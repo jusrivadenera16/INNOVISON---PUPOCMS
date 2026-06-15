@@ -284,6 +284,94 @@
             word-break: break-word;
         }
 
+        .reference-verify-wrap {
+            width: min(620px, 100%);
+            margin: 4px auto 0;
+        }
+
+        .reference-verify-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .reference-verify-input {
+            width: 100%;
+            min-height: 50px;
+            border: 2px solid rgba(250, 204, 21, 0.75);
+            border-radius: 10px;
+            background: #fff;
+            color: #111827;
+            padding: 0 15px;
+            font: inherit;
+            font-size: 1rem;
+            font-weight: 800;
+            text-align: center;
+            text-transform: uppercase;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .reference-verify-input:focus {
+            border-color: #facc15;
+            box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.2);
+        }
+
+        .reference-verify-btn {
+            min-height: 50px;
+            border: 2px solid #facc15;
+            border-radius: 10px;
+            background: #facc15;
+            color: #70131b;
+            padding: 0 18px;
+            font: inherit;
+            font-size: 0.88rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        .reference-verify-btn:hover {
+            background: #fff3a6;
+            transform: translateY(-1px);
+        }
+
+        .reference-verify-btn:disabled {
+            cursor: wait;
+            opacity: 0.72;
+            transform: none;
+        }
+
+        .reference-verify-status {
+            min-height: 22px;
+            margin: 9px 0 0;
+            color: rgba(255, 255, 255, 0.86);
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .reference-verify-status.is-success {
+            color: #fde047;
+        }
+
+        .reference-verify-status.is-error,
+        .reference-field-error {
+            color: #fecaca;
+        }
+
+        .reference-field-error {
+            margin: 8px 0 0;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        @media (max-width: 620px) {
+            .reference-verify-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .upload-instruction-card {
             margin-bottom: 18px;
             padding: 15px 16px;
@@ -1459,7 +1547,8 @@
                     ?: ($prefill['last_name'] ?? '')
                 ));
 
-                $displayReferenceNumber = trim((string) old('reference_number', $prefill['reference_number'] ?? ''));
+                $displayReferenceNumber = trim((string) ($prefill['reference_number'] ?? ''));
+                $referenceNumberDraft = trim((string) old('reference_number', ''));
             @endphp
 
             <div class="stepper-shell">
@@ -1489,7 +1578,6 @@
             <form action="{{ route('store.health.form') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="course_college" value="{{ old('course_college', $prefill['course_college'] ?? $user->course) }}">
-                <input type="hidden" name="reference_number" value="{{ old('reference_number', $prefill['reference_number'] ?? '') }}">
 
                 <div class="step-panel {{ $startStep === 1 ? '' : 'is-hidden' }}" id="stepPanel1">
                     <div class="form-intro">
@@ -1514,7 +1602,38 @@
                         </div>
                         <div class="reference-panel">
                             <small>Reference Number</small>
-                            <strong>{{ $displayReferenceNumber !== '' ? $displayReferenceNumber : 'No Reference Found' }}</strong>
+                            @if($displayReferenceNumber !== '')
+                                <strong>{{ $displayReferenceNumber }}</strong>
+                                <input type="hidden" name="reference_number" id="reference_number" value="{{ $displayReferenceNumber }}">
+                                <p class="reference-verify-status is-success">Verified admission reference</p>
+                            @else
+                                <div class="reference-verify-wrap">
+                                    <div class="reference-verify-row">
+                                        <input
+                                            type="text"
+                                            name="reference_number"
+                                            id="reference_number"
+                                            class="reference-verify-input"
+                                            value="{{ $referenceNumberDraft }}"
+                                            placeholder="e.g. 2026-8889-8828"
+                                            maxlength="120"
+                                            pattern="[A-Za-z0-9]+(?:-[A-Za-z0-9]+){2,}"
+                                            autocomplete="off"
+                                            required
+                                            aria-describedby="referenceVerifyStatus"
+                                        >
+                                        <button type="button" class="reference-verify-btn" id="verifyReferenceBtn">
+                                            Verify Reference
+                                        </button>
+                                    </div>
+                                    <p class="reference-verify-status" id="referenceVerifyStatus" aria-live="polite">
+                                        Enter the reference number shown in your Admission System record.
+                                    </p>
+                                    @error('reference_number')
+                                        <p class="reference-field-error">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            @endif
                         </div>
                     </div>
 
@@ -2028,6 +2147,9 @@
             const stepPanels = Array.from({ length: 5 }, (_, index) => document.getElementById(`stepPanel${index + 1}`));
             const stepChips = Array.from({ length: 5 }, (_, index) => document.getElementById(`chipStep${index + 1}`));
             const nextToStep2Btn = document.getElementById('nextToStep2');
+            const referenceInput = document.getElementById('reference_number');
+            const verifyReferenceBtn = document.getElementById('verifyReferenceBtn');
+            const referenceVerifyStatus = document.getElementById('referenceVerifyStatus');
             const stepNavigationButtons = Array.from(document.querySelectorAll('[data-step-next], [data-step-back]'));
             const birthdayInput = document.getElementById('birthday');
             const ageInput = document.getElementById('age');
@@ -2055,6 +2177,7 @@
             const uploadInputs = Array.from(document.querySelectorAll('[data-upload-input]'));
             let currentStep = {{ $startStep }};
             let isSubmitting = false;
+            let referenceVerified = {{ $displayReferenceNumber !== '' ? 'true' : 'false' }};
 
             function setStep(step) {
                 const normalizedStep = Math.min(5, Math.max(1, Number(step) || 1));
@@ -2442,8 +2565,80 @@
                 if (!validateStep(1)) {
                     return;
                 }
+                if (!referenceVerified) {
+                    referenceInput?.setCustomValidity('Verify your admission reference number before continuing.');
+                    showValidationBubble(referenceInput);
+                    referenceInput?.focus();
+                    return;
+                }
                 setStep(2);
                 stepPanels[1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+
+            referenceInput?.addEventListener('input', () => {
+                referenceInput.value = referenceInput.value.toUpperCase().replace(/\s+/g, '');
+                referenceInput.setCustomValidity('');
+
+                if (verifyReferenceBtn) {
+                    referenceVerified = false;
+                    referenceVerifyStatus?.classList.remove('is-success', 'is-error');
+                    if (referenceVerifyStatus) {
+                        referenceVerifyStatus.textContent = 'Verify this reference before continuing.';
+                    }
+                    verifyReferenceBtn.textContent = 'Verify Reference';
+                }
+            });
+
+            verifyReferenceBtn?.addEventListener('click', async () => {
+                if (!referenceInput || !referenceVerifyStatus) return;
+
+                referenceInput.setCustomValidity('');
+                if (!referenceInput.checkValidity()) {
+                    showValidationBubble(referenceInput);
+                    referenceInput.focus();
+                    return;
+                }
+
+                verifyReferenceBtn.disabled = true;
+                verifyReferenceBtn.textContent = 'Verifying...';
+                referenceVerifyStatus.classList.remove('is-success', 'is-error');
+                referenceVerifyStatus.textContent = 'Checking your reference with PUPTAS...';
+
+                try {
+                    const response = await fetch('{{ route('student.health_form.verify_reference') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({
+                            reference_number: referenceInput.value,
+                        }),
+                    });
+                    const data = await response.json().catch(() => ({}));
+
+                    if (!response.ok || !data.success) {
+                        const validationMessage = data.errors?.reference_number?.[0];
+                        throw new Error(validationMessage || data.message || 'The admission reference could not be verified.');
+                    }
+
+                    referenceInput.value = data.reference_number;
+                    referenceInput.setCustomValidity('');
+                    referenceVerified = true;
+                    referenceVerifyStatus.classList.add('is-success');
+                    referenceVerifyStatus.textContent = data.message;
+                    verifyReferenceBtn.textContent = 'Verified';
+                } catch (error) {
+                    referenceVerified = false;
+                    referenceInput.setCustomValidity(error.message || 'Reference verification failed.');
+                    referenceVerifyStatus.classList.add('is-error');
+                    referenceVerifyStatus.textContent = error.message || 'Reference verification failed.';
+                    verifyReferenceBtn.textContent = 'Verify Reference';
+                } finally {
+                    verifyReferenceBtn.disabled = false;
+                }
             });
             stepNavigationButtons.forEach((button) => {
                 button.addEventListener('click', () => {

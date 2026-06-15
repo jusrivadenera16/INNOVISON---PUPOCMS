@@ -1474,6 +1474,86 @@ public function showHealthForm()
     return view('student.health_form', compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill'));
 }
 
+public function verifyHealthFormReference(Request $request, PuptasWebhookService $puptasService)
+{
+    /** @var \App\Models\User|null $user */
+    $user = Auth::user();
+    abort_unless($user instanceof User, 401);
+
+    $validated = $request->validate([
+        'reference_number' => ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+){2,}$/'],
+    ], [
+        'reference_number.regex' => 'Enter a valid admission reference number.',
+    ]);
+
+    $referenceNumber = strtoupper(trim((string) $validated['reference_number']));
+    $lookup = $puptasService->fetchApplicantByReferenceNumberDetailed($referenceNumber);
+
+    if (!($lookup['success'] ?? false) || !is_array($lookup['data'] ?? null)) {
+        return response()->json([
+            'success' => false,
+            'message' => trim((string) ($lookup['message'] ?? ''))
+                ?: 'The admission reference could not be verified.',
+        ], 422);
+    }
+
+    $applicant = $lookup['data'];
+    $returnedReference = strtoupper(trim((string) (
+        data_get($applicant, 'reference_number')
+        ?: data_get($applicant, 'user.reference_number')
+        ?: data_get($applicant, 'application.reference_number')
+        ?: data_get($applicant, 'admission.reference_number')
+    )));
+
+    if ($returnedReference === '' || $returnedReference !== $referenceNumber) {
+        return response()->json([
+            'success' => false,
+            'message' => 'PUPTAS returned a different admission reference.',
+        ], 422);
+    }
+
+    $applicantIdpUserId = '';
+    foreach ([
+        data_get($applicant, 'idp_user_id'),
+        data_get($applicant, 'student_id'),
+        data_get($applicant, 'user.idp_user_id'),
+        data_get($applicant, 'user.student_id'),
+    ] as $candidate) {
+        $candidate = trim((string) $candidate);
+        if ($candidate !== '') {
+            $applicantIdpUserId = $candidate;
+            break;
+        }
+    }
+
+    $loggedInIdpUserId = trim((string) ($user->student_id ?? ''));
+    if (
+        $loggedInIdpUserId === ''
+        || $applicantIdpUserId === ''
+        || strcasecmp($loggedInIdpUserId, $applicantIdpUserId) !== 0
+    ) {
+        return response()->json([
+            'success' => false,
+            'message' => 'This admission reference is not linked to your One Portal account.',
+        ], 422);
+    }
+
+    $user->reference_number = $returnedReference;
+    $user->save();
+
+    $healthProfile = $user->healthProfile;
+    if ($healthProfile && trim((string) $healthProfile->reference_number) !== $returnedReference) {
+        $healthProfile->reference_number = $returnedReference;
+        $healthProfile->save();
+    }
+
+    return response()->json([
+        'success' => true,
+        'reference_number' => $returnedReference,
+        'message' => 'Admission reference verified and linked to your account.',
+    ]);
+}
+
 public function storeHealthForm(Request $request)
 {
     /** @var \App\Models\User|null $user */
@@ -1485,7 +1565,7 @@ public function storeHealthForm(Request $request)
 
     $request->validate([
         'student_id'        => 'nullable|string|max:255',
-        'reference_number'  => 'required|string|max:255',
+        'reference_number'  => ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+){2,}$/'],
         'school_year'       => ['required', 'string', 'regex:/^\d{4}-\d{4}$/'],
         'home_address'      => 'required|string|max:255',
         'zipcode'           => 'required|string|max:20',
@@ -1536,6 +1616,14 @@ public function storeHealthForm(Request $request)
         'med_cert_findings' => 'required|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review',
         'health_profile_certified' => 'accepted',
     ]);
+
+    $submittedReference = strtoupper(trim((string) $request->input('reference_number')));
+    $verifiedReference = strtoupper(trim((string) ($user->reference_number ?? '')));
+    if ($verifiedReference === '' || $submittedReference !== $verifiedReference) {
+        throw ValidationException::withMessages([
+            'reference_number' => 'Verify your admission reference number before submitting the Health Profile.',
+        ]);
+    }
 
     if ($request->input('covid_vaccinated') === 'Yes') {
         $doseDateFields = [
