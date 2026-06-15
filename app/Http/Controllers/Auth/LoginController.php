@@ -1051,19 +1051,74 @@ class LoginController extends Controller
 
     private function upsertLocalUserFromIdpProfile(array $profile): User
     {
-        $emailSeed = $this->firstNonEmptyScalar($profile, ['email', 'mail', 'username', 'user.email']) ?? '';
-        $studentNumberSeed = $this->firstNonEmptyScalar($profile, ['student_number', 'studentNo']) ?? '';
+        $emailSeed = $this->firstNonEmptyScalar($profile, [
+            'email',
+            'mail',
+            'username',
+            'user.email',
+            'data.user.email',
+        ]) ?? '';
+        $studentNumberSeed = $this->firstNonEmptyScalar($profile, [
+            'student_number',
+            'studentNo',
+            'user.student_number',
+            'user.studentNo',
+            'data.user.student_number',
+        ]) ?? '';
         $referenceNumberSeed = $this->firstNonEmptyScalar($profile, [
             'reference_number',
             'referenceNo',
+            'user.reference_number',
+            'user.referenceNo',
+            'data.user.reference_number',
             'application.reference_number',
             'admission.reference_number',
         ]) ?? '';
-        $studentIdSeed = $this->firstNonEmptyScalar($profile, ['student_id', 'idp_user_id', 'user_id', 'id']) ?? '';
-        $firstName = $this->firstNonEmptyScalar($profile, ['first_name', 'firstname', 'given_name']) ?? '';
-        $middleName = $this->firstNonEmptyScalar($profile, ['middle_name', 'middlename']) ?? '';
-        $lastName = $this->firstNonEmptyScalar($profile, ['last_name', 'lastname', 'family_name']) ?? '';
-        $displayName = $this->firstNonEmptyScalar($profile, ['name', 'full_name', 'display_name']) ?? '';
+        $studentIdSeed = $this->firstNonEmptyScalar($profile, [
+            'student_id',
+            'idp_user_id',
+            'user_id',
+            'id',
+            'user.student_id',
+            'user.idp_user_id',
+            'user.id',
+            'data.user.id',
+        ]) ?? '';
+        $firstName = $this->firstNonEmptyScalar($profile, [
+            'first_name',
+            'firstname',
+            'given_name',
+            'user.first_name',
+            'user.firstname',
+            'data.user.first_name',
+            'data.user.firstname',
+        ]) ?? '';
+        $middleName = $this->firstNonEmptyScalar($profile, [
+            'middle_name',
+            'middlename',
+            'user.middle_name',
+            'user.middlename',
+            'data.user.middle_name',
+            'data.user.middlename',
+        ]) ?? '';
+        $lastName = $this->firstNonEmptyScalar($profile, [
+            'last_name',
+            'lastname',
+            'family_name',
+            'user.last_name',
+            'user.lastname',
+            'data.user.last_name',
+            'data.user.lastname',
+        ]) ?? '';
+        $displayName = $this->firstNonEmptyScalar($profile, [
+            'name',
+            'full_name',
+            'display_name',
+            'user.name',
+            'user.full_name',
+            'data.user.name',
+            'data.user.full_name',
+        ]) ?? '';
 
         if ($displayName === '' && ($firstName !== '' || $middleName !== '' || $lastName !== '')) {
             $displayName = trim(implode(' ', array_filter([$firstName, $middleName, $lastName])));
@@ -1125,9 +1180,7 @@ class LoginController extends Controller
                 (int) $existingUser->id
             );
             $existingUser->first_name = $firstName !== '' ? $firstName : ($existingUser->first_name ?: 'IDP');
-            if ($middleName !== '') {
-                $existingUser->middle_name = $middleName;
-            }
+            $existingUser->middle_name = $middleName !== '' ? $middleName : null;
             $existingUser->last_name = $lastName !== '' ? $lastName : ($existingUser->last_name ?: 'User');
             $existingUser->name = trim(implode(' ', array_filter([
                 $existingUser->first_name,

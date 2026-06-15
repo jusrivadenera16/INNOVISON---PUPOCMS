@@ -1446,16 +1446,18 @@
                 $selectedMedicalHistory = old('medical_history', []);
                 $selectedMedicineAllergies = old('medicine_allergies', []);
                 $selectedHasIllness = old('has_illness', 'No');
-                $hasPuptasIdentity = !empty($prefill['identity_from_puptas']);
-                $displayFirstName = $hasPuptasIdentity
-                    ? trim((string) ($prefill['puptas_first_name'] ?? ''))
-                    : '';
-                $displayMiddleName = $hasPuptasIdentity
-                    ? trim((string) ($prefill['puptas_middle_name'] ?? ''))
-                    : '';
-                $displayLastName = $hasPuptasIdentity
-                    ? trim((string) ($prefill['puptas_last_name'] ?? ''))
-                    : '';
+                $displayFirstName = trim((string) (
+                    ($prefill['puptas_first_name'] ?? '')
+                    ?: ($prefill['first_name'] ?? '')
+                ));
+                $displayMiddleName = trim((string) (
+                    ($prefill['puptas_middle_name'] ?? '')
+                    ?: ($prefill['middle_name'] ?? '')
+                ));
+                $displayLastName = trim((string) (
+                    ($prefill['puptas_last_name'] ?? '')
+                    ?: ($prefill['last_name'] ?? '')
+                ));
 
                 $displayReferenceNumber = trim((string) old('reference_number', $prefill['reference_number'] ?? ''));
             @endphp
