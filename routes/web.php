@@ -146,16 +146,12 @@ Route::middleware(['auth:student', 'audit'])->group(function () {
 
         // 2. Route para i-save ang data (Dito galing ang form submit)
         Route::post('/student/store-health-form', [AppointmentController::class, 'storeHealthForm'])->name('store.health.form');
-        Route::post('/student/health-form/verify-reference', [AppointmentController::class, 'verifyHealthFormReference'])
-            ->middleware('throttle:10,1')
-            ->name('student.health_form.verify_reference');
         if (app()->environment('local')) {
             Route::post('/student/health-form/testing-skip', [AppointmentController::class, 'testingSkipHealthForm'])
                 ->name('student.health_form.testing_skip');
         }
         Route::get('/student/health-form/print', [AppointmentController::class, 'printHealthForm'])->name('student.health_form.print');
         Route::get('/student/health-form/download', [AppointmentController::class, 'downloadHealthForm'])->name('student.health_form.download');
-        Route::post('/student/health-documents/replace', [AppointmentController::class, 'replaceHealthDocument'])->name('student.health_documents.replace');
 
         Route::get('/student/account', [AppointmentController::class, 'account']);
         Route::get('/student/history', [AppointmentController::class, 'history']);

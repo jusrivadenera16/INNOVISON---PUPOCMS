@@ -2049,16 +2049,6 @@
         text-decoration: none;
         transform: translateY(-1px);
     }
-    .record-document-replace-form {
-        margin: 0;
-    }
-    .record-document-file {
-        position: absolute;
-        opacity: 0;
-        pointer-events: none;
-        width: 1px;
-        height: 1px;
-    }
     html[data-theme="dark"] .record-modal {
         background: linear-gradient(180deg, #0f0f10 0%, #161618 100%) !important;
         border-color: rgba(250, 204, 21, 0.16) !important;
@@ -2789,10 +2779,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     <div class="record-modal-grid">
                         <div class="record-modal-card">
-                            <span class="record-modal-label">Student ID</span>
-                            <div class="record-modal-value">{{ optional($healthProfileRecord)->student_id ?: ($user->student_id ?: '-') }}</div>
-                        </div>
-                        <div class="record-modal-card">
                             <span class="record-modal-label">Admission Reference</span>
                             <div class="record-modal-value">{{ $recordReferenceNumber !== '' ? $recordReferenceNumber : '-' }}</div>
                         </div>
@@ -2859,36 +2845,28 @@ document.addEventListener('DOMContentLoaded', function () {
                             @php
                                 $recordDocuments = [
                                     [
-                                        'field' => 'student_photo',
                                         'title' => '2x2 Student Photo',
                                         'meta' => 'Image Upload',
                                         'path' => optional($healthProfileRecord)->student_photo,
                                         'is_image' => true,
-                                        'accept' => '.jpg,.jpeg,.png,image/jpeg,image/png',
                                     ],
                                     [
-                                        'field' => 'medical_certificate',
                                         'title' => 'Medical Certificate',
                                         'meta' => 'PDF or Image Upload',
                                         'path' => optional($healthProfileRecord)->medical_certificate,
                                         'is_image' => false,
-                                        'accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png',
                                     ],
                                     [
-                                        'field' => 'chest_xray_result',
                                         'title' => 'Chest X-ray Result',
                                         'meta' => 'PDF or Image Upload',
                                         'path' => optional($healthProfileRecord)->chest_xray_result,
                                         'is_image' => false,
-                                        'accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png',
                                     ],
                                     [
-                                        'field' => 'pwd_id_proof',
                                         'title' => 'PWD ID Proof',
                                         'meta' => 'PDF Upload',
                                         'path' => optional($healthProfileRecord)->pwd_id_proof,
                                         'is_image' => false,
-                                        'accept' => '.pdf,application/pdf',
                                     ],
                                 ];
                                 $visibleRecordDocuments = collect($recordDocuments)
@@ -2918,12 +2896,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                             <span class="record-document-meta">{{ $document['meta'] }}</span>
                                             <div class="record-document-actions">
                                                 <a class="record-document-btn" href="{{ $documentUrl }}" target="_blank" rel="noopener noreferrer">View</a>
-                                                <form class="record-document-replace-form" action="{{ route('student.health_documents.replace') }}" method="POST" enctype="multipart/form-data">
-                                                    @csrf
-                                                    <input type="hidden" name="document_type" value="{{ $document['field'] }}">
-                                                    <input class="record-document-file" type="file" name="replacement_file" accept="{{ $document['accept'] }}" required>
-                                                    <button type="button" class="record-document-btn" data-replace-document>Replace</button>
-                                                </form>
                                             </div>
                                         </div>
                                     </div>
@@ -3056,27 +3028,8 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
     const modalCard = modal.querySelector('.record-modal');
-    const replaceButtons = modal.querySelectorAll('[data-replace-document]');
 
     modalCard?.addEventListener('scroll', updateHealthRecordModalIndicator);
-
-    replaceButtons.forEach(function (button) {
-        const form = button.closest('.record-document-replace-form');
-        const fileInput = form?.querySelector('.record-document-file');
-        if (!form || !fileInput) {
-            return;
-        }
-
-        button.addEventListener('click', function () {
-            fileInput.click();
-        });
-
-        fileInput.addEventListener('change', function () {
-            if (fileInput.files && fileInput.files.length > 0) {
-                form.submit();
-            }
-        });
-    });
 
     modal.addEventListener('click', function (event) {
         if (event.target === modal) {

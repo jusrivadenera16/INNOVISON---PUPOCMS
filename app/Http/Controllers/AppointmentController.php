@@ -1345,6 +1345,25 @@ public function account(Request $request)
     // 5. Return view user
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
     $accountProfileData = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $user->healthProfile);
+
+    // These fields belong to the submitted clinic Health Profile for now.
+    $profileBirthday = trim((string) (optional($user->healthProfile)->birthday ?: $user->DOB));
+    $profileAge = optional($user->healthProfile)->age;
+    if ($profileAge === null && $profileBirthday !== '') {
+        try {
+            $profileAge = Carbon::parse($profileBirthday)->age;
+        } catch (\Throwable $exception) {
+            $profileAge = null;
+        }
+    }
+    $accountProfileData['birthday'] = $profileBirthday;
+    $accountProfileData['age'] = $profileAge;
+    $accountProfileData['sex'] = trim((string) (optional($user->healthProfile)->sex ?: $user->gender));
+    $accountProfileData['civil_status'] = trim((string) optional($user->healthProfile)->civil_status);
+    $accountProfileData['home_address'] = trim((string) optional($user->healthProfile)->home_address);
+    $accountProfileData['guardian_name'] = trim((string) optional($user->healthProfile)->guardian_name);
+    $accountProfileData['cellphone'] = trim((string) optional($user->healthProfile)->cellphone);
+
     $guisisAccountData = $this->buildGuisisAccountData($user);
     if ($guisisAccountData['available'] ?? false) {
         foreach ([
@@ -1358,14 +1377,7 @@ public function account(Request $request)
             'course_college',
             'year',
             'section',
-            'sex',
-            'birthday',
-            'age',
-            'civil_status',
             'contact_number',
-            'home_address',
-            'guardian_name',
-            'cellphone',
         ] as $key) {
             // GUISIS is authoritative for account information. Assign blank
             // values too, so stale clinic-form data is not shown as GUISIS data.
@@ -1771,86 +1783,6 @@ public function showHealthForm()
     return view('student.health_form', compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill'));
 }
 
-public function verifyHealthFormReference(Request $request, PuptasWebhookService $puptasService)
-{
-    /** @var \App\Models\User|null $user */
-    $user = Auth::user();
-    abort_unless($user instanceof User, 401);
-
-    $validated = $request->validate([
-        'reference_number' => ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+){2,}$/'],
-    ], [
-        'reference_number.regex' => 'Enter a valid admission reference number.',
-    ]);
-
-    $referenceNumber = strtoupper(trim((string) $validated['reference_number']));
-    $lookup = $puptasService->fetchApplicantByReferenceNumberDetailed($referenceNumber);
-
-    if (!($lookup['success'] ?? false) || !is_array($lookup['data'] ?? null)) {
-        return response()->json([
-            'success' => false,
-            'message' => trim((string) ($lookup['message'] ?? ''))
-                ?: 'The admission reference could not be verified.',
-        ], 422);
-    }
-
-    $applicant = $lookup['data'];
-    $returnedReference = strtoupper(trim((string) (
-        data_get($applicant, 'reference_number')
-        ?: data_get($applicant, 'user.reference_number')
-        ?: data_get($applicant, 'application.reference_number')
-        ?: data_get($applicant, 'admission.reference_number')
-    )));
-
-    if ($returnedReference === '' || $returnedReference !== $referenceNumber) {
-        return response()->json([
-            'success' => false,
-            'message' => 'PUPTAS returned a different admission reference.',
-        ], 422);
-    }
-
-    $applicantIdpUserId = '';
-    foreach ([
-        data_get($applicant, 'idp_user_id'),
-        data_get($applicant, 'student_id'),
-        data_get($applicant, 'user.idp_user_id'),
-        data_get($applicant, 'user.student_id'),
-    ] as $candidate) {
-        $candidate = trim((string) $candidate);
-        if ($candidate !== '') {
-            $applicantIdpUserId = $candidate;
-            break;
-        }
-    }
-
-    $loggedInIdpUserId = trim((string) ($user->student_id ?? ''));
-    if (
-        $loggedInIdpUserId === ''
-        || $applicantIdpUserId === ''
-        || strcasecmp($loggedInIdpUserId, $applicantIdpUserId) !== 0
-    ) {
-        return response()->json([
-            'success' => false,
-            'message' => 'This admission reference is not linked to your One Portal account.',
-        ], 422);
-    }
-
-    $user->reference_number = $returnedReference;
-    $user->save();
-
-    $healthProfile = $user->healthProfile;
-    if ($healthProfile && trim((string) $healthProfile->reference_number) !== $returnedReference) {
-        $healthProfile->reference_number = $returnedReference;
-        $healthProfile->save();
-    }
-
-    return response()->json([
-        'success' => true,
-        'reference_number' => $returnedReference,
-        'message' => 'Admission reference verified and linked to your account.',
-    ]);
-}
-
 public function storeHealthForm(Request $request)
 {
     /** @var \App\Models\User|null $user */
@@ -1915,12 +1847,6 @@ public function storeHealthForm(Request $request)
     ]);
 
     $submittedReference = strtoupper(trim((string) $request->input('reference_number')));
-    $verifiedReference = strtoupper(trim((string) ($user->reference_number ?? '')));
-    if ($verifiedReference === '' || $submittedReference !== $verifiedReference) {
-        throw ValidationException::withMessages([
-            'reference_number' => 'Verify your admission reference number before submitting the Health Profile.',
-        ]);
-    }
 
     if ($request->input('covid_vaccinated') === 'Yes') {
         $doseDateFields = [
@@ -1978,6 +1904,7 @@ public function storeHealthForm(Request $request)
     if ($resolvedCourse !== '') {
         $user->course = $resolvedCourse;
     }
+    $user->reference_number = $submittedReference;
     $user->save();
 
     try {
@@ -1995,7 +1922,7 @@ public function storeHealthForm(Request $request)
             ['user_id' => $user->id],
             [
                 'student_id'         => $request->student_id,
-                'reference_number'   => $request->input('reference_number'),
+                'reference_number'   => $submittedReference,
                 'school_year'        => $request->school_year,
                 'home_address'       => $request->home_address,
                 'zipcode'            => $request->zipcode,
@@ -2215,81 +2142,6 @@ public function testingSkipHealthForm()
 
     return redirect()->route('student.health_form.print');
 }
-
-public function replaceHealthDocument(Request $request)
-{
-    /** @var \App\Models\User|null $user */
-    $user = Auth::user();
-    if (!$user) {
-        return redirect('/login-as-student')->with('error', 'Please login first.');
-    }
-
-    $profile = $user->healthProfile;
-    if (!$profile instanceof HealthProfile) {
-        return redirect('/student/account?view=health-record')
-            ->with('error', 'Submit your health profile before replacing documents.');
-    }
-
-    $documentTypes = [
-        'student_photo' => [
-            'rules' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-            'directory' => 'health_profiles/photos',
-            'label' => '2x2 photo',
-        ],
-        'medical_certificate' => [
-            'rules' => 'required|file|mimes:pdf,jpg,jpeg,png|max:4096',
-            'directory' => 'health_profiles/medical_certificates',
-            'label' => 'medical certificate',
-        ],
-        'chest_xray_result' => [
-            'rules' => 'required|file|mimes:pdf,jpg,jpeg,png|max:4096',
-            'directory' => 'health_profiles/chest_xray_results',
-            'label' => 'chest X-ray result',
-        ],
-        'pwd_id_proof' => [
-            'rules' => 'required|file|mimes:pdf|max:4096',
-            'directory' => 'health_profiles/pwd_id_proofs',
-            'label' => 'PWD ID proof',
-        ],
-    ];
-
-    $request->validate([
-        'document_type' => 'required|string|in:' . implode(',', array_keys($documentTypes)),
-    ]);
-
-    $documentType = (string) $request->input('document_type');
-    $config = $documentTypes[$documentType];
-
-    $request->validate([
-        'replacement_file' => $config['rules'],
-    ]);
-
-    $oldPath = (string) ($profile->{$documentType} ?? '');
-    $newPath = $request->file('replacement_file')->store($config['directory'], 'public');
-
-    $profile->{$documentType} = $newPath;
-    $profile->clearance_status = 'For Verification';
-    $profile->pending_reason = null;
-    $profile->verified_at = null;
-    $profile->save();
-
-    if ($oldPath !== '' && $oldPath !== $newPath) {
-        Storage::disk('public')->delete($oldPath);
-    }
-
-    \App\Models\ActivityLog::create([
-        'user_id'     => $user->id,
-        'user_name'   => $user->name,
-        'action'      => 'Health Document Replaced',
-        'description' => 'Student replaced the ' . $config['label'] . '.',
-        'ip_address'  => $request->ip(),
-        'user_agent'  => $request->userAgent(),
-    ]);
-
-    return redirect('/student/account?view=health-record')
-        ->with('success', ucfirst($config['label']) . ' replaced successfully. The clinic will review the updated file.');
-}
-
 
     // -------------------------------
     // RESET BARCODE (for testing)
