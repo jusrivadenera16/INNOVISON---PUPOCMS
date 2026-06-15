@@ -718,7 +718,37 @@ class LoginController extends Controller
 
     private function hasIdentityFields(array $payload): bool
     {
-        foreach (['email', 'role', 'roles', 'user_role', 'student_number', 'student_id', 'name', 'first_name', 'middle_name', 'last_name', 'user_id', 'id'] as $key) {
+        foreach ([
+            'email',
+            'role',
+            'roles',
+            'user_role',
+            'student_number',
+            'student_id',
+            'reference_number',
+            'reference_no',
+            'referenceNo',
+            'name',
+            'full_name',
+            'first_name',
+            'firstname',
+            'middle_name',
+            'middlename',
+            'last_name',
+            'lastname',
+            'user_id',
+            'id',
+            'user.email',
+            'user.id',
+            'user.reference_number',
+            'user.firstname',
+            'user.first_name',
+            'data.user.email',
+            'data.user.id',
+            'data.user.reference_number',
+            'application.reference_number',
+            'admission.reference_number',
+        ] as $key) {
             $value = data_get($payload, $key);
             if (is_string($value) && trim($value) !== '') {
                 return true;
@@ -739,12 +769,12 @@ class LoginController extends Controller
     private function extractProfilePayload(array $payload): ?array
     {
         $candidates = [
+            $payload,
+            data_get($payload, 'data'),
             data_get($payload, 'user'),
             data_get($payload, 'profile'),
             data_get($payload, 'data.user'),
             data_get($payload, 'data.profile'),
-            data_get($payload, 'data'),
-            $payload,
         ];
 
         foreach ($candidates as $candidate) {
@@ -1067,12 +1097,21 @@ class LoginController extends Controller
         ]) ?? '';
         $referenceNumberSeed = $this->firstNonEmptyScalar($profile, [
             'reference_number',
+            'reference_no',
             'referenceNo',
+            'applicant_reference_number',
+            'admission_reference_number',
             'user.reference_number',
+            'user.reference_no',
             'user.referenceNo',
             'data.user.reference_number',
+            'data.user.reference_no',
             'application.reference_number',
+            'application.reference_no',
             'admission.reference_number',
+            'admission.reference_no',
+            'data.application.reference_number',
+            'data.admission.reference_number',
         ]) ?? '';
         $studentIdSeed = $this->firstNonEmptyScalar($profile, [
             'student_id',
@@ -1291,9 +1330,26 @@ class LoginController extends Controller
                 return;
             }
 
-            $referenceNumber = trim((string) data_get($applicantData, 'reference_number', ''));
-            $firstName = trim((string) data_get($applicantData, 'first_name', ''));
-            $lastName = trim((string) data_get($applicantData, 'last_name', ''));
+            $referenceNumber = trim((string) (
+                data_get($applicantData, 'reference_number')
+                ?: data_get($applicantData, 'reference_no')
+                ?: data_get($applicantData, 'referenceNo')
+                ?: data_get($applicantData, 'user.reference_number')
+                ?: data_get($applicantData, 'application.reference_number')
+                ?: data_get($applicantData, 'admission.reference_number')
+            ));
+            $firstName = trim((string) (
+                data_get($applicantData, 'first_name')
+                ?: data_get($applicantData, 'firstname')
+                ?: data_get($applicantData, 'user.first_name')
+                ?: data_get($applicantData, 'user.firstname')
+            ));
+            $lastName = trim((string) (
+                data_get($applicantData, 'last_name')
+                ?: data_get($applicantData, 'lastname')
+                ?: data_get($applicantData, 'user.last_name')
+                ?: data_get($applicantData, 'user.lastname')
+            ));
 
             $shouldUpdate = false;
             if ($referenceNumber !== '' && $user->reference_number === null) {

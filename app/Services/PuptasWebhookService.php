@@ -79,7 +79,8 @@ class PuptasWebhookService
 
     private function getAccessToken(): string
     {
-        $cachedToken = trim((string) Cache::get('puptas.oauth_token', ''));
+        $cacheKey = $this->accessTokenCacheKey();
+        $cachedToken = trim((string) Cache::get($cacheKey, ''));
         if ($cachedToken !== '') {
             return $cachedToken;
         }
@@ -108,9 +109,43 @@ class PuptasWebhookService
         }
 
         $expiresIn = max(60, ((int) $response->json('expires_in', 3600)) - 60);
-        Cache::put('puptas.oauth_token', $token, now()->addSeconds($expiresIn));
+        Cache::put($cacheKey, $token, now()->addSeconds($expiresIn));
 
         return $token;
+    }
+
+    private function accessTokenCacheKey(): string
+    {
+        return 'puptas.oauth_token.' . hash('sha256', implode('|', [
+            $this->tokenUrl,
+            $this->clientId,
+            $this->scope,
+        ]));
+    }
+
+    private function forgetAccessToken(): void
+    {
+        Cache::forget($this->accessTokenCacheKey());
+        Cache::forget('puptas.oauth_token');
+    }
+
+    private function sendApplicantGetRequest(string $url)
+    {
+        $response = Http::timeout($this->timeout)
+            ->withToken($this->getAccessToken())
+            ->acceptJson()
+            ->get($url);
+
+        if ($response->status() === 401) {
+            $this->forgetAccessToken();
+
+            $response = Http::timeout($this->timeout)
+                ->withToken($this->getAccessToken())
+                ->acceptJson()
+                ->get($url);
+        }
+
+        return $response;
     }
 
     private function resolveApplicantsBaseUrl(): string
@@ -163,10 +198,9 @@ class PuptasWebhookService
                 ];
             }
 
-            $response = Http::timeout($this->timeout)
-                ->withToken($this->getAccessToken())
-                ->acceptJson()
-                ->get(rtrim($applicantsBaseUrl, '/') . '/' . rawurlencode($referenceNumber));
+            $response = $this->sendApplicantGetRequest(
+                rtrim($applicantsBaseUrl, '/') . '/' . rawurlencode($referenceNumber)
+            );
 
             if (!$response->successful()) {
                 $responseMessage = trim((string) $response->json('message'));
@@ -254,10 +288,9 @@ class PuptasWebhookService
                 ];
             }
 
-            $response = Http::timeout($this->timeout)
-                ->withToken($this->getAccessToken())
-                ->acceptJson()
-                ->get(rtrim($applicantsBaseUrl, '/') . '/idp/' . urlencode($idpUserId));
+            $response = $this->sendApplicantGetRequest(
+                rtrim($applicantsBaseUrl, '/') . '/idp/' . rawurlencode($idpUserId)
+            );
 
             if (!$response->successful()) {
                 $responseMessage = trim((string) $response->json('message'));

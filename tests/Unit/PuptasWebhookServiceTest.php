@@ -13,7 +13,7 @@ class PuptasWebhookServiceTest extends TestCase
 {
     protected function tearDown(): void
     {
-        Cache::forget('puptas.oauth_token');
+        Cache::flush();
 
         parent::tearDown();
     }

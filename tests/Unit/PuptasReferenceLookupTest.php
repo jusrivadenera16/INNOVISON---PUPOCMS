@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Services\PuptasWebhookService;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -22,7 +23,7 @@ class PuptasReferenceLookupTest extends TestCase
             'services.puptas.timeout' => 20,
         ]);
 
-        Cache::forget('puptas.oauth_token');
+        Cache::flush();
     }
 
     public function test_it_looks_up_an_applicant_using_the_reference_number_endpoint(): void
@@ -73,5 +74,49 @@ class PuptasReferenceLookupTest extends TestCase
 
         $this->assertTrue($result['success']);
         $this->assertSame('2026-1111-1111', $result['data']['reference_number']);
+    }
+
+    public function test_it_refreshes_the_oauth_token_after_an_unauthorized_lookup(): void
+    {
+        $tokenRequests = 0;
+        $lookupRequests = 0;
+
+        Http::fake(function (Request $request) use (&$tokenRequests, &$lookupRequests) {
+            if ($request->url() === 'https://puptas.example.test/oauth/token') {
+                $tokenRequests++;
+
+                return Http::response([
+                    'access_token' => $tokenRequests === 1 ? 'expired-token' : 'fresh-token',
+                    'expires_in' => 3600,
+                ]);
+            }
+
+            if ($request->url() === 'https://puptas.example.test/api/v1/medical/applicants/2026-8889-8828') {
+                $lookupRequests++;
+
+                if ($request->hasHeader('Authorization', 'Bearer expired-token')) {
+                    return Http::response(['message' => 'Unauthenticated.'], 401);
+                }
+
+                return Http::response([
+                    'data' => [
+                        'idp_user_id' => 'idp-user-123',
+                        'reference_number' => '2026-8889-8828',
+                        'first_name' => 'Lofi',
+                        'last_name' => 'Nuko',
+                    ],
+                ]);
+            }
+
+            return Http::response([], 404);
+        });
+
+        $result = app(PuptasWebhookService::class)
+            ->fetchApplicantByReferenceNumberDetailed('2026-8889-8828');
+
+        $this->assertTrue($result['success']);
+        $this->assertSame('2026-8889-8828', $result['data']['reference_number']);
+        $this->assertSame(2, $tokenRequests);
+        $this->assertSame(2, $lookupRequests);
     }
 }
