@@ -3259,158 +3259,360 @@
         }
 
         html[data-theme="light"] .assistant-panel {
-            background: #ffffff;
-            border-color: #e4d8dc;
-            box-shadow: 0 20px 40px rgba(112, 19, 27, 0.12);
-        }
-
-        html[data-theme="light"] .assistant-messages {
-            background: #f8f5f6;
-        }
-
-        html[data-theme="light"] .assistant-bubble {
-            border-color: #efe1e5;
-        }
-
-        html[data-theme="light"] .assistant-bubble.user {
-            background: #efd2d9;
-            border-color: #d49faa;
-            color: #5b0e1a;
-        }
-
-        html[data-theme="light"] .assistant-bubble.assistant {
-            background: #f3dde4;
-            border-color: #dbb1bb;
-            color: #3e0f18;
-        }
-
-        html[data-theme="light"] .assistant-controls {
-            border-top-color: #e8dde1;
-            background: #ffffff;
-        }
-
-        html[data-theme="light"] .assistant-input {
-            border-color: #d5dbe4;
-            color: #40111b;
-            background: #ffffff;
-        }
-
-        html[data-theme="light"] .assistant-input:focus {
-            border-color: #70131B;
-            box-shadow: 0 0 0 3px rgba(112, 19, 27, 0.14);
-        }
-
-        html[data-theme="light"] .assistant-note {
-            color: #5d2833;
-            border-top-color: #e8dde1;
-            background: #f8f5f6;
+            --assistant-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 248, 249, 0.98) 100%);
+            --assistant-head-bg: linear-gradient(135deg, #8b1020 0%, #70131b 58%, #4f0b15 100%);
+            --assistant-surface: #fff8fa;
+            --assistant-surface-strong: #ffffff;
+            --assistant-border: rgba(127, 29, 45, 0.18);
+            --assistant-soft-border: rgba(127, 29, 45, 0.12);
+            --assistant-shadow: 0 24px 58px rgba(112, 19, 27, 0.18);
+            --assistant-text: #351018;
+            --assistant-muted: #6f3a45;
+            --assistant-user-bg: linear-gradient(135deg, #70131b 0%, #9f2337 100%);
+            --assistant-user-text: #ffffff;
+            --assistant-ai-bg: #ffffff;
+            --assistant-ai-text: #3e0f18;
+            --assistant-chip-bg: #fff1c8;
+            --assistant-chip-text: #5b1420;
+            --assistant-input-bg: #ffffff;
+            --assistant-input-text: #351018;
+            --assistant-note-bg: rgba(255, 247, 214, 0.68);
+            --assistant-note-text: #6d3b12;
         }
 
         .assistant-panel {
+            --assistant-bg: linear-gradient(180deg, rgba(73, 18, 29, 0.98) 0%, rgba(31, 11, 18, 0.98) 100%);
+            --assistant-head-bg: linear-gradient(135deg, #8b1020 0%, #70131b 55%, #3b0b13 100%);
+            --assistant-surface: rgba(255, 255, 255, 0.06);
+            --assistant-surface-strong: rgba(255, 255, 255, 0.1);
+            --assistant-border: rgba(250, 204, 21, 0.24);
+            --assistant-soft-border: rgba(255, 255, 255, 0.12);
+            --assistant-shadow: 0 28px 70px rgba(12, 2, 6, 0.44);
+            --assistant-text: #fff7fa;
+            --assistant-muted: #f4c8d1;
+            --assistant-user-bg: linear-gradient(135deg, rgba(250, 204, 21, 0.95) 0%, rgba(234, 179, 8, 0.92) 100%);
+            --assistant-user-text: #3b0b13;
+            --assistant-ai-bg: rgba(255, 255, 255, 0.09);
+            --assistant-ai-text: #fff7fa;
+            --assistant-chip-bg: rgba(250, 204, 21, 0.12);
+            --assistant-chip-text: #fde68a;
+            --assistant-input-bg: rgba(255, 255, 255, 0.09);
+            --assistant-input-text: #fff7fa;
+            --assistant-note-bg: rgba(255, 255, 255, 0.06);
+            --assistant-note-text: #f4c8d1;
             position: fixed;
-            right: 20px;
-            bottom: 18px;
-            width: min(420px, calc(100vw - 24px));
-            background: linear-gradient(180deg, #4f1520 0%, #391019 100%);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(12, 2, 6, 0.32);
+            right: 24px;
+            bottom: 24px;
+            width: min(720px, calc(100vw - 48px));
+            height: min(760px, calc(100vh - 48px));
+            max-height: calc(100vh - 48px);
+            background: var(--assistant-bg);
+            border: 1px solid var(--assistant-border);
+            border-radius: 22px;
+            box-shadow: var(--assistant-shadow);
             z-index: 1200;
             display: none;
             overflow: hidden;
+            color: var(--assistant-text);
+            backdrop-filter: blur(18px);
         }
 
         .assistant-panel.open {
-            display: block;
+            display: flex;
+            flex-direction: column;
+            animation: assistantPanelIn 0.22s ease-out;
+        }
+
+        @keyframes assistantPanelIn {
+            from {
+                opacity: 0;
+                transform: translateY(14px) scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .assistant-head {
-            padding: 12px 14px;
-            background: linear-gradient(145deg, #7f1d2d, #5a0f16);
+            position: relative;
+            padding: 20px;
+            background: var(--assistant-head-bg);
             color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
+            gap: 12px;
+        }
+
+        .assistant-head::after {
+            content: "";
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            bottom: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.78), transparent);
+        }
+
+        .assistant-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .assistant-orb {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: 52px;
+            height: 52px;
+            flex: 0 0 52px;
+            border: 1px solid rgba(250, 204, 21, 0.56);
+            border-radius: 18px;
+            background:
+                linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.04)),
+                rgba(250, 204, 21, 0.14);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                0 12px 26px rgba(15, 23, 42, 0.22);
+        }
+
+        .assistant-orb::after {
+            content: "";
+            position: absolute;
+            right: 7px;
+            bottom: 7px;
+            width: 8px;
+            height: 8px;
+            border: 2px solid #70131b;
+            border-radius: 50%;
+            background: #22c55e;
+        }
+
+        .assistant-orb svg {
+            width: 28px;
+            height: 28px;
+            color: #fde68a;
         }
 
         .assistant-head-title {
             margin: 0;
-            font-size: 14px;
-            font-weight: 800;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 0;
         }
 
         .assistant-head-sub {
             margin: 2px 0 0;
-            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            line-height: 1.35;
             opacity: 0.86;
         }
 
+        .assistant-head-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 0 0 auto;
+        }
+
+        .assistant-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 28px;
+            padding: 0 9px;
+            border: 1px solid rgba(250, 204, 21, 0.36);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.11);
+            color: #fde68a;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .assistant-status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
+        }
+
         .assistant-close {
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.32);
             background: rgba(255, 255, 255, 0.12);
             color: #ffffff;
-            width: 30px;
-            height: 30px;
-            border-radius: 9px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
             cursor: pointer;
-            font-size: 16px;
-            line-height: 1;
+            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+        }
+
+        .assistant-close:hover,
+        .assistant-close:focus-visible {
+            background: rgba(250, 204, 21, 0.18);
+            border-color: rgba(250, 204, 21, 0.72);
+            transform: translateY(-1px);
+            outline: none;
+        }
+
+        .assistant-close svg {
+            width: 17px;
+            height: 17px;
         }
 
         .assistant-messages {
-            max-height: 300px;
+            flex: 1 1 auto;
+            min-height: 380px;
+            max-height: none;
             overflow-y: auto;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.04);
+            padding: 20px;
+            background:
+                radial-gradient(circle at 12% 0%, rgba(250, 204, 21, 0.09) 0%, transparent 32%),
+                var(--assistant-surface);
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
+            scrollbar-width: thin;
         }
 
         .assistant-bubble {
-            padding: 9px 11px;
-            border-radius: 11px;
-            font-size: 13px;
-            line-height: 1.4;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            max-width: 92%;
+            position: relative;
+            padding: 13px 15px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            border: 1px solid var(--assistant-soft-border);
+            max-width: 88%;
             white-space: pre-wrap;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
         }
 
         .assistant-bubble.user {
             margin-left: auto;
-            background: rgba(255, 255, 255, 0.14);
-            border-color: rgba(255, 255, 255, 0.18);
-            color: #ffffff;
+            border-bottom-right-radius: 6px;
+            background: var(--assistant-user-bg);
+            border-color: rgba(250, 204, 21, 0.34);
+            color: var(--assistant-user-text);
         }
 
         .assistant-bubble.assistant {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.12);
-            color: #fff4f7;
+            margin-right: auto;
+            border-bottom-left-radius: 6px;
+            background: var(--assistant-ai-bg);
+            border-color: var(--assistant-soft-border);
+            color: var(--assistant-ai-text);
+        }
+
+        .assistant-bubble.assistant::before {
+            content: "AI";
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+            border-radius: 8px;
+            background: rgba(250, 204, 21, 0.16);
+            color: #facc15;
+            font-size: 10px;
+            font-weight: 900;
+            vertical-align: top;
+        }
+
+        .assistant-quick-prompts {
+            display: flex;
+            gap: 8px;
+            padding: 14px 16px 0;
+            overflow-x: auto;
+            background: var(--assistant-surface);
+            border-top: 1px solid var(--assistant-soft-border);
+        }
+
+        .assistant-prompt-chip {
+            flex: 0 0 auto;
+            border: 1px solid var(--assistant-border);
+            border-radius: 999px;
+            background: var(--assistant-chip-bg);
+            color: var(--assistant-chip-text);
+            padding: 9px 12px;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+        }
+
+        .assistant-prompt-chip:hover,
+        .assistant-prompt-chip:focus-visible {
+            border-color: #facc15;
+            transform: translateY(-1px);
+            outline: none;
         }
 
         .assistant-controls {
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 10px;
+            border-top: 1px solid var(--assistant-soft-border);
+            padding: 14px 16px;
             display: flex;
             gap: 8px;
             align-items: center;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--assistant-surface);
+        }
+
+        .assistant-input-shell {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            border: 1px solid var(--assistant-soft-border);
+            border-radius: 14px;
+            background: var(--assistant-input-bg);
+            transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .assistant-input-shell:focus-within {
+            border-color: #facc15;
+            box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.16);
         }
 
         .assistant-mic,
         .assistant-send {
-            border: 1px solid #6e1220;
-            background: #6e1220;
+            border: 1px solid rgba(250, 204, 21, 0.42);
+            background: linear-gradient(135deg, #8b1020 0%, #6e1220 100%);
             color: #ffffff;
-            padding: 8px 10px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 800;
+            padding: 11px 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 900;
             cursor: pointer;
-            min-width: 68px;
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+
+        .assistant-send:hover,
+        .assistant-send:focus-visible {
+            border-color: #facc15;
+            box-shadow: 0 10px 22px rgba(127, 29, 45, 0.22);
+            transform: translateY(-1px);
+            outline: none;
+        }
+
+        .assistant-send svg {
+            width: 15px;
+            height: 15px;
         }
 
         .assistant-mic.listening {
@@ -3425,38 +3627,82 @@
         }
 
         .assistant-input {
+            width: 100%;
+            min-width: 0;
             flex: 1;
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            border-radius: 10px;
-            padding: 9px 10px;
-            font-size: 13px;
-            color: #fff7fa;
-            background: rgba(255, 255, 255, 0.08);
+            border: 0;
+            border-radius: 14px;
+            padding: 13px 14px;
+            font-size: 14px;
+            color: var(--assistant-input-text);
+            background: transparent;
         }
 
         .assistant-input:focus {
             outline: none;
-            border-color: var(--pup-gold);
-            box-shadow: 0 0 0 3px rgba(255, 184, 28, 0.16);
+        }
+
+        .assistant-input::placeholder {
+            color: var(--assistant-muted);
+            opacity: 0.72;
         }
 
         .assistant-note {
             margin: 0;
-            padding: 8px 11px 11px;
-            font-size: 11px;
-            color: #f0c5cf;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 16px 15px;
+            font-size: 12px;
+            line-height: 1.45;
+            color: var(--assistant-note-text);
+            border-top: 1px solid var(--assistant-soft-border);
+            background: var(--assistant-note-bg);
+        }
+
+        .assistant-note strong {
+            color: inherit;
         }
 
         @media (max-width: 860px) {
             .assistant-panel {
                 right: 12px;
                 bottom: 10px;
+                width: min(560px, calc(100vw - 24px));
+                height: min(720px, calc(100vh - 20px));
+                max-height: calc(100vh - 20px);
             }
 
             .assistant-launch {
                 display: none;
+            }
+        }
+
+        @media (max-width: 620px) {
+            .assistant-panel {
+                right: 8px;
+                bottom: 8px;
+                width: calc(100vw - 16px);
+                height: calc(100vh - 16px);
+                border-radius: 18px;
+            }
+
+            .assistant-head {
+                padding: 16px;
+            }
+
+            .assistant-status-pill {
+                display: none;
+            }
+
+            .assistant-messages {
+                min-height: 260px;
+                padding: 16px;
+            }
+
+            .assistant-bubble {
+                max-width: 94%;
+            }
+
+            .assistant-controls {
+                align-items: stretch;
             }
         }
         /* Container for the name and button */
@@ -4537,25 +4783,46 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 <script id="adminLiveAlertData" type="application/json">@json($adminLiveAlertItems)</script>
 <script id="adminLiveAlertFeedUrl" type="application/json">@json($adminNotificationsFeedUrl)</script>
 
-<section id="assistantPanel" class="assistant-panel" aria-live="polite">
+<section id="assistantPanel" class="assistant-panel" aria-live="polite" role="dialog" aria-label="Clinic AI Assistant">
     <div class="assistant-head">
-        <div>
-            <p class="assistant-head-title">Clinic AI Assistant</p>
-            <p class="assistant-head-sub">Voice commands and basic clinical triage guidance</p>
+        <div class="assistant-brand">
+            <div class="assistant-orb" aria-hidden="true">
+                <x-outline-icon name="sparkles" />
+            </div>
+            <div>
+                <p class="assistant-head-title">Clinic AI Assistant</p>
+                <p class="assistant-head-sub">Operational shortcuts and clinical triage support</p>
+            </div>
         </div>
-        <button type="button" class="assistant-close" aria-label="Close assistant" onclick="closeAssistantPanel()">x</button>
+        <div class="assistant-head-actions">
+            <span class="assistant-status-pill"><span class="assistant-status-dot" aria-hidden="true"></span>Ready</span>
+            <button type="button" class="assistant-close" aria-label="Close assistant" onclick="closeAssistantPanel()">
+                <x-outline-icon name="x-mark" />
+            </button>
+        </div>
     </div>
 
     <div id="assistantMessages" class="assistant-messages">
-        <div class="assistant-bubble assistant">Try: "generate MAR", "open appointments", ask a symptom question, or ask a general question.</div>
+        <div class="assistant-bubble assistant">Try a shortcut below, ask a symptom question, or type a clinic workflow request.</div>
+    </div>
+
+    <div class="assistant-quick-prompts" aria-label="Assistant shortcuts">
+        <button type="button" class="assistant-prompt-chip" data-assistant-prompt="open appointments">Open appointments</button>
+        <button type="button" class="assistant-prompt-chip" data-assistant-prompt="generate MAR">Generate MAR</button>
+        <button type="button" class="assistant-prompt-chip" data-assistant-prompt="summarize clinic alerts">Clinic alerts</button>
     </div>
 
     <div class="assistant-controls">
-        <input type="text" id="assistantInput" class="assistant-input" placeholder="Type command or question..." maxlength="500">
-        <button type="button" id="assistantSendBtn" class="assistant-send">Send</button>
+        <div class="assistant-input-shell">
+            <input type="text" id="assistantInput" class="assistant-input" placeholder="Type a command or triage question..." maxlength="500">
+        </div>
+        <button type="button" id="assistantSendBtn" class="assistant-send">
+            <span>Send</span>
+            <x-outline-icon name="arrow-long-right" />
+        </button>
     </div>
 
-    <p class="assistant-note">Medical responses are for initial triage support only, not a confirmed diagnosis. For emergencies, call local emergency services immediately.</p>
+    <p class="assistant-note"><strong>Clinical safety:</strong> responses support initial triage only, not a confirmed diagnosis. For emergencies, call local emergency services immediately.</p>
 </section>
 
 @include('partials.post_login_terms_gate')
@@ -5467,6 +5734,18 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         bubble.textContent = text;
         messages.appendChild(bubble);
         messages.scrollTop = messages.scrollHeight;
+        return bubble;
+    }
+
+    function setAssistantStatus(label) {
+        const status = document.querySelector('#assistantPanel .assistant-status-pill');
+        if (!status) return;
+        const dot = status.querySelector('.assistant-status-dot');
+        status.textContent = '';
+        if (dot) {
+            status.appendChild(dot);
+        }
+        status.appendChild(document.createTextNode(label || 'Ready'));
     }
 
     async function sendAssistantQuery(rawText) {
@@ -5474,6 +5753,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         if (!text) return;
 
         appendAssistantMessage('user', text);
+        setAssistantStatus('Thinking');
+        const pendingBubble = appendAssistantMessage('assistant', 'Reviewing your request...');
 
         try {
             const response = await fetch(assistantEndpoint, {
@@ -5493,16 +5774,34 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
             const payload = await response.json();
             if (payload.message) {
-                appendAssistantMessage('assistant', payload.message);
+                if (pendingBubble) {
+                    pendingBubble.textContent = payload.message;
+                } else {
+                    appendAssistantMessage('assistant', payload.message);
+                }
             }
 
             if (payload.type === 'action' && payload.action?.kind === 'redirect' && payload.action?.url) {
+                if (pendingBubble && !payload.message) {
+                    pendingBubble.textContent = 'Opening the requested workspace...';
+                }
+                setAssistantStatus('Opening');
                 setTimeout(function () {
                     window.location.href = payload.action.url;
                 }, 650);
+            } else {
+                if (pendingBubble && !payload.message) {
+                    pendingBubble.textContent = 'Done. What would you like to do next?';
+                }
+                setAssistantStatus('Ready');
             }
         } catch (error) {
-            appendAssistantMessage('assistant', 'Unable to process right now. Please try again.');
+            if (pendingBubble) {
+                pendingBubble.textContent = 'Unable to process right now. Please try again.';
+            } else {
+                appendAssistantMessage('assistant', 'Unable to process right now. Please try again.');
+            }
+            setAssistantStatus('Ready');
         }
     }
 
@@ -5510,6 +5809,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         const panel = document.getElementById('assistantPanel');
         const sendBtn = document.getElementById('assistantSendBtn');
         const input = document.getElementById('assistantInput');
+        const promptButtons = document.querySelectorAll('[data-assistant-prompt]');
 
         if (!panel || !sendBtn || !input) return;
 
@@ -5526,6 +5826,16 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 input.value = '';
                 sendAssistantQuery(value);
             }
+        });
+
+        promptButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                const prompt = button.dataset.assistantPrompt || button.textContent || '';
+                input.value = prompt;
+                input.focus({ preventScroll: true });
+                sendAssistantQuery(prompt);
+                input.value = '';
+            });
         });
 
     }
