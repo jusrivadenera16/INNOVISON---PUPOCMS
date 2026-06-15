@@ -1217,13 +1217,26 @@ class LoginController extends Controller
     private function enrichUserWithPuptasData(User $user): void
     {
         try {
+            $puptasService = app(\App\Services\PuptasWebhookService::class);
+            $applicantData = null;
+
+            // Try lookup by student_id first
             $studentId = trim((string) ($user->student_id ?? ''));
-            if ($studentId === '') {
-                return;
+            if ($studentId !== '') {
+                $applicantData = $puptasService->fetchApplicantByIdpUserId($studentId);
             }
 
-            $puptasService = app(\App\Services\PuptasWebhookService::class);
-            $applicantData = $puptasService->fetchApplicantByIdpUserId($studentId);
+            // Fallback: try lookup by reference_number if student_id lookup fails
+            if (!is_array($applicantData) || empty($applicantData)) {
+                $referenceNumber = trim((string) ($user->reference_number ?? ''));
+                if ($referenceNumber !== '') {
+                    $applicantData = $puptasService->fetchApplicantByReferenceNumber($referenceNumber);
+                }
+            }
+
+            if (!is_array($applicantData)) {
+                return;
+            }
 
             if (!is_array($applicantData) || empty($applicantData)) {
                 return;
