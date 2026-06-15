@@ -47,4 +47,38 @@ class LoginControllerIdpProfileTest extends TestCase
         $this->assertIsArray($profile);
         $this->assertSame('5c26bd95-eaee-4931-9706-039931efecd5', $profile['sub']);
     }
+
+    public function test_it_keeps_the_token_reference_when_user_info_only_contains_profile_fields(): void
+    {
+        $controller = new LoginController();
+        $method = new ReflectionMethod($controller, 'mergeIdpProfilePayloads');
+        $method->setAccessible(true);
+
+        $profile = $method->invoke(
+            $controller,
+            [
+                'user' => [
+                    'id' => '1702',
+                    'reference_number' => '2026-8889-8828',
+                ],
+                'application' => [
+                    'reference_number' => '2026-8889-8828',
+                ],
+            ],
+            [
+                'user' => [
+                    'id' => '1702',
+                    'firstname' => 'Lofi',
+                    'middlename' => 'Hebru',
+                    'lastname' => 'Nuko',
+                    'email' => 'lofi@example.test',
+                ],
+            ]
+        );
+
+        $this->assertSame('2026-8889-8828', data_get($profile, 'user.reference_number'));
+        $this->assertSame('2026-8889-8828', data_get($profile, 'application.reference_number'));
+        $this->assertSame('Lofi', data_get($profile, 'user.firstname'));
+        $this->assertSame('lofi@example.test', data_get($profile, 'user.email'));
+    }
 }

@@ -793,6 +793,21 @@ class LoginController extends Controller
         return null;
     }
 
+    private function mergeIdpProfilePayloads(?array $tokenProfile, ?array $userInfoProfile): ?array
+    {
+        if ($tokenProfile === null) {
+            return $userInfoProfile;
+        }
+
+        if ($userInfoProfile === null) {
+            return $tokenProfile;
+        }
+
+        // The token callback can contain admission fields such as the reference
+        // number while /me contains the fresher name and email. Keep both.
+        return array_replace_recursive($tokenProfile, $userInfoProfile);
+    }
+
     private function fetchProfileFromIdp(string $accessToken): ?array
     {
         $profilePaths = (array) config('services.idp.profile_paths', []);
@@ -1664,11 +1679,12 @@ class LoginController extends Controller
             'payload_keys' => array_keys($tokenPayload),
         ]);
 
-        // Prefer profile fetched from IDP user-info endpoints over token payload fields.
-        $profile = $this->fetchProfileFromIdp($accessToken);
-        if ($profile === null) {
-            Log::warning('IDP profile fetch returned null; falling back to token payload.');
-            $profile = $this->extractProfilePayload($tokenPayload);
+        $tokenProfile = $this->extractProfilePayload($tokenPayload);
+        $userInfoProfile = $this->fetchProfileFromIdp($accessToken);
+        $profile = $this->mergeIdpProfilePayloads($tokenProfile, $userInfoProfile);
+
+        if ($userInfoProfile === null && $tokenProfile !== null) {
+            Log::warning('IDP profile fetch returned null; using token payload identity.');
         }
 
         if ($profile === null) {
