@@ -344,8 +344,10 @@
 
         .reference-verify-wrap {
             display: none;
-            width: min(620px, 100%);
-            margin: 4px auto 0;
+            min-height: 74px;
+            align-items: center;
+            justify-content: center;
+            padding: 0 58px;
         }
 
         .reference-panel.is-editing .reference-display {
@@ -353,37 +355,35 @@
         }
 
         .reference-panel.is-editing .reference-verify-wrap {
-            display: block;
-        }
-
-        .reference-panel.is-editing .reference-edit-btn {
-            top: 16px;
-            transform: none;
-        }
-
-        .reference-panel.is-editing .reference-edit-btn:hover {
-            transform: scale(1.04);
+            display: flex;
         }
 
         .reference-verify-row {
-            display: block;
+            width: min(620px, 100%);
         }
 
         .reference-verify-input {
             width: 100%;
-            min-height: 50px;
-            border: 2px solid rgba(250, 204, 21, 0.75);
-            border-radius: 10px;
-            background: #fff;
-            color: #111827;
-            padding: 0 15px;
+            min-height: 62px;
+            border: 2px solid #facc15;
+            border-radius: 12px;
+            background: transparent;
+            color: #facc15;
+            padding: 0 18px;
             font: inherit;
-            font-size: 1rem;
-            font-weight: 800;
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            line-height: 1;
+            font-weight: 950;
+            letter-spacing: 0.05em;
             text-align: center;
             text-transform: uppercase;
             outline: none;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .reference-verify-input::placeholder {
+            color: rgba(250, 204, 21, 0.55);
+            opacity: 1;
         }
 
         .reference-verify-input:focus {
@@ -392,20 +392,27 @@
         }
 
         .reference-verify-status {
-            min-height: 22px;
-            margin: 9px 0 0;
-            color: rgba(255, 255, 255, 0.86);
-            font-size: 0.8rem;
-            font-weight: 700;
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
 
-        .reference-verify-status.is-success {
-            color: #fde047;
+        .reference-icon-check {
+            display: none;
         }
 
-        .reference-verify-status.is-error,
-        .reference-field-error {
-            color: #fecaca;
+        .reference-panel.is-editing .reference-icon-edit {
+            display: none;
+        }
+
+        .reference-panel.is-editing .reference-icon-check {
+            display: block;
         }
 
         .reference-field-error {
@@ -1655,9 +1662,12 @@
                                 aria-expanded="false"
                                 title="{{ $displayReferenceNumber !== '' ? 'Edit reference number' : 'Add reference number' }}"
                             >
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <svg class="reference-icon-edit" viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M12 20h9"></path>
                                     <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
+                                </svg>
+                                <svg class="reference-icon-check" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="m5 12 4 4L19 6"></path>
                                 </svg>
                             </button>
                             <div class="reference-verify-wrap" id="referenceVerifyWrap">
@@ -1668,7 +1678,7 @@
                                         id="reference_number"
                                         class="reference-verify-input"
                                         value="{{ $displayReferenceNumber !== '' ? $displayReferenceNumber : $referenceNumberDraft }}"
-                                        placeholder="e.g. 2026-8889-8828"
+                                        placeholder="0000-0000-0000"
                                         maxlength="120"
                                         pattern="[A-Za-z0-9]+(?:-[A-Za-z0-9]+){2,}"
                                         autocomplete="off"
@@ -2232,6 +2242,14 @@
             function setReferenceEditor(open) {
                 referencePanel?.classList.toggle('is-editing', open);
                 editReferenceBtn?.setAttribute('aria-expanded', open ? 'true' : 'false');
+                editReferenceBtn?.setAttribute(
+                    'aria-label',
+                    open ? 'Confirm admission reference' : 'Edit admission reference'
+                );
+                editReferenceBtn?.setAttribute(
+                    'title',
+                    open ? 'Confirm reference number' : 'Edit reference number'
+                );
 
                 if (open) {
                     window.setTimeout(() => {
