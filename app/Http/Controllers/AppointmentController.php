@@ -1460,7 +1460,13 @@ public function showHealthForm()
     $calculatedAge = $healthFormPrefill['age'] ?? null;
 
     // Return the view with all required variables
-    return view('student.health_form', compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill'));
+    $displayFirstName = $healthFormPrefill['first_name'] ?? '';
+    $displayMiddleName = $healthFormPrefill['middle_name'] ?? '';
+    $displayLastName = $healthFormPrefill['last_name'] ?? '';
+    $displayReferenceNumber = $healthFormPrefill['reference_number'] ?? '';
+    $prefill = $healthFormPrefill;
+
+    return view('student.health_form', compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill'));
 }
 
 public function storeHealthForm(Request $request)
