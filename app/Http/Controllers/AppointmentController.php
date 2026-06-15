@@ -8,9 +8,11 @@ use App\Models\Appointment;
 use App\Models\AppointmentFeedback;
 use App\Models\HealthProfile;
 use App\Models\User;
+use App\Services\GuisisApiService;
 use App\Services\PuptasWebhookService;
 use App\Services\ClinicWorkflowService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -720,6 +722,253 @@ class AppointmentController extends Controller
         ];
     }
 
+    private function unwrapGuisisPayload($payload): array
+    {
+        if (!is_array($payload)) {
+            return [];
+        }
+
+        foreach (['data.student', 'data.profile', 'data.personalInfo', 'data.personal_info', 'data', 'student', 'profile'] as $path) {
+            $candidate = data_get($payload, $path);
+            if (is_array($candidate) && !array_is_list($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return array_is_list($payload) ? [] : $payload;
+    }
+
+    private function firstGuisisValue(array $sources, array $paths): string
+    {
+        foreach ($sources as $source) {
+            if (!is_array($source)) {
+                continue;
+            }
+
+            foreach ($paths as $path) {
+                $value = data_get($source, $path);
+                if (is_scalar($value) && trim((string) $value) !== '') {
+                    return trim((string) $value);
+                }
+            }
+        }
+
+        return '';
+    }
+
+    private function buildGuisisAddress(array $sources): string
+    {
+        $directAddress = $this->firstGuisisValue($sources, [
+            'address',
+            'home_address',
+            'homeAddress',
+            'current_address',
+            'currentAddress',
+            'permanent_address',
+            'permanentAddress',
+            'full_address',
+            'fullAddress',
+        ]);
+
+        if ($directAddress !== '') {
+            return $directAddress;
+        }
+
+        $parts = [];
+        foreach ([
+            ['house_number', 'houseNumber', 'street_address', 'streetAddress', 'street'],
+            ['barangay', 'brgy'],
+            ['city', 'municipality'],
+            ['province'],
+            ['postal_code', 'postalCode', 'zip_code', 'zipCode'],
+        ] as $aliases) {
+            $part = $this->firstGuisisValue($sources, $aliases);
+            if ($part !== '') {
+                $parts[] = $part;
+            }
+        }
+
+        return implode(', ', array_unique($parts));
+    }
+
+    private function buildGuisisAccountData(User $user): array
+    {
+        $email = trim((string) $user->email);
+        if ($email === '') {
+            return ['available' => false, 'status' => 'missing_email'];
+        }
+
+        try {
+            $service = app(GuisisApiService::class);
+            $emailResult = $service->getStudentByEmailDetailed($email);
+            if (!($emailResult['ok'] ?? false)) {
+                Log::warning('GUISIS My Account email lookup failed', [
+                    'user_id' => $user->id,
+                    'status' => $emailResult['status'] ?? null,
+                    'message' => $emailResult['message'] ?? null,
+                ]);
+
+                return [
+                    'available' => false,
+                    'status' => 'email_lookup_failed',
+                    'message' => $emailResult['message'] ?? 'GUISIS record is currently unavailable.',
+                ];
+            }
+
+            $emailProfile = $this->unwrapGuisisPayload($emailResult['data'] ?? []);
+            $studentNumber = $this->firstGuisisValue([$emailProfile], [
+                'student_number',
+                'studentNumber',
+                'student_no',
+                'studentNo',
+                'student_id',
+                'studentId',
+            ]);
+
+            $studentProfile = [];
+            $personalInfo = [];
+            if ($studentNumber !== '') {
+                $studentResult = $service->getStudentByStudentNumberDetailed($studentNumber);
+                if ($studentResult['ok'] ?? false) {
+                    $studentProfile = $this->unwrapGuisisPayload($studentResult['data'] ?? []);
+                }
+
+                $personalResult = $service->getStudentPersonalInfoDetailed($studentNumber);
+                if ($personalResult['ok'] ?? false) {
+                    $personalInfo = $this->unwrapGuisisPayload($personalResult['data'] ?? []);
+                }
+            }
+
+            $sources = [$personalInfo, $studentProfile, $emailProfile];
+            $firstName = $this->firstGuisisValue($sources, ['first_name', 'firstName', 'firstname', 'given_name', 'givenName']);
+            $middleName = $this->firstGuisisValue($sources, ['middle_name', 'middleName', 'middlename']);
+            $lastName = $this->firstGuisisValue($sources, ['last_name', 'lastName', 'lastname', 'surname']);
+            $suffixName = $this->firstGuisisValue($sources, ['suffix', 'suffix_name', 'suffixName', 'name_suffix']);
+            $fullName = $this->firstGuisisValue($sources, ['full_name', 'fullName', 'name']);
+
+            if ($fullName === '') {
+                $fullName = trim(implode(' ', array_filter([$firstName, $middleName, $lastName, $suffixName])));
+            }
+
+            $courseCode = $this->firstGuisisValue($sources, [
+                'program.code',
+                'program_code',
+                'programCode',
+                'course.code',
+                'course_code',
+                'courseCode',
+            ]);
+            $courseName = $this->firstGuisisValue($sources, [
+                'program.name',
+                'program_name',
+                'programName',
+                'course.name',
+                'course_name',
+                'courseName',
+                'program',
+                'course',
+            ]);
+            $courseCollege = trim(implode(' - ', array_unique(array_filter([$courseCode, $courseName]))));
+
+            $birthday = $this->firstGuisisValue($sources, ['birthday', 'birth_date', 'birthDate', 'date_of_birth', 'dateOfBirth', 'dob']);
+            if ($birthday !== '') {
+                try {
+                    $birthday = Carbon::parse($birthday)->format('Y-m-d');
+                } catch (\Throwable $exception) {
+                    // Keep the source value when GUISIS uses a non-standard date format.
+                }
+            }
+            $age = '';
+            if ($birthday !== '') {
+                try {
+                    $age = (string) Carbon::parse($birthday)->age;
+                } catch (\Throwable $exception) {
+                    // Leave age blank when the source birthday cannot be parsed.
+                }
+            }
+
+            $resolvedStudentNumber = $studentNumber !== ''
+                ? $studentNumber
+                : $this->firstGuisisValue($sources, ['student_number', 'studentNumber', 'student_no', 'studentNo']);
+
+            $data = [
+                'available' => true,
+                'status' => 'synced',
+                'student_number' => $resolvedStudentNumber,
+                'first_name' => $firstName,
+                'middle_name' => $middleName,
+                'last_name' => $lastName,
+                'suffix_name' => $suffixName,
+                'full_name' => $fullName,
+                'email' => $this->firstGuisisValue($sources, ['email', 'email_address', 'emailAddress']) ?: $email,
+                'course_college' => $courseCollege,
+                'year' => $this->firstGuisisValue($sources, ['year_level', 'yearLevel', 'year', 'level']),
+                'section' => $this->firstGuisisValue($sources, ['section', 'section_name', 'sectionName']),
+                'sex' => $this->normalizeSexValue($this->firstGuisisValue($sources, ['sex', 'gender'])),
+                'birthday' => $birthday,
+                'age' => $age,
+                'civil_status' => $this->firstGuisisValue($sources, ['civil_status', 'civilStatus', 'marital_status', 'maritalStatus']),
+                'contact_number' => $this->firstGuisisValue($sources, [
+                    'contact_number',
+                    'contactNumber',
+                    'mobile_number',
+                    'mobileNumber',
+                    'phone_number',
+                    'phoneNumber',
+                    'cellphone',
+                ]),
+                'home_address' => $this->buildGuisisAddress($sources),
+                'guardian_name' => $this->firstGuisisValue($sources, [
+                    'guardian_name',
+                    'guardianName',
+                    'emergency_contact_name',
+                    'emergencyContactName',
+                    'parent_guardian_name',
+                    'parentGuardianName',
+                ]),
+                'cellphone' => $this->firstGuisisValue($sources, [
+                    'guardian_contact_number',
+                    'guardianContactNumber',
+                    'emergency_contact_number',
+                    'emergencyContactNumber',
+                ]),
+            ];
+
+            $shouldSave = false;
+            foreach ([
+                'student_number' => 'student_number',
+                'course_college' => 'course',
+                'year' => 'year',
+                'section' => 'section',
+                'sex' => 'gender',
+                'birthday' => 'DOB',
+                'contact_number' => 'contact_no',
+            ] as $sourceKey => $userColumn) {
+                if (($data[$sourceKey] ?? '') !== '' && trim((string) ($user->{$userColumn} ?? '')) === '') {
+                    $user->{$userColumn} = $data[$sourceKey];
+                    $shouldSave = true;
+                }
+            }
+
+            if ($shouldSave) {
+                $user->save();
+            }
+
+            return $data;
+        } catch (\Throwable $exception) {
+            Log::warning('GUISIS My Account synchronization failed', [
+                'user_id' => $user->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return [
+                'available' => false,
+                'status' => 'request_failed',
+                'message' => 'GUISIS record is currently unavailable.',
+            ];
+        }
+    }
+
     private function hasSubmittedHealthProfile(?User $user): bool
     {
         if (!$user) {
@@ -1079,7 +1328,35 @@ public function account(Request $request)
     // 5. Return view user
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
     $accountProfileData = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $user->healthProfile);
-    $isEnrolled = (bool) $user->is_health_profile_completed;
+    $guisisAccountData = $this->buildGuisisAccountData($user);
+    foreach ([
+        'student_number',
+        'first_name',
+        'middle_name',
+        'last_name',
+        'suffix_name',
+        'full_name',
+        'email',
+        'course_college',
+        'year',
+        'section',
+        'sex',
+        'birthday',
+        'age',
+        'civil_status',
+        'contact_number',
+        'home_address',
+        'guardian_name',
+        'cellphone',
+    ] as $key) {
+        if (trim((string) ($guisisAccountData[$key] ?? '')) !== '') {
+            $accountProfileData[$key] = $guisisAccountData[$key];
+        }
+    }
+
+    $isEnrolled = (bool) ($guisisAccountData['available'] ?? false)
+        || trim((string) ($accountProfileData['student_number'] ?? '')) !== ''
+        || (bool) $user->is_health_profile_completed;
     $accountView = in_array((string) $request->query('view', 'profile'), ['profile', 'health-record', 'notifications'], true)
         ? (string) $request->query('view', 'profile')
         : 'profile';
@@ -1095,6 +1372,7 @@ public function account(Request $request)
         'linkedAdminProfile',
         'hasSubmittedHealthProfile',
         'accountProfileData',
+        'guisisAccountData',
         'isEnrolled',
         'accountView'
     ));

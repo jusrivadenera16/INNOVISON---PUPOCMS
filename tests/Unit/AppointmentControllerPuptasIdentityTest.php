@@ -52,4 +52,39 @@ class AppointmentControllerPuptasIdentityTest extends TestCase
 
         Carbon::setTestNow();
     }
+
+    public function test_it_unwraps_common_guisis_response_envelopes(): void
+    {
+        $controller = new AppointmentController();
+        $method = new ReflectionMethod($controller, 'unwrapGuisisPayload');
+        $method->setAccessible(true);
+
+        $profile = $method->invoke($controller, [
+            'data' => [
+                'student' => [
+                    'studentNumber' => '2026-12345',
+                    'firstName' => 'Juan',
+                ],
+            ],
+        ]);
+
+        $this->assertSame('2026-12345', $profile['studentNumber']);
+        $this->assertSame('Juan', $profile['firstName']);
+    }
+
+    public function test_it_builds_a_guisis_address_from_separate_fields(): void
+    {
+        $controller = new AppointmentController();
+        $method = new ReflectionMethod($controller, 'buildGuisisAddress');
+        $method->setAccessible(true);
+
+        $address = $method->invoke($controller, [[
+            'streetAddress' => '123 Main Street',
+            'barangay' => 'Lower Bicutan',
+            'city' => 'Taguig',
+            'postalCode' => '1632',
+        ]]);
+
+        $this->assertSame('123 Main Street, Lower Bicutan, Taguig, 1632', $address);
+    }
 }
