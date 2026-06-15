@@ -3940,8 +3940,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     $adminLiveNotificationsEnabled = $workflowSettings->admin_live_notifications !== false;
     $apiTestingUrl = $isStudentAssistant ? url('/assistant/api-testing') : url('/admin/api-testing');
     $developerToolsUrl = $isStudentAssistant ? url('/assistant/developer-tools') : url('/admin/developer-tools');
-    $canSeeDeveloperTools = app()->environment('local')
-        && strtolower(trim((string) optional($authUser)->email)) === 'pupocms2027@gmail.com';
+    $canSeeDeveloperTools = strtolower(trim((string) optional($authUser)->email)) === 'pupocms2027@gmail.com';
     $settingsUrl = url('/admin/settings');
     $userManagementUrl = url('/admin/user-management?entry=menu');
     $walkinUrl = $isStudentAssistant ? url('/assistant/walkin') : url('/admin/walkin');

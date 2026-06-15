@@ -101,8 +101,7 @@ class AdminController extends Controller
     {
         $email = strtolower(trim((string) ($user->email ?? '')));
 
-        return app()->environment('local')
-            && $email === 'pupocms2027@gmail.com';
+        return $email === 'pupocms2027@gmail.com';
     }
 
     private function findLinkedAdminProfile(User $user): ?Admin
