@@ -1425,14 +1425,20 @@ class LoginController extends Controller
                     'last_name' => $lastName,
                 ]);
             }
-
-            $this->enrichUserWithGuisisData($user);
         } catch (\Throwable $exception) {
             Log::warning('Failed to enrich user with PUPTAS data', [
                 'user_id' => $user->id,
                 'error' => $exception->getMessage(),
             ]);
         }
+    }
+
+    private function enrichUserWithExternalStudentData(User $user): void
+    {
+        // These integrations are independent. A missing PUPTAS applicant must
+        // not prevent GUISIS from supplying the student's academic record.
+        $this->enrichUserWithPuptasData($user);
+        $this->enrichUserWithGuisisData($user);
     }
 
     private function enrichUserWithGuisisData(User $user): void
@@ -1593,8 +1599,7 @@ class LoginController extends Controller
                 $authenticatedUser->save();
             }
 
-            // Fetch reference_number from PUPTAS if not already set
-            $this->enrichUserWithPuptasData($authenticatedUser);
+            $this->enrichUserWithExternalStudentData($authenticatedUser);
 
             $this->recordAuthEvent($request, 'Login', 'User logged in successfully.', $authenticatedUser);
 
@@ -1745,8 +1750,7 @@ class LoginController extends Controller
         $user->user_role = User::normalizeRole($user->user_role);
         $user->save();
 
-        // Fetch reference_number from PUPTAS if not already set
-        $this->enrichUserWithPuptasData($user);
+        $this->enrichUserWithExternalStudentData($user);
 
         if (strtolower(trim((string) ($user->status ?? 'active'))) === 'inactive') {
             Log::warning('IDP callback blocked inactive account.', [
