@@ -3301,10 +3301,10 @@
             --assistant-note-bg: rgba(255, 255, 255, 0.06);
             --assistant-note-text: #f4c8d1;
             position: fixed;
-            right: 24px;
-            bottom: 24px;
-            width: min(720px, calc(100vw - 48px));
-            height: min(760px, calc(100vh - 48px));
+            right: 20px;
+            bottom: 20px;
+            width: min(520px, calc(100vw - 40px));
+            height: min(540px, calc(100vh - 40px));
             max-height: calc(100vh - 48px);
             background: var(--assistant-bg);
             border: 1px solid var(--assistant-border);
@@ -3336,7 +3336,7 @@
 
         .assistant-head {
             position: relative;
-            padding: 20px;
+            padding: 16px;
             background: var(--assistant-head-bg);
             color: #ffffff;
             display: flex;
@@ -3366,9 +3366,9 @@
             position: relative;
             display: grid;
             place-items: center;
-            width: 52px;
-            height: 52px;
-            flex: 0 0 52px;
+            width: 44px;
+            height: 44px;
+            flex: 0 0 44px;
             border: 1px solid rgba(250, 204, 21, 0.56);
             border-radius: 18px;
             background:
@@ -3392,15 +3392,15 @@
         }
 
         .assistant-orb svg {
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             color: #fde68a;
         }
 
         .assistant-head-title {
             margin: 0;
             color: #ffffff;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 900;
             letter-spacing: 0;
         }
@@ -3408,7 +3408,7 @@
         .assistant-head-sub {
             margin: 2px 0 0;
             color: rgba(255, 255, 255, 0.8);
-            font-size: 13px;
+            font-size: 12px;
             line-height: 1.35;
             opacity: 0.86;
         }
@@ -3472,10 +3472,10 @@
 
         .assistant-messages {
             flex: 1 1 auto;
-            min-height: 380px;
+            min-height: 260px;
             max-height: none;
             overflow-y: auto;
-            padding: 20px;
+            padding: 16px;
             background:
                 radial-gradient(circle at 12% 0%, rgba(250, 204, 21, 0.09) 0%, transparent 32%),
                 var(--assistant-surface);
@@ -3487,9 +3487,9 @@
 
         .assistant-bubble {
             position: relative;
-            padding: 13px 15px;
+            padding: 11px 13px;
             border-radius: 16px;
-            font-size: 14px;
+            font-size: 13px;
             line-height: 1.5;
             border: 1px solid var(--assistant-soft-border);
             max-width: 88%;
@@ -3532,7 +3532,7 @@
         .assistant-quick-prompts {
             display: flex;
             gap: 8px;
-            padding: 14px 16px 0;
+            padding: 12px 14px 0;
             overflow-x: auto;
             background: var(--assistant-surface);
             border-top: 1px solid var(--assistant-soft-border);
@@ -3561,7 +3561,7 @@
 
         .assistant-controls {
             border-top: 1px solid var(--assistant-soft-border);
-            padding: 14px 16px;
+            padding: 12px 14px;
             display: flex;
             gap: 8px;
             align-items: center;
@@ -3632,8 +3632,8 @@
             flex: 1;
             border: 0;
             border-radius: 14px;
-            padding: 13px 14px;
-            font-size: 14px;
+            padding: 11px 12px;
+            font-size: 13px;
             color: var(--assistant-input-text);
             background: transparent;
         }
@@ -3649,8 +3649,8 @@
 
         .assistant-note {
             margin: 0;
-            padding: 12px 16px 15px;
-            font-size: 12px;
+            padding: 10px 14px 13px;
+            font-size: 11px;
             line-height: 1.45;
             color: var(--assistant-note-text);
             border-top: 1px solid var(--assistant-soft-border);
@@ -3665,8 +3665,8 @@
             .assistant-panel {
                 right: 12px;
                 bottom: 10px;
-                width: min(560px, calc(100vw - 24px));
-                height: min(720px, calc(100vh - 20px));
+                width: min(500px, calc(100vw - 24px));
+                height: min(540px, calc(100vh - 20px));
                 max-height: calc(100vh - 20px);
             }
 
