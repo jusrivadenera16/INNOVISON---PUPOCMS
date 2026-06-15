@@ -737,14 +737,17 @@ class LoginController extends Controller
             'last_name',
             'lastname',
             'user_id',
+            'sub',
             'id',
             'user.email',
             'user.id',
+            'user.sub',
             'user.reference_number',
             'user.firstname',
             'user.first_name',
             'data.user.email',
             'data.user.id',
+            'data.user.sub',
             'data.user.reference_number',
             'application.reference_number',
             'admission.reference_number',
@@ -1117,10 +1120,15 @@ class LoginController extends Controller
             'student_id',
             'idp_user_id',
             'user_id',
+            'sub',
             'id',
             'user.student_id',
             'user.idp_user_id',
+            'user.sub',
             'user.id',
+            'data.sub',
+            'data.idp_user_id',
+            'data.user.sub',
             'data.user.id',
         ]) ?? '';
         $firstName = $this->firstNonEmptyScalar($profile, [
@@ -1231,8 +1239,10 @@ class LoginController extends Controller
                 $existingUser->idp_role = $idpRole;
             }
 
-            $shouldUpdateStudentId = trim((string) $existingUser->student_id) === '' || Str::startsWith(strtolower((string) $existingUser->student_id), 'idp-');
-            if ($studentIdSeed !== '' && $shouldUpdateStudentId) {
+            if (
+                $studentIdSeed !== ''
+                && trim((string) $existingUser->student_id) !== $studentIdSeed
+            ) {
                 $existingUser->student_id = $this->resolveUniqueStudentId($studentIdSeed, (int) $existingUser->id);
             } elseif (trim((string) $existingUser->student_id) === '') {
                 $existingUser->student_id = $this->resolveUniqueStudentId('idp-' . $existingUser->id, (int) $existingUser->id);

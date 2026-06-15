@@ -31,4 +31,20 @@ class LoginControllerIdpProfileTest extends TestCase
         $this->assertSame('Lofi', data_get($profile, 'user.firstname'));
         $this->assertSame('2026-8889-8828', data_get($profile, 'application.reference_number'));
     }
+
+    public function test_it_recognizes_an_oidc_subject_as_an_identity_field(): void
+    {
+        $controller = new LoginController();
+        $method = new ReflectionMethod($controller, 'extractProfilePayload');
+        $method->setAccessible(true);
+
+        $profile = $method->invoke($controller, [
+            'sub' => '5c26bd95-eaee-4931-9706-039931efecd5',
+            'firstname' => 'Lofi',
+            'lastname' => 'Nuko',
+        ]);
+
+        $this->assertIsArray($profile);
+        $this->assertSame('5c26bd95-eaee-4931-9706-039931efecd5', $profile['sub']);
+    }
 }
