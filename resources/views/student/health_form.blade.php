@@ -1679,8 +1679,9 @@
                                         class="reference-verify-input"
                                         value="{{ $displayReferenceNumber !== '' ? $displayReferenceNumber : $referenceNumberDraft }}"
                                         placeholder="0000-0000-0000"
-                                        maxlength="120"
-                                        pattern="[A-Za-z0-9]+(?:-[A-Za-z0-9]+){2,}"
+                                        maxlength="14"
+                                        pattern="\d{4}-\d{4}-\d{4}"
+                                        inputmode="numeric"
                                         autocomplete="off"
                                         required
                                         aria-describedby="referenceVerifyStatus"
@@ -2262,7 +2263,8 @@
             editReferenceBtn?.addEventListener('click', () => {
                 const isEditing = referencePanel?.classList.contains('is-editing');
                 if (isEditing && referenceInput) {
-                    referenceInput.value = referenceInput.value.toUpperCase().replace(/\s+/g, '');
+                    const digits = referenceInput.value.replace(/\D/g, '').slice(0, 12);
+                    referenceInput.value = digits.match(/.{1,4}/g)?.join('-') || '';
                     referenceInput.setCustomValidity('');
 
                     if (!referenceInput.checkValidity()) {
@@ -2663,7 +2665,8 @@
 
             nextToStep2Btn?.addEventListener('click', () => {
                 if (referenceInput) {
-                    referenceInput.value = referenceInput.value.toUpperCase().replace(/\s+/g, '');
+                    const digits = referenceInput.value.replace(/\D/g, '').slice(0, 12);
+                    referenceInput.value = digits.match(/.{1,4}/g)?.join('-') || '';
                     referenceInput.setCustomValidity('');
                 }
 
@@ -2687,7 +2690,8 @@
             });
 
             referenceInput?.addEventListener('input', () => {
-                referenceInput.value = referenceInput.value.toUpperCase().replace(/\s+/g, '');
+                const digits = referenceInput.value.replace(/\D/g, '').slice(0, 12);
+                referenceInput.value = digits.match(/.{1,4}/g)?.join('-') || '';
                 referenceInput.setCustomValidity('');
                 referenceVerifyStatus?.classList.remove('is-success', 'is-error');
 
