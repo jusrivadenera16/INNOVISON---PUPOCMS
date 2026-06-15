@@ -1218,7 +1218,7 @@ class LoginController extends Controller
     {
         try {
             $studentId = trim((string) ($user->student_id ?? ''));
-            if ($studentId === '' || $user->reference_number !== null) {
+            if ($studentId === '') {
                 return;
             }
 
@@ -1235,12 +1235,39 @@ class LoginController extends Controller
                 ?: data_get($applicantData, 'application.reference_number')
             ));
 
-            if ($referenceNumber !== '') {
+            $firstName = trim((string) (
+                data_get($applicantData, 'first_name')
+                ?: data_get($applicantData, 'firstname')
+            ));
+
+            $lastName = trim((string) (
+                data_get($applicantData, 'last_name')
+                ?: data_get($applicantData, 'lastname')
+            ));
+
+            $shouldUpdate = false;
+            if ($referenceNumber !== '' && $user->reference_number === null) {
                 $user->reference_number = $referenceNumber;
+                $shouldUpdate = true;
+            }
+
+            if ($firstName !== '' && trim((string) $user->first_name) === '') {
+                $user->first_name = $firstName;
+                $shouldUpdate = true;
+            }
+
+            if ($lastName !== '' && trim((string) $user->last_name) === '') {
+                $user->last_name = $lastName;
+                $shouldUpdate = true;
+            }
+
+            if ($shouldUpdate) {
                 $user->save();
-                Log::info('PUPTAS reference_number enriched during login', [
+                Log::info('User enriched with PUPTAS data during login', [
                     'user_id' => $user->id,
                     'reference_number' => $referenceNumber,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
                 ]);
             }
         } catch (\Throwable $exception) {
