@@ -1242,21 +1242,9 @@ class LoginController extends Controller
                 return;
             }
 
-            $referenceNumber = trim((string) (
-                data_get($applicantData, 'reference_number')
-                ?: data_get($applicantData, 'referenceNo')
-                ?: data_get($applicantData, 'application.reference_number')
-            ));
-
-            $firstName = trim((string) (
-                data_get($applicantData, 'first_name')
-                ?: data_get($applicantData, 'firstname')
-            ));
-
-            $lastName = trim((string) (
-                data_get($applicantData, 'last_name')
-                ?: data_get($applicantData, 'lastname')
-            ));
+            $referenceNumber = trim((string) data_get($applicantData, 'reference_number', ''));
+            $firstName = trim((string) data_get($applicantData, 'first_name', ''));
+            $lastName = trim((string) data_get($applicantData, 'last_name', ''));
 
             $shouldUpdate = false;
             if ($referenceNumber !== '' && $user->reference_number === null) {
