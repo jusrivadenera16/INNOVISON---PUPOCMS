@@ -81,4 +81,40 @@ class LoginControllerIdpProfileTest extends TestCase
         $this->assertSame('Lofi', data_get($profile, 'user.firstname'));
         $this->assertSame('lofi@example.test', data_get($profile, 'user.email'));
     }
+
+    public function test_it_extracts_the_idp_subject_from_a_jwt_access_token(): void
+    {
+        $controller = new LoginController();
+        $method = new ReflectionMethod($controller, 'extractJwtClaims');
+        $method->setAccessible(true);
+
+        $encode = static fn (array $value): string => rtrim(strtr(
+            base64_encode(json_encode($value, JSON_UNESCAPED_SLASHES)),
+            '+/',
+            '-_'
+        ), '=');
+
+        $token = $encode(['alg' => 'none', 'typ' => 'JWT'])
+            . '.'
+            . $encode([
+                'sub' => '5c26bd95-eaee-4931-9706-039931efecd5',
+                'email' => 'lofi@example.test',
+            ])
+            . '.signature';
+
+        $claims = $method->invoke($controller, $token);
+
+        $this->assertIsArray($claims);
+        $this->assertSame('5c26bd95-eaee-4931-9706-039931efecd5', $claims['sub']);
+        $this->assertSame('lofi@example.test', $claims['email']);
+    }
+
+    public function test_it_ignores_an_opaque_access_token(): void
+    {
+        $controller = new LoginController();
+        $method = new ReflectionMethod($controller, 'extractJwtClaims');
+        $method->setAccessible(true);
+
+        $this->assertNull($method->invoke($controller, 'opaque-access-token'));
+    }
 }

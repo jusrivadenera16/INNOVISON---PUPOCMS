@@ -808,6 +808,30 @@ class LoginController extends Controller
         return array_replace_recursive($tokenProfile, $userInfoProfile);
     }
 
+    private function extractJwtClaims(?string $token): ?array
+    {
+        $token = trim((string) $token);
+        $segments = explode('.', $token);
+
+        if (count($segments) !== 3 || trim($segments[1]) === '') {
+            return null;
+        }
+
+        $payload = strtr($segments[1], '-_', '+/');
+        $payload .= str_repeat('=', (4 - strlen($payload) % 4) % 4);
+        $decodedPayload = base64_decode($payload, true);
+
+        if ($decodedPayload === false) {
+            return null;
+        }
+
+        $claims = json_decode($decodedPayload, true);
+
+        return is_array($claims) && $this->hasIdentityFields($claims)
+            ? $claims
+            : null;
+    }
+
     private function fetchProfileFromIdp(string $accessToken): ?array
     {
         $profilePaths = (array) config('services.idp.profile_paths', []);
@@ -1680,8 +1704,15 @@ class LoginController extends Controller
         ]);
 
         $tokenProfile = $this->extractProfilePayload($tokenPayload);
+        $jwtProfile = $this->mergeIdpProfilePayloads(
+            $this->extractJwtClaims($tokenPayload['id_token'] ?? null),
+            $this->extractJwtClaims($accessToken)
+        );
         $userInfoProfile = $this->fetchProfileFromIdp($accessToken);
-        $profile = $this->mergeIdpProfilePayloads($tokenProfile, $userInfoProfile);
+        $profile = $this->mergeIdpProfilePayloads(
+            $this->mergeIdpProfilePayloads($tokenProfile, $jwtProfile),
+            $userInfoProfile
+        );
 
         if ($userInfoProfile === null && $tokenProfile !== null) {
             Log::warning('IDP profile fetch returned null; using token payload identity.');
@@ -1696,6 +1727,18 @@ class LoginController extends Controller
 
         Log::info('IDP callback resolved profile payload.', [
             'profile_keys' => array_keys($profile),
+            'has_reference_number' => $this->firstNonEmptyScalar($profile, [
+                'reference_number',
+                'user.reference_number',
+                'application.reference_number',
+                'admission.reference_number',
+            ]) !== null,
+            'has_idp_subject' => $this->firstNonEmptyScalar($profile, [
+                'sub',
+                'user.sub',
+                'idp_user_id',
+                'user.idp_user_id',
+            ]) !== null,
         ]);
 
         $user = $this->upsertLocalUserFromIdpProfile($profile);
