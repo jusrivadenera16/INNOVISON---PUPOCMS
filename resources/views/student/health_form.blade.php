@@ -2039,7 +2039,7 @@
                             <p class="requirement-guideline">Please upload a clear and readable scanned copy of the front of your valid PWD ID.</p>
                             <input id="pwd_id_proof" type="file" name="pwd_id_proof" class="form-control" accept=".pdf,application/pdf" data-requirement-file data-upload-input data-preview-kind="pdf">
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
-                            <small>Required only when PWD. Allowed: PDF only, max 4MB.</small>
+                            <small>Required only when PWD. Allowed: PDF only, max 2MB. Compress the file if needed to meet the size requirement.</small>
                         </div>
                         <div class="requirement-card {{ old('doctor_name') || old('med_cert_date') || old('med_cert_findings') ? 'has-old-data' : '' }}" data-requirement-card>
                             <div class="requirement-card-header">
@@ -2061,7 +2061,7 @@
                             </div>
                             <input type="file" name="medical_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required data-requirement-file data-upload-input>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
-                            <small>Allowed: PDF, JPG, JPEG, or PNG, max 4MB.</small>
+                            <small>Allowed: PDF, JPG, JPEG, or PNG, max 2MB. Compress the file if needed to meet the size requirement.</small>
                             <div class="requirement-extra">
                                 <div class="form-field span-2">
                                     <label class="form-label" for="doctor_name">Doctor's Full Name <span class="required">*</span></label>
@@ -2110,7 +2110,7 @@
                             </div>
                             <input type="file" name="chest_xray_result" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required data-requirement-file data-upload-input>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
-                            <small>Allowed: PDF, JPG, JPEG, or PNG, max 4MB.</small>
+                            <small>Allowed: PDF, JPG, JPEG, or PNG, max 2MB. Compress the file if needed to meet the size requirement.</small>
                             <div class="requirement-extra">
                                 <div class="form-field">
                                     <label class="form-label" for="xray_date">Date of Examination <span class="required">*</span></label>
@@ -2155,7 +2155,7 @@
                             </div>
                             <input type="file" name="student_photo" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" required data-upload-input data-preview-kind="image">
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
-                            <small>Allowed: JPG/PNG only, max 2MB.</small>
+                            <small>Allowed: JPG/PNG only, max 1MB. Compress the image if needed to meet the size requirement.</small>
                         </div>
                     </div>
                     <div class="certify-row final-certification">
