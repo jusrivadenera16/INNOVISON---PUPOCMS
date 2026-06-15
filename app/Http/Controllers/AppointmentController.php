@@ -817,8 +817,8 @@ class AppointmentController extends Controller
 
             $emailProfile = $this->unwrapGuisisPayload($emailResult['data'] ?? []);
             $studentNumber = $this->firstGuisisValue([$emailProfile], [
-                'student_number',
                 'studentNumber',
+                'student_number',
                 'student_no',
                 'studentNo',
                 'student_id',
@@ -841,7 +841,12 @@ class AppointmentController extends Controller
 
             $sources = [$personalInfo, $studentProfile, $emailProfile];
             $firstName = $this->firstGuisisValue($sources, ['first_name', 'firstName', 'firstname', 'given_name', 'givenName']);
-            $middleName = $this->firstGuisisValue($sources, ['middle_name', 'middleName', 'middlename']);
+            $middleName = $this->firstGuisisValue($sources, [
+                'middleName.string',
+                'middle_name',
+                'middleName',
+                'middlename',
+            ]);
             $lastName = $this->firstGuisisValue($sources, ['last_name', 'lastName', 'lastname', 'surname']);
             $suffixName = $this->firstGuisisValue($sources, ['suffix', 'suffix_name', 'suffixName', 'name_suffix']);
             $fullName = $this->firstGuisisValue($sources, ['full_name', 'fullName', 'name']);
@@ -851,18 +856,18 @@ class AppointmentController extends Controller
             }
 
             $courseCode = $this->firstGuisisValue($sources, [
+                'course.code',
                 'program.code',
                 'program_code',
                 'programCode',
-                'course.code',
                 'course_code',
                 'courseCode',
             ]);
             $courseName = $this->firstGuisisValue($sources, [
+                'course.name',
                 'program.name',
                 'program_name',
                 'programName',
-                'course.name',
                 'course_name',
                 'courseName',
                 'program',
@@ -870,7 +875,14 @@ class AppointmentController extends Controller
             ]);
             $courseCollege = trim(implode(' - ', array_unique(array_filter([$courseCode, $courseName]))));
 
-            $birthday = $this->firstGuisisValue($sources, ['birthday', 'birth_date', 'birthDate', 'date_of_birth', 'dateOfBirth', 'dob']);
+            $birthday = $this->firstGuisisValue($sources, [
+                'dateOfBirth',
+                'date_of_birth',
+                'birthDate',
+                'birth_date',
+                'birthday',
+                'dob',
+            ]);
             if ($birthday !== '') {
                 try {
                     $birthday = Carbon::parse($birthday)->format('Y-m-d');
@@ -889,7 +901,7 @@ class AppointmentController extends Controller
 
             $resolvedStudentNumber = $studentNumber !== ''
                 ? $studentNumber
-                : $this->firstGuisisValue($sources, ['student_number', 'studentNumber', 'student_no', 'studentNo']);
+                : $this->firstGuisisValue($sources, ['studentNumber', 'student_number', 'studentNo', 'student_no']);
 
             $data = [
                 'available' => true,
@@ -902,9 +914,14 @@ class AppointmentController extends Controller
                 'full_name' => $fullName,
                 'email' => $this->firstGuisisValue($sources, ['email', 'email_address', 'emailAddress']) ?: $email,
                 'course_college' => $courseCollege,
-                'year' => $this->firstGuisisValue($sources, ['year_level', 'yearLevel', 'year', 'level']),
+                'year' => $this->firstGuisisValue($sources, ['yearLevel', 'year_level', 'year', 'level']),
                 'section' => $this->firstGuisisValue($sources, ['section', 'section_name', 'sectionName']),
-                'sex' => $this->normalizeSexValue($this->firstGuisisValue($sources, ['sex', 'gender'])),
+                'sex' => $this->normalizeSexValue($this->firstGuisisValue($sources, [
+                    'gender.name',
+                    'genderName',
+                    'sex',
+                    'gender',
+                ])),
                 'birthday' => $birthday,
                 'age' => $age,
                 'civil_status' => $this->firstGuisisValue($sources, ['civil_status', 'civilStatus', 'marital_status', 'maritalStatus']),
@@ -1329,28 +1346,30 @@ public function account(Request $request)
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
     $accountProfileData = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $user->healthProfile);
     $guisisAccountData = $this->buildGuisisAccountData($user);
-    foreach ([
-        'student_number',
-        'first_name',
-        'middle_name',
-        'last_name',
-        'suffix_name',
-        'full_name',
-        'email',
-        'course_college',
-        'year',
-        'section',
-        'sex',
-        'birthday',
-        'age',
-        'civil_status',
-        'contact_number',
-        'home_address',
-        'guardian_name',
-        'cellphone',
-    ] as $key) {
-        if (trim((string) ($guisisAccountData[$key] ?? '')) !== '') {
-            $accountProfileData[$key] = $guisisAccountData[$key];
+    if ($guisisAccountData['available'] ?? false) {
+        foreach ([
+            'student_number',
+            'first_name',
+            'middle_name',
+            'last_name',
+            'suffix_name',
+            'full_name',
+            'email',
+            'course_college',
+            'year',
+            'section',
+            'sex',
+            'birthday',
+            'age',
+            'civil_status',
+            'contact_number',
+            'home_address',
+            'guardian_name',
+            'cellphone',
+        ] as $key) {
+            // GUISIS is authoritative for account information. Assign blank
+            // values too, so stale clinic-form data is not shown as GUISIS data.
+            $accountProfileData[$key] = trim((string) ($guisisAccountData[$key] ?? ''));
         }
     }
 

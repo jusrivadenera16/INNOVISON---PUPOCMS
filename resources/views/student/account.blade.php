@@ -2150,9 +2150,11 @@
     $isEnrolled = (bool) ($isEnrolled ?? false);
     $accountView = in_array(($accountView ?? 'profile'), ['profile', 'health-record', 'notifications'], true) ? $accountView : 'profile';
     $showOfficeField = in_array($linkedAccessLevel, ['clinic_staff', 'designee', 'superadmin', 'super_admin', 'faculty'], true) || str_contains($linkedAccessLevel, 'faculty');
-    $displayStudentNumber = trim((string) ($accountProfileData['student_number'] ?? $user->student_number ?? ''));
-    $displayCourse = trim((string) ($accountProfileData['course_college'] ?? $user->course ?? ''));
-    $displayFullName = trim((string) ($accountProfileData['full_name'] ?? $user->name ?? 'Student'));
+    $hasGuisisAccountData = (bool) ($guisisAccountData['available'] ?? false);
+    $displayStudentNumber = trim((string) ($accountProfileData['student_number'] ?? ''));
+    $displayCourse = trim((string) ($accountProfileData['course_college'] ?? ''));
+    $displayFullName = trim((string) ($accountProfileData['full_name'] ?? ''));
+    $displayFullName = $displayFullName !== '' ? $displayFullName : ($hasGuisisAccountData ? 'Available once enrolled' : ($user->name ?? 'Student'));
     $guisisPendingText = 'Available once enrolled';
     $guisisValue = fn ($value) => trim((string) $value) !== '' ? trim((string) $value) : $guisisPendingText;
     $guisisPendingClass = fn ($value) => trim((string) $value) === '' ? ' guisis-pending-value' : '';
@@ -2330,7 +2332,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <h3 class="profile-form-section-title"><x-outline-icon name="document-text" />Academic Information</h3>
                         <div class="profile-grid-3">
                             <div>
-                                <label class="input-label">Student Number / Reference Number</label>
+                                <label class="input-label">Student Number</label>
                                 <div class="form-control profile-static-field{{ $guisisPendingClass($displayStudentNumber) }}">{{ $guisisValue($displayStudentNumber) }}</div>
                             </div>
                             <div>
@@ -2353,25 +2355,25 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="profile-grid-3">
                             <div>
                                 <label class="input-label">First Name</label>
-                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['first_name'] ?? $user->first_name) }}" value="{{ $guisisValue($accountProfileData['first_name'] ?? $user->first_name) }}" readonly>
+                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['first_name'] ?? '') }}" value="{{ $guisisValue($accountProfileData['first_name'] ?? '') }}" readonly>
                             </div>
                             <div>
                                 <label class="input-label">Middle Name</label>
-                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['middle_name'] ?? $user->middle_name) }}" value="{{ $guisisValue($accountProfileData['middle_name'] ?? $user->middle_name) }}" readonly>
+                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['middle_name'] ?? '') }}" value="{{ $guisisValue($accountProfileData['middle_name'] ?? '') }}" readonly>
                             </div>
                             <div>
                                 <label class="input-label">Last Name</label>
-                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['last_name'] ?? $user->last_name) }}" value="{{ $guisisValue($accountProfileData['last_name'] ?? $user->last_name) }}" readonly>
+                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['last_name'] ?? '') }}" value="{{ $guisisValue($accountProfileData['last_name'] ?? '') }}" readonly>
                             </div>
                         </div>
                         <div class="profile-grid-2">
                             <div>
                                 <label class="input-label">Gender</label>
-                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['sex'] ?? $user->gender) }}" value="{{ $guisisValue($accountProfileData['sex'] ?? $user->gender) }}" readonly style="background-color: #f8fafc;">
+                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['sex'] ?? '') }}" value="{{ $guisisValue($accountProfileData['sex'] ?? '') }}" readonly style="background-color: #f8fafc;">
                             </div>
                             <div>
                                 <label class="input-label">Birthday (DOB)</label>
-                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['birthday'] ?? $user->DOB) }}" value="{{ $guisisValue($accountProfileData['birthday'] ?? $user->DOB) }}" readonly style="background-color: #f8fafc;">
+                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['birthday'] ?? '') }}" value="{{ $guisisValue($accountProfileData['birthday'] ?? '') }}" readonly style="background-color: #f8fafc;">
                             </div>
                         </div>
                         <div class="profile-grid-2">
@@ -2406,11 +2408,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         <h3 class="profile-form-section-title"><x-outline-icon name="clock" />Contact Information</h3>
                         <div class="profile-info-row">
                             <label class="input-label">Email Address</label>
-                            <input type="email" class="form-control{{ $guisisPendingClass($accountProfileData['email'] ?? $user->email) }}" value="{{ $guisisValue($accountProfileData['email'] ?? $user->email) }}" readonly>
+                            <input type="email" class="form-control{{ $guisisPendingClass($accountProfileData['email'] ?? '') }}" value="{{ $guisisValue($accountProfileData['email'] ?? '') }}" readonly>
                         </div>
                         <div class="profile-info-row">
                             <label class="input-label">Contact Number</label>
-                            <input type="text" name="contact_no" class="form-control{{ $guisisPendingClass($accountProfileData['contact_number'] ?? $user->contact_no) }}" value="{{ $guisisValue($accountProfileData['contact_number'] ?? $user->contact_no) }}" readonly>
+                            <input type="text" name="contact_no" class="form-control{{ $guisisPendingClass($accountProfileData['contact_number'] ?? '') }}" value="{{ $guisisValue($accountProfileData['contact_number'] ?? '') }}" readonly>
                         </div>
                         <div class="profile-info-row">
                             <label class="input-label">Address</label>
@@ -2440,7 +2442,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <section class="profile-form-section accent-maroon">
                 <h3 class="profile-form-section-title"><x-outline-icon name="information-circle" />Personal Information</h3>
                 <div class="profile-info-row">
-                    <label class="input-label">Student Number / Reference Number</label>
+                    <label class="input-label">Student Number</label>
                     <div class="form-control profile-static-field{{ $guisisPendingClass($displayStudentNumber) }}">{{ $guisisValue($displayStudentNumber) }}</div>
                 </div>
                 <div class="profile-grid-2">

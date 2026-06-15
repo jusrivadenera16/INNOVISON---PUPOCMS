@@ -87,4 +87,77 @@ class AppointmentControllerPuptasIdentityTest extends TestCase
 
         $this->assertSame('123 Main Street, Lower Bicutan, Taguig, 1632', $address);
     }
+
+    public function test_it_reads_the_documented_guisis_personal_info_fields(): void
+    {
+        $controller = new AppointmentController();
+        $unwrap = new ReflectionMethod($controller, 'unwrapGuisisPayload');
+        $unwrap->setAccessible(true);
+        $firstValue = new ReflectionMethod($controller, 'firstGuisisValue');
+        $firstValue->setAccessible(true);
+
+        $personalInfo = $unwrap->invoke($controller, [
+            'data' => [
+                'dateOfBirth' => '2001-10-16',
+                'studentNumber' => '2026-002-067',
+                'gender' => [
+                    'id' => 1,
+                    'name' => 'Male',
+                ],
+            ],
+            'status' => 'success',
+        ]);
+
+        $this->assertSame(
+            '2026-002-067',
+            $firstValue->invoke($controller, [$personalInfo], ['studentNumber', 'student_number'])
+        );
+        $this->assertSame(
+            '2001-10-16',
+            $firstValue->invoke($controller, [$personalInfo], ['dateOfBirth', 'date_of_birth'])
+        );
+        $this->assertSame(
+            'Male',
+            $firstValue->invoke($controller, [$personalInfo], ['gender.name', 'gender'])
+        );
+    }
+
+    public function test_it_reads_the_documented_guisis_student_profile_fields(): void
+    {
+        $controller = new AppointmentController();
+        $unwrap = new ReflectionMethod($controller, 'unwrapGuisisPayload');
+        $unwrap->setAccessible(true);
+        $firstValue = new ReflectionMethod($controller, 'firstGuisisValue');
+        $firstValue->setAccessible(true);
+
+        $profile = $unwrap->invoke($controller, [
+            'data' => [
+                'course' => [
+                    'id' => 10,
+                    'code' => 'BSIT',
+                    'name' => 'Bachelor of Science in Information Technology',
+                ],
+                'firstName' => 'Juan',
+                'middleName' => [
+                    'string' => 'Santos',
+                    'valid' => true,
+                ],
+                'lastName' => 'Dela Cruz',
+                'mobileNumber' => '09123456789',
+                'section' => '1-1',
+                'studentNumber' => '2026-002-067',
+                'yearLevel' => 1,
+            ],
+            'status' => 'success',
+        ]);
+
+        $this->assertSame('BSIT', $firstValue->invoke($controller, [$profile], ['course.code']));
+        $this->assertSame(
+            'Bachelor of Science in Information Technology',
+            $firstValue->invoke($controller, [$profile], ['course.name'])
+        );
+        $this->assertSame('1', $firstValue->invoke($controller, [$profile], ['yearLevel']));
+        $this->assertSame('1-1', $firstValue->invoke($controller, [$profile], ['section']));
+        $this->assertSame('Santos', $firstValue->invoke($controller, [$profile], ['middleName.string']));
+    }
 }
