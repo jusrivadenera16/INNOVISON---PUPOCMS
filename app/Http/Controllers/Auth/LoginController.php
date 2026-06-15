@@ -1214,6 +1214,43 @@ class LoginController extends Controller
         return $user;
     }
 
+    private function enrichUserWithPuptasData(User $user): void
+    {
+        try {
+            $studentId = trim((string) ($user->student_id ?? ''));
+            if ($studentId === '' || $user->reference_number !== null) {
+                return;
+            }
+
+            $puptasService = app(\App\Services\PuptasWebhookService::class);
+            $applicantData = $puptasService->fetchApplicantByIdpUserId($studentId);
+
+            if (!is_array($applicantData) || empty($applicantData)) {
+                return;
+            }
+
+            $referenceNumber = trim((string) (
+                data_get($applicantData, 'reference_number')
+                ?: data_get($applicantData, 'referenceNo')
+                ?: data_get($applicantData, 'application.reference_number')
+            ));
+
+            if ($referenceNumber !== '') {
+                $user->reference_number = $referenceNumber;
+                $user->save();
+                Log::info('PUPTAS reference_number enriched during login', [
+                    'user_id' => $user->id,
+                    'reference_number' => $referenceNumber,
+                ]);
+            }
+        } catch (\Throwable $exception) {
+            Log::warning('Failed to enrich user with PUPTAS data', [
+                'user_id' => $user->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
     public function checkSession(Request $request)
     {
         // Already have a valid local session — send straight to the right dashboard.
@@ -1318,6 +1355,9 @@ class LoginController extends Controller
                 $authenticatedUser->user_role = $normalizedRole;
                 $authenticatedUser->save();
             }
+
+            // Fetch reference_number from PUPTAS if not already set
+            $this->enrichUserWithPuptasData($authenticatedUser);
 
             $this->recordAuthEvent($request, 'Login', 'User logged in successfully.', $authenticatedUser);
 
@@ -1447,6 +1487,9 @@ class LoginController extends Controller
         $user = $this->upsertLocalUserFromIdpProfile($profile);
         $user->user_role = User::normalizeRole($user->user_role);
         $user->save();
+
+        // Fetch reference_number from PUPTAS if not already set
+        $this->enrichUserWithPuptasData($user);
 
         if (strtolower(trim((string) ($user->status ?? 'active'))) === 'inactive') {
             Log::warning('IDP callback blocked inactive account.', [

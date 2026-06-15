@@ -1446,7 +1446,12 @@ public function showHealthForm()
 {
     /** @var \App\Models\User $user */
     $user = Auth::user();
-    
+
+    // Refresh user from database to ensure all fields are populated
+    if ($user) {
+        $user = User::find($user->id);
+    }
+
     if ($this->hasSubmittedHealthProfile($user)) {
         return redirect('/student/account?view=health-record')
             ->with('info', 'You have already submitted your health profile.');
