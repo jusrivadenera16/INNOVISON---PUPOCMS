@@ -1238,10 +1238,6 @@ class LoginController extends Controller
                 return;
             }
 
-            if (!is_array($applicantData) || empty($applicantData)) {
-                return;
-            }
-
             $referenceNumber = trim((string) data_get($applicantData, 'reference_number', ''));
             $firstName = trim((string) data_get($applicantData, 'first_name', ''));
             $lastName = trim((string) data_get($applicantData, 'last_name', ''));
@@ -1271,8 +1267,63 @@ class LoginController extends Controller
                     'last_name' => $lastName,
                 ]);
             }
+
+            $this->enrichUserWithGuisisData($user);
         } catch (\Throwable $exception) {
             Log::warning('Failed to enrich user with PUPTAS data', [
+                'user_id' => $user->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    private function enrichUserWithGuisisData(User $user): void
+    {
+        try {
+            $email = trim((string) ($user->email ?? ''));
+            if ($email === '') {
+                return;
+            }
+
+            $guisisService = app(\App\Services\GuisisApiService::class);
+            $guisisResult = $guisisService->getStudentByEmailDetailed($email);
+
+            if (!($guisisResult['ok'] ?? false) || !is_array($guisisResult['data'] ?? null)) {
+                return;
+            }
+
+            $guisisData = $guisisResult['data'];
+            $studentNumber = trim((string) data_get($guisisData, 'student_number', ''));
+            $course = trim((string) data_get($guisisData, 'program.name', ''));
+            $year = trim((string) data_get($guisisData, 'year', ''));
+
+            $shouldUpdate = false;
+            if ($studentNumber !== '' && trim((string) $user->student_number) === '') {
+                $user->student_number = $studentNumber;
+                $shouldUpdate = true;
+            }
+
+            if ($course !== '' && trim((string) $user->course) === '') {
+                $user->course = $course;
+                $shouldUpdate = true;
+            }
+
+            if ($year !== '' && trim((string) $user->year) === '') {
+                $user->year = $year;
+                $shouldUpdate = true;
+            }
+
+            if ($shouldUpdate) {
+                $user->save();
+                Log::info('User enriched with GUISIS data during login', [
+                    'user_id' => $user->id,
+                    'student_number' => $studentNumber,
+                    'course' => $course,
+                    'year' => $year,
+                ]);
+            }
+        } catch (\Throwable $exception) {
+            Log::warning('Failed to enrich user with GUISIS data', [
                 'user_id' => $user->id,
                 'error' => $exception->getMessage(),
             ]);

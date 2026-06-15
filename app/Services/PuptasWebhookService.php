@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -14,9 +13,6 @@ class PuptasWebhookService
     private string $clientSecret;
     private string $webhookSecret;
     private string $signatureHeader;
-    private string $timestampHeader;
-    private string $nonceHeader;
-    private string $hmacSignatureHeader;
     private int $timeout;
     private string $scope;
     private string $tokenUrl;
@@ -28,25 +24,14 @@ class PuptasWebhookService
         $this->clientSecret = (string) config('services.puptas.client_secret', '');
         $this->webhookSecret = (string) config('services.puptas.webhook_secret', '');
         $this->signatureHeader = (string) config('services.puptas.signature_header', 'X-Medical-Signature');
-        $this->timestampHeader = (string) config('services.puptas.timestamp_header', 'X-HMAC-Timestamp');
-        $this->nonceHeader = (string) config('services.puptas.nonce_header', 'X-HMAC-Nonce');
-        $this->hmacSignatureHeader = (string) config('services.puptas.hmac_signature_header', 'X-HMAC-Signature');
         $this->timeout = (int) config('services.puptas.timeout', 20);
         $this->scope = (string) config('services.puptas.scope', 'medical-read medical-write');
         $this->tokenUrl = $this->resolveTokenUrl((string) config('services.puptas.token_url', ''));
     }
 
-    private function buildHmacSignature(string $method, string $url, string $payload, string $timestamp, string $nonce): string
+    private function buildHmacSignature(string $payload): string
     {
-        $message = implode('|', [
-            strtoupper(trim($method)),
-            trim($url),
-            $payload,
-            $timestamp,
-            $nonce,
-        ]);
-
-        return hash_hmac('sha256', $message, $this->webhookSecret);
+        return hash_hmac('sha256', $payload, $this->webhookSecret);
     }
 
     private function extractWebhookFailureMessage(string $responseBody): string
@@ -316,70 +301,61 @@ class PuptasWebhookService
         }
     }
 
-    public function sendMedicalClearance(string $referenceNumber, string $studentId, bool $isCleared = true): array
+    public function sendMedicalClearance(
+        string $referenceNumber,
+        ?string $studentId = null,
+        bool $isCleared = true
+    ): array
     {
         try {
             $referenceNumber = trim($referenceNumber);
-            $studentId = trim($studentId);
+            $studentId = trim((string) $studentId);
 
-            if ($referenceNumber === '') {
-                return ['success' => false, 'message' => 'Reference number is required.'];
+            if (!$isCleared) {
+                return [
+                    'success' => true,
+                    'skipped' => true,
+                    'message' => 'PUPTAS sync skipped because the student is not yet medically cleared.',
+                ];
             }
 
-            if ($studentId === '') {
-                return ['success' => false, 'message' => 'IDP student ID is required.'];
+            if ($referenceNumber === '' && $studentId === '') {
+                return [
+                    'success' => false,
+                    'message' => 'A reference number or IDP student ID is required.',
+                ];
             }
 
             if ($this->apiUrl === '' || $this->webhookSecret === '') {
                 throw new \RuntimeException('PUPTAS webhook configuration is incomplete.');
             }
 
-            $timestamp = (string) now()->timestamp;
-            $nonce = (string) Str::uuid();
+            $payloadData = [];
+            if ($studentId !== '') {
+                $payloadData['student_id'] = $studentId;
+            }
+            if ($referenceNumber !== '') {
+                $payloadData['reference_number'] = $referenceNumber;
+            }
+            $payloadData['is_health_profile_completed'] = 1;
 
-            // PUPTAS production currently validates `is_health_profile_completed`
-            // in addition to the documented `medical_status` field, so we send both.
-            // We also include timestamp and nonce values so the receiving system can verify freshness.
-            $payload = json_encode([
-                'reference_number' => $referenceNumber,
-                'student_id' => $studentId,
-                'medical_status' => $isCleared ? 'cleared' : 'failed',
-                'is_health_profile_completed' => $isCleared ? 1 : 0,
-                'timestamp' => $timestamp,
-                'nonce' => $nonce,
-            ], JSON_UNESCAPED_SLASHES);
+            $payload = json_encode($payloadData, JSON_UNESCAPED_SLASHES);
 
             if ($payload === false) {
                 throw new \RuntimeException('Failed to encode PUPTAS payload.');
             }
 
-            $legacySignature = hash_hmac('sha256', $payload, $this->webhookSecret);
-            $timestampedSignature = $this->buildHmacSignature('POST', $this->apiUrl, $payload, $timestamp, $nonce);
+            $signature = $this->buildHmacSignature($payload);
             $accessToken = $this->getAccessToken();
 
             $headers = [
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-                $this->timestampHeader => $timestamp,
-                $this->nonceHeader => $nonce,
-                'X-Medical-Timestamp' => $timestamp,
-                'X-Medical-Nonce' => $nonce,
-                $this->hmacSignatureHeader => $timestampedSignature,
-                $this->signatureHeader => $this->signatureHeader === $this->hmacSignatureHeader
-                    ? $timestampedSignature
-                    : $legacySignature,
+                $this->signatureHeader => $signature,
             ];
 
-            if ($this->timestampHeader !== 'X-HMAC-Timestamp') {
-                $headers['X-HMAC-Timestamp'] = $timestamp;
-            }
-
-            if ($this->nonceHeader !== 'X-HMAC-Nonce') {
-                $headers['X-HMAC-Nonce'] = $nonce;
-            }
-
             if ($this->signatureHeader !== 'X-Medical-Signature') {
-                $headers['X-Medical-Signature'] = $legacySignature;
+                $headers['X-Medical-Signature'] = $signature;
             }
 
             $response = Http::timeout($this->timeout)
@@ -392,8 +368,6 @@ class PuptasWebhookService
                 Log::info('PUPTAS webhook sent successfully', [
                     'reference_number' => $referenceNumber,
                     'student_id' => $studentId,
-                    'timestamp' => $timestamp,
-                    'nonce' => $nonce,
                 ]);
                 return ['success' => true, 'message' => 'Synced successfully'];
             }
@@ -403,8 +377,6 @@ class PuptasWebhookService
                 'status' => $response->status(),
                 'reference_number' => $referenceNumber,
                 'student_id' => $studentId,
-                'timestamp' => $timestamp,
-                'nonce' => $nonce,
                 'error' => $response->body(),
             ]);
             return ['success' => false, 'message' => $errorMessage];
@@ -414,7 +386,12 @@ class PuptasWebhookService
         }
     }
 
-    public function sendWithRetry(string $referenceNumber, string $studentId, bool $isCleared = true, int $maxRetries = 3): array
+    public function sendWithRetry(
+        string $referenceNumber,
+        ?string $studentId = null,
+        bool $isCleared = true,
+        int $maxRetries = 3
+    ): array
     {
         $attempt = 0;
         $lastResult = ['success' => false, 'message' => 'No webhook attempts were made.'];

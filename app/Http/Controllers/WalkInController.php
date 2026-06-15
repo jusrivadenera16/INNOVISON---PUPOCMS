@@ -1317,14 +1317,15 @@ PROMPT;
                 ], 404);
             }
 
-            $studentId = $applicantData['idp_user_id'] ?? $referenceNumber;
+            $idpStudentId = trim((string) ($applicantData['idp_user_id'] ?? ''));
+            $studentId = $idpStudentId !== '' ? $idpStudentId : $referenceNumber;
             $student = $this->resolveLocalUserFromApplicant($applicantData, true, $referenceNumber);
             $clearanceStatus = $hasMedicalCondition ? 'Pending/Conditional' : 'Fully Cleared';
 
             // Conditional applicants remain uncleared in PUPTAS until compliance is resolved.
             $webhookResult = $webhookService->sendMedicalClearance(
                 $referenceNumber,
-                $studentId,
+                $idpStudentId,
                 !$hasMedicalCondition
             );
 
@@ -1385,8 +1386,13 @@ PROMPT;
                     : 'Completed / Passed';
                 $profile->documents_valid = !$hasMedicalCondition;
                 $profile->verified_at = $hasMedicalCondition ? null : now();
-                $profile->puptas_sync_status = ($webhookResult['success'] ?? false) ? 'synced' : 'failed';
-                $profile->puptas_synced_at = ($webhookResult['success'] ?? false) ? now() : null;
+                $profile->puptas_sync_status = ($webhookResult['skipped'] ?? false)
+                    ? null
+                    : (($webhookResult['success'] ?? false) ? 'synced' : 'failed');
+                $profile->puptas_synced_at = ($webhookResult['success'] ?? false)
+                    && !($webhookResult['skipped'] ?? false)
+                        ? now()
+                        : null;
                 $profile->puptas_sync_message = $webhookResult['message'] ?? null;
 
                 if (!$profile->medical_assessment_upload && $pendingAssessment) {

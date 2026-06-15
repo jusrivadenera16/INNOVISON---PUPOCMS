@@ -1534,13 +1534,6 @@ public function updateClearance(Request $request, $id)
                             ->with('success', 'Medical clearance updated, but PUPTAS sync was skipped because reference number is missing.');
                     }
 
-                    if ($idpStudentId === '') {
-                        $this->updatePuptasSyncState($record, 'missing_student_id', 'PUPTAS sync skipped because the IDP student ID is still missing.');
-                        \Log::warning("PUPTAS Sync Skipped for HealthProfile {$record->id}: missing student_id.");
-                        return redirect()->route('admin.health_records')
-                            ->with('success', 'Medical clearance updated, but PUPTAS sync was skipped because the IDP student ID is missing.');
-                    }
-
                     $this->updatePuptasSyncState($record, 'syncing', 'Preparing the approved health clearance for PUPTAS.');
                     $syncResult = $puptasService->sendWithRetry($referenceNumber, $idpStudentId, true);
 
