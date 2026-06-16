@@ -878,7 +878,8 @@
 
         .help-guide {
             display: grid;
-            gap: 10px;
+            gap: 12px;
+            padding: 18px 20px 20px;
         }
 
         .help-guide-legacy {
@@ -887,24 +888,23 @@
 
         .help-accordion {
             overflow: hidden;
-            border: 1px solid rgba(250, 204, 21, .2);
-            border-radius: 8px;
-            background: rgba(30, 8, 14, .2);
+            border: 1px solid rgba(250, 204, 21, .18);
+            border-radius: 16px;
+            background: linear-gradient(180deg, rgba(53, 15, 22, .94), rgba(39, 10, 17, .96));
             transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
         }
 
         .help-accordion[open] {
-            border-color: rgba(250, 204, 21, .5);
-            background: rgba(30, 8, 14, .3);
-            box-shadow: 0 12px 26px rgba(31, 4, 9, .16);
+            border-color: rgba(250, 204, 21, .42);
+            box-shadow: 0 14px 28px rgba(31, 4, 9, .18);
         }
 
         .help-accordion summary {
             display: flex;
-            min-height: 54px;
+            min-height: 58px;
             align-items: center;
-            gap: 11px;
-            padding: 10px 12px;
+            gap: 12px;
+            padding: 12px 14px;
             color: #ffffff;
             cursor: pointer;
             list-style: none;
@@ -921,13 +921,13 @@
         }
 
         .help-accordion-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            flex: 0 0 32px;
+            flex: 0 0 36px;
             background: linear-gradient(135deg, var(--gold), var(--gold-soft));
             color: var(--maroon);
             box-shadow: 0 8px 18px rgba(250, 204, 21, .12);
@@ -948,14 +948,14 @@
 
         .help-accordion-heading strong {
             color: #ffffff;
-            font-size: 13px;
+            font-size: 14px;
             line-height: 1.3;
         }
 
         .help-accordion-heading span {
             overflow: hidden;
-            color: rgba(255, 255, 255, .6);
-            font-size: 10px;
+            color: rgba(255, 255, 255, .66);
+            font-size: 11px;
             line-height: 1.35;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -974,7 +974,7 @@
         }
 
         .help-accordion-body {
-            padding: 0 13px 13px 55px;
+            padding: 0 15px 15px 63px;
         }
 
         .help-check-list,
@@ -991,8 +991,8 @@
             position: relative;
             padding-left: 18px;
             color: rgba(255, 255, 255, .78);
-            font-size: 11px;
-            line-height: 1.5;
+            font-size: 12px;
+            line-height: 1.55;
         }
 
         .help-check-list li::before {
@@ -1009,10 +1009,10 @@
         }
 
         .help-issue-list li {
-            padding: 7px 8px 7px 25px;
+            padding: 8px 10px 8px 25px;
             border: 1px solid rgba(255, 255, 255, .08);
-            border-radius: 6px;
-            background: rgba(255, 255, 255, .045);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .05);
         }
 
         .help-issue-list li::before {
@@ -1465,6 +1465,13 @@
             text-wrap: balance;
         }
 
+        @media (min-width: 900px) {
+            .gateway-title {
+                max-width: 100%;
+                white-space: nowrap;
+            }
+        }
+
         body.landing-theme-light .gateway-title {
             color: #70131b;
         }
@@ -1505,9 +1512,36 @@
             background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
             border: 1px solid rgba(250, 204, 21, 0.26);
             box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
-            justify-content: center;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 12px;
             font-size: 0.95rem;
             font-weight: 950;
+        }
+
+        .gateway-actions .portal-btn span {
+            text-align: center;
+        }
+
+        .gateway-actions .portal-btn::after {
+            content: "→";
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            color: currentColor;
+            font-size: 14px;
+            line-height: 1;
+            font-weight: 900;
+        }
+
+        .gateway-actions .portal-btn svg {
+            justify-self: start;
         }
 
         .gateway-actions .portal-btn:hover,
@@ -1516,6 +1550,36 @@
             border-color: var(--gold);
             color: var(--maroon);
             box-shadow: 0 22px 42px rgba(112, 19, 27, 0.26);
+        }
+
+        .gateway-actions .portal-btn:hover::after,
+        .gateway-actions .portal-btn:focus-visible::after {
+            background: rgba(112, 19, 27, 0.12);
+            border-color: rgba(112, 19, 27, 0.14);
+        }
+
+        .gateway-actions .portal-btn--idp {
+            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            border-color: var(--gold);
+            color: var(--maroon);
+        }
+
+        .gateway-actions .portal-btn--idp::after {
+            background: rgba(112, 19, 27, 0.12);
+            border-color: rgba(112, 19, 27, 0.14);
+        }
+
+        .gateway-actions .portal-btn--idp:hover,
+        .gateway-actions .portal-btn--idp:focus-visible {
+            background: #ffffff;
+            border-color: #ffffff;
+            color: #111111;
+        }
+
+        .gateway-actions .portal-btn--idp:hover::after,
+        .gateway-actions .portal-btn--idp:focus-visible::after {
+            background: rgba(17, 17, 17, 0.08);
+            border-color: rgba(17, 17, 17, 0.14);
         }
 
         .workspace-utility-actions.gateway-utility {
@@ -1668,6 +1732,23 @@
             padding: 20px 22px 18px;
         }
 
+        .help-contact-card {
+            display: grid;
+            gap: 6px;
+            border-radius: 14px;
+            border: 1px solid rgba(250, 204, 21, 0.18);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 14px 15px;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .help-contact-card strong {
+            color: #ffffff;
+            font-size: 13px;
+        }
+
         .help-panel-kicker {
             color: #facc15;
         }
@@ -1767,6 +1848,10 @@
                 width: 100%;
             }
 
+            .gateway-title {
+                white-space: normal;
+            }
+
             .gateway-feature-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
@@ -1849,11 +1934,10 @@
         </div>
     </div>
     <main class="landing-shell">
-        <button type="button" class="landing-theme-toggle" id="landingThemeToggle" aria-pressed="false" aria-label="Toggle light and dark mode">
+        <button type="button" class="landing-theme-toggle" id="landingThemeToggle" aria-pressed="false" aria-label="Switch to light mode" title="Switch theme">
             <svg id="landingThemeToggleIcon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
-            <span id="landingThemeToggleText">Light Mode</span>
         </button>
         <section class="landing-panel" aria-label="PUP medical clinic access">
             <div class="info-column">
@@ -2009,6 +2093,7 @@
             <div class="login-column">
                 <div class="login-card">
                     <div class="login-primary gateway-stage" id="landingLoginPrimary">
+                        <div class="gateway-top-content">
                         <div class="logo-stack gateway-logo-row" aria-label="PUP and clinic logos">
                             <span class="logo-frame gateway-logo-card">
                                 <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
@@ -2055,7 +2140,7 @@
                                     <span>My Account</span>
                                 </a>
                             @else
-                                <a class="portal-btn" href="https://one-portal.isaxbsit2027.com/portal">
+                                <a class="portal-btn portal-btn--idp" href="https://one-portal.isaxbsit2027.com/portal">
                                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                         <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
                                         <path d="M15 12H4" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
@@ -2117,6 +2202,8 @@
                                         : 'Admin Side: Available ' . $saAdminWorkspaceHoursLabel }}
                                 </span>
                             </a>
+                        </div>
+
                         </div>
 
                         <div class="gateway-feature-grid" aria-label="Clinic system capabilities">
@@ -2347,7 +2434,6 @@
         const helpBackButton = document.getElementById('landingHelpBackButton');
         const helpAccordions = Array.from(document.querySelectorAll('.help-accordion'));
         const landingThemeToggle = document.getElementById('landingThemeToggle');
-        const landingThemeToggleText = document.getElementById('landingThemeToggleText');
         const landingThemeToggleIcon = document.getElementById('landingThemeToggleIcon');
         let isHelpMode = false;
         const landingThemeStorageKey = 'landing-theme-preference';
@@ -2370,10 +2456,8 @@
 
             if (landingThemeToggle) {
                 landingThemeToggle.setAttribute('aria-pressed', normalizedTheme === 'light' ? 'true' : 'false');
-            }
-
-            if (landingThemeToggleText) {
-                landingThemeToggleText.textContent = normalizedTheme === 'light' ? 'Dark Mode' : 'Light Mode';
+                landingThemeToggle.setAttribute('aria-label', normalizedTheme === 'light' ? 'Switch to dark mode' : 'Switch to light mode');
+                landingThemeToggle.setAttribute('title', normalizedTheme === 'light' ? 'Dark mode' : 'Light mode');
             }
 
             setLandingThemeIcon(normalizedTheme);
