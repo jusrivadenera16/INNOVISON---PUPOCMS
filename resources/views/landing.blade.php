@@ -1290,9 +1290,11 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 0;
             min-height: 42px;
-            padding: 0 15px;
+            width: 42px;
+            height: 42px;
+            padding: 0;
             border-radius: 999px;
             border: 1px solid rgba(250, 204, 21, 0.45);
             background: rgba(20, 16, 20, 0.52);
@@ -1399,6 +1401,15 @@
             gap: 18px;
             text-align: center;
             transition: opacity .3s ease, transform .34s ease;
+        }
+
+        .gateway-top-content {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            transition: opacity .26s ease, transform .32s ease;
         }
 
         .gateway-brand {
@@ -1542,6 +1553,8 @@
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 12px;
             margin-top: 4px;
+            position: relative;
+            z-index: 3;
         }
 
         .gateway-feature-card {
@@ -1615,11 +1628,14 @@
 
         .help-panel {
             position: absolute;
-            inset: 22px;
+            top: 22px;
+            left: 22px;
+            right: 22px;
+            bottom: auto;
             z-index: 5;
             width: auto;
-            max-width: none;
-            height: auto;
+            max-width: 780px;
+            max-height: min(470px, calc(100vh - 180px));
             margin: 0;
             opacity: 0;
             transform: translateY(18px);
@@ -1638,7 +1654,7 @@
             pointer-events: auto;
         }
 
-        .landing-panel.is-help .gateway-stage {
+        .landing-panel.is-help .gateway-top-content {
             opacity: 0;
             transform: translateY(-10px) scale(0.985);
             pointer-events: none;
@@ -1649,7 +1665,7 @@
             color: #ffffff;
             border-radius: 22px 22px 0 0;
             margin: -1px -1px 0;
-            padding: 22px 24px 20px;
+            padding: 20px 22px 18px;
         }
 
         .help-panel-kicker {
@@ -1761,7 +1777,9 @@
                 top: 16px;
                 right: 16px;
                 min-height: 42px;
-                padding: 0 14px;
+                width: 42px;
+                height: 42px;
+                padding: 0;
             }
 
             .landing-panel {
@@ -1785,8 +1803,11 @@
             }
 
             .help-panel {
-                inset: 10px;
+                top: 10px;
+                left: 10px;
+                right: 10px;
                 border-radius: 22px;
+                max-height: min(500px, calc(100vh - 120px));
             }
 
             .workspace-entry.gateway-actions {
