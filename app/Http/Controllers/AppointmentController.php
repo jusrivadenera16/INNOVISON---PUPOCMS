@@ -1794,7 +1794,7 @@ public function storeHealthForm(Request $request)
 
     $request->validate([
         'student_id'        => 'nullable|string|max:255',
-        'reference_number'  => ['required', 'string', 'size:14', 'regex:/^\d{4}-\d{4}-\d{4}$/'],
+        'reference_number'  => ['required', 'string', 'max:20', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$/'],
         'school_year'       => ['required', 'string', 'regex:/^\d{4}-\d{4}$/'],
         'home_address'      => 'required|string|max:255',
         'zipcode'           => 'required|string|max:20',

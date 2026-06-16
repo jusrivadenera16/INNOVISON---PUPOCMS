@@ -6514,8 +6514,18 @@
                         || data.approved === true
                         || data.approved === 1;
 
+                    const isLocalHealthProfile = data.lookup_source === 'local_health_profile';
+                    const lookupFoundMessage = isLocalHealthProfile
+                        ? (data.sync_warning || 'Local health profile found. PUPTAS sync will still depend on a valid Admission reference.')
+                        : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.');
+
                     if (isAlreadyApproved) {
-                        setStatus('success', applicantName ? 'Applicant found: ' + applicantName + ' (Already Approved)' : 'Applicant found (Already Approved)');
+                        setStatus(
+                            isLocalHealthProfile ? 'info' : 'success',
+                            isLocalHealthProfile
+                                ? lookupFoundMessage
+                                : (applicantName ? 'Applicant found: ' + applicantName + ' (Already Approved)' : 'Applicant found (Already Approved)')
+                        );
                         if (foundCard && foundName) {
                             foundName.textContent = (applicantName || ref) + ' ✓';
                             foundCard.style.display = 'block';
@@ -6540,7 +6550,7 @@
                             findBtn.removeEventListener('click', doApprove);
                         }
                     } else {
-                        setStatus('success', applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.');
+                        setStatus(isLocalHealthProfile ? 'info' : 'success', lookupFoundMessage);
                         if (foundCard && foundName) {
                             foundName.textContent = applicantName || ref;
                             foundCard.style.display = 'block';

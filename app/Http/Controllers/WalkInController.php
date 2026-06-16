@@ -169,6 +169,61 @@ class WalkInController extends Controller
             ->first();
     }
 
+    private function findHealthProfileByReference(string $referenceNumber): ?HealthProfile
+    {
+        $referenceNumber = trim($referenceNumber);
+        if ($referenceNumber === '' || !\Schema::hasTable('health_profiles')) {
+            return null;
+        }
+
+        return HealthProfile::query()
+            ->with('user')
+            ->where('reference_number', $referenceNumber)
+            ->orWhere('student_number', $referenceNumber)
+            ->orWhere('student_id', $referenceNumber)
+            ->latest()
+            ->first();
+    }
+
+    private function ensureLocalUserFromHealthProfile(HealthProfile $profile, string $referenceNumber): ?User
+    {
+        $profile->loadMissing('user');
+        $user = $profile->user;
+
+        if (!$user && trim((string) $profile->user_id) !== '') {
+            $user = User::find($profile->user_id);
+        }
+
+        if (!$user) {
+            return null;
+        }
+
+        $needsSave = false;
+        if (\Schema::hasColumn('users', 'reference_number') && trim((string) ($user->reference_number ?? '')) === '') {
+            $user->reference_number = $referenceNumber;
+            $needsSave = true;
+        }
+        if (\Schema::hasColumn('users', 'student_number') && trim((string) ($user->student_number ?? '')) === '') {
+            $user->student_number = trim((string) ($profile->student_number ?: $referenceNumber));
+            $needsSave = true;
+        }
+        if (trim((string) ($user->student_id ?? '')) === '' && trim((string) ($profile->student_id ?? '')) !== '') {
+            $user->student_id = (string) $profile->student_id;
+            $needsSave = true;
+        }
+
+        if ($needsSave) {
+            $user->save();
+        }
+
+        if (trim((string) ($profile->reference_number ?? '')) === '') {
+            $profile->reference_number = $referenceNumber;
+            $profile->save();
+        }
+
+        return $user->fresh('healthProfile');
+    }
+
     private function looksLikeUuid(?string $value): bool
     {
         return (bool) preg_match(
@@ -696,6 +751,19 @@ class WalkInController extends Controller
                 // PUPTAS response. The medical endpoint may stop listing an
                 // applicant after their workflow status changes.
                 $student = $this->resolveLocalUserFromApplicant($applicant, true, $lookup);
+            } elseif (!$student) {
+                $localProfile = $this->findHealthProfileByReference($lookup);
+                if ($localProfile) {
+                    $student = $this->ensureLocalUserFromHealthProfile($localProfile, $lookup);
+                    $lookupStatus = 'local_health_profile';
+                    $lookupMessage = 'Local health profile found. PUPTAS sync will still depend on a valid Admission reference.';
+                }
+            } elseif ($lookupStatus && (int) $lookupStatus !== 200) {
+                $localProfile = $this->findHealthProfileByReference($lookup);
+                if ($localProfile) {
+                    $lookupStatus = 'local_health_profile';
+                    $lookupMessage = 'Local health profile found. PUPTAS sync will still depend on a valid Admission reference.';
+                }
             }
 
             // Log the reference lookup attempt
@@ -711,6 +779,14 @@ class WalkInController extends Controller
                 $this->logReferenceLookup($request, $lookup, true, $applicantName, null, [
                     'local_user_id' => $student->id,
                     'local_email' => $student->email,
+                    'source' => 'puptas',
+                ]);
+            } elseif ($student && $lookupStatus === 'local_health_profile') {
+                $this->logReferenceLookup($request, $lookup, true, $student->name, null, [
+                    'local_user_id' => $student->id,
+                    'local_email' => $student->email,
+                    'source' => 'local_health_profile',
+                    'puptas_lookup_status' => $lookupResult['status'] ?? null,
                 ]);
             } elseif (!is_array($applicant) && $lookupResult['success'] === false) {
                 // Failed lookup with error
@@ -789,6 +865,10 @@ class WalkInController extends Controller
                     'documents' => $this->healthProfileDocuments($request, $healthProfile),
                     'name_matches' => $lookupName !== '' ? $this->namesRoughlyMatch($lookupName, $student) : null,
                     'lookup_status' => $lookupStatus,
+                    'lookup_source' => $lookupStatus === 'local_health_profile' ? 'local_health_profile' : 'puptas_or_local_user',
+                    'sync_warning' => $lookupStatus === 'local_health_profile'
+                        ? 'Local health profile found. PUPTAS sync will only succeed if this saved reference matches the Admission System.'
+                        : null,
                 ]);
             }
 
@@ -825,6 +905,11 @@ class WalkInController extends Controller
                 'health_profile_id' => optional($healthProfile)->id,
                 'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
                 'documents' => $this->healthProfileDocuments($request, $healthProfile),
+                'lookup_status' => $lookupStatus,
+                'lookup_source' => $lookupStatus === 'local_health_profile' ? 'local_health_profile' : 'puptas_or_local_user',
+                'sync_warning' => $lookupStatus === 'local_health_profile'
+                    ? 'Local health profile found. PUPTAS sync will only succeed if this saved reference matches the Admission System.'
+                    : null,
                 'redirect_url' => $intakeTarget === 'assessment'
                     ? (function () use ($student) {
                         $profile = HealthProfile::firstOrCreate(
@@ -1309,17 +1394,38 @@ PROMPT;
 
             // Fetch applicant details to get student ID
             $applicantData = $webhookService->fetchApplicantByStudentNumber($referenceNumber);
+            $localOnlyProfile = null;
+            $isLocalOnlyApproval = false;
 
             if (!$applicantData) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Applicant not found.'
-                ], 404);
+                $localOnlyProfile = $this->findHealthProfileByReference($referenceNumber);
+                if (!$localOnlyProfile) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Applicant not found in PUPTAS or local submitted health profiles.'
+                    ], 404);
+                }
+
+                $student = $this->ensureLocalUserFromHealthProfile($localOnlyProfile, $referenceNumber);
+                if (!$student) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Local health profile was found, but no linked student account is available.'
+                    ], 404);
+                }
+
+                $isLocalOnlyApproval = true;
+                $applicantData = null;
             }
 
-            $idpStudentId = trim((string) ($applicantData['idp_user_id'] ?? ''));
-            $studentId = $idpStudentId !== '' ? $idpStudentId : $referenceNumber;
-            $student = $this->resolveLocalUserFromApplicant($applicantData, true, $referenceNumber);
+            if (!$isLocalOnlyApproval) {
+                $idpStudentId = trim((string) ($applicantData['idp_user_id'] ?? ''));
+                $studentId = $idpStudentId !== '' ? $idpStudentId : $referenceNumber;
+                $student = $this->resolveLocalUserFromApplicant($applicantData, true, $referenceNumber);
+            } else {
+                $idpStudentId = trim((string) ($student->student_id ?? $localOnlyProfile?->student_id ?? ''));
+                $studentId = $idpStudentId !== '' ? $idpStudentId : $referenceNumber;
+            }
             $clearanceStatus = $hasMedicalCondition ? 'Pending/Conditional' : 'Fully Cleared';
 
             // Conditional applicants remain uncleared in PUPTAS until compliance is resolved.
@@ -1341,7 +1447,8 @@ PROMPT;
                 $bloodPressure,
                 $respiratoryRate,
                 $temperature,
-                $webhookResult
+                $webhookResult,
+                $isLocalOnlyApproval
             ) {
                 $pendingAssessment = \Schema::hasTable('pending_medical_assessments')
                     ? \App\Models\PendingMedicalAssessment::query()
@@ -1394,6 +1501,10 @@ PROMPT;
                         ? now()
                         : null;
                 $profile->puptas_sync_message = $webhookResult['message'] ?? null;
+                if ($isLocalOnlyApproval && !($webhookResult['success'] ?? false) && !($webhookResult['skipped'] ?? false)) {
+                    $profile->puptas_sync_message = trim((string) ($profile->puptas_sync_message ?? ''))
+                        ?: 'Local approval saved. PUPTAS sync still needs a matching Admission reference.';
+                }
 
                 if (!$profile->medical_assessment_upload && $pendingAssessment) {
                     $profile->medical_assessment_upload = $pendingAssessment->file_path;
@@ -1438,9 +1549,10 @@ PROMPT;
                     'health_profile_id' => $profile->id,
                     'clearance_status' => $clearanceStatus,
                     'findings_status' => $findingsStatus,
-                    'webhook_status' => ($webhookResult['success'] ?? false) ? 'success' : 'failed',
-                    'webhook_message' => $webhookResult['message'] ?? null,
-                ],
+                'webhook_status' => ($webhookResult['success'] ?? false) ? 'success' : 'failed',
+                'webhook_message' => $webhookResult['message'] ?? null,
+                'lookup_source' => $isLocalOnlyApproval ? 'local_health_profile' : 'puptas',
+            ],
                 'ip_address' => $request->ip(),
                 'user_agent' => substr((string) $request->userAgent(), 0, 255),
             ]);
@@ -1455,9 +1567,12 @@ PROMPT;
                 'status' => $clearanceStatus,
                 'message' => $hasMedicalCondition
                     ? 'Applicant saved under Pending Compliance.'
-                    : 'Applicant approved and added to Health Profile Summary.',
+                    : (($webhookResult['success'] ?? false)
+                        ? 'Applicant approved and synced to PUPTAS.'
+                        : 'Applicant approved locally. PUPTAS sync still needs attention.'),
                 'redirect_url' => $redirectUrl,
                 'webhook_synced' => (bool) ($webhookResult['success'] ?? false),
+                'lookup_source' => $isLocalOnlyApproval ? 'local_health_profile' : 'puptas',
             ]);
         } catch (\Exception $e) {
             Log::error('Applicant approval exception', [
