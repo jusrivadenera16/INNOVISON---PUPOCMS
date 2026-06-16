@@ -1291,14 +1291,14 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            min-height: 46px;
-            padding: 0 18px;
+            min-height: 42px;
+            padding: 0 15px;
             border-radius: 999px;
             border: 1px solid rgba(250, 204, 21, 0.45);
             background: rgba(20, 16, 20, 0.52);
             color: #ffffff;
             font-family: inherit;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 900;
             cursor: pointer;
             box-shadow: 0 18px 32px rgba(15, 23, 42, 0.22);
@@ -1333,11 +1333,11 @@
 
         .landing-panel {
             position: relative;
-            width: min(1120px, 100%);
-            min-height: min(740px, calc(100vh - 64px));
+            width: min(1040px, 100%);
+            min-height: min(650px, calc(100vh - 72px));
             display: block;
-            padding: clamp(34px, 5vw, 58px);
-            border-radius: 34px;
+            padding: clamp(24px, 3.8vw, 40px);
+            border-radius: 28px;
             overflow: hidden;
             background:
                 linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
@@ -1396,7 +1396,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 26px;
+            gap: 18px;
             text-align: center;
             transition: opacity .3s ease, transform .34s ease;
         }
@@ -1417,9 +1417,9 @@
         }
 
         .gateway-logo-card {
-            width: 88px;
-            height: 88px;
-            border-radius: 24px;
+            width: 72px;
+            height: 72px;
+            border-radius: 18px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -1429,16 +1429,16 @@
         }
 
         .gateway-logo-card img {
-            width: 62px;
-            height: 62px;
+            width: 48px;
+            height: 48px;
             object-fit: contain;
         }
 
         .gateway-kicker {
             margin: 0;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 950;
-            letter-spacing: 0.24em;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
             color: #facc15;
         }
@@ -1447,8 +1447,8 @@
             margin: 0;
             max-width: 820px;
             color: #ffffff;
-            font-size: clamp(2.9rem, 6vw, 5.45rem);
-            line-height: 0.96;
+            font-size: clamp(2.2rem, 4.7vw, 4.15rem);
+            line-height: 1.02;
             font-weight: 950;
             letter-spacing: -0.03em;
             text-wrap: balance;
@@ -1462,9 +1462,9 @@
             margin: 0;
             max-width: 760px;
             color: rgba(255, 255, 255, 0.82);
-            font-size: clamp(1rem, 1.7vw, 1.12rem);
-            line-height: 1.8;
-            font-weight: 600;
+            font-size: clamp(0.9rem, 1.25vw, 1rem);
+            line-height: 1.65;
+            font-weight: 500;
             text-wrap: balance;
         }
 
@@ -1482,31 +1482,42 @@
         .workspace-entry.gateway-actions {
             width: min(500px, 100%);
             display: grid;
-            gap: 16px;
+            gap: 12px;
             justify-items: stretch;
         }
 
         .gateway-actions .portal-btn {
-            min-height: 64px;
+            min-height: 54px;
             width: 100%;
-            padding: 0 26px;
+            padding: 0 20px;
             border-radius: 999px;
             background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
             border: 1px solid rgba(250, 204, 21, 0.26);
             box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
             justify-content: center;
-            font-size: 1.02rem;
+            font-size: 0.95rem;
             font-weight: 950;
         }
 
         .gateway-actions .portal-btn:hover,
         .gateway-actions .portal-btn:focus-visible {
+            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            border-color: var(--gold);
+            color: var(--maroon);
             box-shadow: 0 22px 42px rgba(112, 19, 27, 0.26);
         }
 
         .workspace-utility-actions.gateway-utility {
             justify-content: center;
             margin-top: -6px;
+        }
+
+        .workspace-utility-actions.gateway-utility .help-btn {
+            color: rgba(255, 255, 255, 0.84);
+        }
+
+        .workspace-utility-actions.gateway-utility .help-btn svg {
+            color: inherit;
         }
 
         .gateway-sa-selector {
@@ -1529,15 +1540,15 @@
             width: 100%;
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 16px;
-            margin-top: 10px;
+            gap: 12px;
+            margin-top: 4px;
         }
 
         .gateway-feature-card {
             position: relative;
             overflow: hidden;
-            border-radius: 22px;
-            padding: 18px 18px 16px;
+            border-radius: 18px;
+            padding: 14px 14px 12px;
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.10);
             text-align: left;
@@ -1689,7 +1700,7 @@
         .login-primary.gateway-stage {
             width: min(980px, 100%);
             margin: 0 auto;
-            min-height: min(640px, calc(100vh - 120px));
+            min-height: min(560px, calc(100vh - 130px));
             padding: 0 !important;
             background: transparent !important;
             box-shadow: none !important;
