@@ -1677,6 +1677,9 @@
         }
 
         .login-card {
+            width: 100% !important;
+            max-width: none !important;
+            display: block !important;
             background: transparent !important;
             box-shadow: none !important;
             min-height: auto !important;
@@ -1684,7 +1687,8 @@
         }
 
         .login-primary.gateway-stage {
-            width: 100%;
+            width: min(980px, 100%);
+            margin: 0 auto;
             min-height: min(640px, calc(100vh - 120px));
             padding: 0 !important;
             background: transparent !important;
@@ -1692,7 +1696,7 @@
         }
 
         .gateway-brand-copy {
-            width: min(760px, 100%);
+            width: min(960px, 100%);
             display: grid;
             justify-items: center;
             gap: 16px;
@@ -1705,7 +1709,7 @@
         }
 
         .gateway-brand-copy .gateway-copy {
-            max-width: 760px;
+            max-width: 860px;
         }
 
         .login-copy.gateway-brand-copy {
@@ -1713,17 +1717,27 @@
         }
 
         .gateway-stage .workspace-entry {
-            width: min(500px, 100%);
+            width: min(560px, 100%);
         }
 
         .gateway-stage .workspace-entry .portal-btn {
             width: 100%;
         }
 
+        .gateway-feature-grid {
+            max-width: 980px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
         @media (max-width: 980px) {
             .landing-panel {
                 min-height: auto;
                 padding: 26px 18px 24px;
+            }
+
+            .login-primary.gateway-stage {
+                width: 100%;
             }
 
             .gateway-feature-grid {
