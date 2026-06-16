@@ -795,7 +795,9 @@ class AdminUserController extends Controller
                 $email = trim((string) ($faculty['email'] ?? ''));
                 $role = trim((string) ($faculty['faculty_type'] ?? $faculty['role'] ?? $faculty['access_level'] ?? 'Faculty'));
                 $status = strtolower(trim((string) ($faculty['status'] ?? 'active')));
-                $facultyIdentifier = (string) ($faculty['faculty_id'] ?? $faculty['faculty_code'] ?? $faculty['id'] ?? '');
+                $facultyCode = trim((string) ($faculty['faculty_code'] ?? ''));
+                $facultyNumericId = trim((string) ($faculty['faculty_id'] ?? $faculty['id'] ?? ''));
+                $facultyIdentifier = $facultyCode !== '' ? $facultyCode : $facultyNumericId;
                 $recordId = $facultyIdentifier !== '' ? $facultyIdentifier : ($email !== '' ? $email : 'faculty');
 
                 if (in_array($status, ['1', 'true', 'active', 'enabled'], true)) {
@@ -826,7 +828,7 @@ class AdminUserController extends Controller
                     'is_external' => true,
                     'meta' => [
                         'faculty_id' => $faculty['faculty_id'] ?? null,
-                        'faculty_code' => $faculty['faculty_code'] ?? null,
+                        'faculty_code' => $facultyCode !== '' ? $facultyCode : null,
                         'faculty_type' => $faculty['faculty_type'] ?? null,
                         'department' => $faculty['department'] ?? null,
                         'profile' => $profile,
@@ -854,6 +856,19 @@ class AdminUserController extends Controller
             ->filter(fn (array $record) => trim(strtolower((string) ($record['name'] ?? ''))) !== '')
             ->keyBy(fn (array $record) => trim(strtolower((string) ($record['name'] ?? ''))))
             ->all();
+        $facultyByIdentifier = [];
+        foreach ($facultyDirectory as $facultyRecord) {
+            foreach ([
+                $facultyRecord['student_id'] ?? '',
+                data_get($facultyRecord, 'meta.faculty_id'),
+                data_get($facultyRecord, 'meta.faculty_code'),
+            ] as $candidateIdentifier) {
+                $candidateIdentifier = trim(strtolower((string) $candidateIdentifier));
+                if ($candidateIdentifier !== '') {
+                    $facultyByIdentifier[$candidateIdentifier] = $facultyRecord;
+                }
+            }
+        }
 
         $query = Admin::query();
 
@@ -877,7 +892,7 @@ class AdminUserController extends Controller
         return $query->orderBy('name')
             ->limit(100)
             ->get()
-            ->map(function (Admin $admin) use ($facultyByEmail, $facultyByName) {
+            ->map(function (Admin $admin) use ($facultyByEmail, $facultyByName, $facultyByIdentifier) {
                 $linkedUser = Admin::hasColumn('user_id') && $admin->user_id ? User::find($admin->user_id) : null;
                 $externalIdentifier = trim((string) ($admin->external_identifier ?? ''));
                 $displayName = trim((string) ($admin->name ?? ''));
@@ -892,8 +907,16 @@ class AdminUserController extends Controller
                 $normalizedName = trim(strtolower($displayName));
                 $matchedFaculty = $normalizedEmail !== '' && isset($facultyByEmail[$normalizedEmail])
                     ? $facultyByEmail[$normalizedEmail]
-                    : ($normalizedName !== '' && isset($facultyByName[$normalizedName]) ? $facultyByName[$normalizedName] : null);
-                $facultyIdentifier = trim((string) ($matchedFaculty['student_id'] ?? ''));
+                    : ($normalizedName !== '' && isset($facultyByName[$normalizedName])
+                        ? $facultyByName[$normalizedName]
+                        : null);
+                if (!$matchedFaculty && $externalIdentifier !== '') {
+                    $matchedFaculty = $facultyByIdentifier[strtolower($externalIdentifier)] ?? null;
+                }
+                $facultyIdentifier = trim((string) (
+                    data_get($matchedFaculty, 'meta.faculty_code')
+                    ?: ($matchedFaculty['student_id'] ?? '')
+                ));
                 $status = strtolower(trim((string) ($admin->status ?? 'active')));
                 $hubRole = strtolower(trim((string) ($admin->admin_hub_role ?? 'admin_designee')));
                 if (!in_array($hubRole, ['admin_designee', 'super_admin'], true)) {
@@ -904,9 +927,9 @@ class AdminUserController extends Controller
                     $status = 'active';
                 }
 
-                $resolvedIdentifier = $externalIdentifier !== ''
-                    ? $externalIdentifier
-                    : ($facultyIdentifier !== '' ? $facultyIdentifier : (string) ($linkedUser?->student_id ?? ''));
+                $resolvedIdentifier = $facultyIdentifier !== ''
+                    ? $facultyIdentifier
+                    : ($externalIdentifier !== '' ? $externalIdentifier : (string) ($linkedUser?->student_id ?? ''));
 
                 return [
                     'id' => (string) $admin->admin_id,
