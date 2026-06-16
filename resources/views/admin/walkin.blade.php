@@ -6481,6 +6481,26 @@
 
         let isApprovalMode = false;
 
+        function formatApplicantReferenceInput(value) {
+            const upper = String(value || '').toUpperCase().replace(/[^A-Z0-9-]/g, '');
+            if (upper.includes('-') || /[A-Z]/.test(upper)) {
+                return upper
+                    .replace(/-+/g, '-')
+                    .replace(/^-+|-+$/g, '')
+                    .slice(0, 20);
+            }
+
+            const compact = upper.slice(0, 12);
+            if (compact.length <= 4) {
+                return compact;
+            }
+            if (compact.length <= 8) {
+                return compact.slice(0, 4) + '-' + compact.slice(4);
+            }
+
+            return compact.slice(0, 4) + '-' + compact.slice(4, 8) + '-' + compact.slice(8);
+        }
+
         function doLookup() {
             const ref = (refInput ? refInput.value : '').trim();
             if (!ref) {
@@ -6581,6 +6601,14 @@
             })
             .catch(() => setStatus('error', 'Unable to look up right now. Please try again.'));
         }
+
+        refInput?.addEventListener('input', () => {
+            refInput.value = formatApplicantReferenceInput(refInput.value);
+        });
+
+        refInput?.addEventListener('blur', () => {
+            refInput.value = formatApplicantReferenceInput(refInput.value);
+        });
 
         function doApprove() {
             if (!currentLookupRef) {

@@ -2211,7 +2211,7 @@
                 $healthProfile = \App\Models\HealthProfile::where('user_id', $user->id)->first();
             @endphp
             @if(!empty($healthProfile?->student_photo))
-                <img src="{{ asset('storage/' . $healthProfile->student_photo) }}" alt="Student 2x2 Picture">
+                <img src="{{ route('student.health_record.document', ['document' => 'student_photo']) }}" alt="Student 2x2 Picture">
             @else
                 {{ strtoupper(substr($displayFullName, 0, 1)) }}
             @endif
@@ -2881,7 +2881,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div class="record-modal-links">
                                 @forelse($visibleRecordDocuments as $document)
                                     @php
-                                        $documentUrl = asset('storage/' . $document['path']);
+                                        $documentUrl = route('student.health_record.document', ['document' => $document['key']]);
                                     @endphp
                                     <div class="record-document-card">
                                         <div class="record-document-preview" aria-hidden="true">

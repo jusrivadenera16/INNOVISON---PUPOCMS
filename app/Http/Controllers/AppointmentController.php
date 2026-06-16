@@ -1409,6 +1409,41 @@ public function account(Request $request)
     ));
 }
 
+    public function showStudentHealthRecordDocument(string $document)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        abort_unless($user, 403);
+
+        $healthProfile = HealthProfile::query()->where('user_id', $user->id)->firstOrFail();
+
+        $allowedDocuments = [
+            'medical_certificate',
+            'chest_xray_result',
+            'student_photo',
+            'pwd_id_proof',
+            'medical_assessment_upload',
+        ];
+
+        abort_unless(in_array($document, $allowedDocuments, true), 404);
+
+        $path = ltrim((string) $healthProfile->{$document}, '/');
+        $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+
+        abort_if($path === '' || !Storage::disk('public')->exists($path), 404, 'Uploaded document not found.');
+
+        $disk = Storage::disk('public');
+        $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
+        $filename = basename($path);
+
+        return response()->file($disk->path($path), [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . str_replace('"', '', $filename) . '"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, max-age=300',
+        ]);
+    }
+
     public function openNotification(string $notificationId)
     {
         /** @var \App\Models\User|null $user */
@@ -1783,6 +1818,75 @@ public function showHealthForm()
     return view('student.health_form', compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill'));
 }
 
+public function validateHealthFormReference(Request $request)
+{
+    /** @var \App\Models\User|null $user */
+    $user = Auth::user();
+
+    $validated = $request->validate([
+        'reference_number' => ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$/'],
+    ]);
+
+    $referenceNumber = strtoupper(trim((string) $validated['reference_number']));
+    $currentReference = strtoupper(trim((string) ($user->reference_number ?? '')));
+
+    if ($currentReference !== '' && $referenceNumber === $currentReference) {
+        return response()->json([
+            'success' => true,
+            'reference_number' => $currentReference,
+            'message' => 'Reference already verified.',
+        ]);
+    }
+
+    $lookup = app(PuptasWebhookService::class)->fetchApplicantByReferenceNumberDetailed($referenceNumber);
+    if (empty($lookup['success']) || !is_array($lookup['data'] ?? null)) {
+        return response()->json([
+            'success' => false,
+            'message' => trim((string) ($lookup['message'] ?? 'Reference number could not be validated.')),
+        ], 422);
+    }
+
+    $applicantData = $lookup['data'];
+    $applicantIdpUserId = trim((string) (
+        data_get($applicantData, 'idp_user_id')
+        ?: data_get($applicantData, 'user.idp_user_id')
+        ?: data_get($applicantData, 'user_id')
+        ?: data_get($applicantData, 'user.id')
+    ));
+    $applicantEmail = strtolower(trim((string) (
+        data_get($applicantData, 'email')
+        ?: data_get($applicantData, 'user.email')
+    )));
+
+    $currentIdpUserId = trim((string) ($user->student_id ?? ''));
+    $currentEmail = strtolower(trim((string) ($user->email ?? '')));
+
+    $matchesCurrentAccount = false;
+    if ($currentIdpUserId !== '' && $applicantIdpUserId !== '' && strcasecmp($currentIdpUserId, $applicantIdpUserId) === 0) {
+        $matchesCurrentAccount = true;
+    } elseif ($currentEmail !== '' && $applicantEmail !== '' && $currentEmail === $applicantEmail) {
+        $matchesCurrentAccount = true;
+    }
+
+    if (!$matchesCurrentAccount) {
+        return response()->json([
+            'success' => false,
+            'message' => 'This reference number is not linked to your account.',
+        ], 422);
+    }
+
+    $identity = $this->normalizePuptasApplicantIdentity($applicantData);
+    $this->persistPuptasApplicantIdentity($user, $identity);
+    $existingHealthProfile = HealthProfile::query()->where('user_id', $user->id)->first();
+    $this->persistResolvedReferenceNumber($user, $referenceNumber, $existingHealthProfile);
+
+    return response()->json([
+        'success' => true,
+        'reference_number' => $referenceNumber,
+        'message' => 'Reference number verified successfully.',
+    ]);
+}
+
 public function storeHealthForm(Request $request)
 {
     /** @var \App\Models\User|null $user */
@@ -1794,7 +1898,7 @@ public function storeHealthForm(Request $request)
 
     $request->validate([
         'student_id'        => 'nullable|string|max:255',
-        'reference_number'  => ['required', 'string', 'max:20', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$/'],
+        'reference_number'  => ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$/'],
         'school_year'       => ['required', 'string', 'regex:/^\d{4}-\d{4}$/'],
         'home_address'      => 'required|string|max:255',
         'zipcode'           => 'required|string|max:20',
@@ -1892,6 +1996,20 @@ public function storeHealthForm(Request $request)
 
     /** @var \App\Models\User $user */
     $user = Auth::user();
+    $officialReference = strtoupper(trim((string) ($user->reference_number ?? '')));
+    if ($officialReference === '' && $user->relationLoaded('healthProfile') && $user->healthProfile) {
+        $officialReference = strtoupper(trim((string) ($user->healthProfile->reference_number ?? '')));
+    } elseif ($officialReference === '') {
+        $existingHealthProfile = \App\Models\HealthProfile::where('user_id', $user->id)->first();
+        $officialReference = strtoupper(trim((string) ($existingHealthProfile->reference_number ?? '')));
+    }
+
+    if ($officialReference === '' || $submittedReference !== $officialReference) {
+        throw ValidationException::withMessages([
+            'reference_number' => 'Admission Reference must come from the Admission System before submitting the Health Profile.',
+        ]);
+    }
+
     $normalizedHeight = $this->normalizeMeasurement($request->input('height'), 'cm');
     $normalizedWeight = $this->normalizeMeasurement($request->input('weight'), 'kg');
     $user->DOB = $request->input('birthday');
@@ -1904,7 +2022,7 @@ public function storeHealthForm(Request $request)
     if ($resolvedCourse !== '') {
         $user->course = $resolvedCourse;
     }
-    $user->reference_number = $submittedReference;
+    $user->reference_number = $officialReference;
     $user->save();
 
     try {
@@ -1922,7 +2040,7 @@ public function storeHealthForm(Request $request)
             ['user_id' => $user->id],
             [
                 'student_id'         => $request->student_id,
-                'reference_number'   => $submittedReference,
+                'reference_number'   => $officialReference,
                 'school_year'        => $request->school_year,
                 'home_address'       => $request->home_address,
                 'zipcode'            => $request->zipcode,

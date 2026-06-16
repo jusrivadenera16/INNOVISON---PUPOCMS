@@ -140,6 +140,9 @@ Route::middleware(['auth:student', 'audit'])->group(function () {
 
         // 1. Route para ipakita ang blankong form
         Route::get('/student/health-form', [AppointmentController::class, 'showHealthForm'])->name('health.form');
+        Route::get('/student/health-form/reference/validate', [AppointmentController::class, 'validateHealthFormReference'])
+            ->middleware('throttle:15,1')
+            ->name('student.health_form.reference.validate');
         Route::get('/student/health-form-legacy', function () {
             return redirect()->route('health.form');
         })->name('student.health.form');
@@ -152,6 +155,8 @@ Route::middleware(['auth:student', 'audit'])->group(function () {
         }
         Route::get('/student/health-form/print', [AppointmentController::class, 'printHealthForm'])->name('student.health_form.print');
         Route::get('/student/health-form/download', [AppointmentController::class, 'downloadHealthForm'])->name('student.health_form.download');
+        Route::get('/student/health-record/document/{document}', [AppointmentController::class, 'showStudentHealthRecordDocument'])
+            ->name('student.health_record.document');
 
         Route::get('/student/account', [AppointmentController::class, 'account']);
         Route::get('/student/history', [AppointmentController::class, 'history']);

@@ -392,15 +392,20 @@
         }
 
         .reference-verify-status {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
+            margin: 10px auto 0;
+            max-width: 760px;
+            color: #fde68a;
+            font-size: 0.82rem;
+            font-weight: 800;
+            line-height: 1.45;
+        }
+
+        .reference-verify-status.is-success {
+            color: #bbf7d0;
+        }
+
+        .reference-verify-status.is-error {
+            color: #fecaca;
         }
 
         .reference-icon-check {
@@ -419,6 +424,10 @@
             margin: 8px 0 0;
             font-size: 0.78rem;
             font-weight: 800;
+        }
+
+        .reference-panel.is-missing .reference-display strong {
+            font-size: clamp(1.9rem, 5vw, 3.5rem);
         }
 
         .upload-instruction-card {
@@ -1597,7 +1606,6 @@
                 ));
 
                 $displayReferenceNumber = trim((string) ($prefill['reference_number'] ?? ''));
-                $referenceNumberDraft = trim((string) old('reference_number', ''));
             @endphp
 
             <div class="stepper-shell">
@@ -1649,18 +1657,22 @@
                                 <strong>{{ $displayLastName !== '' ? $displayLastName : 'N/A' }}</strong>
                             </div>
                         </div>
-                        <div class="reference-panel" id="referencePanel">
+                        <div
+                            class="reference-panel {{ $displayReferenceNumber === '' ? 'is-missing' : '' }}"
+                            id="referencePanel"
+                            data-reference-locked="{{ $displayReferenceNumber !== '' ? 'true' : 'false' }}"
+                        >
                             <small>Reference Number</small>
                             <div class="reference-display">
-                                <strong id="referenceDisplayValue">{{ $displayReferenceNumber !== '' ? $displayReferenceNumber : 'No Reference Found' }}</strong>
+                                <strong id="referenceDisplayValue">{{ $displayReferenceNumber !== '' ? $displayReferenceNumber : 'No Reference Received' }}</strong>
                             </div>
                             <button
                                 type="button"
                                 class="reference-edit-btn"
                                 id="editReferenceBtn"
-                                aria-label="{{ $displayReferenceNumber !== '' ? 'Edit admission reference' : 'Add admission reference' }}"
+                                aria-label="{{ $displayReferenceNumber !== '' ? 'Reference already verified' : 'Add admission reference' }}"
                                 aria-expanded="false"
-                                title="{{ $displayReferenceNumber !== '' ? 'Edit reference number' : 'Add reference number' }}"
+                                title="{{ $displayReferenceNumber !== '' ? 'Reference already verified' : 'Add reference number' }}"
                             >
                                 <svg class="reference-icon-edit" viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M12 20h9"></path>
@@ -1670,29 +1682,27 @@
                                     <path d="m5 12 4 4L19 6"></path>
                                 </svg>
                             </button>
+                            <input type="hidden" name="reference_number" id="reference_number" value="{{ $displayReferenceNumber }}">
                             <div class="reference-verify-wrap" id="referenceVerifyWrap">
                                 <div class="reference-verify-row">
                                     <input
                                         type="text"
-                                        name="reference_number"
-                                        id="reference_number"
+                                        id="reference_editor"
                                         class="reference-verify-input"
-                                        value="{{ $displayReferenceNumber !== '' ? $displayReferenceNumber : $referenceNumberDraft }}"
+                                        value="{{ $displayReferenceNumber }}"
                                         placeholder="0000-0000-0000"
                                         maxlength="20"
-                                        pattern="[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+"
                                         autocomplete="off"
-                                        required
                                         aria-describedby="referenceVerifyStatus"
                                     >
                                 </div>
-                                <p class="reference-verify-status" id="referenceVerifyStatus" aria-live="polite">
-                                    Enter the reference number exactly as shown in your Admission System record.
-                                </p>
-                                @error('reference_number')
-                                    <p class="reference-field-error">{{ $message }}</p>
-                                @enderror
                             </div>
+                            <p class="reference-verify-status {{ $displayReferenceNumber === '' ? '' : 'is-success' }}" id="referenceVerifyStatus" aria-live="polite">
+                                {{ $displayReferenceNumber === '' ? 'Enter the reference number exactly as shown in your Admission System record, then click the check icon to verify it.' : 'Reference already verified from the Admission System.' }}
+                            </p>
+                            @error('reference_number')
+                                <p class="reference-field-error">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
 
@@ -1705,7 +1715,6 @@
                             <li>Provide your COVID-19 vaccination status and dose details, when applicable.</li>
                             <li>Prepare clear PDF or image copies of your medical certificate and official chest X-ray report.</li>
                             <li>If you are a PWD, upload your PWD ID in Step 5. Upload your formal 2x2 photo as JPG or PNG.</li>
-                            <li>Upload your formal 2x2 photo as JPG or PNG.</li>
                             <li>Download and print your Health Information Form before proceeding to Clinic for Assessment.</li>
                             <li>Don't forget to bring your hard copy of requirements and printed 2 by 2 photo to the clinic.</li>
                         </ol>
@@ -2207,6 +2216,7 @@
             const stepChips = Array.from({ length: 5 }, (_, index) => document.getElementById(`chipStep${index + 1}`));
             const nextToStep2Btn = document.getElementById('nextToStep2');
             const referenceInput = document.getElementById('reference_number');
+            const referenceEditorInput = document.getElementById('reference_editor');
             const referencePanel = document.getElementById('referencePanel');
             const editReferenceBtn = document.getElementById('editReferenceBtn');
             const referenceDisplayValue = document.getElementById('referenceDisplayValue');
@@ -2238,46 +2248,108 @@
             const uploadInputs = Array.from(document.querySelectorAll('[data-upload-input]'));
             let currentStep = {{ $startStep }};
             let isSubmitting = false;
+            let isReferenceValidating = false;
+
+            function isReferenceLocked() {
+                return referencePanel?.dataset.referenceLocked === 'true';
+            }
+
+            function setReferenceLocked(locked) {
+                if (!referencePanel) return;
+                referencePanel.dataset.referenceLocked = locked ? 'true' : 'false';
+            }
+
+            function setReferenceStatus(message, statusClass = '') {
+                if (!referenceVerifyStatus) return;
+                referenceVerifyStatus.textContent = message;
+                referenceVerifyStatus.classList.remove('is-success', 'is-error');
+                if (statusClass) {
+                    referenceVerifyStatus.classList.add(statusClass);
+                }
+            }
 
             function setReferenceEditor(open) {
-                referencePanel?.classList.toggle('is-editing', open);
+                if (!referencePanel) return;
+                referencePanel.classList.toggle('is-editing', open);
                 editReferenceBtn?.setAttribute('aria-expanded', open ? 'true' : 'false');
                 editReferenceBtn?.setAttribute(
                     'aria-label',
-                    open ? 'Confirm admission reference' : 'Edit admission reference'
+                    open ? 'Validate admission reference' : (isReferenceLocked() ? 'Reference already verified' : 'Add admission reference')
                 );
                 editReferenceBtn?.setAttribute(
                     'title',
-                    open ? 'Confirm reference number' : 'Edit reference number'
+                    open ? 'Validate reference number' : (isReferenceLocked() ? 'Reference already verified' : 'Add reference number')
                 );
 
                 if (open) {
                     window.setTimeout(() => {
-                        referenceInput?.focus();
-                        referenceInput?.select();
+                        referenceEditorInput?.focus();
+                        referenceEditorInput?.select();
                     }, 40);
                 }
             }
 
-            editReferenceBtn?.addEventListener('click', () => {
-                const isEditing = referencePanel?.classList.contains('is-editing');
-                if (isEditing && referenceInput) {
-                    referenceInput.value = referenceInput.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
-                    referenceInput.setCustomValidity('');
+            async function validateReferenceNumber() {
+                if (!referenceEditorInput || !referenceInput || isReferenceValidating) {
+                    return;
+                }
 
-                    if (!referenceInput.checkValidity()) {
-                        showValidationBubble(referenceInput);
-                        referenceInput.focus();
+                const normalizedReference = referenceEditorInput.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
+                referenceEditorInput.value = normalizedReference;
+                referenceEditorInput.setCustomValidity('');
+
+                if (!normalizedReference || !/^[A-Z0-9]+(?:-[A-Z0-9]+)+$/.test(normalizedReference)) {
+                    referenceEditorInput.setCustomValidity('Enter a valid Admission Reference.');
+                    setReferenceStatus('Enter a valid Admission Reference before continuing.', 'is-error');
+                    showValidationBubble(referenceEditorInput);
+                    referenceEditorInput.focus();
+                    return;
+                }
+
+                isReferenceValidating = true;
+                editReferenceBtn?.setAttribute('disabled', 'disabled');
+                setReferenceStatus('Checking reference number with the Admission System...');
+
+                try {
+                    const endpoint = new URL('{{ route('student.health_form.reference.validate') }}', window.location.origin);
+                    endpoint.searchParams.set('reference_number', normalizedReference);
+
+                    const response = await fetch(endpoint.toString(), {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin',
+                    });
+
+                    const payload = await response.json().catch(() => ({}));
+                    if (!response.ok || !payload.success) {
+                        const message = payload.message || 'Reference number could not be verified right now.';
+                        referenceEditorInput.setCustomValidity(message);
+                        setReferenceStatus(message, 'is-error');
+                        showValidationBubble(referenceEditorInput);
+                        referenceEditorInput.focus();
                         return;
                     }
 
-                    if (referenceDisplayValue) {
-                        referenceDisplayValue.textContent = referenceInput.value;
-                    }
+                    referenceInput.value = payload.reference_number || normalizedReference;
+                    referenceEditorInput.value = referenceInput.value;
+                    referenceDisplayValue.textContent = referenceInput.value;
+                    referencePanel?.classList.remove('is-missing');
+                    setReferenceLocked(true);
+                    setReferenceStatus(payload.message || 'Reference number verified successfully.', 'is-success');
+                    referenceEditorInput.setCustomValidity('');
+                    setReferenceEditor(false);
+                } catch (error) {
+                    referenceEditorInput.setCustomValidity('Reference number could not be verified right now.');
+                    setReferenceStatus('Reference number could not be verified right now.', 'is-error');
+                    showValidationBubble(referenceEditorInput);
+                } finally {
+                    isReferenceValidating = false;
+                    editReferenceBtn?.removeAttribute('disabled');
                 }
-
-                setReferenceEditor(!isEditing);
-            });
+            }
 
             function setStep(step) {
                 const normalizedStep = Math.min(5, Math.max(1, Number(step) || 1));
@@ -2637,6 +2709,28 @@
                 renderUploadPreview(input);
                 input.addEventListener('change', () => renderUploadPreview(input));
             });
+            editReferenceBtn?.addEventListener('click', () => {
+                if (isReferenceLocked()) {
+                    setReferenceStatus('Reference already verified from the Admission System.', 'is-success');
+                    return;
+                }
+
+                if (referencePanel?.classList.contains('is-editing')) {
+                    validateReferenceNumber();
+                    return;
+                }
+
+                clearValidationBubble();
+                setReferenceStatus('Enter the reference number exactly as shown in your Admission System record, then click the check icon to verify it.');
+                setReferenceEditor(true);
+            });
+            referenceEditorInput?.addEventListener('input', () => {
+                referenceEditorInput.value = referenceEditorInput.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
+                referenceEditorInput.setCustomValidity('');
+                if (!isReferenceLocked()) {
+                    setReferenceStatus('Enter the reference number exactly as shown in your Admission System record, then click the check icon to verify it.');
+                }
+            });
             document.addEventListener('click', (event) => {
                 clinicSelects.forEach((wrap) => {
                     if (!wrap.contains(event.target)) {
@@ -2662,43 +2756,27 @@
             });
 
             nextToStep2Btn?.addEventListener('click', () => {
+                const normalizedReference = (referenceInput?.value || '').trim();
+
                 if (referenceInput) {
-                    referenceInput.value = referenceInput.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
+                    referenceInput.value = normalizedReference;
                     referenceInput.setCustomValidity('');
                 }
 
-                if (!referenceInput?.checkValidity()) {
-                    setReferenceEditor(true);
-                    showValidationBubble(referenceInput);
-                    referenceInput?.focus();
+                if (normalizedReference === '') {
+                    if (referenceInput) {
+                        referenceInput.setCustomValidity('Admission Reference is required before continuing.');
+                        setReferenceStatus('Verify your Admission Reference before continuing.', 'is-error');
+                        showValidationBubble(referenceInput);
+                    }
                     return;
                 }
-
-                if (referenceDisplayValue) {
-                    referenceDisplayValue.textContent = referenceInput.value;
-                }
-                setReferenceEditor(false);
 
                 if (!validateStep(1)) {
                     return;
                 }
                 setStep(2);
                 stepPanels[1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
-
-            referenceInput?.addEventListener('input', () => {
-                referenceInput.value = referenceInput.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
-                referenceInput.setCustomValidity('');
-                referenceVerifyStatus?.classList.remove('is-success', 'is-error');
-
-                if (referenceDisplayValue) {
-                    referenceDisplayValue.textContent = referenceInput.value || 'No Reference Found';
-                }
-
-                if (referenceVerifyStatus) {
-                    referenceVerifyStatus.textContent =
-                        'Enter the reference number exactly as shown in your Admission System record.';
-                }
             });
             stepNavigationButtons.forEach((button) => {
                 button.addEventListener('click', () => {

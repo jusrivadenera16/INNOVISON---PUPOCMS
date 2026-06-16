@@ -1257,6 +1257,517 @@
             font-size: 12px;
             font-weight: 800;
         }
+
+        /* Command Center Gateway Override */
+        body {
+            transition: background 0.45s ease, color 0.28s ease;
+        }
+
+        body.landing-theme-light {
+            color: #4b1520;
+            background:
+                linear-gradient(135deg, rgba(255, 248, 238, 0.94), rgba(255, 255, 255, 0.90)),
+                url('{{ asset('images/PUPBG.jpg') }}') center center / cover no-repeat fixed;
+        }
+
+        body.landing-theme-light::before {
+            background:
+                radial-gradient(circle at 20% 18%, rgba(112, 19, 27, 0.14), transparent 24%),
+                radial-gradient(circle at 82% 12%, rgba(250, 204, 21, 0.18), transparent 22%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.10));
+        }
+
+        .landing-shell {
+            align-items: stretch;
+            padding: clamp(28px, 5vw, 56px) 18px;
+        }
+
+        .landing-theme-toggle {
+            position: fixed;
+            top: 22px;
+            right: 22px;
+            z-index: 40;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 46px;
+            padding: 0 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(250, 204, 21, 0.45);
+            background: rgba(20, 16, 20, 0.52);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 18px 32px rgba(15, 23, 42, 0.22);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+        }
+
+        .landing-theme-toggle:hover,
+        .landing-theme-toggle:focus-visible {
+            transform: translateY(-1px);
+            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            color: var(--maroon);
+            border-color: var(--gold);
+            outline: none;
+        }
+
+        .landing-theme-toggle svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            flex: 0 0 auto;
+        }
+
+        body.landing-theme-light .landing-theme-toggle {
+            background: rgba(255, 255, 255, 0.88);
+            color: #70131b;
+            border-color: rgba(112, 19, 27, 0.24);
+        }
+
+        .landing-panel {
+            position: relative;
+            width: min(1120px, 100%);
+            min-height: min(740px, calc(100vh - 64px));
+            display: block;
+            padding: clamp(34px, 5vw, 58px);
+            border-radius: 34px;
+            overflow: hidden;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+                linear-gradient(145deg, rgba(31, 8, 14, 0.86), rgba(84, 12, 24, 0.74));
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 30px 80px rgba(15, 23, 42, 0.34);
+        }
+
+        body.landing-theme-light .landing-panel {
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 248, 236, 0.82)),
+                linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(255, 244, 224, 0.86));
+            border-color: rgba(112, 19, 27, 0.12);
+            box-shadow: 0 24px 70px rgba(112, 19, 27, 0.14);
+        }
+
+        .landing-panel::before,
+        .landing-panel::after {
+            content: "";
+            position: absolute;
+            border-radius: 999px;
+            pointer-events: none;
+        }
+
+        .landing-panel::before {
+            top: -160px;
+            left: -120px;
+            width: 360px;
+            height: 360px;
+            background: radial-gradient(circle, rgba(250, 204, 21, 0.22), transparent 68%);
+        }
+
+        .landing-panel::after {
+            right: -140px;
+            bottom: -180px;
+            width: 420px;
+            height: 420px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.12), transparent 68%);
+        }
+
+        body.landing-theme-light .landing-panel::before {
+            background: radial-gradient(circle, rgba(250, 204, 21, 0.18), transparent 68%);
+        }
+
+        body.landing-theme-light .landing-panel::after {
+            background: radial-gradient(circle, rgba(112, 19, 27, 0.10), transparent 68%);
+        }
+
+        .gateway-stage {
+            position: relative;
+            z-index: 2;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 26px;
+            text-align: center;
+            transition: opacity .3s ease, transform .34s ease;
+        }
+
+        .gateway-brand {
+            width: min(760px, 100%);
+            display: grid;
+            justify-items: center;
+            gap: 18px;
+        }
+
+        .gateway-logo-row {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .gateway-logo-card {
+            width: 88px;
+            height: 88px;
+            border-radius: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(250, 204, 21, 0.36);
+            box-shadow: 0 18px 34px rgba(15, 23, 42, 0.16);
+        }
+
+        .gateway-logo-card img {
+            width: 62px;
+            height: 62px;
+            object-fit: contain;
+        }
+
+        .gateway-kicker {
+            margin: 0;
+            font-size: 12px;
+            font-weight: 950;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: #facc15;
+        }
+
+        .gateway-title {
+            margin: 0;
+            max-width: 820px;
+            color: #ffffff;
+            font-size: clamp(2.9rem, 6vw, 5.45rem);
+            line-height: 0.96;
+            font-weight: 950;
+            letter-spacing: -0.03em;
+            text-wrap: balance;
+        }
+
+        body.landing-theme-light .gateway-title {
+            color: #70131b;
+        }
+
+        .gateway-copy {
+            margin: 0;
+            max-width: 760px;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: clamp(1rem, 1.7vw, 1.12rem);
+            line-height: 1.8;
+            font-weight: 600;
+            text-wrap: balance;
+        }
+
+        body.landing-theme-light .gateway-copy,
+        body.landing-theme-light .system-foot,
+        body.landing-theme-light .workspace-utility-actions .local-login-link,
+        body.landing-theme-light .workspace-utility-actions .help-btn {
+            color: #6b7280;
+        }
+
+        .gateway-notice {
+            width: min(620px, 100%);
+        }
+
+        .workspace-entry.gateway-actions {
+            width: min(500px, 100%);
+            display: grid;
+            gap: 16px;
+            justify-items: stretch;
+        }
+
+        .gateway-actions .portal-btn {
+            min-height: 64px;
+            width: 100%;
+            padding: 0 26px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
+            border: 1px solid rgba(250, 204, 21, 0.26);
+            box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
+            justify-content: center;
+            font-size: 1.02rem;
+            font-weight: 950;
+        }
+
+        .gateway-actions .portal-btn:hover,
+        .gateway-actions .portal-btn:focus-visible {
+            box-shadow: 0 22px 42px rgba(112, 19, 27, 0.26);
+        }
+
+        .workspace-utility-actions.gateway-utility {
+            justify-content: center;
+            margin-top: -6px;
+        }
+
+        .gateway-sa-selector {
+            width: min(520px, 100%);
+            margin-top: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(250, 204, 21, 0.18);
+            border-radius: 24px;
+            padding: 22px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        body.landing-theme-light .gateway-sa-selector {
+            background: rgba(255, 255, 255, 0.7);
+            border-color: rgba(112, 19, 27, 0.10);
+        }
+
+        .gateway-feature-grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 10px;
+        }
+
+        .gateway-feature-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 22px;
+            padding: 18px 18px 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            text-align: left;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        body.landing-theme-light .gateway-feature-card {
+            background: rgba(255, 255, 255, 0.78);
+            border-color: rgba(112, 19, 27, 0.10);
+        }
+
+        .gateway-feature-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto auto 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #facc15, rgba(250, 204, 21, 0.08));
+        }
+
+        .gateway-feature-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #facc15, #ffe693);
+            color: #70131b;
+            margin-bottom: 12px;
+            box-shadow: 0 12px 24px rgba(250, 204, 21, 0.18);
+        }
+
+        .gateway-feature-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .gateway-feature-title {
+            margin: 0 0 4px;
+            color: #ffffff;
+            font-size: 0.98rem;
+            font-weight: 900;
+        }
+
+        body.landing-theme-light .gateway-feature-title {
+            color: #70131b;
+        }
+
+        .gateway-feature-copy {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 0.84rem;
+            line-height: 1.55;
+            font-weight: 600;
+        }
+
+        body.landing-theme-light .gateway-feature-copy {
+            color: #64748b;
+        }
+
+        .help-panel {
+            position: absolute;
+            inset: 22px;
+            z-index: 5;
+            width: auto;
+            max-width: none;
+            height: auto;
+            margin: 0;
+            opacity: 0;
+            transform: translateY(18px);
+            pointer-events: none;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 248, 236, 0.94));
+            border: 1px solid rgba(112, 19, 27, 0.12);
+            border-radius: 28px;
+            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.20);
+            color: #1f2937;
+            transition: opacity .26s ease, transform .34s ease;
+        }
+
+        .landing-panel.is-help .help-panel {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .landing-panel.is-help .gateway-stage {
+            opacity: 0;
+            transform: translateY(-10px) scale(0.985);
+            pointer-events: none;
+        }
+
+        .help-panel-head {
+            background: linear-gradient(135deg, #70131b, #8f2230);
+            color: #ffffff;
+            border-radius: 22px 22px 0 0;
+            margin: -1px -1px 0;
+            padding: 22px 24px 20px;
+        }
+
+        .help-panel-kicker {
+            color: #facc15;
+        }
+
+        .help-panel-copy {
+            color: rgba(255, 255, 255, 0.84);
+        }
+
+        .help-panel-back {
+            background: rgba(255, 255, 255, 0.10);
+            color: #ffffff;
+            border-color: rgba(250, 204, 21, 0.44);
+        }
+
+        .help-panel-back:hover,
+        .help-panel-back:focus-visible {
+            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            color: var(--maroon);
+        }
+
+        .info-column {
+            display: none !important;
+        }
+
+        .landing-topbar {
+            display: none !important;
+        }
+
+        .login-column {
+            width: 100% !important;
+            display: block !important;
+            background: transparent !important;
+            border: 0 !important;
+        }
+
+        .login-card {
+            background: transparent !important;
+            box-shadow: none !important;
+            min-height: auto !important;
+            padding: 0 !important;
+        }
+
+        .login-primary.gateway-stage {
+            width: 100%;
+            min-height: min(640px, calc(100vh - 120px));
+            padding: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        .gateway-brand-copy {
+            width: min(760px, 100%);
+            display: grid;
+            justify-items: center;
+            gap: 16px;
+            margin-bottom: 6px;
+        }
+
+        .gateway-brand-copy h1,
+        .gateway-brand-copy p {
+            margin: 0;
+        }
+
+        .gateway-brand-copy .gateway-copy {
+            max-width: 760px;
+        }
+
+        .login-copy.gateway-brand-copy {
+            margin-bottom: 0;
+        }
+
+        .gateway-stage .workspace-entry {
+            width: min(500px, 100%);
+        }
+
+        .gateway-stage .workspace-entry .portal-btn {
+            width: 100%;
+        }
+
+        @media (max-width: 980px) {
+            .landing-panel {
+                min-height: auto;
+                padding: 26px 18px 24px;
+            }
+
+            .gateway-feature-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .landing-theme-toggle {
+                top: 16px;
+                right: 16px;
+                min-height: 42px;
+                padding: 0 14px;
+            }
+
+            .landing-panel {
+                padding: 22px 14px 18px;
+                border-radius: 24px;
+            }
+
+            .gateway-logo-card {
+                width: 74px;
+                height: 74px;
+                border-radius: 20px;
+            }
+
+            .gateway-logo-card img {
+                width: 52px;
+                height: 52px;
+            }
+
+            .gateway-feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .help-panel {
+                inset: 10px;
+                border-radius: 22px;
+            }
+
+            .workspace-entry.gateway-actions {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1292,6 +1803,12 @@
         </div>
     </div>
     <main class="landing-shell">
+        <button type="button" class="landing-theme-toggle" id="landingThemeToggle" aria-pressed="false" aria-label="Toggle light and dark mode">
+            <svg id="landingThemeToggleIcon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <span id="landingThemeToggleText">Light Mode</span>
+        </button>
         <section class="landing-panel" aria-label="PUP medical clinic access">
             <div class="info-column">
                 <div class="info-default">
@@ -1404,7 +1921,7 @@
                             <span>My Account</span>
                         </a>
                     @else
-                        <a class="portal-btn" href="{{ route('login.portal') }}">
+                        <a class="portal-btn" href="https://one-portal.isaxbsit2027.com/portal">
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                 <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M15 12H4" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1445,26 +1962,27 @@
 
             <div class="login-column">
                 <div class="login-card">
-                    <div class="login-primary" id="landingLoginPrimary">
-                        <div class="logo-stack" aria-label="PUP and clinic logos">
-                            <span class="logo-frame">
+                    <div class="login-primary gateway-stage" id="landingLoginPrimary">
+                        <div class="logo-stack gateway-logo-row" aria-label="PUP and clinic logos">
+                            <span class="logo-frame gateway-logo-card">
                                 <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
                             </span>
-                            <span class="logo-frame logo-frame--clinic">
+                            <span class="logo-frame logo-frame--clinic gateway-logo-card">
                                 <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="Clinic Logo">
                             </span>
                         </div>
 
-                        <div class="login-copy">
-                            <h2>Clinic Access</h2>
-                            <p>Use your One Portal account to continue browsing other systems or clinic workspace.</p>
+                        <div class="login-copy gateway-brand-copy">
+                            <p class="gateway-kicker">Medical Services Department</p>
+                            <h1 class="gateway-title">PUP Taguig Medical Clinic</h1>
+                            <p class="gateway-copy">A centralized web-based clinic management platform designed to digitize PUP Taguig Clinic operations, integrating student health profiles, appointment scheduling, verification processes, and staff workflows into one unified access point.</p>
                         </div>
 
                         @if($errors->has('idp'))
                             <div class="notice">{{ $errors->first('idp') }}</div>
                         @endif
 
-                        <div class="workspace-entry">
+                        <div class="workspace-entry gateway-actions">
                             <a href="{{ $workspaceHref }}" class="portal-btn" id="viewClinicWorkspaceBtn">
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1491,7 +2009,7 @@
                                     <span>My Account</span>
                                 </a>
                             @else
-                                <a class="portal-btn" href="{{ route('login.portal') }}">
+                                <a class="portal-btn" href="https://one-portal.isaxbsit2027.com/portal">
                                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                         <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
                                         <path d="M15 12H4" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1501,7 +2019,7 @@
                                 </a>
                             @endif
 
-                            <div class="workspace-utility-actions">
+                            <div class="workspace-utility-actions gateway-utility">
                                 <button class="help-btn help-link" type="button" id="landingNeedHelpButton" aria-controls="landingHelpPanel" aria-expanded="false">
                                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                         <path d="M12 18h.01" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1553,6 +2071,51 @@
                                         : 'Admin Side: Available ' . $saAdminWorkspaceHoursLabel }}
                                 </span>
                             </a>
+                        </div>
+
+                        <div class="gateway-feature-grid" aria-label="Clinic system capabilities">
+                            <article class="gateway-feature-card">
+                                <span class="gateway-feature-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M12 3l7 4v5c0 4.5-2.9 7.4-7 9-4.1-1.6-7-4.5-7-9V7l7-4z" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M9 12l2 2 4-5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <h3 class="gateway-feature-title">Clinic Access</h3>
+                                <p class="gateway-feature-copy">Secure workspace entry through One Portal and role-aware portal routing.</p>
+                            </article>
+
+                            <article class="gateway-feature-card">
+                                <span class="gateway-feature-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M12 21s7-4.4 7-11a4 4 0 0 0-7-2.6A4 4 0 0 0 5 10c0 6.6 7 11 7 11z" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M9 13h2l1-2 2 4 1-2h2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <h3 class="gateway-feature-title">Health Records</h3>
+                                <p class="gateway-feature-copy">Student profiles, digital clearances, and clinic-ready submission workflows.</p>
+                            </article>
+
+                            <article class="gateway-feature-card">
+                                <span class="gateway-feature-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v14H4V7a2 2 0 0 1 2-2z" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M8 14h3M8 18h6" stroke-linecap="round"/>
+                                    </svg>
+                                </span>
+                                <h3 class="gateway-feature-title">Appointments</h3>
+                                <p class="gateway-feature-copy">Book clinic services, monitor schedules, and follow your visit status.</p>
+                            </article>
+
+                            <article class="gateway-feature-card">
+                                <span class="gateway-feature-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M12 3l1.2 3.8L17 8l-3.8 1.2L12 13l-1.2-3.8L7 8l3.8-1.2L12 3zM18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14zM6 13l.7 1.8L8.5 15.5l-1.8.7L6 18l-.7-1.8-1.8-.7 1.8-.7L6 13z" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <h3 class="gateway-feature-title">AI Integrated</h3>
+                                <p class="gateway-feature-copy">Assisted intake tools and smarter clinic-side workflow support.</p>
+                            </article>
                         </div>
 
                         <p class="system-foot">PUP Taguig Clinic Management System</p>
@@ -1737,13 +2300,57 @@
         const helpButtons = Array.from(document.querySelectorAll('.help-btn'));
         const helpBackButton = document.getElementById('landingHelpBackButton');
         const helpAccordions = Array.from(document.querySelectorAll('.help-accordion'));
+        const landingThemeToggle = document.getElementById('landingThemeToggle');
+        const landingThemeToggleText = document.getElementById('landingThemeToggleText');
+        const landingThemeToggleIcon = document.getElementById('landingThemeToggleIcon');
         let isHelpMode = false;
+        const landingThemeStorageKey = 'landing-theme-preference';
+
+        function setLandingThemeIcon(theme) {
+            if (!landingThemeToggleIcon) {
+                return;
+            }
+
+            if (theme === 'light') {
+                landingThemeToggleIcon.innerHTML = '<path d="M12 3v2.2M12 18.8V21M4.9 4.9l1.5 1.5M17.6 17.6l1.5 1.5M3 12h2.2M18.8 12H21M4.9 19.1l1.5-1.5M17.6 6.4l1.5-1.5M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z" stroke-linecap="round" stroke-linejoin="round"></path>';
+            } else {
+                landingThemeToggleIcon.innerHTML = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" stroke-linecap="round" stroke-linejoin="round"></path>';
+            }
+        }
+
+        function applyLandingTheme(theme) {
+            const normalizedTheme = theme === 'light' ? 'light' : 'dark';
+            document.body.classList.toggle('landing-theme-light', normalizedTheme === 'light');
+
+            if (landingThemeToggle) {
+                landingThemeToggle.setAttribute('aria-pressed', normalizedTheme === 'light' ? 'true' : 'false');
+            }
+
+            if (landingThemeToggleText) {
+                landingThemeToggleText.textContent = normalizedTheme === 'light' ? 'Dark Mode' : 'Light Mode';
+            }
+
+            setLandingThemeIcon(normalizedTheme);
+            localStorage.setItem(landingThemeStorageKey, normalizedTheme);
+        }
+
+        function initializeLandingTheme() {
+            const savedTheme = localStorage.getItem(landingThemeStorageKey);
+            applyLandingTheme(savedTheme === 'light' ? 'light' : 'dark');
+
+            landingThemeToggle?.addEventListener('click', function () {
+                const nextTheme = document.body.classList.contains('landing-theme-light') ? 'dark' : 'light';
+                applyLandingTheme(nextTheme);
+            });
+        }
 
         // Initialize: Show preloader, check URL parameters from gateway
         function initializeLanding() {
             if (preloader) {
                 preloader.classList.remove('hidden');
             }
+
+            initializeLandingTheme();
 
             // Check URL parameters set by the workspace gateway
             checkGatewayParameters();
