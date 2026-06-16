@@ -1520,12 +1520,12 @@
             font-weight: 950;
         }
 
-        .gateway-actions .portal-btn span {
+        .gateway-actions .portal-btn .portal-btn__label {
             text-align: center;
         }
 
-        .gateway-actions .portal-btn::after {
-            content: "→";
+        .gateway-actions .portal-btn .portal-btn__icon,
+        .gateway-actions .portal-btn .portal-btn__arrow {
             width: 28px;
             height: 28px;
             border-radius: 50%;
@@ -1535,12 +1535,19 @@
             background: rgba(255, 255, 255, 0.14);
             border: 1px solid rgba(255, 255, 255, 0.16);
             color: currentColor;
-            font-size: 14px;
-            line-height: 1;
-            font-weight: 900;
+            flex: 0 0 28px;
         }
 
-        .gateway-actions .portal-btn svg {
+        .gateway-actions .portal-btn .portal-btn__icon svg,
+        .gateway-actions .portal-btn .portal-btn__arrow svg {
+            width: 15px;
+            height: 15px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .gateway-actions .portal-btn > svg {
             justify-self: start;
         }
 
@@ -1552,8 +1559,10 @@
             box-shadow: 0 22px 42px rgba(112, 19, 27, 0.26);
         }
 
-        .gateway-actions .portal-btn:hover::after,
-        .gateway-actions .portal-btn:focus-visible::after {
+        .gateway-actions .portal-btn:hover .portal-btn__icon,
+        .gateway-actions .portal-btn:focus-visible .portal-btn__icon,
+        .gateway-actions .portal-btn:hover .portal-btn__arrow,
+        .gateway-actions .portal-btn:focus-visible .portal-btn__arrow {
             background: rgba(112, 19, 27, 0.12);
             border-color: rgba(112, 19, 27, 0.14);
         }
@@ -1564,7 +1573,8 @@
             color: var(--maroon);
         }
 
-        .gateway-actions .portal-btn--idp::after {
+        .gateway-actions .portal-btn--idp .portal-btn__icon,
+        .gateway-actions .portal-btn--idp .portal-btn__arrow {
             background: rgba(112, 19, 27, 0.12);
             border-color: rgba(112, 19, 27, 0.14);
         }
@@ -1576,8 +1586,10 @@
             color: #111111;
         }
 
-        .gateway-actions .portal-btn--idp:hover::after,
-        .gateway-actions .portal-btn--idp:focus-visible::after {
+        .gateway-actions .portal-btn--idp:hover .portal-btn__icon,
+        .gateway-actions .portal-btn--idp:focus-visible .portal-btn__icon,
+        .gateway-actions .portal-btn--idp:hover .portal-btn__arrow,
+        .gateway-actions .portal-btn--idp:focus-visible .portal-btn__arrow {
             background: rgba(17, 17, 17, 0.08);
             border-color: rgba(17, 17, 17, 0.14);
         }
@@ -1589,10 +1601,26 @@
 
         .workspace-utility-actions.gateway-utility .help-btn {
             color: rgba(255, 255, 255, 0.84);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 38px;
+            padding: 0 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
         }
 
         .workspace-utility-actions.gateway-utility .help-btn svg {
             color: inherit;
+        }
+
+        .workspace-utility-actions.gateway-utility .help-btn:hover,
+        .workspace-utility-actions.gateway-utility .help-btn:focus-visible {
+            color: #ffffff;
+            border-color: rgba(250, 204, 21, 0.42);
+            background: rgba(250, 204, 21, 0.10);
         }
 
         .gateway-sa-selector {
@@ -1710,6 +1738,7 @@
             box-shadow: 0 24px 70px rgba(15, 23, 42, 0.20);
             color: #1f2937;
             transition: opacity .26s ease, transform .34s ease;
+            overflow: hidden;
         }
 
         .landing-panel.is-help .help-panel {
@@ -1727,9 +1756,9 @@
         .help-panel-head {
             background: linear-gradient(135deg, #70131b, #8f2230);
             color: #ffffff;
-            border-radius: 22px 22px 0 0;
-            margin: -1px -1px 0;
-            padding: 20px 22px 18px;
+            border-radius: 0;
+            margin: 0;
+            padding: 18px 20px 16px;
         }
 
         .help-contact-card {
@@ -2114,13 +2143,20 @@
                         @endif
 
                         <div class="workspace-entry gateway-actions">
-                            <a href="{{ $workspaceHref }}" class="portal-btn" id="viewClinicWorkspaceBtn">
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M15 12H4" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M20 4v16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>View Clinic Workspace</span>
+                            <a href="{{ $workspaceHref }}" class="portal-btn portal-btn--workspace" id="viewClinicWorkspaceBtn">
+                                <span class="portal-btn__icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24">
+                                        <rect x="3" y="4" width="18" height="12" rx="2"></rect>
+                                        <path d="M8 20h8M12 16v4"></path>
+                                    </svg>
+                                </span>
+                                <span class="portal-btn__label">View Clinic Workspace</span>
+                                <span class="portal-btn__arrow" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M5 12h14"></path>
+                                        <path d="m13 6 6 6-6 6"></path>
+                                    </svg>
+                                </span>
                             </a>
 
                             @if($landingStudentUser)
@@ -2141,12 +2177,19 @@
                                 </a>
                             @else
                                 <a class="portal-btn portal-btn--idp" href="https://one-portal.isaxbsit2027.com/portal">
-                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                        <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M15 12H4" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M20 4v16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    <span>Log In via One Portal</span>
+                                    <span class="portal-btn__icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24">
+                                            <circle cx="12" cy="8" r="4"></circle>
+                                            <path d="M5 20a7 7 0 0 1 14 0"></path>
+                                        </svg>
+                                    </span>
+                                    <span class="portal-btn__label">Log In via One Portal</span>
+                                    <span class="portal-btn__arrow" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M5 12h14"></path>
+                                            <path d="m13 6 6 6-6 6"></path>
+                                        </svg>
+                                    </span>
                                 </a>
                             @endif
 
