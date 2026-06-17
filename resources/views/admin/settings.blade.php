@@ -407,15 +407,18 @@
         color: #64748b;
     }
     .field select {
-        padding-right: 44px;
+        padding-right: 56px;
         background-image:
+            linear-gradient(to right, transparent calc(100% - 48px), rgba(127,0,0,0.12) calc(100% - 48px), rgba(127,0,0,0.12) calc(100% - 47px), transparent calc(100% - 47px)),
             linear-gradient(45deg, transparent 50%, #7f0000 50%),
             linear-gradient(135deg, #7f0000 50%, transparent 50%);
         background-position:
-            calc(100% - 20px) calc(50% - 3px),
-            calc(100% - 14px) calc(50% - 3px);
-        background-size: 6px 6px, 6px 6px;
+            right 0 top 0,
+            calc(100% - 22px) calc(50% - 3px),
+            calc(100% - 16px) calc(50% - 3px);
+        background-size: 100% 100%, 6px 6px, 6px 6px;
         background-repeat: no-repeat;
+        cursor: pointer;
     }
     .field-help {
         margin: 8px 0 0 6px;
@@ -856,6 +859,25 @@
         transition: border-color .18s ease, box-shadow .2s ease, transform .18s ease;
         outline: none;
     }
+    .modal-body .field select {
+        padding-right: 56px;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image:
+            linear-gradient(to right, transparent calc(100% - 48px), rgba(112, 19, 27, 0.12) calc(100% - 48px), rgba(112, 19, 27, 0.12) calc(100% - 47px), transparent calc(100% - 47px)),
+            linear-gradient(45deg, transparent 50%, #8b0000 50%),
+            linear-gradient(135deg, #8b0000 50%, transparent 50%),
+            linear-gradient(180deg, #ffffff, #fff8f6);
+        background-position:
+            right 0 top 0,
+            calc(100% - 22px) calc(50% - 3px),
+            calc(100% - 16px) calc(50% - 3px),
+            left top;
+        background-size: 100% 100%, 6px 6px, 6px 6px, 100% 100%;
+        background-repeat: no-repeat;
+        cursor: pointer;
+    }
     .modal-body .field input:hover,
     .modal-body .field select:hover {
         border-color: rgba(112, 19, 27, 0.28);
@@ -1096,6 +1118,12 @@
         border-color: #facc15;
         box-shadow: 0 0 0 3px rgba(250,204,21,0.12), 0 10px 24px rgba(0,0,0,0.22);
     }
+    html[data-theme="dark"] .field select {
+        background-image:
+            linear-gradient(to right, transparent calc(100% - 48px), rgba(250,204,21,0.18) calc(100% - 48px), rgba(250,204,21,0.18) calc(100% - 47px), transparent calc(100% - 47px)),
+            linear-gradient(45deg, transparent 50%, #facc15 50%),
+            linear-gradient(135deg, #facc15 50%, transparent 50%);
+    }
     html[data-theme="dark"] .modal-body .field label {
         color: #94a3b8;
     }
@@ -1112,6 +1140,13 @@
         background: rgba(20, 9, 13, 0.92);
         color: #fff1f4;
         border-color: rgba(255,255,255,0.10);
+    }
+    html[data-theme="dark"] .modal-body .field select {
+        background-image:
+            linear-gradient(to right, transparent calc(100% - 48px), rgba(250,204,21,0.16) calc(100% - 48px), rgba(250,204,21,0.16) calc(100% - 47px), transparent calc(100% - 47px)),
+            linear-gradient(45deg, transparent 50%, #facc15 50%),
+            linear-gradient(135deg, #facc15 50%, transparent 50%),
+            linear-gradient(180deg, rgba(20, 9, 13, 0.92), rgba(20, 9, 13, 0.92));
     }
     html[data-theme="dark"] .modal-body .field input:hover,
     html[data-theme="dark"] .modal-body .field select:hover {
@@ -1362,7 +1397,7 @@
                             <strong>{{ app(\App\Services\ClinicWorkflowService::class)->studentAssistantHoursLabel() }}</strong>
                         </div>
                         <div class="workflow-summary-row">
-                            <span>Appointment Reminder</span>
+                            <span>Appointment Reminder Timing</span>
                             <strong>{{ $reminderLabels[(int) ($settings->appointment_reminder_hours ?? 24)] ?? '1 day before' }}</strong>
                         </div>
                         <div class="workflow-summary-row">
@@ -1425,8 +1460,8 @@
                         </section>
 
                         <section class="workflow-setting-group">
-                            <h4>Appointment Reminder Schedule</h4>
-                            <p>Creates an in-system student reminder when an approved appointment enters the selected time window.</p>
+                            <h4>Appointment Reminder Timing</h4>
+                            <p>Choose when the system should send a reminder to the student's Notifications before an approved appointment.</p>
                             <div class="field-grid">
                                 <div class="field">
                                     <label for="appointmentReminderHours">Reminder Timing</label>

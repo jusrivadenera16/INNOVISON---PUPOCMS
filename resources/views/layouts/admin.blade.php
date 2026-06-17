@@ -4435,10 +4435,12 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                     </button>
                     <span class="quick-action-tooltip">Scan</span>
                     <div class="quick-scan-menu" id="headerQuickScanMenu">
+                        @unless($isStudentAssistant)
                         <button type="button" class="quick-scan-choice">
                             <x-outline-icon name="document-text" />
                             <span>Applicants</span>
                         </button>
+                        @endunless
                         <button type="button" class="quick-scan-choice">
                             <x-outline-icon name="user-plus" />
                             <span>Walk-in</span>

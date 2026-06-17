@@ -653,7 +653,7 @@
         <div class="treatment-record-actions">
             <button type="button" class="treatment-filter-button" id="openTreatmentFilter">
                 <x-outline-icon name="calendar-days" />
-                Filter Only
+                Filter
             </button>
             <a href="{{ $reportsHomeUrl }}" class="treatment-record-back">
                 <x-outline-icon name="arrow-long-right" />
