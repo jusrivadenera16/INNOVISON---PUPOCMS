@@ -1500,13 +1500,13 @@
         .gateway-actions .portal-btn {
             min-height: 54px;
             width: 100%;
-            padding: 0 20px;
-            border-radius: 999px;
-            background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
-            border: 1px solid rgba(250, 204, 21, 0.26);
-            box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
+            padding: 0;
+            border-radius: 0;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
             display: grid;
-            grid-template-columns: auto 1fr auto;
+            grid-template-columns: 82px minmax(0, 1fr) 82px;
             align-items: center;
             gap: 12px;
             font-size: 0.95rem;
@@ -1514,27 +1514,34 @@
         }
 
         .gateway-actions .portal-btn .portal-btn__label {
+            min-height: 54px;
+            padding: 0 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
+            background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
+            border: 1px solid rgba(250, 204, 21, 0.50);
+            box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
         }
 
         .gateway-actions .portal-btn .portal-btn__icon,
         .gateway-actions .portal-btn .portal-btn__arrow {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
+            width: 82px;
+            min-height: 54px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.14);
-            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
+            border: 1px solid rgba(250, 204, 21, 0.50);
             color: currentColor;
-            flex: 0 0 28px;
+            box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
         }
 
         .gateway-actions .portal-btn .portal-btn__icon svg,
         .gateway-actions .portal-btn .portal-btn__arrow svg {
-            width: 15px;
-            height: 15px;
+            width: 18px;
+            height: 18px;
             stroke: currentColor;
             stroke-width: 2;
             fill: none;
@@ -1546,45 +1553,46 @@
 
         .gateway-actions .portal-btn:hover,
         .gateway-actions .portal-btn:focus-visible {
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
-            border-color: var(--gold);
             color: var(--maroon);
-            box-shadow: 0 22px 42px rgba(112, 19, 27, 0.26);
         }
 
         .gateway-actions .portal-btn:hover .portal-btn__icon,
         .gateway-actions .portal-btn:focus-visible .portal-btn__icon,
+        .gateway-actions .portal-btn:hover .portal-btn__label,
+        .gateway-actions .portal-btn:focus-visible .portal-btn__label,
         .gateway-actions .portal-btn:hover .portal-btn__arrow,
         .gateway-actions .portal-btn:focus-visible .portal-btn__arrow {
-            background: rgba(112, 19, 27, 0.12);
-            border-color: rgba(112, 19, 27, 0.14);
+            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            border-color: var(--gold);
+            color: var(--maroon);
         }
 
         .gateway-actions .portal-btn--idp {
+            color: #111111;
+        }
+
+        .gateway-actions .portal-btn--idp .portal-btn__label,
+        .gateway-actions .portal-btn--idp .portal-btn__icon,
+        .gateway-actions .portal-btn--idp .portal-btn__arrow {
             background: #ffffff;
             border-color: rgba(255, 255, 255, 0.96);
             color: #111111;
         }
 
-        .gateway-actions .portal-btn--idp .portal-btn__icon,
-        .gateway-actions .portal-btn--idp .portal-btn__arrow {
-            background: rgba(17, 17, 17, 0.06);
-            border-color: rgba(17, 17, 17, 0.10);
-        }
-
         .gateway-actions .portal-btn--idp:hover,
         .gateway-actions .portal-btn--idp:focus-visible {
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
-            border-color: var(--gold);
             color: var(--maroon);
         }
 
         .gateway-actions .portal-btn--idp:hover .portal-btn__icon,
         .gateway-actions .portal-btn--idp:focus-visible .portal-btn__icon,
+        .gateway-actions .portal-btn--idp:hover .portal-btn__label,
+        .gateway-actions .portal-btn--idp:focus-visible .portal-btn__label,
         .gateway-actions .portal-btn--idp:hover .portal-btn__arrow,
         .gateway-actions .portal-btn--idp:focus-visible .portal-btn__arrow {
-            background: rgba(112, 19, 27, 0.12);
-            border-color: rgba(112, 19, 27, 0.14);
+            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            border-color: var(--gold);
+            color: var(--maroon);
         }
 
         .workspace-utility-actions.gateway-utility {
@@ -1671,38 +1679,29 @@
             border-color: rgba(112, 19, 27, 0.10);
         }
 
-        .gateway-feature-card::before {
+        .gateway-feature-card::before,
+        .gateway-feature-card::after {
             content: "";
             position: absolute;
-            inset: 0 auto auto 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, #facc15, rgba(250, 204, 21, 0.08));
+            top: 12px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(229, 231, 235, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.82);
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.36);
         }
 
-        .gateway-feature-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #facc15, #ffe693);
-            color: #70131b;
-            margin-bottom: 12px;
-            box-shadow: 0 12px 24px rgba(250, 204, 21, 0.18);
+        .gateway-feature-card::before {
+            left: 12px;
         }
 
-        .gateway-feature-icon svg {
-            width: 20px;
-            height: 20px;
-            stroke: currentColor;
-            stroke-width: 2;
-            fill: none;
+        .gateway-feature-card::after {
+            right: 12px;
         }
 
         .gateway-feature-title {
-            margin: 0 0 4px;
+            margin: 26px 0 4px;
             color: #ffffff;
             font-size: 0.98rem;
             font-weight: 900;
@@ -2280,44 +2279,21 @@
 
                         <div class="gateway-feature-grid" aria-label="Clinic system capabilities">
                             <article class="gateway-feature-card">
-                                <span class="gateway-feature-icon">
-                                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                                        <path d="M12 3l7 4v5c0 4.5-2.9 7.4-7 9-4.1-1.6-7-4.5-7-9V7l7-4z" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M9 12l2 2 4-5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </span>
                                 <h3 class="gateway-feature-title">Clinic Access</h3>
                                 <p class="gateway-feature-copy">Secure workspace entry through One Portal and role-aware portal routing.</p>
                             </article>
 
                             <article class="gateway-feature-card">
-                                <span class="gateway-feature-icon">
-                                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                                        <path d="M12 21s7-4.4 7-11a4 4 0 0 0-7-2.6A4 4 0 0 0 5 10c0 6.6 7 11 7 11z" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M9 13h2l1-2 2 4 1-2h2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </span>
                                 <h3 class="gateway-feature-title">Health Records</h3>
                                 <p class="gateway-feature-copy">Student profiles, digital clearances, and clinic-ready submission workflows.</p>
                             </article>
 
                             <article class="gateway-feature-card">
-                                <span class="gateway-feature-icon">
-                                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                                        <path d="M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v14H4V7a2 2 0 0 1 2-2z" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M8 14h3M8 18h6" stroke-linecap="round"/>
-                                    </svg>
-                                </span>
                                 <h3 class="gateway-feature-title">Appointments</h3>
                                 <p class="gateway-feature-copy">Book clinic services, monitor schedules, and follow your visit status.</p>
                             </article>
 
                             <article class="gateway-feature-card">
-                                <span class="gateway-feature-icon">
-                                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                                        <path d="M12 3l1.2 3.8L17 8l-3.8 1.2L12 13l-1.2-3.8L7 8l3.8-1.2L12 3zM18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14zM6 13l.7 1.8L8.5 15.5l-1.8.7L6 18l-.7-1.8-1.8-.7 1.8-.7L6 13z" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </span>
                                 <h3 class="gateway-feature-title">AI Integrated</h3>
                                 <p class="gateway-feature-copy">Assisted intake tools and smarter clinic-side workflow support.</p>
                             </article>

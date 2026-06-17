@@ -298,24 +298,51 @@
             text-align: center;
         }
 
+        .portal-btn {
+            min-height: 54px;
+            width: 100%;
+            padding: 0;
+            border-radius: 0;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            display: grid;
+            grid-template-columns: 82px minmax(0, 1fr) 82px;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.95rem;
+            font-weight: 950;
+        }
+
+        .portal-btn__label {
+            min-height: 54px;
+            padding: 0 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
+            border: 1px solid rgba(250, 204, 21, 0.50);
+            box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
+        }
+
         .portal-btn__icon,
         .portal-btn__arrow {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
+            width: 82px;
+            min-height: 54px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.14);
-            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
+            border: 1px solid rgba(250, 204, 21, 0.50);
             color: currentColor;
-            flex: 0 0 28px;
+            box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
         }
 
         .portal-btn__icon svg,
         .portal-btn__arrow svg {
-            width: 15px;
-            height: 15px;
+            width: 18px;
+            height: 18px;
             stroke: currentColor;
             stroke-width: 2;
             fill: none;
@@ -323,10 +350,13 @@
 
         .portal-btn:hover .portal-btn__icon,
         .portal-btn:focus-visible .portal-btn__icon,
+        .portal-btn:hover .portal-btn__label,
+        .portal-btn:focus-visible .portal-btn__label,
         .portal-btn:hover .portal-btn__arrow,
         .portal-btn:focus-visible .portal-btn__arrow {
-            background: rgba(112, 19, 27, 0.12);
-            border-color: rgba(112, 19, 27, 0.14);
+            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            border-color: var(--gold);
+            color: var(--maroon);
         }
 
         .workspace-schedule {
@@ -347,8 +377,6 @@
         .portal-btn.is-disabled:hover,
         .portal-btn.is-disabled:focus-visible {
             cursor: not-allowed;
-            border-color: #cbd5e1;
-            background: #e5e7eb;
             color: #64748b;
             box-shadow: none;
             transform: none;
@@ -359,9 +387,12 @@
         }
 
         .portal-btn.is-disabled .portal-btn__icon,
+        .portal-btn.is-disabled .portal-btn__label,
         .portal-btn.is-disabled .portal-btn__arrow {
-            background: rgba(100, 116, 139, 0.12);
-            border-color: rgba(100, 116, 139, 0.16);
+            background: #e5e7eb;
+            border-color: #cbd5e1;
+            color: #64748b;
+            box-shadow: none;
         }
 
         .workspace-utility-actions.gateway-utility {
@@ -457,38 +488,29 @@
             border-color: rgba(112, 19, 27, 0.10);
         }
 
-        .gateway-feature-card::before {
+        .gateway-feature-card::before,
+        .gateway-feature-card::after {
             content: "";
             position: absolute;
-            inset: 0 auto auto 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, #facc15, rgba(250, 204, 21, 0.08));
+            top: 12px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(229, 231, 235, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.82);
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.36);
         }
 
-        .gateway-feature-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #facc15, #ffe693);
-            color: #70131b;
-            margin-bottom: 12px;
-            box-shadow: 0 12px 24px rgba(250, 204, 21, 0.18);
+        .gateway-feature-card::before {
+            left: 12px;
         }
 
-        .gateway-feature-icon svg {
-            width: 20px;
-            height: 20px;
-            stroke: currentColor;
-            stroke-width: 2;
-            fill: none;
+        .gateway-feature-card::after {
+            right: 12px;
         }
 
         .gateway-feature-title {
-            margin: 0 0 4px;
+            margin: 26px 0 4px;
             color: #ffffff;
             font-size: 0.98rem;
             font-weight: 900;
@@ -994,44 +1016,21 @@
 
                 <div class="gateway-feature-grid" aria-label="Available workspace capabilities">
                     <article class="gateway-feature-card">
-                        <span class="gateway-feature-icon">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <circle cx="12" cy="8" r="4"></circle>
-                                <path d="M5 20a7 7 0 0 1 14 0"></path>
-                            </svg>
-                        </span>
                         <h3 class="gateway-feature-title">Student Services</h3>
                         <p class="gateway-feature-copy">Appointments, health records, and student-side clinic actions.</p>
                     </article>
 
                     <article class="gateway-feature-card">
-                        <span class="gateway-feature-icon">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <rect x="3" y="4" width="18" height="12" rx="2"></rect>
-                                <path d="M8 20h8M12 16v4"></path>
-                            </svg>
-                        </span>
                         <h3 class="gateway-feature-title">Clinic Operations</h3>
                         <p class="gateway-feature-copy">Authorized clinic workflows and admin-side operational access.</p>
                     </article>
 
                     <article class="gateway-feature-card">
-                        <span class="gateway-feature-icon">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M12 3l7 4v5c0 4.5-2.9 7.4-7 9-4.1-1.6-7-4.5-7-9V7l7-4z" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M9 12l2 2 4-5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </span>
                         <h3 class="gateway-feature-title">Protected Access</h3>
                         <p class="gateway-feature-copy">Workspace entry still follows your clinic role and allowed access hours.</p>
                     </article>
 
                     <article class="gateway-feature-card">
-                        <span class="gateway-feature-icon">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M12 3l1.2 3.8L17 8l-3.8 1.2L12 13l-1.2-3.8L7 8l3.8-1.2L12 3zM18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14zM6 13l.7 1.8L8.5 15.5l-1.8.7L6 18l-.7-1.8-1.8-.7 1.8-.7L6 13z" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </span>
                         <h3 class="gateway-feature-title">Unified Gateway</h3>
                         <p class="gateway-feature-copy">Move between student-facing and staff-facing flows from one shared portal.</p>
                     </article>
