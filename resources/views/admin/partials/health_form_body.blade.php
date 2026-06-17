@@ -248,7 +248,6 @@ for the improvement of healthcare services.
             </td>
             <td>
                 <div class="signature-space signature-date-space">
-                    {{ empty($studentPrintCopy) && $profile->created_at ? $profile->created_at->format('m/d/Y') : '' }}
                 </div>
                 <div class="sig-line"></div>
                 <div class="signature-caption">Date</div>
