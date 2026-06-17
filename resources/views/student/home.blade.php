@@ -451,6 +451,10 @@
         const learnMoreModal = document.getElementById('learnMoreModal');
         const learnMoreCloseBtn = document.getElementById('learnMoreCloseBtn');
 
+        if (learnMoreModal && learnMoreModal.parentElement !== document.body) {
+          document.body.appendChild(learnMoreModal);
+        }
+
         function setLearnMoreOpen(isOpen) {
           if (!learnMoreModal) return;
           learnMoreModal.classList.toggle('is-open', isOpen);
