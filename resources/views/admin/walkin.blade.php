@@ -6596,6 +6596,7 @@
 
                     const isLocalHealthProfile = data.lookup_source === 'local_health_profile';
                     const isLocalClinicReference = data.lookup_source === 'local_clinic_reference';
+                    const isLocalOnlyLookup = isLocalHealthProfile || isLocalClinicReference;
                     const lookupFoundMessage = isLocalHealthProfile
                         ? (data.sync_warning || 'Local health profile found. PUPTAS sync will still depend on a valid Admission reference.')
                         : (isClinicLookupMode()
@@ -6604,8 +6605,8 @@
 
                     if (isAlreadyApproved) {
                         setStatus(
-                            isLocalHealthProfile ? 'info' : 'success',
-                            isLocalHealthProfile
+                            isLocalOnlyLookup ? 'info' : 'success',
+                            isLocalOnlyLookup
                                 ? lookupFoundMessage
                                 : (applicantName ? 'Applicant found: ' + applicantName + ' (Already Approved)' : 'Applicant found (Already Approved)')
                         );
@@ -6646,7 +6647,7 @@
                             }
                         }
                     } else {
-                        setStatus(isLocalHealthProfile ? 'info' : 'success', lookupFoundMessage);
+                        setStatus(isLocalOnlyLookup ? 'info' : 'success', lookupFoundMessage);
                         if (foundCard && foundName) {
                             foundName.textContent = applicantName || ref;
                             foundCard.style.display = 'block';
@@ -6660,39 +6661,16 @@
                         const lookupRow = document.querySelector('.applicant-ref-lookup-row');
                         if (lookupRow) lookupRow.style.display = 'none';
 
-                        if (isClinicLookupMode() || isLocalClinicReference) {
-                            isApprovalMode = false;
-                            const medicalConditionSection = document.querySelector('.applicant-medical-condition-section');
-                            if (medicalConditionSection) {
-                                medicalConditionSection.classList.remove('show');
-                                medicalConditionSection.style.display = 'none';
-                            }
-
-                            if (findBtn) {
-                                findBtn.textContent = 'Open Record';
-                                findBtn.disabled = false;
-                                findBtn.style.opacity = '1';
-                                findBtn.style.cursor = 'pointer';
-                                findBtn.removeEventListener('click', doLookup);
-                                findBtn.removeEventListener('click', doApprove);
-                                findBtn.onclick = function () {
-                                    if (currentLookupRedirect) {
-                                        window.location.href = currentLookupRedirect;
-                                    }
-                                };
-                            }
-                        } else {
-                            // Change button to Approve mode
-                            isApprovalMode = true;
-                            if (findBtn) {
-                                findBtn.textContent = 'Approve';
-                                findBtn.disabled = false;
-                                findBtn.style.opacity = '1';
-                                findBtn.style.cursor = 'pointer';
-                                findBtn.removeEventListener('click', doLookup);
-                                findBtn.onclick = null;
-                                findBtn.addEventListener('click', doApprove);
-                            }
+                        // Change button to Approve mode for both admission applicants and local clinic references.
+                        isApprovalMode = true;
+                        if (findBtn) {
+                            findBtn.textContent = 'Approve';
+                            findBtn.disabled = false;
+                            findBtn.style.opacity = '1';
+                            findBtn.style.cursor = 'pointer';
+                            findBtn.removeEventListener('click', doLookup);
+                            findBtn.onclick = null;
+                            findBtn.addEventListener('click', doApprove);
                         }
                     }
                 } else {
@@ -6746,6 +6724,7 @@
 
             const approvalData = {
                 reference_number: currentLookupRef,
+                lookup_scope: isClinicLookupMode() ? 'clinic_local' : 'default',
                 findings_status: findingsStatusInput.value,
                 blood_pressure: bloodPressureInput.value.trim(),
                 respiratory_rate: respiratoryRateInput.value,

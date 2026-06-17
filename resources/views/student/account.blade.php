@@ -2886,7 +2886,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div class="record-modal-links">
                                 @forelse($visibleRecordDocuments as $document)
                                     @php
-                                        $documentUrl = route('student.health_record.document', ['document' => $document['key']]);
+                                        $documentUrl = route('student.health_record.document', ['document' => $document['key'] ?? $document['id'] ?? '']);
                                     @endphp
                                     <div class="record-document-card">
                                         <div class="record-document-preview" aria-hidden="true">

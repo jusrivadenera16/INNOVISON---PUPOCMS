@@ -1403,6 +1403,7 @@ PROMPT;
         try {
             $validated = $request->validate([
                 'reference_number' => ['required', 'string', 'max:120'],
+                'lookup_scope' => ['nullable', 'string', 'max:40'],
                 'findings_status' => ['required', 'string', 'in:No Findings / Normal,With Findings'],
                 'has_medical_condition' => ['nullable', 'boolean'],
                 'medical_condition' => ['required_if:has_medical_condition,true', 'nullable', 'string', 'max:1000'],
@@ -1412,6 +1413,8 @@ PROMPT;
                 'temperature' => ['required', 'numeric', 'min:30', 'max:45'],
             ]);
             $referenceNumber = trim((string) $validated['reference_number']);
+            $lookupScope = strtolower(trim((string) ($validated['lookup_scope'] ?? 'default')));
+            $forceLocalClinicApproval = $lookupScope === 'clinic_local';
             $findingsStatus = (string) $validated['findings_status'];
             $hasMedicalCondition = $request->boolean('has_medical_condition')
                 || $findingsStatus === 'With Findings';
@@ -1422,9 +1425,11 @@ PROMPT;
             $temperature = (float) $validated['temperature'];
 
             // Fetch applicant details to get student ID
-            $applicantData = $webhookService->fetchApplicantByStudentNumber($referenceNumber);
+            $applicantData = $forceLocalClinicApproval
+                ? null
+                : $webhookService->fetchApplicantByStudentNumber($referenceNumber);
             $localOnlyProfile = null;
-            $isLocalOnlyApproval = false;
+            $isLocalOnlyApproval = $forceLocalClinicApproval;
 
             if (!$applicantData) {
                 $localOnlyProfile = $this->findHealthProfileByReference($referenceNumber);
@@ -1458,11 +1463,17 @@ PROMPT;
             $clearanceStatus = $hasMedicalCondition ? 'Pending/Conditional' : 'Fully Cleared';
 
             // Conditional applicants remain uncleared in PUPTAS until compliance is resolved.
-            $webhookResult = $webhookService->sendMedicalClearance(
-                $referenceNumber,
-                $idpStudentId,
-                !$hasMedicalCondition
-            );
+            $webhookResult = $isLocalOnlyApproval
+                ? [
+                    'success' => false,
+                    'skipped' => true,
+                    'message' => 'Local clinic reference decision saved without PUPTAS sync.',
+                ]
+                : $webhookService->sendMedicalClearance(
+                    $referenceNumber,
+                    $idpStudentId,
+                    !$hasMedicalCondition
+                );
 
             $profile = DB::transaction(function () use (
                 $student,
@@ -1580,7 +1591,7 @@ PROMPT;
                     'findings_status' => $findingsStatus,
                 'webhook_status' => ($webhookResult['success'] ?? false) ? 'success' : 'failed',
                 'webhook_message' => $webhookResult['message'] ?? null,
-                'lookup_source' => $isLocalOnlyApproval ? 'local_health_profile' : 'puptas',
+                'lookup_source' => $isLocalOnlyApproval ? 'local_clinic_reference' : 'puptas',
             ],
                 'ip_address' => $request->ip(),
                 'user_agent' => substr((string) $request->userAgent(), 0, 255),
@@ -1601,7 +1612,7 @@ PROMPT;
                         : 'Applicant approved locally. PUPTAS sync still needs attention.'),
                 'redirect_url' => $redirectUrl,
                 'webhook_synced' => (bool) ($webhookResult['success'] ?? false),
-                'lookup_source' => $isLocalOnlyApproval ? 'local_health_profile' : 'puptas',
+                'lookup_source' => $isLocalOnlyApproval ? 'local_clinic_reference' : 'puptas',
             ]);
         } catch (\Exception $e) {
             Log::error('Applicant approval exception', [
