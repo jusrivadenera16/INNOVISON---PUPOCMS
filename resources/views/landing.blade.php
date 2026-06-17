@@ -1508,6 +1508,18 @@
             overflow: hidden;
         }
 
+        .gateway-actions .portal-btn .portal-btn__label::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            transform: scaleX(0);
+            transform-origin: left center;
+            transition: transform 0.32s ease;
+            pointer-events: none;
+            z-index: 0;
+        }
+
         .gateway-actions .portal-btn .portal-btn__label::after {
             content: "";
             position: absolute;
@@ -1523,6 +1535,11 @@
             transition: transform 0.9s ease;
             pointer-events: none;
             z-index: 0;
+        }
+
+        .gateway-actions .portal-btn:hover .portal-btn__label::before,
+        .gateway-actions .portal-btn:focus-visible .portal-btn__label::before {
+            transform: scaleX(1);
         }
 
         .gateway-actions .portal-btn:hover .portal-btn__label::after,
@@ -1593,10 +1610,14 @@
         }
 
         .gateway-actions .portal-btn:hover .portal-btn__icon,
-        .gateway-actions .portal-btn:focus-visible .portal-btn__icon,
+        .gateway-actions .portal-btn:focus-visible .portal-btn__icon {
+            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            border-color: var(--gold);
+            color: var(--maroon);
+        }
+
         .gateway-actions .portal-btn:hover .portal-btn__label,
         .gateway-actions .portal-btn:focus-visible .portal-btn__label {
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
             border-color: var(--gold);
             color: var(--maroon);
         }
