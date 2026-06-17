@@ -1494,6 +1494,7 @@
         }
 
         .gateway-actions .portal-btn .portal-btn__label {
+            position: relative;
             min-height: 64px;
             padding: 0 70px 0 24px;
             display: flex;
@@ -1504,6 +1505,39 @@
             border: 1px solid rgba(250, 204, 21, 0.50);
             box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
             border-radius: 0 18px 18px 0;
+            overflow: hidden;
+        }
+
+        .gateway-actions .portal-btn .portal-btn__label::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(120deg,
+                    rgba(255, 248, 196, 0) 0%,
+                    rgba(255, 239, 181, 0.14) 20%,
+                    rgba(255, 239, 181, 0.46) 48%,
+                    rgba(255, 239, 181, 0.14) 76%,
+                    rgba(255, 248, 196, 0) 100%);
+            transform: translateX(-135%);
+            transition: transform 0.9s ease;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .gateway-actions .portal-btn:hover .portal-btn__label::after,
+        .gateway-actions .portal-btn:focus-visible .portal-btn__label::after {
+            transform: translateX(135%);
+        }
+
+        .gateway-actions .portal-btn .portal-btn__label > span,
+        .gateway-actions .portal-btn .portal-btn__label > svg,
+        .gateway-actions .portal-btn .portal-btn__label > i,
+        .gateway-actions .portal-btn .portal-btn__label > strong,
+        .gateway-actions .portal-btn .portal-btn__label > em,
+        .gateway-actions .portal-btn .portal-btn__label > b {
+            position: relative;
+            z-index: 1;
         }
 
         .gateway-actions .portal-btn .portal-btn__icon {
@@ -1546,6 +1580,13 @@
             z-index: 2;
         }
 
+        .gateway-actions .portal-btn:hover .portal-btn__arrow,
+        .gateway-actions .portal-btn:focus-visible .portal-btn__arrow {
+            background: rgba(255, 255, 255, 0.22);
+            border-color: rgba(255, 255, 255, 0.28);
+            color: var(--maroon);
+        }
+
         .gateway-actions .portal-btn:hover,
         .gateway-actions .portal-btn:focus-visible {
             color: var(--maroon);
@@ -1583,6 +1624,13 @@
         .gateway-actions .portal-btn--idp:focus-visible .portal-btn__label {
             background: linear-gradient(135deg, var(--gold), var(--gold-soft));
             border-color: var(--gold);
+            color: var(--maroon);
+        }
+
+        .gateway-actions .portal-btn--idp:hover .portal-btn__arrow,
+        .gateway-actions .portal-btn--idp:focus-visible .portal-btn__arrow {
+            background: rgba(255, 255, 255, 0.72);
+            border-color: rgba(255, 255, 255, 0.88);
             color: var(--maroon);
         }
 
