@@ -2142,6 +2142,11 @@
     $showOfficeField = in_array($linkedAccessLevel, ['clinic_staff', 'designee', 'superadmin', 'super_admin', 'faculty'], true) || str_contains($linkedAccessLevel, 'faculty');
     $hasGuisisAccountData = (bool) ($guisisAccountData['available'] ?? false);
     $displayStudentNumber = trim((string) ($accountProfileData['student_number'] ?? ''));
+    if ($displayStudentNumber === '') {
+        $displayStudentNumber = trim((string) ($accountProfileData['reference_number'] ?? ''));
+    }
+    $referenceMode = trim((string) ($accountProfileData['reference_mode'] ?? 'admission'));
+    $referenceHeading = $referenceMode === 'admission' ? 'Admission Reference' : 'Clinic Reference';
     $displayCourse = trim((string) ($accountProfileData['course_college'] ?? ''));
     $displayFullName = trim((string) ($accountProfileData['full_name'] ?? ''));
     $displayFullName = $displayFullName !== '' ? $displayFullName : ($hasGuisisAccountData ? 'Available once enrolled' : ($user->name ?? 'Student'));
@@ -2643,7 +2648,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <div class="health-status-meta-grid">
                     <div class="health-status-meta">
-                        <span class="health-status-meta-label">Reference Number</span>
+                        <span class="health-status-meta-label">{{ $referenceHeading }}</span>
                         <span class="health-status-meta-value">{{ $recordReferenceNumber !== '' ? $recordReferenceNumber : '-' }}</span>
                     </div>
                     <div class="health-status-meta">
@@ -2718,7 +2723,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <div class="health-status-meta-grid">
                     <div class="health-status-meta">
-                        <span class="health-status-meta-label">Reference Number</span>
+                        <span class="health-status-meta-label">{{ $referenceHeading }}</span>
                         <span class="health-status-meta-value">{{ $recordReferenceNumber !== '' ? $recordReferenceNumber : '-' }}</span>
                     </div>
                     <div class="health-status-meta">
@@ -2772,14 +2777,14 @@ document.addEventListener('DOMContentLoaded', function () {
                             <span class="record-modal-status">{{ $status }}</span>
                         </div>
                         <div class="record-modal-summary-card">
-                            <span class="record-modal-label">Reference Number</span>
+                            <span class="record-modal-label">{{ $referenceHeading }}</span>
                             <div class="record-modal-value">{{ $recordReferenceNumber !== '' ? $recordReferenceNumber : '-' }}</div>
                         </div>
                     </div>
 
                     <div class="record-modal-grid">
                         <div class="record-modal-card">
-                            <span class="record-modal-label">Admission Reference</span>
+                            <span class="record-modal-label">{{ $referenceHeading }}</span>
                             <div class="record-modal-value">{{ $recordReferenceNumber !== '' ? $recordReferenceNumber : '-' }}</div>
                         </div>
                         <div class="record-modal-card">

@@ -219,11 +219,11 @@
                 </span>
                 <h2>Appointment services</h2>
                 <p>
-                    The clinic appointment workspace helps students request scheduled services and monitor their pending or approved visits.
+                    The clinic appointment workspace allows you to request services and monitor your pending or approved visits.
                 </p>
                 <ul class="public-appt-list">
                     <li>Choose the clinic service you need.</li>
-                    <li>Select an available date and provide the required details.</li>
+                    <li>Select available date and provide the required details.</li>
                     <li>Track your request from your student account after submission.</li>
                 </ul>
             </article>
@@ -237,7 +237,7 @@
                 </span>
                 <h2>Login required before booking</h2>
                 <p>
-                    Please login to your student account through One Portal to access the appointment booking features and manage your clinic visits.
+                    Please login your account through One Portal to access the appointment booking features and manage your clinic visits.
                 <a href="{{ route('login.portal') }}" class="public-appt-login-btn">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>

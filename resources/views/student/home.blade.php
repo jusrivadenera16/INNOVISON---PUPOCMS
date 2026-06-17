@@ -312,7 +312,7 @@
         <div class="section-head">
           <div>
             <h3>What people are saying</h3>
-            <p class="lead">Recent feedback from students and staff about our clinic services.</p>
+            <p class="lead">Latest feedback on clinic services...</p>
           </div>
           @if(($feedbackCount ?? 0) > 3)
             <a href="{{ route('student.feedback.index') }}" class="feedback-more" aria-label="View more feedback" title="View more feedback">

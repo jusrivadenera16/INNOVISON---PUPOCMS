@@ -730,11 +730,26 @@ class WalkInController extends Controller
         $lookupName = trim((string) $request->student_name);
         $previewOnly = $request->boolean('preview_only');
         $intakeTarget = strtolower(trim((string) $request->query('intake_target', 'consultation')));
+        $lookupScope = strtolower(trim((string) $request->query('lookup_scope', 'default')));
         $student = $this->findUserByIdentifier($lookup);
-        $lookupMessage = 'No patient matched that student number in local records or PUPTAS.';
+        $lookupMessage = $lookupScope === 'clinic_local'
+            ? 'No clinic record matched that reference number in local records.'
+            : 'No patient matched that student number in local records or PUPTAS.';
         $lookupStatus = null;
 
-        if (
+        if ($lookupScope === 'clinic_local' && $lookup !== '') {
+            if (!$student) {
+                $localProfile = $this->findHealthProfileByReference($lookup);
+                if ($localProfile) {
+                    $student = $this->ensureLocalUserFromHealthProfile($localProfile, $lookup);
+                    $lookupStatus = 'local_clinic_reference';
+                    $lookupMessage = 'Clinic reference found in local records.';
+                }
+            } else {
+                $lookupStatus = 'local_clinic_reference';
+                $lookupMessage = 'Clinic reference found in local records.';
+            }
+        } elseif (
             $lookup !== ''
             && (
                 !$student
@@ -832,6 +847,15 @@ class WalkInController extends Controller
                 ?: optional($healthProfile)->landline
                 ?: ($student->contact_no ?? '')
             ));
+            $walkinLookupIdentifier = (string) (
+                $student->student_number
+                ?: $resolvedReferenceNumber
+                ?: $student->student_id
+                ?: $student->id
+            );
+            $walkinRoutePrefix = Str::startsWith((string) optional($request->route())->getName(), 'assistant.')
+                ? '/assistant'
+                : '/admin';
             $rawClearanceStatus = trim((string) optional($healthProfile)->clearance_status);
             $resolvedClinicStatus = match (true) {
                 in_array($rawClearanceStatus, ['Issued', 'Fully Cleared'], true) => 'Fully Cleared',
@@ -865,10 +889,13 @@ class WalkInController extends Controller
                     'documents' => $this->healthProfileDocuments($request, $healthProfile),
                     'name_matches' => $lookupName !== '' ? $this->namesRoughlyMatch($lookupName, $student) : null,
                     'lookup_status' => $lookupStatus,
-                    'lookup_source' => $lookupStatus === 'local_health_profile' ? 'local_health_profile' : 'puptas_or_local_user',
+                    'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_clinic_reference'], true)
+                        ? $lookupStatus
+                        : 'puptas_or_local_user',
                     'sync_warning' => $lookupStatus === 'local_health_profile'
                         ? 'Local health profile found. PUPTAS sync will only succeed if this saved reference matches the Admission System.'
                         : null,
+                    'redirect_url' => url($walkinRoutePrefix . '/walkin/form/' . rawurlencode($walkinLookupIdentifier) . '?source=walkin'),
                 ]);
             }
 
@@ -906,7 +933,9 @@ class WalkInController extends Controller
                 'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
                 'documents' => $this->healthProfileDocuments($request, $healthProfile),
                 'lookup_status' => $lookupStatus,
-                'lookup_source' => $lookupStatus === 'local_health_profile' ? 'local_health_profile' : 'puptas_or_local_user',
+                'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_clinic_reference'], true)
+                    ? $lookupStatus
+                    : 'puptas_or_local_user',
                 'sync_warning' => $lookupStatus === 'local_health_profile'
                     ? 'Local health profile found. PUPTAS sync will only succeed if this saved reference matches the Admission System.'
                     : null,
@@ -945,7 +974,7 @@ class WalkInController extends Controller
                         return route('admin.show_health', $profile->id);
                     })()
                     : route($this->walkinRouteName($request, 'form'), [
-                        'student_id' => $student->student_number ?: $student->student_id,
+                        'student_id' => $walkinLookupIdentifier,
                         'source' => 'walkin'
                     ])
             ]);

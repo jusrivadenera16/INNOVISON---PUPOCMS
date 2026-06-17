@@ -1606,12 +1606,21 @@
                 ));
 
                 $displayReferenceNumber = trim((string) ($prefill['reference_number'] ?? ''));
+                $referenceMode = trim((string) ($prefill['reference_mode'] ?? 'admission'));
+                $referenceRequiresValidation = (bool) ($prefill['reference_requires_validation'] ?? true);
+                $stepOneTitle = trim((string) ($prefill['step_1_title'] ?? 'Admission Reference'));
+                $stepOneDescription = trim((string) ($prefill['step_1_description'] ?? 'Confirm your admission reference, complete your health information, then upload the required clinic documents.'));
+                $referenceLabel = trim((string) ($prefill['reference_label'] ?? 'Admission Reference Number'));
+                $referenceDisplayFallback = $referenceMode === 'admission' ? 'No Reference Received' : 'No Clinic Reference Yet';
+                $referenceStatusDefault = $referenceRequiresValidation
+                    ? 'Enter the reference number exactly as shown in your Admission System record, then click the check icon to verify it.'
+                    : 'This clinic reference is generated and managed inside the clinic system for local staff, admin, faculty, and guest records.';
             @endphp
 
             <div class="stepper-shell">
                 <div class="step-chip {{ $startStep === 1 ? 'is-active' : '' }}" id="chipStep1">
                     <small>Step 1</small>
-                    <strong>Admission Reference</strong>
+                    <strong>{{ $stepOneTitle }}</strong>
                 </div>
                 <div class="step-chip {{ $startStep === 2 ? 'is-active' : '' }}" id="chipStep2">
                     <small>Step 2</small>
@@ -1638,8 +1647,8 @@
 
                 <div class="step-panel {{ $startStep === 1 ? '' : 'is-hidden' }}" id="stepPanel1">
                     <div class="form-intro">
-                        <h1>Admission Reference</h1>
-                        <p>Confirm your admission reference, complete your health information, then upload the required clinic documents.</p>
+                        <h1>{{ $stepOneTitle }}</h1>
+                        <p>{{ $stepOneDescription }}</p>
                     </div>
 
                     <div class="identity-overview">
@@ -1661,44 +1670,50 @@
                             class="reference-panel {{ $displayReferenceNumber === '' ? 'is-missing' : '' }}"
                             id="referencePanel"
                             data-reference-locked="{{ $displayReferenceNumber !== '' ? 'true' : 'false' }}"
+                            data-reference-mode="{{ $referenceMode }}"
+                            data-reference-requires-validation="{{ $referenceRequiresValidation ? 'true' : 'false' }}"
                         >
-                            <small>Reference Number</small>
+                            <small>{{ $referenceLabel }}</small>
                             <div class="reference-display">
-                                <strong id="referenceDisplayValue">{{ $displayReferenceNumber !== '' ? $displayReferenceNumber : 'No Reference Received' }}</strong>
+                                <strong id="referenceDisplayValue">{{ $displayReferenceNumber !== '' ? $displayReferenceNumber : $referenceDisplayFallback }}</strong>
                             </div>
-                            <button
-                                type="button"
-                                class="reference-edit-btn"
-                                id="editReferenceBtn"
-                                aria-label="{{ $displayReferenceNumber !== '' ? 'Reference already verified' : 'Add admission reference' }}"
-                                aria-expanded="false"
-                                title="{{ $displayReferenceNumber !== '' ? 'Reference already verified' : 'Add reference number' }}"
-                            >
-                                <svg class="reference-icon-edit" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="M12 20h9"></path>
-                                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
-                                </svg>
-                                <svg class="reference-icon-check" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="m5 12 4 4L19 6"></path>
-                                </svg>
-                            </button>
+                            @if($referenceRequiresValidation)
+                                <button
+                                    type="button"
+                                    class="reference-edit-btn"
+                                    id="editReferenceBtn"
+                                    aria-label="{{ $displayReferenceNumber !== '' ? 'Reference already verified' : 'Add admission reference' }}"
+                                    aria-expanded="false"
+                                    title="{{ $displayReferenceNumber !== '' ? 'Reference already verified' : 'Add reference number' }}"
+                                >
+                                    <svg class="reference-icon-edit" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M12 20h9"></path>
+                                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
+                                    </svg>
+                                    <svg class="reference-icon-check" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="m5 12 4 4L19 6"></path>
+                                    </svg>
+                                </button>
+                            @endif
                             <input type="hidden" name="reference_number" id="reference_number" value="{{ $displayReferenceNumber }}">
-                            <div class="reference-verify-wrap" id="referenceVerifyWrap">
-                                <div class="reference-verify-row">
-                                    <input
-                                        type="text"
-                                        id="reference_editor"
-                                        class="reference-verify-input"
-                                        value="{{ $displayReferenceNumber }}"
-                                        placeholder="0000-0000-0000"
-                                        maxlength="20"
-                                        autocomplete="off"
-                                        aria-describedby="referenceVerifyStatus"
-                                    >
+                            @if($referenceRequiresValidation)
+                                <div class="reference-verify-wrap" id="referenceVerifyWrap">
+                                    <div class="reference-verify-row">
+                                        <input
+                                            type="text"
+                                            id="reference_editor"
+                                            class="reference-verify-input"
+                                            value="{{ $displayReferenceNumber }}"
+                                            placeholder="0000-0000-0000"
+                                            maxlength="20"
+                                            autocomplete="off"
+                                            aria-describedby="referenceVerifyStatus"
+                                        >
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
                             <p class="reference-verify-status {{ $displayReferenceNumber === '' ? '' : 'is-success' }}" id="referenceVerifyStatus" aria-live="polite">
-                                {{ $displayReferenceNumber === '' ? 'Enter the reference number exactly as shown in your Admission System record, then click the check icon to verify it.' : 'Reference already verified from the Admission System.' }}
+                                {{ $displayReferenceNumber === '' ? $referenceStatusDefault : ($referenceRequiresValidation ? 'Reference already verified from the Admission System.' : 'Clinic reference is ready for use inside the clinic system.') }}
                             </p>
                             @error('reference_number')
                                 <p class="reference-field-error">{{ $message }}</p>
@@ -1709,7 +1724,7 @@
                     <div class="upload-instruction-card">
                         <strong>Instructions for Completing Your Health Profile</strong>
                         <ol>
-                            <li>Review your admission reference and name before proceeding.</li>
+                            <li>Review your {{ strtolower($stepOneTitle) }} and name before proceeding.</li>
                             <li>Complete every required field in Personal Information using accurate and current details.</li>
                             <li>Answer the Medical History, allergy, disability, smoking, and alcohol questions truthfully.</li>
                             <li>Provide your COVID-19 vaccination status and dose details, when applicable.</li>
@@ -2249,6 +2264,7 @@
             let currentStep = {{ $startStep }};
             let isSubmitting = false;
             let isReferenceValidating = false;
+            const referenceRequiresValidation = referencePanel?.dataset.referenceRequiresValidation === 'true';
 
             function isReferenceLocked() {
                 return referencePanel?.dataset.referenceLocked === 'true';
@@ -2274,7 +2290,7 @@
                 editReferenceBtn?.setAttribute('aria-expanded', open ? 'true' : 'false');
                 editReferenceBtn?.setAttribute(
                     'aria-label',
-                    open ? 'Validate admission reference' : (isReferenceLocked() ? 'Reference already verified' : 'Add admission reference')
+                    open ? 'Validate reference number' : (isReferenceLocked() ? 'Reference already verified' : 'Add reference number')
                 );
                 editReferenceBtn?.setAttribute(
                     'title',
@@ -2299,8 +2315,8 @@
                 referenceEditorInput.setCustomValidity('');
 
                 if (!normalizedReference || !/^[A-Z0-9]+(?:-[A-Z0-9]+)+$/.test(normalizedReference)) {
-                    referenceEditorInput.setCustomValidity('Enter a valid Admission Reference.');
-                    setReferenceStatus('Enter a valid Admission Reference before continuing.', 'is-error');
+                    referenceEditorInput.setCustomValidity('Enter a valid reference number.');
+                    setReferenceStatus('Enter a valid reference number before continuing.', 'is-error');
                     showValidationBubble(referenceEditorInput);
                     referenceEditorInput.focus();
                     return;
@@ -2710,6 +2726,9 @@
                 input.addEventListener('change', () => renderUploadPreview(input));
             });
             editReferenceBtn?.addEventListener('click', () => {
+                if (!referenceRequiresValidation) {
+                    return;
+                }
                 if (isReferenceLocked()) {
                     setReferenceStatus('Reference already verified from the Admission System.', 'is-success');
                     return;
@@ -2728,7 +2747,10 @@
                 referenceEditorInput.value = referenceEditorInput.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
                 referenceEditorInput.setCustomValidity('');
                 if (!isReferenceLocked()) {
-                    setReferenceStatus('Enter the reference number exactly as shown in your Admission System record, then click the check icon to verify it.');
+                    setReferenceStatus(referenceRequiresValidation
+                        ? 'Enter the reference number exactly as shown in your Admission System record, then click the check icon to verify it.'
+                        : 'Clinic reference is generated and managed inside the clinic system.'
+                    );
                 }
             });
             document.addEventListener('click', (event) => {
@@ -2765,8 +2787,15 @@
 
                 if (normalizedReference === '') {
                     if (referenceInput) {
-                        referenceInput.setCustomValidity('Admission Reference is required before continuing.');
-                        setReferenceStatus('Verify your Admission Reference before continuing.', 'is-error');
+                        referenceInput.setCustomValidity(referenceRequiresValidation
+                            ? 'Admission Reference is required before continuing.'
+                            : 'Clinic Reference is required before continuing.'
+                        );
+                        setReferenceStatus(referenceRequiresValidation
+                            ? 'Verify your Admission Reference before continuing.'
+                            : 'Clinic Reference is required before continuing.',
+                            'is-error'
+                        );
                         showValidationBubble(referenceInput);
                     }
                     return;

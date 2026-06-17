@@ -4426,6 +4426,23 @@
                 </a>
             @endunless
 
+            <a href="#" class="intake-option-link" id="openClinicRefModal">
+                <div class="intake-option-card intake-option-applicant">
+                    <span class="intake-option-chip" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+                        </svg>
+                    </span>
+                    <span class="intake-option-icon-wrap" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" />
+                        </svg>
+                    </span>
+                    <h3 class="intake-option-title">Clinic Reference</h3>
+                    <p class="intake-option-copy">Open local clinic records for faculty, admin-designee, guests, and clinic-managed profiles.</p>
+                </div>
+            </a>
+
         </div>
     </div>
 
@@ -4434,10 +4451,10 @@
         <div class="applicant-modal-shell">
             <div class="applicant-modal-head">
                 <div class="applicant-modal-head-main">
-                    <div class="applicant-modal-head-badge">AP</div>
+                    <div class="applicant-modal-head-badge" id="lookupModalBadge">AP</div>
                     <div class="applicant-modal-head-copy">
-                        <h3>Applicants</h3>
-                        <p>Enter the applicant's reference number to look up the record.</p>
+                        <h3 id="lookupModalTitle">Applicants</h3>
+                        <p id="lookupModalSubtitle">Enter the applicant's reference number to look up the record.</p>
                     </div>
                 </div>
                 <button type="button" class="applicant-modal-close" id="closeApplicantRefModal" aria-label="Close modal">
@@ -4449,23 +4466,23 @@
                 <div class="applicant-ref-mode" id="applicantRefDefault">
                     <div class="applicant-ref-copy">
                         <p class="applicant-ref-kicker">Proceed</p>
-                        <h4>Reference Lookup</h4>
-                        <p>Use the reference number to open the applicant record.</p>
+                        <h4 id="lookupModalEntryTitle">Reference Lookup</h4>
+                        <p id="lookupModalEntrySubtitle">Use the reference number to open the applicant record.</p>
                     </div>
 
                     <button type="button" id="btnShowApplicantRefInput" class="applicant-ref-toggle-btn" style="max-width:360px;">
                         <x-outline-icon name="magnifying-glass" />
-                        <span>Input Reference Number</span>
+                        <span id="lookupModalEntryButtonText">Input Reference Number</span>
                     </button>
                 </div>
 
                 <div class="applicant-ref-panel" id="applicantRefEntry">
                     <div class="applicant-ref-lookup-row">
                     <div class="applicant-ref-instruction">
-                        <span class="applicant-ref-help-copy">Find the reference number in the <strong>Admission System</strong> under the applicant's profile or registration form.</span>
+                        <span class="applicant-ref-help-copy" id="lookupModalHelpCopy">Find the reference number in the <strong>Admission System</strong> under the applicant's profile or registration form.</span>
                     </div>
                     <div class="applicant-ref-field">
-                        <label for="applicantRefInput">Reference Number</label>
+                        <label for="applicantRefInput" id="lookupModalFieldLabel">Reference Number</label>
                         <input type="text" id="applicantRefInput" class="applicant-ref-input" placeholder="Enter reference number">
                     </div>
                     </div>
@@ -6157,6 +6174,7 @@
         const backdrop        = document.getElementById('applicantRefModal');
         const modalShell      = backdrop?.querySelector('.applicant-modal-shell');
         const openBtn         = document.getElementById('openApplicantRefModal');
+        const openClinicBtn   = document.getElementById('openClinicRefModal');
         const closeBtn        = document.getElementById('closeApplicantRefModal');
         const defaultPane     = document.getElementById('applicantRefDefault');
         const entryPane       = document.getElementById('applicantRefEntry');
@@ -6187,6 +6205,14 @@
         const documentsModal  = document.getElementById('applicantDocumentsModal');
         const documentsGrid   = document.getElementById('applicantDocumentsGrid');
         const closeDocuments  = document.getElementById('closeApplicantDocumentsModal');
+        const lookupModalBadge = document.getElementById('lookupModalBadge');
+        const lookupModalTitle = document.getElementById('lookupModalTitle');
+        const lookupModalSubtitle = document.getElementById('lookupModalSubtitle');
+        const lookupModalEntryTitle = document.getElementById('lookupModalEntryTitle');
+        const lookupModalEntrySubtitle = document.getElementById('lookupModalEntrySubtitle');
+        const lookupModalEntryButtonText = document.getElementById('lookupModalEntryButtonText');
+        const lookupModalHelpCopy = document.getElementById('lookupModalHelpCopy');
+        const lookupModalFieldLabel = document.getElementById('lookupModalFieldLabel');
         const previewPanel    = document.getElementById('applicantDocumentPreviewPanel');
         const previewTitle    = document.getElementById('applicantDocumentPreviewTitle');
         const previewFrame    = document.getElementById('applicantDocumentPreviewFrame');
@@ -6196,7 +6222,35 @@
         const approvalOverlay = document.getElementById('applicantApprovalOverlay');
         let currentLookupRef  = '';
         let currentDocuments  = [];
+        let currentLookupMode = 'applicant';
+        let currentLookupRedirect = '';
         const getStudentUrl   = '{{ url($basePrefix . '/walkin/get-student') }}';
+
+        function isClinicLookupMode() {
+            return currentLookupMode === 'clinic';
+        }
+
+        function applyLookupMode(mode) {
+            currentLookupMode = mode === 'clinic' ? 'clinic' : 'applicant';
+
+            if (lookupModalBadge) lookupModalBadge.textContent = isClinicLookupMode() ? 'CR' : 'AP';
+            if (lookupModalTitle) lookupModalTitle.textContent = isClinicLookupMode() ? 'Clinic Reference' : 'Applicants';
+            if (lookupModalSubtitle) lookupModalSubtitle.textContent = isClinicLookupMode()
+                ? 'Enter the clinic reference number to look up local clinic-managed records.'
+                : "Enter the applicant's reference number to look up the record.";
+            if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isClinicLookupMode() ? 'Clinic Reference Lookup' : 'Reference Lookup';
+            if (lookupModalEntrySubtitle) lookupModalEntrySubtitle.textContent = isClinicLookupMode()
+                ? 'Use the clinic reference number to open the saved local clinic record.'
+                : 'Use the reference number to open the applicant record.';
+            if (lookupModalEntryButtonText) lookupModalEntryButtonText.textContent = isClinicLookupMode() ? 'Input Clinic Reference' : 'Input Reference Number';
+            if (lookupModalHelpCopy) {
+                lookupModalHelpCopy.innerHTML = isClinicLookupMode()
+                    ? 'Find the clinic reference number in the saved <strong>Clinic Health Profile</strong> or local clinic record.'
+                    : "Find the reference number in the <strong>Admission System</strong> under the applicant's profile or registration form.";
+            }
+            if (lookupModalFieldLabel) lookupModalFieldLabel.textContent = isClinicLookupMode() ? 'Clinic Reference Number' : 'Reference Number';
+            if (refInput) refInput.placeholder = isClinicLookupMode() ? 'Enter clinic reference number' : 'Enter reference number';
+        }
 
         function closeDocumentPreview() {
             if (previewFrame) {
@@ -6341,6 +6395,7 @@
             }
             if (documentsButton) documentsButton.classList.remove('is-visible');
             currentLookupRef = '';
+            currentLookupRedirect = '';
             if (defaultPane) defaultPane.style.display = 'flex';
             if (entryPane) entryPane.classList.remove('is-visible');
             const medicalConditionSection = document.querySelector('.applicant-medical-condition-section');
@@ -6367,6 +6422,8 @@
             // Reset button text and events back to Find mode
             if (findBtn) {
                 findBtn.textContent = 'Find';
+                findBtn.onclick = null;
+                findBtn.removeEventListener('click', doLookup);
                 findBtn.removeEventListener('click', doApprove);
                 findBtn.addEventListener('click', doLookup);
             }
@@ -6381,6 +6438,15 @@
 
         function openApplicantsModal() {
             if (!backdrop) return;
+            applyLookupMode('applicant');
+            backdrop.classList.add('show');
+            setEntryMode(false);
+            if (refInput) refInput.value = '';
+        }
+
+        function openClinicLookupModal() {
+            if (!backdrop) return;
+            applyLookupMode('clinic');
             backdrop.classList.add('show');
             setEntryMode(false);
             if (refInput) refInput.value = '';
@@ -6511,11 +6577,18 @@
                 return;
             }
 
-            setStatus('info', 'Looking up applicant...');
+            setStatus('info', isClinicLookupMode() ? 'Looking up clinic record...' : 'Looking up applicant...');
             if (foundCard) foundCard.style.display = 'none';
             if (documentsButton) documentsButton.classList.remove('is-visible');
 
-            fetch(getStudentUrl + '?student_id=' + encodeURIComponent(ref) + '&preview_only=true', {
+            const lookupUrl = new URL(getStudentUrl, window.location.origin);
+            lookupUrl.searchParams.set('student_id', ref);
+            lookupUrl.searchParams.set('preview_only', 'true');
+            if (isClinicLookupMode()) {
+                lookupUrl.searchParams.set('lookup_scope', 'clinic_local');
+            }
+
+            fetch(lookupUrl.toString(), {
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
             })
             .then(r => r.json())
@@ -6529,6 +6602,7 @@
                     }
 
                     currentLookupRef = data.reference_number || ref;
+                    currentLookupRedirect = data.redirect_url || '';
 
                     // Check if applicant is already approved
                     const isAlreadyApproved = data.is_health_profile_completed === true
@@ -6538,9 +6612,12 @@
                         || data.approved === 1;
 
                     const isLocalHealthProfile = data.lookup_source === 'local_health_profile';
+                    const isLocalClinicReference = data.lookup_source === 'local_clinic_reference';
                     const lookupFoundMessage = isLocalHealthProfile
                         ? (data.sync_warning || 'Local health profile found. PUPTAS sync will still depend on a valid Admission reference.')
-                        : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.');
+                        : (isClinicLookupMode()
+                            ? (applicantName ? 'Clinic record found: ' + applicantName + '.' : 'Clinic record found.')
+                            : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.'));
 
                     if (isAlreadyApproved) {
                         setStatus(
@@ -6562,15 +6639,28 @@
                         const lookupRow = document.querySelector('.applicant-ref-lookup-row');
                         if (lookupRow) lookupRow.style.display = 'none';
 
-                        // Show message but disable Approve button
                         isApprovalMode = false;
                         if (findBtn) {
-                            findBtn.textContent = 'Already Approved';
-                            findBtn.disabled = true;
-                            findBtn.style.opacity = '0.6';
-                            findBtn.style.cursor = 'not-allowed';
                             findBtn.removeEventListener('click', doLookup);
                             findBtn.removeEventListener('click', doApprove);
+
+                            if (isClinicLookupMode()) {
+                                findBtn.textContent = 'Open Record';
+                                findBtn.disabled = false;
+                                findBtn.style.opacity = '1';
+                                findBtn.style.cursor = 'pointer';
+                                findBtn.onclick = function () {
+                                    if (currentLookupRedirect) {
+                                        window.location.href = currentLookupRedirect;
+                                    }
+                                };
+                            } else {
+                                findBtn.textContent = 'Already Approved';
+                                findBtn.disabled = true;
+                                findBtn.style.opacity = '0.6';
+                                findBtn.style.cursor = 'not-allowed';
+                                findBtn.onclick = null;
+                            }
                         }
                     } else {
                         setStatus(isLocalHealthProfile ? 'info' : 'success', lookupFoundMessage);
@@ -6587,19 +6677,45 @@
                         const lookupRow = document.querySelector('.applicant-ref-lookup-row');
                         if (lookupRow) lookupRow.style.display = 'none';
 
-                        // Change button to Approve mode
-                        isApprovalMode = true;
-                        if (findBtn) {
-                            findBtn.textContent = 'Approve';
-                            findBtn.disabled = false;
-                            findBtn.style.opacity = '1';
-                            findBtn.style.cursor = 'pointer';
-                            findBtn.removeEventListener('click', doLookup);
-                            findBtn.addEventListener('click', doApprove);
+                        if (isClinicLookupMode() || isLocalClinicReference) {
+                            isApprovalMode = false;
+                            const medicalConditionSection = document.querySelector('.applicant-medical-condition-section');
+                            if (medicalConditionSection) {
+                                medicalConditionSection.classList.remove('show');
+                                medicalConditionSection.style.display = 'none';
+                            }
+
+                            if (findBtn) {
+                                findBtn.textContent = 'Open Record';
+                                findBtn.disabled = false;
+                                findBtn.style.opacity = '1';
+                                findBtn.style.cursor = 'pointer';
+                                findBtn.removeEventListener('click', doLookup);
+                                findBtn.removeEventListener('click', doApprove);
+                                findBtn.onclick = function () {
+                                    if (currentLookupRedirect) {
+                                        window.location.href = currentLookupRedirect;
+                                    }
+                                };
+                            }
+                        } else {
+                            // Change button to Approve mode
+                            isApprovalMode = true;
+                            if (findBtn) {
+                                findBtn.textContent = 'Approve';
+                                findBtn.disabled = false;
+                                findBtn.style.opacity = '1';
+                                findBtn.style.cursor = 'pointer';
+                                findBtn.removeEventListener('click', doLookup);
+                                findBtn.onclick = null;
+                                findBtn.addEventListener('click', doApprove);
+                            }
                         }
                     }
                 } else {
-                    setStatus('error', data.message || 'No applicant found with that reference number.');
+                    setStatus('error', data.message || (isClinicLookupMode()
+                        ? 'No clinic record found with that reference number.'
+                        : 'No applicant found with that reference number.'));
                 }
             })
             .catch(() => setStatus('error', 'Unable to look up right now. Please try again.'));
@@ -6717,6 +6833,7 @@
         }
 
         if (openBtn) openBtn.addEventListener('click', function (e) { e.preventDefault(); openApplicantsModal(); });
+        if (openClinicBtn) openClinicBtn.addEventListener('click', function (e) { e.preventDefault(); openClinicLookupModal(); });
         if (closeBtn) closeBtn.addEventListener('click', closeApplicantsModal);
         if (backdrop) backdrop.addEventListener('click', function (e) { if (e.target === backdrop) closeApplicantsModal(); });
         if (informationButton) informationButton.addEventListener('click', function () {

@@ -598,12 +598,60 @@ class AppointmentController extends Controller
         return 'Dr. ' . trim($value);
     }
 
+    private function resolveHealthReferenceMode(User $user, ?Admin $linkedAdminProfile = null, ?array $applicantData = null): string
+    {
+        $linkedAdminProfile = $linkedAdminProfile ?: $this->resolveLinkedAdminProfile($user);
+        $applicantData = is_array($applicantData) ? $applicantData : $this->fetchPuptasApplicantForUser($user);
+        $applicantIdentity = $this->normalizePuptasApplicantIdentity($applicantData);
+
+        if (($applicantIdentity['available'] ?? false) === true) {
+            return 'admission';
+        }
+
+        $hasLinkedDirectoryProfile = $linkedAdminProfile instanceof Admin;
+        $isAdminLikeUser = User::normalizeRole((string) ($user->user_role ?? '')) === User::ROLE_ADMIN
+            || User::normalizeRole((string) ($user->user_role ?? '')) === User::ROLE_SUPERADMIN;
+
+        return ($hasLinkedDirectoryProfile || $isAdminLikeUser)
+            ? 'clinic'
+            : 'guest';
+    }
+
+    private function generateClinicReferenceNumber(User $user): string
+    {
+        $year = now()->format('Y');
+        $seed = (int) ($user->id ?: 0);
+
+        if ($seed <= 0) {
+            $seed = random_int(1, 999999);
+        }
+
+        return sprintf('CLN-%s-%06d', $year, $seed);
+    }
+
+    private function resolveClinicReferenceNumber(User $user, ?HealthProfile $healthProfile = null): string
+    {
+        $candidates = array_filter([
+            trim((string) (optional($healthProfile)->reference_number ?? '')),
+            trim((string) ($user->reference_number ?? '')),
+        ], fn ($value) => $value !== '');
+
+        foreach ($candidates as $candidate) {
+            if (!$this->looksLikeIdpIdentifier($candidate)) {
+                return strtoupper($candidate);
+            }
+        }
+
+        return $this->generateClinicReferenceNumber($user);
+    }
+
     private function buildHealthFormPrefill(User $user, ?Admin $linkedAdminProfile = null, ?HealthProfile $healthProfile = null): array
     {
         $linkedAdminProfile = $linkedAdminProfile ?: $this->resolveLinkedAdminProfile($user);
         $applicantData = $this->fetchPuptasApplicantForUser($user);
         $applicantIdentity = $this->normalizePuptasApplicantIdentity($applicantData);
         $this->persistPuptasApplicantIdentity($user, $applicantIdentity);
+        $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile, $applicantData);
 
         $calculatedAge = null;
         if (!empty($user->DOB)) {
@@ -659,8 +707,18 @@ class AppointmentController extends Controller
         $applicantLastName = trim((string) $applicantIdentity['last_name']);
         $applicantStructuredName = trim((string) $applicantIdentity['full_name']);
         $hasOfficialApplicantIdentity = (bool) $applicantIdentity['available'];
+        $resolvedReferenceNumber = $referenceMode === 'admission'
+            ? $this->resolveReferenceNumber($user, $healthProfile, $applicantData)
+            : $this->resolveClinicReferenceNumber($user, $healthProfile);
 
         return [
+            'reference_mode' => $referenceMode,
+            'reference_requires_validation' => $referenceMode === 'admission',
+            'reference_label' => $referenceMode === 'admission' ? 'Admission Reference Number' : 'Clinic Reference Number',
+            'step_1_title' => $referenceMode === 'admission' ? 'Admission Reference' : 'Clinic Reference',
+            'step_1_description' => $referenceMode === 'admission'
+                ? 'Confirm your admission reference, complete your health information, then upload the required clinic documents.'
+                : 'Review your clinic reference, complete your health information, then upload the required clinic documents.',
             'identity_from_puptas' => $hasOfficialApplicantIdentity,
             'puptas_full_name' => $applicantStructuredName,
             'puptas_first_name' => $applicantFirstName,
@@ -677,7 +735,7 @@ class AppointmentController extends Controller
                 ?: trim((string) (optional($linkedAdminProfile)->last_name ?? $user->last_name ?? '')),
             'suffix_name' => trim((string) (optional($linkedAdminProfile)->suffix_name ?? '')),
             'student_id' => (string) (optional($healthProfile)->student_id ?? $user->student_id ?? ''),
-            'reference_number' => $this->resolveReferenceNumber($user, $healthProfile, $applicantData),
+            'reference_number' => $resolvedReferenceNumber,
             'student_number' => $this->resolveStudentNumber($user, $healthProfile, $applicantData),
             'school_year_from_puptas' => trim((string) $applicantIdentity['school_year']) !== '',
             'email' => (string) (
@@ -1385,9 +1443,21 @@ public function account(Request $request)
         }
     }
 
+    $hasLocalProfileData = collect([
+        $accountProfileData['birthday'] ?? '',
+        $accountProfileData['sex'] ?? '',
+        $accountProfileData['civil_status'] ?? '',
+        $accountProfileData['home_address'] ?? '',
+        $accountProfileData['guardian_name'] ?? '',
+        $accountProfileData['cellphone'] ?? '',
+        $accountProfileData['reference_number'] ?? '',
+        optional($linkedAdminProfile)->office ?? '',
+    ])->contains(fn ($value) => trim((string) $value) !== '');
+
     $isEnrolled = (bool) ($guisisAccountData['available'] ?? false)
         || trim((string) ($accountProfileData['student_number'] ?? '')) !== ''
-        || (bool) $user->is_health_profile_completed;
+        || (bool) $user->is_health_profile_completed
+        || $hasLocalProfileData;
     $accountView = in_array((string) $request->query('view', 'profile'), ['profile', 'health-record', 'notifications'], true)
         ? (string) $request->query('view', 'profile')
         : 'profile';
@@ -1822,6 +1892,22 @@ public function validateHealthFormReference(Request $request)
 {
     /** @var \App\Models\User|null $user */
     $user = Auth::user();
+    $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
+    $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile);
+
+    if ($referenceMode !== 'admission') {
+        $clinicReference = $this->resolveClinicReferenceNumber(
+            $user,
+            HealthProfile::query()->where('user_id', optional($user)->id)->first()
+        );
+        $this->persistResolvedReferenceNumber($user, $clinicReference);
+
+        return response()->json([
+            'success' => true,
+            'reference_number' => $clinicReference,
+            'message' => 'Clinic reference is ready for this account.',
+        ]);
+    }
 
     $validated = $request->validate([
         'reference_number' => ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$/'],
@@ -1996,18 +2082,27 @@ public function storeHealthForm(Request $request)
 
     /** @var \App\Models\User $user */
     $user = Auth::user();
-    $officialReference = strtoupper(trim((string) ($user->reference_number ?? '')));
-    if ($officialReference === '' && $user->relationLoaded('healthProfile') && $user->healthProfile) {
-        $officialReference = strtoupper(trim((string) ($user->healthProfile->reference_number ?? '')));
-    } elseif ($officialReference === '') {
-        $existingHealthProfile = \App\Models\HealthProfile::where('user_id', $user->id)->first();
-        $officialReference = strtoupper(trim((string) ($existingHealthProfile->reference_number ?? '')));
-    }
+    $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
+    $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile);
+    $existingHealthProfile = $user->relationLoaded('healthProfile') && $user->healthProfile
+        ? $user->healthProfile
+        : \App\Models\HealthProfile::where('user_id', $user->id)->first();
 
-    if ($officialReference === '' || $submittedReference !== $officialReference) {
-        throw ValidationException::withMessages([
-            'reference_number' => 'Admission Reference must come from the Admission System before submitting the Health Profile.',
-        ]);
+    if ($referenceMode === 'admission') {
+        $officialReference = strtoupper(trim((string) ($user->reference_number ?? '')));
+        if ($officialReference === '' && $existingHealthProfile) {
+            $officialReference = strtoupper(trim((string) ($existingHealthProfile->reference_number ?? '')));
+        }
+
+        if ($officialReference === '' || $submittedReference !== $officialReference) {
+            throw ValidationException::withMessages([
+                'reference_number' => 'Admission Reference must come from the Admission System before submitting the Health Profile.',
+            ]);
+        }
+    } else {
+        $officialReference = $submittedReference !== ''
+            ? $submittedReference
+            : $this->resolveClinicReferenceNumber($user, $existingHealthProfile);
     }
 
     $normalizedHeight = $this->normalizeMeasurement($request->input('height'), 'cm');

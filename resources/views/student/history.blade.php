@@ -1066,11 +1066,12 @@
             @empty
                 <div class="empty-state" id="emptyHistoryState">
                   <div class="empty-illustration" aria-hidden="true">
+                    <h2 class="empty-title">You have no appointment history yet</h2>
                     <div class="empty-bubble">
                         <span class="bubble-text bubble-text-book">Book Now!</span>
                         <span class="bubble-text bubble-text-yay">Yay!</span>
                     </div>
-                    <div class="empty-shadow"></div>
+                    <!-- <div class="empty-shadow"></div> 
                     <div class="clinic-cartoon">
                         <div class="cartoon-hair"></div>
                         <div class="cartoon-head"></div>
@@ -1084,9 +1085,9 @@
                         <div class="cartoon-cross-h"></div>
                         <div class="cartoon-leg left"></div>
                         <div class="cartoon-leg right"></div>
-                    </div>
+                    </div>-->
                   </div>
-                  <h2 class="empty-title">You have no appointment history yet</h2>
+                
                   <a href="{{ url('/student/booking') }}" class="btn-outline empty-cta" id="emptyHistoryCta">Book your first appointment</a>
                 </div>
             @endforelse
