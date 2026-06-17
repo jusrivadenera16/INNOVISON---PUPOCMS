@@ -303,6 +303,7 @@
             background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
             border: 1px solid rgba(250, 204, 21, 0.50);
             box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
+            border-radius: 0 18px 18px 0;
         }
 
         .portal-btn__icon {
@@ -315,6 +316,7 @@
             border: 1px solid rgba(250, 204, 21, 0.50);
             color: currentColor;
             box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
+            border-radius: 18px 0 0 18px;
         }
 
         .portal-btn__icon svg,
