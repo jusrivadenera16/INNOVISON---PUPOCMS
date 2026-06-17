@@ -99,26 +99,27 @@
     /* 2. Header & Logo Layout */
     .header-top {
         width: 100%;
-        display: grid;
-        grid-template-columns: 110px 1fr 110px;
-        align-items: center;
-        column-gap: 18px;
+        display: table;
+        table-layout: fixed;
         margin-bottom: 18px;
     }
 
     .pup-logo-section {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
+        display: table-cell;
         width: 110px;
+        vertical-align: middle;
+        text-align: left;
     }
 
     .pup-logo-section img {
         width: 62px;
         height: auto;
+        display: inline-block;
     }
 
     .report-header-center {
+        display: table-cell;
+        vertical-align: middle;
         text-align: center;
         line-height: 1.15;
     }
@@ -160,19 +161,17 @@
     }
 
     .bp-logo {
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-end;
+        display: table-cell;
         width: 110px;
-        min-width: 110px;
-        margin-left: 0;
+        vertical-align: middle;
+        text-align: right;
     }
 
     .bp-logo img {
         width: 74px;
         height: auto;
         object-fit: contain;
-        display: block;
+        display: inline-block;
     }
 
     /* 3. Report Info & Titles */
