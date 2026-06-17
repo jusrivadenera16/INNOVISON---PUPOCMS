@@ -145,6 +145,7 @@
             flex-direction: column;
             align-items: center;
             gap: 10px;
+            margin-top: 3px;
             transition: opacity .26s ease, transform .32s ease;
         }
 
@@ -239,6 +240,7 @@
             min-height: 52px;
             width: 100%;
             padding: 0 20px;
+            overflow: hidden;
             border-radius: 999px;
             background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
             border: 1px solid rgba(250, 204, 21, 0.26);
@@ -509,7 +511,7 @@
         }
 
         .account-note {
-            margin: 8px 0 0;
+            margin: 0 0 8px;
             color: rgba(255, 255, 255, 0.72);
             font-size: 12px;
             line-height: 1.55;
@@ -530,6 +532,13 @@
         .landing-panel.is-help .gateway-top-content {
             opacity: 0;
             transform: translateY(-10px) scale(0.985);
+            pointer-events: none;
+        }
+
+        .landing-panel.is-help .gateway-feature-grid,
+        .landing-panel.is-help .system-foot {
+            opacity: 0;
+            visibility: hidden;
             pointer-events: none;
         }
 
@@ -911,6 +920,10 @@
                             <p class="account-note" role="alert" style="color:#fecaca; margin:0 0 4px;">{{ $message }}</p>
                         @enderror
 
+                        <p class="account-note">
+                            Signed in as {{ $user->name ?? 'Student Assistant' }}
+                        </p>
+
                         @if($showStudentWorkspace)
                             <a class="portal-btn" href="{{ route('assistant.enter-student') }}">
                                 <span class="portal-btn__icon" aria-hidden="true">
@@ -976,10 +989,6 @@
                                 <span>Need Help?</span>
                             </button>
                         </div>
-
-                        <p class="account-note">
-                            Signed in as {{ $user->name ?? 'Student Assistant' }}
-                        </p>
                     </div>
                 </div>
 
