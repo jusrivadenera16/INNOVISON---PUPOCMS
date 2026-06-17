@@ -695,22 +695,6 @@
             transition: color .12s ease, transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
         }
 
-        .portal-btn::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background:
-                linear-gradient(120deg,
-                    rgba(255, 248, 196, 0) 0%,
-                    rgba(255, 239, 181, 0.16) 22%,
-                    rgba(255, 239, 181, 0.58) 48%,
-                    rgba(255, 239, 181, 0.16) 72%,
-                    rgba(255, 248, 196, 0) 100%);
-            transform: translateX(-135%);
-            transition: transform 1.4s ease;
-            pointer-events: none;
-        }
-
         .portal-btn:hover,
         .portal-btn:focus-visible {
             transform: translateY(-1px);
@@ -721,11 +705,6 @@
                 0 0 0 4px rgba(250, 204, 21, 0.18),
                 0 22px 42px rgba(112, 19, 27, 0.20);
             outline: none;
-        }
-
-        .portal-btn:hover::after,
-        .portal-btn:focus-visible::after {
-            transform: translateX(135%);
         }
 
         .help-btn {
