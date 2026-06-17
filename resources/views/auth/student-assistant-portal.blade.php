@@ -414,7 +414,7 @@
         .portal-btn:hover .portal-btn__label,
         .portal-btn:focus-visible .portal-btn__label {
             border-color: var(--gold);
-            color: var(--maroon);
+            color: #111111;
         }
 
         .workspace-schedule {
