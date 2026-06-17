@@ -135,13 +135,19 @@
     }
 
     .bp-logo {
-        border: 1.5px solid #000;
-        padding: 10px 15px;
-        font-weight: bold;
-        font-size: 12px;
-        text-align: center;
-        width: 110px;
-        line-height: 1.1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 120px;
+        min-width: 120px;
+        margin-left: auto;
+    }
+
+    .bp-logo img {
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+        display: block;
     }
 
     /* 3. Report Info & Titles */
@@ -694,7 +700,7 @@
             </div>
         </div>
         <div class="bp-logo">
-            BAGONG PILIPINAS
+            <img src="{{ asset('images/Bagong_Pilipinas_logo.png') }}" alt="Bagong Pilipinas Logo">
         </div>
     </div>
 

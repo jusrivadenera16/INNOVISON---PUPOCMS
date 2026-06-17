@@ -1841,7 +1841,7 @@
                                         </button>
 
                                         @if($appt->status == 'Pending')
-                                            <a href="{{ url($basePrefix . '/appointments/' . $appt->id . '/Approved') }}" class="appointment-action-menu-item is-approve btn-approve" title="Approve" data-status-target="Approved">
+                                            <a href="{{ url($basePrefix . '/appointments/' . $appt->id . '/Approved') }}" class="appointment-action-menu-item is-approve btn-approve" title="Approve" data-id="{{ $appt->id }}" data-name="{{ $appt->name }}" data-service="{{ $appt->service }}" data-date="{{ $appt->date }}" data-time="{{ $appt->time }}" data-status-target="Approved">
                                                 <x-outline-icon name="check" />
                                                 Approve
                                             </a>
@@ -1849,7 +1849,7 @@
                                                 <x-outline-icon name="calendar-days" />
                                                 Reschedule
                                             </button>
-                                            <a href="{{ url($basePrefix . '/appointments/' . $appt->id . '/Cancelled') }}" class="appointment-action-menu-item is-reject btn-reject btn-cancel" title="Reject" data-status-target="Cancelled">
+                                            <a href="{{ url($basePrefix . '/appointments/' . $appt->id . '/Cancelled') }}" class="appointment-action-menu-item is-reject btn-reject btn-cancel" title="Reject" data-id="{{ $appt->id }}" data-name="{{ $appt->name }}" data-service="{{ $appt->service }}" data-date="{{ $appt->date }}" data-time="{{ $appt->time }}" data-status-target="Cancelled">
                                                 <x-outline-icon name="x-mark" />
                                                 Reject
                                             </a>
@@ -1978,9 +1978,9 @@
         }
 
         const name = row.querySelector('.student-name')?.textContent?.trim() || '';
-        const service = row.cells?.[2]?.textContent?.trim() || '';
-        const dateNode = row.cells?.[3]?.querySelector('div');
-        const timeNode = row.cells?.[3]?.querySelectorAll('div')?.[1];
+        const service = row.cells?.[3]?.textContent?.trim() || '';
+        const dateNode = row.cells?.[4]?.querySelector('div');
+        const timeNode = row.cells?.[4]?.querySelectorAll('div')?.[1];
         const date = dateNode?.textContent?.trim() || '';
         const time = timeNode?.textContent?.trim() || '';
 
