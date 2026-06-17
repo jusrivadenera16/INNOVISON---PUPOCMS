@@ -237,8 +237,7 @@
                 </span>
                 <h2>Login required before booking</h2>
                 <p>
-                    Public guests may view clinic information, but booking an appointment requires a verified One Portal student account.
-                </p>
+                    Please login to your student account through One Portal to access the appointment booking features and manage your clinic visits.
                 <a href="{{ route('login.portal') }}" class="public-appt-login-btn">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
