@@ -619,14 +619,13 @@ class AppointmentController extends Controller
 
     private function generateClinicReferenceNumber(User $user): string
     {
-        $year = now()->format('Y');
-        $seed = (int) ($user->id ?: 0);
+        $timestamp = now()->setTimezone('Asia/Taipei');
 
-        if ($seed <= 0) {
-            $seed = random_int(1, 999999);
-        }
-
-        return sprintf('CLN-%s-%06d', $year, $seed);
+        return sprintf(
+            'CLN-%s-%s',
+            $timestamp->format('Y'),
+            $timestamp->format('mdHi')
+        );
     }
 
     private function resolveClinicReferenceNumber(User $user, ?HealthProfile $healthProfile = null): string
