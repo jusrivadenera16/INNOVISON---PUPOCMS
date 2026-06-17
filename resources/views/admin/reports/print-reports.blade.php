@@ -97,38 +97,37 @@
     }
 
     /* 2. Header & Logo Layout */
-    .header-top { 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        gap: 20px;
-        margin-bottom: 20px; 
+    .header-top {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 110px 1fr 110px;
+        align-items: center;
+        column-gap: 18px;
+        margin-bottom: 18px;
     }
 
     .pup-logo-section {
         display: flex;
         align-items: center;
         justify-content: flex-start;
-        gap: 12px;
-        flex: 0 0 170px;
+        width: 110px;
     }
 
     .pup-logo-section img {
-        width: 70px; 
+        width: 62px;
         height: auto;
     }
 
     .report-header-center {
-        flex: 1 1 auto;
         text-align: center;
-        line-height: 1.2;
+        line-height: 1.15;
     }
 
     .report-header-center .university {
         display: block;
-        font-size: 22px;
+        font-size: 12px;
         font-weight: 800;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
         color: #111827;
     }
@@ -136,7 +135,7 @@
     .report-header-center .department,
     .report-header-center .campus {
         display: block;
-        font-size: 15px;
+        font-size: 10px;
         font-weight: 700;
         color: #374151;
     }
@@ -163,15 +162,14 @@
     .bp-logo {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        width: 120px;
-        min-width: 120px;
-        flex: 0 0 120px;
-        margin-left: auto;
+        justify-content: flex-end;
+        width: 110px;
+        min-width: 110px;
+        margin-left: 0;
     }
 
     .bp-logo img {
-        width: 100%;
+        width: 74px;
         height: auto;
         object-fit: contain;
         display: block;
