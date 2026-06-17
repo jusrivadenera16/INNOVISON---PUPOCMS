@@ -1511,14 +1511,15 @@
             gap: 12px;
             font-size: 1.02rem;
             font-weight: 950;
+            position: relative;
         }
 
         .gateway-actions .portal-btn .portal-btn__label {
             min-height: 64px;
-            padding: 0 20px 0 24px;
+            padding: 0 70px 0 24px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
             text-align: left;
             background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
             border: 1px solid rgba(250, 204, 21, 0.50);
@@ -1544,6 +1545,24 @@
             stroke: currentColor;
             stroke-width: 2;
             fill: none;
+        }
+
+        .gateway-actions .portal-btn .portal-btn__arrow {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 34px;
+            height: 34px;
+            min-height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: currentColor;
+            box-shadow: none;
+            z-index: 2;
         }
 
         .gateway-actions .portal-btn:hover,
