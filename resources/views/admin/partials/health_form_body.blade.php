@@ -24,7 +24,7 @@
 
     <table class="official-title-table">
         <tr>
-            <td>HEALTH INFORMATION FORM FOR STUDENTS</td>
+            <td>HEALTH INFORMATION FORM</td>
         </tr>
     </table>
 
