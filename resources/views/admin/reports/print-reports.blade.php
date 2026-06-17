@@ -101,18 +101,44 @@
         display: flex; 
         justify-content: space-between; 
         align-items: center; 
+        gap: 20px;
         margin-bottom: 20px; 
     }
 
     .pup-logo-section {
         display: flex;
         align-items: center;
-        gap: 12px; 
+        justify-content: flex-start;
+        gap: 12px;
+        flex: 0 0 170px;
     }
 
     .pup-logo-section img {
         width: 70px; 
         height: auto;
+    }
+
+    .report-header-center {
+        flex: 1 1 auto;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    .report-header-center .university {
+        display: block;
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #111827;
+    }
+
+    .report-header-center .department,
+    .report-header-center .campus {
+        display: block;
+        font-size: 15px;
+        font-weight: 700;
+        color: #374151;
     }
 
     .logo-text-box {
@@ -140,6 +166,7 @@
         justify-content: center;
         width: 120px;
         min-width: 120px;
+        flex: 0 0 120px;
         margin-left: auto;
     }
 
@@ -693,16 +720,18 @@
 
     @if(!in_array($type, ['inventory', 'mar'], true))
         <div class="header-top">
-        <div class="pup-logo-section">
-            <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
-            <div class="logo-text-box">
-                <div class="title">PUP TAGUIG</div>
+            <div class="pup-logo-section">
+                <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
+            </div>
+            <div class="report-header-center">
+                <span class="university">POLYTECHNIC UNIVERSITY OF THE PHILIPPINES</span>
+                <span class="department">Medical Services Department</span>
+                <span class="campus">Taguig Campus</span>
+            </div>
+            <div class="bp-logo">
+                <img src="{{ asset('images/Bagong_Pilipinas_logo.png') }}" alt="Bagong Pilipinas Logo">
             </div>
         </div>
-        <div class="bp-logo">
-            <img src="{{ asset('images/Bagong_Pilipinas_logo.png') }}" alt="Bagong Pilipinas Logo">
-        </div>
-    </div>
 
         <div class="report-main-title">
         @if($type == 'mar')
