@@ -149,8 +149,6 @@
         display:none;
         position:fixed;
         inset:0;
-        width:100vw;
-        height:100vh;
         z-index:1200;
         align-items:center;
         justify-content:center;
@@ -159,6 +157,10 @@
         backdrop-filter:blur(14px);
         -webkit-backdrop-filter:blur(14px);
         overflow-y:auto;
+    }
+    html.learn-more-open,
+    body.learn-more-open {
+        overflow:hidden;
     }
     .learn-more-modal.is-open { display:flex; }
     .learn-more-card {
@@ -453,6 +455,8 @@
           if (!learnMoreModal) return;
           learnMoreModal.classList.toggle('is-open', isOpen);
           learnMoreModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+          document.documentElement.classList.toggle('learn-more-open', isOpen);
+          document.body.classList.toggle('learn-more-open', isOpen);
         }
 
         if (learnMoreBtn) {
