@@ -2850,24 +2850,28 @@ document.addEventListener('DOMContentLoaded', function () {
                             @php
                                 $recordDocuments = [
                                     [
+                                        'key' => 'student_photo',
                                         'title' => '2x2 Student Photo',
                                         'meta' => 'Image Upload',
                                         'path' => optional($healthProfileRecord)->student_photo,
                                         'is_image' => true,
                                     ],
                                     [
+                                        'key' => 'medical_certificate',
                                         'title' => 'Medical Certificate',
                                         'meta' => 'PDF or Image Upload',
                                         'path' => optional($healthProfileRecord)->medical_certificate,
                                         'is_image' => false,
                                     ],
                                     [
+                                        'key' => 'chest_xray_result',
                                         'title' => 'Chest X-ray Result',
                                         'meta' => 'PDF or Image Upload',
                                         'path' => optional($healthProfileRecord)->chest_xray_result,
                                         'is_image' => false,
                                     ],
                                     [
+                                        'key' => 'pwd_id_proof',
                                         'title' => 'PWD ID Proof',
                                         'meta' => 'PDF Upload',
                                         'path' => optional($healthProfileRecord)->pwd_id_proof,
