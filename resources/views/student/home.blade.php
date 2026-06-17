@@ -403,7 +403,7 @@
               <li>General Consultation</li>
               <li>Mental Health Support</li>
               <li>Prescription Services</li>
-              <li>Medical Certificates</li>
+              <li></li>
             </ul>
           </div>
 
