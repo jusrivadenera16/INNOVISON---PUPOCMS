@@ -4355,23 +4355,6 @@
         </div>
 
         <div class="intake-options-grid">
-            <a href="{{ url()->current() }}?mode=registration" class="intake-option-link">
-                <div class="intake-option-card intake-option-registration {{ $currentMode === 'registration' ? 'is-active' : '' }}">
-                    <span class="intake-option-chip" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                    </span>
-                    <span class="intake-option-icon-wrap" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 3h6m0 0v6m0-6-7.5 7.5M9 6H6.75A2.25 2.25 0 0 0 4.5 8.25v9A2.25 2.25 0 0 0 6.75 19.5h9A2.25 2.25 0 0 0 18 17.25V15" />
-                        </svg>
-                    </span>
-                    <h3 class="intake-option-title">Registration</h3>
-                    <p class="intake-option-copy">Open registration options for IDP account creation or assisted manual profile setup.</p>
-                </div>
-            </a>
-
             <a href="#" class="intake-option-link" id="openScanLookupModal">
                 <div class="intake-option-card intake-option-scan {{ $currentMode === 'scan' ? 'is-active' : '' }}">
                     <span class="intake-option-chip" aria-hidden="true">

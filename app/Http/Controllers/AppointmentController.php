@@ -1985,6 +1985,7 @@ public function storeHealthForm(Request $request)
     }
 
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
+    $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile);
     $existingHealthProfile = $user?->relationLoaded('healthProfile') && $user?->healthProfile
         ? $user->healthProfile
         : \App\Models\HealthProfile::where('user_id', $user?->id)->first();
@@ -2110,14 +2111,6 @@ public function storeHealthForm(Request $request)
             throw ValidationException::withMessages($dateErrors);
         }
     }
-
-    /** @var \App\Models\User $user */
-    $user = Auth::user();
-    $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
-    $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile);
-    $existingHealthProfile = $user->relationLoaded('healthProfile') && $user->healthProfile
-        ? $user->healthProfile
-        : \App\Models\HealthProfile::where('user_id', $user->id)->first();
 
     if ($referenceMode === 'admission') {
         $officialReference = strtoupper(trim((string) ($user->reference_number ?? '')));

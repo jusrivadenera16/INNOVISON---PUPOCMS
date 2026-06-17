@@ -1643,7 +1643,7 @@
 
             <form action="{{ route('store.health.form') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <input type="hidden" name="course_college" value="{{ old('course_college', $prefill['course_college'] ?? $user->course) }}">
+                <input type="hidden" name="course_college" value="{{ old('course_college', trim((string) (($prefill['course_college'] ?? '') !== '' ? $prefill['course_college'] : ($user->course ?? '')))) }}">
 
                 <div class="step-panel {{ $startStep === 1 ? '' : 'is-hidden' }}" id="stepPanel1">
                     <div class="form-intro">
