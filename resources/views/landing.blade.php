@@ -1338,32 +1338,25 @@
             width: min(1040px, 100%);
             min-height: min(650px, calc(100vh - 72px));
             display: block;
-            padding: clamp(24px, 3.8vw, 40px);
-            border-radius: 28px;
-            overflow: hidden;
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
-                linear-gradient(145deg, rgba(31, 8, 14, 0.86), rgba(84, 12, 24, 0.74));
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            box-shadow: 0 30px 80px rgba(15, 23, 42, 0.34);
+            padding: clamp(16px, 2.8vw, 26px) 0;
+            border-radius: 0;
+            overflow: visible;
+            background: transparent;
+            border: 0;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            box-shadow: none;
         }
 
         body.landing-theme-light .landing-panel {
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 248, 236, 0.82)),
-                linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(255, 244, 224, 0.86));
-            border-color: rgba(112, 19, 27, 0.12);
-            box-shadow: 0 24px 70px rgba(112, 19, 27, 0.14);
+            background: transparent;
+            border-color: transparent;
+            box-shadow: none;
         }
 
         .landing-panel::before,
         .landing-panel::after {
-            content: "";
-            position: absolute;
-            border-radius: 999px;
-            pointer-events: none;
+            content: none;
         }
 
         .landing-panel::before {
@@ -1568,30 +1561,30 @@
         }
 
         .gateway-actions .portal-btn--idp {
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
-            border-color: var(--gold);
-            color: var(--maroon);
+            background: #ffffff;
+            border-color: rgba(255, 255, 255, 0.96);
+            color: #111111;
         }
 
         .gateway-actions .portal-btn--idp .portal-btn__icon,
         .gateway-actions .portal-btn--idp .portal-btn__arrow {
-            background: rgba(112, 19, 27, 0.12);
-            border-color: rgba(112, 19, 27, 0.14);
+            background: rgba(17, 17, 17, 0.06);
+            border-color: rgba(17, 17, 17, 0.10);
         }
 
         .gateway-actions .portal-btn--idp:hover,
         .gateway-actions .portal-btn--idp:focus-visible {
-            background: #ffffff;
-            border-color: #ffffff;
-            color: #111111;
+            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            border-color: var(--gold);
+            color: var(--maroon);
         }
 
         .gateway-actions .portal-btn--idp:hover .portal-btn__icon,
         .gateway-actions .portal-btn--idp:focus-visible .portal-btn__icon,
         .gateway-actions .portal-btn--idp:hover .portal-btn__arrow,
         .gateway-actions .portal-btn--idp:focus-visible .portal-btn__arrow {
-            background: rgba(17, 17, 17, 0.08);
-            border-color: rgba(17, 17, 17, 0.14);
+            background: rgba(112, 19, 27, 0.12);
+            border-color: rgba(112, 19, 27, 0.14);
         }
 
         .workspace-utility-actions.gateway-utility {
@@ -1870,7 +1863,7 @@
         @media (max-width: 980px) {
             .landing-panel {
                 min-height: auto;
-                padding: 26px 18px 24px;
+                padding: 12px 0 18px;
             }
 
             .login-primary.gateway-stage {
@@ -1897,8 +1890,8 @@
             }
 
             .landing-panel {
-                padding: 22px 14px 18px;
-                border-radius: 24px;
+                padding: 10px 0 16px;
+                border-radius: 0;
             }
 
             .gateway-logo-card {
