@@ -149,12 +149,16 @@
         display:none;
         position:fixed;
         inset:0;
+        width:100vw;
+        height:100vh;
         z-index:1200;
         align-items:center;
         justify-content:center;
-        padding:20px;
-        background:rgba(15,23,42,.58);
-        backdrop-filter:blur(5px);
+        padding:24px;
+        background:rgba(15,23,42,.48);
+        backdrop-filter:blur(14px);
+        -webkit-backdrop-filter:blur(14px);
+        overflow-y:auto;
     }
     .learn-more-modal.is-open { display:flex; }
     .learn-more-card {
@@ -177,8 +181,11 @@
     .learn-more-head h3 { margin:0; color:#fff; font-size:22px; font-weight:900; }
     .learn-more-head p { margin:5px 0 0; color:rgba(255,255,255,.78); font-size:13px; line-height:1.5; }
     .learn-more-close {
-        width:38px;
-        height:38px;
+        position:relative;
+        overflow:hidden;
+        isolation:isolate;
+        width:42px;
+        height:42px;
         border-radius:999px;
         border:1px solid rgba(255,255,255,.24);
         background:rgba(255,255,255,.12);
@@ -187,6 +194,30 @@
         align-items:center;
         justify-content:center;
         cursor:pointer;
+        transition:background .22s ease, border-color .22s ease, color .22s ease, transform .22s ease, box-shadow .22s ease;
+    }
+    .learn-more-close::before {
+        content:"";
+        position:absolute;
+        inset:0;
+        background:linear-gradient(120deg, transparent 0%, rgba(255,255,255,.14) 28%, rgba(255,255,255,.5) 50%, rgba(255,255,255,.14) 72%, transparent 100%);
+        transform:translateX(-140%);
+        transition:transform .72s ease;
+        z-index:-1;
+        pointer-events:none;
+    }
+    .learn-more-close:hover,
+    .learn-more-close:focus-visible {
+        background:#5e0f17;
+        border-color:#facc15;
+        color:#fff;
+        transform:translateY(-1px);
+        box-shadow:0 12px 24px rgba(94,15,23,.26);
+        outline:none;
+    }
+    .learn-more-close:hover::before,
+    .learn-more-close:focus-visible::before {
+        transform:translateX(140%);
     }
     .learn-more-close svg { width:18px; height:18px; }
     .learn-more-body {
