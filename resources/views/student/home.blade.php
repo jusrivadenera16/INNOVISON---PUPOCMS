@@ -153,10 +153,11 @@
         align-items:center;
         justify-content:center;
         padding:24px;
-        background:rgba(15,23,42,.48);
-        backdrop-filter:blur(14px);
-        -webkit-backdrop-filter:blur(14px);
+        background:transparent;
+        backdrop-filter:none;
+        -webkit-backdrop-filter:none;
         overflow-y:auto;
+        pointer-events:none;
     }
     html.learn-more-open,
     body.learn-more-open {
@@ -170,7 +171,11 @@
         background:#fff;
         border-top:4px solid #facc15;
         border-bottom:4px solid #facc15;
-        box-shadow:0 24px 60px rgba(0,0,0,.24);
+        box-shadow:
+            0 28px 80px rgba(15, 23, 42, 0.34),
+            0 0 0 1px rgba(112, 19, 27, 0.08),
+            0 18px 36px rgba(0, 0, 0, 0.18);
+        pointer-events:auto;
     }
     .learn-more-head {
         display:flex;
