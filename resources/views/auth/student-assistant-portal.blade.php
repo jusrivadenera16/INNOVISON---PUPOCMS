@@ -976,7 +976,7 @@
                                     </span>
                                 </button>
                             @endif
-                            <small class="workspace-schedule">Available daily from {{ $adminWorkspaceHoursLabel ?? '8:00 AM–8:00 PM' }}</small>
+                            <small class="workspace-schedule">Admin Workspace: Available daily from {{ $adminWorkspaceHoursLabel ?? '8:00 AM–8:00 PM' }}</small>
                         @endif
 
                         <div class="workspace-utility-actions gateway-utility">
