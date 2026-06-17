@@ -1506,7 +1506,7 @@
             border: 0;
             box-shadow: none;
             display: grid;
-            grid-template-columns: 82px minmax(0, 1fr) 82px;
+            grid-template-columns: 82px minmax(0, 1fr);
             align-items: center;
             gap: 12px;
             font-size: 0.95rem;
@@ -1515,18 +1515,17 @@
 
         .gateway-actions .portal-btn .portal-btn__label {
             min-height: 54px;
-            padding: 0 22px;
+            padding: 0 18px 0 22px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            text-align: center;
+            justify-content: space-between;
+            text-align: left;
             background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
             border: 1px solid rgba(250, 204, 21, 0.50);
             box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
         }
 
-        .gateway-actions .portal-btn .portal-btn__icon,
-        .gateway-actions .portal-btn .portal-btn__arrow {
+        .gateway-actions .portal-btn .portal-btn__icon {
             width: 82px;
             min-height: 54px;
             display: inline-flex;
@@ -1547,10 +1546,6 @@
             fill: none;
         }
 
-        .gateway-actions .portal-btn > svg {
-            justify-self: start;
-        }
-
         .gateway-actions .portal-btn:hover,
         .gateway-actions .portal-btn:focus-visible {
             color: var(--maroon);
@@ -1559,9 +1554,7 @@
         .gateway-actions .portal-btn:hover .portal-btn__icon,
         .gateway-actions .portal-btn:focus-visible .portal-btn__icon,
         .gateway-actions .portal-btn:hover .portal-btn__label,
-        .gateway-actions .portal-btn:focus-visible .portal-btn__label,
-        .gateway-actions .portal-btn:hover .portal-btn__arrow,
-        .gateway-actions .portal-btn:focus-visible .portal-btn__arrow {
+        .gateway-actions .portal-btn:focus-visible .portal-btn__label {
             background: linear-gradient(135deg, var(--gold), var(--gold-soft));
             border-color: var(--gold);
             color: var(--maroon);
@@ -1587,9 +1580,7 @@
         .gateway-actions .portal-btn--idp:hover .portal-btn__icon,
         .gateway-actions .portal-btn--idp:focus-visible .portal-btn__icon,
         .gateway-actions .portal-btn--idp:hover .portal-btn__label,
-        .gateway-actions .portal-btn--idp:focus-visible .portal-btn__label,
-        .gateway-actions .portal-btn--idp:hover .portal-btn__arrow,
-        .gateway-actions .portal-btn--idp:focus-visible .portal-btn__arrow {
+        .gateway-actions .portal-btn--idp:focus-visible .portal-btn__label {
             background: linear-gradient(135deg, var(--gold), var(--gold-soft));
             border-color: var(--gold);
             color: var(--maroon);
