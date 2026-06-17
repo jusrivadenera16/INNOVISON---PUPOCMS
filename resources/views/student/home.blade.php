@@ -209,13 +209,13 @@
         color:#f8fafc;
     }
 
-    /* Modal Animation */
+   
     @keyframes slideUp {
         from { opacity: 0; transform: translateY(30px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Responsive */
+
     @media (max-width:900px){
         .comments-grid { grid-template-columns:repeat(2,1fr); }
         .footer-grid { grid-template-columns:repeat(2,1fr); }

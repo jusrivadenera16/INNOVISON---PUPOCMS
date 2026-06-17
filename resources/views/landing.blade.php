@@ -1764,8 +1764,8 @@
             color: #ffffff;
             border-radius: 0;
             margin: 0;
-            padding: 0 8px 12px;
-            text-align: center;
+            padding: 0 8px 12px 54px;
+            text-align: left;
         }
 
         .help-contact-card {
@@ -1793,6 +1793,14 @@
             color: rgba(255, 255, 255, 0.84);
         }
 
+        body.landing-theme-light .help-panel-title {
+            color: #111111;
+        }
+
+        body.landing-theme-light .help-panel-copy {
+            color: #1f2937;
+        }
+
         .help-guide {
             width: min(740px, 100%);
             margin: 0 auto;
@@ -1801,13 +1809,13 @@
 
         .help-panel-back {
             top: -2px;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 8px;
+            transform: none;
         }
 
         .help-panel-back:hover,
         .help-panel-back:focus-visible {
-            transform: translateX(calc(-50% - 2px));
+            transform: translateX(-2px);
         }
 
         .help-panel-back {
