@@ -236,50 +236,10 @@
         }
 
         .portal-btn {
-            position: relative;
-            min-height: 52px;
-            width: 100%;
-            padding: 0 20px;
-            overflow: hidden;
-            border-radius: 999px;
-            background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
-            border: 1px solid rgba(250, 204, 21, 0.26);
-            box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            align-items: center;
-            gap: 12px;
-            color: #ffffff;
-            text-decoration: none;
-            font-size: 0.95rem;
-            font-weight: 950;
-            transition: color .12s ease, transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
-        }
-
-        .portal-btn:hover,
-        .portal-btn:focus-visible {
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
-            border-color: var(--gold);
-            color: var(--maroon);
-            box-shadow: 0 22px 42px rgba(112, 19, 27, 0.26);
-            transform: translateY(-1px);
-            outline: none;
-        }
-
-        .portal-btn span,
-        .portal-btn svg {
-            position: relative;
-            z-index: 1;
-        }
-
-        .portal-btn__label {
-            text-align: center;
-        }
-
-        .portal-btn {
             min-height: 64px;
             width: 100%;
             padding: 0;
+            overflow: visible;
             border-radius: 0;
             background: transparent;
             border: 0;
@@ -291,6 +251,15 @@
             font-size: 1.02rem;
             font-weight: 950;
             position: relative;
+            color: #ffffff;
+            text-decoration: none;
+            transition: color .12s ease, transform .18s ease;
+        }
+
+        .portal-btn span,
+        .portal-btn svg {
+            position: relative;
+            z-index: 1;
         }
 
         .portal-btn__label {
@@ -389,6 +358,7 @@
             width: 34px;
             height: 34px;
             min-height: 34px;
+            border-radius: 10px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
