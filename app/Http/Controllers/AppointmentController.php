@@ -753,6 +753,9 @@ class AppointmentController extends Controller
                     data_get($applicantData, 'track'),
                 ])))
                 ?: ($user->course ?? '')
+                ?: trim((string) (optional($linkedAdminProfile)->office ?? ''))
+                ?: trim((string) (optional($linkedAdminProfile)->access_level ?? ''))
+                ?: 'Faculty / Staff'
             )),
             'home_address' => trim((string) (
                 optional($healthProfile)->home_address
@@ -1980,6 +1983,35 @@ public function storeHealthForm(Request $request)
         return redirect('/student/account?view=health-record')
             ->with('info', 'Your health profile is already submitted.');
     }
+
+    $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
+    $existingHealthProfile = $user?->relationLoaded('healthProfile') && $user?->healthProfile
+        ? $user->healthProfile
+        : \App\Models\HealthProfile::where('user_id', $user?->id)->first();
+
+    $resolvedCourseCollege = trim((string) $request->input('course_college'));
+    if ($resolvedCourseCollege === '') {
+        $resolvedCourseCollege = trim((string) (
+            optional($existingHealthProfile)->course_college
+            ?: ($user?->course ?? '')
+            ?: optional($linkedAdminProfile)->office
+            ?: optional($linkedAdminProfile)->access_level
+            ?: 'Faculty / Staff'
+        ));
+    }
+
+    $resolvedSchoolYear = trim((string) $request->input('school_year'));
+    if ($resolvedSchoolYear === '') {
+        $resolvedSchoolYear = trim((string) (
+            optional($existingHealthProfile)->school_year
+            ?: ($user ? $this->resolveSchoolYear(null, $user) : '')
+        ));
+    }
+
+    $request->merge([
+        'course_college' => $resolvedCourseCollege,
+        'school_year' => $resolvedSchoolYear,
+    ]);
 
     $request->validate([
         'student_id'        => 'nullable|string|max:255',
