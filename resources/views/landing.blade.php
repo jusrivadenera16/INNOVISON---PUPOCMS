@@ -1506,6 +1506,8 @@
             box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
             border-radius: 0 18px 18px 0;
             overflow: hidden;
+            z-index: 1;
+            isolation: isolate;
         }
 
         .gateway-actions .portal-btn .portal-btn__label::before {
@@ -1517,7 +1519,7 @@
             transform-origin: left center;
             transition: transform 0.32s ease;
             pointer-events: none;
-            z-index: 0;
+            z-index: -2;
         }
 
         .gateway-actions .portal-btn .portal-btn__label::after {
@@ -1534,7 +1536,7 @@
             transform: translateX(-135%);
             transition: transform 0.9s ease;
             pointer-events: none;
-            z-index: 0;
+            z-index: -1;
         }
 
         .gateway-actions .portal-btn:hover .portal-btn__label::before,
@@ -1650,8 +1652,8 @@
 
         .gateway-actions .portal-btn--idp:hover .portal-btn__arrow,
         .gateway-actions .portal-btn--idp:focus-visible .portal-btn__arrow {
-            background: rgba(255, 255, 255, 0.72);
-            border-color: rgba(255, 255, 255, 0.88);
+            background: linear-gradient(135deg, #fff4b8, #ffe693);
+            border-color: #ffffff;
             color: var(--maroon);
         }
 
