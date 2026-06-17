@@ -265,10 +265,10 @@
         .portal-btn__label {
             position: relative;
             min-height: 64px;
-            padding: 0 70px 0 24px;
+            padding: 0 18px 0 24px;
             display: flex;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: space-between;
             text-align: left;
             background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
             border: 1px solid rgba(250, 204, 21, 0.50);
@@ -351,13 +351,11 @@
         }
 
         .portal-btn__arrow {
-            position: absolute;
-            right: 18px;
-            top: 50%;
-            transform: translateY(-50%);
+            position: static;
             width: 34px;
             height: 34px;
             min-height: 34px;
+            flex: 0 0 34px;
             border-radius: 10px;
             display: inline-flex;
             align-items: center;
@@ -991,12 +989,14 @@
                                         <path d="M5 20a7 7 0 0 1 14 0"></path>
                                     </svg>
                                 </span>
-                                <span class="portal-btn__label">Student Workspace</span>
-                                <span class="portal-btn__arrow" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M5 12h14"></path>
-                                        <path d="m13 6 6 6-6 6"></path>
-                                    </svg>
+                                <span class="portal-btn__label">
+                                    <span>Student Workspace</span>
+                                    <span class="portal-btn__arrow" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M5 12h14"></path>
+                                            <path d="m13 6 6 6-6 6"></path>
+                                        </svg>
+                                    </span>
                                 </span>
                             </a>
                         @endif
@@ -1010,12 +1010,14 @@
                                             <path d="M8 20h8M12 16v4"></path>
                                         </svg>
                                     </span>
-                                    <span class="portal-btn__label">Admin Workspace</span>
-                                    <span class="portal-btn__arrow" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24">
-                                            <path d="M5 12h14"></path>
-                                            <path d="m13 6 6 6-6 6"></path>
-                                        </svg>
+                                    <span class="portal-btn__label">
+                                        <span>Admin Workspace</span>
+                                        <span class="portal-btn__arrow" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24">
+                                                <path d="M5 12h14"></path>
+                                                <path d="m13 6 6 6-6 6"></path>
+                                            </svg>
+                                        </span>
                                     </span>
                                 </a>
                             @else
@@ -1026,12 +1028,14 @@
                                             <path d="M8 20h8M12 16v4"></path>
                                         </svg>
                                     </span>
-                                    <span class="portal-btn__label">Admin Workspace</span>
-                                    <span class="portal-btn__arrow" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24">
-                                            <path d="M5 12h14"></path>
-                                            <path d="m13 6 6 6-6 6"></path>
-                                        </svg>
+                                    <span class="portal-btn__label">
+                                        <span>Admin Workspace</span>
+                                        <span class="portal-btn__arrow" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24">
+                                                <path d="M5 12h14"></path>
+                                                <path d="m13 6 6 6-6 6"></path>
+                                            </svg>
+                                        </span>
                                     </span>
                                 </button>
                             @endif
