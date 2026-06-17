@@ -1057,7 +1057,7 @@
         @media (max-width: 920px) {
             .landing-shell {
                 align-items: flex-start;
-                padding: 18px;
+                padding: 12px 14px 16px;
             }
 
             .landing-topbar {
@@ -1258,7 +1258,7 @@
             font-weight: 800;
         }
 
-        /* Command Center Gateway Override */
+      
         body {
             transition: background 0.45s ease, color 0.28s ease;
         }
@@ -1279,13 +1279,13 @@
 
         .landing-shell {
             align-items: stretch;
-            padding: clamp(28px, 5vw, 56px) 18px;
+            padding: clamp(2px, 1vw, 10px) 18px 18px;
         }
 
         .landing-theme-toggle {
             position: fixed;
-            top: 22px;
-            right: 22px;
+            top: 18px;
+            right: 18px;
             z-index: 40;
             display: inline-flex;
             align-items: center;
@@ -1338,7 +1338,7 @@
             width: min(1040px, 100%);
             min-height: min(650px, calc(100vh - 72px));
             display: block;
-            padding: clamp(16px, 2.8vw, 26px) 0;
+            padding: 0 0 14px;
             border-radius: 0;
             overflow: visible;
             background: transparent;
@@ -1390,7 +1390,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             gap: 18px;
             text-align: center;
             transition: opacity .3s ease, transform .34s ease;
@@ -1401,7 +1401,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 18px;
+            gap: 10px;
             transition: opacity .26s ease, transform .32s ease;
         }
 
@@ -1451,7 +1451,7 @@
             margin: 0;
             max-width: 820px;
             color: #ffffff;
-            font-size: clamp(2.2rem, 4.7vw, 4.15rem);
+            font-size: clamp(2rem, 4vw, 3.7rem);
             line-height: 1.02;
             font-weight: 950;
             letter-spacing: -0.03em;
@@ -1473,8 +1473,8 @@
             margin: 0;
             max-width: 760px;
             color: rgba(255, 255, 255, 0.82);
-            font-size: clamp(0.9rem, 1.25vw, 1rem);
-            line-height: 1.65;
+            font-size: clamp(0.88rem, 1.08vw, 0.96rem);
+            line-height: 1.58;
             font-weight: 500;
             text-wrap: balance;
         }
@@ -1589,20 +1589,23 @@
 
         .workspace-utility-actions.gateway-utility {
             justify-content: center;
-            margin-top: -6px;
+            margin-top: 0;
         }
 
         .workspace-utility-actions.gateway-utility .help-btn {
-            color: rgba(255, 255, 255, 0.84);
+            color: rgba(255, 255, 255, 0.9);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            min-height: 38px;
-            padding: 0 16px;
+            min-height: 34px;
+            padding: 0 12px;
             border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            background: rgba(255, 255, 255, 0.06);
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+            font-size: 0.96rem;
+            font-weight: 800;
         }
 
         .workspace-utility-actions.gateway-utility .help-btn svg {
@@ -1611,9 +1614,19 @@
 
         .workspace-utility-actions.gateway-utility .help-btn:hover,
         .workspace-utility-actions.gateway-utility .help-btn:focus-visible {
-            color: #ffffff;
-            border-color: rgba(250, 204, 21, 0.42);
-            background: rgba(250, 204, 21, 0.10);
+            color: var(--gold);
+            border-color: transparent;
+            background: transparent;
+        }
+
+        body.landing-theme-light .workspace-utility-actions.gateway-utility .help-btn {
+            color: var(--maroon);
+        }
+
+        body.landing-theme-light .workspace-utility-actions.gateway-utility .help-btn:hover,
+        body.landing-theme-light .workspace-utility-actions.gateway-utility .help-btn:focus-visible {
+            color: #8f2230;
+            background: transparent;
         }
 
         .gateway-sa-selector {
@@ -1713,30 +1726,30 @@
 
         .help-panel {
             position: absolute;
-            top: 22px;
-            left: 22px;
-            right: 22px;
+            top: 50%;
+            left: 50%;
+            right: auto;
             bottom: auto;
             z-index: 5;
-            width: auto;
-            max-width: 780px;
-            max-height: min(470px, calc(100vh - 180px));
-            margin: 0;
+            width: min(760px, calc(100% - 44px));
+            max-width: 760px;
+            max-height: min(560px, calc(100vh - 96px));
+            margin: 0 auto;
             opacity: 0;
-            transform: translateY(18px);
+            transform: translate(-50%, calc(-50% + 18px));
             pointer-events: none;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 248, 236, 0.94));
-            border: 1px solid rgba(112, 19, 27, 0.12);
-            border-radius: 28px;
-            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.20);
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
             color: #1f2937;
             transition: opacity .26s ease, transform .34s ease;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .landing-panel.is-help .help-panel {
             opacity: 1;
-            transform: translateY(0);
+            transform: translate(-50%, -50%);
             pointer-events: auto;
         }
 
@@ -1747,11 +1760,12 @@
         }
 
         .help-panel-head {
-            background: linear-gradient(135deg, #70131b, #8f2230);
+            background: transparent;
             color: #ffffff;
             border-radius: 0;
             margin: 0;
-            padding: 18px 20px 16px;
+            padding: 0 8px 12px;
+            text-align: center;
         }
 
         .help-contact-card {
@@ -1777,6 +1791,23 @@
 
         .help-panel-copy {
             color: rgba(255, 255, 255, 0.84);
+        }
+
+        .help-guide {
+            width: min(740px, 100%);
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        .help-panel-back {
+            top: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .help-panel-back:hover,
+        .help-panel-back:focus-visible {
+            transform: translateX(calc(-50% - 2px));
         }
 
         .help-panel-back {
@@ -1863,7 +1894,7 @@
         @media (max-width: 980px) {
             .landing-panel {
                 min-height: auto;
-                padding: 12px 0 18px;
+                padding: 0 0 16px;
             }
 
             .login-primary.gateway-stage {
@@ -1890,7 +1921,7 @@
             }
 
             .landing-panel {
-                padding: 10px 0 16px;
+                padding: 0 0 12px;
                 border-radius: 0;
             }
 
@@ -1910,11 +1941,8 @@
             }
 
             .help-panel {
-                top: 10px;
-                left: 10px;
-                right: 10px;
-                border-radius: 22px;
-                max-height: min(500px, calc(100vh - 120px));
+                width: calc(100% - 20px);
+                max-height: min(520px, calc(100vh - 72px));
             }
 
             .workspace-entry.gateway-actions {
@@ -2212,7 +2240,7 @@
                             </div>
                         </div>
 
-                        <!-- Student Assistant Workspace Selector -->
+                       
                         <div id="saWorkspaceSelector" class="sa-workspace-selector">
                             <div class="login-copy" style="margin-bottom: 8px;">
                                 <h2>Choose Your Workspace</h2>
@@ -2460,7 +2488,7 @@
     </main>
     @include('partials.system_footer')
     <script>
-        // ============ PRELOADER & URL PARAMETER CHECK ============
+      
         const preloader = document.getElementById('preloader');
         const saSelector = document.getElementById('saWorkspaceSelector');
         const landingPanel = document.querySelector('.landing-panel');
@@ -2510,7 +2538,7 @@
             });
         }
 
-        // Initialize: Show preloader, check URL parameters from gateway
+     
         function initializeLanding() {
             if (preloader) {
                 preloader.classList.remove('hidden');
@@ -2518,12 +2546,12 @@
 
             initializeLandingTheme();
 
-            // Check URL parameters set by the workspace gateway
+
             checkGatewayParameters();
             hidePreloader();
         }
 
-        // Read URL parameters set by the workspace gateway route
+    
         function checkGatewayParameters() {
             console.log('[LANDING] Checking gateway parameters...');
             const urlParams = new URLSearchParams(window.location.search);
@@ -2533,21 +2561,21 @@
 
             console.log('[LANDING] URL Params - workspace:', workspaceParam, 'auth_error:', authErrorParam);
 
-            // Keep the public landing page visible if authentication returns an error.
+          
             if (authErrorParam === 'true') {
                 console.log('[LANDING] Gateway returned auth_error - keeping public workspace UI visible');
                 updateUIForGuest();
                 return;
             }
 
-            // If workspace=sa, show Student Assistant selector
+ 
             if (workspaceParam === 'sa') {
                 console.log('[LANDING] Gateway returned workspace=sa - showing SA workspace selector');
                 showStudentAssistantSelector();
                 return;
             }
 
-            // If workspace=student, keep the public workspace entry visible.
+         
             if (workspaceParam === 'student') {
                 console.log('[LANDING] Gateway returned workspace=student - showing public workspace UI');
                 updateUIForGuest();
@@ -2573,7 +2601,7 @@
             }
         }
 
-        // Show Student Assistant workspace selector modal
+       
         function showStudentAssistantSelector() {
             console.log('[LANDING] Creating Student Assistant workspace selector');
             const adminWorkspaceAvailable = @json($saAdminWorkspaceAvailable);
@@ -2723,7 +2751,7 @@
             modal.appendChild(modalBox);
             document.body.appendChild(modal);
 
-            // Add animation styles
+     
             const style = document.createElement('style');
             style.textContent = `
                 @keyframes fadeInOverlay {
@@ -2758,7 +2786,7 @@
             });
         }
 
-        // Handle "View Homepage" click for non-SA users
+     
         function handleViewHomepage(event) {
             event.preventDefault();
 
@@ -2783,7 +2811,7 @@
             });
         }
 
-        // ============ HELP MODE TOGGLE ============
+       
         function setLandingHelpMode(nextState) {
             if (!landingPanel || !helpPanel) {
                 return;
@@ -2822,7 +2850,7 @@
             });
         });
 
-        // Initialize on page load
+   
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeLanding);
         } else {
