@@ -729,6 +729,7 @@ class AdminUserController extends Controller
             ->get()
             ->map(function (User $user) {
                 $linkedAdmin = $this->findLinkedAdminProfile($user);
+                $resolvedAccessLevel = $this->resolveEffectiveAdminAccessLevel($user, $linkedAdmin);
                 $rawRole = strtolower(trim((string) ($user->user_role ?? 'student')));
                 $role = User::normalizeRole($rawRole);
                 $source = $this->resolveUserSource($user);
@@ -778,7 +779,7 @@ class AdminUserController extends Controller
                         'gender' => (string) ($user->gender ?? ''),
                         'contact_no' => (string) ($user->contact_no ?? ''),
                         'is_health_profile_completed' => (bool) ($user->is_health_profile_completed ?? false),
-                        'access_level' => (string) ($linkedAdmin?->access_level ?? ''),
+                        'access_level' => $resolvedAccessLevel,
                         'user_type' => (string) ($user->user_type ?? ''),
                         'admin_login_email' => (string) ($linkedAdmin?->email_address ?? $linkedAdmin?->email ?? ''),
                         'admin_profile_id' => $linkedAdmin?->admin_id,
@@ -1049,8 +1050,8 @@ class AdminUserController extends Controller
             return 'Admin - Student Assistant';
         }
 
-        if ($normalizedRole === User::ROLE_ADMIN && $linkedAdmin) {
-            $accessLevel = strtolower(trim((string) ($linkedAdmin->access_level ?? '')));
+        if ($normalizedRole === User::ROLE_ADMIN) {
+            $accessLevel = $this->resolveEffectiveAdminAccessLevel($user, $linkedAdmin);
 
             return match ($accessLevel) {
                 'designee' => 'Admin - Designee',
@@ -1066,38 +1067,79 @@ class AdminUserController extends Controller
         };
     }
 
-    private function findLinkedAdminProfile(User $user): ?Admin
+    private function linkedAdminProfilesForUser(User $user)
     {
         if (!Schema::hasTable('admins')) {
-            return null;
+            return collect();
         }
 
-        if (Admin::hasColumn('user_id')) {
-            $linkedByUserId = Admin::query()
-                ->where('user_id', $user->id)
-                ->first();
+        $query = Admin::query()->where(function ($builder) use ($user) {
+            $matched = false;
 
-            if ($linkedByUserId) {
-                return $linkedByUserId;
+            if (Admin::hasColumn('user_id')) {
+                $builder->orWhere('user_id', $user->id);
+                $matched = true;
             }
-        }
 
-        $email = trim((string) ($user->email ?? ''));
-        if ($email === '') {
-            return null;
-        }
-
-        $linkedAdmin = Admin::query()
-            ->where(function ($builder) use ($email) {
+            $email = trim((string) ($user->email ?? ''));
+            if ($email !== '') {
                 if (Admin::hasColumn('email')) {
                     $builder->orWhere('email', $email);
+                    $matched = true;
                 }
 
                 if (Admin::hasColumn('email_address')) {
                     $builder->orWhere('email_address', $email);
+                    $matched = true;
                 }
-            })
-            ->first();
+            }
+
+            if (!$matched) {
+                $builder->whereRaw('1 = 0');
+            }
+        });
+
+        return $query->get()->unique(fn (Admin $admin) => (string) ($admin->admin_id ?? spl_object_id($admin)))->values();
+    }
+
+    private function resolveEffectiveAdminProfile(User $user, ?Admin $linkedAdmin = null): ?Admin
+    {
+        $profiles = $this->linkedAdminProfilesForUser($user);
+
+        if ($linkedAdmin) {
+            $profiles = $profiles->prepend($linkedAdmin)
+                ->unique(fn (Admin $admin) => (string) ($admin->admin_id ?? spl_object_id($admin)))
+                ->values();
+        }
+
+        if ($profiles->isEmpty()) {
+            return null;
+        }
+
+        $scoreProfile = function (Admin $admin): int {
+            $accessLevel = strtolower(trim((string) ($admin->access_level ?? '')));
+
+            return match ($accessLevel) {
+                'superadmin' => 40,
+                'clinic_staff', 'clinic staff', 'staff' => 30,
+                'designee' => 20,
+                default => 10,
+            };
+        };
+
+        return $profiles->sortByDesc($scoreProfile)->first();
+    }
+
+    private function resolveEffectiveAdminAccessLevel(User $user, ?Admin $linkedAdmin = null): string
+    {
+        $profile = $this->resolveEffectiveAdminProfile($user, $linkedAdmin);
+
+        return strtolower(trim((string) ($profile?->access_level ?? '')));
+    }
+
+    private function findLinkedAdminProfile(User $user): ?Admin
+    {
+        $linkedAdmin = $this->resolveEffectiveAdminProfile($user);
 
         if ($linkedAdmin && Admin::hasColumn('user_id') && !$linkedAdmin->user_id) {
             $linkedAdmin->user_id = $user->id;
