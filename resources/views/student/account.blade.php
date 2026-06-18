@@ -2131,15 +2131,19 @@
 
 @section('content')
 @php
-    $linkedAccessLevel = strtolower(trim((string) optional($linkedAdminProfile)->access_level));
-    $linkedRoleLabel = in_array($linkedAccessLevel, ['clinic_staff', 'designee', 'superadmin', 'super_admin'], true)
+    $linkedAccessLevel = strtolower(trim((string) (
+        optional($linkedAdminProfile)->access_level
+        ?? optional($linkedAdminProfile)->admin_hub_role
+        ?? ''
+    )));
+    $linkedRoleLabel = in_array($linkedAccessLevel, ['clinic_staff', 'designee', 'admin_designee', 'superadmin', 'super_admin'], true)
         ? (str_contains($linkedAccessLevel, 'faculty') ? 'Faculty' : 'Admin')
         : null;
     $accountProfileData = $accountProfileData ?? [];
     $guisisAccountData = $guisisAccountData ?? ['available' => false, 'status' => 'not_checked'];
     $isEnrolled = (bool) ($isEnrolled ?? false);
     $accountView = in_array(($accountView ?? 'profile'), ['profile', 'health-record', 'notifications'], true) ? $accountView : 'profile';
-    $showOfficeField = in_array($linkedAccessLevel, ['clinic_staff', 'designee', 'superadmin', 'super_admin', 'faculty'], true) || str_contains($linkedAccessLevel, 'faculty');
+    $showOfficeField = in_array($linkedAccessLevel, ['clinic_staff', 'designee', 'admin_designee', 'superadmin', 'super_admin', 'faculty'], true) || str_contains($linkedAccessLevel, 'faculty');
     $hasGuisisAccountData = (bool) ($guisisAccountData['available'] ?? false);
     $displayStudentNumber = trim((string) ($accountProfileData['student_number'] ?? ''));
     if ($displayStudentNumber === '') {

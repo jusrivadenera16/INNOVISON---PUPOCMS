@@ -4163,8 +4163,12 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         if ($isStudentAssistant) {
             $adminTypeLabel = 'Admin - Student Assistant';
         } else {
-            $accessLevel = strtolower(trim((string) ($linkedAdminProfile?->access_level ?? '')));
-            if ($accessLevel === 'designee') {
+            $accessLevel = strtolower(trim((string) (
+                $linkedAdminProfile?->access_level
+                ?? $linkedAdminProfile?->admin_hub_role
+                ?? ''
+            )));
+            if (in_array($accessLevel, ['designee', 'admin_designee'], true)) {
                 $adminTypeLabel = 'Admin - Designee';
             } elseif (in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff'], true)) {
                 $adminTypeLabel = 'Admin - Clinic Staff';

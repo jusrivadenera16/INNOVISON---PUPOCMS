@@ -311,6 +311,7 @@ class LoginController extends Controller
 
         $hubRole = strtolower(trim((string) (
             $linkedAdmin->access_level
+            ?? $linkedAdmin->admin_hub_role
             ?? $linkedAdmin->role
             ?? $linkedAdmin->user_role
             ?? ''
@@ -320,7 +321,7 @@ class LoginController extends Controller
             return $this->superAdminRoleValue();
         }
 
-        if (in_array($hubRole, ['clinic_staff', 'clinic staff', 'staff', 'designee'], true)) {
+        if (in_array($hubRole, ['clinic_staff', 'clinic staff', 'staff', 'designee', 'admin_designee'], true)) {
             return $this->adminRoleValue();
         }
 
@@ -371,9 +372,13 @@ class LoginController extends Controller
             }
 
             $linkedAdmin = $this->findLinkedAdminProfile($user);
-            $accessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
+            $accessLevel = strtolower(trim((string) (
+                $linkedAdmin?->access_level
+                ?? $linkedAdmin?->admin_hub_role
+                ?? ''
+            )));
 
-            if ($accessLevel === 'designee') {
+            if (in_array($accessLevel, ['designee', 'admin_designee'], true)) {
                 return '/student/home';
             }
 

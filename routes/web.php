@@ -53,7 +53,13 @@ if (!function_exists('resolveWorkspaceRedirectForUser')) {
                     ->first();
             }
 
-            if (strtolower(trim((string) ($linkedAdmin?->access_level ?? ''))) === 'designee') {
+            $linkedRole = strtolower(trim((string) (
+                $linkedAdmin?->access_level
+                ?? $linkedAdmin?->admin_hub_role
+                ?? ''
+            )));
+
+            if (in_array($linkedRole, ['designee', 'admin_designee'], true)) {
                 return '/student/home';
             }
 
