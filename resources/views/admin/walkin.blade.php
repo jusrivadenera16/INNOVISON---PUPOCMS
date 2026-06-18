@@ -6613,6 +6613,25 @@
                             foundCard.style.display = 'block';
                         }
                         showLookupDetails(data, ref);
+                        if (foundCard) foundCard.style.display = 'none';
+                        if (foundName) foundName.textContent = '';
+                        if (lookupDetails) lookupDetails.style.display = 'none';
+                        lookupDetails?.classList.remove('is-summary-visible');
+                        if (informationDetails) {
+                            informationDetails.classList.remove('is-visible');
+                            informationDetails.setAttribute('aria-hidden', 'true');
+                        }
+                        if (informationButton) {
+                            informationButton.classList.remove('is-visible');
+                            informationButton.setAttribute('aria-expanded', 'false');
+                        }
+                        if (documentsButton) documentsButton.classList.remove('is-visible');
+                        renderDocuments([]);
+                        const approvedMedicalConditionSection = document.querySelector('.applicant-medical-condition-section');
+                        if (approvedMedicalConditionSection) {
+                            approvedMedicalConditionSection.classList.remove('show');
+                            approvedMedicalConditionSection.style.removeProperty('display');
+                        }
 
                         // Hide input sections and show only results
                         if (defaultPane) defaultPane.style.display = 'none';
@@ -6626,23 +6645,11 @@
                             findBtn.removeEventListener('click', doLookup);
                             findBtn.removeEventListener('click', doApprove);
 
-                            if (isClinicLookupMode()) {
-                                findBtn.textContent = 'Open Record';
-                                findBtn.disabled = false;
-                                findBtn.style.opacity = '1';
-                                findBtn.style.cursor = 'pointer';
-                                findBtn.onclick = function () {
-                                    if (currentLookupRedirect) {
-                                        window.location.href = currentLookupRedirect;
-                                    }
-                                };
-                            } else {
-                                findBtn.textContent = 'Already Approved';
-                                findBtn.disabled = true;
-                                findBtn.style.opacity = '0.6';
-                                findBtn.style.cursor = 'not-allowed';
-                                findBtn.onclick = null;
-                            }
+                            findBtn.textContent = 'Already Approved';
+                            findBtn.disabled = true;
+                            findBtn.style.opacity = '0.6';
+                            findBtn.style.cursor = 'not-allowed';
+                            findBtn.onclick = null;
                         }
                     } else {
                         setStatus(isLocalOnlyLookup ? 'info' : 'success', lookupFoundMessage);
@@ -6651,7 +6658,6 @@
                             foundCard.style.display = 'block';
                         }
                         showLookupDetails(data, ref);
-
                         // Hide input sections and show only results
                         if (defaultPane) defaultPane.style.display = 'none';
 
