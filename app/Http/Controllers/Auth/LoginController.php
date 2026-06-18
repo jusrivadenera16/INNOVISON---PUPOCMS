@@ -953,6 +953,24 @@ class LoginController extends Controller
         return $normalized;
     }
 
+    private function isAssistantIdpRole(?string $role): bool
+    {
+        $normalized = $this->normalizeIdpRoleToken((string) $role);
+
+        return in_array($normalized, ['student_assistant', 'assistant', 'studentassistant'], true);
+    }
+
+    private function defaultUserTypeForIdpRole(?string $idpRole, ?string $localRole = null): string
+    {
+        $normalizedLocalRole = User::normalizeRole((string) $localRole);
+
+        if ($normalizedLocalRole === User::ROLE_SUPERADMIN || $normalizedLocalRole === User::ROLE_STUDENT) {
+            return 'Regular';
+        }
+
+        return $this->isAssistantIdpRole($idpRole) ? 'Assistant' : 'Regular';
+    }
+
     private function mapSingleIdpRoleToLocal(string $role): ?string
     {
         $normalized = $this->normalizeIdpRoleToken($role);
@@ -1301,12 +1319,19 @@ class LoginController extends Controller
 
             if ($this->usersTableHasUserTypeColumn()) {
                 $normalizedLocalRole = User::normalizeRole($role);
+                $linkedAdmin = $this->findLinkedAdminProfile($existingUser);
+                $currentUserType = strtolower(trim((string) ($existingUser->user_type ?? '')));
+
                 if ($normalizedLocalRole === User::ROLE_SUPERADMIN) {
                     $existingUser->user_type = 'Regular';
                 } elseif (empty($existingUser->user_type)) {
-                    $existingUser->user_type = $normalizedLocalRole === User::normalizeRole($this->studentRoleValue())
-                        ? 'Regular'
-                        : 'Assistant';
+                    $existingUser->user_type = $this->defaultUserTypeForIdpRole($idpRole, $role);
+                } elseif (
+                    in_array($currentUserType, ['assistant', 'student assistant', 'student_assistant'], true)
+                    && !$this->isAssistantIdpRole($idpRole)
+                    && !$linkedAdmin
+                ) {
+                    $existingUser->user_type = 'Regular';
                 }
             }
 
@@ -1342,11 +1367,7 @@ class LoginController extends Controller
         $user = User::create($newUserAttributes);
 
         if ($this->usersTableHasUserTypeColumn() && empty($user->user_type)) {
-            $normalizedLocalRole = User::normalizeRole($role);
-            $user->user_type = $normalizedLocalRole === User::ROLE_SUPERADMIN
-                || $normalizedLocalRole === User::normalizeRole($this->studentRoleValue())
-                ? 'Regular'
-                : 'Assistant';
+            $user->user_type = $this->defaultUserTypeForIdpRole($idpRole, $role);
             $user->save();
         }
 
