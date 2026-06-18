@@ -20,6 +20,61 @@ use Carbon\Carbon;
 
 class AppointmentController extends Controller
 {
+    private function promoteDesigneeAdminToStudentGuard(): ?User
+    {
+        /** @var \App\Models\User|null $studentUser */
+        $studentUser = Auth::guard('student')->user();
+        if ($studentUser) {
+            return $studentUser;
+        }
+
+        /** @var \App\Models\User|null $adminUser */
+        $adminUser = Auth::guard('admin')->user();
+        if (!$adminUser instanceof User || User::normalizeRole((string) ($adminUser->user_role ?? '')) !== User::ROLE_ADMIN) {
+            return null;
+        }
+
+        $linkedAdmin = null;
+        if ($adminUser->relationLoaded('adminProfile')) {
+            $linkedAdmin = $adminUser->adminProfile;
+        }
+        if (!$linkedAdmin) {
+            $linkedAdmin = Admin::query()
+                ->where(function ($builder) use ($adminUser) {
+                    if (Admin::hasColumn('user_id')) {
+                        $builder->orWhere('user_id', $adminUser->id);
+                    }
+
+                    $email = trim((string) ($adminUser->email ?? ''));
+                    if ($email !== '') {
+                        if (Admin::hasColumn('email')) {
+                            $builder->orWhere('email', $email);
+                        }
+                        if (Admin::hasColumn('email_address')) {
+                            $builder->orWhere('email_address', $email);
+                        }
+                    }
+                })
+                ->first();
+        }
+
+        $resolvedRole = strtolower(trim((string) (
+            $linkedAdmin?->access_level
+            ?? $linkedAdmin?->admin_hub_role
+            ?? ''
+        )));
+
+        if (!in_array($resolvedRole, ['designee', 'admin_designee'], true)) {
+            return null;
+        }
+
+        Auth::guard('student')->login($adminUser);
+        Auth::shouldUse('student');
+        Auth::guard('admin')->logout();
+
+        return $adminUser;
+    }
+
     private function formatFeedbackDisplayName(?User $user, ?Appointment $appointment = null): string
     {
         $firstName = trim((string) ($user?->first_name ?? ''));
@@ -355,6 +410,7 @@ class AppointmentController extends Controller
 
     public function home()
     {
+        $this->promoteDesigneeAdminToStudentGuard();
         $allFeedback = $this->buildRecentFeedbackCollection();
         $feedbackCount = $allFeedback->count();
         $recentFeedback = $allFeedback->take(3);
@@ -1152,7 +1208,7 @@ class AppointmentController extends Controller
         Appointment::expireOverduePending();
 
         /** @var \App\Models\User|null $user */
-        $user = Auth::guard('student')->user();
+        $user = $this->promoteDesigneeAdminToStudentGuard() ?? Auth::guard('student')->user();
         if (!$user) {
             return view('student.booking-public');
         }
@@ -1644,7 +1700,7 @@ public function account(Request $request)
         Appointment::expireOverduePending();
 
         /** @var \App\Models\User|null $user */
-        $user = Auth::guard('student')->user();
+        $user = $this->promoteDesigneeAdminToStudentGuard() ?? Auth::guard('student')->user();
         $pendingCount = 0;
         $upcomingCount = 0;
         $completedCount = 0;
