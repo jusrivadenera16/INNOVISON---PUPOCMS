@@ -49,28 +49,28 @@
 
     .um-entry-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(280px, 360px));
+        grid-template-columns: repeat(2, minmax(260px, 380px));
         justify-content: center;
-        gap: 22px;
+        gap: 18px;
     }
 
     .um-entry-card {
-        display: block;
+        display: flex;
+        flex-direction: column;
         text-decoration: none;
         position: relative;
         overflow: hidden;
-        width: min(360px, 100%);
-        min-height: 300px;
-        padding: 24px 22px 24px;
-        border-radius: 28px;
-        border: 1px solid rgba(128, 0, 0, 0.14);
-        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 48%, #e5e7eb 100%);
+        width: min(380px, 100%);
+        min-height: 220px;
+        padding: 22px 20px;
+        border-radius: 16px;
+        border: 1px solid rgba(112, 19, 27, 0.46);
+        background: linear-gradient(135deg, #70131B, #8f2230);
         box-shadow:
-            0 0 0 1px rgba(112, 19, 27, 0.06),
-            0 24px 38px rgba(112, 19, 27, 0.10),
-            0 52px 72px -38px rgba(15, 23, 42, 0.24);
-        color: inherit;
-        transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
+            inset 0 -3px 0 rgba(250, 204, 21, 0.72),
+            0 10px 24px rgba(112, 19, 27, 0.18);
+        color: #ffffff;
+        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease, background .2s ease;
         justify-self: center;
     }
 
@@ -83,53 +83,46 @@
         content: "";
         position: absolute;
         inset: 0;
-        background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.28) 42%, rgba(255,255,255,0.10));
+        background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 38%);
         pointer-events: none;
     }
 
     .um-entry-card::after {
         content: "";
         position: absolute;
-        top: -42%;
-        left: -130%;
-        width: 120%;
-        height: 185%;
-        background: linear-gradient(115deg, rgba(250, 204, 21, 0) 0%, rgba(250, 204, 21, 0.5) 45%, rgba(250, 204, 21, 0) 100%);
-        transform: skewX(-20deg);
-        opacity: 0;
-        transition: left .8s ease, opacity .18s ease;
+        inset: 0;
+        background: linear-gradient(120deg, rgba(255, 248, 196, 0) 0%, rgba(250, 204, 21, 0.42) 48%, rgba(255, 248, 196, 0) 100%);
+        transform: translateX(-130%);
+        transition: transform .95s ease;
         pointer-events: none;
         z-index: 0;
     }
 
     .um-entry-card:hover {
-        transform: translateY(-4px);
-        border-color: rgba(234, 179, 8, 0.62);
+        background: #facc15;
+        color: #70131B;
+        transform: translateY(-8px);
+        border-color: #facc15;
         box-shadow:
-            0 0 0 1px rgba(250, 204, 21, 0.22),
-            0 28px 44px rgba(234, 179, 8, 0.18),
-            0 58px 78px -38px rgba(202, 138, 4, 0.38);
+            0 0 0 3px rgba(250, 204, 21, 0.12),
+            0 20px 30px rgba(139, 0, 0, 0.22);
     }
 
     .um-entry-card:hover::after {
-        opacity: 1;
-        left: 125%;
+        transform: translateX(130%);
     }
 
     .um-entry-icon {
-        width: 68px;
-        height: 68px;
+        width: 58px;
+        height: 58px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 22px;
-        margin: 14px 0 10px;
+        border-radius: 16px;
+        margin-bottom: 14px;
         color: #ffffff;
-        background: linear-gradient(145deg, rgba(128, 0, 0, 0.96), rgba(112, 19, 27, 0.92));
-        border: 1px solid rgba(112, 19, 27, 0.30);
-        box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.18),
-            0 18px 28px rgba(112, 19, 27, 0.22);
+        background: rgba(255, 248, 196, 0.12);
+        border: 1px solid rgba(255, 248, 196, 0.16);
         position: relative;
         z-index: 1;
         animation: umEntryFloat 3.8s ease-in-out infinite;
@@ -139,50 +132,93 @@
     .um-entry-icon::after {
         content: "";
         position: absolute;
-        left: 12%;
-        right: 12%;
-        bottom: -14px;
-        height: 16px;
+        left: 10%;
+        right: 10%;
+        bottom: -10px;
+        height: 14px;
         border-radius: 999px;
-        background: radial-gradient(circle, rgba(148, 163, 184, 0.24) 0%, rgba(148, 163, 184, 0.1) 44%, transparent 82%);
         filter: blur(8px);
-        opacity: 0.72;
+        opacity: .6;
         z-index: -1;
         pointer-events: none;
+        background: radial-gradient(circle, rgba(0, 0, 0, 0.44) 0%, rgba(0, 0, 0, 0.22) 48%, transparent 86%);
     }
 
     .um-entry-icon svg {
-        width: 30px;
-        height: 30px;
+        width: 24px;
+        height: 24px;
         display: block;
         stroke: currentColor;
     }
 
+    .um-entry-chip {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        background: rgba(255, 248, 196, 0.12);
+        color: #ffffff;
+        border: 1px solid rgba(255, 248, 196, 0.72);
+        box-shadow: 0 8px 14px rgba(15, 23, 42, 0.14);
+        transition: background .2s ease, color .2s ease, border-color .2s ease;
+    }
+
+    .um-entry-chip svg {
+        width: 14px;
+        height: 14px;
+        stroke: currentColor;
+        stroke-width: 2.2;
+        fill: none;
+    }
+
     .um-entry-card h2 {
-        margin: 0 0 10px;
-        font-size: 1.08rem;
-        font-weight: 900;
-        color: #111827;
+        margin: 0 0 8px;
+        font-size: 18px;
+        font-weight: 800;
+        color: #ffffff !important;
         position: relative;
         z-index: 1;
+        transition: color .2s ease;
     }
 
     .um-entry-card p {
         margin: 0;
-        color: #475569;
-        line-height: 1.65;
-        font-size: 0.82rem;
+        color: #ffffff !important;
+        line-height: 1.55;
+        font-size: 0.9rem;
         position: relative;
         z-index: 1;
+        transition: color .2s ease;
     }
 
     .um-entry-meta {
-        margin-top: 14px;
+        margin-top: auto;
+        padding-top: 18px;
         font-size: 0.82rem;
-        font-weight: 700;
-        color: #70131b;
+        font-weight: 900;
+        color: #ffffff !important;
         position: relative;
         z-index: 1;
+        transition: color .2s ease;
+    }
+
+    .um-entry-card:hover .um-entry-icon,
+    .um-entry-card:hover .um-entry-chip {
+        background: #70131B;
+        color: #ffffff;
+        border-color: rgba(112, 19, 27, 0.62);
+    }
+
+    .um-entry-card:hover h2,
+    .um-entry-card:hover p,
+    .um-entry-card:hover .um-entry-meta {
+        color: #70131B;
     }
 
     html[data-theme="dark"] .user-management-shell {
@@ -206,46 +242,36 @@
     }
 
     html[data-theme="dark"] .um-entry-card {
-        background: linear-gradient(145deg, #5f0012 0%, #7d0b17 45%, #5a0010 100%);
-        border-color: rgba(148, 163, 184, 0.14);
+        background: #70131B;
+        border-color: rgba(250, 204, 21, 0.62);
         box-shadow:
-            0 0 0 1px rgba(148, 163, 184, 0.08),
-            0 24px 38px rgba(95, 0, 18, 0.34),
-            0 52px 72px -38px rgba(0, 0, 0, 0.52);
+            inset 0 -3px 0 rgba(250, 204, 21, 0.92),
+            0 14px 26px rgba(0, 0, 0, 0.22);
     }
 
     html[data-theme="dark"] .um-entry-card::before {
-        background: linear-gradient(180deg, rgba(193, 138, 16, 0.16), rgba(125, 11, 23, 0.06) 42%, rgba(95, 0, 18, 0.14));
+        background: none;
     }
 
     html[data-theme="dark"] .um-entry-card::after {
-        background: linear-gradient(115deg, rgba(250, 204, 21, 0) 0%, rgba(250, 204, 21, 0.46) 45%, rgba(250, 204, 21, 0) 100%);
-    }
-
-    html[data-theme="dark"] .um-entry-card h2 {
-        color: #f8fafc;
+        background: linear-gradient(180deg, #8f2230 0%, #70131B 100%);
     }
 
     html[data-theme="dark"] .um-entry-card:hover {
-        border-color: rgba(240, 209, 90, 0.24);
-        background: linear-gradient(145deg, #6d0014 0%, #8a0d19 42%, #670012 100%);
-        box-shadow:
-            0 0 0 1px rgba(240, 209, 90, 0.10),
-            0 26px 40px rgba(95, 0, 18, 0.38),
-            0 56px 76px -38px rgba(193, 138, 16, 0.52);
+        background: linear-gradient(135deg, #facc15, #fde68a);
+        border-color: #facc15;
     }
 
-    html[data-theme="dark"] .um-entry-icon {
-        background: linear-gradient(145deg, rgba(128, 0, 0, 0.92), rgba(95, 0, 18, 0.88));
-        border-color: rgba(240, 209, 90, 0.22);
-        color: #f8fafc;
-        box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.12),
-            0 18px 28px rgba(95, 0, 18, 0.28);
-    }
-
+    html[data-theme="dark"] .um-entry-card h2,
+    html[data-theme="dark"] .um-entry-card p,
     html[data-theme="dark"] .um-entry-meta {
-        color: #f0d15a;
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .um-entry-card:hover h2,
+    html[data-theme="dark"] .um-entry-card:hover p,
+    html[data-theme="dark"] .um-entry-card:hover .um-entry-meta {
+        color: #70131B;
     }
 
     @keyframes umEntryFloat {
@@ -276,6 +302,12 @@
 
     <div class="um-entry-grid">
         <a href="{{ route('admin.user-management.account-access') }}" class="um-entry-card">
+            <span class="um-entry-chip" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M5 12h14"/>
+                    <path d="M13 6l6 6-6 6"/>
+                </svg>
+            </span>
             <span class="um-entry-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
@@ -290,6 +322,12 @@
         </a>
 
         <a href="{{ route('admin.user-management.admin-hub') }}" class="um-entry-card">
+            <span class="um-entry-chip" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M5 12h14"/>
+                    <path d="M13 6l6 6-6 6"/>
+                </svg>
+            </span>
             <span class="um-entry-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"/>

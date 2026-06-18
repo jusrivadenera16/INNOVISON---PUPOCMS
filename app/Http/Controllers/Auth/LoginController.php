@@ -282,6 +282,29 @@ class LoginController extends Controller
         return in_array($userType, ['assistant', 'student assistant', 'student_assistant'], true);
     }
 
+    private function isAdminDesigneeAccount(User $user): bool
+    {
+        if (User::normalizeRole((string) $user->user_role) !== User::ROLE_ADMIN) {
+            return false;
+        }
+
+        $linkedAdmin = $this->findLinkedAdminProfile($user);
+        $accessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
+        if (in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff', 'superadmin'], true)) {
+            return false;
+        }
+
+        if ($accessLevel === 'designee') {
+            return true;
+        }
+
+        $adminHubEnabled = !Admin::hasColumn('admin_hub_enabled')
+            || (bool) ($linkedAdmin?->admin_hub_enabled ?? false);
+        $adminHubRole = strtolower(trim((string) ($linkedAdmin?->admin_hub_role ?? '')));
+
+        return $adminHubEnabled && in_array($adminHubRole, ['designee', 'admin_designee'], true);
+    }
+
     private function resolveLocalRoleFromAdminHub(string $email): ?string
     {
         if (!Schema::hasTable('admins')) {
@@ -371,14 +394,7 @@ class LoginController extends Controller
                 return '/assistant/choose-portal';
             }
 
-            $linkedAdmin = $this->findLinkedAdminProfile($user);
-            $accessLevel = strtolower(trim((string) (
-                $linkedAdmin?->access_level
-                ?? $linkedAdmin?->admin_hub_role
-                ?? ''
-            )));
-
-            if (in_array($accessLevel, ['designee', 'admin_designee'], true)) {
+            if ($this->isAdminDesigneeAccount($user)) {
                 return '/student/home';
             }
 
@@ -968,9 +984,19 @@ class LoginController extends Controller
     private function defaultUserTypeForIdpRole(?string $idpRole, ?string $localRole = null): string
     {
         $normalizedLocalRole = User::normalizeRole((string) $localRole);
+        $normalizedIdpRole = $this->normalizeIdpRoleToken((string) $idpRole);
 
-        if ($normalizedLocalRole === User::ROLE_SUPERADMIN || $normalizedLocalRole === User::ROLE_STUDENT) {
+        if ($normalizedLocalRole === User::ROLE_SUPERADMIN) {
             return 'Regular';
+        }
+
+        if ($normalizedLocalRole === User::ROLE_STUDENT) {
+            return match ($normalizedIdpRole) {
+                'faculty' => 'Faculty',
+                'guest' => 'Guest',
+                'student' => 'Student',
+                default => 'Regular',
+            };
         }
 
         return $this->isAssistantIdpRole($idpRole) ? 'Assistant' : 'Regular';
@@ -991,7 +1017,7 @@ class LoginController extends Controller
             return $this->adminRoleValue();
         }
 
-        if ($normalized === 'student') {
+        if (in_array($normalized, ['student', 'faculty', 'guest'], true)) {
             return $this->studentRoleValue();
         }
 
@@ -1005,17 +1031,17 @@ class LoginController extends Controller
             return null;
         }
 
+        if (in_array('superadmin', $normalizedRoles, true) || in_array('super_admin', $normalizedRoles, true)) {
+            return $this->superAdminRoleValue();
+        }
+
         $hasAdmin = count(array_intersect($normalizedRoles, ['admin', 'student_assistant', 'assistant', 'studentassistant'])) > 0;
         if ($hasAdmin) {
             return $this->adminRoleValue();
         }
 
-        if (in_array('student', $normalizedRoles, true)) {
+        if (count(array_intersect($normalizedRoles, ['student', 'faculty', 'guest'])) > 0) {
             return $this->studentRoleValue();
-        }
-
-        if (in_array('superadmin', $normalizedRoles, true) || in_array('super_admin', $normalizedRoles, true)) {
-            return $this->superAdminRoleValue();
         }
 
         return null;
@@ -1326,11 +1352,18 @@ class LoginController extends Controller
                 $normalizedLocalRole = User::normalizeRole($role);
                 $linkedAdmin = $this->findLinkedAdminProfile($existingUser);
                 $currentUserType = strtolower(trim((string) ($existingUser->user_type ?? '')));
+                $resolvedUserType = $this->defaultUserTypeForIdpRole($idpRole, $role);
 
                 if ($normalizedLocalRole === User::ROLE_SUPERADMIN) {
                     $existingUser->user_type = 'Regular';
+                } elseif (
+                    $normalizedLocalRole === User::ROLE_STUDENT
+                    && in_array($resolvedUserType, ['Faculty', 'Guest', 'Student'], true)
+                    && $existingUser->user_type !== $resolvedUserType
+                ) {
+                    $existingUser->user_type = $resolvedUserType;
                 } elseif (empty($existingUser->user_type)) {
-                    $existingUser->user_type = $this->defaultUserTypeForIdpRole($idpRole, $role);
+                    $existingUser->user_type = $resolvedUserType;
                 } elseif (
                     in_array($currentUserType, ['assistant', 'student assistant', 'student_assistant'], true)
                     && !$this->isAssistantIdpRole($idpRole)
@@ -1464,7 +1497,92 @@ class LoginController extends Controller
         // These integrations are independent. A missing PUPTAS applicant must
         // not prevent GUISIS from supplying the student's academic record.
         $this->enrichUserWithPuptasData($user);
+        $this->enrichUserWithFlssFacultyData($user);
         $this->enrichUserWithGuisisData($user);
+    }
+
+    private function enrichUserWithFlssFacultyData(User $user): void
+    {
+        if (User::normalizeRole((string) ($user->user_role ?? '')) !== User::ROLE_STUDENT) {
+            return;
+        }
+
+        try {
+            $searchTerms = array_values(array_unique(array_filter(array_map('trim', [
+                (string) ($user->email ?? ''),
+                (string) ($user->student_id ?? ''),
+            ]))));
+
+            if ($searchTerms === []) {
+                return;
+            }
+
+            $facultySyncService = app(\App\Services\FacultySyncService::class);
+            $matchedFaculty = null;
+
+            foreach ($searchTerms as $searchTerm) {
+                $faculties = $facultySyncService->fetchFaculties($searchTerm);
+                $matchedFaculty = collect($faculties)
+                    ->filter(fn ($faculty) => is_array($faculty))
+                    ->first(function (array $faculty) use ($user) {
+                        $facultyEmail = strtolower(trim((string) ($faculty['email'] ?? '')));
+                        $userEmail = strtolower(trim((string) ($user->email ?? '')));
+                        $facultyIdentifier = strtolower(trim((string) (
+                            $faculty['faculty_code']
+                            ?? $faculty['faculty_id']
+                            ?? $faculty['id']
+                            ?? ''
+                        )));
+                        $userIdentifiers = array_filter(array_map(
+                            fn ($value) => strtolower(trim((string) $value)),
+                            [$user->student_id ?? '']
+                        ));
+
+                        return ($facultyEmail !== '' && $facultyEmail === $userEmail)
+                            || ($facultyIdentifier !== '' && in_array($facultyIdentifier, $userIdentifiers, true));
+                    });
+
+                if (is_array($matchedFaculty)) {
+                    break;
+                }
+            }
+
+            if (!is_array($matchedFaculty)) {
+                return;
+            }
+
+            $status = strtolower(trim((string) ($matchedFaculty['status'] ?? 'active')));
+            if (in_array($status, ['0', 'false', 'inactive', 'disabled'], true)) {
+                return;
+            }
+
+            $shouldUpdate = false;
+            if ($this->usersTableHasUserTypeColumn() && trim((string) ($user->user_type ?? '')) !== 'Faculty') {
+                $user->user_type = 'Faculty';
+                $shouldUpdate = true;
+            }
+
+            $facultyCode = trim((string) ($matchedFaculty['faculty_code'] ?? ''));
+            $facultyId = trim((string) ($matchedFaculty['faculty_id'] ?? $matchedFaculty['id'] ?? ''));
+            $facultyIdentifier = $facultyCode !== '' ? $facultyCode : $facultyId;
+            if ($facultyIdentifier !== '' && trim((string) ($user->student_id ?? '')) === '') {
+                $user->student_id = $facultyIdentifier;
+                $shouldUpdate = true;
+            }
+
+            if ($shouldUpdate) {
+                $user->save();
+                Log::info('User identified as Faculty through PUPT-FLSS during login', [
+                    'user_id' => $user->id,
+                    'faculty_identifier' => $facultyIdentifier,
+                ]);
+            }
+        } catch (\Throwable $exception) {
+            Log::warning('Failed to enrich user with PUPT-FLSS faculty data', [
+                'user_id' => $user->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     private function enrichUserWithGuisisData(User $user): void
@@ -1974,6 +2092,9 @@ class LoginController extends Controller
                 Log::info('[WORKSPACE GATEWAY] Redirecting Student Assistant to landing with workspace selector');
                 // Student Assistant - show workspace selector
                 return redirect('/?workspace=sa');
+            } elseif ($this->isAdminDesigneeAccount($user)) {
+                Log::info('[WORKSPACE GATEWAY] Redirecting Admin Designee to student-side landing');
+                return redirect('/?workspace=student');
             } else {
                 Log::info('[WORKSPACE GATEWAY] Redirecting Admin to /admin/dashboard');
                 // Regular admin - go to dashboard

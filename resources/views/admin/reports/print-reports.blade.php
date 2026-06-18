@@ -1318,6 +1318,45 @@
                 @endforelse
             </tbody>
         </table>
+    @elseif($type == 'audit')
+        <p style="font-size: 12px; font-weight: bold; margin: 0 0 10px;">
+            Date Range:
+            {{ optional($dateFrom ?? null)->format('F d, Y') ?? 'N/A' }}
+            to
+            {{ optional($dateTo ?? null)->format('F d, Y') ?? 'N/A' }}
+        </p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date / Time</th>
+                    <th>Actor</th>
+                    <th>Role</th>
+                    <th>Event</th>
+                    <th>Module</th>
+                    <th>Request</th>
+                    <th>Status</th>
+                    <th>IP</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($data as $log)
+                <tr>
+                    <td>{{ optional($log->created_at)->format('M d, Y g:i A') }}</td>
+                    <td class="text-left">{{ $log->user_name ?: 'Unknown' }}</td>
+                    <td>{{ ucwords(str_replace('_', ' ', $log->user_role ?: 'unknown')) }}</td>
+                    <td>{{ ucwords(str_replace('_', ' ', $log->event_type ?: 'action')) }}</td>
+                    <td>{{ $log->module ?: '-' }}</td>
+                    <td class="text-left">{{ trim(($log->http_method ?: '-') . ' ' . ($log->request_path ?: '-')) }}</td>
+                    <td>{{ $log->status_code ?: '-' }}</td>
+                    <td>{{ $log->ip_address ?: '-' }}</td>
+                    <td class="text-left">{{ $log->description ?: $log->action ?: '-' }}</td>
+                </tr>
+                @empty
+                <tr><td colspan="9">No audit trail records found for the selected date range.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
     @elseif($type == 'health_forms')
         <table>
             <thead>

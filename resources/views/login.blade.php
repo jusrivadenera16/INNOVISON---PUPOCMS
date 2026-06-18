@@ -741,8 +741,20 @@
                           <label>CLINIC ROLE</label>
                           <select name="clinic_role" required>
                               <option value="" disabled {{ old('clinic_role') ? '' : 'selected' }}>Select clinic role</option>
+                              <option value="student" {{ old('clinic_role') === 'student' ? 'selected' : '' }}>
+                                  Student
+                              </option>
+                              <option value="faculty" {{ old('clinic_role') === 'faculty' ? 'selected' : '' }}>
+                                  Faculty
+                              </option>
+                              <option value="guest" {{ old('clinic_role') === 'guest' ? 'selected' : '' }}>
+                                  Guest
+                              </option>
                               <option value="admin_clinic_staff" {{ old('clinic_role') === 'admin_clinic_staff' ? 'selected' : '' }}>
                                   Admin - Clinic Staff
+                              </option>
+                              <option value="admin_designee" {{ old('clinic_role') === 'admin_designee' ? 'selected' : '' }}>
+                                  Admin - Designee
                               </option>
                               <option value="student_assistant" {{ old('clinic_role') === 'student_assistant' ? 'selected' : '' }}>
                                   Admin - Student Assistant

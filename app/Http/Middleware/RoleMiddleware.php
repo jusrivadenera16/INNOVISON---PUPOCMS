@@ -60,7 +60,19 @@ class RoleMiddleware
         $linkedAdmin = $this->findLinkedAdminProfile($user);
         $accessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
 
-        return $accessLevel === 'designee';
+        if (in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff', 'superadmin'], true)) {
+            return false;
+        }
+
+        if ($accessLevel === 'designee') {
+            return true;
+        }
+
+        $adminHubEnabled = !Admin::hasColumn('admin_hub_enabled')
+            || (bool) ($linkedAdmin?->admin_hub_enabled ?? false);
+        $adminHubRole = strtolower(trim((string) ($linkedAdmin?->admin_hub_role ?? '')));
+
+        return $adminHubEnabled && in_array($adminHubRole, ['designee', 'admin_designee'], true);
     }
 
     private function isClinicStaffAdmin($user): bool

@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Consultation;
 use App\Models\AppointmentFeedback;
 use App\Models\Appointment;
+use App\Models\ActivityLog;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\HealthProfile;
@@ -16,6 +17,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class ReportsController extends Controller
 {
@@ -35,7 +37,7 @@ class ReportsController extends Controller
         return $item->convertDispensingQuantityToStockQuantity($consumedTotal);
     }
 
-    public function appointmentStatistics(Request $request)
+    public function dailyTreatmentRecord(Request $request)
     {
         $legacyMonth = trim((string) $request->query('month', ''));
         $monthFrom = trim((string) $request->query('month_from', $legacyMonth ?: now()->format('Y-m')));
@@ -73,11 +75,256 @@ class ReportsController extends Controller
             ->orderBy('created_at')
             ->get();
 
-        return view('admin.reports.appointment-statistics', compact(
+        return view('admin.reports.daily-treatment-record', compact(
             'monthFrom',
             'monthTo',
             'consultations',
         ));
+    }
+
+    public function appointmentStatistics(Request $request)
+    {
+        $legacyMonth = trim((string) $request->query('month', ''));
+        $monthFrom = trim((string) $request->query('month_from', $legacyMonth ?: now()->format('Y-m')));
+        $monthTo = trim((string) $request->query('month_to', $legacyMonth ?: $monthFrom));
+
+        if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $monthFrom)) {
+            $monthFrom = now()->format('Y-m');
+        }
+
+        if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $monthTo)) {
+            $monthTo = $monthFrom;
+        }
+
+        $monthStart = Carbon::createFromFormat('Y-m-d', $monthFrom . '-01')->startOfMonth();
+        $monthEnd = Carbon::createFromFormat('Y-m-d', $monthTo . '-01')->endOfMonth();
+
+        if ($monthStart->gt($monthEnd)) {
+            [$monthStart, $monthEnd] = [
+                Carbon::createFromFormat('Y-m-d', $monthTo . '-01')->startOfMonth(),
+                Carbon::createFromFormat('Y-m-d', $monthFrom . '-01')->endOfMonth(),
+            ];
+            [$monthFrom, $monthTo] = [$monthTo, $monthFrom];
+        }
+
+        $filters = [
+            'month_from' => $monthFrom,
+            'month_to' => $monthTo,
+            'patient_type' => $this->normalizeAppointmentStatsFilter((string) $request->query('patient_type', ''), ['student', 'faculty', 'admin', 'dependent']),
+            'status' => $this->normalizeAppointmentStatsFilter((string) $request->query('status', ''), ['pending', 'approved', 'completed', 'cancelled', 'expired', 'missed']),
+            'service' => $this->normalizeAppointmentStatsFilter((string) $request->query('service', ''), ['general_consultation', 'blood_pressure_monitoring']),
+            'source' => $this->normalizeAppointmentStatsFilter((string) $request->query('source', ''), ['online', 'walk-in']),
+        ];
+
+        $appointmentRows = Appointment::query()
+            ->with('user')
+            ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->get()
+            ->map(function (Appointment $appointment) {
+                $source = $this->appointmentStatsSource($appointment->type ?? null, 'online');
+
+                return [
+                    'date' => Carbon::parse($appointment->date),
+                    'time' => $appointment->time ? Carbon::parse($appointment->time) : null,
+                    'patient_type' => $this->appointmentStatsPatientType($appointment->user_type ?: optional($appointment->user)->user_type ?: optional($appointment->user)->user_role),
+                    'status' => $this->appointmentStatsStatus($appointment->status),
+                    'service' => $this->appointmentStatsService($appointment->service ?: null),
+                    'source' => $source,
+                    'reason' => trim((string) ($appointment->problem ?: $appointment->notes ?: '')),
+                ];
+            });
+
+        $consultationRows = Consultation::query()
+            ->with('user')
+            ->whereBetween('consultation_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->get()
+            ->map(function (Consultation $consultation) {
+                $source = $this->appointmentStatsSource($consultation->consultation_source ?? null, 'walk-in');
+
+                return [
+                    'date' => Carbon::parse($consultation->consultation_date),
+                    'time' => $consultation->time_in ? Carbon::parse($consultation->time_in) : null,
+                    'patient_type' => $this->appointmentStatsPatientType($consultation->user_type ?: $consultation->user_role ?: optional($consultation->user)->user_type),
+                    'status' => 'completed',
+                    'service' => $this->appointmentStatsService($consultation->service ?: null),
+                    'source' => $source,
+                    'reason' => trim((string) ($consultation->reason_for_visit ?: $consultation->comments ?: '')),
+                ];
+            });
+
+        $allRows = $appointmentRows
+            ->concat($consultationRows)
+            ->sortBy(fn ($row) => $row['date']->timestamp)
+            ->values();
+        $rows = $allRows
+            ->when($filters['patient_type'] !== '', fn ($collection) => $collection->where('patient_type', $filters['patient_type']))
+            ->when($filters['status'] !== '', fn ($collection) => $collection->where('status', $filters['status']))
+            ->when($filters['service'] !== '', fn ($collection) => $collection->where('service', $filters['service']))
+            ->when($filters['source'] !== '', fn ($collection) => $collection->where('source', $filters['source']))
+            ->values();
+
+        $totalAppointments = $rows->count();
+        $uniqueDayCount = max(1, $monthStart->diffInDays($monthEnd) + 1);
+        $averagePerDay = $totalAppointments / $uniqueDayCount;
+
+        $summaryCards = [
+            ['label' => 'Total Records', 'value' => $totalAppointments, 'hint' => 'Filtered activity'],
+            ['label' => 'Online', 'value' => $rows->where('source', 'online')->count(), 'hint' => 'Online appointment requests'],
+            ['label' => 'Walk-in', 'value' => $rows->where('source', 'walk-in')->count(), 'hint' => 'Same-day clinic visits'],
+            ['label' => 'Average Appointments / Day', 'value' => number_format($averagePerDay, 1), 'hint' => 'Across selected range'],
+        ];
+
+        $statusBreakdown = $this->appointmentStatsBreakdown($rows, 'status', [
+            'pending', 'approved', 'completed', 'cancelled', 'expired', 'missed',
+        ]);
+        $patientTypeBreakdown = $this->appointmentStatsBreakdown($rows, 'patient_type', [
+            'student', 'faculty', 'admin', 'dependent',
+        ]);
+        $sourceBreakdown = $this->appointmentStatsBreakdown($rows, 'source', ['online', 'walk-in']);
+        $topReasons = $this->appointmentStatsBreakdown($rows, 'reason')->take(5)->values();
+        $serviceBreakdown = $this->appointmentStatsBreakdown($rows, 'service')->take(5)->values();
+
+        $peakHours = $rows
+            ->filter(fn ($row) => $row['time'] instanceof Carbon)
+            ->groupBy(fn ($row) => $row['time']->format('g A'))
+            ->map(fn ($items, $hour) => ['label' => $hour, 'value' => $items->count()])
+            ->sortByDesc('value')
+            ->take(5)
+            ->values();
+
+        $groupByMonth = $monthStart->diffInDays($monthEnd) > 62;
+        $today = now()->startOfDay();
+
+        if ($groupByMonth) {
+            $trendRows = $rows
+                ->groupBy(fn ($row) => $row['date']->format('M Y'))
+                ->map(fn ($items, $label) => ['label' => $label, 'value' => $items->count()])
+                ->values();
+
+            if ($trendRows->isEmpty()) {
+                $trendRows = collect([['label' => $monthStart->format('M Y'), 'value' => 0]]);
+            }
+        } else {
+            $anchorDate = $today->betweenIncluded($monthStart->copy()->startOfDay(), $monthEnd->copy()->startOfDay())
+                ? $today
+                : $monthEnd->copy()->startOfDay();
+
+            $trendRows = collect([2, 1, 0])
+                ->map(function (int $daysAgo) use ($rows, $anchorDate) {
+                    $date = $anchorDate->copy()->subDays($daysAgo);
+
+                    return [
+                        'label' => $date->format('M d'),
+                        'value' => $rows->filter(fn ($row) => $row['date']->isSameDay($date))->count(),
+                        'row_class' => $daysAgo === 0 ? 'is-current' : 'is-muted',
+                    ];
+                })
+                ->values();
+        }
+
+        $trendTotal = $trendRows->sum('value');
+
+        return view('admin.reports.appointment-statistics', compact(
+            'filters',
+            'monthStart',
+            'monthEnd',
+            'summaryCards',
+            'statusBreakdown',
+            'patientTypeBreakdown',
+            'sourceBreakdown',
+            'topReasons',
+            'serviceBreakdown',
+            'peakHours',
+            'trendRows',
+            'trendTotal',
+            'totalAppointments',
+            'averagePerDay'
+        ));
+    }
+
+    private function normalizeAppointmentStatsFilter(string $value, array $allowed): string
+    {
+        $value = strtolower(trim($value));
+
+        return in_array($value, $allowed, true) ? $value : '';
+    }
+
+    private function appointmentStatsPatientType(?string $value): string
+    {
+        return match (strtolower(trim((string) $value))) {
+            'faculty' => 'faculty',
+            'admin', 'staff', 'regular' => 'admin',
+            'guest', 'dependent', 'dependents' => 'dependent',
+            default => 'student',
+        };
+    }
+
+    private function appointmentStatsService(?string $value): string
+    {
+        $service = strtolower(trim((string) $value));
+
+        if (str_contains($service, 'blood') || str_contains($service, 'bp')) {
+            return 'blood_pressure_monitoring';
+        }
+
+        return 'general_consultation';
+    }
+
+    private function appointmentStatsSource(?string $value, string $default = 'online'): string
+    {
+        $source = strtolower(trim((string) $value));
+
+        if ($source === '') {
+            return $default;
+        }
+
+        return in_array($source, ['walkin', 'walk-in', 'walk in'], true) ? 'walk-in' : 'online';
+    }
+
+    private function appointmentStatsStatus(?string $value): string
+    {
+        $status = strtolower(trim((string) $value));
+
+        return match ($status) {
+            'approved' => 'approved',
+            'completed', 'complete' => 'completed',
+            'cancelled', 'canceled' => 'cancelled',
+            'expired' => 'expired',
+            'missed' => 'missed',
+            default => 'pending',
+        };
+    }
+
+    private function appointmentStatsBreakdown(Collection $rows, string $key, array $preferredOrder = []): Collection
+    {
+        $items = $rows
+            ->map(fn ($row) => trim((string) ($row[$key] ?? '')))
+            ->filter()
+            ->countBy()
+            ->map(fn ($count, $label) => [
+                'label' => $this->appointmentStatsLabel($label),
+                'raw_label' => $label,
+                'value' => $count,
+            ]);
+
+        if ($preferredOrder !== []) {
+            return collect($preferredOrder)
+                ->map(fn ($label) => $items->get($label, [
+                    'label' => $this->appointmentStatsLabel($label),
+                    'raw_label' => $label,
+                    'value' => 0,
+                ]))
+                ->values();
+        }
+
+        return $items->sortByDesc('value')->values();
+    }
+
+    private function appointmentStatsLabel(string $value): string
+    {
+        return (string) Str::of($value)
+            ->replace(['-', '_'], ' ')
+            ->title();
     }
 
     private function normalizeReportPatientType(?string $value): ?string
@@ -692,8 +939,14 @@ public function printReport(Request $request)
     elseif ($type == 'appointment') {
     $title = "APPOINTMENT SUMMARY REPORT";
     // for date
-    $data = \App\Models\Appointment::whereYear('date', $year)
-            ->whereMonth('date', $month)
+    $data = \App\Models\Appointment::whereBetween('date', [$dateFrom->toDateString(), $dateTo->toDateString()])
+            ->get();
+    }
+    elseif ($type == 'audit') {
+        $title = "AUDIT TRAIL REPORT";
+        $data = ActivityLog::query()
+            ->whereBetween('created_at', [$dateFrom, $dateTo])
+            ->latest()
             ->get();
     }
     elseif ($type == 'health_forms') {
@@ -746,6 +999,8 @@ public function printReport(Request $request)
             'inventoryReportAsOf' => $inventoryReportAsOf ?? null,
             'inventoryPreparedBy' => $inventoryPreparedBy ?? null,
             'gadTables' => $gadTables ?? [],
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
             'isPdf' => true,
         ])->setPaper('a4', 'portrait');
 
@@ -771,6 +1026,8 @@ public function printReport(Request $request)
         'inventoryReportAsOf' => $inventoryReportAsOf ?? null,
         'inventoryPreparedBy' => $inventoryPreparedBy ?? null,
         'gadTables' => $gadTables ?? [],
+        'dateFrom' => $dateFrom,
+        'dateTo' => $dateTo,
         'isPdf' => false,
         'pdfUnavailable' => $output === 'pdf',
     ])->withHeaders([

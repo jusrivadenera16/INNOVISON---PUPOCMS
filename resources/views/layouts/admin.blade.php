@@ -4180,8 +4180,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     $inventoryUrl = $isStudentAssistant ? url('/assistant/inventory') : url('/admin/inventory');
     $reportsUrl = $isStudentAssistant ? url('/assistant/reports') : url('/admin/reports');
     $dailyTreatmentRecordUrl = $isStudentAssistant
-        ? url('/assistant/reports/appointment-statistics')
-        : url('/admin/reports/appointment-statistics');
+        ? url('/assistant/reports/daily-treatment-record')
+        : url('/admin/reports/daily-treatment-record');
     $healthRecordsUrl = route('admin.health_records');
     $adminNotificationsFeedUrl = $isStudentAssistant
         ? route('assistant.notifications.feed')

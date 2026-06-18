@@ -14,7 +14,8 @@
     }
     .inventory-summary-card {
         position: relative;
-        overflow: hidden;
+        overflow-x: auto;
+        overflow-y: visible;
     }
     .inventory-summary-card::before {
         content: "";
@@ -33,6 +34,10 @@
         color: #111827;
     }
     table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    #inventoryTable {
+        table-layout: fixed;
+        min-width: 1120px;
+    }
     th { text-align: left; padding: 12px 16px; border-bottom: 2px solid #f1f5f9; color: #000000; text-transform: uppercase; font-size: 12px; }
     td { padding: 16px; border-bottom: 1px solid #f8fafc; font-size: 14px; color: #111827; }
 
@@ -705,7 +710,8 @@
 
     body.admin-inventory-page #inventoryTable th:nth-child(4),
     body.admin-inventory-page #inventoryTable td:nth-child(4) {
-        width: 86px;
+        width: 112px;
+        max-width: 112px;
     }
 
     body.admin-inventory-page #inventoryTable th:nth-child(5),
@@ -1176,12 +1182,16 @@
     }
 
     .inventory-category-wrap,
-    .inventory-medicine-type-wrap {
+    .inventory-medicine-type-wrap,
+    .inventory-unit-wrap,
+    .inventory-dispensing-unit-wrap {
         position: relative;
     }
 
     .inventory-category-select,
-    .inventory-medicine-type-select {
+    .inventory-medicine-type-select,
+    .inventory-unit-select,
+    .inventory-dispensing-unit-select {
         position: absolute;
         width: 1px !important;
         height: 1px !important;
@@ -1193,7 +1203,9 @@
     }
 
     .inventory-category-display,
-    .inventory-medicine-type-display {
+    .inventory-medicine-type-display,
+    .inventory-unit-display,
+    .inventory-dispensing-unit-display {
         width: 100%;
         min-height: 52px;
         padding: 14px 52px 14px 16px;
@@ -1214,7 +1226,9 @@
     }
 
     .inventory-category-display:hover,
-    .inventory-medicine-type-display:hover {
+    .inventory-medicine-type-display:hover,
+    .inventory-unit-display:hover,
+    .inventory-dispensing-unit-display:hover {
         border-color: rgba(139, 0, 0, 0.34);
         box-shadow:
             0 14px 24px rgba(15, 23, 42, 0.10),
@@ -1226,7 +1240,11 @@
     .inventory-category-display.is-open,
     .inventory-category-display:focus,
     .inventory-medicine-type-display.is-open,
-    .inventory-medicine-type-display:focus {
+    .inventory-medicine-type-display:focus,
+    .inventory-unit-display.is-open,
+    .inventory-unit-display:focus,
+    .inventory-dispensing-unit-display.is-open,
+    .inventory-dispensing-unit-display:focus {
         outline: none;
         border-color: #8B0000;
         box-shadow:
@@ -1236,7 +1254,9 @@
     }
 
     .inventory-category-wrap::after,
-    .inventory-medicine-type-wrap::after {
+    .inventory-medicine-type-wrap::after,
+    .inventory-unit-wrap::after,
+    .inventory-dispensing-unit-wrap::after {
         content: "";
         position: absolute;
         top: 26px;
@@ -1251,7 +1271,9 @@
     }
 
     .inventory-category-wrap::before,
-    .inventory-medicine-type-wrap::before {
+    .inventory-medicine-type-wrap::before,
+    .inventory-unit-wrap::before,
+    .inventory-dispensing-unit-wrap::before {
         content: "";
         position: absolute;
         top: 26px;
@@ -1264,12 +1286,16 @@
     }
 
     .inventory-category-wrap.is-open::after,
-    .inventory-medicine-type-wrap.is-open::after {
+    .inventory-medicine-type-wrap.is-open::after,
+    .inventory-unit-wrap.is-open::after,
+    .inventory-dispensing-unit-wrap.is-open::after {
         transform: translateY(-20%) rotate(225deg);
     }
 
     .inventory-category-menu,
-    .inventory-medicine-type-menu {
+    .inventory-medicine-type-menu,
+    .inventory-unit-menu,
+    .inventory-dispensing-unit-menu {
         position: absolute;
         top: calc(100% + 10px);
         left: 0;
@@ -1289,16 +1315,24 @@
     }
 
     .inventory-category-wrap.is-open .inventory-category-menu,
-    .inventory-medicine-type-wrap.is-open .inventory-medicine-type-menu {
+    .inventory-medicine-type-wrap.is-open .inventory-medicine-type-menu,
+    .inventory-unit-wrap.is-open .inventory-unit-menu,
+    .inventory-dispensing-unit-wrap.is-open .inventory-dispensing-unit-menu {
         display: grid;
     }
 
-    .inventory-medicine-type-menu.is-open {
+    .inventory-medicine-type-menu.is-open,
+    .inventory-unit-menu.is-open,
+    .inventory-dispensing-unit-menu.is-open {
         display: grid;
     }
 
     #itemModal .inventory-medicine-type-wrap.is-open .inventory-medicine-type-menu,
-    body > .inventory-medicine-type-menu.is-open {
+    #itemModal .inventory-unit-wrap.is-open .inventory-unit-menu,
+    #itemModal .inventory-dispensing-unit-wrap.is-open .inventory-dispensing-unit-menu,
+    body > .inventory-medicine-type-menu.is-open,
+    body > .inventory-unit-menu.is-open,
+    body > .inventory-dispensing-unit-menu.is-open {
         position: fixed;
         right: auto;
         z-index: 2200;
@@ -1306,7 +1340,9 @@
         max-height: min(420px, calc(100vh - 24px));
     }
 
-    .inventory-medicine-type-search {
+    .inventory-medicine-type-search,
+    .inventory-unit-search,
+    .inventory-dispensing-unit-search {
         width: 100%;
         min-height: 44px;
         padding: 12px 14px;
@@ -1322,19 +1358,25 @@
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.86);
     }
 
-    .inventory-medicine-type-search::placeholder {
+    .inventory-medicine-type-search::placeholder,
+    .inventory-unit-search::placeholder,
+    .inventory-dispensing-unit-search::placeholder {
         color: #6b7280;
         font-weight: 700;
     }
 
-    .inventory-medicine-type-search:focus {
+    .inventory-medicine-type-search:focus,
+    .inventory-unit-search:focus,
+    .inventory-dispensing-unit-search:focus {
         border-color: #8B0000;
         box-shadow:
             0 0 0 3px rgba(139, 0, 0, 0.06),
             inset 0 1px 0 rgba(255,255,255,0.88);
     }
 
-    .inventory-medicine-type-options {
+    .inventory-medicine-type-options,
+    .inventory-unit-options,
+    .inventory-dispensing-unit-options {
         display: grid;
         gap: 10px;
         max-height: 248px;
@@ -1343,7 +1385,9 @@
     }
 
     .inventory-category-option,
-    .inventory-medicine-type-option {
+    .inventory-medicine-type-option,
+    .inventory-unit-option,
+    .inventory-dispensing-unit-option {
         width: 100%;
         border: 1px solid rgba(148, 163, 184, 0.22);
         background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
@@ -1363,7 +1407,11 @@
     .inventory-category-option:hover,
     .inventory-category-option.is-selected,
     .inventory-medicine-type-option:hover,
-    .inventory-medicine-type-option.is-selected {
+    .inventory-medicine-type-option.is-selected,
+    .inventory-unit-option:hover,
+    .inventory-unit-option.is-selected,
+    .inventory-dispensing-unit-option:hover,
+    .inventory-dispensing-unit-option.is-selected {
         transform: translateY(-1px);
         border-color: #8B0000;
         background: linear-gradient(135deg, #8B0000, #70131B);
@@ -1371,7 +1419,9 @@
         box-shadow: 0 12px 20px rgba(139, 0, 0, 0.16);
     }
 
-    .inventory-medicine-type-empty {
+    .inventory-medicine-type-empty,
+    .inventory-unit-empty,
+    .inventory-dispensing-unit-empty {
         display: none;
         padding: 12px 14px;
         border-radius: 14px;
@@ -1383,8 +1433,59 @@
         text-align: center;
     }
 
-    .inventory-medicine-type-menu.is-filter-empty .inventory-medicine-type-empty {
+    .inventory-medicine-type-menu.is-filter-empty .inventory-medicine-type-empty,
+    .inventory-unit-menu.is-filter-empty .inventory-unit-empty {
         display: block;
+    }
+
+    .inventory-dispensing-unit-menu.is-filter-empty .inventory-dispensing-unit-empty {
+        display: block;
+    }
+
+    .inventory-unit-group-label,
+    .inventory-dispensing-unit-group-label {
+        margin: 4px 2px -2px;
+        color: #70131B;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .inventory-unit-cell {
+        max-width: 112px;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .inventory-unit-pill {
+        display: inline-flex;
+        max-width: 100%;
+        align-items: center;
+        min-height: 26px;
+        padding: 4px 9px;
+        border-radius: 999px;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        color: #9a3412 !important;
+        font-size: 12px;
+        font-weight: 900;
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .inventory-unit-note {
+        display: block;
+        max-width: 100%;
+        margin-top: 5px;
+        color: #64748b !important;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 
     .inventory-subgroup {
@@ -1770,7 +1871,9 @@
     }
 
     html[data-theme="dark"] .inventory-category-display,
-    html[data-theme="dark"] .inventory-medicine-type-display {
+    html[data-theme="dark"] .inventory-medicine-type-display,
+    html[data-theme="dark"] .inventory-unit-display,
+    html[data-theme="dark"] .inventory-dispensing-unit-display {
         color: #f8fafc !important;
         border-color: rgba(250, 204, 21, 0.16);
         background:
@@ -1786,7 +1889,13 @@
     html[data-theme="dark"] .inventory-category-display.is-open,
     html[data-theme="dark"] .inventory-medicine-type-display:hover,
     html[data-theme="dark"] .inventory-medicine-type-display:focus,
-    html[data-theme="dark"] .inventory-medicine-type-display.is-open {
+    html[data-theme="dark"] .inventory-medicine-type-display.is-open,
+    html[data-theme="dark"] .inventory-unit-display:hover,
+    html[data-theme="dark"] .inventory-unit-display:focus,
+    html[data-theme="dark"] .inventory-unit-display.is-open,
+    html[data-theme="dark"] .inventory-dispensing-unit-display:hover,
+    html[data-theme="dark"] .inventory-dispensing-unit-display:focus,
+    html[data-theme="dark"] .inventory-dispensing-unit-display.is-open {
         border-color: #facc15;
         box-shadow:
             0 0 0 4px rgba(250, 204, 21, 0.14),
@@ -1795,25 +1904,35 @@
     }
 
     html[data-theme="dark"] .inventory-category-wrap::after,
-    html[data-theme="dark"] .inventory-medicine-type-wrap::after {
+    html[data-theme="dark"] .inventory-medicine-type-wrap::after,
+    html[data-theme="dark"] .inventory-unit-wrap::after,
+    html[data-theme="dark"] .inventory-dispensing-unit-wrap::after {
         border-right-color: #facc15;
         border-bottom-color: #facc15;
     }
 
     html[data-theme="dark"] .inventory-category-wrap::before,
-    html[data-theme="dark"] .inventory-medicine-type-wrap::before {
+    html[data-theme="dark"] .inventory-medicine-type-wrap::before,
+    html[data-theme="dark"] .inventory-unit-wrap::before,
+    html[data-theme="dark"] .inventory-dispensing-unit-wrap::before {
         background: rgba(250, 204, 21, 0.18);
     }
 
     html[data-theme="dark"] .inventory-category-menu,
     html[data-theme="dark"] .inventory-medicine-type-menu,
-    html[data-theme="dark"] body > .inventory-medicine-type-menu {
+    html[data-theme="dark"] .inventory-unit-menu,
+    html[data-theme="dark"] .inventory-dispensing-unit-menu,
+    html[data-theme="dark"] body > .inventory-medicine-type-menu,
+    html[data-theme="dark"] body > .inventory-unit-menu,
+    html[data-theme="dark"] body > .inventory-dispensing-unit-menu {
         background: rgba(18, 18, 18, 0.96);
         border-color: rgba(250, 204, 21, 0.14);
         box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34);
     }
 
-    html[data-theme="dark"] .inventory-medicine-type-search {
+    html[data-theme="dark"] .inventory-medicine-type-search,
+    html[data-theme="dark"] .inventory-unit-search,
+    html[data-theme="dark"] .inventory-dispensing-unit-search {
         color: #f8fafc;
         border-color: rgba(250, 204, 21, 0.16);
         background:
@@ -1822,11 +1941,15 @@
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
     }
 
-    html[data-theme="dark"] .inventory-medicine-type-search::placeholder {
+    html[data-theme="dark"] .inventory-medicine-type-search::placeholder,
+    html[data-theme="dark"] .inventory-unit-search::placeholder,
+    html[data-theme="dark"] .inventory-dispensing-unit-search::placeholder {
         color: rgba(248, 250, 252, 0.62);
     }
 
-    html[data-theme="dark"] .inventory-medicine-type-search:focus {
+    html[data-theme="dark"] .inventory-medicine-type-search:focus,
+    html[data-theme="dark"] .inventory-unit-search:focus,
+    html[data-theme="dark"] .inventory-dispensing-unit-search:focus {
         border-color: #facc15;
         box-shadow:
             0 0 0 3px rgba(250, 204, 21, 0.14),
@@ -1834,7 +1957,9 @@
     }
 
     html[data-theme="dark"] .inventory-category-option,
-    html[data-theme="dark"] .inventory-medicine-type-option {
+    html[data-theme="dark"] .inventory-medicine-type-option,
+    html[data-theme="dark"] .inventory-unit-option,
+    html[data-theme="dark"] .inventory-dispensing-unit-option {
         color: #f8fafc !important;
         border-color: rgba(250, 204, 21, 0.14);
         background: linear-gradient(180deg, rgba(40, 26, 26, 0.98) 0%, rgba(23, 23, 23, 0.98) 100%);
@@ -1846,16 +1971,27 @@
     html[data-theme="dark"] .inventory-category-option:hover,
     html[data-theme="dark"] .inventory-category-option.is-selected,
     html[data-theme="dark"] .inventory-medicine-type-option:hover,
-    html[data-theme="dark"] .inventory-medicine-type-option.is-selected {
+    html[data-theme="dark"] .inventory-medicine-type-option.is-selected,
+    html[data-theme="dark"] .inventory-unit-option:hover,
+    html[data-theme="dark"] .inventory-unit-option.is-selected,
+    html[data-theme="dark"] .inventory-dispensing-unit-option:hover,
+    html[data-theme="dark"] .inventory-dispensing-unit-option.is-selected {
         background: linear-gradient(135deg, #8B0000, #70131B);
         color: #facc15 !important;
         border-color: rgba(250, 204, 21, 0.28);
     }
 
-    html[data-theme="dark"] .inventory-medicine-type-empty {
+    html[data-theme="dark"] .inventory-medicine-type-empty,
+    html[data-theme="dark"] .inventory-unit-empty,
+    html[data-theme="dark"] .inventory-dispensing-unit-empty {
         color: #f8fafc;
         border-color: rgba(250, 204, 21, 0.18);
         background: rgba(255, 255, 255, 0.06);
+    }
+
+    html[data-theme="dark"] .inventory-unit-group-label,
+    html[data-theme="dark"] .inventory-dispensing-unit-group-label {
+        color: #facc15;
     }
 
     html[data-theme="dark"] #medicineFields,
@@ -2907,7 +3043,7 @@
             </div>
             @if($canManageInventory)
                 <button type="button" class="btn-add" onclick="openInventoryImportModal()">Import Inventory</button>
-                <button class="btn-add" onclick="openModal()">+ Add New Item</button>
+                <button type="button" class="btn-add" onclick="openModal()">+ Add New Item</button>
             @endif
         </div>
     </div>
@@ -2988,10 +3124,10 @@
                                 @endif
                             </small>
                         </td>
-                        <td>
-                            <div style="font-weight: 700;">{{ $item->unit ?: 'pcs' }}</div>
+                        <td class="inventory-unit-cell">
+                            <span class="inventory-unit-pill">{{ $item->unit ?: 'pcs' }}</span>
                             @if($item->category == 'Medicine' && $item->hasDispensingConversion())
-                                <small style="display:block; color:#64748b; margin-top:4px;">
+                                <small class="inventory-unit-note">
                                     Dispense as: {{ $item->dispensing_unit }} ({{ $item->units_per_stock_unit }} per {{ $item->unit }})
                                 </small>
                             @endif
@@ -3466,40 +3602,138 @@
 
                                 <div class="form-group">
                                     <label>Unit</label>
-                                    <input type="text" name="unit" id="iUnit" class="form-control" list="inventoryUnitSuggestions" required placeholder="e.g. pcs, box, bottle, vial">
-                                    <datalist id="inventoryUnitSuggestions">
-                                        <option value="pcs">
-                                        <option value="box">
-                                        <option value="bottle">
-                                        <option value="vial">
-                                        <option value="ampule">
-                                        <option value="tablet">
-                                        <option value="capsule">
-                                        <option value="pack">
-                                        <option value="set">
-                                        <option value="tube">
-                                        <option value="sachet">
-                                        <option value="roll">
-                                        <option value="pair">
-                                        <option value="ml">
-                                        <option value="mg">
-                                    </datalist>
+                                    @php
+                                        $inventoryUnitGroups = [
+                                            'Count Units' => [
+                                                'pcs' => 'Pieces (pcs)',
+                                                'box' => 'Box',
+                                                'pack' => 'Pack',
+                                                'set' => 'Set',
+                                                'pair' => 'Pair',
+                                            ],
+                                            'Tablet/Capsule Units' => [
+                                                'tablet' => 'Tablet',
+                                                'capsule' => 'Capsule',
+                                                'strip' => 'Strip',
+                                                'blister' => 'Blister',
+                                            ],
+                                            'Liquid Units' => [
+                                                'ml' => 'Milliliter (ml)',
+                                                'liter' => 'Liter',
+                                                'bottle' => 'Bottle',
+                                                'drop' => 'Drop',
+                                                'dose' => 'Dose',
+                                            ],
+                                            'Injectable Units' => [
+                                                'vial' => 'Vial',
+                                                'ampule' => 'Ampule',
+                                                'syringe' => 'Syringe',
+                                                'cartridge' => 'Cartridge',
+                                            ],
+                                            'Powder/Topical Units' => [
+                                                'sachet' => 'Sachet',
+                                                'tube' => 'Tube',
+                                                'jar' => 'Jar',
+                                                'tin' => 'Tin',
+                                                'roll' => 'Roll',
+                                            ],
+                                            'Medical Device Units' => [
+                                                'puff' => 'Puff (Inhaler)',
+                                                'meter' => 'Meter',
+                                                'sheet' => 'Sheet',
+                                            ],
+                                            'Weight/Mass Units' => [
+                                                'mg' => 'Milligram (mg)',
+                                                'gram' => 'Gram (g)',
+                                                'kg' => 'Kilogram (kg)',
+                                            ],
+                                            'Other Units' => [
+                                                'unit' => 'Unit',
+                                                'bag' => 'Bag',
+                                                'can' => 'Can',
+                                            ],
+                                        ];
+                                    @endphp
+                                    <div class="inventory-unit-wrap" id="inventoryUnitWrap">
+                                        <select name="unit" id="iUnit" class="form-control inventory-unit-select" required>
+                                            <option value="">-- Select Unit --</option>
+                                            @foreach($inventoryUnitGroups as $groupLabel => $unitOptions)
+                                                <optgroup label="{{ $groupLabel }}">
+                                                    @foreach($unitOptions as $unitValue => $unitLabel)
+                                                        <option value="{{ $unitValue }}">{{ $unitLabel }}</option>
+                                                    @endforeach
+                                                </optgroup>
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="inventory-unit-display" id="inventoryUnitDisplay" aria-haspopup="listbox" aria-expanded="false">
+                                            Select unit
+                                        </button>
+                                        <div class="inventory-unit-menu" id="inventoryUnitMenu" role="listbox" aria-label="Unit options">
+                                            <input type="search" class="inventory-unit-search" id="inventoryUnitSearch" placeholder="Search unit..." autocomplete="off">
+                                            <div class="inventory-unit-options">
+                                                @foreach($inventoryUnitGroups as $groupLabel => $unitOptions)
+                                                    <div class="inventory-unit-group-label" data-unit-group>{{ $groupLabel }}</div>
+                                                    @foreach($unitOptions as $unitValue => $unitLabel)
+                                                        <button type="button" class="inventory-unit-option" data-unit-value="{{ $unitValue }}" data-unit-name="{{ strtolower($unitLabel . ' ' . $unitValue . ' ' . $groupLabel) }}">{{ $unitLabel }}</button>
+                                                    @endforeach
+                                                @endforeach
+                                            </div>
+                                            <div class="inventory-unit-empty" id="inventoryUnitEmpty">No unit found.</div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div id="medicineDispensingFields" class="inventory-subgroup">
                                     <div class="inventory-inline-grid">
                                         <div class="form-group">
                                             <label>Dispensing Unit</label>
-                                            <input type="text" name="dispensing_unit" id="iDispensingUnit" class="form-control" list="dispensingUnitSuggestions" placeholder="e.g. tablet, capsule, ml">
-                                            <datalist id="dispensingUnitSuggestions">
-                                                <option value="tablet">
-                                                <option value="capsule">
-                                                <option value="ml">
-                                                <option value="dose">
-                                                <option value="drop">
-                                                <option value="puff">
-                                                <option value="sachet">
-                                            </datalist>
+                                            @php
+                                                $dispensingUnitGroups = [
+                                                    'Tablet/Capsule' => [
+                                                        'tablet' => 'Tablet',
+                                                        'capsule' => 'Capsule',
+                                                    ],
+                                                    'Liquid' => [
+                                                        'ml' => 'Milliliter (ml)',
+                                                        'dose' => 'Dose',
+                                                        'drop' => 'Drop',
+                                                    ],
+                                                    'Inhalation' => [
+                                                        'puff' => 'Puff',
+                                                    ],
+                                                    'Powder/Topical' => [
+                                                        'sachet' => 'Sachet',
+                                                        'gram' => 'Gram (g)',
+                                                    ],
+                                                ];
+                                            @endphp
+                                            <div class="inventory-dispensing-unit-wrap" id="inventoryDispensingUnitWrap">
+                                                <select name="dispensing_unit" id="iDispensingUnit" class="form-control inventory-dispensing-unit-select">
+                                                    <option value="">-- Select Dispensing Unit --</option>
+                                                    @foreach($dispensingUnitGroups as $groupLabel => $unitOptions)
+                                                        <optgroup label="{{ $groupLabel }}">
+                                                            @foreach($unitOptions as $unitValue => $unitLabel)
+                                                                <option value="{{ $unitValue }}">{{ $unitLabel }}</option>
+                                                            @endforeach
+                                                        </optgroup>
+                                                    @endforeach
+                                                </select>
+                                                <button type="button" class="inventory-dispensing-unit-display" id="inventoryDispensingUnitDisplay" aria-haspopup="listbox" aria-expanded="false">
+                                                    Select dispensing unit
+                                                </button>
+                                                <div class="inventory-dispensing-unit-menu" id="inventoryDispensingUnitMenu" role="listbox" aria-label="Dispensing unit options">
+                                                    <input type="search" class="inventory-dispensing-unit-search" id="inventoryDispensingUnitSearch" placeholder="Search dispensing unit..." autocomplete="off">
+                                                    <div class="inventory-dispensing-unit-options">
+                                                        @foreach($dispensingUnitGroups as $groupLabel => $unitOptions)
+                                                            <div class="inventory-dispensing-unit-group-label" data-dispensing-unit-group>{{ $groupLabel }}</div>
+                                                            @foreach($unitOptions as $unitValue => $unitLabel)
+                                                                <button type="button" class="inventory-dispensing-unit-option" data-dispensing-unit-value="{{ $unitValue }}" data-dispensing-unit-name="{{ strtolower($unitLabel . ' ' . $unitValue . ' ' . $groupLabel) }}">{{ $unitLabel }}</button>
+                                                            @endforeach
+                                                        @endforeach
+                                                    </div>
+                                                    <div class="inventory-dispensing-unit-empty" id="inventoryDispensingUnitEmpty">No dispensing unit found.</div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <div id="itemsPerUnitField" class="form-group" style="display:none;">
@@ -3739,6 +3973,22 @@
     const medicineTypeCustomWrap = document.getElementById('medicineTypeCustomWrap');
     const medicineTypeCustomInput = document.getElementById('iMedicineTypeCustom');
     const medicineTypeMenuHome = medicineTypeMenu ? medicineTypeMenu.parentElement : null;
+    const unitSelect = document.getElementById('iUnit');
+    const unitWrap = document.getElementById('inventoryUnitWrap');
+    const unitDisplay = document.getElementById('inventoryUnitDisplay');
+    const unitMenu = document.getElementById('inventoryUnitMenu');
+    const unitSearch = document.getElementById('inventoryUnitSearch');
+    const unitOptions = Array.from(document.querySelectorAll('.inventory-unit-option'));
+    const unitEmpty = document.getElementById('inventoryUnitEmpty');
+    const unitMenuHome = unitMenu ? unitMenu.parentElement : null;
+    const dispensingUnitSelect = document.getElementById('iDispensingUnit');
+    const dispensingUnitWrap = document.getElementById('inventoryDispensingUnitWrap');
+    const dispensingUnitDisplay = document.getElementById('inventoryDispensingUnitDisplay');
+    const dispensingUnitMenu = document.getElementById('inventoryDispensingUnitMenu');
+    const dispensingUnitSearch = document.getElementById('inventoryDispensingUnitSearch');
+    const dispensingUnitOptions = Array.from(document.querySelectorAll('.inventory-dispensing-unit-option'));
+    const dispensingUnitEmpty = document.getElementById('inventoryDispensingUnitEmpty');
+    const dispensingUnitMenuHome = dispensingUnitMenu ? dispensingUnitMenu.parentElement : null;
     const restockQuantityInput = document.getElementById('restockQuantity');
     const restockCurrentStockDisplay = document.getElementById('restockCurrentStock');
     const restockPreviewLine = document.getElementById('restockPreviewLine');
@@ -3880,6 +4130,184 @@
         }
     }
 
+    function syncUnitDisplay() {
+        if (!unitSelect || !unitDisplay) return;
+
+        const selectedOption = unitSelect.options[unitSelect.selectedIndex];
+        unitDisplay.textContent = selectedOption && selectedOption.value ? selectedOption.text : 'Select unit';
+
+        unitOptions.forEach(function(option) {
+            option.classList.toggle('is-selected', option.dataset.unitValue === unitSelect.value);
+        });
+    }
+
+    function setUnitOpenState(isOpen) {
+        if (!unitWrap || !unitDisplay) return;
+
+        unitWrap.classList.toggle('is-open', isOpen);
+        unitDisplay.classList.toggle('is-open', isOpen);
+        unitDisplay.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        if (unitMenu) {
+            unitMenu.classList.toggle('is-open', isOpen);
+        }
+
+        if (isOpen && unitSearch) {
+            if (unitMenu && unitMenu.parentElement !== document.body) {
+                document.body.appendChild(unitMenu);
+            }
+            positionUnitMenu();
+            unitSearch.value = '';
+            filterUnitOptions('');
+            setTimeout(function() {
+                positionUnitMenu();
+                unitSearch.focus();
+            }, 0);
+        } else if (unitMenu) {
+            unitMenu.style.left = '';
+            unitMenu.style.top = '';
+            unitMenu.style.width = '';
+            unitMenu.style.maxHeight = '';
+            if (unitMenuHome && unitMenu.parentElement !== unitMenuHome) {
+                unitMenuHome.appendChild(unitMenu);
+            }
+        }
+    }
+
+    function positionUnitMenu() {
+        if (!unitDisplay || !unitMenu || !unitWrap.classList.contains('is-open')) return;
+
+        const triggerRect = unitDisplay.getBoundingClientRect();
+        const viewportPadding = 12;
+        const menuGap = 6;
+        const width = Math.min(triggerRect.width, window.innerWidth - (viewportPadding * 2));
+        const left = Math.min(Math.max(triggerRect.left, viewportPadding), window.innerWidth - width - viewportPadding);
+        const spaceBelow = window.innerHeight - triggerRect.bottom - viewportPadding - menuGap;
+        const spaceAbove = triggerRect.top - viewportPadding - menuGap;
+        const openUpward = spaceBelow < 240 && spaceAbove > spaceBelow;
+        const availableHeight = openUpward ? spaceAbove : spaceBelow;
+        const maxHeight = Math.max(180, Math.min(420, availableHeight));
+        const top = openUpward
+            ? Math.max(viewportPadding, triggerRect.top - menuGap - maxHeight)
+            : triggerRect.bottom + menuGap;
+
+        unitMenu.style.left = `${left}px`;
+        unitMenu.style.width = `${width}px`;
+        unitMenu.style.maxHeight = `${maxHeight}px`;
+        unitMenu.style.top = `${top}px`;
+    }
+
+    function filterUnitOptions(query) {
+        const normalizedQuery = String(query || '').trim().toLowerCase();
+        let visibleCount = 0;
+
+        unitOptions.forEach(function(option) {
+            const searchableName = option.dataset.unitName || option.textContent.toLowerCase();
+            const isVisible = searchableName.includes(normalizedQuery);
+
+            option.style.display = isVisible ? '' : 'none';
+            if (isVisible) {
+                visibleCount += 1;
+            }
+        });
+
+        if (unitMenu) {
+            unitMenu.classList.toggle('is-filter-empty', visibleCount === 0);
+        }
+
+        if (unitEmpty) {
+            unitEmpty.style.display = visibleCount === 0 ? 'block' : '';
+        }
+    }
+
+    function syncDispensingUnitDisplay() {
+        if (!dispensingUnitSelect || !dispensingUnitDisplay) return;
+
+        const selectedOption = dispensingUnitSelect.options[dispensingUnitSelect.selectedIndex];
+        dispensingUnitDisplay.textContent = selectedOption && selectedOption.value ? selectedOption.text : 'Select dispensing unit';
+
+        dispensingUnitOptions.forEach(function(option) {
+            option.classList.toggle('is-selected', option.dataset.dispensingUnitValue === dispensingUnitSelect.value);
+        });
+    }
+
+    function setDispensingUnitOpenState(isOpen) {
+        if (!dispensingUnitWrap || !dispensingUnitDisplay) return;
+
+        dispensingUnitWrap.classList.toggle('is-open', isOpen);
+        dispensingUnitDisplay.classList.toggle('is-open', isOpen);
+        dispensingUnitDisplay.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        if (dispensingUnitMenu) {
+            dispensingUnitMenu.classList.toggle('is-open', isOpen);
+        }
+
+        if (isOpen && dispensingUnitSearch) {
+            if (dispensingUnitMenu && dispensingUnitMenu.parentElement !== document.body) {
+                document.body.appendChild(dispensingUnitMenu);
+            }
+            positionDispensingUnitMenu();
+            dispensingUnitSearch.value = '';
+            filterDispensingUnitOptions('');
+            setTimeout(function() {
+                positionDispensingUnitMenu();
+                dispensingUnitSearch.focus();
+            }, 0);
+        } else if (dispensingUnitMenu) {
+            dispensingUnitMenu.style.left = '';
+            dispensingUnitMenu.style.top = '';
+            dispensingUnitMenu.style.width = '';
+            dispensingUnitMenu.style.maxHeight = '';
+            if (dispensingUnitMenuHome && dispensingUnitMenu.parentElement !== dispensingUnitMenuHome) {
+                dispensingUnitMenuHome.appendChild(dispensingUnitMenu);
+            }
+        }
+    }
+
+    function positionDispensingUnitMenu() {
+        if (!dispensingUnitDisplay || !dispensingUnitMenu || !dispensingUnitWrap.classList.contains('is-open')) return;
+
+        const triggerRect = dispensingUnitDisplay.getBoundingClientRect();
+        const viewportPadding = 12;
+        const menuGap = 6;
+        const width = Math.min(triggerRect.width, window.innerWidth - (viewportPadding * 2));
+        const left = Math.min(Math.max(triggerRect.left, viewportPadding), window.innerWidth - width - viewportPadding);
+        const spaceBelow = window.innerHeight - triggerRect.bottom - viewportPadding - menuGap;
+        const spaceAbove = triggerRect.top - viewportPadding - menuGap;
+        const openUpward = spaceBelow < 240 && spaceAbove > spaceBelow;
+        const availableHeight = openUpward ? spaceAbove : spaceBelow;
+        const maxHeight = Math.max(180, Math.min(420, availableHeight));
+        const top = openUpward
+            ? Math.max(viewportPadding, triggerRect.top - menuGap - maxHeight)
+            : triggerRect.bottom + menuGap;
+
+        dispensingUnitMenu.style.left = `${left}px`;
+        dispensingUnitMenu.style.width = `${width}px`;
+        dispensingUnitMenu.style.maxHeight = `${maxHeight}px`;
+        dispensingUnitMenu.style.top = `${top}px`;
+    }
+
+    function filterDispensingUnitOptions(query) {
+        const normalizedQuery = String(query || '').trim().toLowerCase();
+        let visibleCount = 0;
+
+        dispensingUnitOptions.forEach(function(option) {
+            const searchableName = option.dataset.dispensingUnitName || option.textContent.toLowerCase();
+            const isVisible = searchableName.includes(normalizedQuery);
+
+            option.style.display = isVisible ? '' : 'none';
+            if (isVisible) {
+                visibleCount += 1;
+            }
+        });
+
+        if (dispensingUnitMenu) {
+            dispensingUnitMenu.classList.toggle('is-filter-empty', visibleCount === 0);
+        }
+
+        if (dispensingUnitEmpty) {
+            dispensingUnitEmpty.style.display = visibleCount === 0 ? 'block' : '';
+        }
+    }
+
     function positionMedicineTypeMenu() {
         if (!medicineTypeDisplay || !medicineTypeMenu || !medicineTypeWrap.classList.contains('is-open')) return;
 
@@ -3939,6 +4367,7 @@
             }
             if (dispensingUnitInput) {
                 dispensingUnitInput.value = '';
+                syncDispensingUnitDisplay();
             }
             if (unitsPerStockUnitInput) {
                 unitsPerStockUnitInput.value = '';
@@ -3978,6 +4407,7 @@
             syncMedicineTypeDisplay();
             if (dispensingUnitInput) {
                 dispensingUnitInput.value = '';
+                syncDispensingUnitDisplay();
             }
             if (unitsPerStockUnitInput) {
                 unitsPerStockUnitInput.value = '';
@@ -4008,8 +4438,10 @@
         }
         document.getElementById('iMinimumStock').value = '10';
         document.getElementById('iUnit').value = 'pcs';
+        syncUnitDisplay();
         if (dispensingUnitInput) {
             dispensingUnitInput.value = '';
+            syncDispensingUnitDisplay();
         }
         if (unitsPerStockUnitInput) {
             unitsPerStockUnitInput.value = '';
@@ -4050,8 +4482,10 @@
         }
         document.getElementById('iMinimumStock').value = item.minimum_stock ?? '10';
         document.getElementById('iUnit').value = item.unit || 'pcs';
+        syncUnitDisplay();
         if (dispensingUnitInput) {
             dispensingUnitInput.value = item.dispensing_unit || '';
+            syncDispensingUnitDisplay();
         }
         if (unitsPerStockUnitInput) {
             unitsPerStockUnitInput.value = item.units_per_stock_unit || '';
@@ -4087,6 +4521,8 @@
         itemModal.style.display = 'none';
         setCategoryOpenState(false);
         setMedicineTypeOpenState(false);
+        setUnitOpenState(false);
+        setDispensingUnitOpenState(false);
     }
 
     function openInventoryImportModal() {
@@ -4479,6 +4915,8 @@
             event.preventDefault();
             const shouldOpen = !categoryWrap.classList.contains('is-open');
             setMedicineTypeOpenState(false);
+            setUnitOpenState(false);
+            setDispensingUnitOpenState(false);
             setCategoryOpenState(shouldOpen);
         });
 
@@ -4502,6 +4940,8 @@
             event.preventDefault();
             const shouldOpen = !medicineTypeWrap.classList.contains('is-open');
             setCategoryOpenState(false);
+            setUnitOpenState(false);
+            setDispensingUnitOpenState(false);
             setMedicineTypeOpenState(shouldOpen);
         });
 
@@ -4572,6 +5012,150 @@
         });
 
         syncMedicineTypeDisplay();
+    }
+
+    if (unitDisplay && unitMenu && unitSelect) {
+        unitDisplay.addEventListener('click', function(event) {
+            event.preventDefault();
+            const shouldOpen = !unitWrap.classList.contains('is-open');
+            setCategoryOpenState(false);
+            setMedicineTypeOpenState(false);
+            setDispensingUnitOpenState(false);
+            setUnitOpenState(shouldOpen);
+        });
+
+        unitOptions.forEach(function(option) {
+            option.addEventListener('click', function(event) {
+                event.preventDefault();
+                unitSelect.value = option.dataset.unitValue || '';
+                unitSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                syncUnitDisplay();
+                setUnitOpenState(false);
+            });
+        });
+
+        unitSelect.addEventListener('change', function() {
+            syncUnitDisplay();
+            toggleDispensingFields();
+            syncMinStockUnitLabel();
+        });
+
+        if (unitSearch) {
+            unitSearch.addEventListener('input', function(event) {
+                filterUnitOptions(event.target.value);
+            });
+
+            unitSearch.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    setUnitOpenState(false);
+                    unitDisplay.focus();
+                } else if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const firstVisibleOption = unitOptions.find(function(option) {
+                        return option.style.display !== 'none';
+                    });
+
+                    if (firstVisibleOption) {
+                        firstVisibleOption.click();
+                    }
+                }
+            });
+        }
+
+        window.addEventListener('resize', positionUnitMenu);
+        window.addEventListener('scroll', positionUnitMenu, true);
+
+        document.addEventListener('click', function(event) {
+            if (
+                unitWrap &&
+                unitMenu &&
+                !unitWrap.contains(event.target) &&
+                !unitMenu.contains(event.target)
+            ) {
+                setUnitOpenState(false);
+            }
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                setUnitOpenState(false);
+            }
+        });
+
+        syncUnitDisplay();
+    }
+
+    if (dispensingUnitDisplay && dispensingUnitMenu && dispensingUnitSelect) {
+        dispensingUnitDisplay.addEventListener('click', function(event) {
+            event.preventDefault();
+            const shouldOpen = !dispensingUnitWrap.classList.contains('is-open');
+            setCategoryOpenState(false);
+            setMedicineTypeOpenState(false);
+            setUnitOpenState(false);
+            setDispensingUnitOpenState(shouldOpen);
+        });
+
+        dispensingUnitOptions.forEach(function(option) {
+            option.addEventListener('click', function(event) {
+                event.preventDefault();
+                dispensingUnitSelect.value = option.dataset.dispensingUnitValue || '';
+                dispensingUnitSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                syncDispensingUnitDisplay();
+                syncMinStockUnitLabel();
+                setDispensingUnitOpenState(false);
+            });
+        });
+
+        dispensingUnitSelect.addEventListener('change', function() {
+            syncDispensingUnitDisplay();
+            syncMinStockUnitLabel();
+        });
+
+        if (dispensingUnitSearch) {
+            dispensingUnitSearch.addEventListener('input', function(event) {
+                filterDispensingUnitOptions(event.target.value);
+            });
+
+            dispensingUnitSearch.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    setDispensingUnitOpenState(false);
+                    dispensingUnitDisplay.focus();
+                } else if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const firstVisibleOption = dispensingUnitOptions.find(function(option) {
+                        return option.style.display !== 'none';
+                    });
+
+                    if (firstVisibleOption) {
+                        firstVisibleOption.click();
+                    }
+                }
+            });
+        }
+
+        window.addEventListener('resize', positionDispensingUnitMenu);
+        window.addEventListener('scroll', positionDispensingUnitMenu, true);
+
+        document.addEventListener('click', function(event) {
+            if (
+                dispensingUnitWrap &&
+                dispensingUnitMenu &&
+                !dispensingUnitWrap.contains(event.target) &&
+                !dispensingUnitMenu.contains(event.target)
+            ) {
+                setDispensingUnitOpenState(false);
+            }
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                setDispensingUnitOpenState(false);
+            }
+        });
+
+        syncDispensingUnitDisplay();
     }
 
     if (itemForm && medicineSelect && medicineTypeDisplay) {
@@ -4796,13 +5380,16 @@
     }
 
     if (unitInput) {
-        unitInput.addEventListener('input',  () => { toggleDispensingFields(); syncMinStockUnitLabel(); });
-        unitInput.addEventListener('change', () => { toggleDispensingFields(); syncMinStockUnitLabel(); });
+        unitInput.addEventListener('input',  () => { syncUnitDisplay(); toggleDispensingFields(); syncMinStockUnitLabel(); });
+        unitInput.addEventListener('change', () => { syncUnitDisplay(); toggleDispensingFields(); syncMinStockUnitLabel(); });
     }
 
     const dispensingUnitWatcher   = document.getElementById('iDispensingUnit');
     const unitsPerStockUnitWatcher = document.getElementById('iUnitsPerStockUnit');
-    if (dispensingUnitWatcher)    dispensingUnitWatcher.addEventListener('input',  syncMinStockUnitLabel);
+    if (dispensingUnitWatcher) {
+        dispensingUnitWatcher.addEventListener('input',  () => { syncDispensingUnitDisplay(); syncMinStockUnitLabel(); });
+        dispensingUnitWatcher.addEventListener('change', () => { syncDispensingUnitDisplay(); syncMinStockUnitLabel(); });
+    }
     if (unitsPerStockUnitWatcher) unitsPerStockUnitWatcher.addEventListener('input', syncMinStockUnitLabel);
 </script>
 @endpush

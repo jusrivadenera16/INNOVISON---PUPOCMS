@@ -1389,10 +1389,6 @@
                             <strong>{{ $settings->admin_live_notifications !== false ? 'Enabled' : 'Disabled' }}</strong>
                         </div>
                         <div class="workflow-summary-row">
-                            <span>Appointment Approval</span>
-                            <strong>{{ $settings->auto_approve ? 'Automatic' : 'Manual Review' }}</strong>
-                        </div>
-                        <div class="workflow-summary-row">
                             <span>Student Assistant Admin Hours</span>
                             <strong>{{ app(\App\Services\ClinicWorkflowService::class)->studentAssistantHoursLabel() }}</strong>
                         </div>
@@ -1436,10 +1432,6 @@
                                 <div class="switch-item">
                                     <input type="checkbox" name="admin_live_notifications" id="adminLiveNotifications" {{ $settings->admin_live_notifications !== false ? 'checked' : '' }}>
                                     <label for="adminLiveNotifications">Enable Admin Live Notifications</label>
-                                </div>
-                                <div class="switch-item">
-                                    <input type="checkbox" name="auto_approve" id="autoApprove" {{ $settings->auto_approve ? 'checked' : '' }}>
-                                    <label for="autoApprove">Auto-Approve Appointments</label>
                                 </div>
                             </div>
                         </section>

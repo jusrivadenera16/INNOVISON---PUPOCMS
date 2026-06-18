@@ -6405,6 +6405,16 @@
             // Reset button text and events back to Find mode
             if (findBtn) {
                 findBtn.textContent = 'Find';
+                findBtn.disabled = false;
+                findBtn.style.opacity = '';
+                findBtn.style.cursor = 'pointer';
+                findBtn.style.background = '';
+                findBtn.style.color = '';
+                findBtn.style.fontWeight = '';
+                findBtn.style.fontSize = '';
+                findBtn.style.letterSpacing = '';
+                findBtn.style.boxShadow = '';
+                findBtn.style.border = '';
                 findBtn.onclick = null;
                 findBtn.removeEventListener('click', doLookup);
                 findBtn.removeEventListener('click', doApprove);
@@ -6645,10 +6655,17 @@
                             findBtn.removeEventListener('click', doLookup);
                             findBtn.removeEventListener('click', doApprove);
 
-                            findBtn.textContent = 'Already Approved';
+                            findBtn.textContent = '✓ Already Approved';
                             findBtn.disabled = true;
-                            findBtn.style.opacity = '0.6';
+                            findBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                            findBtn.style.color = '#000000';
+                            findBtn.style.opacity = '1';
                             findBtn.style.cursor = 'not-allowed';
+                            findBtn.style.fontWeight = '700';
+                            findBtn.style.fontSize = '14px';
+                            findBtn.style.letterSpacing = '0.5px';
+                            findBtn.style.boxShadow = '0 8px 16px rgba(16, 185, 129, 0.25)';
+                            findBtn.style.border = '2px solid #059669';
                             findBtn.onclick = null;
                         }
                     } else {

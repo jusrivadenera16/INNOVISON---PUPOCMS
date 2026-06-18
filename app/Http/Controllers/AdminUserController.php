@@ -140,7 +140,7 @@ class AdminUserController extends Controller
         $this->ensureCanManageUsers();
         $managementView = trim((string) $request->input('management_view', 'account-access'));
         $allowedRoles = $managementView === 'admin-hub'
-            ? ['admin_designee', 'super_admin']
+            ? ['admin_designee']
             : ['admin_clinic_staff', 'student_assistant', 'super_admin'];
 
         $request->validate([
@@ -224,7 +224,7 @@ class AdminUserController extends Controller
             && trim((string) $user->idp_role) === ''
             && !in_array(User::normalizeRole($originalRole), [User::ROLE_ADMIN, User::ROLE_SUPERADMIN], true)
         ) {
-            $user->idp_role = trim((string) $originalRole) !== '' ? $originalRole : User::ROLE_STUDENT;
+            $user->idp_role = $this->baseRoleTokenForUser($user);
         }
         $user->user_role = $normalizedRequestedRole;
         if (Schema::hasColumn('users', 'user_type')) {
@@ -312,7 +312,7 @@ class AdminUserController extends Controller
         $this->ensureCanManageUsers();
         $managementView = trim((string) $request->input('management_view', 'account-access'));
         $allowedRoles = $managementView === 'admin-hub'
-            ? ['admin_designee', 'super_admin']
+            ? ['admin_designee']
             : ['admin_clinic_staff', 'student_assistant', 'super_admin'];
 
         $request->validate([
@@ -428,7 +428,7 @@ class AdminUserController extends Controller
             && trim((string) $user->idp_role) === ''
             && !in_array(User::normalizeRole((string) $user->user_role), [User::ROLE_ADMIN, User::ROLE_SUPERADMIN], true)
         ) {
-            $user->idp_role = trim((string) $user->user_role) !== '' ? $user->user_role : 'faculty';
+            $user->idp_role = $this->baseRoleTokenForUser($user);
         }
 
         $user->user_role = $normalizedRequestedRole;
@@ -499,7 +499,7 @@ class AdminUserController extends Controller
         $this->ensureCanManageUsers();
 
         $request->validate([
-            'user_role' => ['required', Rule::in(['admin_designee', 'super_admin'])],
+            'user_role' => ['required', Rule::in(['admin_designee'])],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'email' => ['required', 'email', 'max:255'],
             'office' => ['nullable', 'string', 'max:255'],
@@ -647,19 +647,6 @@ class AdminUserController extends Controller
         $originalStatus = $user->status ?? 'active';
         $adminProfileId = trim((string) request()->input('admin_profile_id', ''));
 
-        $restoredRole = trim((string) ($user->idp_role ?? ''));
-        if ($restoredRole === '') {
-            $restoredRole = User::ROLE_STUDENT;
-        }
-        $user->user_role = User::normalizeRole($restoredRole);
-        if (Schema::hasColumn('users', 'user_type')) {
-            $user->user_type = $this->defaultUserTypeForIdpRole($restoredRole);
-        }
-        if (Schema::hasColumn('users', 'status')) {
-            $user->status = 'active';
-        }
-        $user->save();
-
         $linkedAdmin = null;
         if ($adminProfileId !== '' && Schema::hasTable('admins')) {
             $linkedAdmin = Admin::query()
@@ -671,6 +658,25 @@ class AdminUserController extends Controller
             $linkedAdmin = $this->findLinkedAdminProfile($user);
         }
 
+        $isAdminHubMember = $linkedAdmin
+            && Admin::hasColumn('admin_hub_enabled')
+            && (bool) $linkedAdmin->admin_hub_enabled
+            && in_array(strtolower(trim((string) ($linkedAdmin->admin_hub_role ?? ''))), ['admin_designee', 'designee'], true);
+
+        if ($isAdminHubMember) {
+            $user->user_role = User::ROLE_ADMIN;
+            if (Schema::hasColumn('users', 'user_type')) {
+                $user->user_type = 'Regular';
+            }
+        } else {
+            $this->applyBaseRoleToUser($user);
+        }
+
+        if (Schema::hasColumn('users', 'status')) {
+            $user->status = 'active';
+        }
+        $user->save();
+
         if ($linkedAdmin) {
             if (Admin::hasColumn('access_level')) {
                 $linkedAdmin->access_level = null;
@@ -678,8 +684,6 @@ class AdminUserController extends Controller
             if (Admin::hasColumn('status')) {
                 $linkedAdmin->status = 'active';
             }
-            $isAdminHubMember = Admin::hasColumn('admin_hub_enabled')
-                && (bool) $linkedAdmin->admin_hub_enabled;
             if (Admin::hasColumn('email_address') && !$isAdminHubMember) {
                 $linkedAdmin->email_address = null;
             }
@@ -1227,9 +1231,50 @@ class AdminUserController extends Controller
 
     private function defaultUserTypeForIdpRole(string $idpRole): string
     {
-        return in_array(strtolower(trim($idpRole)), ['student_assistant', 'studentassistant', 'assistant'], true)
-            ? 'Assistant'
-            : 'Regular';
+        return match (strtolower(trim($idpRole))) {
+            'faculty' => 'Faculty',
+            'guest' => 'Guest',
+            'student' => 'Student',
+            'student_assistant', 'studentassistant', 'assistant' => 'Assistant',
+            default => 'Regular',
+        };
+    }
+
+    private function baseRoleTokenForUser(User $user): string
+    {
+        $userType = strtolower(trim((string) ($user->user_type ?? '')));
+        if ($userType === 'faculty') {
+            return 'faculty';
+        }
+        if ($userType === 'guest') {
+            return 'guest';
+        }
+
+        $normalizedRole = User::normalizeRole((string) ($user->user_role ?? ''));
+        if ($normalizedRole === User::ROLE_STUDENT) {
+            return User::ROLE_STUDENT;
+        }
+
+        return trim((string) ($user->idp_role ?? '')) ?: User::ROLE_STUDENT;
+    }
+
+    private function applyBaseRoleToUser(User $user): void
+    {
+        $restoredRole = trim((string) ($user->idp_role ?? ''));
+        if ($restoredRole === '') {
+            $restoredRole = $this->baseRoleTokenForUser($user);
+        }
+
+        $normalizedRestoredRole = strtolower(trim($restoredRole));
+        if (in_array($normalizedRestoredRole, ['student', 'faculty', 'guest'], true)) {
+            $user->user_role = User::ROLE_STUDENT;
+        } else {
+            $user->user_role = User::normalizeRole($restoredRole);
+        }
+
+        if (Schema::hasColumn('users', 'user_type')) {
+            $user->user_type = $this->defaultUserTypeForIdpRole($restoredRole);
+        }
     }
 
     private function resolveLinkedUserForAdminRecord(Admin $admin): ?User
@@ -1276,15 +1321,7 @@ class AdminUserController extends Controller
 
     private function restoreUserToBaseRole(User $user): void
     {
-        $restoredRole = trim((string) ($user->idp_role ?? ''));
-        if ($restoredRole === '') {
-            $restoredRole = User::ROLE_STUDENT;
-        }
-
-        $user->user_role = User::normalizeRole($restoredRole);
-        if (Schema::hasColumn('users', 'user_type')) {
-            $user->user_type = $this->defaultUserTypeForIdpRole($restoredRole);
-        }
+        $this->applyBaseRoleToUser($user);
         if (Schema::hasColumn('users', 'status')) {
             $user->status = 'active';
         }

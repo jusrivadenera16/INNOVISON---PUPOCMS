@@ -626,7 +626,7 @@
             border: 0;
             border-radius: 6px;
             background: transparent;
-            color: #111827;
+            color: #ffffff;
             box-shadow: none;
             font-family: inherit;
             font-size: 13px;
@@ -644,7 +644,7 @@
             transform: none;
             border: 0;
             background: transparent;
-            color: var(--maroon);
+            color: #ffffff;
             box-shadow: none;
             outline: none;
         }

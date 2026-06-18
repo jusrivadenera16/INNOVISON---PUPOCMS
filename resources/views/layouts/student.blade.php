@@ -2825,12 +2825,11 @@
     {{-- HEALTH PROFILE PROMPT MODAL --}}
     @auth('student')
     @php
-        $showHealthFormModal = false;
-        if (session('show_health_profile_prompt')) {
-            $studentUser = Auth::guard('student')->user();
-            $studentUser?->loadMissing('healthProfile');
-            $showHealthFormModal = $studentUser && (is_null($studentUser->healthProfile) || empty($studentUser->healthProfile));
-        }
+        $studentUser = Auth::guard('student')->user();
+        $studentUser?->loadMissing('healthProfile');
+        $showHealthFormModal = $studentUser
+            && !(bool) ($studentUser->is_health_profile_completed ?? false)
+            && !$studentUser->healthProfile;
     @endphp
 
     @if($showHealthFormModal)

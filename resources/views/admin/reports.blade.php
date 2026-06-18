@@ -272,6 +272,47 @@
         background: rgba(17, 17, 17, 0.10) !important;
     }
 
+    /* Audit Trail Premium Styling */
+    .report-card-audit {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+        border: 2px solid rgba(124, 58, 237, 0.3) !important;
+        position: relative;
+    }
+
+    .report-card-audit::before {
+        background: linear-gradient(135deg, #6366f1, #a855f7) !important;
+    }
+
+    .report-card-audit:hover {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+        border-color: #a855f7 !important;
+        box-shadow:
+            0 0 0 3px rgba(168, 85, 247, 0.15),
+            0 20px 40px rgba(124, 58, 237, 0.3) !important;
+    }
+
+    .report-card-audit .report-card-icon {
+        color: #c7d2fe;
+        background: rgba(79, 70, 229, 0.25);
+        border-color: rgba(168, 85, 247, 0.3);
+    }
+
+    .report-card-audit:hover .report-card-icon {
+        background: rgba(17, 17, 17, 0.10);
+        border-color: rgba(17, 17, 17, 0.14);
+        color: #000;
+    }
+
+    html[data-theme="dark"] .report-card-audit {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+        border-color: rgba(168, 85, 247, 0.3) !important;
+    }
+
+    html[data-theme="dark"] .report-card-audit:hover {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+        border-color: #a855f7 !important;
+    }
+
     .back-nav {
         margin-top: 40px;
         text-align: center;
@@ -644,6 +685,7 @@
     $dashboardUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/dashboard') : url('/admin/dashboard');
     $marUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/mar') : url('/admin/reports/mar');
     $inventorySummaryUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/inventory-summary') : url('/admin/reports/inventory-summary');
+    $dailyTreatmentRecordUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/daily-treatment-record') : url('/admin/reports/daily-treatment-record');
     $appointmentStatisticsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/appointment-statistics') : url('/admin/reports/appointment-statistics');
     $healthFormsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/health-forms') : url('/admin/reports/health-forms');
     $feedbacksUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/feedbacks') : url('/admin/reports/feedbacks');
@@ -681,7 +723,7 @@
             </div>
         </a>
 
-        <a href="{{ $appointmentStatisticsUrl }}" class="report-card report-card-primary">
+        <a href="{{ $dailyTreatmentRecordUrl }}" class="report-card report-card-primary">
             <div>
                 <div class="report-label">Form B</div>
                 <div class="report-main-title">Daily Treatment Record</div>
@@ -689,6 +731,17 @@
             <div class="report-card-footer">
                 <div class="report-badge">Treatment Log</div>
                 <span class="report-card-icon"><x-outline-icon name="clipboard-document-list" /></span>
+            </div>
+        </a>
+
+        <a href="{{ $appointmentStatisticsUrl }}" class="report-card report-card-primary">
+            <div>
+                <div class="report-label">Clinic Analytics</div>
+                <div class="report-main-title">Appointment Statistics</div>
+            </div>
+            <div class="report-card-footer">
+                <div class="report-badge">Trends</div>
+                <span class="report-card-icon"><x-outline-icon name="calendar-days" /></span>
             </div>
         </a>
 
@@ -725,18 +778,16 @@
             </div>
         </a>
 
-        @if($role !== \App\Models\User::ROLE_ADMIN)
-            <a href="{{ route('admin.logs') }}" class="report-card">
-                <div>
-                    <div class="report-label">System Monitoring</div>
-                    <div class="report-main-title">Audit Trail</div>
-                </div>
-                <div class="report-card-footer">
-                    <div class="report-badge">Restricted</div>
-                    <span class="report-card-icon"><x-outline-icon name="eye" /></span>
-                </div>
-            </a>
-        @endif
+        <a href="{{ route('admin.logs') }}" class="report-card report-card-audit">
+            <div>
+                <div class="report-label">System Monitoring</div>
+                <div class="report-main-title">Audit Trail</div>
+            </div>
+            <div class="report-card-footer">
+                <div class="report-badge">Activity Log</div>
+                <span class="report-card-icon"><x-outline-icon name="clock" /></span>
+            </div>
+        </a>
 
         </div>
     </div>

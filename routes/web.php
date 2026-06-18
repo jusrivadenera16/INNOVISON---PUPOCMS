@@ -253,6 +253,7 @@ Route::middleware(['auth:admin', 'audit'])->group(function () {
         Route::get('/admin/reports', [AdminController::class, 'reports'])->name('admin.reports');
         Route::get('/admin/reports/mar', [ReportsController::class, 'marReport'])->name('reports.mar');
         Route::get('/admin/reports/inventory-summary', [AdminController::class, 'inventorySummary'])->name('reports.inventory-summary');
+        Route::get('/admin/reports/daily-treatment-record', [ReportsController::class, 'dailyTreatmentRecord'])->name('reports.daily-treatment-record');
         Route::get('/admin/reports/appointment-statistics', [ReportsController::class, 'appointmentStatistics'])->name('reports.appointment-statistics');
         Route::get('/admin/reports/health-forms', [ReportsController::class, 'healthFormsReport'])->name('reports.health-forms');
         Route::get('/admin/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->name('reports.feedbacks');
@@ -331,6 +332,7 @@ Route::middleware(['auth:admin', 'audit'])->group(function () {
         Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
         Route::get('/reports/mar', [ReportsController::class, 'marReport'])->name('reports.mar');
         Route::get('/reports/inventory-summary', [AdminController::class, 'inventorySummary'])->name('reports.inventory-summary');
+        Route::get('/reports/daily-treatment-record', [ReportsController::class, 'dailyTreatmentRecord'])->name('reports.daily-treatment-record');
         Route::get('/reports/appointment-statistics', [ReportsController::class, 'appointmentStatistics'])->name('reports.appointment-statistics');
         Route::get('/reports/health-forms', [ReportsController::class, 'healthFormsReport'])->name('reports.health-forms');
         Route::get('/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->name('reports.feedbacks');
