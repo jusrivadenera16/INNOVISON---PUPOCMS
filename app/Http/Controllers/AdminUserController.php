@@ -56,12 +56,23 @@ class AdminUserController extends Controller
             ->filter(function (array $record) {
                 $source = $record['source'] ?? 'student';
                 $accessLevel = strtolower(trim((string) ($record['meta']['access_level'] ?? '')));
+                $adminProfileId = trim((string) ($record['meta']['admin_profile_id'] ?? ''));
 
                 if ($source === 'superadmin' || $source === 'student_assistant') {
                     return true;
                 }
 
-                return $source === 'admin' && $accessLevel !== 'designee';
+                if ($source !== 'admin') {
+                    return false;
+                }
+
+                // Hide orphaned admin-tagged accounts that no longer have a linked
+                // clinic admin profile/access level after access removal.
+                if ($adminProfileId === '' && $accessLevel === '') {
+                    return false;
+                }
+
+                return $accessLevel !== 'designee';
             })
             ->sortBy(fn (array $record) => sprintf(
                 '%02d-%s',

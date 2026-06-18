@@ -18,14 +18,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
-// --- PUBLIC ROUTES (No login required) ---
-Route::get('/', function () {
-    $user = Auth::guard('admin')->user() ?? Auth::guard('student')->user();
-    if ($user instanceof User) {
+if (!function_exists('resolveWorkspaceRedirectForUser')) {
+    function resolveWorkspaceRedirectForUser(User $user): string
+    {
         $normalizedRole = User::normalizeRole((string) ($user->user_role ?? ''));
 
         if ($normalizedRole === User::ROLE_SUPERADMIN) {
-            return redirect('/admin/dashboard');
+            return '/admin/dashboard';
         }
 
         $rawRole = strtolower(trim((string) ($user->user_role ?? '')));
@@ -34,13 +33,42 @@ Route::get('/', function () {
             || in_array($rawRole, ['student_assistant', 'studentassistant', 'assistant'], true);
 
         if ($normalizedRole === User::ROLE_ADMIN && $isStudentAssistant) {
-            return redirect('/assistant/choose-portal');
+            return '/assistant/choose-portal';
         }
 
-        return match ($normalizedRole) {
-            User::ROLE_ADMIN => redirect('/assistant/dashboard'),
-            default => redirect('/student/home'),
-        };
+        if ($normalizedRole === User::ROLE_ADMIN) {
+            $linkedAdmin = null;
+            $email = trim((string) ($user->email ?? ''));
+
+            if ($email !== '' && \Illuminate\Support\Facades\Schema::hasTable('admins')) {
+                $linkedAdmin = Admin::query()
+                    ->where(function ($query) use ($email) {
+                        if (Admin::hasColumn('email')) {
+                            $query->orWhere('email', $email);
+                        }
+                        if (Admin::hasColumn('email_address')) {
+                            $query->orWhere('email_address', $email);
+                        }
+                    })
+                    ->first();
+            }
+
+            if (strtolower(trim((string) ($linkedAdmin?->access_level ?? ''))) === 'designee') {
+                return '/student/home';
+            }
+
+            return '/assistant/dashboard';
+        }
+
+        return '/student/home';
+    }
+}
+
+// --- PUBLIC ROUTES (No login required) ---
+Route::get('/', function () {
+    $user = Auth::guard('admin')->user() ?? Auth::guard('student')->user();
+    if ($user instanceof User) {
+        return redirect(resolveWorkspaceRedirectForUser($user));
     }
 
     return view('landing');
@@ -49,25 +77,7 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::get('/login/portal', function () {
     $existingUser = Auth::guard('admin')->user() ?? Auth::guard('student')->user();
     if ($existingUser instanceof User) {
-        $normalizedRole = User::normalizeRole((string) ($existingUser->user_role ?? ''));
-
-        if ($normalizedRole === User::ROLE_SUPERADMIN) {
-            return redirect('/admin/dashboard');
-        }
-
-        $rawRole = strtolower(trim((string) ($existingUser->user_role ?? '')));
-        $userType = strtolower(trim((string) ($existingUser->user_type ?? '')));
-        $isStudentAssistant = in_array($userType, ['assistant', 'student assistant', 'student_assistant'], true)
-            || in_array($rawRole, ['student_assistant', 'studentassistant', 'assistant'], true);
-
-        if ($normalizedRole === User::ROLE_ADMIN && $isStudentAssistant) {
-            return redirect('/assistant/choose-portal');
-        }
-
-        return match ($normalizedRole) {
-            User::ROLE_ADMIN => redirect('/assistant/dashboard'),
-            default => redirect('/student/home'),
-        };
+        return redirect(resolveWorkspaceRedirectForUser($existingUser));
     }
 
     $clientId = trim((string) config('services.idp.client_id', ''));
@@ -347,26 +357,15 @@ Route::get('/dev-login/{id}', function ($id) {
             return redirect('/admin/dashboard')->with('success', 'Logged in as ' . $user->name);
         }
         if ($normalizedRole === User::ROLE_ADMIN) {
-            $linkedAdmin = null;
-            $email = trim((string) ($user->email ?? ''));
-            if ($email !== '') {
-                $linkedAdmin = Admin::query()
-                    ->where(function ($query) use ($email) {
-                        $query->where('email', $email);
-                        if (Admin::hasColumn('email_address')) {
-                            $query->orWhere('email_address', $email);
-                        }
-                    })
-                    ->first();
-            }
+            $redirectPath = resolveWorkspaceRedirectForUser($user);
 
-            if (strtolower(trim((string) ($linkedAdmin?->access_level ?? ''))) === 'designee') {
+            if ($redirectPath === '/student/home') {
                 Auth::guard('student')->login($user);
                 return redirect('/student/home')->with('success', 'Logged in as ' . $user->name);
             }
 
             Auth::guard('admin')->login($user);
-            return redirect('/assistant/dashboard')->with('success', 'Logged in as ' . $user->name);
+            return redirect($redirectPath)->with('success', 'Logged in as ' . $user->name);
         }
 
         Auth::guard('student')->login($user);
