@@ -56,7 +56,6 @@ class AdminUserController extends Controller
             ->filter(function (array $record) {
                 $source = $record['source'] ?? 'student';
                 $accessLevel = strtolower(trim((string) ($record['meta']['access_level'] ?? '')));
-                $adminProfileId = trim((string) ($record['meta']['admin_profile_id'] ?? ''));
 
                 if ($source === 'superadmin' || $source === 'student_assistant') {
                     return true;
@@ -66,13 +65,7 @@ class AdminUserController extends Controller
                     return false;
                 }
 
-                // Hide orphaned admin-tagged accounts that no longer have a linked
-                // clinic admin profile/access level after access removal.
-                if ($adminProfileId === '' && $accessLevel === '') {
-                    return false;
-                }
-
-                return $accessLevel !== 'designee';
+                return in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff', 'superadmin'], true);
             })
             ->sortBy(fn (array $record) => sprintf(
                 '%02d-%s',
@@ -567,6 +560,8 @@ class AdminUserController extends Controller
     {
         $this->ensureCanManageUsers();
 
+        $linkedUser = $this->resolveLinkedUserForAdminRecord($admin);
+
         if (Admin::hasColumn('admin_hub_enabled')) {
             $admin->admin_hub_enabled = false;
         }
@@ -575,16 +570,26 @@ class AdminUserController extends Controller
         }
         $admin->save();
 
+        if ($linkedUser && !$this->hasClinicAccountAccess($linkedUser, $admin)) {
+            $this->restoreUserToBaseRole($linkedUser);
+        }
+
         $this->logUserManagementAction(
             'Removed admin hub access',
             sprintf(
-                'Removed centralized Admin Hub membership for record #%s (%s) without changing clinic access.',
+                'Removed centralized Admin Hub membership for record #%s (%s).',
                 $admin->admin_id,
                 $admin->name ?? ($admin->email ?? 'Unknown Admin')
             )
         );
 
-        return $this->redirectToManagementView($request, 'success', 'Admin Hub membership removed. Clinic account access was not changed.');
+        return $this->redirectToManagementView(
+            $request,
+            'success',
+            $linkedUser && !$this->hasClinicAccountAccess($linkedUser, $admin)
+                ? 'Admin Hub membership removed. The linked account returned to its base role.'
+                : 'Admin Hub membership removed. Clinic account access was not changed.'
+        );
     }
 
     public function deleteAdminHubRecord(Request $request, Admin $admin)
@@ -593,8 +598,10 @@ class AdminUserController extends Controller
 
         $adminName = $admin->name ?? ($admin->email ?? 'Unknown Admin');
         $adminId = $admin->admin_id;
-        $hasLinkedClinicAccount = (Admin::hasColumn('user_id') && !empty($admin->user_id))
-            || (Admin::hasColumn('access_level') && trim((string) $admin->access_level) !== '');
+        $linkedUser = $this->resolveLinkedUserForAdminRecord($admin);
+        $hasLinkedClinicAccount = $linkedUser
+            ? $this->hasClinicAccountAccess($linkedUser, $admin)
+            : in_array(strtolower(trim((string) ($admin->access_level ?? ''))), ['clinic_staff', 'clinic staff', 'staff', 'superadmin'], true);
 
         if ($hasLinkedClinicAccount) {
             if (Admin::hasColumn('admin_hub_enabled')) {
@@ -1181,6 +1188,65 @@ class AdminUserController extends Controller
         return in_array(strtolower(trim($idpRole)), ['student_assistant', 'studentassistant', 'assistant'], true)
             ? 'Assistant'
             : 'Regular';
+    }
+
+    private function resolveLinkedUserForAdminRecord(Admin $admin): ?User
+    {
+        if (Admin::hasColumn('user_id') && !empty($admin->user_id)) {
+            $linkedUser = User::find($admin->user_id);
+            if ($linkedUser) {
+                return $linkedUser;
+            }
+        }
+
+        $emails = array_filter([
+            trim((string) ($admin->email ?? '')),
+            trim((string) ($admin->email_address ?? '')),
+        ]);
+
+        foreach ($emails as $email) {
+            $linkedUser = User::query()->where('email', $email)->first();
+            if ($linkedUser) {
+                return $linkedUser;
+            }
+        }
+
+        return null;
+    }
+
+    private function hasClinicAccountAccess(User $user, ?Admin $linkedAdmin = null): bool
+    {
+        if (User::normalizeRole((string) ($user->user_role ?? '')) === User::ROLE_SUPERADMIN) {
+            return true;
+        }
+
+        if ($user->isStudentAssistant()) {
+            return true;
+        }
+
+        $accessLevel = strtolower(trim((string) (
+            $linkedAdmin?->access_level
+            ?? ''
+        )));
+
+        return in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff', 'superadmin'], true);
+    }
+
+    private function restoreUserToBaseRole(User $user): void
+    {
+        $restoredRole = trim((string) ($user->idp_role ?? ''));
+        if ($restoredRole === '') {
+            $restoredRole = User::ROLE_STUDENT;
+        }
+
+        $user->user_role = User::normalizeRole($restoredRole);
+        if (Schema::hasColumn('users', 'user_type')) {
+            $user->user_type = $this->defaultUserTypeForIdpRole($restoredRole);
+        }
+        if (Schema::hasColumn('users', 'status')) {
+            $user->status = 'active';
+        }
+        $user->save();
     }
 
     private function logUserManagementAction(string $action, string $description): void
