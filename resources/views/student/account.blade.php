@@ -2147,9 +2147,14 @@
     }
     $referenceMode = trim((string) ($accountProfileData['reference_mode'] ?? 'admission'));
     $referenceHeading = $referenceMode === 'admission' ? 'Admission Reference' : 'Clinic Reference';
+    $idNumberHeading = $referenceMode === 'admission' ? 'Student Number' : 'ID Number';
     $displayCourse = trim((string) ($accountProfileData['course_college'] ?? ''));
     $displayFullName = trim((string) ($accountProfileData['full_name'] ?? ''));
     $displayFullName = $displayFullName !== '' ? $displayFullName : ($hasGuisisAccountData ? 'Available once enrolled' : ($user->name ?? 'Student'));
+    $localMiddleName = trim((string) ($accountProfileData['middle_name'] ?? $user->middle_name ?? optional($linkedAdminProfile)->middle_name ?? ''));
+    $localMiddleName = $localMiddleName !== '' ? $localMiddleName : 'N/A';
+    $localSuffixName = trim((string) ($accountProfileData['suffix_name'] ?? optional($linkedAdminProfile)->suffix_name ?? ''));
+    $localSuffixName = $localSuffixName !== '' ? $localSuffixName : 'N/A';
     $guisisPendingText = 'Available once enrolled';
     $guisisValue = fn ($value) => trim((string) $value) !== '' ? trim((string) $value) : $guisisPendingText;
     $guisisPendingClass = fn ($value) => trim((string) $value) === '' ? ' guisis-pending-value' : '';
@@ -2327,7 +2332,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <h3 class="profile-form-section-title"><x-outline-icon name="document-text" />Academic Information</h3>
                         <div class="profile-grid-3">
                             <div>
-                                <label class="input-label">Student Number</label>
+                                <label class="input-label">{{ $idNumberHeading }}</label>
                                 <div class="form-control profile-static-field{{ $guisisPendingClass($displayStudentNumber) }}">{{ $guisisValue($displayStudentNumber) }}</div>
                             </div>
                             <div>
@@ -2354,7 +2359,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                             <div>
                                 <label class="input-label">Middle Name</label>
-                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['middle_name'] ?? '') }}" value="{{ $guisisValue($accountProfileData['middle_name'] ?? '') }}" readonly>
+                                <input type="text" class="form-control" value="{{ $localMiddleName }}" readonly>
                             </div>
                             <div>
                                 <label class="input-label">Last Name</label>
@@ -2437,7 +2442,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <section class="profile-form-section accent-maroon">
                 <h3 class="profile-form-section-title"><x-outline-icon name="information-circle" />Personal Information</h3>
                 <div class="profile-info-row">
-                    <label class="input-label">Student Number</label>
+                    <label class="input-label">{{ $idNumberHeading }}</label>
                     <div class="form-control profile-static-field{{ $guisisPendingClass($displayStudentNumber) }}">{{ $guisisValue($displayStudentNumber) }}</div>
                 </div>
                 <div class="profile-grid-2">
@@ -2447,7 +2452,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                     <div>
                         <label class="input-label">Middle Name</label>
-                        <input type="text" name="middle_name" class="form-control{{ $guisisPendingClass(old('middle_name', $accountProfileData['middle_name'] ?? $user->middle_name ?? $linkedAdminProfile->middle_name)) }}" value="{{ old('middle_name', $accountProfileData['middle_name'] ?? $user->middle_name ?? $linkedAdminProfile->middle_name) }}" placeholder="{{ $guisisPendingText }}" disabled>
+                        <input type="text" name="middle_name" class="form-control" value="{{ $localMiddleName }}" disabled>
                     </div>
                 </div>
 
@@ -2458,7 +2463,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                     <div>
                         <label class="input-label">Suffix Name</label>
-                        <input type="text" name="suffix_name" class="form-control{{ $guisisPendingClass(old('suffix_name', $accountProfileData['suffix_name'] ?? $linkedAdminProfile->suffix_name)) }}" value="{{ old('suffix_name', $accountProfileData['suffix_name'] ?? $linkedAdminProfile->suffix_name) }}" placeholder="{{ $guisisPendingText }}" disabled>
+                        <input type="text" name="suffix_name" class="form-control" value="{{ $localSuffixName }}" disabled>
                     </div>
                 </div>
 
