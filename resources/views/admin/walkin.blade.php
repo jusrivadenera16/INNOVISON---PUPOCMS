@@ -6607,12 +6607,7 @@
                             : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.'));
 
                     if (isAlreadyApproved) {
-                        setStatus(
-                            isLocalOnlyLookup ? 'info' : 'success',
-                            isLocalOnlyLookup
-                                ? lookupFoundMessage
-                                : (applicantName ? 'Applicant found: ' + applicantName + ' (Already Approved)' : 'Applicant found (Already Approved)')
-                        );
+                        setStatus('success', 'Already Approved.');
                         if (foundCard && foundName) {
                             foundName.textContent = (applicantName || ref) + ' ✓';
                             foundCard.style.display = 'block';
