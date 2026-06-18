@@ -6591,6 +6591,9 @@
                     const isAlreadyApproved = data.is_health_profile_completed === true
                         || data.is_health_profile_completed === 1
                         || data.medical_status === 'cleared'
+                        || data.clinic_status === 'Fully Cleared'
+                        || data.clearance_status === 'Fully Cleared'
+                        || data.clearance_status === 'Issued'
                         || data.approved === true
                         || data.approved === 1;
 

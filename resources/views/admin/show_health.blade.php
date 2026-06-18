@@ -233,6 +233,7 @@
         default => 'profile-status-default',
     };
     $profileStatusLabel = $profileStatusNormalized !== '' ? $profileStatusNormalized : 'Not Processed';
+    $documentRouteName = request()->routeIs('assistant.*') ? 'assistant.walkin.document' : 'walkin.document';
 @endphp
 <div class="health-profile-wrap">
     <div class="profile-card">
@@ -300,12 +301,13 @@
             <div class="doc-file">
                 <h4>Medical Certificate (PDF)</h4>
                 @if(!empty($profile->medical_certificate))
+                    @php($medicalCertificateUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'medical_certificate']))
                     <div class="doc-actions">
-                        <a class="doc-link" href="{{ asset('storage/' . $profile->medical_certificate) }}" target="_blank" rel="noopener">
+                        <a class="doc-link" href="{{ $medicalCertificateUrl }}" target="_blank" rel="noopener">
                             <x-outline-icon name="document-text" /> Open
                         </a>
                     </div>
-                    <div class="doc-preview"><iframe src="{{ asset('storage/' . $profile->medical_certificate) }}"></iframe></div>
+                    <div class="doc-preview"><iframe src="{{ $medicalCertificateUrl }}"></iframe></div>
                 @else
                     <div class="doc-missing">No medical certificate uploaded.</div>
                 @endif
@@ -314,12 +316,13 @@
             <div class="doc-file">
                 <h4>Medical Assessment Copy</h4>
                 @if(!empty($profile->medical_assessment_upload))
+                    @php($medicalAssessmentUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'medical_assessment_upload']))
                     <div class="doc-actions">
-                        <a class="doc-link" href="{{ asset('storage/' . $profile->medical_assessment_upload) }}" target="_blank" rel="noopener">
+                        <a class="doc-link" href="{{ $medicalAssessmentUrl }}" target="_blank" rel="noopener">
                             <x-outline-icon name="document-text" /> Open
                         </a>
                     </div>
-                    <div class="doc-preview"><iframe src="{{ asset('storage/' . $profile->medical_assessment_upload) }}"></iframe></div>
+                    <div class="doc-preview"><iframe src="{{ $medicalAssessmentUrl }}"></iframe></div>
                 @else
                     <div class="doc-missing">No medical assessment copy uploaded.</div>
                 @endif
@@ -328,12 +331,13 @@
             <div class="doc-file">
                 <h4>Chest X-ray Result (PDF)</h4>
                 @if(!empty($profile->chest_xray_result))
+                    @php($chestXrayUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'chest_xray_result']))
                     <div class="doc-actions">
-                        <a class="doc-link" href="{{ asset('storage/' . $profile->chest_xray_result) }}" target="_blank" rel="noopener">
+                        <a class="doc-link" href="{{ $chestXrayUrl }}" target="_blank" rel="noopener">
                             <x-outline-icon name="document-text" /> Open
                         </a>
                     </div>
-                    <div class="doc-preview"><iframe src="{{ asset('storage/' . $profile->chest_xray_result) }}"></iframe></div>
+                    <div class="doc-preview"><iframe src="{{ $chestXrayUrl }}"></iframe></div>
                 @else
                     <div class="doc-missing">No chest X-ray result uploaded.</div>
                 @endif
@@ -344,12 +348,13 @@
                 @if(($profile->has_disability ?? 'No') !== 'Yes')
                     <div class="doc-missing">Not required (PWD is set to No).</div>
                 @elseif(!empty($profile->pwd_id_proof))
+                    @php($pwdIdProofUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'pwd_id_proof']))
                     <div class="doc-actions">
-                        <a class="doc-link" href="{{ asset('storage/' . $profile->pwd_id_proof) }}" target="_blank" rel="noopener">
+                        <a class="doc-link" href="{{ $pwdIdProofUrl }}" target="_blank" rel="noopener">
                             <x-outline-icon name="document-text" /> Open
                         </a>
                     </div>
-                    <div class="doc-preview"><iframe src="{{ asset('storage/' . $profile->pwd_id_proof) }}"></iframe></div>
+                    <div class="doc-preview"><iframe src="{{ $pwdIdProofUrl }}"></iframe></div>
                 @else
                     <div class="doc-missing">PWD is Yes but no proof uploaded.</div>
                 @endif
@@ -358,12 +363,13 @@
             <div class="doc-file">
                 <h4>2x2 Student Photo</h4>
                 @if(!empty($profile->student_photo))
+                    @php($studentPhotoUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'student_photo']))
                     <div class="doc-actions">
-                        <a class="doc-link" href="{{ asset('storage/' . $profile->student_photo) }}" target="_blank" rel="noopener">
+                        <a class="doc-link" href="{{ $studentPhotoUrl }}" target="_blank" rel="noopener">
                             <x-outline-icon name="eye" /> Open
                         </a>
                     </div>
-                    <div class="doc-preview"><img src="{{ asset('storage/' . $profile->student_photo) }}" alt="2x2 Student Photo"></div>
+                    <div class="doc-preview"><img src="{{ $studentPhotoUrl }}" alt="2x2 Student Photo"></div>
                 @else
                     <div class="doc-missing">No 2x2 student photo uploaded.</div>
                 @endif

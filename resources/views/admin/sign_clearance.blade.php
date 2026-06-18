@@ -47,6 +47,9 @@
 @endpush
 
 @section('content')
+@php
+    $documentRouteName = request()->routeIs('assistant.*') ? 'assistant.walkin.document' : 'walkin.document';
+@endphp
 <div style="margin-bottom: 14px;">
     <a href="{{ route('admin.health_records') }}" style="text-decoration: none; color: #64748b; font-size: 14px;">&larr; Back to Health Records</a>
 </div>
@@ -88,11 +91,12 @@
             <div class="verify-doc">
                 <h4>Medical Certificate (PDF)</h4>
                 @if(!empty($record->medical_certificate))
-                    <a class="verify-link" href="{{ asset('storage/' . $record->medical_certificate) }}" target="_blank" rel="noopener">
+                    @php($medicalCertificateUrl = route($documentRouteName, ['healthProfile' => $record->id, 'document' => 'medical_certificate']))
+                    <a class="verify-link" href="{{ $medicalCertificateUrl }}" target="_blank" rel="noopener">
                         <x-outline-icon name="document-text" /> Open
                     </a>
                     <div class="verify-doc-preview">
-                        <iframe src="{{ asset('storage/' . $record->medical_certificate) }}"></iframe>
+                        <iframe src="{{ $medicalCertificateUrl }}"></iframe>
                     </div>
                 @else
                     <div class="verify-missing">No medical certificate uploaded.</div>
@@ -102,11 +106,12 @@
             <div class="verify-doc">
                 <h4>Medical Assessment Copy</h4>
                 @if(!empty($record->medical_assessment_upload))
-                    <a class="verify-link" href="{{ asset('storage/' . $record->medical_assessment_upload) }}" target="_blank" rel="noopener">
+                    @php($medicalAssessmentUrl = route($documentRouteName, ['healthProfile' => $record->id, 'document' => 'medical_assessment_upload']))
+                    <a class="verify-link" href="{{ $medicalAssessmentUrl }}" target="_blank" rel="noopener">
                         <x-outline-icon name="document-text" /> Open
                     </a>
                     <div class="verify-doc-preview">
-                        <iframe src="{{ asset('storage/' . $record->medical_assessment_upload) }}"></iframe>
+                        <iframe src="{{ $medicalAssessmentUrl }}"></iframe>
                     </div>
                 @else
                     <div class="verify-missing">No medical assessment copy uploaded.</div>
@@ -116,11 +121,12 @@
             <div class="verify-doc">
                 <h4>Chest X-ray Result (PDF)</h4>
                 @if(!empty($record->chest_xray_result))
-                    <a class="verify-link" href="{{ asset('storage/' . $record->chest_xray_result) }}" target="_blank" rel="noopener">
+                    @php($chestXrayUrl = route($documentRouteName, ['healthProfile' => $record->id, 'document' => 'chest_xray_result']))
+                    <a class="verify-link" href="{{ $chestXrayUrl }}" target="_blank" rel="noopener">
                         <x-outline-icon name="document-text" /> Open
                     </a>
                     <div class="verify-doc-preview">
-                        <iframe src="{{ asset('storage/' . $record->chest_xray_result) }}"></iframe>
+                        <iframe src="{{ $chestXrayUrl }}"></iframe>
                     </div>
                 @else
                     <div class="verify-missing">No chest X-ray result uploaded.</div>
@@ -132,11 +138,12 @@
                 @if(($record->has_disability ?? 'No') !== 'Yes')
                     <div class="verify-missing">Not required (PWD is set to No).</div>
                 @elseif(!empty($record->pwd_id_proof))
-                    <a class="verify-link" href="{{ asset('storage/' . $record->pwd_id_proof) }}" target="_blank" rel="noopener">
+                    @php($pwdIdProofUrl = route($documentRouteName, ['healthProfile' => $record->id, 'document' => 'pwd_id_proof']))
+                    <a class="verify-link" href="{{ $pwdIdProofUrl }}" target="_blank" rel="noopener">
                         <x-outline-icon name="document-text" /> Open
                     </a>
                     <div class="verify-doc-preview">
-                        <iframe src="{{ asset('storage/' . $record->pwd_id_proof) }}"></iframe>
+                        <iframe src="{{ $pwdIdProofUrl }}"></iframe>
                     </div>
                 @else
                     <div class="verify-missing">PWD is Yes but no proof uploaded.</div>
@@ -146,11 +153,12 @@
             <div class="verify-doc">
                 <h4>2x2 Student Photo</h4>
                 @if(!empty($record->student_photo))
-                    <a class="verify-link" href="{{ asset('storage/' . $record->student_photo) }}" target="_blank" rel="noopener">
+                    @php($studentPhotoUrl = route($documentRouteName, ['healthProfile' => $record->id, 'document' => 'student_photo']))
+                    <a class="verify-link" href="{{ $studentPhotoUrl }}" target="_blank" rel="noopener">
                         <x-outline-icon name="eye" /> Open
                     </a>
                     <div class="verify-doc-preview">
-                        <img src="{{ asset('storage/' . $record->student_photo) }}" alt="2x2 Student Photo">
+                        <img src="{{ $studentPhotoUrl }}" alt="2x2 Student Photo">
                     </div>
                 @else
                     <div class="verify-missing">No 2x2 photo uploaded.</div>
