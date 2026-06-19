@@ -229,6 +229,42 @@
             box-shadow: 0 0 0 4px rgba(139,0,0,0.09);
             transform: translateY(-1px);
         }
+        .field input.has-password-toggle {
+            padding-right: 52px;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: #6b7280;
+            cursor: pointer;
+        }
+        .password-toggle:hover,
+        .password-toggle:focus-visible {
+            background: rgba(139, 0, 0, 0.08);
+            color: #8b0000;
+            outline: none;
+        }
+        .input-wrap .password-toggle svg {
+            position: static;
+            width: 20px;
+            height: 20px;
+            transform: none;
+            stroke: currentColor;
+            pointer-events: none;
+        }
+        .password-toggle [hidden] {
+            display: none;
+        }
         .submit {
             min-height: 52px;
             border: 0;
@@ -361,7 +397,16 @@
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V7.875a4.5 4.5 0 1 0-9 0V10.5m9 0A2.25 2.25 0 0 1 18.75 12.75v4.5A2.25 2.25 0 0 1 16.5 19.5h-9A2.25 2.25 0 0 1 5.25 17.25v-4.5A2.25 2.25 0 0 1 7.5 10.5m9 0h-9" />
                             </svg>
-                            <input type="password" name="password" id="password" placeholder="Enter emergency password" required>
+                            <input type="password" name="password" id="password" class="has-password-toggle" placeholder="Enter emergency password" required>
+                            <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password" title="Show password" aria-pressed="false">
+                                <svg data-password-show xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12 18 18.75 12 18.75 2.25 12 2.25 12Z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                </svg>
+                                <svg data-password-hide xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true" hidden>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m3 3 18 18M10.6 5.45A9.7 9.7 0 0 1 12 5.25c6 0 9.75 6.75 9.75 6.75a17.7 17.7 0 0 1-2.15 2.92M6.2 6.2C3.67 8.02 2.25 12 2.25 12S6 18.75 12 18.75c1.45 0 2.76-.39 3.92-1.01M9.88 9.88A3 3 0 0 0 14.12 14.12" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
 
@@ -385,5 +430,23 @@
         PUP Taguig Clinic Management System
     </footer>
     @include('partials.system_footer')
+    <script>
+        document.getElementById('passwordToggle')?.addEventListener('click', function () {
+            const passwordInput = document.getElementById('password');
+            const showIcon = this.querySelector('[data-password-show]');
+            const hideIcon = this.querySelector('[data-password-hide]');
+            const shouldShow = passwordInput?.type === 'password';
+
+            if (!passwordInput) return;
+
+            passwordInput.type = shouldShow ? 'text' : 'password';
+            showIcon.hidden = shouldShow;
+            hideIcon.hidden = !shouldShow;
+            this.setAttribute('aria-label', shouldShow ? 'Hide password' : 'Show password');
+            this.setAttribute('title', shouldShow ? 'Hide password' : 'Show password');
+            this.setAttribute('aria-pressed', shouldShow ? 'true' : 'false');
+            passwordInput.focus({ preventScroll: true });
+        });
+    </script>
 </body>
 </html>

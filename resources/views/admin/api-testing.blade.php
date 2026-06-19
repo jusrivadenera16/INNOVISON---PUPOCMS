@@ -1295,13 +1295,15 @@
                         <th>System</th>
                         <th>Endpoint</th>
                         <th>Error Code</th>
+                        <th>Affected Account</th>
+                        <th>Attempts</th>
                         <th>Message</th>
                         <th>Response Time</th>
                         <th>Timestamp</th>
                     </tr>
                 </thead>
                 <tbody id="errorBody">
-                    <tr><td colspan="6" style="text-align: center; color: #6b7280;">Click "Load Errors" to fetch error logs</td></tr>
+                    <tr><td colspan="8" style="text-align: center; color: #6b7280;">Click "Load Errors" to fetch error logs</td></tr>
                 </tbody>
             </table>
         </div>
@@ -1402,13 +1404,20 @@
         }
 
         // ===== ERROR LOG =====
+        const escapeApiLogValue = (value) => String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+
         document.getElementById('loadErrorsBtn')?.addEventListener('click', function () {
             const hours = document.getElementById('errorHours').value;
             const system = document.getElementById('errorSystem').value;
             const body = document.getElementById('errorBody');
             const stats = document.getElementById('errorStats');
 
-            body.innerHTML = '<tr><td colspan="6"><div class="api-loading"><div class="api-loading-spinner"></div>Loading errors...</div></td></tr>';
+            body.innerHTML = '<tr><td colspan="8"><div class="api-loading"><div class="api-loading-spinner"></div>Loading errors...</div></td></tr>';
 
             const url = new URL('/admin/api/error-logs', window.location.origin);
             url.searchParams.append('hours', hours);
@@ -1419,28 +1428,38 @@
                 .then(data => {
                     const errors = data.errors || [];
                     const errorStats = data.stats || {};
+                    const puptasSummary = data.puptas_summary || {};
 
                     if (errors.length === 0) {
-                        body.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #6b7280;">No errors found</td></tr>';
+                        body.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #6b7280;">No errors found</td></tr>';
                         stats.innerHTML = '';
                         return;
                     }
 
                     body.innerHTML = '';
                     errors.forEach(err => {
+                        let requestMeta = {};
+                        try {
+                            requestMeta = JSON.parse(err.request_payload || '{}');
+                        } catch (error) {
+                            requestMeta = {};
+                        }
+                        const affectedAccount = requestMeta.user_id ? `User #${requestMeta.user_id}` : 'System';
+                        const attempts = requestMeta.attempts || 'N/A';
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td><strong>${err.system_name}</strong></td>
-                            <td><code style="font-size: 11px; color: #7f1d2d;">${err.endpoint || 'N/A'}</code></td>
-                            <td><code style="font-size: 11px;">${err.error_code || 'N/A'}</code></td>
+                            <td><strong>${escapeApiLogValue(err.system_name)}</strong></td>
+                            <td><code style="font-size: 11px; color: #7f1d2d;">${escapeApiLogValue(err.endpoint || 'N/A')}</code></td>
+                            <td><code style="font-size: 11px;">${escapeApiLogValue(err.error_code || 'N/A')}</code></td>
+                            <td>${escapeApiLogValue(affectedAccount)}</td>
+                            <td>${escapeApiLogValue(attempts)}</td>
                             <td>
-                                ${err.error_message}
+                                ${escapeApiLogValue(err.error_message)}
                                 <details style="margin-top: 6px;">
                                     <summary style="cursor: pointer; color: #7f1d2d; font-size: 12px;">Details</summary>
-                                    <pre style="font-size: 11px; background: #f3f4f6; padding: 8px; border-radius: 6px; overflow: auto; max-height: 150px;">Error Type: ${err.error_type || 'N/A'}
-HTTP Status: ${err.http_status || 'N/A'}
-Request: ${err.request_payload || 'N/A'}
-Response: ${err.response_payload || 'N/A'}</pre>
+                                    <pre style="font-size: 11px; background: #f3f4f6; padding: 8px; border-radius: 6px; overflow: auto; max-height: 150px;">Error Type: ${escapeApiLogValue(err.error_type || 'N/A')}
+HTTP Status: ${escapeApiLogValue(err.http_status || 'N/A')}
+Request: ${escapeApiLogValue(err.request_payload || 'N/A')}</pre>
                                 </details>
                             </td>
                             <td>${err.response_time_ms ? err.response_time_ms + 'ms' : 'N/A'}</td>
@@ -1456,10 +1475,13 @@ Response: ${err.response_payload || 'N/A'}</pre>
                             statsHtml += `${sys}: ${stat.error_count} | `;
                         });
                     }
+                    if (puptasSummary.failure_count) {
+                        statsHtml += `<br>PUPTAS failures: ${puptasSummary.failure_count} | Affected accounts: ${puptasSummary.affected_account_count || 0}`;
+                    }
                     stats.innerHTML = statsHtml;
                 })
                 .catch(e => {
-                    body.innerHTML = `<tr><td colspan="6"><div class="api-alert">Failed to load errors: ${e.message}</div></td></tr>`;
+                    body.innerHTML = `<tr><td colspan="8"><div class="api-alert">Failed to load errors: ${escapeApiLogValue(e.message)}</div></td></tr>`;
                 });
         });
 

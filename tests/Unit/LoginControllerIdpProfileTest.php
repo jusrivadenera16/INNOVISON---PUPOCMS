@@ -3,11 +3,24 @@
 namespace Tests\Unit;
 
 use App\Http\Controllers\Auth\LoginController;
-use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
+use Tests\TestCase;
 
 class LoginControllerIdpProfileTest extends TestCase
 {
+    public function test_it_maps_the_applicant_idp_role_to_the_student_guard_and_applicant_user_type(): void
+    {
+        $controller = new LoginController();
+
+        $mapRole = new ReflectionMethod($controller, 'mapSingleIdpRoleToLocal');
+        $mapRole->setAccessible(true);
+        $defaultUserType = new ReflectionMethod($controller, 'defaultUserTypeForIdpRole');
+        $defaultUserType->setAccessible(true);
+
+        $this->assertSame('student', $mapRole->invoke($controller, 'applicant'));
+        $this->assertSame('Applicant', $defaultUserType->invoke($controller, 'applicant', 'student'));
+    }
+
     public function test_it_preserves_a_reference_number_outside_the_nested_user_payload(): void
     {
         $controller = new LoginController();

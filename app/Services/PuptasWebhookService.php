@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\ApiErrorLog;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class PuptasWebhookService
 {
@@ -16,6 +18,7 @@ class PuptasWebhookService
     private int $timeout;
     private string $scope;
     private string $tokenUrl;
+    private int $lastLookupAttempts = 0;
 
     public function __construct()
     {
@@ -131,21 +134,101 @@ class PuptasWebhookService
 
     private function sendApplicantGetRequest(string $url)
     {
-        $response = Http::timeout($this->timeout)
-            ->withToken($this->getAccessToken())
-            ->acceptJson()
-            ->get($url);
+        $maxAttempts = 3;
+        $lastException = null;
 
-        if ($response->status() === 401) {
-            $this->forgetAccessToken();
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            $this->lastLookupAttempts = $attempt;
 
-            $response = Http::timeout($this->timeout)
-                ->withToken($this->getAccessToken())
-                ->acceptJson()
-                ->get($url);
+            try {
+                $response = Http::timeout($this->timeout)
+                    ->withToken($this->getAccessToken())
+                    ->acceptJson()
+                    ->get($url);
+
+                if ($response->status() === 401) {
+                    $this->forgetAccessToken();
+                    $response = Http::timeout($this->timeout)
+                        ->withToken($this->getAccessToken())
+                        ->acceptJson()
+                        ->get($url);
+                }
+
+                $isTemporaryFailure = in_array($response->status(), [408, 425, 429], true)
+                    || $response->status() >= 500;
+
+                if (!$isTemporaryFailure || $attempt === $maxAttempts) {
+                    return $response;
+                }
+            } catch (\Throwable $exception) {
+                $lastException = $exception;
+                if ($attempt === $maxAttempts) {
+                    throw $exception;
+                }
+            }
+
+            usleep(250000 * $attempt);
         }
 
-        return $response;
+        throw $lastException ?: new \RuntimeException('PUPTAS lookup failed after retrying.');
+    }
+
+    private function maskedLookupIdentifier(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        return strlen($value) <= 4
+            ? str_repeat('*', strlen($value))
+            : str_repeat('*', max(4, strlen($value) - 4)) . substr($value, -4);
+    }
+
+    private function logApplicantLookupFailure(
+        string $lookupType,
+        string $identifier,
+        ?int $httpStatus,
+        string $message,
+        string $errorType
+    ): void {
+        Log::warning('PUPTAS applicant lookup unavailable', [
+            'lookup_type' => $lookupType,
+            'identifier' => $this->maskedLookupIdentifier($identifier),
+            'status' => $httpStatus,
+            'attempts' => $this->lastLookupAttempts,
+            'user_id' => auth()->id(),
+            'error_type' => $errorType,
+        ]);
+
+        try {
+            if (!Schema::hasTable('api_error_logs')) {
+                return;
+            }
+
+            ApiErrorLog::logError('puptas', [
+                'endpoint' => $lookupType === 'idp'
+                    ? '/api/v1/medical/applicants/idp/{idpUserId}'
+                    : '/api/v1/medical/applicants/{referenceNumber}',
+                'error_code' => $httpStatus ? 'HTTP_' . $httpStatus : 'LOOKUP_EXCEPTION',
+                'error_message' => mb_substr($message, 0, 2000),
+                'request_payload' => json_encode([
+                    'user_id' => auth()->id(),
+                    'lookup_type' => $lookupType,
+                    'identifier' => $this->maskedLookupIdentifier($identifier),
+                    'attempts' => $this->lastLookupAttempts,
+                ], JSON_UNESCAPED_SLASHES),
+                'response_payload' => null,
+                'http_status' => $httpStatus !== null ? (string) $httpStatus : null,
+                'error_type' => $errorType,
+                'ip_address' => request()?->ip(),
+                'user_agent' => mb_substr((string) request()?->userAgent(), 0, 255),
+            ]);
+        } catch (\Throwable $exception) {
+            Log::debug('Unable to persist PUPTAS API error log', [
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     private function resolveApplicantsBaseUrl(): string
@@ -182,19 +265,31 @@ class PuptasWebhookService
             if ($referenceNumber === '') {
                 return [
                     'success' => false,
+                    'outcome' => 'invalid',
                     'status' => null,
                     'message' => 'Reference number is required.',
                     'data' => null,
+                    'attempts' => 0,
                 ];
             }
 
             $applicantsBaseUrl = $this->resolveApplicantsBaseUrl();
             if ($applicantsBaseUrl === '') {
+                $this->lastLookupAttempts = 0;
+                $this->logApplicantLookupFailure(
+                    'reference',
+                    $referenceNumber,
+                    null,
+                    'PUPTAS applicants endpoint is not configured.',
+                    'configuration'
+                );
                 return [
                     'success' => false,
+                    'outcome' => 'unavailable',
                     'status' => null,
                     'message' => 'PUPTAS applicants endpoint is not configured.',
                     'data' => null,
+                    'attempts' => 0,
                 ];
             }
 
@@ -204,42 +299,65 @@ class PuptasWebhookService
 
             if (!$response->successful()) {
                 $responseMessage = trim((string) $response->json('message'));
-                Log::warning('PUPTAS applicant lookup failed', [
-                    'reference_number' => $referenceNumber,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
+                $isNotFound = $response->status() === 404;
+                if (!$isNotFound) {
+                    $this->logApplicantLookupFailure(
+                        'reference',
+                        $referenceNumber,
+                        $response->status(),
+                        $responseMessage !== '' ? $responseMessage : 'PUPTAS lookup could not be completed.',
+                        'http_error'
+                    );
+                }
                 return [
                     'success' => false,
+                    'outcome' => $isNotFound ? 'not_found' : 'unavailable',
                     'status' => $response->status(),
                     'message' => $responseMessage !== ''
                         ? $responseMessage
-                        : ($response->status() === 404
+                        : ($isNotFound
                             ? 'No eligible PUPTAS applicant was found for that reference number.'
                             : 'PUPTAS lookup could not be completed. Please try again.'),
                     'body' => $response->body(),
                     'data' => null,
+                    'attempts' => $this->lastLookupAttempts,
                 ];
             }
 
             $data = $response->json('data');
+            if (!is_array($data)) {
+                $this->logApplicantLookupFailure(
+                    'reference',
+                    $referenceNumber,
+                    $response->status(),
+                    'PUPTAS response did not include applicant data.',
+                    'invalid_response'
+                );
+            }
             return [
                 'success' => is_array($data),
+                'outcome' => is_array($data) ? 'found' : 'unavailable',
                 'status' => $response->status(),
                 'message' => is_array($data) ? 'Applicant found.' : 'PUPTAS response did not include applicant data.',
                 'body' => $response->body(),
                 'data' => is_array($data) ? $data : null,
+                'attempts' => $this->lastLookupAttempts,
             ];
         } catch (\Throwable $exception) {
-            Log::warning('PUPTAS applicant lookup exception', [
-                'reference_number' => $referenceNumber,
-                'error' => $exception->getMessage(),
-            ]);
+            $this->logApplicantLookupFailure(
+                'reference',
+                $referenceNumber,
+                null,
+                'PUPTAS lookup could not be completed after retrying.',
+                'exception'
+            );
             return [
                 'success' => false,
+                'outcome' => 'unavailable',
                 'status' => null,
-                'message' => $exception->getMessage(),
+                'message' => 'PUPTAS verification is temporarily unavailable. Please try again later.',
                 'data' => null,
+                'attempts' => $this->lastLookupAttempts,
             ];
         }
     }
@@ -272,19 +390,31 @@ class PuptasWebhookService
             if ($idpUserId === '') {
                 return [
                     'success' => false,
+                    'outcome' => 'invalid',
                     'status' => null,
                     'message' => 'IDP user ID is required.',
                     'data' => null,
+                    'attempts' => 0,
                 ];
             }
 
             $applicantsBaseUrl = $this->resolveApplicantsBaseUrl();
             if ($applicantsBaseUrl === '') {
+                $this->lastLookupAttempts = 0;
+                $this->logApplicantLookupFailure(
+                    'idp',
+                    $idpUserId,
+                    null,
+                    'PUPTAS applicants endpoint is not configured.',
+                    'configuration'
+                );
                 return [
                     'success' => false,
+                    'outcome' => 'unavailable',
                     'status' => null,
                     'message' => 'PUPTAS applicants endpoint is not configured.',
                     'data' => null,
+                    'attempts' => 0,
                 ];
             }
 
@@ -294,42 +424,65 @@ class PuptasWebhookService
 
             if (!$response->successful()) {
                 $responseMessage = trim((string) $response->json('message'));
-                Log::warning('PUPTAS applicant IDP lookup failed', [
-                    'idp_user_id' => $idpUserId,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
+                $isNotFound = $response->status() === 404;
+                if (!$isNotFound) {
+                    $this->logApplicantLookupFailure(
+                        'idp',
+                        $idpUserId,
+                        $response->status(),
+                        $responseMessage !== '' ? $responseMessage : 'PUPTAS lookup could not be completed.',
+                        'http_error'
+                    );
+                }
                 return [
                     'success' => false,
+                    'outcome' => $isNotFound ? 'not_found' : 'unavailable',
                     'status' => $response->status(),
                     'message' => $responseMessage !== ''
                         ? $responseMessage
-                        : ($response->status() === 404
+                        : ($isNotFound
                             ? 'No eligible PUPTAS applicant was found for this account.'
                             : 'PUPTAS lookup could not be completed. Please try again.'),
                     'body' => $response->body(),
                     'data' => null,
+                    'attempts' => $this->lastLookupAttempts,
                 ];
             }
 
             $data = $response->json('data');
+            if (!is_array($data)) {
+                $this->logApplicantLookupFailure(
+                    'idp',
+                    $idpUserId,
+                    $response->status(),
+                    'PUPTAS response did not include applicant data.',
+                    'invalid_response'
+                );
+            }
             return [
                 'success' => is_array($data),
+                'outcome' => is_array($data) ? 'found' : 'unavailable',
                 'status' => $response->status(),
                 'message' => is_array($data) ? 'Applicant found.' : 'PUPTAS response did not include applicant data.',
                 'body' => $response->body(),
                 'data' => is_array($data) ? $data : null,
+                'attempts' => $this->lastLookupAttempts,
             ];
         } catch (\Throwable $exception) {
-            Log::warning('PUPTAS applicant IDP lookup exception', [
-                'idp_user_id' => $idpUserId,
-                'error' => $exception->getMessage(),
-            ]);
+            $this->logApplicantLookupFailure(
+                'idp',
+                $idpUserId,
+                null,
+                'PUPTAS lookup could not be completed after retrying.',
+                'exception'
+            );
             return [
                 'success' => false,
+                'outcome' => 'unavailable',
                 'status' => null,
-                'message' => $exception->getMessage(),
+                'message' => 'PUPTAS verification is temporarily unavailable. Please try again later.',
                 'data' => null,
+                'attempts' => $this->lastLookupAttempts,
             ];
         }
     }

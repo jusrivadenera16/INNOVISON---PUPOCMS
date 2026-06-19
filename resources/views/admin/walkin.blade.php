@@ -3098,6 +3098,47 @@
         line-height: 1.4;
     }
 
+    .applicant-reference-value-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .applicant-reference-value-row .applicant-lookup-value {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .applicant-reference-copy {
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #d6a900;
+        border-radius: 8px;
+        background: #facc15;
+        color: #111827;
+        cursor: pointer;
+    }
+
+    .applicant-reference-copy:hover,
+    .applicant-reference-copy:focus-visible {
+        background: #fde047;
+        outline: 2px solid rgba(112, 19, 27, 0.2);
+        outline-offset: 2px;
+    }
+
+    .applicant-reference-copy svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+    }
+
     .applicant-upload-wrap {
         display: none;
         width: 100%;
@@ -3107,10 +3148,58 @@
 
     .applicant-file-actions {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 12px;
         align-items: start;
         width: 100%;
+    }
+
+    .saved-review-modal {
+        width: min(94vw, 760px);
+    }
+
+    .saved-review-body {
+        padding: 20px 24px 24px;
+    }
+
+    .saved-review-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .saved-review-card {
+        min-width: 0;
+        padding: 12px 14px;
+        border: 1px solid rgba(112, 19, 27, 0.14);
+        border-radius: 8px;
+        background: #fffdfa;
+    }
+
+    .saved-review-card span {
+        display: block;
+        margin-bottom: 5px;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .saved-review-card strong {
+        display: block;
+        color: #1f2937;
+        font-size: 13px;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+    }
+
+    html[data-theme="dark"] .saved-review-card {
+        border-color: rgba(250, 204, 21, 0.16);
+        background: rgba(15, 23, 42, 0.8);
+    }
+
+    html[data-theme="dark"] .saved-review-card strong {
+        color: #f8fafc;
     }
 
     .applicant-file-actions .applicant-upload-wrap {
@@ -3320,6 +3409,11 @@
     }
 
     @media (max-width: 640px) {
+        .applicant-file-actions,
+        .saved-review-grid {
+            grid-template-columns: 1fr;
+        }
+
         .applicant-ref-actions {
             grid-template-columns: 1fr;
         }
@@ -4520,7 +4614,15 @@
                                     </div>
                                     <div class="applicant-lookup-content">
                                         <p class="applicant-lookup-label">Reference Number</p>
-                                        <p class="applicant-lookup-value" id="applicantLookupRef">-</p>
+                                        <div class="applicant-reference-value-row">
+                                            <p class="applicant-lookup-value" id="applicantLookupRef">-</p>
+                                            <button type="button" class="applicant-reference-copy" id="copyApplicantReference" aria-label="Copy reference number" title="Copy reference number">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                    <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+                                                    <path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -4630,6 +4732,10 @@
                             <span>View Uploaded Documents</span>
                             <span class="applicant-documents-count" id="applicantDocumentsCount">0</span>
                         </button>
+                        <button type="button" id="btnViewSavedAssessment" class="applicant-documents-trigger applicant-file-action">
+                            <x-outline-icon name="clipboard-document-list" />
+                            <span>View Saved Review</span>
+                        </button>
                     </div>
 
                     {{-- Medical Condition Section --}}
@@ -4716,6 +4822,35 @@
                         <button type="button" id="btnCancelApplicantRef" class="applicant-ref-action-btn applicant-ref-cancel-btn">Cancel</button>
                         <button type="button" id="btnFindApplicant" class="applicant-ref-action-btn applicant-ref-find-btn">Find</button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="applicant-modal-backdrop" id="savedAssessmentModal" aria-hidden="true">
+        <div class="applicant-modal-shell saved-review-modal">
+            <div class="applicant-modal-head">
+                <div class="applicant-modal-head-main">
+                    <div class="applicant-modal-head-badge">RV</div>
+                    <div class="applicant-modal-head-copy">
+                        <h3>Saved Nurse Review</h3>
+                        <p>Previously recorded findings and physical assessment.</p>
+                    </div>
+                </div>
+                <button type="button" class="applicant-modal-close" id="closeSavedAssessmentModal" aria-label="Close saved nurse review">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </div>
+            <div class="saved-review-body">
+                <div class="saved-review-grid">
+                    <div class="saved-review-card"><span>Review Result</span><strong id="savedReviewResult">-</strong></div>
+                    <div class="saved-review-card"><span>Pending Reasons</span><strong id="savedReviewReasons">-</strong></div>
+                    <div class="saved-review-card"><span>Medical Condition</span><strong id="savedReviewCondition">-</strong></div>
+                    <div class="saved-review-card"><span>Remarks</span><strong id="savedReviewRemarks">-</strong></div>
+                    <div class="saved-review-card"><span>Blood Pressure</span><strong id="savedReviewBloodPressure">-</strong></div>
+                    <div class="saved-review-card"><span>Respiratory Rate</span><strong id="savedReviewRespiratoryRate">-</strong></div>
+                    <div class="saved-review-card"><span>Temperature</span><strong id="savedReviewTemperature">-</strong></div>
+                    <div class="saved-review-card"><span>Reference Number</span><strong id="savedReviewReference">-</strong></div>
                 </div>
             </div>
         </div>
@@ -6243,10 +6378,14 @@
         const lookupContact   = document.getElementById('applicantLookupContact');
         const informationButton = document.getElementById('btnViewApplicantInformation');
         const documentsButton = document.getElementById('btnViewApplicantDocuments');
+        const savedAssessmentButton = document.getElementById('btnViewSavedAssessment');
+        const copyReferenceButton = document.getElementById('copyApplicantReference');
         const documentsCount  = document.getElementById('applicantDocumentsCount');
         const documentsModal  = document.getElementById('applicantDocumentsModal');
         const documentsGrid   = document.getElementById('applicantDocumentsGrid');
         const closeDocuments  = document.getElementById('closeApplicantDocumentsModal');
+        const savedAssessmentModal = document.getElementById('savedAssessmentModal');
+        const closeSavedAssessment = document.getElementById('closeSavedAssessmentModal');
         const lookupModalBadge = document.getElementById('lookupModalBadge');
         const lookupModalTitle = document.getElementById('lookupModalTitle');
         const lookupModalSubtitle = document.getElementById('lookupModalSubtitle');
@@ -6266,6 +6405,7 @@
         let currentDocuments  = [];
         let currentLookupMode = 'applicant';
         let currentLookupRedirect = '';
+        let currentAssessmentReview = {};
         const getStudentUrl   = '{{ url($basePrefix . '/walkin/get-student') }}';
 
         function isClinicLookupMode() {
@@ -6436,8 +6576,14 @@
                 informationButton.setAttribute('aria-expanded', 'false');
             }
             if (documentsButton) documentsButton.classList.remove('is-visible');
+            if (savedAssessmentButton) savedAssessmentButton.classList.remove('is-visible');
+            if (savedAssessmentModal) {
+                savedAssessmentModal.classList.remove('show');
+                savedAssessmentModal.setAttribute('aria-hidden', 'true');
+            }
             currentLookupRef = '';
             currentLookupRedirect = '';
+            currentAssessmentReview = {};
             if (defaultPane) defaultPane.style.display = 'flex';
             if (entryPane) entryPane.classList.remove('is-visible');
             const medicalConditionSection = document.querySelector('.applicant-medical-condition-section');
@@ -6482,6 +6628,7 @@
                 findBtn.onclick = null;
                 findBtn.removeEventListener('click', doLookup);
                 findBtn.removeEventListener('click', doApprove);
+                findBtn.removeEventListener('click', enterSavedReviewEditMode);
                 findBtn.addEventListener('click', doLookup);
             }
 
@@ -6521,12 +6668,95 @@
             refStatus.textContent = msg;
         }
 
+        function populateAssessmentReview(review) {
+            const savedReview = review && typeof review === 'object' ? review : {};
+            const isChecked = (value) => value === true || value === 1 || value === '1';
+
+            document.querySelectorAll('input[name="applicant_findings_status"]').forEach(function (input) {
+                input.checked = input.value === (savedReview.findings_status || '');
+            });
+
+            const fieldValues = {
+                applicantMedicalCondition: savedReview.medical_condition || '',
+                applicantConditionRemarks: savedReview.condition_remarks || '',
+                applicantNormalRemarks: savedReview.normal_remarks || '',
+                applicantBloodPressure: savedReview.blood_pressure || '',
+                applicantRespiratoryRate: savedReview.respiratory_rate ?? '',
+                applicantTemperature: savedReview.temperature ?? '',
+                applicantOtherPendingReasonText: savedReview.other_pending_reason || ''
+            };
+            Object.entries(fieldValues).forEach(function ([id, value]) {
+                const field = document.getElementById(id);
+                if (field) field.value = value;
+            });
+
+            const checkboxValues = {
+                applicantHasMedicalCondition: savedReview.has_medical_condition,
+                applicantIncompleteRequirements: savedReview.incomplete_requirements,
+                applicantNeedsPhysicianEvaluation: savedReview.needs_physician_evaluation,
+                applicantOtherPendingReason: Boolean(savedReview.other_pending_reason)
+            };
+            Object.entries(checkboxValues).forEach(function ([id, value]) {
+                const field = document.getElementById(id);
+                if (field) field.checked = isChecked(value) || value === true;
+            });
+
+            if (typeof syncFindingsReviewFields === 'function') {
+                syncFindingsReviewFields();
+            }
+        }
+
+        function hasSavedAssessmentReview(review) {
+            return Boolean(review && typeof review === 'object' && review.findings_status);
+        }
+
+        function renderSavedAssessmentReview(review, referenceNumber) {
+            const savedReview = review && typeof review === 'object' ? review : {};
+            const pendingReasons = [];
+            if (savedReview.has_medical_condition) pendingReasons.push('With Medical Condition');
+            if (savedReview.incomplete_requirements) pendingReasons.push('Incomplete Requirements');
+            if (savedReview.needs_physician_evaluation) pendingReasons.push('For Physician Evaluation');
+            if (savedReview.other_pending_reason) pendingReasons.push('Others: ' + savedReview.other_pending_reason);
+
+            const values = {
+                savedReviewResult: savedReview.findings_status || '-',
+                savedReviewReasons: pendingReasons.join(', ') || '-',
+                savedReviewCondition: savedReview.medical_condition || '-',
+                savedReviewRemarks: savedReview.condition_remarks || savedReview.normal_remarks || '-',
+                savedReviewBloodPressure: savedReview.blood_pressure || '-',
+                savedReviewRespiratoryRate: savedReview.respiratory_rate !== null && savedReview.respiratory_rate !== undefined && savedReview.respiratory_rate !== '' ? savedReview.respiratory_rate + ' cpm' : '-',
+                savedReviewTemperature: savedReview.temperature !== null && savedReview.temperature !== undefined && savedReview.temperature !== '' ? savedReview.temperature + ' °C' : '-',
+                savedReviewReference: referenceNumber || '-'
+            };
+
+            Object.entries(values).forEach(function ([id, value]) {
+                const field = document.getElementById(id);
+                if (field) field.textContent = value;
+            });
+        }
+
+        function enterSavedReviewEditMode() {
+            const medicalConditionSection = document.querySelector('.applicant-medical-condition-section');
+            if (medicalConditionSection) {
+                medicalConditionSection.classList.add('show');
+                medicalConditionSection.style.display = 'grid';
+                medicalConditionSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            if (findBtn) {
+                findBtn.removeEventListener('click', enterSavedReviewEditMode);
+                findBtn.removeEventListener('click', doApprove);
+                findBtn.addEventListener('click', doApprove);
+            }
+            syncFindingsReviewFields();
+        }
+
         function showLookupDetails(data, fallbackRef) {
             console.log('showLookupDetails called with data:', data);
 
             if (!lookupDetails) {
                 console.log('ERROR: lookupDetails element not found!');
-                return;
+                return false;
             }
 
             const referenceNumber = data.reference_number || fallbackRef || '-';
@@ -6578,58 +6808,59 @@
                 modalBody.scrollTop = 0;
             }
 
-            // Show medical condition section
+            currentAssessmentReview = data.assessment_review && typeof data.assessment_review === 'object'
+                ? data.assessment_review
+                : {};
+            const hasSavedReview = hasSavedAssessmentReview(currentAssessmentReview);
+            renderSavedAssessmentReview(currentAssessmentReview, referenceNumber);
+            if (savedAssessmentButton) {
+                savedAssessmentButton.classList.toggle('is-visible', hasSavedReview);
+            }
+
             const medicalConditionSection = document.querySelector('.applicant-medical-condition-section');
             if (medicalConditionSection) {
-                medicalConditionSection.classList.add('show');
-                medicalConditionSection.style.display = 'grid';
+                medicalConditionSection.classList.toggle('show', !hasSavedReview);
+                medicalConditionSection.style.display = hasSavedReview ? 'none' : 'grid';
             }
 
-            // Reset medical condition fields
-            const conditionFields = document.getElementById('applicantConditionFields');
-            const normalRemarksFields = document.getElementById('applicantNormalRemarksFields');
-            document.querySelectorAll('input[name="applicant_findings_status"]').forEach(function (input) {
-                input.checked = false;
-            });
-            if (conditionFields) {
-                conditionFields.style.display = 'none';
-            }
-            if (normalRemarksFields) {
-                normalRemarksFields.style.display = 'none';
-            }
-            ['applicantMedicalCondition', 'applicantConditionRemarks', 'applicantNormalRemarks', 'applicantBloodPressure', 'applicantRespiratoryRate', 'applicantTemperature', 'applicantOtherPendingReasonText'].forEach(function (id) {
-                const field = document.getElementById(id);
-                if (field) field.value = '';
-            });
-            ['applicantHasMedicalCondition', 'applicantIncompleteRequirements', 'applicantNeedsPhysicianEvaluation', 'applicantOtherPendingReason'].forEach(function (id) {
-                const field = document.getElementById(id);
-                if (field) field.checked = false;
-            });
-            if (typeof syncFindingsReviewFields === 'function') syncFindingsReviewFields();
+            populateAssessmentReview(currentAssessmentReview);
 
             console.log('showLookupDetails completed');
+            return hasSavedReview;
         }
 
         let isApprovalMode = false;
 
         function formatApplicantReferenceInput(value) {
-            const upper = String(value || '').toUpperCase().replace(/[^A-Z0-9-]/g, '');
-            if (upper.includes('-') || /[A-Z]/.test(upper)) {
-                return upper
-                    .replace(/-+/g, '-')
-                    .replace(/^-+|-+$/g, '')
-                    .slice(0, 20);
+            const compact = String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+            if (isClinicLookupMode()) {
+                if (compact === '') return '';
+                if (!compact.startsWith('CLN')) {
+                    if (/^[0-9]/.test(compact)) {
+                        return formatApplicantReferenceInput('CLN' + compact);
+                    }
+                    return compact.slice(0, 3);
+                }
+
+                const suffix = compact.slice(3, 16);
+                if (suffix === '') return 'CLN';
+                const firstGroupLength = suffix.startsWith('20') ? 4 : 6;
+                const firstGroup = suffix.slice(0, firstGroupLength);
+                const remaining = suffix.slice(firstGroupLength);
+
+                return 'CLN-' + firstGroup + (remaining ? '-' + remaining : '');
             }
 
-            const compact = upper.slice(0, 12);
-            if (compact.length <= 4) {
-                return compact;
+            const admissionReference = compact.slice(0, 12);
+            if (admissionReference.length <= 4) {
+                return admissionReference;
             }
-            if (compact.length <= 8) {
-                return compact.slice(0, 4) + '-' + compact.slice(4);
+            if (admissionReference.length <= 8) {
+                return admissionReference.slice(0, 4) + '-' + admissionReference.slice(4);
             }
 
-            return compact.slice(0, 4) + '-' + compact.slice(4, 8) + '-' + compact.slice(8);
+            return admissionReference.slice(0, 4) + '-' + admissionReference.slice(4, 8) + '-' + admissionReference.slice(8);
         }
 
         function doLookup() {
@@ -6767,6 +6998,7 @@
                             findBtn.onclick = null;
                             findBtn.addEventListener('click', doApprove);
                         }
+                        syncFindingsReviewFields();
                     }
                 } else {
                     setStatus('error', data.message || (isClinicLookupMode()

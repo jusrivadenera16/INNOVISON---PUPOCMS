@@ -3,6 +3,8 @@
 namespace Tests\Unit;
 
 use App\Http\Controllers\AppointmentController;
+use App\Models\Admin;
+use App\Models\HealthProfile;
 use App\Models\User;
 use Carbon\Carbon;
 use PHPUnit\Framework\TestCase;
@@ -159,5 +161,80 @@ class AppointmentControllerPuptasIdentityTest extends TestCase
         $this->assertSame('1', $firstValue->invoke($controller, [$profile], ['yearLevel']));
         $this->assertSame('1-1', $firstValue->invoke($controller, [$profile], ['section']));
         $this->assertSame('Santos', $firstValue->invoke($controller, [$profile], ['middleName.string']));
+    }
+
+    public function test_admission_reference_resolution_never_uses_a_clinic_reference(): void
+    {
+        $controller = new AppointmentController();
+        $method = new ReflectionMethod($controller, 'resolveReferenceNumber');
+        $method->setAccessible(true);
+
+        $user = new User();
+        $user->reference_number = 'CLN-061926-1203R1';
+        $profile = new HealthProfile();
+        $profile->reference_number = 'CLN-061926-1203R1';
+
+        $this->assertSame('', $method->invoke($controller, $user, $profile, []));
+        $this->assertSame(
+            '2026-1111-1111',
+            $method->invoke($controller, $user, $profile, ['reference_number' => '2026-1111-1111'])
+        );
+    }
+
+    public function test_known_local_directory_accounts_keep_clinic_mode_during_puptas_outages(): void
+    {
+        $controller = new AppointmentController();
+        $method = new ReflectionMethod($controller, 'resolveHealthReferenceMode');
+        $method->setAccessible(true);
+
+        $user = new User();
+        $user->user_role = User::ROLE_ADMIN;
+
+        $this->assertSame(
+            'clinic',
+            $method->invoke($controller, $user, new Admin(), [], 'unavailable')
+        );
+    }
+
+    public function test_applicant_role_stays_in_admission_mode_when_idp_lookup_returns_not_found(): void
+    {
+        $controller = new AppointmentController();
+        $method = new ReflectionMethod($controller, 'resolveHealthReferenceMode');
+        $method->setAccessible(true);
+
+        $user = new User();
+        $user->user_role = User::ROLE_STUDENT;
+        $user->idp_role = 'applicant';
+        $user->user_type = 'Applicant';
+
+        $this->assertSame(
+            'admission',
+            $method->invoke($controller, $user, new Admin(), [], 'not_found')
+        );
+        $this->assertSame(
+            'verification_unavailable',
+            $method->invoke($controller, $user, new Admin(), [], 'unavailable')
+        );
+    }
+
+    public function test_non_applicant_idp_roles_use_clinic_reference_mode(): void
+    {
+        $controller = new AppointmentController();
+        $method = new ReflectionMethod($controller, 'resolveHealthReferenceMode');
+        $method->setAccessible(true);
+
+        foreach (['student', 'guest', 'faculty', 'admin', 'superadmin'] as $idpRole) {
+            $user = new User();
+            $user->idp_role = $idpRole;
+            $user->user_role = in_array($idpRole, ['admin', 'superadmin'], true)
+                ? $idpRole
+                : User::ROLE_STUDENT;
+
+            $this->assertSame(
+                'clinic',
+                $method->invoke($controller, $user, new Admin(), ['reference_number' => 'STALE-PUPTAS-REFERENCE'], 'found'),
+                "Expected {$idpRole} to use clinic reference mode."
+            );
+        }
     }
 }

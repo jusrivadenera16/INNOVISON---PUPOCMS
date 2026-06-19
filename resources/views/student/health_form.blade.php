@@ -1552,13 +1552,22 @@
                 $displayReferenceNumber = trim((string) ($prefill['reference_number'] ?? ''));
                 $referenceMode = trim((string) ($prefill['reference_mode'] ?? 'admission'));
                 $referenceRequiresValidation = (bool) ($prefill['reference_requires_validation'] ?? true);
+                $referenceVerificationUnavailable = $referenceMode === 'verification_unavailable';
                 $stepOneTitle = trim((string) ($prefill['step_1_title'] ?? 'Admission Reference'));
                 $stepOneDescription = trim((string) ($prefill['step_1_description'] ?? 'Confirm your admission reference, complete your health information, then upload the required clinic documents.'));
                 $referenceLabel = trim((string) ($prefill['reference_label'] ?? 'Admission Reference Number'));
-                $referenceDisplayFallback = $referenceMode === 'admission' ? 'No Reference Received' : 'No Clinic Reference Yet';
+                $referenceDisplayFallback = $referenceMode === 'admission'
+                    ? 'No Reference Received'
+                    : ($referenceVerificationUnavailable ? 'Verification Temporarily Unavailable' : 'No Clinic Reference Yet');
                 $referenceStatusDefault = $referenceRequiresValidation
-                    ? 'Enter the reference number exactly as shown in your Admission System record, then click the check icon to verify it.'
-                    : 'This clinic reference is generated and managed inside the clinic system for local staff, admin, faculty, and guest records.';
+                    ? 'No Admission Reference was received. Use the pencil button to enter and verify the reference from Admissions. If you do not have one, contact Admissions or clinic staff.'
+                    : ($referenceVerificationUnavailable
+                        ? 'PUPTAS could not be reached after retrying. No clinic reference was generated. Please retry later or contact Admissions or clinic staff.'
+                        : 'This clinic reference is generated and managed inside the clinic system for local staff, admin, faculty, and guest records.');
+
+                if ($displayReferenceNumber === '' && ($referenceRequiresValidation || $referenceVerificationUnavailable)) {
+                    $startStep = 1;
+                }
             @endphp
 
             <div class="stepper-shell">
@@ -1698,12 +1707,21 @@
                                 Skip to Print (Testing)
                             </button>
                         @endenv
-                        <button type="button" class="btn btn-health btn-health-next" id="nextToStep2">
+                        <button type="button" class="btn btn-health btn-health-next" id="nextToStep2" {{ $referenceVerificationUnavailable ? 'disabled' : '' }}>
                             <span>Next</span>
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="m9 18 6-6-6-6"></path>
                             </svg>
                         </button>
+                        @if($referenceVerificationUnavailable)
+                            <button type="button" class="btn btn-health btn-health-next" onclick="window.location.reload()">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M20 11a8 8 0 1 0-2.34 5.66"></path>
+                                    <path d="M20 4v7h-7"></path>
+                                </svg>
+                                <span>Retry Verification</span>
+                            </button>
+                        @endif
                     </div>
                 </div>
 
@@ -2288,10 +2306,16 @@
                     const payload = await response.json().catch(() => ({}));
                     if (!response.ok || !payload.success) {
                         const message = payload.message || 'Reference number could not be verified right now.';
+                        if (payload.rate_limited) {
+                            editReferenceBtn?.setAttribute('disabled', 'disabled');
+                            referenceEditorInput.setAttribute('disabled', 'disabled');
+                        }
                         referenceEditorInput.setCustomValidity(message);
                         setReferenceStatus(message, 'is-error');
-                        showValidationBubble(referenceEditorInput);
-                        referenceEditorInput.focus();
+                        if (!payload.rate_limited) {
+                            showValidationBubble(referenceEditorInput);
+                            referenceEditorInput.focus();
+                        }
                         return;
                     }
 
@@ -2686,7 +2710,7 @@
                 }
 
                 clearValidationBubble();
-                setReferenceStatus('Enter the reference number exactly as shown in your Admission System record, then click the check icon to verify it.');
+                setReferenceStatus('Enter the reference exactly as shown by Admissions, then click the check icon. If you do not have a reference, contact Admissions or clinic staff.');
                 setReferenceEditor(true);
             });
             referenceEditorInput?.addEventListener('input', () => {
@@ -2694,7 +2718,7 @@
                 referenceEditorInput.setCustomValidity('');
                 if (!isReferenceLocked()) {
                     setReferenceStatus(referenceRequiresValidation
-                        ? 'Enter the reference number exactly as shown in your Admission System record, then click the check icon to verify it.'
+                        ? 'Enter the reference exactly as shown by Admissions, then click the check icon. If you do not have a reference, contact Admissions or clinic staff.'
                         : 'Clinic reference is generated and managed inside the clinic system.'
                     );
                 }

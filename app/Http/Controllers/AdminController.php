@@ -3146,10 +3146,25 @@ public function inventorySummary()
 
         $errors = $query->get();
         $stats = \App\Models\ApiErrorLog::getErrorStats($hours);
+        $affectedPuptasAccounts = $errors
+            ->where('system_name', 'puptas')
+            ->map(function ($error) {
+                $payload = json_decode((string) $error->request_payload, true);
+
+                return is_array($payload) ? ($payload['user_id'] ?? null) : null;
+            })
+            ->filter()
+            ->unique()
+            ->values();
 
         return response()->json([
             'errors' => $errors,
             'stats' => $stats,
+            'puptas_summary' => [
+                'failure_count' => $errors->where('system_name', 'puptas')->count(),
+                'affected_account_count' => $affectedPuptasAccounts->count(),
+                'affected_account_ids' => $affectedPuptasAccounts,
+            ],
             'hours' => $hours,
             'system' => $system,
         ]);

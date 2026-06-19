@@ -994,6 +994,7 @@ class LoginController extends Controller
             return match ($normalizedIdpRole) {
                 'faculty' => 'Faculty',
                 'guest' => 'Guest',
+                'applicant' => 'Applicant',
                 'student' => 'Student',
                 default => 'Regular',
             };
@@ -1017,7 +1018,7 @@ class LoginController extends Controller
             return $this->adminRoleValue();
         }
 
-        if (in_array($normalized, ['student', 'faculty', 'guest'], true)) {
+        if (in_array($normalized, ['student', 'faculty', 'guest', 'applicant'], true)) {
             return $this->studentRoleValue();
         }
 
@@ -1040,7 +1041,7 @@ class LoginController extends Controller
             return $this->adminRoleValue();
         }
 
-        if (count(array_intersect($normalizedRoles, ['student', 'faculty', 'guest'])) > 0) {
+        if (count(array_intersect($normalizedRoles, ['student', 'faculty', 'guest', 'applicant'])) > 0) {
             return $this->studentRoleValue();
         }
 
@@ -1358,7 +1359,7 @@ class LoginController extends Controller
                     $existingUser->user_type = 'Regular';
                 } elseif (
                     $normalizedLocalRole === User::ROLE_STUDENT
-                    && in_array($resolvedUserType, ['Faculty', 'Guest', 'Student'], true)
+                    && in_array($resolvedUserType, ['Faculty', 'Guest', 'Student', 'Applicant'], true)
                     && $existingUser->user_type !== $resolvedUserType
                 ) {
                     $existingUser->user_type = $resolvedUserType;

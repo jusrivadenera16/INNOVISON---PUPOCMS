@@ -543,6 +543,87 @@ class WalkInController extends Controller
         return $documents;
     }
 
+    private function healthProfileAssessmentReview(?HealthProfile $profile): array
+    {
+        if (!$profile) {
+            return [];
+        }
+
+        $pendingReason = trim((string) $profile->pending_reason);
+        $medicalRemarks = trim((string) $profile->medical_condition_remarks);
+        $assessmentRemarks = trim((string) $profile->assessment_remarks);
+        $clearanceStatus = trim((string) $profile->clearance_status);
+        $hasSavedReview = trim((string) $profile->blood_pressure) !== ''
+            || $profile->respiratory_rate !== null
+            || $profile->temperature !== null
+            || $pendingReason !== ''
+            || in_array($clearanceStatus, ['Pending/Conditional', 'Fully Cleared', 'Issued'], true)
+            || $profile->verified_at !== null;
+
+        if (!$hasSavedReview) {
+            return [];
+        }
+
+        $findingsStatus = trim((string) $profile->med_cert_findings);
+        if (!in_array($findingsStatus, ['No Findings / Normal', 'With Findings'], true)) {
+            $findingsStatus = $clearanceStatus === 'Pending/Conditional'
+                ? 'With Findings'
+                : 'No Findings / Normal';
+        }
+
+        [$pendingReasonLine, $pendingRemarks] = array_pad(
+            preg_split('/\R/', $pendingReason, 2) ?: [],
+            2,
+            ''
+        );
+        [$medicalCondition, $medicalConditionRemarks] = array_pad(
+            preg_split('/\R/', $medicalRemarks, 2) ?: [],
+            2,
+            ''
+        );
+
+        $hasMedicalCondition = $medicalRemarks !== ''
+            || stripos($pendingReasonLine, 'Medical Condition:') !== false
+            || stripos($pendingReasonLine, 'With Medical Condition') !== false;
+        if ($medicalCondition === '' && preg_match('/Medical Condition:\s*([^;]+)/i', $pendingReasonLine, $matches)) {
+            $medicalCondition = trim((string) $matches[1]);
+        }
+
+        $hasIncompleteRequirements = stripos($pendingReasonLine, 'Incomplete Requirements') !== false;
+        $needsPhysicianEvaluation = stripos($pendingReasonLine, 'For Physician Evaluation') !== false;
+        $otherPendingReason = '';
+        if (preg_match('/(?:^|;\s*)Others:\s*(.+)$/i', $pendingReasonLine, $matches)) {
+            $otherPendingReason = trim((string) $matches[1]);
+        }
+
+        if (
+            $findingsStatus === 'With Findings'
+            && !$hasMedicalCondition
+            && !$hasIncompleteRequirements
+            && !$needsPhysicianEvaluation
+            && $otherPendingReason === ''
+            && $pendingReasonLine !== ''
+        ) {
+            $otherPendingReason = $pendingReasonLine;
+        }
+
+        return [
+            'findings_status' => $findingsStatus,
+            'has_medical_condition' => $hasMedicalCondition,
+            'medical_condition' => $medicalCondition,
+            'incomplete_requirements' => $hasIncompleteRequirements,
+            'needs_physician_evaluation' => $needsPhysicianEvaluation,
+            'other_pending_reason' => $otherPendingReason,
+            'condition_remarks' => $findingsStatus === 'With Findings'
+                ? trim($pendingRemarks !== '' ? $pendingRemarks : $medicalConditionRemarks)
+                : '',
+            'normal_remarks' => $findingsStatus === 'No Findings / Normal' ? $assessmentRemarks : '',
+            'blood_pressure' => trim((string) $profile->blood_pressure),
+            'respiratory_rate' => $profile->respiratory_rate,
+            'temperature' => $profile->temperature,
+        ];
+    }
+
     public function showApplicantDocument(HealthProfile $healthProfile, string $document)
     {
         $allowedDocuments = [
@@ -895,6 +976,7 @@ class WalkInController extends Controller
                     'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                     'health_profile_id' => optional($healthProfile)->id,
                     'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
+                    'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
                     'documents' => $this->healthProfileDocuments($request, $healthProfile),
                     'name_matches' => $lookupName !== '' ? $this->namesRoughlyMatch($lookupName, $student) : null,
                     'lookup_status' => $lookupStatus,
@@ -942,6 +1024,7 @@ class WalkInController extends Controller
                 'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                 'health_profile_id' => optional($healthProfile)->id,
                 'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
+                'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
                 'documents' => $this->healthProfileDocuments($request, $healthProfile),
                 'lookup_status' => $lookupStatus,
                 'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_clinic_reference'], true)

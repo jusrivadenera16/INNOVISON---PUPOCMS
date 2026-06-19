@@ -134,26 +134,7 @@ class ReportsController extends Controller
                 ];
             });
 
-        $consultationRows = Consultation::query()
-            ->with('user')
-            ->whereBetween('consultation_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
-            ->get()
-            ->map(function (Consultation $consultation) {
-                $source = $this->appointmentStatsSource($consultation->consultation_source ?? null, 'walk-in');
-
-                return [
-                    'date' => Carbon::parse($consultation->consultation_date),
-                    'time' => $consultation->time_in ? Carbon::parse($consultation->time_in) : null,
-                    'patient_type' => $this->appointmentStatsPatientType($consultation->user_type ?: $consultation->user_role ?: optional($consultation->user)->user_type),
-                    'status' => 'completed',
-                    'service' => $this->appointmentStatsService($consultation->service ?: null),
-                    'source' => $source,
-                    'reason' => trim((string) ($consultation->reason_for_visit ?: $consultation->comments ?: '')),
-                ];
-            });
-
         $allRows = $appointmentRows
-            ->concat($consultationRows)
             ->sortBy(fn ($row) => $row['date']->timestamp)
             ->values();
         $rows = $allRows

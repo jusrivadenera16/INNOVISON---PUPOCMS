@@ -13,6 +13,7 @@ use App\Services\PuptasWebhookService;
 use App\Services\ClinicWorkflowService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -253,27 +254,69 @@ class AppointmentController extends Controller
         }, $notifications);
     }
 
-    private function fetchPuptasApplicantForUser(User $user): ?array
+    private function fetchPuptasApplicantLookupForUser(User $user): array
     {
         $puptasService = app(PuptasWebhookService::class);
+        $lookupResults = [];
 
         $referenceNumber = trim((string) ($user->reference_number ?? ''));
-        if ($referenceNumber !== '' && !$this->looksLikeIdpIdentifier($referenceNumber, $user)) {
-            $applicantByReference = $puptasService->fetchApplicantByStudentNumber($referenceNumber);
-            if (is_array($applicantByReference) && !empty($applicantByReference)) {
-                return $applicantByReference;
+        if (
+            $referenceNumber !== ''
+            && !$this->looksLikeIdpIdentifier($referenceNumber, $user)
+            && !$this->isClinicReference($referenceNumber)
+        ) {
+            $lookup = $puptasService->fetchApplicantByReferenceNumberDetailed($referenceNumber);
+            $lookupResults[] = $lookup;
+            if (($lookup['outcome'] ?? '') === 'found' && is_array($lookup['data'] ?? null)) {
+                return $lookup;
             }
         }
 
         $idpUserId = trim((string) ($user->student_id ?? ''));
         if ($idpUserId !== '') {
-            $applicantByIdpUserId = $puptasService->fetchApplicantByIdpUserId($idpUserId);
-            if (is_array($applicantByIdpUserId) && !empty($applicantByIdpUserId)) {
-                return $applicantByIdpUserId;
+            $lookup = $puptasService->fetchApplicantByIdpUserIdDetailed($idpUserId);
+            $lookupResults[] = $lookup;
+            if (($lookup['outcome'] ?? '') === 'found' && is_array($lookup['data'] ?? null)) {
+                return $lookup;
             }
         }
 
-        return null;
+        $unavailable = collect($lookupResults)->first(
+            fn ($lookup) => ($lookup['outcome'] ?? '') === 'unavailable'
+        );
+        if (is_array($unavailable)) {
+            return $unavailable;
+        }
+
+        $notFound = collect($lookupResults)->first(
+            fn ($lookup) => ($lookup['outcome'] ?? '') === 'not_found'
+        );
+        if (is_array($notFound)) {
+            return $notFound;
+        }
+
+        return [
+            'success' => false,
+            'outcome' => 'not_found',
+            'status' => null,
+            'message' => 'No PUPTAS applicant identifiers are available for this account.',
+            'data' => null,
+            'attempts' => 0,
+        ];
+    }
+
+    private function fetchPuptasApplicantForUser(User $user): ?array
+    {
+        $lookup = $this->fetchPuptasApplicantLookupForUser($user);
+
+        return ($lookup['outcome'] ?? '') === 'found' && is_array($lookup['data'] ?? null)
+            ? $lookup['data']
+            : null;
+    }
+
+    private function isClinicReference(?string $referenceNumber): bool
+    {
+        return str_starts_with(strtoupper(trim((string) $referenceNumber)), 'CLN-');
     }
 
     private function normalizePuptasApplicantIdentity(?array $applicantData): array
@@ -477,7 +520,11 @@ class AppointmentController extends Controller
         ];
 
         foreach ($candidates as $candidate) {
-            if ($candidate !== '' && !$this->looksLikeIdpIdentifier($candidate, $user)) {
+            if (
+                $candidate !== ''
+                && !$this->looksLikeIdpIdentifier($candidate, $user)
+                && !$this->isClinicReference($candidate)
+            ) {
                 return $candidate;
             }
         }
@@ -514,12 +561,29 @@ class AppointmentController extends Controller
             return;
         }
 
-        if (trim((string) ($user->reference_number ?? '')) !== $referenceNumber) {
-            $user->reference_number = $referenceNumber;
-            $user->save();
+        $currentUserReference = trim((string) ($user->reference_number ?? ''));
+        $userHasAdmissionReference = $currentUserReference !== ''
+            && !$this->looksLikeIdpIdentifier($currentUserReference, $user)
+            && !$this->isClinicReference($currentUserReference);
+        $incomingIsClinicReference = $this->isClinicReference($referenceNumber);
+
+        if (!$userHasAdmissionReference || !$incomingIsClinicReference) {
+            if ($currentUserReference !== $referenceNumber) {
+                $user->reference_number = $referenceNumber;
+                $user->save();
+            }
         }
 
-        if ($healthProfile && trim((string) ($healthProfile->reference_number ?? '')) !== $referenceNumber) {
+        $currentHealthReference = trim((string) optional($healthProfile)->reference_number);
+        $healthProfileHasAdmissionReference = $currentHealthReference !== ''
+            && !$this->looksLikeIdpIdentifier($currentHealthReference, $user)
+            && !$this->isClinicReference($currentHealthReference);
+
+        if (
+            $healthProfile
+            && (!$healthProfileHasAdmissionReference || !$incomingIsClinicReference)
+            && $currentHealthReference !== $referenceNumber
+        ) {
             $healthProfile->reference_number = $referenceNumber;
             $healthProfile->save();
         }
@@ -654,13 +718,45 @@ class AppointmentController extends Controller
         return 'Dr. ' . trim($value);
     }
 
-    private function resolveHealthReferenceMode(User $user, ?Admin $linkedAdminProfile = null, ?array $applicantData = null): string
+    private function resolveHealthReferenceMode(
+        User $user,
+        ?Admin $linkedAdminProfile = null,
+        ?array $applicantData = null,
+        ?string $lookupOutcome = null
+    ): string
     {
         $linkedAdminProfile = $linkedAdminProfile ?: $this->resolveLinkedAdminProfile($user);
-        $applicantData = is_array($applicantData) ? $applicantData : $this->fetchPuptasApplicantForUser($user);
-        $applicantIdentity = $this->normalizePuptasApplicantIdentity($applicantData);
+        if (!is_array($applicantData) && $lookupOutcome === null) {
+            $lookup = $this->fetchPuptasApplicantLookupForUser($user);
+            $applicantData = is_array($lookup['data'] ?? null) ? $lookup['data'] : null;
+            $lookupOutcome = (string) ($lookup['outcome'] ?? '');
+        }
 
-        if (($applicantIdentity['available'] ?? false) === true) {
+        $existingReference = trim((string) ($user->reference_number ?? ''));
+        if (
+            $existingReference !== ''
+            && !$this->looksLikeIdpIdentifier($existingReference, $user)
+            && !$this->isClinicReference($existingReference)
+        ) {
+            return 'admission';
+        }
+
+        $applicantIdentity = $this->normalizePuptasApplicantIdentity($applicantData);
+        $normalizedIdpRole = strtolower(trim((string) ($user->idp_role ?? '')));
+        $isApplicantAccount = $normalizedIdpRole === 'applicant'
+            || strtolower(trim((string) ($user->user_type ?? ''))) === 'applicant';
+
+        if ($isApplicantAccount) {
+            return $lookupOutcome === 'unavailable'
+                ? 'verification_unavailable'
+                : 'admission';
+        }
+
+        if (in_array($normalizedIdpRole, ['student', 'guest', 'faculty', 'admin', 'superadmin', 'super_admin'], true)) {
+            return 'clinic';
+        }
+
+        if ($lookupOutcome === 'found' || ($applicantIdentity['available'] ?? false) === true) {
             return 'admission';
         }
 
@@ -668,9 +764,11 @@ class AppointmentController extends Controller
         $isAdminLikeUser = User::normalizeRole((string) ($user->user_role ?? '')) === User::ROLE_ADMIN
             || User::normalizeRole((string) ($user->user_role ?? '')) === User::ROLE_SUPERADMIN;
 
-        return ($hasLinkedDirectoryProfile || $isAdminLikeUser)
-            ? 'clinic'
-            : 'guest';
+        if ($hasLinkedDirectoryProfile || $isAdminLikeUser) {
+            return 'clinic';
+        }
+
+        return 'guest';
     }
 
     private function generateClinicReferenceNumber(User $user): string
@@ -733,10 +831,12 @@ class AppointmentController extends Controller
     private function buildHealthFormPrefill(User $user, ?Admin $linkedAdminProfile = null, ?HealthProfile $healthProfile = null): array
     {
         $linkedAdminProfile = $linkedAdminProfile ?: $this->resolveLinkedAdminProfile($user);
-        $applicantData = $this->fetchPuptasApplicantForUser($user);
+        $applicantLookup = $this->fetchPuptasApplicantLookupForUser($user);
+        $applicantData = is_array($applicantLookup['data'] ?? null) ? $applicantLookup['data'] : null;
+        $lookupOutcome = (string) ($applicantLookup['outcome'] ?? 'not_found');
         $applicantIdentity = $this->normalizePuptasApplicantIdentity($applicantData);
         $this->persistPuptasApplicantIdentity($user, $applicantIdentity);
-        $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile, $applicantData);
+        $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile, $applicantData, $lookupOutcome);
 
         $calculatedAge = null;
         if (!empty($user->DOB)) {
@@ -792,18 +892,28 @@ class AppointmentController extends Controller
         $applicantLastName = trim((string) $applicantIdentity['last_name']);
         $applicantStructuredName = trim((string) $applicantIdentity['full_name']);
         $hasOfficialApplicantIdentity = (bool) $applicantIdentity['available'];
-        $resolvedReferenceNumber = $referenceMode === 'admission'
-            ? $this->resolveReferenceNumber($user, $healthProfile, $applicantData)
-            : $this->resolveClinicReferenceNumber($user, $healthProfile);
+        $resolvedReferenceNumber = match ($referenceMode) {
+            'admission' => $this->resolveReferenceNumber($user, $healthProfile, $applicantData),
+            'verification_unavailable' => '',
+            default => $this->resolveClinicReferenceNumber($user, $healthProfile),
+        };
 
         return [
             'reference_mode' => $referenceMode,
             'reference_requires_validation' => $referenceMode === 'admission',
-            'reference_label' => $referenceMode === 'admission' ? 'Admission Reference Number' : 'Clinic Reference Number',
-            'step_1_title' => $referenceMode === 'admission' ? 'Admission Reference' : 'Clinic Reference',
-            'step_1_description' => $referenceMode === 'admission'
-                ? 'Confirm your admission reference, complete your health information, then upload the required clinic documents.'
-                : 'Review your clinic reference, complete your health information, then upload the required clinic documents.',
+            'reference_label' => $referenceMode === 'admission'
+                ? 'Admission Reference Number'
+                : ($referenceMode === 'verification_unavailable' ? 'PUPTAS Verification' : 'Clinic Reference Number'),
+            'step_1_title' => $referenceMode === 'admission'
+                ? 'Admission Reference'
+                : ($referenceMode === 'verification_unavailable' ? 'PUPTAS Verification' : 'Clinic Reference'),
+            'step_1_description' => match ($referenceMode) {
+                'admission' => 'Confirm your admission reference, complete your health information, then upload the required clinic documents.',
+                'verification_unavailable' => 'PUPTAS verification is temporarily unavailable. The form remains locked to prevent an incorrect clinic reference from being generated.',
+                default => 'Review your clinic reference, complete your health information, then upload the required clinic documents.',
+            },
+            'puptas_verification_status' => $lookupOutcome,
+            'puptas_verification_message' => trim((string) ($applicantLookup['message'] ?? '')),
             'identity_from_puptas' => $hasOfficialApplicantIdentity,
             'puptas_full_name' => $applicantStructuredName,
             'puptas_first_name' => $applicantFirstName,
@@ -1981,7 +2091,23 @@ public function validateHealthFormReference(Request $request)
     /** @var \App\Models\User|null $user */
     $user = Auth::user();
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
-    $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile);
+    $accountLookup = $this->fetchPuptasApplicantLookupForUser($user);
+    $accountApplicantData = is_array($accountLookup['data'] ?? null) ? $accountLookup['data'] : null;
+    $accountLookupOutcome = (string) ($accountLookup['outcome'] ?? 'not_found');
+    $referenceMode = $this->resolveHealthReferenceMode(
+        $user,
+        $linkedAdminProfile,
+        $accountApplicantData,
+        $accountLookupOutcome
+    );
+
+    if ($referenceMode === 'verification_unavailable') {
+        return response()->json([
+            'success' => false,
+            'service_unavailable' => true,
+            'message' => 'PUPTAS verification is temporarily unavailable. Please try again later or contact Admissions or clinic staff.',
+        ], 503);
+    }
 
     if ($referenceMode !== 'admission') {
         $clinicReference = $this->resolveClinicReferenceNumber(
@@ -2004,7 +2130,12 @@ public function validateHealthFormReference(Request $request)
     $referenceNumber = strtoupper(trim((string) $validated['reference_number']));
     $currentReference = strtoupper(trim((string) ($user->reference_number ?? '')));
 
-    if ($currentReference !== '' && $referenceNumber === $currentReference) {
+    if (
+        $currentReference !== ''
+        && !$this->isClinicReference($currentReference)
+        && $referenceNumber === $currentReference
+    ) {
+        RateLimiter::clear($this->healthReferenceAttemptKey($request, $user));
         return response()->json([
             'success' => true,
             'reference_number' => $currentReference,
@@ -2012,11 +2143,49 @@ public function validateHealthFormReference(Request $request)
         ]);
     }
 
-    $lookup = app(PuptasWebhookService::class)->fetchApplicantByReferenceNumberDetailed($referenceNumber);
-    if (empty($lookup['success']) || !is_array($lookup['data'] ?? null)) {
+    if ($currentReference !== '' && !$this->isClinicReference($currentReference)) {
         return response()->json([
             'success' => false,
-            'message' => trim((string) ($lookup['message'] ?? 'Reference number could not be validated.')),
+            'message' => 'A verified Admission Reference is already linked to this account and cannot be replaced.',
+        ], 409);
+    }
+
+    $attemptKey = $this->healthReferenceAttemptKey($request, $user);
+    if (RateLimiter::tooManyAttempts($attemptKey, 3)) {
+        $retryAfter = RateLimiter::availableIn($attemptKey);
+
+        return response()->json([
+            'success' => false,
+            'rate_limited' => true,
+            'attempts_remaining' => 0,
+            'retry_after_seconds' => $retryAfter,
+            'retry_at' => now()->addSeconds($retryAfter)->format('g:i A'),
+            'message' => 'Too many failed verification attempts. Try again at '
+                . now()->addSeconds($retryAfter)->format('g:i A')
+                . ' or contact Admissions or clinic staff.',
+        ], 429);
+    }
+
+    $lookup = app(PuptasWebhookService::class)->fetchApplicantByReferenceNumberDetailed($referenceNumber);
+    if (empty($lookup['success']) || !is_array($lookup['data'] ?? null)) {
+        if (($lookup['outcome'] ?? '') === 'unavailable') {
+            return response()->json([
+                'success' => false,
+                'service_unavailable' => true,
+                'message' => 'PUPTAS verification is temporarily unavailable. Please try again later or contact Admissions or clinic staff.',
+            ], 503);
+        }
+
+        RateLimiter::hit($attemptKey, 3600);
+        $attemptsRemaining = max(0, 3 - RateLimiter::attempts($attemptKey));
+
+        return response()->json([
+            'success' => false,
+            'attempts_remaining' => $attemptsRemaining,
+            'message' => 'The reference number could not be verified for this account. '
+                . ($attemptsRemaining > 0
+                    ? "You have {$attemptsRemaining} attempt(s) remaining this hour."
+                    : 'Manual verification is locked for one hour.'),
         ], 422);
     }
 
@@ -2043,9 +2212,16 @@ public function validateHealthFormReference(Request $request)
     }
 
     if (!$matchesCurrentAccount) {
+        RateLimiter::hit($attemptKey, 3600);
+        $attemptsRemaining = max(0, 3 - RateLimiter::attempts($attemptKey));
+
         return response()->json([
             'success' => false,
-            'message' => 'This reference number is not linked to your account.',
+            'attempts_remaining' => $attemptsRemaining,
+            'message' => 'The reference number could not be verified for this account. '
+                . ($attemptsRemaining > 0
+                    ? "You have {$attemptsRemaining} attempt(s) remaining this hour."
+                    : 'Manual verification is locked for one hour.'),
         ], 422);
     }
 
@@ -2053,12 +2229,18 @@ public function validateHealthFormReference(Request $request)
     $this->persistPuptasApplicantIdentity($user, $identity);
     $existingHealthProfile = HealthProfile::query()->where('user_id', $user->id)->first();
     $this->persistResolvedReferenceNumber($user, $referenceNumber, $existingHealthProfile);
+    RateLimiter::clear($attemptKey);
 
     return response()->json([
         'success' => true,
         'reference_number' => $referenceNumber,
         'message' => 'Reference number verified successfully.',
     ]);
+}
+
+private function healthReferenceAttemptKey(Request $request, User $user): string
+{
+    return 'health-reference-verification:' . $user->id . ':' . sha1((string) $request->ip());
 }
 
 public function storeHealthForm(Request $request)
@@ -2071,7 +2253,19 @@ public function storeHealthForm(Request $request)
     }
 
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
-    $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile);
+    $accountLookup = $this->fetchPuptasApplicantLookupForUser($user);
+    $accountApplicantData = is_array($accountLookup['data'] ?? null) ? $accountLookup['data'] : null;
+    $referenceMode = $this->resolveHealthReferenceMode(
+        $user,
+        $linkedAdminProfile,
+        $accountApplicantData,
+        (string) ($accountLookup['outcome'] ?? 'not_found')
+    );
+    if ($referenceMode === 'verification_unavailable') {
+        throw ValidationException::withMessages([
+            'reference_number' => 'PUPTAS verification is temporarily unavailable. Please try again later or contact Admissions or clinic staff.',
+        ]);
+    }
     $existingHealthProfile = $user?->relationLoaded('healthProfile') && $user?->healthProfile
         ? $user->healthProfile
         : \App\Models\HealthProfile::where('user_id', $user?->id)->first();
@@ -2200,8 +2394,14 @@ public function storeHealthForm(Request $request)
 
     if ($referenceMode === 'admission') {
         $officialReference = strtoupper(trim((string) ($user->reference_number ?? '')));
+        if ($this->isClinicReference($officialReference)) {
+            $officialReference = '';
+        }
         if ($officialReference === '' && $existingHealthProfile) {
             $officialReference = strtoupper(trim((string) ($existingHealthProfile->reference_number ?? '')));
+            if ($this->isClinicReference($officialReference)) {
+                $officialReference = '';
+            }
         }
 
         if ($officialReference === '' || $submittedReference !== $officialReference) {
@@ -2210,9 +2410,7 @@ public function storeHealthForm(Request $request)
             ]);
         }
     } else {
-        $officialReference = $submittedReference !== ''
-            ? $submittedReference
-            : $this->resolveClinicReferenceNumber($user, $existingHealthProfile);
+        $officialReference = $this->resolveClinicReferenceNumber($user, $existingHealthProfile);
     }
 
     $normalizedHeight = $this->normalizeMeasurement($request->input('height'), 'cm');
