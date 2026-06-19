@@ -676,12 +676,42 @@ class AppointmentController extends Controller
     private function generateClinicReferenceNumber(User $user): string
     {
         $timestamp = now()->setTimezone('Asia/Taipei');
-
-        return sprintf(
-            'CLN-%s-%s',
-            $timestamp->format('Y'),
-            $timestamp->format('mdHi')
+        $baseReference = sprintf(
+            'CLN-%s-%sR',
+            $timestamp->format('mdy'),
+            $timestamp->format('Hi')
         );
+
+        $existingReferences = collect();
+
+        if (\Schema::hasTable('health_profiles') && \Schema::hasColumn('health_profiles', 'reference_number')) {
+            $existingReferences = $existingReferences->merge(
+                HealthProfile::query()
+                    ->where('reference_number', 'like', $baseReference . '%')
+                    ->pluck('reference_number')
+            );
+        }
+
+        if (\Schema::hasTable('users') && \Schema::hasColumn('users', 'reference_number')) {
+            $existingReferences = $existingReferences->merge(
+                User::query()
+                    ->where('reference_number', 'like', $baseReference . '%')
+                    ->pluck('reference_number')
+            );
+        }
+
+        $highestSequence = $existingReferences
+            ->map(function ($reference) use ($baseReference) {
+                $reference = strtoupper(trim((string) $reference));
+                if (!preg_match('/^' . preg_quote($baseReference, '/') . '(\d+)$/', $reference, $matches)) {
+                    return 0;
+                }
+
+                return (int) $matches[1];
+            })
+            ->max() ?: 0;
+
+        return $baseReference . ($highestSequence + 1);
     }
 
     private function resolveClinicReferenceNumber(User $user, ?HealthProfile $healthProfile = null): string

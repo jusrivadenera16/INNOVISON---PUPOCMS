@@ -1427,62 +1427,6 @@
             font-weight: 700;
         }
 
-        .submit-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.55);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            backdrop-filter: blur(4px);
-        }
-
-        .submit-overlay.is-open {
-            display: flex;
-        }
-
-        .submit-card {
-            width: min(360px, calc(100vw - 26px));
-            border-radius: 18px;
-            background: #ffffff;
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.28);
-            padding: 26px 20px;
-            text-align: center;
-        }
-
-        .submit-check {
-            width: 72px;
-            height: 72px;
-            border-radius: 999px;
-            margin: 0 auto 12px;
-            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: popIn 0.35s ease;
-        }
-
-        .submit-check svg {
-            width: 36px;
-            height: 36px;
-            stroke: #fff;
-            stroke-width: 2.6;
-            fill: none;
-        }
-
-        .submit-card strong {
-            display: block;
-            color: #111827;
-            font-size: 1rem;
-        }
-
-        @keyframes popIn {
-            0% { transform: scale(0.7); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
         @media (max-width: 768px) {
             body {
                 padding-bottom: 132px;
@@ -1944,7 +1888,21 @@
                         </div>
                         <div class="form-field" id="disabilityTypeWrap">
                             <label class="form-label" for="disability_type">Disability Type <span class="required">*</span></label>
-                            <input id="disability_type" name="disability_type" class="form-control field-maroon" value="{{ old('disability_type', $prefill['disability_type'] ?? '') }}">
+                            <input id="disability_type" name="disability_type" class="form-control field-maroon" value="{{ old('disability_type', $prefill['disability_type'] ?? '') }}" list="disabilityTypeSuggestions" autocomplete="off" placeholder="Type or select disability type">
+                            <datalist id="disabilityTypeSuggestions">
+                                <option value="Physical Disability">
+                                <option value="Visual Disability">
+                                <option value="Hearing Disability">
+                                <option value="Speech and Language Impairment">
+                                <option value="Intellectual Disability">
+                                <option value="Learning Disability">
+                                <option value="Psychosocial Disability">
+                                <option value="Autism Spectrum Disorder">
+                                <option value="Disability Due to Chronic Illness">
+                                <option value="Orthopedic Disability">
+                                <option value="Multiple Disability">
+                                <option value="Other Disability">
+                            </datalist>
                         </div>
                     </div>
 
@@ -2213,17 +2171,6 @@
         </div>
     </div>
 
-    <div class="submit-overlay" id="submitOverlay" aria-hidden="true">
-        <div class="submit-card">
-            <div class="submit-check" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                    <path d="M20 6L9 17l-5-5"></path>
-                </svg>
-            </div>
-            <strong>Thank you for submission.</strong>
-        </div>
-    </div>
-
     <script>
         (function () {
             const form = document.querySelector('form[action="{{ route('store.health.form') }}"]');
@@ -2257,7 +2204,6 @@
                 document.getElementById('booster_1_date'),
                 document.getElementById('booster_2_date'),
             ].filter(Boolean);
-            const submitOverlay = document.getElementById('submitOverlay');
             const requirementFiles = document.querySelectorAll('[data-requirement-file]');
             const clinicSelects = Array.from(document.querySelectorAll('[data-clinic-select]'));
             const uploadInputs = Array.from(document.querySelectorAll('[data-upload-input]'));
@@ -2847,7 +2793,6 @@
 
                 event.preventDefault();
                 isSubmitting = true;
-                submitOverlay?.classList.add('is-open');
                 const submitButtons = form.querySelectorAll('button[type="submit"], button[type="button"], a.btn');
                 submitButtons.forEach((btn) => {
                     btn.setAttribute('aria-disabled', 'true');
@@ -2855,9 +2800,7 @@
                     btn.style.opacity = '0.72';
                 });
 
-                window.setTimeout(() => {
-                    form.submit();
-                }, 850);
+                form.submit();
             });
 
             updateAgeFromBirthday();

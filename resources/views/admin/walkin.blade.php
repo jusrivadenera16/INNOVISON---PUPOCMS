@@ -3462,6 +3462,40 @@
         font-size: 14px;
     }
 
+    .applicant-pending-reasons {
+        display: grid;
+        gap: 8px;
+        padding: 2px 0 4px;
+    }
+
+    .applicant-pending-reason-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border: 1px solid rgba(3, 105, 161, 0.24);
+        border-radius: 8px;
+        background: #ffffff;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .applicant-pending-reason-option input {
+        width: 18px;
+        height: 18px;
+        margin: 0;
+        accent-color: #70131b;
+        cursor: pointer;
+    }
+
+    .applicant-pending-reason-option:has(input:checked) {
+        border-color: rgba(112, 19, 27, 0.5);
+        background: #fff7ed;
+        color: #70131b;
+    }
+
     .applicant-condition-fields {
         display: flex;
         flex-direction: column;
@@ -4615,20 +4649,45 @@
                                     </label>
                                 </div>
                             </div>
-                            <div class="applicant-condition-header">
-                                <label class="applicant-condition-toggle">
-                                    <input type="checkbox" id="applicantHasMedicalCondition" class="applicant-condition-checkbox">
-                                    <span class="applicant-condition-toggle-text">With Medical Condition</span>
-                                </label>
+                            <div id="applicantNormalRemarksFields" class="applicant-condition-fields" style="display: none;">
+                                <div class="applicant-condition-field">
+                                    <label for="applicantNormalRemarks">Remarks <span style="color: #94a3b8;">(Optional)</span></label>
+                                    <textarea id="applicantNormalRemarks" name="normal_remarks" placeholder="Optional notes for a normal review..." class="applicant-condition-textarea" rows="3"></textarea>
+                                </div>
                             </div>
                             <div id="applicantConditionFields" class="applicant-condition-fields" style="display: none;">
                                 <div class="applicant-condition-field">
+                                    <label>Pending Reason <span style="color: #dc2626;">*</span></label>
+                                    <div class="applicant-pending-reasons">
+                                        <label class="applicant-pending-reason-option">
+                                            <input type="checkbox" id="applicantHasMedicalCondition" name="has_medical_condition" value="1">
+                                            <span>With Medical Condition</span>
+                                        </label>
+                                        <label class="applicant-pending-reason-option">
+                                            <input type="checkbox" id="applicantIncompleteRequirements" name="incomplete_requirements" value="1">
+                                            <span>Incomplete Requirements</span>
+                                        </label>
+                                        <label class="applicant-pending-reason-option">
+                                            <input type="checkbox" id="applicantNeedsPhysicianEvaluation" name="needs_physician_evaluation" value="1">
+                                            <span>For Physician Evaluation</span>
+                                        </label>
+                                        <label class="applicant-pending-reason-option">
+                                            <input type="checkbox" id="applicantOtherPendingReason" name="other_pending_reason_selected" value="1">
+                                            <span>Others</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="applicantMedicalConditionField" class="applicant-condition-field" style="display: none;">
                                     <label for="applicantMedicalCondition">Medical Condition <span style="color: #dc2626;">*</span></label>
                                     <input type="text" id="applicantMedicalCondition" name="medical_condition" placeholder="e.g., Asthma, Diabetes, Hypertension..." class="applicant-condition-input">
                                 </div>
+                                <div id="applicantOtherPendingReasonField" class="applicant-condition-field" style="display: none;">
+                                    <label for="applicantOtherPendingReasonText">Other Pending Reason <span style="color: #dc2626;">*</span></label>
+                                    <input type="text" id="applicantOtherPendingReasonText" name="other_pending_reason" placeholder="Enter other pending reason..." class="applicant-condition-input">
+                                </div>
                                 <div class="applicant-condition-field">
                                     <label for="applicantConditionRemarks">Remarks <span style="color: #94a3b8;">(Optional)</span></label>
-                                    <textarea id="applicantConditionRemarks" name="condition_remarks" placeholder="Additional notes about the medical condition..." class="applicant-condition-textarea" rows="3"></textarea>
+                                    <textarea id="applicantConditionRemarks" name="condition_remarks" placeholder="Additional notes about the findings..." class="applicant-condition-textarea" rows="3"></textarea>
                                 </div>
                             </div>
                         </section>
@@ -6389,14 +6448,19 @@
             document.querySelectorAll('input[name="applicant_findings_status"]').forEach(function (input) {
                 input.checked = false;
             });
-            const conditionToggle = document.getElementById('applicantHasMedicalCondition');
             const conditionFields = document.getElementById('applicantConditionFields');
-            if (conditionToggle) conditionToggle.checked = false;
+            const normalRemarksFields = document.getElementById('applicantNormalRemarksFields');
             if (conditionFields) conditionFields.style.display = 'none';
-            ['applicantMedicalCondition', 'applicantConditionRemarks', 'applicantBloodPressure', 'applicantRespiratoryRate', 'applicantTemperature'].forEach(function (id) {
+            if (normalRemarksFields) normalRemarksFields.style.display = 'none';
+            ['applicantMedicalCondition', 'applicantConditionRemarks', 'applicantNormalRemarks', 'applicantBloodPressure', 'applicantRespiratoryRate', 'applicantTemperature', 'applicantOtherPendingReasonText'].forEach(function (id) {
                 const field = document.getElementById(id);
                 if (field) field.value = '';
             });
+            ['applicantHasMedicalCondition', 'applicantIncompleteRequirements', 'applicantNeedsPhysicianEvaluation', 'applicantOtherPendingReason'].forEach(function (id) {
+                const field = document.getElementById(id);
+                if (field) field.checked = false;
+            });
+            if (typeof syncFindingsReviewFields === 'function') syncFindingsReviewFields();
 
             // Show input form elements again
             const lookupRow = document.querySelector('.applicant-ref-lookup-row');
@@ -6522,21 +6586,26 @@
             }
 
             // Reset medical condition fields
-            const medicalConditionCheckbox = document.getElementById('applicantHasMedicalCondition');
             const conditionFields = document.getElementById('applicantConditionFields');
+            const normalRemarksFields = document.getElementById('applicantNormalRemarksFields');
             document.querySelectorAll('input[name="applicant_findings_status"]').forEach(function (input) {
                 input.checked = false;
             });
-            if (medicalConditionCheckbox) {
-                medicalConditionCheckbox.checked = false;
-            }
             if (conditionFields) {
                 conditionFields.style.display = 'none';
             }
-            ['applicantBloodPressure', 'applicantRespiratoryRate', 'applicantTemperature'].forEach(function (id) {
+            if (normalRemarksFields) {
+                normalRemarksFields.style.display = 'none';
+            }
+            ['applicantMedicalCondition', 'applicantConditionRemarks', 'applicantNormalRemarks', 'applicantBloodPressure', 'applicantRespiratoryRate', 'applicantTemperature', 'applicantOtherPendingReasonText'].forEach(function (id) {
                 const field = document.getElementById(id);
                 if (field) field.value = '';
             });
+            ['applicantHasMedicalCondition', 'applicantIncompleteRequirements', 'applicantNeedsPhysicianEvaluation', 'applicantOtherPendingReason'].forEach(function (id) {
+                const field = document.getElementById(id);
+                if (field) field.checked = false;
+            });
+            if (typeof syncFindingsReviewFields === 'function') syncFindingsReviewFields();
 
             console.log('showLookupDetails completed');
         }
@@ -6567,6 +6636,11 @@
             const ref = (refInput ? refInput.value : '').trim();
             if (!ref) {
                 setStatus('error', 'Please enter a reference number first.');
+                return;
+            }
+
+            if (!isClinicLookupMode() && ref.toUpperCase().startsWith('CLN-')) {
+                setStatus('error', 'This is a Clinic Reference, not an Applicant Reference. Please use the Clinic Reference lookup.');
                 return;
             }
 
@@ -6717,11 +6791,15 @@
                 return;
             }
 
-            // Get medical condition data if enabled
-            const hasMedicalCondition = document.getElementById('applicantHasMedicalCondition');
             const medicalConditionInput = document.getElementById('applicantMedicalCondition');
             const conditionRemarksInput = document.getElementById('applicantConditionRemarks');
+            const normalRemarksInput = document.getElementById('applicantNormalRemarks');
             const findingsStatusInput = document.querySelector('input[name="applicant_findings_status"]:checked');
+            const medicalConditionCheckbox = document.getElementById('applicantHasMedicalCondition');
+            const incompleteRequirementsCheckbox = document.getElementById('applicantIncompleteRequirements');
+            const physicianEvaluationCheckbox = document.getElementById('applicantNeedsPhysicianEvaluation');
+            const otherPendingReasonCheckbox = document.getElementById('applicantOtherPendingReason');
+            const otherPendingReasonInput = document.getElementById('applicantOtherPendingReasonText');
             const bloodPressureInput = document.getElementById('applicantBloodPressure');
             const respiratoryRateInput = document.getElementById('applicantRespiratoryRate');
             const temperatureInput = document.getElementById('applicantTemperature');
@@ -6731,8 +6809,24 @@
                 return;
             }
 
-            if (hasMedicalCondition && hasMedicalCondition.checked && (!medicalConditionInput.value.trim())) {
+            const hasFindings = findingsStatusInput.value === 'With Findings';
+            const hasMedicalCondition = Boolean(medicalConditionCheckbox?.checked);
+            const hasIncompleteRequirements = Boolean(incompleteRequirementsCheckbox?.checked);
+            const needsPhysicianEvaluation = Boolean(physicianEvaluationCheckbox?.checked);
+            const hasOtherPendingReason = Boolean(otherPendingReasonCheckbox?.checked);
+
+            if (hasFindings && !hasMedicalCondition && !hasIncompleteRequirements && !needsPhysicianEvaluation && !hasOtherPendingReason) {
+                setStatus('error', 'Please select at least one pending reason.');
+                return;
+            }
+
+            if (hasFindings && hasMedicalCondition && (!medicalConditionInput?.value.trim())) {
                 setStatus('error', 'Please enter the medical condition.');
+                return;
+            }
+
+            if (hasFindings && hasOtherPendingReason && (!otherPendingReasonInput?.value.trim())) {
+                setStatus('error', 'Please enter the other pending reason.');
                 return;
             }
 
@@ -6741,7 +6835,7 @@
                 return;
             }
 
-            setStatus('info', 'Approving applicant...');
+            setStatus('info', hasFindings ? 'Saving pending compliance...' : 'Approving applicant...');
 
             const approvalData = {
                 reference_number: currentLookupRef,
@@ -6752,10 +6846,15 @@
                 temperature: temperatureInput.value
             };
 
-            if (hasMedicalCondition && hasMedicalCondition.checked) {
-                approvalData.has_medical_condition = true;
-                approvalData.medical_condition = medicalConditionInput.value.trim();
-                approvalData.condition_remarks = conditionRemarksInput.value.trim();
+            if (hasFindings) {
+                approvalData.has_medical_condition = hasMedicalCondition;
+                approvalData.incomplete_requirements = hasIncompleteRequirements;
+                approvalData.needs_physician_evaluation = needsPhysicianEvaluation;
+                approvalData.other_pending_reason = hasOtherPendingReason ? otherPendingReasonInput.value.trim() : '';
+                approvalData.medical_condition = hasMedicalCondition ? medicalConditionInput.value.trim() : '';
+                approvalData.condition_remarks = conditionRemarksInput?.value.trim() || '';
+            } else {
+                approvalData.condition_remarks = normalRemarksInput?.value.trim() || '';
             }
 
             fetch("{{ route('admin.walkin.approve_applicant') }}", {
@@ -6798,22 +6897,69 @@
             .catch(() => setStatus('error', 'Unable to approve right now. Please try again.'));
         }
 
-        // Medical Condition Toggle
-        const medicalConditionCheckbox = document.getElementById('applicantHasMedicalCondition');
+        const findingsInputs = document.querySelectorAll('input[name="applicant_findings_status"]');
+        const pendingReasonInputs = document.querySelectorAll('#applicantHasMedicalCondition, #applicantIncompleteRequirements, #applicantNeedsPhysicianEvaluation, #applicantOtherPendingReason');
         const medicalConditionFields = document.getElementById('applicantConditionFields');
+        const normalRemarksFields = document.getElementById('applicantNormalRemarksFields');
+        const medicalConditionField = document.getElementById('applicantMedicalConditionField');
+        const otherPendingReasonField = document.getElementById('applicantOtherPendingReasonField');
 
-        if (medicalConditionCheckbox) {
-            medicalConditionCheckbox.addEventListener('change', function () {
-                if (this.checked) {
-                    medicalConditionFields.style.display = 'flex';
-                } else {
-                    medicalConditionFields.style.display = 'none';
-                    // Clear fields when unchecked
-                    document.getElementById('applicantMedicalCondition').value = '';
-                    document.getElementById('applicantConditionRemarks').value = '';
+        function syncFindingsReviewFields() {
+            const selectedFinding = document.querySelector('input[name="applicant_findings_status"]:checked')?.value || '';
+            const hasFindings = selectedFinding === 'With Findings';
+            const hasNormalResult = selectedFinding === 'No Findings / Normal';
+            const hasMedicalCondition = Boolean(document.getElementById('applicantHasMedicalCondition')?.checked);
+            const hasOtherPendingReason = Boolean(document.getElementById('applicantOtherPendingReason')?.checked);
+
+            if (medicalConditionFields) {
+                medicalConditionFields.style.display = hasFindings ? 'flex' : 'none';
+            }
+            if (normalRemarksFields) {
+                normalRemarksFields.style.display = hasNormalResult ? 'flex' : 'none';
+            }
+            if (medicalConditionField) {
+                medicalConditionField.style.display = hasFindings && hasMedicalCondition ? 'flex' : 'none';
+            }
+            if (otherPendingReasonField) {
+                otherPendingReasonField.style.display = hasFindings && hasOtherPendingReason ? 'flex' : 'none';
+            }
+
+            if (!hasFindings) {
+                const conditionInput = document.getElementById('applicantMedicalCondition');
+                const conditionRemarks = document.getElementById('applicantConditionRemarks');
+                const otherPendingReason = document.getElementById('applicantOtherPendingReasonText');
+                if (conditionInput) conditionInput.value = '';
+                if (conditionRemarks) conditionRemarks.value = '';
+                if (otherPendingReason) otherPendingReason.value = '';
+                pendingReasonInputs.forEach(function (input) {
+                    input.checked = false;
+                });
+            } else {
+                if (!hasMedicalCondition) {
+                    const conditionInput = document.getElementById('applicantMedicalCondition');
+                    if (conditionInput) conditionInput.value = '';
                 }
-            });
+                if (!hasOtherPendingReason) {
+                    const otherPendingReason = document.getElementById('applicantOtherPendingReasonText');
+                    if (otherPendingReason) otherPendingReason.value = '';
+                }
+            }
+            if (!hasNormalResult) {
+                const normalRemarks = document.getElementById('applicantNormalRemarks');
+                if (normalRemarks) normalRemarks.value = '';
+            }
+
+            if (findBtn && isApprovalMode) {
+                findBtn.textContent = hasFindings ? 'Pending' : 'Approve';
+            }
         }
+
+        findingsInputs.forEach(function (input) {
+            input.addEventListener('change', syncFindingsReviewFields);
+        });
+        pendingReasonInputs.forEach(function (input) {
+            input.addEventListener('change', syncFindingsReviewFields);
+        });
 
         if (openBtn) openBtn.addEventListener('click', function (e) { e.preventDefault(); openApplicantsModal(); });
         if (openClinicBtn) openClinicBtn.addEventListener('click', function (e) { e.preventDefault(); openClinicLookupModal(); });

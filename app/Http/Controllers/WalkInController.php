@@ -731,6 +731,13 @@ class WalkInController extends Controller
         $previewOnly = $request->boolean('preview_only');
         $intakeTarget = strtolower(trim((string) $request->query('intake_target', 'consultation')));
         $lookupScope = strtolower(trim((string) $request->query('lookup_scope', 'default')));
+        if ($lookup !== '' && $lookupScope !== 'clinic_local' && Str::startsWith(strtoupper($lookup), 'CLN-')) {
+            return response()->json([
+                'status' => 'not_found',
+                'message' => 'This is a Clinic Reference, not an Applicant Reference. Please use the Clinic Reference lookup.',
+            ], 422);
+        }
+
         $student = $this->findUserByIdentifier($lookup);
         $lookupMessage = $lookupScope === 'clinic_local'
             ? 'No clinic record matched that reference number in local records.'
@@ -1410,6 +1417,9 @@ PROMPT;
                 'lookup_scope' => ['nullable', 'string', 'max:40'],
                 'findings_status' => ['required', 'string', 'in:No Findings / Normal,With Findings'],
                 'has_medical_condition' => ['nullable', 'boolean'],
+                'incomplete_requirements' => ['nullable', 'boolean'],
+                'needs_physician_evaluation' => ['nullable', 'boolean'],
+                'other_pending_reason' => ['nullable', 'string', 'max:1000'],
                 'medical_condition' => ['required_if:has_medical_condition,true', 'nullable', 'string', 'max:1000'],
                 'condition_remarks' => ['nullable', 'string', 'max:2000'],
                 'blood_pressure' => ['required', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
@@ -1420,13 +1430,37 @@ PROMPT;
             $lookupScope = strtolower(trim((string) ($validated['lookup_scope'] ?? 'default')));
             $forceLocalClinicApproval = $lookupScope === 'clinic_local';
             $findingsStatus = (string) $validated['findings_status'];
-            $hasMedicalCondition = $request->boolean('has_medical_condition')
-                || $findingsStatus === 'With Findings';
+            $hasMedicalCondition = $request->boolean('has_medical_condition');
+            $hasIncompleteRequirements = $request->boolean('incomplete_requirements');
+            $needsPhysicianEvaluation = $request->boolean('needs_physician_evaluation');
             $medicalCondition = trim((string) $request->input('medical_condition', ''));
+            $otherPendingReason = trim((string) $request->input('other_pending_reason', ''));
             $conditionRemarks = trim((string) $request->input('condition_remarks', ''));
             $bloodPressure = preg_replace('/\s+/', '', (string) $validated['blood_pressure']);
             $respiratoryRate = (int) $validated['respiratory_rate'];
             $temperature = (float) $validated['temperature'];
+
+            $pendingReasons = [];
+            if ($hasMedicalCondition) {
+                $pendingReasons[] = $medicalCondition !== '' ? 'Medical Condition: ' . $medicalCondition : 'With Medical Condition';
+            }
+            if ($hasIncompleteRequirements) {
+                $pendingReasons[] = 'Incomplete Requirements';
+            }
+            if ($needsPhysicianEvaluation) {
+                $pendingReasons[] = 'For Physician Evaluation';
+            }
+            if ($otherPendingReason !== '') {
+                $pendingReasons[] = 'Others: ' . $otherPendingReason;
+            }
+            $hasPendingFinding = $findingsStatus === 'With Findings';
+
+            if ($hasPendingFinding && empty($pendingReasons)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please select at least one pending reason.',
+                ], 422);
+            }
 
             // Fetch applicant details to get student ID
             $applicantData = $forceLocalClinicApproval
@@ -1464,7 +1498,7 @@ PROMPT;
                 $idpStudentId = trim((string) ($student->student_id ?? $localOnlyProfile?->student_id ?? ''));
                 $studentId = $idpStudentId !== '' ? $idpStudentId : $referenceNumber;
             }
-            $clearanceStatus = $hasMedicalCondition ? 'Pending/Conditional' : 'Fully Cleared';
+            $clearanceStatus = $hasPendingFinding ? 'Pending/Conditional' : 'Fully Cleared';
 
             // Conditional applicants remain uncleared in PUPTAS until compliance is resolved.
             $webhookResult = $isLocalOnlyApproval
@@ -1476,7 +1510,7 @@ PROMPT;
                 : $webhookService->sendMedicalClearance(
                     $referenceNumber,
                     $idpStudentId,
-                    !$hasMedicalCondition
+                    !$hasPendingFinding
                 );
 
             $profile = DB::transaction(function () use (
@@ -1485,6 +1519,8 @@ PROMPT;
                 $referenceNumber,
                 $clearanceStatus,
                 $hasMedicalCondition,
+                $hasPendingFinding,
+                $pendingReasons,
                 $medicalCondition,
                 $conditionRemarks,
                 $findingsStatus,
@@ -1521,22 +1557,24 @@ PROMPT;
                 $profile->respiratory_rate = $respiratoryRate;
                 $profile->temperature = $temperature;
                 $profile->clearance_status = $clearanceStatus;
-                $profile->pending_reason = $hasMedicalCondition
-                    ? ($conditionRemarks !== ''
-                        ? $conditionRemarks
-                        : ($medicalCondition !== '' ? $medicalCondition : 'With findings noted during nurse review.'))
+                $profile->pending_reason = $hasPendingFinding
+                    ? trim(implode('; ', $pendingReasons)
+                        . ($conditionRemarks !== '' ? "\n" . $conditionRemarks : ''))
                     : null;
                 $profile->medical_condition_remarks = $hasMedicalCondition
                     ? trim(($medicalCondition !== '' ? $medicalCondition : 'With findings')
                         . ($conditionRemarks !== '' ? "\n" . $conditionRemarks : ''))
                     : null;
+                $profile->assessment_remarks = !$hasPendingFinding && $conditionRemarks !== ''
+                    ? $conditionRemarks
+                    : $profile->assessment_remarks;
                 $profile->has_illness = $hasMedicalCondition ? 'Yes' : ($profile->has_illness ?: 'No');
                 $profile->other_illness = $hasMedicalCondition ? $medicalCondition : $profile->other_illness;
-                $profile->physical_assessment_status = $hasMedicalCondition
+                $profile->physical_assessment_status = $hasPendingFinding
                     ? 'Not Yet Conducted'
                     : 'Completed / Passed';
-                $profile->documents_valid = !$hasMedicalCondition;
-                $profile->verified_at = $hasMedicalCondition ? null : now();
+                $profile->documents_valid = !$hasPendingFinding;
+                $profile->verified_at = $hasPendingFinding ? null : now();
                 $profile->puptas_sync_status = ($webhookResult['skipped'] ?? false)
                     ? null
                     : (($webhookResult['success'] ?? false) ? 'synced' : 'failed');
@@ -1556,7 +1594,7 @@ PROMPT;
 
                 $profile->save();
 
-                $student->is_health_profile_completed = $hasMedicalCondition ? 0 : 1;
+                $student->is_health_profile_completed = $hasPendingFinding ? 0 : 1;
                 $student->save();
 
                 return $profile;
@@ -1575,10 +1613,10 @@ PROMPT;
                 'user_id' => auth()->id(),
                 'user_name' => auth()->user()?->name ?? auth()->user()?->email ?? 'System',
                 'user_role' => strtolower((string) (auth()->user()?->user_role ?? '')),
-                'action' => $hasMedicalCondition ? 'Applicant Pending Compliance' : 'Applicant Approval',
+                'action' => $hasPendingFinding ? 'Applicant Pending Compliance' : 'Applicant Approval',
                 'module' => 'Patient Intake',
-                'event_type' => $hasMedicalCondition ? 'applicant_pending_compliance' : 'applicant_approval',
-                'description' => $hasMedicalCondition
+                'event_type' => $hasPendingFinding ? 'applicant_pending_compliance' : 'applicant_approval',
+                'description' => $hasPendingFinding
                     ? "Applicant set to pending compliance: {$referenceNumber} (Student ID: {$studentId})"
                     : "Applicant approved: {$referenceNumber} (Student ID: {$studentId})",
                 'route_name' => optional($request->route())->getName(),
@@ -1593,23 +1631,24 @@ PROMPT;
                     'health_profile_id' => $profile->id,
                     'clearance_status' => $clearanceStatus,
                     'findings_status' => $findingsStatus,
-                'webhook_status' => ($webhookResult['success'] ?? false) ? 'success' : 'failed',
-                'webhook_message' => $webhookResult['message'] ?? null,
-                'lookup_source' => $isLocalOnlyApproval ? 'local_clinic_reference' : 'puptas',
-            ],
+                    'pending_reasons' => $pendingReasons,
+                    'webhook_status' => ($webhookResult['success'] ?? false) ? 'success' : 'failed',
+                    'webhook_message' => $webhookResult['message'] ?? null,
+                    'lookup_source' => $isLocalOnlyApproval ? 'local_clinic_reference' : 'puptas',
+                ],
                 'ip_address' => $request->ip(),
                 'user_agent' => substr((string) $request->userAgent(), 0, 255),
             ]);
 
             $redirectUrl = route('admin.health_records')
-                . ($hasMedicalCondition
+                . ($hasPendingFinding
                     ? '?tab=pending_conditional&highlight_health=' . $profile->id
                     : '?highlight_health=' . $profile->id);
 
             return response()->json([
                 'success' => true,
                 'status' => $clearanceStatus,
-                'message' => $hasMedicalCondition
+                'message' => $hasPendingFinding
                     ? 'Applicant saved under Pending Compliance.'
                     : (($webhookResult['success'] ?? false)
                         ? 'Applicant approved and synced to PUPTAS.'

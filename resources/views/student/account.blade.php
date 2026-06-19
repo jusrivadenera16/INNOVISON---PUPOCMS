@@ -921,78 +921,6 @@
 
     /* --- NOTIFICATIONS --- */
     .alert-success { background: #dcfce7; color: #15803d; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: 600; border: 1px solid #bbf7d0; }
-    .health-submit-overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 1200;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(15, 23, 42, 0.62);
-        backdrop-filter: blur(10px);
-        animation: overlayFadeIn 0.28s ease;
-    }
-    .health-submit-overlay.is-hiding {
-        animation: overlayFadeOut 0.3s ease forwards;
-    }
-    .health-submit-overlay-card {
-        text-align: center;
-        padding: 30px 24px;
-        max-width: 420px;
-    }
-    .health-submit-title {
-        font-size: 28px;
-        font-weight: 800;
-        color: #ffffff;
-        margin: 0 0 22px;
-        letter-spacing: -0.02em;
-    }
-    .health-submit-circle {
-        width: 132px;
-        height: 132px;
-        margin: 0 auto 18px;
-        border-radius: 999px;
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #ffffff;
-        border: 3px solid rgba(255, 255, 255, 0.92);
-        box-shadow: 0 18px 38px rgba(15, 23, 42, 0.16);
-        transform: scale(0.84);
-        animation: submitCircleResolve 0.9s ease forwards;
-        animation-delay: 0.92s;
-    }
-    .health-submit-ring {
-        position: absolute;
-        inset: -9px;
-        width: calc(100% + 18px);
-        height: calc(100% + 18px);
-        transform: rotate(-90deg);
-    }
-    .health-submit-ring circle {
-        fill: none;
-        stroke: #16a34a;
-        stroke-width: 7;
-        stroke-linecap: round;
-        stroke-dasharray: 358;
-        stroke-dashoffset: 358;
-        animation: submitRingDraw 0.9s ease forwards;
-    }
-    .health-submit-check {
-        position: absolute;
-        width: 54px;
-        height: 54px;
-        opacity: 0;
-        transform: scale(0.6);
-        animation: submitCheckReveal 0.34s ease forwards;
-        animation-delay: 1.18s;
-    }
-    .health-submit-subtext {
-        font-size: 14px;
-        color: rgba(255, 255, 255, 0.84);
-        margin: 0;
-    }
     .health-print-reminder {
         position: fixed;
         inset: 0;
@@ -1019,7 +947,7 @@
     }
     .health-print-reminder-card h2 {
         margin: 0 0 12px;
-        color: #741421;
+        color: #111827;
         font-size: 1.35rem;
         font-weight: 800;
     }
@@ -1052,45 +980,6 @@
     @keyframes overlayFadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
-    }
-    @keyframes overlayFadeOut {
-        from { opacity: 1; }
-        to { opacity: 0; visibility: hidden; }
-    }
-    @keyframes submitRingDraw {
-        0% {
-            stroke-dashoffset: 358;
-        }
-        100% {
-            stroke-dashoffset: 0;
-        }
-    }
-    @keyframes submitCircleResolve {
-        0% {
-            transform: scale(0.84);
-            background: #ffffff;
-            border-color: rgba(255, 255, 255, 0.92);
-        }
-        55% {
-            transform: scale(1.04);
-            background: #22c55e;
-            border-color: #22c55e;
-        }
-        100% {
-            transform: scale(1);
-            background: #16a34a;
-            border-color: #16a34a;
-        }
-    }
-    @keyframes submitCheckReveal {
-        0% {
-            opacity: 0;
-            transform: scale(0.6);
-        }
-        100% {
-            opacity: 1;
-            transform: scale(1);
-        }
     }
     .notif-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
     .notif-item:last-child { border-bottom: none; }
@@ -1831,6 +1720,48 @@
             0 10px 18px rgba(15, 23, 42, 0.06),
             inset 0 1px 0 rgba(255,255,255,0.82);
     }
+    .record-modal-summary-download {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #111827 !important;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .record-modal-summary-download:hover {
+        transform: translateY(-2px);
+        border-color: #eab308 !important;
+        background: #fbbf24 !important;
+        box-shadow: 0 16px 26px rgba(112, 19, 27, 0.12);
+        color: #111827 !important;
+        text-decoration: none;
+    }
+    .record-modal-summary-download .record-modal-label,
+    .record-modal-summary-download .record-modal-value {
+        color: #111827 !important;
+    }
+    .record-modal-download-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.42) !important;
+        color: #111827 !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        box-shadow: 0 10px 18px rgba(250, 204, 21, 0.18);
+    }
+    .record-modal-download-icon svg {
+        width: 20px;
+        height: 20px;
+        stroke-width: 2.4;
+        color: #111827 !important;
+        stroke: #111827 !important;
+    }
     .record-modal-body-fade {
         display: none;
     }
@@ -2061,6 +1992,15 @@
         border-color: rgba(250, 204, 21, 0.14) !important;
         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24) !important;
     }
+    html[data-theme="dark"] .record-modal-summary-download {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #111827 !important;
+    }
+    html[data-theme="dark"] .record-modal-summary-download:hover {
+        background: #fbbf24 !important;
+        border-color: #eab308 !important;
+    }
     html[data-theme="dark"] .record-modal-label,
     html[data-theme="dark"] .record-modal-value {
         color: #f8fafc !important;
@@ -2171,27 +2111,10 @@
 @endphp
 <div class="container" style="padding: 0 20px 40px;">
 
-    @if(session('health_profile_submitted'))
-        <div class="health-submit-overlay" id="healthSubmitOverlay">
-            <div class="health-submit-overlay-card">
-                <h2 class="health-submit-title">Health Profile Submitted</h2>
-                <div class="health-submit-circle" aria-hidden="true">
-                    <svg class="health-submit-ring" viewBox="0 0 120 120" aria-hidden="true">
-                        <circle cx="60" cy="60" r="54"></circle>
-                    </svg>
-                    <svg class="health-submit-check" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 6L9 17l-5-5"></path>
-                    </svg>
-                </div>
-                <p class="health-submit-subtext">Your record has been received and added to your account.</p>
-            </div>
-        </div>
-    @endif
-
     @if(session('show_health_print_reminder'))
         <div class="health-print-reminder" id="healthPrintReminder" aria-hidden="true">
             <section class="health-print-reminder-card" role="dialog" aria-modal="true" aria-labelledby="healthPrintReminderTitle">
-                <h2 id="healthPrintReminderTitle">Print Your Health Form</h2>
+                <h2 id="healthPrintReminderTitle">Print / Download your Health Form</h2>
                 <p>
                     Please print your Health Form before proceeding to the Medical Clinic to submit the physical copy.
                     Do not forget to bring a hard copy of your 2x2 photo.
@@ -2271,26 +2194,10 @@
         @if(session('health_profile_submitted'))
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const overlay = document.getElementById('healthSubmitOverlay');
     const printReminder = document.getElementById('healthPrintReminder');
-    if (!overlay) {
-        if (printReminder) {
-            printReminder.classList.add('is-open');
-            printReminder.setAttribute('aria-hidden', 'false');
-        }
-        return;
-    }
-
-    window.setTimeout(() => {
-        overlay.classList.add('is-hiding');
-        window.setTimeout(() => {
-            overlay.remove();
-            if (printReminder) {
-                printReminder.classList.add('is-open');
-                printReminder.setAttribute('aria-hidden', 'false');
-            }
-        }, 320);
-    }, 3500);
+    if (!printReminder) return;
+    printReminder.classList.add('is-open');
+    printReminder.setAttribute('aria-hidden', 'false');
 });
 </script>
 @endif
@@ -2571,7 +2478,16 @@ document.addEventListener('DOMContentLoaded', function () {
         $statusNormalized = strtolower(trim((string) $status));
         $isIssuedStatus = $statusNormalized === 'issued';
         $isRejectedStatus = $statusNormalized === 'rejected';
+        $isConditionalStatus = str_contains($statusNormalized, 'pending') || str_contains($statusNormalized, 'conditional');
         $isPendingStatus = !$isIssuedStatus && !$isRejectedStatus;
+        $recordPendingReason = trim((string) optional($user->healthProfile)->pending_reason);
+        $recordSubmissionStatus = $isConditionalStatus ? 'Pending Compliance' : 'Waiting for clinic review';
+        $recordStatusMessage = $isConditionalStatus
+            ? 'Your health profile needs follow-up before it can be issued. Please check the pending reason and coordinate with the Medical Clinic.'
+            : 'Your health profile has been submitted. Please proceed to the Medical Clinic on your designated schedule for medical review.';
+        $recordStatusNote = $isConditionalStatus
+            ? 'Please complete the pending requirement before your record can be marked as issued.'
+            : 'Clinic approval is required before your record can be marked as issued.';
         $puptasSyncStatus = optional($user->healthProfile)->puptas_sync_status;
         $puptasSyncMessage = trim((string) optional($user->healthProfile)->puptas_sync_message);
         $puptasSyncedAt = optional(optional($user->healthProfile)->puptas_synced_at)->format('M d, Y g:i A');
@@ -2583,6 +2499,8 @@ document.addEventListener('DOMContentLoaded', function () {
         $recordAssessmentDate = optional(optional($healthProfileRecord)->assessment_date)->format('M d, Y');
         $recordChestXrayDate = optional(optional($healthProfileRecord)->xray_date)->format('M d, Y');
         $recordMedicalIssuedAt = optional(optional($healthProfileRecord)->med_cert_date)->format('M d, Y');
+        $recordCourseValue = trim((string) (optional($healthProfileRecord)->course_college ?: ($accountProfileData['course_college'] ?? $user->course ?? '')));
+        $recordCourseLabel = strcasecmp($recordCourseValue, 'Faculty / Staff') === 0 ? 'Classification' : 'Course';
     @endphp
     <div class="page-hero">
         <div class="page-hero-icon" aria-hidden="true">
@@ -2727,7 +2645,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 <span class="health-status-note">Valid for Academic Year 2025-2026</span>
             @else
                 <div class="health-status-summary">
-                    <p class="health-status-message">Your health profile has been submitted. Please proceed to the Medical Clinic on your designated schedule for medical review.</p>
+                    @if($isConditionalStatus)
+                        <span class="health-status-state pending"><x-outline-icon name="clock" /> Pending Compliance</span>
+                    @endif
+                    <p class="health-status-message">{{ $recordStatusMessage }}</p>
                 </div>
 
                 <div class="health-status-meta-grid">
@@ -2737,11 +2658,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                     <div class="health-status-meta">
                         <span class="health-status-meta-label">Submission Status</span>
-                        <span class="health-status-meta-value">Waiting for clinic review</span>
+                        <span class="health-status-meta-value">{{ $recordSubmissionStatus }}</span>
                     </div>
                     <div class="health-status-meta">
-                        <span class="health-status-meta-label">View Mode</span>
-                        <span class="health-status-meta-value">Digital copy and status only</span>
+                        <span class="health-status-meta-label">{{ $isConditionalStatus ? 'Pending Reason' : 'View Mode' }}</span>
+                        <span class="health-status-meta-value">{{ $isConditionalStatus ? ($recordPendingReason !== '' ? $recordPendingReason : '-') : 'Digital copy and status only' }}</span>
                     </div>
                 </div>
 
@@ -2755,7 +2676,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         Approval Required
                     </button>
                 </div>
-                <span class="health-status-note">Clinic approval is required before your record can be marked as issued.</span>
+                <span class="health-status-note">{{ $recordStatusNote }}</span>
             @endif
             @else
                 <div class="health-status-summary">
@@ -2776,8 +2697,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     <button type="button" class="record-modal-close" aria-label="Close record details" onclick="closeHealthRecordModal()">
                         <x-outline-icon name="x-mark" />
                     </button>
-                    <h2 class="record-modal-title" id="healthRecordModalTitle">Health Record Details</h2>
-                    <p class="record-modal-subtitle">Review the information and uploaded digital copies submitted through your Student Health Profile.</p>
+                    <div class="record-modal-head-main">
+                        <h2 class="record-modal-title" id="healthRecordModalTitle">Health Record Details</h2>
+                        <p class="record-modal-subtitle">Review the information and uploaded digital copies submitted through your Student Health Profile.</p>
+                    </div>
                 </div>
                 <div class="record-modal-body" id="healthRecordModalBody">
                     <div class="record-modal-summary">
@@ -2785,10 +2708,19 @@ document.addEventListener('DOMContentLoaded', function () {
                             <span class="record-modal-label">Current Status</span>
                             <span class="record-modal-status">{{ $status }}</span>
                         </div>
-                        <div class="record-modal-summary-card">
-                            <span class="record-modal-label">{{ $referenceHeading }}</span>
-                            <div class="record-modal-value">{{ $recordReferenceNumber !== '' ? $recordReferenceNumber : '-' }}</div>
-                        </div>
+                        <a class="record-modal-summary-card record-modal-summary-download" href="{{ route('student.health_form.print') }}" target="_blank" rel="noopener">
+                            <span>
+                                <span class="record-modal-label">Health Form</span>
+                                <span class="record-modal-value">Download</span>
+                            </span>
+                            <span class="record-modal-download-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 3v12"></path>
+                                    <path d="m7 10 5 5 5-5"></path>
+                                    <path d="M5 21h14"></path>
+                                </svg>
+                            </span>
+                        </a>
                     </div>
 
                     <div class="record-modal-grid">
@@ -2797,8 +2729,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div class="record-modal-value">{{ $recordReferenceNumber !== '' ? $recordReferenceNumber : '-' }}</div>
                         </div>
                         <div class="record-modal-card">
-                            <span class="record-modal-label">Course</span>
-                            <div class="record-modal-value">{{ optional($healthProfileRecord)->course_college ?: ($accountProfileData['course_college'] ?? $user->course ?? '-') }}</div>
+                            <span class="record-modal-label">{{ $recordCourseLabel }}</span>
+                            <div class="record-modal-value">{{ $recordCourseValue !== '' ? $recordCourseValue : '-' }}</div>
                         </div>
                         <div class="record-modal-card">
                             <span class="record-modal-label">School Year</span>

@@ -59,8 +59,8 @@
             <td class="student-number-value">{{ $profile->student_number ?: $profile->user->student_number }}</td>
         </tr>
         <tr>
-            <td class="line-label">Home Address:</td>
-            <td class="line-value">{{ $profile->home_address ?? '' }}</td>
+            <td class="line-label home-address-label-cell">Home Address:</td>
+            <td class="line-value home-address-value-cell">{{ $profile->home_address ?? '' }}</td>
             <td class="line-label school-year-label">School Year:</td>
             <td class="line-value">{{ $profile->school_year ?? '2025-2026' }}</td>
         </tr>
@@ -228,72 +228,72 @@ personal and health information for the purpose/s of health assessment/ treatmen
 for the improvement of healthcare services.
     </div>
 
-
-
-    <table class="signature-table">
-        <tr>
-            <td>
-                <div class="signature-space"></div>
-                <div class="sig-line"></div>
-                <div class="signature-caption">(Signature of parent/guardian for<br>students below 18 years old)</div>
-            </td>
-            <td>
-                @if(empty($studentPrintCopy) && $profile->digital_signature)
-                    <img src="{{ asset('storage/' . $profile->digital_signature) }}" class="sig-image" style="height: 40px; width: auto;">
-                @else
+    <div class="signature-physician-block">
+        <table class="signature-table">
+            <tr>
+                <td>
                     <div class="signature-space"></div>
-                @endif
-                <div class="sig-line">{{ empty($studentPrintCopy) ? strtoupper($printedStudentName) : '' }}</div>
-                <div class="signature-caption">(Printed name and signature of student)</div>
-            </td>
-            <td>
-                <div class="signature-space signature-date-space">
-                </div>
-                <div class="sig-line"></div>
-                <div class="signature-caption">Date</div>
-            </td>
-        </tr>
-    </table>
-
-    <div class="physician-section">
-        <p style="text-align: center; font-weight: bold; margin-bottom: 2px; font-size: 14px; text-transform: uppercase;">FOR PHYSICIAN ONLY</p>
-        <p class="physician-check-instruction">Please Check</p>
-        
-        <table class="physician-clearance-table">
-            <tr>
-                <td class="physician-clearance-label">Medical Clearance:</td>
-                <td>
-                    <span class="box-ui physician-box">
-                    {{ empty($studentPrintCopy) && in_array($profile->clearance_status, ['Issued', 'Fully Cleared'], true) ? '/' : '' }}
-                    </span>
-                    Issued
+                    <div class="sig-line"></div>
+                    <div class="signature-caption">(Signature of parent/guardian for<br>students below 18 years old)</div>
                 </td>
-                <td class="physician-pending-cell">
-                    <span class="box-ui physician-box">
-                    {{ empty($studentPrintCopy) && in_array($profile->clearance_status, ['Pending', 'For Verification'], true) ? '/' : '' }}
-                    </span>
-                    Pending, Reason:
-                    <span class="physician-reason-line">
-                        {{ empty($studentPrintCopy) && in_array($profile->clearance_status, ['Pending', 'For Verification'], true) ? $profile->pending_reason : '' }}
-                    </span>
-                </td>
-            </tr>
-        </table>
-
-        <table class="physician-signature-table">
-            <tr>
                 <td>
-                    <div class="physician-signature-line">
-                        {{ empty($studentPrintCopy) && $profile->verified_at ? \Carbon\Carbon::parse($profile->verified_at)->format('m/d/Y') : '' }}
+                    @if(empty($studentPrintCopy) && $profile->digital_signature)
+                        <img src="{{ asset('storage/' . $profile->digital_signature) }}" class="sig-image" style="height: 40px; width: auto;">
+                    @else
+                        <div class="signature-space"></div>
+                    @endif
+                    <div class="sig-line">{{ empty($studentPrintCopy) ? strtoupper($printedStudentName) : '' }}</div>
+                    <div class="signature-caption">(Printed name and signature of student)</div>
+                </td>
+                <td>
+                    <div class="signature-space signature-date-space">
                     </div>
-                    <div class="physician-signature-label">Date:</div>
-                </td>
-                <td>
-                    <div class="physician-signature-line"></div>
-                    <div class="physician-signature-label">Physician's Name and Signature</div>
+                    <div class="sig-line"></div>
+                    <div class="signature-caption">Date</div>
                 </td>
             </tr>
         </table>
+
+        <div class="physician-section">
+            <p style="text-align: center; font-weight: bold; margin-bottom: 2px; font-size: 14px; text-transform: uppercase;">FOR PHYSICIAN ONLY</p>
+            <p class="physician-check-instruction">Please Check</p>
+            
+            <table class="physician-clearance-table">
+                <tr>
+                    <td class="physician-clearance-label">Medical Clearance:</td>
+                    <td>
+                        <span class="box-ui physician-box">
+                        {{ empty($studentPrintCopy) && in_array($profile->clearance_status, ['Issued', 'Fully Cleared'], true) ? '/' : '' }}
+                        </span>
+                        Issued
+                    </td>
+                    <td class="physician-pending-cell">
+                        <span class="box-ui physician-box">
+                        {{ empty($studentPrintCopy) && in_array($profile->clearance_status, ['Pending', 'For Verification'], true) ? '/' : '' }}
+                        </span>
+                        Pending, Reason:
+                        <span class="physician-reason-line">
+                            {{ empty($studentPrintCopy) && in_array($profile->clearance_status, ['Pending', 'For Verification'], true) ? $profile->pending_reason : '' }}
+                        </span>
+                    </td>
+                </tr>
+            </table>
+
+            <table class="physician-signature-table">
+                <tr>
+                    <td>
+                        <div class="physician-signature-line">
+                            {{ empty($studentPrintCopy) && $profile->verified_at ? \Carbon\Carbon::parse($profile->verified_at)->format('m/d/Y') : '' }}
+                        </div>
+                        <div class="physician-signature-label">Date:</div>
+                    </td>
+                    <td>
+                        <div class="physician-signature-line"></div>
+                        <div class="physician-signature-label">Physician's Name and Signature</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
     </div>
 
 </div>
