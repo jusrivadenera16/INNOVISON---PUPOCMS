@@ -634,15 +634,15 @@
     .export-hub-container .btn-select-month {
         flex-direction: column;
         gap: 2px;
-        background: #ffffff;
-        color: #334155;
-        border-color: #cbd5e1;
-        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+        background: linear-gradient(135deg, #70131B, #8f2230);
+        color: #ffffff;
+        border-color: #8f2230;
+        box-shadow: 0 10px 22px rgba(112, 19, 27, 0.18);
     }
 
     .export-hub-container .selected-date-range {
         margin: 0;
-        color: #70131B;
+        color: inherit;
         font-size: 12px;
         font-weight: 900;
     }
@@ -667,8 +667,7 @@
     }
 
     .export-hub-container .bg-audit,
-    .export-hub-container .bg-audit:hover,
-    .export-hub-container .bg-audit:focus {
+    .export-hub-container .bg-audit:not(:hover):not(:focus) {
         background: linear-gradient(135deg, #70131B, #8f2230) !important;
         border-color: #8f2230 !important;
     }

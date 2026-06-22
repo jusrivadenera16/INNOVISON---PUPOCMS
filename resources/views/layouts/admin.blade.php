@@ -3913,7 +3913,9 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             bottom: 82px;
             width: min(820px, calc(100vw - 128px));
             height: min(680px, calc(100vh - 118px));
-            overflow: visible;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
             border: 1px solid rgba(250, 204, 21, 0.48);
             border-radius: 20px;
             background: rgba(255, 248, 249, 0.96);
@@ -4054,7 +4056,9 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         .treatment-record-modal-frame {
             display: block;
             width: 100%;
-            height: calc(100% - 64px);
+            height: auto;
+            min-height: 0;
+            flex: 1 1 auto;
             border: 0;
             border-radius: 0 0 19px 19px;
             background: #f8fafc;
@@ -4433,23 +4437,11 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                     <span class="quick-action-tooltip">Daily Treatment Record</span>
                 </div>
                 <div class="quick-actions-divider" aria-hidden="true"></div>
-                <div class="quick-action-item quick-action-scan" id="headerQuickScan">
-                    <button type="button" class="quick-action-btn" onclick="toggleQuickScanMenu(event)" aria-label="Scan options" aria-expanded="false">
+                <div class="quick-action-item">
+                    <a href="{{ $walkinUrl }}" class="quick-action-btn" aria-label="Open Walk-in">
                         <x-outline-icon name="qr-code" />
-                    </button>
-                    <span class="quick-action-tooltip">Scan</span>
-                    <div class="quick-scan-menu" id="headerQuickScanMenu">
-                        @unless($isStudentAssistant)
-                        <button type="button" class="quick-scan-choice">
-                            <x-outline-icon name="document-text" />
-                            <span>Applicants</span>
-                        </button>
-                        @endunless
-                        <button type="button" class="quick-scan-choice">
-                            <x-outline-icon name="user-plus" />
-                            <span>Walk-in</span>
-                        </button>
-                    </div>
+                    </a>
+                    <span class="quick-action-tooltip">Walk-in</span>
                 </div>
                 <div class="quick-actions-divider" aria-hidden="true"></div>
                 <div class="quick-action-item">
@@ -4608,6 +4600,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             id="treatmentRecordModalFrame"
             title="Daily Treatment Record"
             data-src="{{ $dailyTreatmentRecordUrl }}?embed=1"
+            scrolling="yes"
         ></iframe>
     </section>
 </div>

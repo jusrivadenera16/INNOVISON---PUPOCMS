@@ -708,12 +708,13 @@ class AdminUserController extends Controller
 
     private function collectLocalUsers(string $search): array
     {
-        $query = User::query()->with('healthProfile');
+        $query = User::query()->with(['healthProfile', 'adminProfile']);
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
                 foreach ([
                     'student_id',
+                    'student_number',
                     'first_name',
                     'last_name',
                     'name',
@@ -722,10 +723,21 @@ class AdminUserController extends Controller
                     'year',
                     'section',
                     'user_role',
+                    'idp_role',
                 ] as $column) {
                     if (Schema::hasColumn('users', $column)) {
                         $builder->orWhere($column, 'like', '%' . $search . '%');
                     }
+                }
+
+                if (Schema::hasTable('admins')) {
+                    $builder->orWhereHas('adminProfile', function ($adminQuery) use ($search) {
+                        foreach (['admin_id', 'external_identifier', 'name', 'email', 'email_address'] as $column) {
+                            if (Admin::hasColumn($column)) {
+                                $adminQuery->orWhere($column, 'like', '%' . $search . '%');
+                            }
+                        }
+                    });
                 }
             });
         }
@@ -755,7 +767,7 @@ class AdminUserController extends Controller
                 $studentPhoto = $user->healthProfile?->student_photo;
                 $studentNumber = trim((string) ($user->student_number ?? ''));
                 $studentId = trim((string) ($user->student_id ?? ''));
-                $resolvedIdentifier = $this->resolveDisplayIdentifier($studentNumber, $studentId);
+                $resolvedIdentifier = $this->resolveUserDisplayIdentifier($user, $linkedAdmin);
 
                 return [
                     'id' => (string) $user->id,
@@ -1181,6 +1193,34 @@ class AdminUserController extends Controller
         ) === 1;
 
         return $studentId !== '' && !$isUuid ? $studentId : '';
+    }
+
+    private function resolveUserDisplayIdentifier(User $user, ?Admin $linkedAdmin): string
+    {
+        $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
+        $userType = strtolower(trim((string) ($user->user_type ?? '')));
+        $studentNumber = trim((string) ($user->student_number ?? ''));
+        $studentId = trim((string) ($user->student_id ?? ''));
+
+        if (in_array($userType, ['assistant', 'student assistant', 'student_assistant'], true)) {
+            return $studentNumber;
+        }
+
+        if ($idpRole === 'faculty') {
+            $facultyCode = trim((string) ($linkedAdmin?->external_identifier ?? ''));
+
+            return $this->resolveDisplayIdentifier('', $facultyCode !== '' ? $facultyCode : $studentId);
+        }
+
+        if ($idpRole === 'admin') {
+            return trim((string) ($linkedAdmin?->admin_id ?? ''));
+        }
+
+        if (in_array($idpRole, ['student', 'applicant', 'guest'], true)) {
+            return $studentNumber;
+        }
+
+        return $this->resolveDisplayIdentifier($studentNumber, $studentId);
     }
 
     private function findLinkedAdminProfile(User $user): ?Admin

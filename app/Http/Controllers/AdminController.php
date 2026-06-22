@@ -376,7 +376,9 @@ class AdminController extends Controller
 
         $total = Appointment::count();
         $pending = Appointment::where('status', 'Pending')->count();
-        $upcoming = Appointment::where('status', 'Approved')->count();
+        $upcoming = Appointment::where('status', 'Approved')
+            ->whereDate('date', today())
+            ->count();
         $completed = Appointment::where('status', 'Completed')->count();
         $cancelled = Appointment::where('status', 'Cancelled')->count();
 
@@ -391,7 +393,7 @@ class AdminController extends Controller
 
         $appointmentChartStats = [
             ['label' => 'Pending', 'value' => $pending, 'class' => 'warning'],
-            ['label' => 'Approved', 'value' => $upcoming, 'class' => 'success'],
+            ['label' => 'Scheduled Today', 'value' => $upcoming, 'class' => 'success'],
             ['label' => 'Completed', 'value' => $completed, 'class' => 'info'],
             ['label' => 'Cancelled', 'value' => $cancelled, 'class' => 'danger'],
         ];

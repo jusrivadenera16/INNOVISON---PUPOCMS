@@ -36,13 +36,13 @@
         padding: 11px 18px;
         font-size: 15px;
         font-weight: 800;
-        color: #ffffff;
-        background: linear-gradient(135deg, #70131B, #8f2230);
-        border: 1px solid #8f2230;
+        color: #70131B;
+        background: #ffffff;
+        border: 1px solid rgba(112, 19, 27, 0.34);
         text-decoration: none;
         box-shadow:
-            0 0 0 3px rgba(112, 19, 27, 0.12),
-            0 10px 22px rgba(112, 19, 27, 0.20);
+            0 0 0 2px rgba(112, 19, 27, 0.08),
+            0 10px 22px rgba(15, 23, 42, 0.10);
         transition: color .08s linear, transform .18s ease, box-shadow .18s ease, border-color .18s ease;
         z-index: 0;
     }
@@ -62,10 +62,11 @@
         z-index: -1;
     }
     .profile-top-btn:hover {
-        color: #ffffff !important;
+        color: #70131B !important;
         text-decoration: none;
         transform: translateY(-1px);
-        border-color: #facc15;
+        border-color: rgba(112, 19, 27, 0.58);
+        background: #ffffff;
         box-shadow:
             0 0 0 3px rgba(250, 204, 21, 0.18),
             0 14px 24px rgba(112, 19, 27, 0.16);
@@ -77,11 +78,11 @@
     .profile-top-btn:hover,
     .profile-top-btn span,
     .profile-top-btn svg {
-        color: #ffffff !important;
+        color: #70131B !important;
     }
     .profile-top-btn svg,
     .profile-top-btn svg * {
-        stroke: #ffffff !important;
+        stroke: #70131B !important;
     }
     .profile-top-btn:hover::after {
         transform: translateX(135%);
@@ -244,7 +245,7 @@
             </div>
             <div class="profile-head-actions">
                 <a href="{{ route('admin.health_records') }}" class="profile-top-btn">
-                    <x-outline-icon name="arrow-left-on-rectangle" />
+                    <span aria-hidden="true">&larr;</span>
                     Back
                 </a>
             </div>
@@ -254,7 +255,7 @@
     <div class="profile-card">
         <div class="profile-switch-head">
             <div class="profile-switch" role="tablist" aria-label="Health profile sections">
-                <button type="button" class="profile-tab is-active" data-profile-tab-target="summaryPanel">Health Summary</button>
+                <button type="button" class="profile-tab is-active" data-profile-tab-target="summaryPanel">Personal Information</button>
                 <button type="button" class="profile-tab" data-profile-tab-target="docsPanel">Uploaded Documents</button>
             </div>
             <span class="profile-status-badge {{ $profileStatusClass }}">

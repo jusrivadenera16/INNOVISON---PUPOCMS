@@ -1692,6 +1692,15 @@
         detailOriginalRole.value = originalRole
             ? originalRole.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
             : 'N/A';
+        if (detailIdentifierLabel && managementView !== 'admin-hub') {
+            const normalizedOriginalRole = originalRole.toLowerCase();
+            const normalizedSource = String(row.dataset.source || '').toLowerCase();
+            detailIdentifierLabel.textContent = normalizedSource === 'student_assistant'
+                ? 'Student Number'
+                : (normalizedOriginalRole === 'faculty'
+                    ? 'Faculty Code'
+                    : (normalizedOriginalRole === 'admin' ? 'Admin ID' : 'Student Number'));
+        }
         const accessLevel = (meta.access_level || '').toLowerCase();
         const adminLoginEmail = meta.admin_login_email || '';
         const office = meta.office || '';

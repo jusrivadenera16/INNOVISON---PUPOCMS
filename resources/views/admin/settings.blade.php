@@ -189,7 +189,11 @@
         box-shadow: 0 10px 20px rgba(15,23,42,0.06);
     }
     .btn-edit-profile:hover {
-        background: rgba(127,0,0,0.10);
+        background: #facc15;
+        border-color: #facc15;
+        color: #111827;
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(15,23,42,0.12);
     }
     .mini-edit-btn {
         display: inline-flex;
@@ -205,7 +209,11 @@
         white-space: nowrap;
     }
     .mini-edit-btn:hover {
-        background: rgba(127,0,0,0.10);
+        background: #facc15;
+        border-color: #facc15;
+        color: #111827;
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(15,23,42,0.12);
     }
 
     .profile-top {
@@ -611,12 +619,27 @@
     .btn-save:hover {
         transform: translateY(-1px);
         border-color: #facc15;
+        background: #facc15;
+        color: #111827;
         box-shadow:
             0 0 0 3px rgba(250, 204, 21, 0.18),
             0 14px 24px rgba(112, 19, 27, 0.16);
     }
     .btn-save:hover::after {
         transform: translateX(135%);
+    }
+
+    .modal-body .field select,
+    .workflow-setting-group textarea {
+        border: 1px solid rgba(127, 0, 0, 0.18);
+        background: linear-gradient(180deg, #ffffff, #fffdf8);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06), inset 0 1px 0 #ffffff;
+        transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .modal-body .field select:hover,
+    .workflow-setting-group textarea:hover {
+        border-color: rgba(127, 0, 0, 0.38);
     }
 
     /* ── Settings Modals — MA-style design ─────────────────────── */

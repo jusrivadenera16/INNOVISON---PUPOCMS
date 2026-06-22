@@ -798,6 +798,43 @@
         color: #be123c;
     }
 
+    .manual-lookup-status {
+        display: none;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 12px;
+        padding: 12px 14px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.5;
+    }
+    .manual-lookup-status.is-visible { display: flex; }
+    .manual-lookup-status.is-loading { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+    .manual-lookup-status.is-success { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+    .manual-lookup-status.is-error { background: #fff1f2; border-color: #fecdd3; color: #9f1239; }
+    .manual-lookup-status .spinner {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        border-width: 2px;
+    }
+
+    .ocr-status.approved {
+        display: block;
+        padding: 18px 20px;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        border-left: 5px solid #059669;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #ecfdf5, #ffffff);
+        color: #065f46;
+        font-size: 15px;
+        font-weight: 900;
+        line-height: 1.5;
+        box-shadow: 0 14px 32px rgba(5, 150, 105, 0.14);
+    }
+
     html[data-theme="dark"] .walkin-strip-card::before {
         background: #facc15;
     }
@@ -5002,6 +5039,7 @@
                                     <input type="text" id="student_id_manual" placeholder="Enter student number" class="form-control" required>
                                     <button type="submit" id="manualFindBtn" class="manual-find-btn" disabled>Find Student</button>
                                 </form>
+                                <div id="manualLookupStatus" class="manual-lookup-status" role="status" aria-live="polite"></div>
                             </div>
                         </div>
                         <canvas id="ocrCanvas" style="display:none;"></canvas>
@@ -5137,8 +5175,9 @@
             <div id="manualInputArea" style="display:none;" class="mt-3">
                 <form id="walkinFormManual" class="d-flex gap-2">
                     <input type="text" id="student_id_manual" placeholder="Enter student number" class="form-control" style="margin-bottom:0;" required>
-                    <button type="submit" class="manual-find-btn">Find</button>
+                    <button type="submit" id="manualFindBtn" class="manual-find-btn" disabled>Find Student</button>
                 </form>
+                <div id="manualLookupStatus" class="manual-lookup-status" role="status" aria-live="polite"></div>
             </div>
 
             <div class="mt-4 pt-3" style="border-top: 1px dashed #cbd5e1;">
@@ -6020,24 +6059,61 @@
             });
         }
 
-        function verifyUser(id, studentName = '', autoProceed = false) {
-            $('#scan-loading').css('display', 'flex');
+        function setManualLookupStatus(type, message) {
+            const status = document.getElementById('manualLookupStatus');
+            if (!status) return;
+
+            status.className = 'manual-lookup-status is-visible is-' + type;
+            status.replaceChildren();
+
+            if (type === 'loading') {
+                const spinner = document.createElement('span');
+                spinner.className = 'spinner';
+                spinner.setAttribute('aria-hidden', 'true');
+                status.appendChild(spinner);
+            }
+
+            const copy = document.createElement('span');
+            copy.textContent = message;
+            status.appendChild(copy);
+        }
+
+        function verifyUser(id, studentName = '', autoProceed = false, verificationSource = 'ocr') {
+            const isManualLookup = verificationSource === 'manual';
+            const normalizedId = String(id || '').trim();
+
+            if (isManualLookup) {
+                setManualLookupStatus('loading', 'Verifying student number...');
+                $('#manualFindBtn').prop('disabled', true).text('Verifying...');
+            } else {
+                $('#scan-loading').css('display', 'flex');
+            }
             $('#notification').html('');
-            $.get("{{ url($basePrefix . '/walkin/get-student') }}", { student_id: id, student_name: studentName, intake_target: intakeTarget }, function(res) {
-                $('#scan-loading').hide();
+            $.get("{{ url($basePrefix . '/walkin/get-student') }}", { student_id: normalizedId, student_name: studentName, intake_target: intakeTarget }, function(res) {
+                if (!isManualLookup) $('#scan-loading').hide();
                 autoProceedInFlight = false;
                 if (res.status === 'found') {
+                    if (isManualLookup) setManualLookupStatus('success', 'Student found. Opening the student record...');
                     window.location.href = res.redirect_url;
                 } else if (res.status === 'name_mismatch') {
                     const candidateName = res.candidate && res.candidate.name ? res.candidate.name : 'Saved patient name';
-                    const candidateNumber = res.candidate && res.candidate.student_number ? res.candidate.student_number : id;
-                    buildStatus(`We found ${candidateNumber}, but the extracted name did not match the saved record (${candidateName}). Please review the OCR result before continuing.`, 'error');
-                    $('#ocrResultPanel').show();
+                    const candidateNumber = res.candidate && res.candidate.student_number ? res.candidate.student_number : normalizedId;
+                    if (isManualLookup) {
+                        setManualLookupStatus('error', `Student ${candidateNumber} was found, but the supplied name does not match ${candidateName}.`);
+                    } else {
+                        buildStatus(`We found ${candidateNumber}, but the extracted name did not match the saved record (${candidateName}). Please review the OCR result before continuing.`, 'error');
+                        $('#ocrResultPanel').show();
+                    }
                 } else {
                     const statusText = res.lookup_status ? ` (PUPTAS status ${res.lookup_status})` : '';
                     const failureMessage = res.message
                         ? `${res.message}${statusText}`
-                        : `No patient matched ${id} locally or in PUPTAS${statusText}.`;
+                        : `No user found for student number ${normalizedId}${statusText}. Please check the number and try again.`;
+
+                    if (isManualLookup) {
+                        setManualLookupStatus('error', failureMessage);
+                        return;
+                    }
 
                     if (autoProceed) {
                         buildStatus(`Auto proceed stopped: ${failureMessage}`, 'info');
@@ -6058,8 +6134,16 @@
                     }
                 }
             }).fail(() => {
-                $('#scan-loading').hide();
+                if (isManualLookup) {
+                    setManualLookupStatus('error', 'Unable to verify the student number right now. Please try again.');
+                } else {
+                    $('#scan-loading').hide();
+                }
                 autoProceedInFlight = false;
+            }).always(() => {
+                if (isManualLookup) {
+                    $('#manualFindBtn').prop('disabled', normalizedId === '').text('Find Student');
+                }
             });
         }
 
@@ -6218,6 +6302,11 @@
 
         $('#student_id_manual').on('input', function() {
             $('#manualFindBtn').prop('disabled', $(this).val().trim() === '');
+            const manualStatus = document.getElementById('manualLookupStatus');
+            if (manualStatus) {
+                manualStatus.className = 'manual-lookup-status';
+                manualStatus.replaceChildren();
+            }
         });
 
         $('#btnSwitchScanMode').on('click', function() {
@@ -6282,7 +6371,7 @@
 
         $('#walkinFormManual').on('submit', function(e) {
             e.preventDefault();
-            verifyUser($('#student_id_manual').val());
+            verifyUser($('#student_id_manual').val(), '', false, 'manual');
         });
 
         $('#confirmBtn').on('click', function() {
@@ -6653,7 +6742,7 @@
             applyLookupMode('clinic');
             backdrop.classList.add('show');
             setEntryMode(false);
-            if (refInput) refInput.value = '';
+            if (refInput) refInput.value = 'CLN-';
         }
 
         function closeApplicantsModal() {
@@ -6923,7 +7012,7 @@
                             : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.'));
 
                     if (isAlreadyApproved) {
-                        setStatus('success', 'Already Approved.');
+                        setStatus('approved', 'Applicant Already Approved. This health profile has already been cleared by the clinic.');
                         if (foundCard && foundName) {
                             foundName.textContent = (applicantName || ref) + ' ✓';
                             foundCard.style.display = 'block';

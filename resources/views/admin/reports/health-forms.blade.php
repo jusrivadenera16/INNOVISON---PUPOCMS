@@ -252,7 +252,7 @@
     <div class="health-forms-head">
         <div>
             <h1 class="health-forms-title">Health Forms</h1>
-            <p class="health-forms-copy">Issued health forms summarized by course. Use the filters to review how many forms were released per course for the selected month.</p>
+            <p class="health-forms-copy">Issued health forms summarized by course for the selected date range.</p>
         </div>
         <a href="{{ $reportsUrl }}" class="health-forms-back">&larr; Back to Reports</a>
     </div>
@@ -277,8 +277,12 @@
             <h3>Filter Records</h3>
             <form class="health-forms-filter-form" method="GET">
                 <div class="health-forms-field">
-                    <label for="healthFormsMonth">Month</label>
-                    <input id="healthFormsMonth" type="month" name="month" value="{{ $monthFilter }}">
+                    <label for="healthFormsDateFrom">From</label>
+                    <input id="healthFormsDateFrom" type="text" name="date_from" value="{{ $dateFrom->format('d/m/Y') }}" placeholder="DD/MM/YYYY" inputmode="numeric" pattern="\d{2}/\d{2}/\d{4}" required>
+                </div>
+                <div class="health-forms-field">
+                    <label for="healthFormsDateTo">To</label>
+                    <input id="healthFormsDateTo" type="text" name="date_to" value="{{ $dateTo->format('d/m/Y') }}" placeholder="DD/MM/YYYY" inputmode="numeric" pattern="\d{2}/\d{2}/\d{4}" required>
                 </div>
                 <div class="health-forms-field">
                     <label for="healthFormsSearch">Search</label>

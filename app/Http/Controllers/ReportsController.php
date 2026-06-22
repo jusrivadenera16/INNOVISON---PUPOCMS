@@ -37,29 +37,37 @@ class ReportsController extends Controller
         return $item->convertDispensingQuantityToStockQuantity($consumedTotal);
     }
 
+    private function parseReportDate(string $value, Carbon $fallback): Carbon
+    {
+        $value = trim($value);
+
+        foreach (['d/m/Y', 'Y-m-d'] as $format) {
+            try {
+                $date = Carbon::createFromFormat('!' . $format, $value);
+                if ($date && $date->format($format) === $value) {
+                    return $date;
+                }
+            } catch (\Throwable $exception) {
+                // Try the next supported input format.
+            }
+        }
+
+        return $fallback->copy();
+    }
+
     public function dailyTreatmentRecord(Request $request)
     {
-        $legacyMonth = trim((string) $request->query('month', ''));
-        $monthFrom = trim((string) $request->query('month_from', $legacyMonth ?: now()->format('Y-m')));
-        $monthTo = trim((string) $request->query('month_to', $legacyMonth ?: $monthFrom));
+        $dateFrom = $this->parseReportDate(
+            (string) $request->query('date_from', ''),
+            now()->startOfMonth()
+        )->startOfDay();
+        $dateTo = $this->parseReportDate(
+            (string) $request->query('date_to', ''),
+            now()
+        )->endOfDay();
 
-        if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $monthFrom)) {
-            $monthFrom = now()->format('Y-m');
-        }
-
-        if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $monthTo)) {
-            $monthTo = $monthFrom;
-        }
-
-        $monthStart = Carbon::createFromFormat('Y-m-d', $monthFrom . '-01')->startOfMonth();
-        $monthEnd = Carbon::createFromFormat('Y-m-d', $monthTo . '-01')->endOfMonth();
-
-        if ($monthStart->gt($monthEnd)) {
-            [$monthStart, $monthEnd] = [
-                Carbon::createFromFormat('Y-m-d', $monthTo . '-01')->startOfMonth(),
-                Carbon::createFromFormat('Y-m-d', $monthFrom . '-01')->endOfMonth(),
-            ];
-            [$monthFrom, $monthTo] = [$monthTo, $monthFrom];
+        if ($dateFrom->gt($dateTo)) {
+            [$dateFrom, $dateTo] = [$dateTo->copy()->startOfDay(), $dateFrom->copy()->endOfDay()];
         }
 
         $consultations = Consultation::query()
@@ -69,15 +77,15 @@ class ReportsController extends Controller
                 'medicineItem',
                 'attendingStaff.adminProfile',
             ])
-            ->whereBetween('consultation_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()])
             ->orderBy('consultation_date')
             ->orderBy('time_in')
             ->orderBy('created_at')
             ->get();
 
         return view('admin.reports.daily-treatment-record', compact(
-            'monthFrom',
-            'monthTo',
+            'dateFrom',
+            'dateTo',
             'consultations',
         ));
     }
@@ -545,24 +553,24 @@ class ReportsController extends Controller
     public function healthFormsReport(Request $request)
     {
         $search = trim((string) $request->query('q', ''));
-        $monthFilter = trim((string) $request->query('month', now()->format('Y-m')));
+        $dateFrom = $this->parseReportDate((string) $request->query('date_from', ''), now()->startOfMonth())->startOfDay();
+        $dateTo = $this->parseReportDate((string) $request->query('date_to', ''), now())->endOfDay();
+
+        if ($dateFrom->gt($dateTo)) {
+            [$dateFrom, $dateTo] = [$dateTo->copy()->startOfDay(), $dateFrom->copy()->endOfDay()];
+        }
 
         $issuedBaseQuery = HealthProfile::query()
             ->with('user')
             ->where('clearance_status', 'Issued');
 
-        if ($monthFilter !== '') {
-            $monthStart = Carbon::parse($monthFilter . '-01')->startOfMonth();
-            $monthEnd = (clone $monthStart)->endOfMonth();
-
-            $issuedBaseQuery->where(function ($builder) use ($monthStart, $monthEnd) {
-                $builder->whereBetween('verified_at', [$monthStart, $monthEnd])
-                    ->orWhere(function ($fallback) use ($monthStart, $monthEnd) {
+        $issuedBaseQuery->where(function ($builder) use ($dateFrom, $dateTo) {
+                $builder->whereBetween('verified_at', [$dateFrom, $dateTo])
+                    ->orWhere(function ($fallback) use ($dateFrom, $dateTo) {
                         $fallback->whereNull('verified_at')
-                            ->whereBetween('created_at', [$monthStart, $monthEnd]);
+                            ->whereBetween('created_at', [$dateFrom, $dateTo]);
                     });
             });
-        }
 
         if ($search !== '') {
             $issuedBaseQuery->where(function ($builder) use ($search) {
@@ -614,18 +622,13 @@ class ReportsController extends Controller
 
         $summaryQuery = HealthProfile::query()->where('clearance_status', 'Issued');
 
-        if ($monthFilter !== '') {
-            $monthStart = Carbon::parse($monthFilter . '-01')->startOfMonth();
-            $monthEnd = (clone $monthStart)->endOfMonth();
-
-            $summaryQuery->where(function ($builder) use ($monthStart, $monthEnd) {
-                $builder->whereBetween('verified_at', [$monthStart, $monthEnd])
-                    ->orWhere(function ($fallback) use ($monthStart, $monthEnd) {
+        $summaryQuery->where(function ($builder) use ($dateFrom, $dateTo) {
+                $builder->whereBetween('verified_at', [$dateFrom, $dateTo])
+                    ->orWhere(function ($fallback) use ($dateFrom, $dateTo) {
                         $fallback->whereNull('verified_at')
-                            ->whereBetween('created_at', [$monthStart, $monthEnd]);
+                            ->whereBetween('created_at', [$dateFrom, $dateTo]);
                     });
             });
-        }
 
         $totalIssued = (clone $summaryQuery)->count();
         $totalCourses = $issuedFormsCollection->count();
@@ -639,7 +642,8 @@ class ReportsController extends Controller
             'issuedWithConditions',
             'topCourse',
             'search',
-            'monthFilter'
+            'dateFrom',
+            'dateTo'
         ));
     }
 

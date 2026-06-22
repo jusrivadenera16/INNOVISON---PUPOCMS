@@ -1641,6 +1641,9 @@
     #itemModal .inventory-modal-close:hover {
         border-color: #facc15;
         transform: translateY(-1px);
+        background: linear-gradient(90deg, #8f2230 0 50%, #70131b 50% 100%);
+        background-size: 205% 100%;
+        background-position: 0 0;
         box-shadow:
             0 0 0 3px rgba(250, 204, 21, 0.18),
             0 14px 24px rgba(112, 19, 27, 0.16);
@@ -1882,6 +1885,14 @@
         box-shadow:
             0 12px 22px rgba(0, 0, 0, 0.22),
             inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    html[data-theme="dark"] .inventory-unit-display,
+    html[data-theme="dark"] .inventory-unit-display *,
+    html[data-theme="dark"] .inventory-dispensing-unit-display,
+    html[data-theme="dark"] .inventory-dispensing-unit-display * {
+        color: #ffffff !important;
+        opacity: 1 !important;
     }
 
     html[data-theme="dark"] .inventory-category-display:hover,

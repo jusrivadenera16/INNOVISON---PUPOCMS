@@ -637,9 +637,9 @@
 @php
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
     $reportsHomeUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
-    $rangeStartLabel = \Carbon\Carbon::createFromFormat('Y-m-d', $monthFrom . '-01')->format('F Y');
-    $rangeEndLabel = \Carbon\Carbon::createFromFormat('Y-m-d', $monthTo . '-01')->format('F Y');
-    $selectedMonthLabel = $monthFrom === $monthTo
+    $rangeStartLabel = $dateFrom->format('d M Y');
+    $rangeEndLabel = $dateTo->format('d M Y');
+    $selectedMonthLabel = $dateFrom->isSameDay($dateTo)
         ? $rangeStartLabel
         : $rangeStartLabel . ' to ' . $rangeEndLabel;
 @endphp
@@ -776,19 +776,19 @@
             </span>
             <div class="treatment-filter-head-copy">
                 <h2 id="treatmentFilterTitle">Treatment Record Date Range</h2>
-                <p>Select the starting and ending months to display in the Form B logbook.</p>
+                <p>Select the starting and ending dates to display in the Form B logbook.</p>
             </div>
             <button type="button" class="treatment-filter-close" id="closeTreatmentFilter" aria-label="Close date filter">&times;</button>
         </header>
         <form method="GET" class="treatment-filter-form">
             <div class="treatment-filter-grid">
                 <div class="treatment-filter-card">
-                    <label for="treatmentMonthFrom">Month From</label>
-                    <input id="treatmentMonthFrom" class="treatment-month-input" type="month" name="month_from" value="{{ $monthFrom }}" required>
+                    <label for="treatmentDateFrom">From</label>
+                    <input id="treatmentDateFrom" class="treatment-month-input" type="text" name="date_from" value="{{ $dateFrom->format('d/m/Y') }}" placeholder="DD/MM/YYYY" inputmode="numeric" pattern="\d{2}/\d{2}/\d{4}" required>
                 </div>
                 <div class="treatment-filter-card">
-                    <label for="treatmentMonthTo">Month To</label>
-                    <input id="treatmentMonthTo" class="treatment-month-input" type="month" name="month_to" value="{{ $monthTo }}" required>
+                    <label for="treatmentDateTo">To</label>
+                    <input id="treatmentDateTo" class="treatment-month-input" type="text" name="date_to" value="{{ $dateTo->format('d/m/Y') }}" placeholder="DD/MM/YYYY" inputmode="numeric" pattern="\d{2}/\d{2}/\d{4}" required>
                 </div>
             </div>
             <div class="treatment-filter-actions">
@@ -812,8 +812,8 @@
         const openFilter = document.getElementById('openTreatmentFilter');
         const closeFilter = document.getElementById('closeTreatmentFilter');
         const cancelFilter = document.getElementById('cancelTreatmentFilter');
-        const monthFrom = document.getElementById('treatmentMonthFrom');
-        const monthTo = document.getElementById('treatmentMonthTo');
+        const dateFrom = document.getElementById('treatmentDateFrom');
+        const dateTo = document.getElementById('treatmentDateTo');
 
         const updateSearch = function () {
             const query = searchInput.value.trim().toLowerCase();
@@ -844,7 +844,7 @@
             document.body.style.overflow = isOpen ? 'hidden' : '';
             if (isOpen) {
                 window.setTimeout(function () {
-                    monthFrom?.focus();
+                    dateFrom?.focus();
                 }, 0);
             }
         };
@@ -868,17 +868,6 @@
                 setFilterModal(false);
             }
         });
-        monthFrom?.addEventListener('change', function () {
-            if (monthTo && monthFrom.value && (!monthTo.value || monthTo.value < monthFrom.value)) {
-                monthTo.value = monthFrom.value;
-            }
-            if (monthTo && monthFrom.value) {
-                monthTo.min = monthFrom.value;
-            }
-        });
-        if (monthTo && monthFrom?.value) {
-            monthTo.min = monthFrom.value;
-        }
     });
 </script>
 @endsection

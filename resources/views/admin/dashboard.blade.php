@@ -336,7 +336,7 @@
 
         <div class="stat-card">
             <div>
-                <div class="stat-label">Approved</div>
+                <div class="stat-label">Scheduled Today</div>
                 <div class="stat-value">{{ $upcoming }}</div>
             </div>
             <div class="stat-badge badge-success">Scheduled</div>

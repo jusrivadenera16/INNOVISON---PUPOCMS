@@ -3,6 +3,8 @@
 namespace Tests\Unit;
 
 use App\Http\Controllers\AdminUserController;
+use App\Models\Admin;
+use App\Models\User;
 use ReflectionMethod;
 use PHPUnit\Framework\TestCase;
 
@@ -34,6 +36,20 @@ class AdminEffectiveRoleLabelTest extends TestCase
         $this->assertSame('Regular', $this->defaultUserType('admin'));
     }
 
+    public function test_account_access_identifiers_follow_the_original_identity(): void
+    {
+        $admin = new Admin(['admin_id' => 42]);
+
+        $adminUser = new User(['idp_role' => 'admin', 'student_id' => '23bc49da-b339-4bc1-ad6d-5e8da90014f3']);
+        $this->assertSame('42', $this->userIdentifier($adminUser, $admin));
+
+        $assistant = new User(['idp_role' => 'student', 'user_type' => 'Assistant', 'student_number' => '2025-00123-TG-0']);
+        $this->assertSame('2025-00123-TG-0', $this->userIdentifier($assistant));
+
+        $faculty = new User(['idp_role' => 'faculty', 'student_id' => 'FAC-009']);
+        $this->assertSame('FAC-009', $this->userIdentifier($faculty));
+    }
+
     private function roleLabel(string $accessLevel): string
     {
         $controller = new AdminUserController();
@@ -59,5 +75,14 @@ class AdminEffectiveRoleLabelTest extends TestCase
         $method->setAccessible(true);
 
         return $method->invoke($controller, $idpRole);
+    }
+
+    private function userIdentifier(User $user, ?Admin $admin = null): string
+    {
+        $controller = new AdminUserController();
+        $method = new ReflectionMethod($controller, 'resolveUserDisplayIdentifier');
+        $method->setAccessible(true);
+
+        return $method->invoke($controller, $user, $admin);
     }
 }
