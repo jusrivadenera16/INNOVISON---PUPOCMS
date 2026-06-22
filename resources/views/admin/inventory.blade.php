@@ -243,6 +243,9 @@
             0 14px 24px rgba(112, 19, 27, 0.16);
     }
     .modal-actions-row .btn-add:hover {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #111827 !important;
         box-shadow:
             0 0 0 3px rgba(250, 204, 21, 0.18),
             0 14px 24px rgba(112, 19, 27, 0.16),
@@ -1885,6 +1888,13 @@
         box-shadow:
             0 12px 22px rgba(0, 0, 0, 0.22),
             inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    #itemModal .modal-actions-row .btn-add:hover,
+    #itemModal .modal-actions-row .btn-add:focus-visible {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #111827 !important;
     }
 
     html[data-theme="dark"] .inventory-unit-display,

@@ -2581,7 +2581,15 @@ public function deleteItem($id)
             $settings->clinic_closure_message = $request->input('clinic_closure_message') ?: null;
         }
 
-        $settings->save();
+        $cancelledForClosure = DB::transaction(function () use ($settings, $request) {
+            $settings->save();
+
+            if (!$request->boolean('preferences_form') || !$settings->clinic_closure_enabled) {
+                return 0;
+            }
+
+            return $this->cancelAppointmentsDuringClinicClosure($settings);
+        });
 
         $logParts = [];
         if ($request->filled('clinic_name') || $request->filled('clinic_location') || $request->filled('open_time') || $request->filled('close_time')) {
@@ -2589,6 +2597,9 @@ public function deleteItem($id)
         }
         if ($request->boolean('preferences_form')) {
             $logParts[] = 'system preferences';
+            if ($cancelledForClosure > 0) {
+                $logParts[] = "cancelled {$cancelledForClosure} appointment(s) within the clinic closure window";
+            }
         }
         $logDescription = $logParts !== []
             ? 'Modified ' . implode(', ', $logParts)
@@ -2604,7 +2615,63 @@ public function deleteItem($id)
         'user_agent'  => request()->userAgent(),
     ]);
 
-        return redirect()->back()->with('success', 'System settings saved.');
+        $successMessage = 'System settings saved.';
+        if ($cancelledForClosure > 0) {
+            $successMessage .= " {$cancelledForClosure} affected appointment(s) were cancelled and students were asked to rebook.";
+        }
+
+        return redirect()->back()->with('success', $successMessage);
+    }
+
+    private function cancelAppointmentsDuringClinicClosure(Setting $settings): int
+    {
+        if (!$settings->clinic_closure_starts_at || !$settings->clinic_closure_ends_at) {
+            return 0;
+        }
+
+        $timezone = config('app.timezone');
+        $startsAt = Carbon::parse($settings->clinic_closure_starts_at, $timezone);
+        $endsAt = Carbon::parse($settings->clinic_closure_ends_at, $timezone);
+        $reason = trim((string) ($settings->clinic_closure_reason ?: 'Temporary Clinic Closure'));
+        $closureNote = sprintf(
+            '[Clinic Closure] %s. Clinic unavailable from %s until %s. Please book a new appointment after reopening.',
+            $reason,
+            $startsAt->format('M d, Y g:i A'),
+            $endsAt->format('M d, Y g:i A')
+        );
+
+        $appointments = Appointment::query()
+            ->whereIn('status', ['Pending', 'Approved'])
+            ->whereBetween('date', [$startsAt->toDateString(), $endsAt->toDateString()])
+            ->lockForUpdate()
+            ->get();
+
+        $cancelled = 0;
+        foreach ($appointments as $appointment) {
+            if (!$appointment->date || !$appointment->time) {
+                continue;
+            }
+
+            $appointmentAt = Carbon::parse($appointment->date . ' ' . $appointment->time, $timezone);
+            if (!$this->appointmentFallsWithinClinicClosure($appointmentAt, $startsAt, $endsAt)) {
+                continue;
+            }
+
+            $existingNotes = trim((string) $appointment->notes);
+            $appointment->status = 'Cancelled';
+            $appointment->notes = $existingNotes === ''
+                ? $closureNote
+                : $existingNotes . PHP_EOL . PHP_EOL . $closureNote;
+            $appointment->save();
+            $cancelled++;
+        }
+
+        return $cancelled;
+    }
+
+    private function appointmentFallsWithinClinicClosure(Carbon $appointmentAt, Carbon $startsAt, Carbon $endsAt): bool
+    {
+        return $appointmentAt->gte($startsAt) && $appointmentAt->lt($endsAt);
     }
 
     public function updateProfile(Request $request)

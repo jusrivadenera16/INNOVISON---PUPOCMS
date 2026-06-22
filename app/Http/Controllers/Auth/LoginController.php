@@ -1586,6 +1586,12 @@ class LoginController extends Controller
     private function enrichUserWithGuisisData(User $user): void
     {
         try {
+            $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
+            $userType = strtolower(trim((string) ($user->user_type ?? '')));
+            if ($idpRole !== 'student' && !($idpRole === '' && $userType === 'student')) {
+                return;
+            }
+
             $email = trim((string) ($user->email ?? ''));
             if ($email === '') {
                 return;
@@ -1609,7 +1615,7 @@ class LoginController extends Controller
                 $shouldUpdate = true;
             }
 
-            if ($course !== '' && trim((string) $user->course) === '') {
+            if ($course !== '' && trim((string) $user->course) !== $course) {
                 $user->course = $course;
                 $shouldUpdate = true;
             }

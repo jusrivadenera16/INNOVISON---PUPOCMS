@@ -144,13 +144,16 @@ class AppointmentController extends Controller
                     'link' => url('/student/history'),
                 ];
             } elseif ($appt->status === 'Cancelled') {
+                $cancelledForClosure = str_contains((string) $appt->notes, '[Clinic Closure]');
                 $notifications[] = [
                     'id' => $this->buildNotificationId('appointment-cancelled', [$appt->id, $appt->status, optional($appt->updated_at)->timestamp]),
                     'type' => 'danger',
                     'icon' => 'X',
-                    'message' => "Your {$appt->service} on {$dateStr} was cancelled.",
+                    'message' => $cancelledForClosure
+                        ? "Your {$appt->service} on {$dateStr} was cancelled because the clinic is unavailable during that schedule. Please book a new appointment after reopening."
+                        : "Your {$appt->service} on {$dateStr} was cancelled.",
                     'time' => $timeAgo,
-                    'link' => url('/student/history'),
+                    'link' => $cancelledForClosure ? url('/student/booking') : url('/student/history'),
                 ];
             } elseif ($appt->status === 'Expired') {
                 $timeLabel = $appt->time ? date('g:i A', strtotime((string) $appt->time)) : 'N/A';
@@ -593,7 +596,6 @@ class AppointmentController extends Controller
     {
         $resolvedStudentNumber = trim((string) ($prefill['student_number'] ?? ''));
         $resolvedGender = trim((string) ($prefill['sex'] ?? ''));
-        $resolvedCourse = trim((string) ($prefill['course_college'] ?? ''));
 
         $shouldSave = false;
 
@@ -604,11 +606,6 @@ class AppointmentController extends Controller
 
         if ($resolvedGender !== '' && trim((string) $user->gender) === '') {
             $user->gender = $resolvedGender;
-            $shouldSave = true;
-        }
-
-        if ($resolvedCourse !== '' && trim((string) $user->course) === '') {
-            $user->course = $resolvedCourse;
             $shouldSave = true;
         }
 
@@ -626,6 +623,20 @@ class AppointmentController extends Controller
             'female' => 'Female',
             default => '',
         };
+    }
+
+    private function sanitizeAcademicCourse(?string $value): string
+    {
+        $course = trim((string) $value);
+        $normalized = strtolower(preg_replace('/\s+/', ' ', $course));
+        $roleLabels = [
+            'admin', 'admin - designee', 'admin designee', 'designee',
+            'admin - clinic staff', 'clinic staff', 'student assistant',
+            'faculty', 'faculty / staff', 'faculty/staff', 'guest', 'applicant',
+            'regular', 'superadmin', 'super admin',
+        ];
+
+        return $course !== '' && !in_array($normalized, $roleLabels, true) ? $course : '';
     }
 
     private function isPuptasApplicant(array $applicantData): bool
@@ -938,21 +949,9 @@ class AppointmentController extends Controller
                 ?: optional(optional($healthProfile)->user)->email
                 ?: ($user->email ?? optional($linkedAdminProfile)->email ?? '')
             ),
-            'course_college' => trim((string) (
-                optional($healthProfile)->course_college
-                ?? trim(implode(' - ', array_filter([
-                    data_get($applicantData, 'program.code'),
-                    data_get($applicantData, 'program.name'),
-                ])))
-                ?: trim(implode(' - ', array_filter([
-                    data_get($applicantData, 'strand'),
-                    data_get($applicantData, 'track'),
-                ])))
-                ?: ($user->course ?? '')
-                ?: trim((string) (optional($linkedAdminProfile)->office ?? ''))
-                ?: trim((string) (optional($linkedAdminProfile)->access_level ?? ''))
-                ?: 'Faculty / Staff'
-            )),
+            'course_college' => $this->sanitizeAcademicCourse(
+                $user->course ?? null
+            ),
             'home_address' => trim((string) (
                 optional($healthProfile)->home_address
                 ?: ($resolvedAddress !== '' ? $resolvedAddress : trim((string) (optional($linkedAdminProfile)->address ?? '')))
@@ -1401,6 +1400,18 @@ class AppointmentController extends Controller
             return redirect()->back()->withInput()->with('error', 'Please choose a future appointment time.');
         }
 
+        $scheduledClosure = $workflow->activeClosure($selectedDateTime);
+        if ($scheduledClosure) {
+            $reopening = $scheduledClosure['ends_at']
+                ? ' Reopening is expected on ' . $scheduledClosure['ends_at']->format('M d, Y g:i A') . '.'
+                : '';
+
+            return redirect()->back()->withInput()->with(
+                'error',
+                'That appointment time falls within a temporary clinic closure.' . $reopening . ' Please choose another schedule.'
+            );
+        }
+
         // Prevent overlapping appointments
         $exists = Appointment::where('date', $request->date)
                              ->where('time', $request->time)
@@ -1532,6 +1543,8 @@ class AppointmentController extends Controller
         $slots = [];
         $now = Carbon::now();
         $dailyCount = 0;
+        $closureBlockedCount = 0;
+        $workflow = app(ClinicWorkflowService::class);
 
         for ($hour = 8; $hour <= 19; $hour++) {
             foreach ([0, 30] as $minute) {
@@ -1544,7 +1557,12 @@ class AppointmentController extends Controller
                 $slotDateTime = Carbon::parse($selectedDate->toDateString() . ' ' . $slotValue);
                 $isTaken = isset($takenLookup[$slotValue]);
                 $isPastTime = $slotDateTime->lt($now);
-                $isAvailable = !$isTaken && !$isPastTime;
+                $isClosureBlocked = $workflow->activeClosure($slotDateTime) !== null;
+                $isAvailable = !$isTaken && !$isPastTime && !$isClosureBlocked;
+
+                if ($isClosureBlocked) {
+                    $closureBlockedCount++;
+                }
 
                 if ($isAvailable) {
                     $dailyCount++;
@@ -1561,8 +1579,12 @@ class AppointmentController extends Controller
         return response()->json([
             'date' => $selectedDate->toDateString(),
             'available' => $dailyCount > 0,
-            'reason' => $dailyCount > 0 ? null : 'fully_booked',
-            'message' => $dailyCount > 0 ? null : 'No available time slots for this date.',
+            'reason' => $dailyCount > 0 ? null : ($closureBlockedCount > 0 ? 'clinic_closure' : 'fully_booked'),
+            'message' => $dailyCount > 0
+                ? null
+                : ($closureBlockedCount > 0
+                    ? 'No appointments are available during the temporary clinic closure. Please choose a schedule after reopening.'
+                    : 'No available time slots for this date.'),
             'slots' => $slots,
         ]);
     }
@@ -2270,16 +2292,9 @@ public function storeHealthForm(Request $request)
         ? $user->healthProfile
         : \App\Models\HealthProfile::where('user_id', $user?->id)->first();
 
-    $resolvedCourseCollege = trim((string) $request->input('course_college'));
-    if ($resolvedCourseCollege === '') {
-        $resolvedCourseCollege = trim((string) (
-            optional($existingHealthProfile)->course_college
-            ?: ($user?->course ?? '')
-            ?: optional($linkedAdminProfile)->office
-            ?: optional($linkedAdminProfile)->access_level
-            ?: 'Faculty / Staff'
-        ));
-    }
+    $resolvedCourseCollege = $this->sanitizeAcademicCourse(
+        $user?->course
+    );
 
     $resolvedSchoolYear = trim((string) $request->input('school_year'));
     if ($resolvedSchoolYear === '') {
@@ -2307,7 +2322,7 @@ public function storeHealthForm(Request $request)
         'age'               => 'required|numeric|min:15|max:100',
         'sex'               => 'required|string',
         'civil_status'      => 'required|string',
-        'course_college'    => 'required|string',
+        'course_college'    => 'nullable|string|max:255',
         'blood_type'        => 'required|string|max:20',
         'contact_no'        => 'required|string|max:20',
         'guardian_name'     => 'required|string|max:255',
@@ -2421,10 +2436,6 @@ public function storeHealthForm(Request $request)
     if ($resolvedGender !== '') {
         $user->gender = $resolvedGender;
     }
-    $resolvedCourse = trim((string) $request->input('course_college'));
-    if ($resolvedCourse !== '') {
-        $user->course = $resolvedCourse;
-    }
     $user->reference_number = $officialReference;
     $user->save();
 
@@ -2454,7 +2465,7 @@ public function storeHealthForm(Request $request)
                 'age'                => $request->age,
                 'sex'                => $request->sex,
                 'civil_status'       => $request->civil_status,
-                'course_college'     => $request->course_college,
+                'course_college'     => $resolvedCourseCollege !== '' ? $resolvedCourseCollege : null,
                 'blood_type'         => $request->blood_type,
                 'guardian_name'      => $request->guardian_name,
                 'landline'           => $request->landline,

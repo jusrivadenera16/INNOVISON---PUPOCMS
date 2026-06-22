@@ -1491,7 +1491,7 @@
 
                         <section class="workflow-setting-group">
                             <h4>Temporary Clinic Closure / Availability Notice</h4>
-                            <p>Students may continue browsing records, but new appointment booking is blocked while this notice is active.</p>
+                            <p>Students may continue browsing records. Saving an enabled closure cancels Pending and Approved appointments inside the selected period, notifies affected students to rebook, and blocks those time slots.</p>
                             <div class="switch-item">
                                 <input type="checkbox" name="clinic_closure_enabled" id="clinicClosureEnabled" {{ old('clinic_closure_enabled', $settings->clinic_closure_enabled) ? 'checked' : '' }}>
                                 <label for="clinicClosureEnabled">Temporarily close appointment booking</label>
@@ -1524,7 +1524,7 @@
                                 </div>
                                 <div>
                                     <label for="clinicClosureMessage" class="workflow-message-label">Public Notice Message</label>
-                                    <textarea id="clinicClosureMessage" name="clinic_closure_message" maxlength="500" placeholder="Example: The clinic will close early today due to an official staff meeting. Existing appointments and health records remain accessible.">{{ old('clinic_closure_message', $settings->clinic_closure_message) }}</textarea>
+                                    <textarea id="clinicClosureMessage" name="clinic_closure_message" maxlength="500" placeholder="Example: The clinic will close early today due to an official staff meeting. Affected appointments must be rebooked after reopening.">{{ old('clinic_closure_message', $settings->clinic_closure_message) }}</textarea>
                                 </div>
                             </div>
 
