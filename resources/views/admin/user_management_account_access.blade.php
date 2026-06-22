@@ -1258,7 +1258,6 @@
                             <th>Email</th>
                             <th>Role</th>
                             <th>Status</th>
-                            <th>Source</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1309,11 +1308,10 @@
                                         {{ ucfirst($record['status']) }}
                                     </span>
                                 </td>
-                                <td><span class="um-badge source">{{ $record['source_label'] }}</span></td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5"><div class="um-empty">No managed clinic users found yet.</div></td>
+                                <td colspan="4"><div class="um-empty">No managed clinic users found yet.</div></td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -1355,7 +1353,6 @@
                             <th>Email</th>
                             <th>Role</th>
                             <th>Status</th>
-                            <th>Source</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1401,11 +1398,10 @@
                                 <td>{{ $record['email'] ?: 'N/A' }}</td>
                                 <td>{{ $record['role'] }}</td>
                                 <td><span class="um-badge {{ $record['status'] === 'inactive' ? 'inactive' : 'active' }}">{{ ucfirst($record['status']) }}</span></td>
-                                <td><span class="um-badge source">{{ $record['source_label'] }}</span></td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5"><div class="um-empty">No Users matched the current search.</div></td>
+                                <td colspan="4"><div class="um-empty">No Users matched the current search.</div></td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -1455,6 +1451,10 @@
                         <div class="um-field">
                             <label>Source</label>
                             <input type="text" id="detailSource" readonly>
+                        </div>
+                        <div class="um-field">
+                            <label>Original Role</label>
+                            <input type="text" id="detailOriginalRole" readonly>
                         </div>
                         <div class="um-field">
                             <label>Last Updated</label>
@@ -1549,6 +1549,7 @@
     const detailAccessLevelLabel = document.getElementById('detailAccessLevelLabel');
     const detailIdentifier = document.getElementById('detailIdentifier');
     const detailSource = document.getElementById('detailSource');
+    const detailOriginalRole = document.getElementById('detailOriginalRole');
     const detailUpdated = document.getElementById('detailUpdated');
     const detailRole = document.getElementById('detailRole');
     const detailStatus = document.getElementById('detailStatus');
@@ -1658,7 +1659,7 @@
 
         detailName.value = row.dataset.name || '';
         detailEmail.value = row.dataset.email || '';
-        detailIdentifier.value = row.dataset.studentId || row.dataset.id || '';
+        detailIdentifier.value = row.dataset.studentId || 'N/A';
         if (detailIdentifierLabel) {
             detailIdentifierLabel.textContent = managementView === 'admin-hub' ? 'Faculty / External ID' : 'Student / Faculty ID';
         }
@@ -1687,6 +1688,10 @@
                 return {};
             }
         })();
+        const originalRole = String(meta.idp_role || '').trim();
+        detailOriginalRole.value = originalRole
+            ? originalRole.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
+            : 'N/A';
         const accessLevel = (meta.access_level || '').toLowerCase();
         const adminLoginEmail = meta.admin_login_email || '';
         const office = meta.office || '';

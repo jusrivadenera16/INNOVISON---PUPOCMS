@@ -65,7 +65,8 @@ class RoleMiddleware
         }
 
         if ($accessLevel === 'designee') {
-            return true;
+            return !Admin::hasColumn('admin_hub_enabled')
+                || (bool) ($linkedAdmin?->admin_hub_enabled ?? false);
         }
 
         $adminHubEnabled = !Admin::hasColumn('admin_hub_enabled')

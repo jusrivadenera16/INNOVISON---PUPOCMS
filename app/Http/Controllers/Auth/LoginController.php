@@ -260,10 +260,6 @@ class LoginController extends Controller
             $linkedAdmin->email_address = $user->email;
         }
 
-        if (Admin::hasColumn('access_level') && trim((string) $linkedAdmin->access_level) === '') {
-            $linkedAdmin->access_level = 'designee';
-        }
-
         if (Admin::hasColumn('status') && trim((string) ($linkedAdmin->status ?? '')) === '') {
             $linkedAdmin->status = 'active';
         }
@@ -295,7 +291,8 @@ class LoginController extends Controller
         }
 
         if ($accessLevel === 'designee') {
-            return true;
+            return !Admin::hasColumn('admin_hub_enabled')
+                || (bool) ($linkedAdmin?->admin_hub_enabled ?? false);
         }
 
         $adminHubEnabled = !Admin::hasColumn('admin_hub_enabled')

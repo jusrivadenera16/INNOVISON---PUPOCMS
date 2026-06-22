@@ -3148,7 +3148,7 @@
 
     .applicant-file-actions {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 12px;
         align-items: start;
         width: 100%;
@@ -6878,6 +6878,7 @@
             setStatus('info', isClinicLookupMode() ? 'Looking up clinic record...' : 'Looking up applicant...');
             if (foundCard) foundCard.style.display = 'none';
             if (documentsButton) documentsButton.classList.remove('is-visible');
+            if (savedAssessmentButton) savedAssessmentButton.classList.remove('is-visible');
 
             const lookupUrl = new URL(getStudentUrl, window.location.origin);
             lookupUrl.searchParams.set('student_id', ref);
@@ -6959,6 +6960,7 @@
                         if (findBtn) {
                             findBtn.removeEventListener('click', doLookup);
                             findBtn.removeEventListener('click', doApprove);
+                            findBtn.removeEventListener('click', enterSavedReviewEditMode);
 
                             findBtn.textContent = '✓ Already Approved';
                             findBtn.disabled = true;
@@ -6979,7 +6981,7 @@
                             foundName.textContent = applicantName || ref;
                             foundCard.style.display = 'block';
                         }
-                        showLookupDetails(data, ref);
+                        const hasSavedReview = showLookupDetails(data, ref);
                         // Hide input sections and show only results
                         if (defaultPane) defaultPane.style.display = 'none';
 
@@ -6990,15 +6992,17 @@
                         // Change button to Approve mode for both admission applicants and local clinic references.
                         isApprovalMode = true;
                         if (findBtn) {
-                            findBtn.textContent = 'Approve';
+                            findBtn.textContent = hasSavedReview ? 'Edit Review' : 'Approve';
                             findBtn.disabled = false;
                             findBtn.style.opacity = '1';
                             findBtn.style.cursor = 'pointer';
                             findBtn.removeEventListener('click', doLookup);
+                            findBtn.removeEventListener('click', doApprove);
+                            findBtn.removeEventListener('click', enterSavedReviewEditMode);
                             findBtn.onclick = null;
-                            findBtn.addEventListener('click', doApprove);
+                            findBtn.addEventListener('click', hasSavedReview ? enterSavedReviewEditMode : doApprove);
                         }
-                        syncFindingsReviewFields();
+                        if (!hasSavedReview) syncFindingsReviewFields();
                     }
                 } else {
                     setStatus('error', data.message || (isClinicLookupMode()
@@ -7214,6 +7218,40 @@
         });
         if (documentsButton) documentsButton.addEventListener('click', function () {
             if (documentsModal) documentsModal.classList.add('show');
+        });
+        if (savedAssessmentButton) savedAssessmentButton.addEventListener('click', function () {
+            if (!hasSavedAssessmentReview(currentAssessmentReview) || !savedAssessmentModal) return;
+            savedAssessmentModal.classList.add('show');
+            savedAssessmentModal.setAttribute('aria-hidden', 'false');
+        });
+        if (closeSavedAssessment) closeSavedAssessment.addEventListener('click', function () {
+            if (!savedAssessmentModal) return;
+            savedAssessmentModal.classList.remove('show');
+            savedAssessmentModal.setAttribute('aria-hidden', 'true');
+        });
+        if (savedAssessmentModal) savedAssessmentModal.addEventListener('click', function (event) {
+            if (event.target !== savedAssessmentModal) return;
+            savedAssessmentModal.classList.remove('show');
+            savedAssessmentModal.setAttribute('aria-hidden', 'true');
+        });
+        if (copyReferenceButton) copyReferenceButton.addEventListener('click', async function () {
+            const referenceNumber = (lookupRef?.textContent || currentLookupRef || '').trim();
+            if (referenceNumber === '' || referenceNumber === '-') return;
+
+            try {
+                await navigator.clipboard.writeText(referenceNumber);
+            } catch (error) {
+                const temporaryInput = document.createElement('textarea');
+                temporaryInput.value = referenceNumber;
+                temporaryInput.style.position = 'fixed';
+                temporaryInput.style.opacity = '0';
+                document.body.appendChild(temporaryInput);
+                temporaryInput.select();
+                document.execCommand('copy');
+                temporaryInput.remove();
+            }
+
+            setStatus('success', 'Reference number copied.');
         });
         if (closeDocuments) closeDocuments.addEventListener('click', closeDocumentsModal);
         if (documentsModal) documentsModal.addEventListener('click', function (event) {

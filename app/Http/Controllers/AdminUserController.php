@@ -666,7 +666,9 @@ class AdminUserController extends Controller
         if ($isAdminHubMember) {
             $user->user_role = User::ROLE_ADMIN;
             if (Schema::hasColumn('users', 'user_type')) {
-                $user->user_type = 'Regular';
+                $user->user_type = $this->defaultUserTypeForIdpRole(
+                    trim((string) ($user->idp_role ?? '')) ?: $this->baseRoleTokenForUser($user)
+                );
             }
         } else {
             $this->applyBaseRoleToUser($user);
@@ -753,7 +755,7 @@ class AdminUserController extends Controller
                 $studentPhoto = $user->healthProfile?->student_photo;
                 $studentNumber = trim((string) ($user->student_number ?? ''));
                 $studentId = trim((string) ($user->student_id ?? ''));
-                $resolvedIdentifier = $studentNumber !== '' ? $studentNumber : $studentId;
+                $resolvedIdentifier = $this->resolveDisplayIdentifier($studentNumber, $studentId);
 
                 return [
                     'id' => (string) $user->id,
@@ -784,6 +786,7 @@ class AdminUserController extends Controller
                         'contact_no' => (string) ($user->contact_no ?? ''),
                         'is_health_profile_completed' => (bool) ($user->is_health_profile_completed ?? false),
                         'access_level' => $resolvedAccessLevel,
+                        'idp_role' => (string) ($user->idp_role ?? ''),
                         'user_type' => (string) ($user->user_type ?? ''),
                         'admin_login_email' => (string) ($linkedAdmin?->email_address ?? $linkedAdmin?->email ?? ''),
                         'admin_profile_id' => $linkedAdmin?->admin_id,
@@ -1057,17 +1060,22 @@ class AdminUserController extends Controller
         if ($normalizedRole === User::ROLE_ADMIN) {
             $accessLevel = $this->resolveEffectiveAdminAccessLevel($user, $linkedAdmin);
 
-            return match ($accessLevel) {
-                'designee' => 'Admin - Designee',
-                'clinic_staff', 'clinic staff', 'staff' => 'Admin - Clinic Staff',
-                default => 'Admin',
-            };
+            return $this->adminRoleLabelForAccessLevel($accessLevel);
         }
 
         return match ($normalizedRole) {
             User::ROLE_SUPERADMIN => 'Super Admin',
-            User::ROLE_ADMIN => 'Admin',
+            User::ROLE_ADMIN => 'Admin - Regular',
             default => 'Student',
+        };
+    }
+
+    private function adminRoleLabelForAccessLevel(string $accessLevel): string
+    {
+        return match (strtolower(trim($accessLevel))) {
+            'designee' => 'Admin - Designee',
+            'clinic_staff', 'clinic staff', 'staff' => 'Admin - Clinic Staff',
+            default => 'Admin - Regular',
         };
     }
 
@@ -1122,11 +1130,13 @@ class AdminUserController extends Controller
 
         $scoreProfile = function (Admin $admin): int {
             $accessLevel = strtolower(trim((string) ($admin->access_level ?? '')));
+            $activeAdminHubMembership = !Admin::hasColumn('admin_hub_enabled')
+                || (bool) ($admin->admin_hub_enabled ?? false);
 
             return match ($accessLevel) {
                 'superadmin' => 40,
                 'clinic_staff', 'clinic staff', 'staff' => 30,
-                'designee' => 20,
+                'designee' => $activeAdminHubMembership ? 20 : 5,
                 default => 10,
             };
         };
@@ -1137,8 +1147,40 @@ class AdminUserController extends Controller
     private function resolveEffectiveAdminAccessLevel(User $user, ?Admin $linkedAdmin = null): string
     {
         $profile = $this->resolveEffectiveAdminProfile($user, $linkedAdmin);
+        $accessLevel = strtolower(trim((string) ($profile?->access_level ?? '')));
 
-        return strtolower(trim((string) ($profile?->access_level ?? '')));
+        if (
+            $accessLevel === 'designee'
+            && Admin::hasColumn('admin_hub_enabled')
+            && !(bool) ($profile?->admin_hub_enabled ?? false)
+        ) {
+            return '';
+        }
+
+        if (
+            $accessLevel === ''
+            && $profile
+            && (!Admin::hasColumn('admin_hub_enabled') || (bool) ($profile->admin_hub_enabled ?? false))
+            && in_array(strtolower(trim((string) ($profile->admin_hub_role ?? ''))), ['designee', 'admin_designee'], true)
+        ) {
+            return 'designee';
+        }
+
+        return $accessLevel;
+    }
+
+    private function resolveDisplayIdentifier(string $studentNumber, string $studentId): string
+    {
+        if ($studentNumber !== '') {
+            return $studentNumber;
+        }
+
+        $isUuid = preg_match(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
+            $studentId
+        ) === 1;
+
+        return $studentId !== '' && !$isUuid ? $studentId : '';
     }
 
     private function findLinkedAdminProfile(User $user): ?Admin
