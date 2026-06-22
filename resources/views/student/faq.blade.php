@@ -175,7 +175,7 @@
                 <div class="sidebar-widget" style="background: #20343a; color: white; border: none;">
                     <h4 class="widget-title" style="color: white;">Contact Us</h4>
                     <p style="font-size: 13px; opacity: 0.8; margin-bottom: 15px;">Need urgent help?</p>
-                    <div style="font-size: 14px; font-weight: 600;">(02) 1234-5678<br>clinic@pup.edu.ph</div>
+                    <div style="font-size: 14px; font-weight: 600;">(02) 8837-5858<br>puptclinic@gmail.com</div>
                 </div>
 
             </div>
