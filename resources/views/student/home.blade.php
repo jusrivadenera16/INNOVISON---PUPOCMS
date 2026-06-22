@@ -416,7 +416,7 @@
               </li>
               <li>
                 <x-outline-icon name="envelope" class="contact-icon" />
-                pupt_clinic@pup.edu.ph
+                puptclinic@gmail.com
               </li>
               <li>
                 <x-outline-icon name="phone" class="contact-icon" />
