@@ -11,6 +11,7 @@ use App\Models\Item;
 use App\Models\ActivityLog;
 use App\Models\Consultation;
 use App\Services\PuptasWebhookService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -402,8 +403,8 @@ class WalkInController extends Controller
             $user->first_name = $fallbackFirstName;
         }
 
-        if ($middleName !== '' && \Schema::hasColumn('users', 'middle_name')) {
-            $user->middle_name = $middleName;
+        if (\Schema::hasColumn('users', 'middle_name') && ($firstName !== '' || $lastName !== '' || $fullName !== '')) {
+            $user->middle_name = $middleName !== '' ? $middleName : null;
         }
 
         if ($lastName !== '') {
@@ -515,7 +516,7 @@ class WalkInController extends Controller
             ['key' => 'chest_xray_result', 'label' => 'Chest X-Ray Result', 'path' => $profile->chest_xray_result],
             ['key' => 'student_photo', 'label' => '2x2 Photo', 'path' => $profile->student_photo],
             ['key' => 'pwd_id_proof', 'label' => 'PWD ID Proof', 'path' => $profile->pwd_id_proof],
-            ['key' => 'medical_assessment_upload', 'label' => 'Compliance / Assessment Copy', 'path' => $profile->medical_assessment_upload],
+            ['key' => 'medical_assessment_upload', 'label' => 'Medical Assessment Copy', 'path' => $profile->medical_assessment_upload],
         ])->filter(fn (array $document) => filled($document['path']))
             ->map(function (array $document) use ($request, $profile) {
                 $extension = strtolower(pathinfo((string) $document['path'], PATHINFO_EXTENSION));
@@ -619,9 +620,72 @@ class WalkInController extends Controller
                 : '',
             'normal_remarks' => $findingsStatus === 'No Findings / Normal' ? $assessmentRemarks : '',
             'blood_pressure' => trim((string) $profile->blood_pressure),
+            'pulse_rate' => $profile->pulse_rate,
             'respiratory_rate' => $profile->respiratory_rate,
             'temperature' => $profile->temperature,
+            'covid_positive' => trim((string) $profile->covid_positive),
+            'covid_positive_date' => optional($profile->covid_positive_date)->format('Y-m-d'),
         ];
+    }
+
+    private function formatMedicalAssessmentDate($value): string
+    {
+        if (blank($value)) {
+            return '';
+        }
+
+        try {
+            return \Carbon\Carbon::parse($value)->format('M d, Y');
+        } catch (\Throwable $e) {
+            return trim((string) $value);
+        }
+    }
+
+    private function normalizeMedicalAssessmentXrayResult(?string $value): string
+    {
+        $value = trim((string) $value);
+
+        return match ($value) {
+            'With Findings' => 'With Findings',
+            'Normal', 'No Findings / Normal' => 'Normal / Without Findings',
+            default => $value !== '' ? $value : 'Normal / Without Findings',
+        };
+    }
+
+    private function generateMedicalAssessmentCopy(HealthProfile $profile): string
+    {
+        $profile->refresh();
+
+        $data = [
+            'assessmentDate' => $this->formatMedicalAssessmentDate($profile->assessment_date ?: now()),
+            'birthday' => $this->formatMedicalAssessmentDate($profile->birthday),
+            'height' => trim((string) $profile->height),
+            'weight' => trim((string) $profile->weight),
+            'bloodPressure' => trim((string) $profile->blood_pressure),
+            'pulseRate' => trim((string) $profile->pulse_rate),
+            'respiratoryRate' => trim((string) $profile->respiratory_rate),
+            'temperature' => trim((string) $profile->temperature),
+            'covidPositive' => trim((string) $profile->covid_positive),
+            'covidPositiveDate' => $profile->covid_positive === 'Yes'
+                ? $this->formatMedicalAssessmentDate($profile->covid_positive_date)
+                : '',
+            'doctorName' => trim((string) ($profile->medical_certificate_issued_by ?: $profile->doctor_name)),
+            'medicalCertificateDate' => $this->formatMedicalAssessmentDate($profile->medical_certificate_issued_at ?: $profile->med_cert_date),
+            'xrayResult' => $this->normalizeMedicalAssessmentXrayResult($profile->chest_xray_result_text ?: $profile->xray_findings),
+            'xrayDate' => $this->formatMedicalAssessmentDate($profile->chest_xray_date ?: $profile->xray_date),
+        ];
+
+        $pdf = Pdf::loadView('admin.medical_assessment_copy', $data)->setPaper('letter');
+        $path = 'health_profiles/medical_assessments/medical-assessment-' . $profile->id . '-' . now()->format('YmdHis') . '.pdf';
+
+        $previousPath = ltrim((string) $profile->medical_assessment_upload, '/');
+        if (Str::startsWith($previousPath, 'health_profiles/medical_assessments/') && Storage::disk('public')->exists($previousPath)) {
+            Storage::disk('public')->delete($previousPath);
+        }
+
+        Storage::disk('public')->put($path, $pdf->output());
+
+        return $path;
     }
 
     public function showApplicantDocument(HealthProfile $healthProfile, string $document)
@@ -1522,8 +1586,11 @@ PROMPT;
                 'medical_condition' => ['required_if:has_medical_condition,true', 'nullable', 'string', 'max:1000'],
                 'condition_remarks' => ['nullable', 'string', 'max:2000'],
                 'blood_pressure' => ['required', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
+                'pulse_rate' => ['required', 'integer', 'min:1', 'max:300'],
                 'respiratory_rate' => ['required', 'integer', 'min:1', 'max:120'],
                 'temperature' => ['required', 'numeric', 'min:30', 'max:45'],
+                'covid_positive' => ['required', 'string', 'in:Yes,No'],
+                'covid_positive_date' => ['required_if:covid_positive,Yes', 'nullable', 'date'],
             ]);
             $referenceNumber = trim((string) $validated['reference_number']);
             $lookupScope = strtolower(trim((string) ($validated['lookup_scope'] ?? 'default')));
@@ -1536,8 +1603,13 @@ PROMPT;
             $otherPendingReason = trim((string) $request->input('other_pending_reason', ''));
             $conditionRemarks = trim((string) $request->input('condition_remarks', ''));
             $bloodPressure = preg_replace('/\s+/', '', (string) $validated['blood_pressure']);
+            $pulseRate = (int) $validated['pulse_rate'];
             $respiratoryRate = (int) $validated['respiratory_rate'];
             $temperature = (float) $validated['temperature'];
+            $covidPositive = (string) $validated['covid_positive'];
+            $covidPositiveDate = $covidPositive === 'Yes'
+                ? $validated['covid_positive_date']
+                : null;
 
             $pendingReasons = [];
             if ($hasMedicalCondition) {
@@ -1624,8 +1696,11 @@ PROMPT;
                 $conditionRemarks,
                 $findingsStatus,
                 $bloodPressure,
+                $pulseRate,
                 $respiratoryRate,
                 $temperature,
+                $covidPositive,
+                $covidPositiveDate,
                 $webhookResult,
                 $isLocalOnlyApproval
             ) {
@@ -1649,12 +1724,20 @@ PROMPT;
                 $profile->birthday = $profile->birthday ?: $student->DOB;
                 $profile->sex = (string) ($profile->sex ?: $student->gender);
                 $profile->med_cert_findings = $findingsStatus;
-                $profile->xray_findings = $findingsStatus === 'No Findings / Normal'
-                    ? 'Normal'
-                    : 'With Findings';
+                $profile->xray_findings = trim((string) $profile->xray_findings) !== ''
+                    ? $profile->xray_findings
+                    : ($findingsStatus === 'No Findings / Normal' ? 'Normal' : 'With Findings');
                 $profile->blood_pressure = $bloodPressure;
+                $profile->pulse_rate = $pulseRate;
                 $profile->respiratory_rate = $respiratoryRate;
                 $profile->temperature = $temperature;
+                $profile->covid_positive = $covidPositive;
+                $profile->covid_positive_date = $covidPositiveDate;
+                $profile->medical_certificate_issued_by = $profile->doctor_name;
+                $profile->medical_certificate_issued_at = $profile->med_cert_date;
+                $profile->chest_xray_result_text = $this->normalizeMedicalAssessmentXrayResult($profile->xray_findings);
+                $profile->chest_xray_date = $profile->xray_date;
+                $profile->assessment_date = $hasPendingFinding ? $profile->assessment_date : now()->toDateString();
                 $profile->clearance_status = $clearanceStatus;
                 $profile->pending_reason = $hasPendingFinding
                     ? trim(implode('; ', $pendingReasons)
@@ -1692,6 +1775,11 @@ PROMPT;
                 }
 
                 $profile->save();
+
+                if (!$hasPendingFinding) {
+                    $profile->medical_assessment_upload = $this->generateMedicalAssessmentCopy($profile);
+                    $profile->save();
+                }
 
                 $student->is_health_profile_completed = $hasPendingFinding ? 0 : 1;
                 $student->save();

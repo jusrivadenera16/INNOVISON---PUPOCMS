@@ -322,6 +322,16 @@ class AppointmentController extends Controller
         return str_starts_with(strtoupper(trim((string) $referenceNumber)), 'CLN-');
     }
 
+    private function formatDisplayNameParts(?string $firstName, ?string $middleName, ?string $lastName, ?string $suffixName = ''): string
+    {
+        return trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([
+            trim((string) $firstName),
+            trim((string) $middleName),
+            trim((string) $lastName),
+            trim((string) $suffixName),
+        ])))) ?: '';
+    }
+
     private function normalizePuptasApplicantIdentity(?array $applicantData): array
     {
         if (!is_array($applicantData) || empty($applicantData)) {
@@ -381,7 +391,7 @@ class AppointmentController extends Controller
             'first_name' => $firstName,
             'middle_name' => $middleName,
             'last_name' => $lastName,
-            'full_name' => trim(implode(' ', array_filter([$firstName, $middleName, $lastName]))),
+            'full_name' => $this->formatDisplayNameParts($firstName, $middleName, $lastName),
             'reference_number' => $referenceNumber,
             'email' => $email,
             'school_year' => $schoolYear,
@@ -1246,10 +1256,9 @@ class AppointmentController extends Controller
             $lastName = $this->firstGuisisValue($sources, ['last_name', 'lastName', 'lastname', 'surname']);
             $suffixName = $this->firstGuisisValue($sources, ['suffix', 'suffix_name', 'suffixName', 'name_suffix']);
             $fullName = $this->firstGuisisValue($sources, ['full_name', 'fullName', 'name']);
+            $structuredFullName = $this->formatDisplayNameParts($firstName, $middleName, $lastName, $suffixName);
 
-            if ($fullName === '') {
-                $fullName = trim(implode(' ', array_filter([$firstName, $middleName, $lastName, $suffixName])));
-            }
+            $fullName = $structuredFullName !== '' ? $structuredFullName : $fullName;
 
             $courseCode = $this->firstGuisisValue($sources, [
                 'course.code',

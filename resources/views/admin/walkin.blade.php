@@ -3070,6 +3070,10 @@
         display: block;
     }
 
+    .applicant-review-source-grid {
+        margin: 12px 0 16px;
+    }
+
     .applicant-lookup-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3110,6 +3114,12 @@
         font-size: 12px;
         font-weight: 900;
         letter-spacing: 0;
+    }
+
+    .applicant-lookup-icon.is-maroon {
+        background: linear-gradient(135deg, #7f1d1d, #a11d2a);
+        color: #ffffff;
+        box-shadow: 0 8px 16px rgba(127, 29, 29, 0.18);
     }
 
     .applicant-lookup-content {
@@ -4756,42 +4766,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="applicant-lookup-item">
-                                <div class="applicant-lookup-card">
-                                    <div class="applicant-lookup-icon">MC</div>
-                                    <div class="applicant-lookup-content">
-                                        <p class="applicant-lookup-label">Medical Certificate Result</p>
-                                        <p class="applicant-lookup-value" id="applicantLookupMedCertResult">N/A</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="applicant-lookup-item">
-                                <div class="applicant-lookup-card">
-                                    <div class="applicant-lookup-icon">FD</div>
-                                    <div class="applicant-lookup-content">
-                                        <p class="applicant-lookup-label">Student Declared Findings</p>
-                                        <p class="applicant-lookup-value" id="applicantLookupMedCertDetails">N/A</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="applicant-lookup-item">
-                                <div class="applicant-lookup-card">
-                                    <div class="applicant-lookup-icon">XR</div>
-                                    <div class="applicant-lookup-content">
-                                        <p class="applicant-lookup-label">Chest X-ray Result</p>
-                                        <p class="applicant-lookup-value" id="applicantLookupXrayResult">N/A</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="applicant-lookup-item">
-                                <div class="applicant-lookup-card">
-                                    <div class="applicant-lookup-icon">XF</div>
-                                    <div class="applicant-lookup-content">
-                                        <p class="applicant-lookup-label">Student Declared X-ray Findings</p>
-                                        <p class="applicant-lookup-value" id="applicantLookupXrayDetails">N/A</p>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -4815,6 +4789,44 @@
                     <div class="applicant-medical-condition-section">
                         <section class="applicant-screening-panel applicant-review-panel">
                             <h4 class="applicant-screening-panel-title">Nurse Findings Review</h4>
+                            <div class="applicant-lookup-grid applicant-review-source-grid">
+                                <div class="applicant-lookup-item">
+                                    <div class="applicant-lookup-card">
+                                        <div class="applicant-lookup-icon is-maroon">MC</div>
+                                        <div class="applicant-lookup-content">
+                                            <p class="applicant-lookup-label">Medical Certificate Result</p>
+                                            <p class="applicant-lookup-value" id="applicantLookupMedCertResult">N/A</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="applicant-lookup-item">
+                                    <div class="applicant-lookup-card">
+                                        <div class="applicant-lookup-icon is-maroon">FD</div>
+                                        <div class="applicant-lookup-content">
+                                            <p class="applicant-lookup-label">Student Declared Findings</p>
+                                            <p class="applicant-lookup-value" id="applicantLookupMedCertDetails">N/A</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="applicant-lookup-item">
+                                    <div class="applicant-lookup-card">
+                                        <div class="applicant-lookup-icon is-maroon">XR</div>
+                                        <div class="applicant-lookup-content">
+                                            <p class="applicant-lookup-label">Chest X-ray Result</p>
+                                            <p class="applicant-lookup-value" id="applicantLookupXrayResult">N/A</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="applicant-lookup-item">
+                                    <div class="applicant-lookup-card">
+                                        <div class="applicant-lookup-icon is-maroon">XF</div>
+                                        <div class="applicant-lookup-content">
+                                            <p class="applicant-lookup-label">Student Declared X-ray Findings</p>
+                                            <p class="applicant-lookup-value" id="applicantLookupXrayDetails">N/A</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="applicant-findings-review">
                                 <div class="applicant-findings-label">Review Result <span style="color:#dc2626;">*</span></div>
                                 <div class="applicant-findings-options">
@@ -4880,12 +4892,33 @@
                                     <input type="text" id="applicantBloodPressure" name="blood_pressure" class="applicant-condition-input" placeholder="e.g., 120/80" inputmode="numeric">
                                 </div>
                                 <div class="applicant-condition-field">
+                                    <label for="applicantPulseRate">Pulse Rate (bpm) <span style="color:#dc2626;">*</span></label>
+                                    <input type="number" id="applicantPulseRate" name="pulse_rate" class="applicant-condition-input" placeholder="e.g., 72" min="1" max="300">
+                                </div>
+                                <div class="applicant-condition-field">
                                     <label for="applicantRespiratoryRate">Respiratory Rate (cpm) <span style="color:#dc2626;">*</span></label>
                                     <input type="number" id="applicantRespiratoryRate" name="respiratory_rate" class="applicant-condition-input" placeholder="e.g., 18" min="1" max="120">
                                 </div>
                                 <div class="applicant-condition-field">
                                     <label for="applicantTemperature">Temperature (&deg;C) <span style="color:#dc2626;">*</span></label>
                                     <input type="number" id="applicantTemperature" name="temperature" class="applicant-condition-input" placeholder="e.g., 36.5" min="30" max="45" step="0.1">
+                                </div>
+                                <div class="applicant-condition-field">
+                                    <label>COVID Positive? <span style="color:#dc2626;">*</span></label>
+                                    <div class="applicant-findings-options">
+                                        <label class="applicant-findings-option">
+                                            <input type="radio" name="applicant_covid_positive" value="No">
+                                            <span>No</span>
+                                        </label>
+                                        <label class="applicant-findings-option">
+                                            <input type="radio" name="applicant_covid_positive" value="Yes">
+                                            <span>Yes</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="applicant-condition-field" id="applicantCovidDateField" style="display:none;">
+                                    <label for="applicantCovidPositiveDate">COVID Positive Date <span style="color:#dc2626;">*</span></label>
+                                    <input type="date" id="applicantCovidPositiveDate" name="covid_positive_date" class="applicant-condition-input">
                                 </div>
                             </div>
                         </section>
@@ -4921,8 +4954,11 @@
                     <div class="saved-review-card"><span>Medical Condition</span><strong id="savedReviewCondition">-</strong></div>
                     <div class="saved-review-card"><span>Remarks</span><strong id="savedReviewRemarks">-</strong></div>
                     <div class="saved-review-card"><span>Blood Pressure</span><strong id="savedReviewBloodPressure">-</strong></div>
+                    <div class="saved-review-card"><span>Pulse Rate</span><strong id="savedReviewPulseRate">-</strong></div>
                     <div class="saved-review-card"><span>Respiratory Rate</span><strong id="savedReviewRespiratoryRate">-</strong></div>
                     <div class="saved-review-card"><span>Temperature</span><strong id="savedReviewTemperature">-</strong></div>
+                    <div class="saved-review-card"><span>COVID Positive</span><strong id="savedReviewCovidPositive">-</strong></div>
+                    <div class="saved-review-card"><span>COVID Positive Date</span><strong id="savedReviewCovidPositiveDate">-</strong></div>
                     <div class="saved-review-card"><span>Reference Number</span><strong id="savedReviewReference">-</strong></div>
                 </div>
             </div>
@@ -6727,15 +6763,19 @@
             const normalRemarksFields = document.getElementById('applicantNormalRemarksFields');
             if (conditionFields) conditionFields.style.display = 'none';
             if (normalRemarksFields) normalRemarksFields.style.display = 'none';
-            ['applicantMedicalCondition', 'applicantConditionRemarks', 'applicantNormalRemarks', 'applicantBloodPressure', 'applicantRespiratoryRate', 'applicantTemperature', 'applicantOtherPendingReasonText'].forEach(function (id) {
+            ['applicantMedicalCondition', 'applicantConditionRemarks', 'applicantNormalRemarks', 'applicantBloodPressure', 'applicantPulseRate', 'applicantRespiratoryRate', 'applicantTemperature', 'applicantCovidPositiveDate', 'applicantOtherPendingReasonText'].forEach(function (id) {
                 const field = document.getElementById(id);
                 if (field) field.value = '';
+            });
+            document.querySelectorAll('input[name="applicant_covid_positive"]').forEach(function (input) {
+                input.checked = false;
             });
             ['applicantHasMedicalCondition', 'applicantIncompleteRequirements', 'applicantNeedsPhysicianEvaluation', 'applicantOtherPendingReason'].forEach(function (id) {
                 const field = document.getElementById(id);
                 if (field) field.checked = false;
             });
             if (typeof syncFindingsReviewFields === 'function') syncFindingsReviewFields();
+            if (typeof syncCovidPositiveFields === 'function') syncCovidPositiveFields();
 
             // Show input form elements again
             const lookupRow = document.querySelector('.applicant-ref-lookup-row');
@@ -6810,8 +6850,10 @@
                 applicantConditionRemarks: savedReview.condition_remarks || '',
                 applicantNormalRemarks: savedReview.normal_remarks || '',
                 applicantBloodPressure: savedReview.blood_pressure || '',
+                applicantPulseRate: savedReview.pulse_rate ?? '',
                 applicantRespiratoryRate: savedReview.respiratory_rate ?? '',
                 applicantTemperature: savedReview.temperature ?? '',
+                applicantCovidPositiveDate: savedReview.covid_positive_date || '',
                 applicantOtherPendingReasonText: savedReview.other_pending_reason || ''
             };
             Object.entries(fieldValues).forEach(function ([id, value]) {
@@ -6830,8 +6872,15 @@
                 if (field) field.checked = isChecked(value) || value === true;
             });
 
+            document.querySelectorAll('input[name="applicant_covid_positive"]').forEach(function (input) {
+                input.checked = input.value === (savedReview.covid_positive || '');
+            });
+
             if (typeof syncFindingsReviewFields === 'function') {
                 syncFindingsReviewFields();
+            }
+            if (typeof syncCovidPositiveFields === 'function') {
+                syncCovidPositiveFields();
             }
         }
 
@@ -6853,8 +6902,11 @@
                 savedReviewCondition: savedReview.medical_condition || '-',
                 savedReviewRemarks: savedReview.condition_remarks || savedReview.normal_remarks || '-',
                 savedReviewBloodPressure: savedReview.blood_pressure || '-',
+                savedReviewPulseRate: savedReview.pulse_rate !== null && savedReview.pulse_rate !== undefined && savedReview.pulse_rate !== '' ? savedReview.pulse_rate + ' bpm' : '-',
                 savedReviewRespiratoryRate: savedReview.respiratory_rate !== null && savedReview.respiratory_rate !== undefined && savedReview.respiratory_rate !== '' ? savedReview.respiratory_rate + ' cpm' : '-',
                 savedReviewTemperature: savedReview.temperature !== null && savedReview.temperature !== undefined && savedReview.temperature !== '' ? savedReview.temperature + ' °C' : '-',
+                savedReviewCovidPositive: savedReview.covid_positive || '-',
+                savedReviewCovidPositiveDate: savedReview.covid_positive_date || '-',
                 savedReviewReference: referenceNumber || '-'
             };
 
@@ -7170,8 +7222,11 @@
             const otherPendingReasonCheckbox = document.getElementById('applicantOtherPendingReason');
             const otherPendingReasonInput = document.getElementById('applicantOtherPendingReasonText');
             const bloodPressureInput = document.getElementById('applicantBloodPressure');
+            const pulseRateInput = document.getElementById('applicantPulseRate');
             const respiratoryRateInput = document.getElementById('applicantRespiratoryRate');
             const temperatureInput = document.getElementById('applicantTemperature');
+            const covidPositiveInput = document.querySelector('input[name="applicant_covid_positive"]:checked');
+            const covidPositiveDateInput = document.getElementById('applicantCovidPositiveDate');
 
             if (!findingsStatusInput) {
                 setStatus('error', 'Please select the nurse findings review result.');
@@ -7199,8 +7254,18 @@
                 return;
             }
 
-            if (!bloodPressureInput?.value.trim() || !respiratoryRateInput?.value || !temperatureInput?.value) {
-                setStatus('error', 'Please complete the blood pressure, respiratory rate, and temperature fields.');
+            if (!bloodPressureInput?.value.trim() || !pulseRateInput?.value || !respiratoryRateInput?.value || !temperatureInput?.value) {
+                setStatus('error', 'Please complete the blood pressure, pulse rate, respiratory rate, and temperature fields.');
+                return;
+            }
+
+            if (!covidPositiveInput) {
+                setStatus('error', 'Please select if the student is COVID Positive.');
+                return;
+            }
+
+            if (covidPositiveInput.value === 'Yes' && !covidPositiveDateInput?.value) {
+                setStatus('error', 'Please enter the COVID Positive date.');
                 return;
             }
 
@@ -7211,8 +7276,11 @@
                 lookup_scope: isClinicLookupMode() ? 'clinic_local' : 'default',
                 findings_status: findingsStatusInput.value,
                 blood_pressure: bloodPressureInput.value.trim(),
+                pulse_rate: pulseRateInput.value,
                 respiratory_rate: respiratoryRateInput.value,
-                temperature: temperatureInput.value
+                temperature: temperatureInput.value,
+                covid_positive: covidPositiveInput.value,
+                covid_positive_date: covidPositiveInput.value === 'Yes' ? covidPositiveDateInput.value : ''
             };
 
             if (hasFindings) {
@@ -7272,6 +7340,25 @@
         const normalRemarksFields = document.getElementById('applicantNormalRemarksFields');
         const medicalConditionField = document.getElementById('applicantMedicalConditionField');
         const otherPendingReasonField = document.getElementById('applicantOtherPendingReasonField');
+        const covidPositiveInputs = document.querySelectorAll('input[name="applicant_covid_positive"]');
+        const covidPositiveDateField = document.getElementById('applicantCovidDateField');
+        const covidPositiveDateInput = document.getElementById('applicantCovidPositiveDate');
+
+        function syncCovidPositiveFields() {
+            const selectedCovidValue = document.querySelector('input[name="applicant_covid_positive"]:checked')?.value || '';
+            const isPositive = selectedCovidValue === 'Yes';
+
+            if (covidPositiveDateField) {
+                covidPositiveDateField.style.display = isPositive ? 'flex' : 'none';
+            }
+            if (covidPositiveDateInput) {
+                covidPositiveDateInput.required = isPositive;
+                covidPositiveDateInput.disabled = !isPositive;
+                if (!isPositive) {
+                    covidPositiveDateInput.value = '';
+                }
+            }
+        }
 
         function syncFindingsReviewFields() {
             const selectedFinding = document.querySelector('input[name="applicant_findings_status"]:checked')?.value || '';
@@ -7329,6 +7416,10 @@
         pendingReasonInputs.forEach(function (input) {
             input.addEventListener('change', syncFindingsReviewFields);
         });
+        covidPositiveInputs.forEach(function (input) {
+            input.addEventListener('change', syncCovidPositiveFields);
+        });
+        syncCovidPositiveFields();
 
         if (openBtn) openBtn.addEventListener('click', function (e) { e.preventDefault(); openApplicantsModal(); });
         if (openClinicBtn) openClinicBtn.addEventListener('click', function (e) { e.preventDefault(); openClinicLookupModal(); });
