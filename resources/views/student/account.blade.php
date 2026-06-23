@@ -2947,13 +2947,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                         'is_image' => false,
                                     ],
                                     [
-                                        'key' => 'medical_assessment_upload',
-                                        'title' => 'Medical Assessment Copy',
-                                        'meta' => 'Generated PDF',
-                                        'path' => optional($healthProfileRecord)->medical_assessment_upload,
-                                        'is_image' => false,
-                                    ],
-                                    [
                                         'key' => 'pwd_id_proof',
                                         'title' => 'PWD ID Proof',
                                         'meta' => 'PDF Upload',
