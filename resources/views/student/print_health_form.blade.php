@@ -19,7 +19,7 @@
         .logo { width: 88px; height: 88px; object-fit: contain; }
         .official-heading-cell { font-family: "Times New Roman", Times, serif; }
         .official-heading-cell p { margin: 0; font-size: 13px; line-height: 1.17; }
-        .official-heading-cell .univ-name { font-size: 15px; font-weight: normal; }
+        .official-heading-cell .univ-name { font-size: 16px; font-weight: normal; }
         .official-heading-cell .dept-name { margin-top: 2px; font-size: 21px; font-weight: normal; }
         .photo-box { position: absolute; top: 29px; right: 2px; box-sizing: border-box; width: 130px; height: 120px; padding: 24px 8px 0; overflow: hidden; border: 1px solid #000; font-size: 13px; line-height: 1.25; text-align: center; white-space: normal; word-wrap: break-word; }
         .official-title-table { position: relative; width: 60%; margin-top: -5px; margin-left: 23.5%; border-collapse: collapse; table-layout: fixed; }
@@ -60,13 +60,13 @@
         .contact-information-row .cellphone-value { width: 26.8%; padding: 0 3px !important; border-bottom: 1px solid #000; font-weight: 700; }
         .compound-row { padding: 0 !important; }
         .age-label { width: 5%; }
-        .age-value { width: 10%; }
-        .sex-label { width: 5%; padding-left: 7px !important; }
-        .sex-value { width: 14%; }
-        .civil-label { width: 11%; padding-left: 7px !important; }
-        .civil-value { width: 14%; }
-        .course-label { width: 17%; padding-left: 7px !important; }
-        .course-value { width: 24%; padding-bottom: 2px !important; font-size: 11px !important; line-height: 1.08; white-space: normal; overflow-wrap: break-word; word-wrap: break-word; }
+        .age-value { width: 8%; }
+        .sex-label { width: 5%; padding-left: 5px !important; }
+        .sex-value { width: 11%; }
+        .civil-label { width: 10%; padding-left: 5px !important; }
+        .civil-value { width: 12%; }
+        .course-label { width: 15%; padding-left: 5px !important; }
+        .course-value { width: 34%; padding-bottom: 2px !important; font-size: 10px !important; line-height: 1.02; white-space: normal; overflow-wrap: break-word; word-wrap: break-word; }
         .row { display: block; width: 100%; margin: 5px 0; }
         .field { display: inline-block; min-height: 13px; min-width: 90px; padding: 0 4px; border-bottom: 1px solid #000; color: #000; font-size: 13px; font-weight: bold; vertical-align: bottom; }
         .label, .labels { white-space: nowrap; font-size: 13px; }

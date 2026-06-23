@@ -4756,6 +4756,42 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="applicant-lookup-item">
+                                <div class="applicant-lookup-card">
+                                    <div class="applicant-lookup-icon">MC</div>
+                                    <div class="applicant-lookup-content">
+                                        <p class="applicant-lookup-label">Medical Certificate Result</p>
+                                        <p class="applicant-lookup-value" id="applicantLookupMedCertResult">N/A</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="applicant-lookup-item">
+                                <div class="applicant-lookup-card">
+                                    <div class="applicant-lookup-icon">FD</div>
+                                    <div class="applicant-lookup-content">
+                                        <p class="applicant-lookup-label">Student Declared Findings</p>
+                                        <p class="applicant-lookup-value" id="applicantLookupMedCertDetails">N/A</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="applicant-lookup-item">
+                                <div class="applicant-lookup-card">
+                                    <div class="applicant-lookup-icon">XR</div>
+                                    <div class="applicant-lookup-content">
+                                        <p class="applicant-lookup-label">Chest X-ray Result</p>
+                                        <p class="applicant-lookup-value" id="applicantLookupXrayResult">N/A</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="applicant-lookup-item">
+                                <div class="applicant-lookup-card">
+                                    <div class="applicant-lookup-icon">XF</div>
+                                    <div class="applicant-lookup-content">
+                                        <p class="applicant-lookup-label">Student Declared X-ray Findings</p>
+                                        <p class="applicant-lookup-value" id="applicantLookupXrayDetails">N/A</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -6465,6 +6501,10 @@
         const lookupAge       = document.getElementById('applicantLookupAge');
         const lookupGender    = document.getElementById('applicantLookupGender');
         const lookupContact   = document.getElementById('applicantLookupContact');
+        const lookupMedCertResult = document.getElementById('applicantLookupMedCertResult');
+        const lookupMedCertDetails = document.getElementById('applicantLookupMedCertDetails');
+        const lookupXrayResult = document.getElementById('applicantLookupXrayResult');
+        const lookupXrayDetails = document.getElementById('applicantLookupXrayDetails');
         const informationButton = document.getElementById('btnViewApplicantInformation');
         const documentsButton = document.getElementById('btnViewApplicantDocuments');
         const savedAssessmentButton = document.getElementById('btnViewSavedAssessment');
@@ -6871,6 +6911,10 @@
             if (lookupAge) lookupAge.textContent = data.age !== null && data.age !== undefined && data.age !== '' ? String(data.age) : 'N/A';
             if (lookupGender) lookupGender.textContent = data.sex || 'N/A';
             if (lookupContact) lookupContact.textContent = data.contact_number || 'N/A';
+            if (lookupMedCertResult) lookupMedCertResult.textContent = data.medical_certificate_result || 'N/A';
+            if (lookupMedCertDetails) lookupMedCertDetails.textContent = data.medical_certificate_findings_details || '-';
+            if (lookupXrayResult) lookupXrayResult.textContent = data.xray_result || 'N/A';
+            if (lookupXrayDetails) lookupXrayDetails.textContent = data.xray_findings_details || '-';
 
             console.log('Setting display styles...');
             lookupDetails.style.display = 'block';

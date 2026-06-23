@@ -2498,6 +2498,7 @@ public function storeHealthForm(Request $request)
         'chest_xray_result' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
         'xray_date'         => 'required|date',
         'xray_findings'     => 'required|string|in:Normal,With Findings,Not Sure / For Clinic Review',
+        'xray_findings_details' => 'required_if:xray_findings,With Findings|nullable|string|max:1000',
         'has_disability'    => 'required|string',
         'disability_type'   => 'required_if:has_disability,Yes|nullable|string|max:255',
         'pwd_id_proof'      => 'required_if:has_disability,Yes|file|mimes:pdf|max:2048',
@@ -2505,6 +2506,7 @@ public function storeHealthForm(Request $request)
         'doctor_name'       => 'required|string|max:255',
         'med_cert_date'     => 'required|date',
         'med_cert_findings' => 'required|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review',
+        'med_cert_findings_details' => 'required_if:med_cert_findings,With Findings|nullable|string|max:1000',
         'health_profile_certified' => 'accepted',
     ]);
 
@@ -2642,6 +2644,11 @@ public function storeHealthForm(Request $request)
                 'chest_xray_result'  => $chestXrayPath,
                 'xray_date'          => $request->input('xray_date'),
                 'xray_findings'      => $request->input('xray_findings'),
+                'xray_findings_details' => \Schema::hasColumn('health_profiles', 'xray_findings_details')
+                    ? ($request->input('xray_findings') === 'With Findings'
+                        ? trim((string) $request->input('xray_findings_details'))
+                        : null)
+                    : null,
                 'has_disability'     => $request->has_disability,
                 'disability_type'    => $request->disability_type,
                 'pwd_id_proof'       => $pwdIdProofPath,
@@ -2649,6 +2656,11 @@ public function storeHealthForm(Request $request)
                 'doctor_name'        => $request->input('doctor_name'),
                 'med_cert_date'      => $request->input('med_cert_date'),
                 'med_cert_findings'  => $request->input('med_cert_findings'),
+                'med_cert_findings_details' => \Schema::hasColumn('health_profiles', 'med_cert_findings_details')
+                    ? ($request->input('med_cert_findings') === 'With Findings'
+                        ? trim((string) $request->input('med_cert_findings_details'))
+                        : null)
+                    : null,
                 'clearance_status'   => 'For Verification',
                 'pending_reason'     => null,
                 'verified_at'        => null,

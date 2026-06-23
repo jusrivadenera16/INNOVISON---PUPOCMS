@@ -2229,6 +2229,7 @@
                     Do not forget to bring a hard copy of your 2x2 photo.
                 </p>
                 <a
+                    id="healthPrintReminderOpen"
                     class="health-print-reminder-button"
                     href="{{ route('student.health_form.print') }}"
                     target="_blank"
@@ -2307,6 +2308,13 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!printReminder) return;
     printReminder.classList.add('is-open');
     printReminder.setAttribute('aria-hidden', 'false');
+
+    document.getElementById('healthPrintReminderOpen')?.addEventListener('click', function () {
+        window.setTimeout(function () {
+            printReminder.classList.remove('is-open');
+            printReminder.setAttribute('aria-hidden', 'true');
+        }, 120);
+    });
 });
 </script>
 @endif

@@ -945,6 +945,14 @@ class WalkInController extends Controller
                 ? '/assistant'
                 : '/admin';
             $rawClearanceStatus = trim((string) optional($healthProfile)->clearance_status);
+            $medicalCertificateResult = trim((string) optional($healthProfile)->med_cert_findings);
+            $medicalCertificateDetails = \Schema::hasColumn('health_profiles', 'med_cert_findings_details')
+                ? trim((string) optional($healthProfile)->med_cert_findings_details)
+                : '';
+            $xrayResult = trim((string) optional($healthProfile)->xray_findings);
+            $xrayDetails = \Schema::hasColumn('health_profiles', 'xray_findings_details')
+                ? trim((string) optional($healthProfile)->xray_findings_details)
+                : '';
             $resolvedClinicStatus = match (true) {
                 in_array($rawClearanceStatus, ['Issued', 'Fully Cleared'], true) => 'Fully Cleared',
                 $rawClearanceStatus === 'Pending/Conditional' => 'Pending Compliance / Conditional',
@@ -976,6 +984,10 @@ class WalkInController extends Controller
                     'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                     'health_profile_id' => optional($healthProfile)->id,
                     'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
+                    'medical_certificate_result' => $medicalCertificateResult,
+                    'medical_certificate_findings_details' => $medicalCertificateDetails,
+                    'xray_result' => $xrayResult,
+                    'xray_findings_details' => $xrayDetails,
                     'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
                     'documents' => $this->healthProfileDocuments($request, $healthProfile),
                     'name_matches' => $lookupName !== '' ? $this->namesRoughlyMatch($lookupName, $student) : null,
@@ -1024,6 +1036,10 @@ class WalkInController extends Controller
                 'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                 'health_profile_id' => optional($healthProfile)->id,
                 'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
+                'medical_certificate_result' => $medicalCertificateResult,
+                'medical_certificate_findings_details' => $medicalCertificateDetails,
+                'xray_result' => $xrayResult,
+                'xray_findings_details' => $xrayDetails,
                 'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
                 'documents' => $this->healthProfileDocuments($request, $healthProfile),
                 'lookup_status' => $lookupStatus,

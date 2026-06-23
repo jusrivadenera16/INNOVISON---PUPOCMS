@@ -1198,7 +1198,9 @@
         }
 
         #disabilityTypeWrap.is-hidden,
-        #pwdUploadWrap.is-hidden {
+        #pwdUploadWrap.is-hidden,
+        #medCertFindingsDetailsWrap.is-hidden,
+        #xrayFindingsDetailsWrap.is-hidden {
             display: none;
         }
 
@@ -1540,7 +1542,7 @@
                 $personalErrorFields = ['school_year', 'course_code', 'course_college', 'home_address', 'zipcode', 'birthday', 'age', 'sex', 'civil_status', 'height', 'weight', 'blood_type', 'contact_no', 'guardian_name', 'landline', 'cellphone'];
                 $medicalErrorFields = ['has_illness', 'medical_history', 'other_illness', 'has_disability', 'disability_type', 'food_allergies', 'no_allergies', 'medicine_allergies', 'other_med_allergies', 'is_smoker', 'is_drinker'];
                 $covidErrorFields = ['covid_vaccinated', 'vaccine_history'];
-                $uploadErrorFields = ['medical_certificate', 'doctor_name', 'med_cert_date', 'med_cert_findings', 'chest_xray_result', 'xray_date', 'xray_findings', 'pwd_id_proof', 'student_photo', 'health_profile_certified'];
+                $uploadErrorFields = ['medical_certificate', 'doctor_name', 'med_cert_date', 'med_cert_findings', 'med_cert_findings_details', 'chest_xray_result', 'xray_date', 'xray_findings', 'xray_findings_details', 'pwd_id_proof', 'student_photo', 'health_profile_certified'];
                 $startStep = collect($uploadErrorFields)->contains(fn ($field) => $errors->has($field)) ? 5
                     : (collect($covidErrorFields)->contains(fn ($field) => $errors->has($field)) ? 4
                     : (collect($medicalErrorFields)->contains(fn ($field) => $errors->has($field)) ? 3
@@ -2087,7 +2089,7 @@
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             <small>Required only when PWD. Allowed: PDF only, max 2MB. Compress the file if needed to meet the size requirement.</small>
                         </div>
-                        <div class="requirement-card {{ old('doctor_name') || old('med_cert_date') || old('med_cert_findings') ? 'has-old-data' : '' }}" data-requirement-card>
+                        <div class="requirement-card {{ old('doctor_name') || old('med_cert_date') || old('med_cert_findings') || old('med_cert_findings_details') ? 'has-old-data' : '' }}" data-requirement-card>
                             <div class="requirement-card-header">
                                 <strong>Medical Certificate <span class="required">*</span></strong>
                                 <span class="requirement-badge">PDF/IMG</span>
@@ -2134,9 +2136,21 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="form-field span-2 {{ old('med_cert_findings') === 'With Findings' ? '' : 'is-hidden' }}" id="medCertFindingsDetailsWrap">
+                                    <label class="form-label" for="med_cert_findings_details">Medical Certificate Findings <span class="required">*</span></label>
+                                    <textarea
+                                        id="med_cert_findings_details"
+                                        name="med_cert_findings_details"
+                                        class="form-control"
+                                        rows="3"
+                                        maxlength="1000"
+                                        placeholder="Type the findings written in your medical certificate."
+                                        data-requirement-extra-field
+                                    >{{ old('med_cert_findings_details') }}</textarea>
+                                </div>
                             </div>
                         </div>
-                        <div class="requirement-card {{ old('xray_date') || old('xray_findings') ? 'has-old-data' : '' }}" data-requirement-card>
+                        <div class="requirement-card {{ old('xray_date') || old('xray_findings') || old('xray_findings_details') ? 'has-old-data' : '' }}" data-requirement-card>
                             <div class="requirement-card-header">
                                 <strong>Chest X-ray Result <span class="required">*</span></strong>
                                 <span class="requirement-badge">PDF/IMG</span>
@@ -2178,6 +2192,18 @@
                                             <button type="button" class="clinic-select-option" data-select-value="Not Sure / For Clinic Review">Not Sure / For Clinic Review</button>
                                         </div>
                                     </div>
+                                </div>
+                                <div class="form-field span-2 {{ old('xray_findings') === 'With Findings' ? '' : 'is-hidden' }}" id="xrayFindingsDetailsWrap">
+                                    <label class="form-label" for="xray_findings_details">Chest X-ray Findings <span class="required">*</span></label>
+                                    <textarea
+                                        id="xray_findings_details"
+                                        name="xray_findings_details"
+                                        class="form-control"
+                                        rows="3"
+                                        maxlength="1000"
+                                        placeholder="Type the findings written in your chest X-ray report."
+                                        data-requirement-extra-field
+                                    >{{ old('xray_findings_details') }}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -2273,6 +2299,12 @@
             const clinicSelects = Array.from(document.querySelectorAll('[data-clinic-select]'));
             const courseCodeSelect = document.getElementById('course_code');
             const courseCollegeInput = document.getElementById('course_college');
+            const medCertFindingsSelect = document.getElementById('med_cert_findings');
+            const medCertFindingsDetailsWrap = document.getElementById('medCertFindingsDetailsWrap');
+            const medCertFindingsDetails = document.getElementById('med_cert_findings_details');
+            const xrayFindingsSelect = document.getElementById('xray_findings');
+            const xrayFindingsDetailsWrap = document.getElementById('xrayFindingsDetailsWrap');
+            const xrayFindingsDetails = document.getElementById('xray_findings_details');
             const uploadInputs = Array.from(document.querySelectorAll('[data-upload-input]'));
             let currentStep = {{ $startStep }};
             let isSubmitting = false;
@@ -2628,6 +2660,30 @@
                 courseCollegeInput.value = selectedOption?.dataset.courseName || '';
             }
 
+            function syncMedCertFindingsDetails() {
+                if (!medCertFindingsSelect || !medCertFindingsDetails || !medCertFindingsDetailsWrap) return;
+                const shouldShow = medCertFindingsSelect.value === 'With Findings';
+                medCertFindingsDetailsWrap.classList.toggle('is-hidden', !shouldShow);
+                medCertFindingsDetails.required = shouldShow && !medCertFindingsSelect.disabled;
+                medCertFindingsDetails.disabled = !shouldShow || medCertFindingsSelect.disabled;
+                if (!shouldShow) {
+                    medCertFindingsDetails.value = '';
+                    medCertFindingsDetails.setCustomValidity('');
+                }
+            }
+
+            function syncXrayFindingsDetails() {
+                if (!xrayFindingsSelect || !xrayFindingsDetails || !xrayFindingsDetailsWrap) return;
+                const shouldShow = xrayFindingsSelect.value === 'With Findings';
+                xrayFindingsDetailsWrap.classList.toggle('is-hidden', !shouldShow);
+                xrayFindingsDetails.required = shouldShow && !xrayFindingsSelect.disabled;
+                xrayFindingsDetails.disabled = !shouldShow || xrayFindingsSelect.disabled;
+                if (!shouldShow) {
+                    xrayFindingsDetails.value = '';
+                    xrayFindingsDetails.setCustomValidity('');
+                }
+            }
+
             function initializeClinicSelect(wrap) {
                 const select = wrap?.querySelector('select');
                 const display = wrap?.querySelector('.clinic-select-display');
@@ -2662,6 +2718,10 @@
 
             courseCodeSelect?.addEventListener('change', syncCourseCollegeValue);
             syncCourseCollegeValue();
+            medCertFindingsSelect?.addEventListener('change', syncMedCertFindingsDetails);
+            syncMedCertFindingsDetails();
+            xrayFindingsSelect?.addEventListener('change', syncXrayFindingsDetails);
+            syncXrayFindingsDetails();
 
             function formatFileSize(bytes) {
                 if (!Number.isFinite(bytes) || bytes <= 0) {
@@ -2746,7 +2806,11 @@
             });
             requirementFiles.forEach((fileInput) => {
                 syncRequirementCard(fileInput);
-                fileInput.addEventListener('change', () => syncRequirementCard(fileInput));
+                fileInput.addEventListener('change', () => {
+                    syncRequirementCard(fileInput);
+                    syncMedCertFindingsDetails();
+                    syncXrayFindingsDetails();
+                });
             });
             clinicSelects.forEach(initializeClinicSelect);
             uploadInputs.forEach((input) => {
