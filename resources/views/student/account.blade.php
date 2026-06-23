@@ -2611,7 +2611,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $healthFormSubmitted = $hasSubmittedHealthProfile ?? ($user->healthProfile !== null);
         $status = $user->healthProfile->clearance_status ?? 'For Verification';
         $statusNormalized = strtolower(trim((string) $status));
-        $isIssuedStatus = $statusNormalized === 'issued';
+        $isIssuedStatus = in_array($statusNormalized, ['issued', 'fully cleared'], true);
         $isRejectedStatus = $statusNormalized === 'rejected';
         $isConditionalStatus = str_contains($statusNormalized, 'pending') || str_contains($statusNormalized, 'conditional');
         $isPendingStatus = !$isIssuedStatus && !$isRejectedStatus;
