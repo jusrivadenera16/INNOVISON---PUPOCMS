@@ -1221,6 +1221,59 @@
         .record-modal-grid {
             grid-template-columns: 1fr;
         }
+        .health-status-steps {
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            gap: 8px;
+            align-items: stretch;
+        }
+        .health-step {
+            justify-content: center;
+            min-width: 0;
+            width: 46px;
+            padding: 8px 5px;
+            gap: 0;
+        }
+        .health-step.is-active {
+            justify-content: flex-start;
+            width: auto;
+            padding: 8px 10px;
+            gap: 8px;
+        }
+        .health-step:not(.is-active) .health-step-label {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        .health-step-icon {
+            width: 34px;
+            height: 34px;
+        }
+        .health-step-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+        .health-step.is-active .health-step-icon {
+            width: 40px;
+            height: 40px;
+        }
+        .health-step.is-active .health-step-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+        .health-step.is-active .health-step-label {
+            font-size: 11px;
+            line-height: 1.15;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            overflow-wrap: normal;
+            word-break: normal;
+        }
         .record-modal-links {
             grid-template-columns: 1fr;
         }
@@ -1587,6 +1640,62 @@
         background: rgba(69, 26, 3, 0.32);
         border-color: rgba(250, 204, 21, 0.18);
         color: #fde68a;
+    }
+    @media (max-width: 760px) {
+        .health-status-steps {
+            display: grid;
+            grid-template-columns: 40px minmax(156px, 1fr) 40px;
+            gap: 8px;
+            align-items: stretch;
+        }
+        .health-step {
+            width: auto;
+            min-width: 0;
+            justify-content: center;
+            padding: 7px 4px;
+            gap: 0;
+        }
+        .health-step.is-active {
+            justify-content: flex-start;
+            padding: 7px 9px;
+            gap: 7px;
+        }
+        .health-step:not(.is-active) .health-step-label {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        .health-step-icon {
+            width: 30px;
+            height: 30px;
+        }
+        .health-step-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+        .health-step.is-active .health-step-icon {
+            width: 36px;
+            height: 36px;
+        }
+        .health-step.is-active .health-step-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+        .health-step.is-active .health-step-label {
+            min-width: 0;
+            font-size: 11px;
+            line-height: 1.15;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     }
     .record-modal-overlay {
         display: none;

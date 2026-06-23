@@ -19,9 +19,9 @@
         .logo { width: 88px; height: 88px; object-fit: contain; }
         .official-heading-cell { font-family: "Times New Roman", Times, serif; }
         .official-heading-cell p { margin: 0; font-size: 13px; line-height: 1.17; }
-        .official-heading-cell .univ-name { font-size: 19px; font-weight: normal; }
+        .official-heading-cell .univ-name { font-size: 15px; font-weight: normal; }
         .official-heading-cell .dept-name { margin-top: 2px; font-size: 21px; font-weight: normal; }
-        .photo-box { position: absolute; top: 29px; right: 2px; box-sizing: border-box; width: 116.5px; height: 115px; padding: 22px 8px 0; overflow: hidden; border: 1px solid #000; font-size: 13px; line-height: 1.25; text-align: center; white-space: normal; word-wrap: break-word; }
+        .photo-box { position: absolute; top: 29px; right: 2px; box-sizing: border-box; width: 130px; height: 120px; padding: 24px 8px 0; overflow: hidden; border: 1px solid #000; font-size: 13px; line-height: 1.25; text-align: center; white-space: normal; word-wrap: break-word; }
         .official-title-table { position: relative; width: 60%; margin-top: -5px; margin-left: 23.5%; border-collapse: collapse; table-layout: fixed; }
         .official-title-table::before { position: absolute; top: 0; left: -33.333%; width: 120%; border-top: 2px solid #000; content: ""; }
         .official-title-table td { padding: 9px 0 5px; border: 0; font-family: Arial, Helvetica, sans-serif; font-size: 17px; font-weight: 700; font-style: italic; text-align: center; }
