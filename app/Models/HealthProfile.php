@@ -11,7 +11,7 @@ class HealthProfile extends Model
         'student_id', 'student_number', 'reference_number',
         'school_year', 'home_address', 'zipcode', 'birthday', 'student_photo', 
         'height', 'weight',
-        'age', 'sex', 'civil_status', 'course_college', 
+        'age', 'sex', 'civil_status', 'course_college', 'course_code',
         'blood_type', 'guardian_name', 'landline', 'cellphone',
         'chest_xray_result',
         'xray_date',

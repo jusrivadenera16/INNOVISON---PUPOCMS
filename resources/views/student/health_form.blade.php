@@ -949,6 +949,18 @@
             box-shadow: 0 14px 26px rgba(127, 29, 45, 0.24);
         }
 
+        .course-select-wrap .clinic-select-display {
+            min-height: 52px;
+            white-space: normal;
+            line-height: 1.25;
+        }
+
+        .course-select-wrap .clinic-select-option {
+            border-radius: 14px;
+            white-space: normal;
+            line-height: 1.25;
+        }
+
         .btn-row {
             margin-top: 22px;
             display: flex;
@@ -1525,7 +1537,7 @@
             @endif
             @php
                 $selectedPwd = old('has_disability', $prefill['has_disability'] ?? 'No');
-                $personalErrorFields = ['school_year', 'home_address', 'zipcode', 'birthday', 'age', 'sex', 'civil_status', 'height', 'weight', 'blood_type', 'contact_no', 'guardian_name', 'landline', 'cellphone'];
+                $personalErrorFields = ['school_year', 'course_code', 'course_college', 'home_address', 'zipcode', 'birthday', 'age', 'sex', 'civil_status', 'height', 'weight', 'blood_type', 'contact_no', 'guardian_name', 'landline', 'cellphone'];
                 $medicalErrorFields = ['has_illness', 'medical_history', 'other_illness', 'has_disability', 'disability_type', 'food_allergies', 'no_allergies', 'medicine_allergies', 'other_med_allergies', 'is_smoker', 'is_drinker'];
                 $covidErrorFields = ['covid_vaccinated', 'vaccine_history'];
                 $uploadErrorFields = ['medical_certificate', 'doctor_name', 'med_cert_date', 'med_cert_findings', 'chest_xray_result', 'xray_date', 'xray_findings', 'pwd_id_proof', 'student_photo', 'health_profile_certified'];
@@ -1564,6 +1576,10 @@
                     : ($referenceVerificationUnavailable
                         ? 'PUPTAS could not be reached after retrying. No clinic reference was generated. Please retry later or contact Admissions or clinic staff.'
                         : 'This clinic reference is generated and managed inside the clinic system for local staff, admin, faculty, and guest records.');
+                $courseOptions = $prefill['course_options'] ?? [];
+                $courseApplicable = (bool) ($prefill['course_applicable'] ?? false);
+                $selectedCourseCode = old('course_code', $prefill['course_code'] ?? '');
+                $selectedCourseName = old('course_college', $prefill['course_college'] ?? '');
 
                 if ($displayReferenceNumber === '' && ($referenceRequiresValidation || $referenceVerificationUnavailable)) {
                     $startStep = 1;
@@ -1596,7 +1612,7 @@
 
             <form action="{{ route('store.health.form') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <input type="hidden" name="course_college" value="{{ old('course_college', trim((string) (($prefill['course_college'] ?? '') !== '' ? $prefill['course_college'] : ($user->course ?? '')))) }}">
+                <input type="hidden" id="course_college" name="course_college" value="{{ $courseApplicable ? $selectedCourseName : '' }}">
 
                 <div class="step-panel {{ $startStep === 1 ? '' : 'is-hidden' }}" id="stepPanel1">
                     <div class="form-intro">
@@ -1746,6 +1762,37 @@
                         <label class="form-label" for="profile_email">Email Address</label>
                         <input id="profile_email" type="email" class="form-control identity-readonly" value="{{ $user->email }}" readonly>
                     </div>
+                    @if($courseApplicable)
+                        <div class="form-field personal-email-field">
+                            <label class="form-label" for="course_code">Course / Program <span class="required">*</span></label>
+                            <div class="clinic-select-wrap course-select-wrap" data-clinic-select data-select-placeholder="Select course">
+                                <select id="course_code" class="form-select clinic-select-native field-maroon" name="course_code" required>
+                                    <option value="">Select course</option>
+                                    @foreach($courseOptions as $courseOption)
+                                        <option
+                                            value="{{ $courseOption['code'] }}"
+                                            data-course-name="{{ $courseOption['name'] }}"
+                                            {{ $selectedCourseCode === $courseOption['code'] ? 'selected' : '' }}
+                                        >
+                                            {{ $courseOption['label'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select course</button>
+                                <div class="clinic-select-menu" role="listbox" aria-label="Course options">
+                                    @foreach($courseOptions as $courseOption)
+                                        <button
+                                            type="button"
+                                            class="clinic-select-option"
+                                            data-select-value="{{ $courseOption['code'] }}"
+                                        >
+                                            {{ $courseOption['label'] }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                     <div class="step-one-grid">
                         <div class="form-field">
                             <label class="form-label" for="school_year">School Year <span class="required">*</span></label>
@@ -2224,6 +2271,8 @@
             ].filter(Boolean);
             const requirementFiles = document.querySelectorAll('[data-requirement-file]');
             const clinicSelects = Array.from(document.querySelectorAll('[data-clinic-select]'));
+            const courseCodeSelect = document.getElementById('course_code');
+            const courseCollegeInput = document.getElementById('course_college');
             const uploadInputs = Array.from(document.querySelectorAll('[data-upload-input]'));
             let currentStep = {{ $startStep }};
             let isSubmitting = false;
@@ -2573,6 +2622,12 @@
                 });
             }
 
+            function syncCourseCollegeValue() {
+                if (!courseCodeSelect || !courseCollegeInput) return;
+                const selectedOption = courseCodeSelect.options[courseCodeSelect.selectedIndex];
+                courseCollegeInput.value = selectedOption?.dataset.courseName || '';
+            }
+
             function initializeClinicSelect(wrap) {
                 const select = wrap?.querySelector('select');
                 const display = wrap?.querySelector('.clinic-select-display');
@@ -2604,6 +2659,9 @@
 
                 select.addEventListener('change', () => syncClinicSelect(wrap));
             }
+
+            courseCodeSelect?.addEventListener('change', syncCourseCollegeValue);
+            syncCourseCollegeValue();
 
             function formatFileSize(bytes) {
                 if (!Number.isFinite(bytes) || bytes <= 0) {

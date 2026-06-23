@@ -35,30 +35,7 @@ class AdminSeeder extends Seeder
                 'office' => 'Clinic Office',
                 'access_level' => 'superadmin',
             ],
-            [
-                'admin_id' => 2,
-                'first_name' => 'Alden',
-                'last_name' => 'Richard',
-                'email' => 'aldenrichard@gmail.com',
-                'birthday' => '2000-01-01',
-                'age' => 26,
-                'gender' => 'Male',
-                'civil_status' => 'Single',
-                'address' => 'Manila',
-                'emergency_contact_person' => 'Maine Mendoza',
-                'emergency_contact_no' => '09123456789',
-                'office' => 'Registrar',
-                'access_level' => 'admin',
-            ],
-            [
-                'admin_id' => 3,
-                'first_name' => 'Joyce',
-                'middle_name' => null,
-                'last_name' => 'Lim',
-                'suffix_name' => null,
-                'email' => 'nursejoyce@gmail.com',
-                'office' => 'Clinic Office',
-            ],
+            
         ];
 
         foreach ($records as $record) {

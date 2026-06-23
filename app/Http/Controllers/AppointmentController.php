@@ -639,6 +639,136 @@ class AppointmentController extends Controller
         return $course !== '' && !in_array($normalized, $roleLabels, true) ? $course : '';
     }
 
+    private function healthFormCourseOptions(): array
+    {
+        $courses = [
+            'BSBA-HRM' => 'Bachelor of Science in Business Administration major in Human Resource Management',
+            'BSBA-MM' => 'Bachelor of Science in Business Administration major in Marketing Management',
+            'BSECE' => 'Bachelor of Science in Electronics Engineering',
+            'BSIT' => 'Bachelor of Science in Information Technology',
+            'BSME' => 'Bachelor of Science in Mechanical Engineering',
+            'BSOA' => 'Bachelor of Science in Office Administration',
+            'BSPSY' => 'Bachelor of Science in Psychology',
+            'BSED-ENGLISH' => 'Bachelor of Secondary Education major in English',
+            'BSED-MATH' => 'Bachelor of Secondary Education major in Mathematics',
+            'DIT' => 'Diploma in Information Technology',
+            'DOMT' => 'Diploma in Office Management Technology',
+        ];
+
+        return collect($courses)
+            ->map(fn (string $name, string $code) => [
+                'code' => $code,
+                'name' => $name,
+                'label' => $code . ' - ' . $name,
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function healthFormCourseMap(): array
+    {
+        return collect($this->healthFormCourseOptions())
+            ->keyBy('code')
+            ->all();
+    }
+
+    private function normalizeCourseCode(?string $value): string
+    {
+        return strtoupper(trim((string) $value));
+    }
+
+    private function isHealthCourseApplicable(User $user): bool
+    {
+        $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
+        $userType = strtolower(trim((string) ($user->user_type ?? '')));
+        $userRole = User::normalizeRole((string) ($user->user_role ?? ''));
+
+        if (in_array($userType, ['faculty', 'guest', 'regular', 'assistant', 'student assistant'], true)) {
+            return false;
+        }
+
+        if (in_array($idpRole, ['faculty', 'guest', 'admin', 'superadmin', 'super_admin'], true)) {
+            return false;
+        }
+
+        return in_array($userType, ['student', 'applicant'], true)
+            || in_array($idpRole, ['student', 'applicant'], true)
+            || ($userType === '' && $userRole === User::ROLE_STUDENT);
+    }
+
+    private function isApplicantAccount(User $user): bool
+    {
+        return strtolower(trim((string) ($user->idp_role ?? ''))) === 'applicant'
+            || strtolower(trim((string) ($user->user_type ?? ''))) === 'applicant';
+    }
+
+    private function findHealthFormCourse(?string $code, ?string $name = null): array
+    {
+        $map = $this->healthFormCourseMap();
+        $normalizedCode = $this->normalizeCourseCode($code);
+
+        if ($normalizedCode !== '' && isset($map[$normalizedCode])) {
+            return $map[$normalizedCode];
+        }
+
+        $normalizedName = strtolower(preg_replace('/\s+/', ' ', trim((string) $name)));
+        if ($normalizedName !== '') {
+            foreach ($map as $option) {
+                $candidateName = strtolower(preg_replace('/\s+/', ' ', $option['name']));
+                $candidateLabel = strtolower(preg_replace('/\s+/', ' ', $option['label']));
+                if ($normalizedName === $candidateName || $normalizedName === $candidateLabel) {
+                    return $option;
+                }
+            }
+        }
+
+        return ['code' => '', 'name' => '', 'label' => ''];
+    }
+
+    private function resolveHealthFormCourse(User $user, ?HealthProfile $healthProfile = null, ?array $applicantData = null, ?Request $request = null): array
+    {
+        if (!$this->isHealthCourseApplicable($user)) {
+            return ['code' => '', 'name' => '', 'label' => ''];
+        }
+
+        $requestedCode = $request ? $this->normalizeCourseCode($request->input('course_code')) : '';
+        if ($requestedCode !== '') {
+            return $this->findHealthFormCourse($requestedCode);
+        }
+
+        $existingCode = $this->normalizeCourseCode(optional($healthProfile)->course_code);
+        $existingName = $this->sanitizeAcademicCourse(optional($healthProfile)->course_college);
+        $existingCourse = $this->findHealthFormCourse($existingCode, $existingName);
+        if ($existingCourse['code'] !== '') {
+            return $existingCourse;
+        }
+
+        $puptasCode = $this->normalizeCourseCode(
+            data_get($applicantData, 'program.code')
+            ?: data_get($applicantData, 'program_code')
+            ?: data_get($applicantData, 'programCode')
+            ?: data_get($applicantData, 'course.code')
+            ?: data_get($applicantData, 'course_code')
+        );
+        $puptasName = trim((string) (
+            data_get($applicantData, 'program.name')
+            ?: data_get($applicantData, 'program_name')
+            ?: data_get($applicantData, 'programName')
+            ?: data_get($applicantData, 'course.name')
+            ?: data_get($applicantData, 'course_name')
+            ?: data_get($applicantData, 'program')
+            ?: data_get($applicantData, 'course')
+        ));
+
+        $puptasCourse = $this->findHealthFormCourse($puptasCode, $puptasName);
+        if ($puptasCourse['code'] !== '') {
+            return $puptasCourse;
+        }
+
+        $userCourse = $this->sanitizeAcademicCourse($user->course ?? null);
+        return $this->findHealthFormCourse(null, $userCourse);
+    }
+
     private function isPuptasApplicant(array $applicantData): bool
     {
         if (empty($applicantData)) {
@@ -848,6 +978,7 @@ class AppointmentController extends Controller
         $applicantIdentity = $this->normalizePuptasApplicantIdentity($applicantData);
         $this->persistPuptasApplicantIdentity($user, $applicantIdentity);
         $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile, $applicantData, $lookupOutcome);
+        $usePuptasApplicantPrefill = $this->isApplicantAccount($user) && is_array($applicantData) && !empty($applicantData);
 
         $calculatedAge = null;
         if (!empty($user->DOB)) {
@@ -859,8 +990,9 @@ class AppointmentController extends Controller
         }
 
         $resolvedSex = $this->normalizeSexValue(
-            data_get($applicantData, 'sex')
-            ?: (optional($healthProfile)->sex ?? $user->gender ?? optional($linkedAdminProfile)->gender ?? '')
+            $usePuptasApplicantPrefill
+                ? (data_get($applicantData, 'sex') ?: optional($healthProfile)->sex)
+                : (optional($healthProfile)->sex ?? $user->gender ?? optional($linkedAdminProfile)->gender ?? '')
         );
 
         $resolvedCivilStatus = trim((string) (optional($healthProfile)->civil_status ?? optional($linkedAdminProfile)->civil_status ?? ''));
@@ -868,9 +1000,9 @@ class AppointmentController extends Controller
 
         $resolvedBirthday = (string) (
             optional($healthProfile)->birthday
+            ?: ($usePuptasApplicantPrefill ? data_get($applicantData, 'birthday') : null)
             ?: $user->DOB
             ?: optional($linkedAdminProfile)->birthday
-            ?: data_get($applicantData, 'birthday')
             ?: ''
         );
 
@@ -891,12 +1023,13 @@ class AppointmentController extends Controller
             }
         }
 
-        $resolvedAddress = trim(implode(', ', array_filter([
+        $resolvedAddress = $usePuptasApplicantPrefill ? trim(implode(', ', array_filter([
             data_get($applicantData, 'street_address'),
             data_get($applicantData, 'barangay'),
             data_get($applicantData, 'city'),
             data_get($applicantData, 'province'),
-        ])));
+        ]))) : '';
+        $resolvedCourse = $this->resolveHealthFormCourse($user, $healthProfile, $applicantData);
 
         $applicantFirstName = trim((string) $applicantIdentity['first_name']);
         $applicantMiddleName = trim((string) $applicantIdentity['middle_name']);
@@ -949,14 +1082,18 @@ class AppointmentController extends Controller
                 ?: optional(optional($healthProfile)->user)->email
                 ?: ($user->email ?? optional($linkedAdminProfile)->email ?? '')
             ),
-            'course_college' => $this->sanitizeAcademicCourse(
-                $user->course ?? null
-            ),
+            'course_options' => $this->healthFormCourseOptions(),
+            'course_applicable' => $this->isHealthCourseApplicable($user),
+            'course_code' => $resolvedCourse['code'],
+            'course_college' => $resolvedCourse['name'],
             'home_address' => trim((string) (
                 optional($healthProfile)->home_address
                 ?: ($resolvedAddress !== '' ? $resolvedAddress : trim((string) (optional($linkedAdminProfile)->address ?? '')))
             )),
-            'zipcode' => trim((string) (optional($healthProfile)->zipcode ?? data_get($applicantData, 'postal_code') ?? '')),
+            'zipcode' => trim((string) (
+                optional($healthProfile)->zipcode
+                ?: ($usePuptasApplicantPrefill ? data_get($applicantData, 'postal_code') : '')
+            )),
             'school_year' => (string) (optional($healthProfile)->school_year ?? $this->resolveSchoolYear($applicantData, $user)),
             'height' => (string) (optional($healthProfile)->height ?? $user->height ?? ''),
             'weight' => (string) (optional($healthProfile)->weight ?? $user->weight ?? ''),
@@ -965,7 +1102,11 @@ class AppointmentController extends Controller
             'sex' => $resolvedSex,
             'civil_status' => $resolvedCivilStatus,
             'blood_type' => (string) (optional($healthProfile)->blood_type ?? 'Not Known'),
-            'contact_number' => trim((string) ($user->contact_no ?? data_get($applicantData, 'contactnumber') ?? '')),
+            'contact_number' => trim((string) (
+                ($usePuptasApplicantPrefill ? data_get($applicantData, 'contactnumber') : null)
+                ?: $user->contact_no
+                ?: ''
+            )),
             'guardian_name' => trim((string) (optional($healthProfile)->guardian_name ?? optional($linkedAdminProfile)->emergency_contact_person ?? '')),
             'cellphone' => trim((string) (
                 optional($healthProfile)->cellphone
@@ -2292,9 +2433,11 @@ public function storeHealthForm(Request $request)
         ? $user->healthProfile
         : \App\Models\HealthProfile::where('user_id', $user?->id)->first();
 
-    $resolvedCourseCollege = $this->sanitizeAcademicCourse(
-        $user?->course
-    );
+    $resolvedCourse = $user
+        ? $this->resolveHealthFormCourse($user, $existingHealthProfile, $accountApplicantData, $request)
+        : ['code' => '', 'name' => '', 'label' => ''];
+    $resolvedCourseCode = $resolvedCourse['code'];
+    $resolvedCourseCollege = $resolvedCourse['name'];
 
     $resolvedSchoolYear = trim((string) $request->input('school_year'));
     if ($resolvedSchoolYear === '') {
@@ -2305,6 +2448,7 @@ public function storeHealthForm(Request $request)
     }
 
     $request->merge([
+        'course_code' => $resolvedCourseCode,
         'course_college' => $resolvedCourseCollege,
         'school_year' => $resolvedSchoolYear,
     ]);
@@ -2322,6 +2466,7 @@ public function storeHealthForm(Request $request)
         'age'               => 'required|numeric|min:15|max:100',
         'sex'               => 'required|string',
         'civil_status'      => 'required|string',
+        'course_code'       => 'nullable|string|max:30',
         'course_college'    => 'nullable|string|max:255',
         'blood_type'        => 'required|string|max:20',
         'contact_no'        => 'required|string|max:20',
@@ -2362,6 +2507,12 @@ public function storeHealthForm(Request $request)
         'med_cert_findings' => 'required|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review',
         'health_profile_certified' => 'accepted',
     ]);
+
+    if ($user && $this->isHealthCourseApplicable($user) && $resolvedCourseCode === '') {
+        throw ValidationException::withMessages([
+            'course_code' => 'Please select the correct course/program.',
+        ]);
+    }
 
     $submittedReference = strtoupper(trim((string) $request->input('reference_number')));
 
@@ -2466,6 +2617,7 @@ public function storeHealthForm(Request $request)
                 'sex'                => $request->sex,
                 'civil_status'       => $request->civil_status,
                 'course_college'     => $resolvedCourseCollege !== '' ? $resolvedCourseCollege : null,
+                'course_code'        => \Schema::hasColumn('health_profiles', 'course_code') && $resolvedCourseCode !== '' ? $resolvedCourseCode : null,
                 'blood_type'         => $request->blood_type,
                 'guardian_name'      => $request->guardian_name,
                 'landline'           => $request->landline,

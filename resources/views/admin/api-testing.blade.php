@@ -916,6 +916,9 @@
                     @endif
                 </p>
             @endif
+            @if(!empty($apiResponseMeta['auth_note']))
+                <div class="api-connection-note">{{ $apiResponseMeta['auth_note'] }}</div>
+            @endif
             @if(!empty($apiResponseMeta['auth_status']) || !empty($apiResponseMeta['auth_token_source']) || !empty($apiResponseMeta['auth_endpoint']))
                 <p class="api-testing-meta" style="margin-top: 8px;">
                     @if(!empty($apiResponseMeta['auth_status']))

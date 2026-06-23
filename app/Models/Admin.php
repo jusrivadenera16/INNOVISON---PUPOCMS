@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class Admin extends Model
@@ -17,6 +18,8 @@ class Admin extends Model
     protected $keyType = 'int';
 
     protected $guarded = [];
+
+    private static array $columnCache = [];
 
     protected static function booted(): void
     {
@@ -35,15 +38,20 @@ class Admin extends Model
 
     public static function availableColumns(): array
     {
-        static $columns;
+        $connection = DB::connection();
+        $cacheKey = implode(':', [
+            $connection->getName(),
+            (string) $connection->getDatabaseName(),
+            'admins',
+        ]);
 
-        if ($columns === null) {
-            $columns = Schema::hasTable('admins')
+        if (!array_key_exists($cacheKey, static::$columnCache)) {
+            static::$columnCache[$cacheKey] = Schema::hasTable('admins')
                 ? Schema::getColumnListing('admins')
                 : [];
         }
 
-        return $columns;
+        return static::$columnCache[$cacheKey];
     }
 
     public static function hasColumn(string $column): bool

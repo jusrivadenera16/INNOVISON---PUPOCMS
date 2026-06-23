@@ -27,6 +27,7 @@ use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
+use App\Models\IntegrationClient;
 
 class AdminController extends Controller
 {
@@ -494,12 +495,13 @@ class AdminController extends Controller
                             'ok' => true,
                             'endpoint' => $internalAdminEndpoint,
                             'result_count' => count($results),
-                            'auth_mode' => 'system-key-check',
+                            'auth_mode' => $systemMeta['auth_mode'],
                             'source' => $source,
                             'system' => $systemMeta['system'],
                             'header_name' => $systemMeta['header_name'],
                             'system_header_name' => $systemMeta['system_header_name'],
-                            'api_key_preview' => $systemMeta['api_key_preview'],
+                            'api_key_preview' => $systemMeta['api_key_preview'] ?? null,
+                            'auth_note' => $systemMeta['auth_note'] ?? null,
                         ];
 
                         if (empty($results)) {
@@ -530,12 +532,13 @@ class AdminController extends Controller
                             'ok' => true,
                             'endpoint' => $internalAdminOptionsEndpoint,
                             'result_count' => count($results),
-                            'auth_mode' => 'system-key-check',
+                            'auth_mode' => $systemMeta['auth_mode'],
                             'source' => $source,
                             'system' => $systemMeta['system'],
                             'header_name' => $systemMeta['header_name'],
                             'system_header_name' => $systemMeta['system_header_name'],
-                            'api_key_preview' => $systemMeta['api_key_preview'],
+                            'api_key_preview' => $systemMeta['api_key_preview'] ?? null,
+                            'auth_note' => $systemMeta['auth_note'] ?? null,
                         ];
 
                         if (empty($results)) {
@@ -903,18 +906,24 @@ class AdminController extends Controller
 
     private function externalApiTestingSystems(): array
     {
-        $systemKeys = config('services.external_admin_profile.system_keys', []);
+        $databaseSystems = collect();
 
-        \Log::debug('External Admin Systems Debug', [
-            'system_keys_type' => gettype($systemKeys),
-            'system_keys_count' => count($systemKeys),
-            'system_keys' => $systemKeys,
-            'raw_env' => env('EXTERNAL_ADMIN_PROFILE_SYSTEM_KEYS'),
-        ]);
+        if (Schema::hasTable('integration_clients')) {
+            $databaseSystems = IntegrationClient::query()
+                ->where('is_active', true)
+                ->orderBy('system_name')
+                ->pluck('system_key');
+        }
 
-        return collect($systemKeys)
-            ->keys()
-            ->filter(fn ($value) => trim((string) $value) !== '')
+        $legacySystems = collect(
+            config('services.external_admin_profile.system_keys', [])
+        )->keys();
+
+        return $databaseSystems
+            ->merge($legacySystems)
+            ->map(fn ($system) => strtolower(trim((string) $system)))
+            ->filter()
+            ->unique()
             ->values()
             ->all();
     }
@@ -922,6 +931,15 @@ class AdminController extends Controller
     private function resolveExternalApiTestingSystemMeta(string $selectedSystem): array
     {
         $system = strtolower(trim($selectedSystem));
+        $client = null;
+
+        if (Schema::hasTable('integration_clients')) {
+            $client = IntegrationClient::query()
+                ->whereRaw('LOWER(system_key) = ?', [$system])
+                ->where('is_active', true)
+                ->first();
+        }
+
         $systemKeys = collect(config('services.external_admin_profile.system_keys', []))
             ->mapWithKeys(fn ($value, $key) => [strtolower(trim((string) $key)) => trim((string) $value)]);
 
@@ -929,15 +947,27 @@ class AdminController extends Controller
             return [false, null, 'Choose an external system first to test the API key configuration.'];
         }
 
+        if ($client) {
+            return [true, [
+                'system' => $system,
+                'header_name' => 'Authorization',
+                'system_header_name' => trim((string) config('services.external_admin_profile.system_header', 'X-External-System')),
+                'auth_mode' => 'sanctum-bearer-token',
+                'api_key_preview' => 'Bearer token stored hashed in database',
+                'auth_note' => 'Use the issued TOKEN_ID|RANDOM_SECRET as the Bearer token. The plaintext token cannot be viewed again after issuing.',
+            ], null];
+        }
+
         $apiKey = (string) $systemKeys->get($system, '');
         if ($apiKey === '') {
-            return [false, null, 'No API key is configured for the selected external system.'];
+            return [false, null, 'No active integration client or legacy API key is configured for the selected external system.'];
         }
 
         return [true, [
             'system' => $system,
             'header_name' => trim((string) config('services.external_admin_profile.header', 'X-External-Api-Key')),
             'system_header_name' => trim((string) config('services.external_admin_profile.system_header', 'X-External-System')),
+            'auth_mode' => 'legacy-static-key',
             'api_key_preview' => substr($apiKey, 0, 8) . '...' . substr($apiKey, -6),
         ], null];
     }
