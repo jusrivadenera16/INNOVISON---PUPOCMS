@@ -385,6 +385,41 @@
         font-weight: 900;
         word-break: break-word;
     }
+    .readonly-reference-value {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+    }
+    .readonly-copy-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        flex: 0 0 22px;
+        border: 1px solid rgba(112, 19, 27, 0.18);
+        border-radius: 7px;
+        background: #ffffff;
+        color: #70131B;
+        cursor: pointer;
+        transition: background-color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .readonly-copy-btn svg {
+        width: 13px;
+        height: 13px;
+        stroke-width: 2.4;
+    }
+    .readonly-copy-btn:hover {
+        background: #facc15;
+        border-color: #facc15;
+        transform: translateY(-1px);
+    }
+    .readonly-copy-btn.is-copied {
+        background: #dcfce7;
+        border-color: #86efac;
+        color: #166534;
+    }
     .readonly-record-pill.status-flag-pill {
         background: #fef3c7;
         border-color: #facc15;
@@ -2448,7 +2483,15 @@
                             <div class="readonly-record-meta">
                                 <div class="readonly-record-pill">
                                     <span>Reference Number</span>
-                                    <strong>{{ $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-' }}</strong>
+                                    @php($readonlyReference = $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-')
+                                    <strong class="readonly-reference-value">
+                                        <span>{{ $readonlyReference }}</span>
+                                        @if($readonlyReference !== '-')
+                                            <button type="button" class="readonly-copy-btn" data-copy-reference="{{ $readonlyReference }}" aria-label="Copy reference number">
+                                                <x-outline-icon name="clipboard-document-list" />
+                                            </button>
+                                        @endif
+                                    </strong>
                                 </div>
                                 <div class="readonly-record-pill status-flag-pill">
                                     <span>Status Flag</span>
@@ -2524,15 +2567,42 @@
                                 <h4 class="readonly-record-name">{{ optional($readonlyRecord->user)->name ?: 'Unnamed Student' }}</h4>
                                 <p class="readonly-record-sub">{{ optional($readonlyRecord->user)->email ?: '-' }}</p>
                             </div>
-                            <span class="readonly-record-status">Conditional / Flagged</span>
+                            <div class="readonly-record-meta">
+                                <div class="readonly-record-pill">
+                                    <span>Reference Number</span>
+                                    @php($readonlyReference = $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-')
+                                    <strong class="readonly-reference-value">
+                                        <span>{{ $readonlyReference }}</span>
+                                        @if($readonlyReference !== '-')
+                                            <button type="button" class="readonly-copy-btn" data-copy-reference="{{ $readonlyReference }}" aria-label="Copy reference number">
+                                                <x-outline-icon name="clipboard-document-list" />
+                                            </button>
+                                        @endif
+                                    </strong>
+                                </div>
+                                <div class="readonly-record-pill status-flag-pill">
+                                    <span>Status Flag</span>
+                                    <strong>Conditional / Flagged</strong>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="readonly-expand-btn"
+                                    aria-expanded="false"
+                                    onclick="event.stopPropagation(); const card = this.closest('.readonly-record-card'); if (card) { const expanded = !card.classList.contains('is-expanded'); card.classList.toggle('is-expanded', expanded); this.setAttribute('aria-expanded', expanded ? 'true' : 'false'); const label = this.querySelector('span'); if (label) label.textContent = expanded ? 'Hide' : 'View'; }"
+                                >
+                                    <span>View</span>
+                                </button>
+                            </div>
                         </div>
-                        <div class="readonly-record-grid">
-                            <div class="readonly-field"><span>Status Flag</span><strong>Conditional / Flagged</strong></div>
-                            <div class="readonly-field"><span>Previous Nurse Disapproval Notes</span><strong>{{ $readonlyRecord->pending_reason ?: '-' }}</strong></div>
-                            <div class="readonly-field"><span>Student Full Name</span><strong>{{ optional($readonlyRecord->user)->name ?: 'Unnamed Student' }}</strong></div>
-                            <div class="readonly-field"><span>Student ID Number</span><strong>{{ $readonlyRecord->student_id ?: optional($readonlyRecord->user)->student_id ?: optional($readonlyRecord->user)->student_number ?: '-' }}</strong></div>
-                            <div class="readonly-field"><span>Submission Reference Number</span><strong>{{ $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-' }}</strong></div>
-                            <div class="readonly-field"><span>Last Updated Nurse Tracking Remarks</span><strong>{{ $readonlyRecord->medical_condition_remarks ?: $readonlyRecord->pending_reason ?: '-' }}</strong></div>
+                        <div class="readonly-record-details">
+                            <div class="readonly-record-grid">
+                                <div class="readonly-field"><span>Status Flag</span><strong>Conditional / Flagged</strong></div>
+                                <div class="readonly-field"><span>Previous Nurse Disapproval Notes</span><strong>{{ $readonlyRecord->pending_reason ?: '-' }}</strong></div>
+                                <div class="readonly-field"><span>Student Full Name</span><strong>{{ optional($readonlyRecord->user)->name ?: 'Unnamed Student' }}</strong></div>
+                                <div class="readonly-field"><span>Student ID Number</span><strong>{{ $readonlyRecord->student_id ?: optional($readonlyRecord->user)->student_id ?: optional($readonlyRecord->user)->student_number ?: '-' }}</strong></div>
+                                <div class="readonly-field"><span>Submission Reference Number</span><strong>{{ $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-' }}</strong></div>
+                                <div class="readonly-field"><span>Last Updated Nurse Tracking Remarks</span><strong>{{ $readonlyRecord->medical_condition_remarks ?: $readonlyRecord->pending_reason ?: '-' }}</strong></div>
+                            </div>
                         </div>
                     </article>
                 @empty
@@ -2863,6 +2933,48 @@
         const pendingConditionalInfoBtn = document.getElementById('pendingConditionalInfoBtn');
         const pendingConditionalInfoModal = document.getElementById('pendingConditionalInfoModal');
         const closePendingConditionalInfoModal = document.getElementById('closePendingConditionalInfoModal');
+        const copyReferenceValue = function (value, button) {
+            const text = (value || '').trim();
+            if (!text) return;
+
+            const markCopied = function () {
+                const originalLabel = button?.getAttribute('aria-label') || 'Copy reference number';
+                button?.setAttribute('aria-label', 'Copied');
+                button?.classList.add('is-copied');
+                window.setTimeout(function () {
+                    button?.setAttribute('aria-label', originalLabel);
+                    button?.classList.remove('is-copied');
+                }, 1200);
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(markCopied).catch(function () {});
+                return;
+            }
+
+            const tempInput = document.createElement('textarea');
+            tempInput.value = text;
+            tempInput.setAttribute('readonly', 'readonly');
+            tempInput.style.position = 'fixed';
+            tempInput.style.left = '-9999px';
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+                document.execCommand('copy');
+                markCopied();
+            } catch (error) {
+                // Browser denied copy; leave the UI unchanged.
+            }
+            document.body.removeChild(tempInput);
+        };
+
+        document.querySelectorAll('[data-copy-reference]').forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                copyReferenceValue(button.getAttribute('data-copy-reference'), button);
+            });
+        });
 
         if (pendingApprovalInfoBtn && pendingApprovalInfoModal) {
             pendingApprovalInfoBtn.addEventListener('click', function () {

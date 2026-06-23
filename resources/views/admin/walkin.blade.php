@@ -6822,7 +6822,7 @@
             applyLookupMode('clinic');
             backdrop.classList.add('show');
             setEntryMode(false);
-            if (refInput) refInput.value = 'CLN-';
+            if (refInput) refInput.value = '';
         }
 
         function closeApplicantsModal() {
@@ -7021,12 +7021,7 @@
 
             if (isClinicLookupMode()) {
                 if (compact === '') return '';
-                if (!compact.startsWith('CLN')) {
-                    if (/^[0-9]/.test(compact)) {
-                        return formatApplicantReferenceInput('CLN' + compact);
-                    }
-                    return compact.slice(0, 3);
-                }
+                if (!compact.startsWith('CLN')) return compact.slice(0, 20);
 
                 const suffix = compact.slice(3, 16);
                 if (suffix === '') return 'CLN';

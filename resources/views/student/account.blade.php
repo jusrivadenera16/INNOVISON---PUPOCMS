@@ -947,9 +947,12 @@
     }
     .health-print-reminder-card h2 {
         margin: 0 0 12px;
-        color: #111827;
+        color: #111827 !important;
         font-size: 1.35rem;
         font-weight: 800;
+    }
+    #healthPrintReminderTitle {
+        color: #111827 !important;
     }
     .health-print-reminder-card p {
         margin: 0;
@@ -2195,15 +2198,18 @@
     $showOfficeField = in_array($linkedAccessLevel, ['clinic_staff', 'designee', 'admin_designee', 'superadmin', 'super_admin', 'faculty'], true) || str_contains($linkedAccessLevel, 'faculty');
     $hasGuisisAccountData = (bool) ($guisisAccountData['available'] ?? false);
     $displayStudentNumber = trim((string) ($accountProfileData['student_number'] ?? ''));
-    if ($displayStudentNumber === '') {
-        $displayStudentNumber = trim((string) ($accountProfileData['reference_number'] ?? ''));
-    }
     $referenceMode = trim((string) ($accountProfileData['reference_mode'] ?? 'admission'));
     $referenceHeading = $referenceMode === 'admission' ? 'Admission Reference' : 'Clinic Reference';
     $idNumberHeading = $referenceMode === 'admission' ? 'Student Number' : 'ID Number';
     $displayCourse = trim((string) ($accountProfileData['course_college'] ?? ''));
     $displayFullName = trim((string) ($accountProfileData['full_name'] ?? ''));
     $displayFullName = $displayFullName !== '' ? $displayFullName : ($hasGuisisAccountData ? 'Available once enrolled' : ($user->name ?? 'Student'));
+    if (\Illuminate\Support\Str::startsWith(\Illuminate\Support\Str::upper($displayStudentNumber), 'CLN-')) {
+        $displayStudentNumber = '';
+    }
+    $displayYear = trim((string) ($accountProfileData['year'] ?? $user->year ?? ''));
+    $displaySection = trim((string) ($accountProfileData['section'] ?? $user->section ?? ''));
+    $heroAcademicParts = array_values(array_filter([$displayStudentNumber, $displayCourse], fn ($value) => trim((string) $value) !== ''));
     $localMiddleName = trim((string) ($accountProfileData['middle_name'] ?? $user->middle_name ?? optional($linkedAdminProfile)->middle_name ?? ''));
     $localMiddleName = $localMiddleName !== '' ? $localMiddleName : 'N/A';
     $localSuffixName = trim((string) ($accountProfileData['suffix_name'] ?? optional($linkedAdminProfile)->suffix_name ?? ''));
@@ -2266,12 +2272,14 @@
         <div class="hero-info">
             <h1 class="hero-name">{{ $displayFullName }} <span class="hero-badge">Active</span></h1>
             @if($isEnrolled)
-                <div class="hero-course" @if($linkedRoleLabel) style="display: none;" @endif>
-                    {{ $guisisValue($displayStudentNumber) }} &bull; {{ $guisisValue($displayCourse) }}
-                </div>
+                @if(!empty($heroAcademicParts))
+                    <div class="hero-course" @if($linkedRoleLabel) style="display: none;" @endif>
+                        {{ implode(' • ', $heroAcademicParts) }}
+                    </div>
+                @endif
                 @if($linkedRoleLabel)
                     <div class="hero-course">
-                        {{ $guisisValue($displayStudentNumber) }} - {{ $linkedRoleLabel }}
+                        {{ $displayStudentNumber !== '' ? $displayStudentNumber . ' - ' : '' }}{{ $linkedRoleLabel }}
                     </div>
                 @endif
             @else
@@ -2359,22 +2367,30 @@ document.addEventListener('DOMContentLoaded', function () {
                     <section class="profile-form-section accent-maroon profile-frame-equal">
                         <h3 class="profile-form-section-title"><x-outline-icon name="document-text" />Academic Information</h3>
                         <div class="profile-grid-3">
-                            <div>
-                                <label class="input-label">{{ $idNumberHeading }}</label>
-                                <div class="form-control profile-static-field{{ $guisisPendingClass($displayStudentNumber) }}">{{ $guisisValue($displayStudentNumber) }}</div>
-                            </div>
-                            <div>
-                                <label class="input-label">Course</label>
-                                <div class="form-control profile-course-field profile-static-field{{ $guisisPendingClass($displayCourse) }}">{{ $guisisValue($displayCourse) }}</div>
-                            </div>
-                            <div>
-                                <label class="input-label">Year</label>
-                                <input type="text" name="year" class="form-control{{ $guisisPendingClass($accountProfileData['year'] ?? $user->year) }}" value="{{ $guisisValue($accountProfileData['year'] ?? $user->year) }}" readonly>
-                            </div>
-                            <div>
-                                <label class="input-label">Section</label>
-                                <input type="text" name="section" class="form-control{{ $guisisPendingClass($accountProfileData['section'] ?? $user->section) }}" value="{{ $guisisValue($accountProfileData['section'] ?? $user->section) }}" readonly>
-                            </div>
+                            @if($displayStudentNumber !== '')
+                                <div>
+                                    <label class="input-label">{{ $idNumberHeading }}</label>
+                                    <div class="form-control profile-static-field">{{ $displayStudentNumber }}</div>
+                                </div>
+                            @endif
+                            @if($displayCourse !== '')
+                                <div>
+                                    <label class="input-label">Course</label>
+                                    <div class="form-control profile-course-field profile-static-field">{{ $displayCourse }}</div>
+                                </div>
+                            @endif
+                            @if($displayYear !== '')
+                                <div>
+                                    <label class="input-label">Year</label>
+                                    <input type="text" name="year" class="form-control" value="{{ $displayYear }}" readonly>
+                                </div>
+                            @endif
+                            @if($displaySection !== '')
+                                <div>
+                                    <label class="input-label">Section</label>
+                                    <input type="text" name="section" class="form-control" value="{{ $displaySection }}" readonly>
+                                </div>
+                            @endif
                         </div>
                     </section>
 
@@ -2469,10 +2485,12 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="profile-sections-grid">
             <section class="profile-form-section accent-maroon">
                 <h3 class="profile-form-section-title"><x-outline-icon name="information-circle" />Personal Information</h3>
-                <div class="profile-info-row">
-                    <label class="input-label">{{ $idNumberHeading }}</label>
-                    <div class="form-control profile-static-field{{ $guisisPendingClass($displayStudentNumber) }}">{{ $guisisValue($displayStudentNumber) }}</div>
-                </div>
+                @if($displayStudentNumber !== '')
+                    <div class="profile-info-row">
+                        <label class="input-label">{{ $idNumberHeading }}</label>
+                        <div class="form-control profile-static-field">{{ $displayStudentNumber }}</div>
+                    </div>
+                @endif
                 <div class="profile-grid-2">
                     <div>
                         <label class="input-label">First Name</label>

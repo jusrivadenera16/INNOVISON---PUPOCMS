@@ -23,104 +23,103 @@
             text-align: center;
             text-transform: uppercase;
         }
-        .row {
-            margin-bottom: 13px;
+        .assessment-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+            table-layout: fixed;
+        }
+        .assessment-table td {
+            padding: 0 5px;
+            border: 0;
+            vertical-align: bottom;
             white-space: nowrap;
         }
         .label {
-            display: inline-block;
-            min-width: 110px;
+            width: 19%;
             font-weight: 700;
         }
-        .short-label {
-            min-width: 34px;
+        .label-short {
+            width: 7%;
+            font-weight: 700;
         }
-        .line {
-            display: inline-block;
+        .label-wide {
+            width: 32%;
+            font-weight: 700;
+        }
+        .value-line {
+            border-bottom: 1px solid #111 !important;
+            font-weight: 700;
             min-height: 16px;
-            padding: 0 6px 1px;
-            border-bottom: 1px solid #111;
-            font-weight: 700;
-            vertical-align: bottom;
         }
-        .line-date { width: 180px; }
-        .line-birth { width: 210px; }
-        .line-small { width: 86px; }
-        .line-medium { width: 150px; }
-        .line-doctor { width: 270px; }
-        .line-xray { width: 300px; }
-        .suffix {
-            display: inline-block;
-            min-width: 36px;
-            margin-right: 54px;
-            font-weight: 700;
-        }
-        .vitals .line {
-            margin-right: 18px;
-        }
-        .spacer {
-            display: inline-block;
-            width: 26px;
-        }
+        .value-small { width: 14%; }
+        .value-medium { width: 24%; }
+        .value-wide { width: 40%; }
+        .value-xray { width: 46%; }
     </style>
 </head>
 <body>
     <div class="sheet">
         <h1 class="title">Medical Assessment Copy</h1>
 
-        <div class="row">
-            <span class="label">Date:</span>
-            <span class="line line-date">{{ $assessmentDate }}</span>
-        </div>
-
-        <div class="row">
-            <span class="label">Date of birth:</span>
-            <span class="line line-birth">{{ $birthday }}</span>
-        </div>
-
-        <div class="row">
-            <span class="label">Height:</span>
-            <span class="line line-small">{{ $height }}</span>
-            <span class="suffix">cm</span>
-            <span class="label short-label">Weight:</span>
-            <span class="line line-small">{{ $weight }}</span>
-            <span class="suffix">kg</span>
-        </div>
-
-        <div class="row vitals">
-            <span class="label short-label">BP:</span>
-            <span class="line line-small">{{ $bloodPressure }}</span>
-            <span class="label short-label">PR:</span>
-            <span class="line line-small">{{ $pulseRate }}</span>
-            <span class="label short-label">RR:</span>
-            <span class="line line-small">{{ $respiratoryRate }}</span>
-            <span class="label short-label">Temp:</span>
-            <span class="line line-small">{{ $temperature }}</span>
-        </div>
-
-        <div class="row">
-            <span class="label">COVID Positive:</span>
-            <span class="line line-small">{{ $covidPositive }}</span>
-            <span class="spacer"></span>
-            <span class="label short-label">Date</span>
-            <span class="line line-medium">{{ $covidPositiveDate }}</span>
-        </div>
-
-        <div class="row">
-            <span class="label">Medical certificate issued by: Dr.</span>
-            <span class="line line-doctor">{{ $doctorName }}</span>
-            <span class="spacer"></span>
-            <span class="label short-label">Date:</span>
-            <span class="line line-medium">{{ $medicalCertificateDate }}</span>
-        </div>
-
-        <div class="row">
-            <span class="label">Chest x-ray result:</span>
-            <span class="line line-xray">{{ $xrayResult }}</span>
-            <span class="spacer"></span>
-            <span class="label short-label">Date:</span>
-            <span class="line line-medium">{{ $xrayDate }}</span>
-        </div>
+        <table class="assessment-table">
+            <colgroup>
+                <col style="width: 18%;">
+                <col style="width: 16%;">
+                <col style="width: 8%;">
+                <col style="width: 15%;">
+                <col style="width: 8%;">
+                <col style="width: 15%;">
+                <col style="width: 8%;">
+                <col style="width: 12%;">
+            </colgroup>
+            <tr>
+                <td class="label">Date:</td>
+                <td class="value-line value-medium">{{ $assessmentDate }}</td>
+                <td colspan="6"></td>
+            </tr>
+            <tr>
+                <td class="label">Date of birth:</td>
+                <td class="value-line value-medium">{{ $birthday }}</td>
+                <td colspan="6"></td>
+            </tr>
+            <tr>
+                <td class="label">Height:</td>
+                <td class="value-line value-small">{{ $height }}</td>
+                <td class="label-short">Weight:</td>
+                <td class="value-line value-small">{{ $weight }}</td>
+                <td colspan="4"></td>
+            </tr>
+            <tr>
+                <td class="label-short">BP:</td>
+                <td class="value-line value-small">{{ $bloodPressure }}</td>
+                <td class="label-short">PR:</td>
+                <td class="value-line value-small">{{ $pulseRate }}</td>
+                <td class="label-short">RR:</td>
+                <td class="value-line value-small">{{ $respiratoryRate }}</td>
+                <td class="label-short">Temp:</td>
+                <td class="value-line value-small">{{ $temperature }}</td>
+            </tr>
+            <tr>
+                <td class="label">COVID Positive:</td>
+                <td class="value-line value-small">{{ $covidPositive }}</td>
+                <td class="label-short">Date:</td>
+                <td class="value-line value-medium">{{ $covidPositiveDate }}</td>
+                <td colspan="4"></td>
+            </tr>
+            <tr>
+                <td class="label-wide">Medical certificate issued by: Dr.</td>
+                <td colspan="3" class="value-line value-wide">{{ $doctorName }}</td>
+                <td class="label-short">Date:</td>
+                <td colspan="3" class="value-line value-medium">{{ $medicalCertificateDate }}</td>
+            </tr>
+            <tr>
+                <td class="label">Chest x-ray result:</td>
+                <td colspan="4" class="value-line value-xray">{{ $xrayResult }}</td>
+                <td class="label-short">Date:</td>
+                <td colspan="2" class="value-line value-medium">{{ $xrayDate }}</td>
+            </tr>
+        </table>
     </div>
 </body>
 </html>
