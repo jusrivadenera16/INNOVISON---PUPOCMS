@@ -2572,7 +2572,12 @@
             function syncVaccineDateRules() {
                 const firstDoseDate = document.getElementById('first_dose_date');
                 const secondDoseDate = document.getElementById('second_dose_date');
-                const minimumSecondDoseDate = addDaysToIsoDate(firstDoseDate?.value, 28);
+                const booster1Date = document.getElementById('booster_1_date');
+                const booster2Date = document.getElementById('booster_2_date');
+
+                const minimumSecondDoseDate = addDaysToIsoDate(firstDoseDate?.value, 14);
+                const minimumBooster1Date = addDaysToIsoDate(secondDoseDate?.value, 14);
+                const minimumBooster2Date = addDaysToIsoDate(booster1Date?.value, 14);
 
                 if (secondDoseDate) {
                     secondDoseDate.min = minimumSecondDoseDate || '2021-03-01';
@@ -2581,16 +2586,42 @@
                         && secondDoseDate.value
                         && secondDoseDate.value < minimumSecondDoseDate
                     ) {
-                        secondDoseDate.dataset.validationMessage = 'The 2nd Dose must be at least 4 weeks after the 1st Dose.';
+                        secondDoseDate.dataset.validationMessage = 'The 2nd Dose must be at least 2 weeks after the 1st Dose.';
                     } else {
                         delete secondDoseDate.dataset.validationMessage;
+                    }
+                }
+
+                if (booster1Date) {
+                    booster1Date.min = minimumBooster1Date || '2021-03-01';
+                    if (
+                        minimumBooster1Date
+                        && booster1Date.value
+                        && booster1Date.value < minimumBooster1Date
+                    ) {
+                        booster1Date.dataset.validationMessage = 'Booster 1 must be at least 2 weeks after the 2nd Dose.';
+                    } else {
+                        delete booster1Date.dataset.validationMessage;
+                    }
+                }
+
+                if (booster2Date) {
+                    booster2Date.min = minimumBooster2Date || '2021-03-01';
+                    if (
+                        minimumBooster2Date
+                        && booster2Date.value
+                        && booster2Date.value < minimumBooster2Date
+                    ) {
+                        booster2Date.dataset.validationMessage = 'Booster 2 must be at least 2 weeks after Booster 1.';
+                    } else {
+                        delete booster2Date.dataset.validationMessage;
                     }
                 }
 
                 const dateUsage = new Map();
                 vaccineDateFields.forEach((field) => {
                     field.setCustomValidity('');
-                    if (field !== secondDoseDate || !field.dataset.validationMessage) {
+                    if ((field !== secondDoseDate && field !== booster1Date && field !== booster2Date) || !field.dataset.validationMessage) {
                         delete field.dataset.validationMessage;
                     }
 
