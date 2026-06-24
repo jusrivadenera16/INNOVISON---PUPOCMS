@@ -7374,6 +7374,16 @@
                     covidPositiveDateInput.value = '';
                 }
             }
+
+            // Sync COVID positive selection to consultation form
+            if (selectedCovidValue) {
+                const consultationCovidField = document.querySelector('input[name="covid_status"][value="' + selectedCovidValue + '"]');
+                if (consultationCovidField) {
+                    consultationCovidField.checked = true;
+                    consultationCovidField.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+
             validateCovidDate();
         }
 

@@ -1574,9 +1574,9 @@
                     ? 'No Reference Received'
                     : ($referenceVerificationUnavailable ? 'Verification Temporarily Unavailable' : 'No Clinic Reference Yet');
                 $referenceStatusDefault = $referenceRequiresValidation
-                    ? 'No Admission Reference was received. Use the pencil button to enter and verify the reference from Admissions. If you do not have one, contact Admissions or clinic staff.'
+                    ? 'No Admission Reference was received. Use the pencil button to enter and verify the reference from Admissions. If you do not have one, contact Admissions or clinic staff at puptclinic@gmail.com.'
                     : ($referenceVerificationUnavailable
-                        ? 'PUPTAS could not be reached after retrying. No clinic reference was generated. Please retry later or contact Admissions or clinic staff.'
+                        ? 'PUPTAS could not be reached after retrying. No clinic reference was generated. Please retry later or contact Admissions or clinic staff at puptclinic@gmail.com.'
                         : 'This clinic reference is generated and managed inside the clinic system for local staff, admin, faculty, and guest records.');
                 $courseOptions = $prefill['course_options'] ?? [];
                 $courseApplicable = (bool) ($prefill['course_applicable'] ?? false);
@@ -1723,6 +1723,9 @@
                                 data-testing-skip
                             >
                                 Skip to Print (Testing)
+                            </button>
+                            <button type="button" class="btn btn-health" data-step-next="2" style="background-color: #ffc107; color: #000;">
+                                <span>Skip Step 1</span>
                             </button>
                         @endenv
                         <button type="button" class="btn btn-health btn-health-next" id="nextToStep2" {{ $referenceVerificationUnavailable ? 'disabled' : '' }}>

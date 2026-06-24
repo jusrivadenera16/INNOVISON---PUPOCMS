@@ -298,6 +298,42 @@
         color: #64748b;
         font-size: 11px;
     }
+    .form-error {
+        margin-top: 6px;
+        color: #dc2626;
+        font-size: 12px;
+        font-weight: 500;
+        display: none;
+    }
+    .form-error.show {
+        display: block;
+    }
+    .form-success {
+        margin-top: 6px;
+        color: #16a34a;
+        font-size: 12px;
+        font-weight: 500;
+        display: none;
+    }
+    .form-success.show {
+        display: block;
+    }
+    .form-control.is-invalid {
+        border-color: #dc2626;
+        background-color: #fef2f2;
+    }
+    .form-control.is-invalid:focus {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
+    .form-control.is-valid {
+        border-color: #16a34a;
+        background-color: #f0fdf4;
+    }
+    .form-control.is-valid:focus {
+        border-color: #16a34a;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+    }
     .mar-required {
         border-color: #fca5a5;
         background: #fff7f7;
@@ -1885,27 +1921,57 @@
                 <div class="form-grid-2">
                     <div class="form-group">
                         <label for="consultHeight">Height (cm)</label>
-                        <input type="number" id="consultHeight" step="0.01" name="height" class="form-control" placeholder="165" value="{{ old('height', $consultationHeight ?? '') }}">
+                        <input type="number" id="consultHeight" step="0.01" name="height" class="form-control @error('height') is-invalid @enderror" placeholder="165" value="{{ old('height', $consultationHeight ?? '') }}" data-vital="height" data-vital-min="1" data-vital-max="300" data-vital-name="Height">
+                        <div class="form-error" id="heightError"></div>
+                        <div class="form-success" id="heightSuccess">✓ Valid height</div>
+                        @error('height')
+                            <div class="form-error" style="display: block;">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="consultWeight">Weight (kg)</label>
-                        <input type="number" id="consultWeight" step="0.01" name="weight" class="form-control" placeholder="60" value="{{ old('weight', $consultationWeight ?? '') }}">
+                        <input type="number" id="consultWeight" step="0.01" name="weight" class="form-control @error('weight') is-invalid @enderror" placeholder="60" value="{{ old('weight', $consultationWeight ?? '') }}" data-vital="weight" data-vital-min="1" data-vital-max="500" data-vital-name="Weight">
+                        <div class="form-error" id="weightError"></div>
+                        <div class="form-success" id="weightSuccess">✓ Valid weight</div>
+                        @error('weight')
+                            <div class="form-error" style="display: block;">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="consultTemp">Temperature (C)</label>
-                        <input type="number" id="consultTemp" step="0.1" name="temp" class="form-control" placeholder="36.5" value="{{ old('temp') }}">
+                        <input type="number" id="consultTemp" step="0.1" name="temp" class="form-control @error('temp') is-invalid @enderror" placeholder="36.5" value="{{ old('temp') }}" data-vital="temp" data-vital-min="30" data-vital-max="45" data-vital-name="Temperature">
+                        <div class="form-error" id="tempError"></div>
+                        <div class="form-success" id="tempSuccess">✓ Valid temperature</div>
+                        @error('temp')
+                            <div class="form-error" style="display: block;">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="consultBp">Blood Pressure</label>
-                        <input type="text" id="consultBp" name="bp" class="form-control" placeholder="120/80" value="{{ old('bp') }}">
+                        <input type="text" id="consultBp" name="bp" class="form-control @error('bp') is-invalid @enderror" placeholder="120/80" value="{{ old('bp') }}" data-vital="bp" data-vital-name="Blood Pressure">
+                        <div class="form-error" id="bpError"></div>
+                        <div class="form-success" id="bpSuccess">✓ Valid blood pressure</div>
+                        @error('bp')
+                            <div class="form-error" style="display: block;">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="consultPulse">Pulse Rate (bpm)</label>
-                        <input type="number" id="consultPulse" name="pulse_rate" class="form-control" placeholder="72" value="{{ old('pulse_rate') }}">
+                        <input type="number" id="consultPulse" name="pulse_rate" class="form-control @error('pulse_rate') is-invalid @enderror" placeholder="72" value="{{ old('pulse_rate') }}" data-vital="pulse_rate" data-vital-min="1" data-vital-max="300" data-vital-name="Pulse Rate">
+                        <div class="form-error" id="pulseError"></div>
+                        <div class="form-success" id="pulseSuccess">✓ Valid pulse rate</div>
+                        @error('pulse_rate')
+                            <div class="form-error" style="display: block;">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="consultRespiratory">Respiratory Rate (cpm)</label>
-                        <input type="number" id="consultRespiratory" name="respiratory_rate" class="form-control" placeholder="18" value="{{ old('respiratory_rate') }}">
+                        <input type="number" id="consultRespiratory" name="respiratory_rate" class="form-control @error('respiratory_rate') is-invalid @enderror" placeholder="18" value="{{ old('respiratory_rate') }}" data-vital="respiratory_rate" data-vital-min="1" data-vital-max="120" data-vital-name="Respiratory Rate">
+                        <div class="form-error" id="respiratoryError"></div>
+                        <div class="form-success" id="respiratorySuccess">✓ Valid respiratory rate</div>
+                        @error('respiratory_rate')
+                            <div class="form-error" style="display: block;">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
                 <div class="form-group">
@@ -2063,6 +2129,16 @@
         <span>Stock Tally</span>
         <span class="utility-rail-count">{{ $items->count() }}</span>
     </button>
+    @if($student)
+        @php
+            $recentRecordsCount = \App\Models\Consultation::where('user_id', $student->id)->count();
+        @endphp
+        <button type="button" class="utility-rail-button" data-utility-target="recent_records" title="Recent Records">
+            <x-outline-icon name="clock" />
+            <span>Recent Records</span>
+            <span class="utility-rail-count">{{ $recentRecordsCount }}</span>
+        </button>
+    @endif
     <button type="button" class="utility-rail-button" data-utility-target="treatments" title="Treatment Record">
         <x-outline-icon name="clipboard-document-list" />
         <span>Treatment Record</span>
@@ -2162,6 +2238,71 @@
         </div>
     </section>
 
+    <section class="utility-panel-pane" data-utility-pane="recent_records">
+        <p class="utility-pane-note">All recent records for this student.</p>
+        <div class="consultation-treatment-table-wrap">
+            <table class="consultation-treatment-table">
+                <thead>
+                    <tr>
+                        <th class="treatment-date-col">Date</th>
+                        <th class="treatment-time-col">Time In</th>
+                        <th class="treatment-time-col">Time Out</th>
+                        <th class="treatment-service-col">Service</th>
+                        <th class="treatment-complaint-col">Complaints / Impression</th>
+                        <th class="treatment-medicine-col">Treatment / Medicines</th>
+                        <th class="treatment-quantity-col">Qty</th>
+                        <th class="treatment-staff-col">Attending Staff</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $recentConsultations = $student ? \App\Models\Consultation::where('user_id', $student->id)->orderByDesc('created_at')->get() : collect();
+                    @endphp
+                    @if($student && $recentConsultations->count())
+                        @forelse($recentConsultations as $consultation)
+                            @php
+                                $consultMedicine = trim((string) (optional($consultation->medicineItem)->name ?: $consultation->medicine));
+                                $consultStaff = trim((string) ($consultation->attending_staff_name ?: optional($consultation->attendingStaff)->name));
+                                $consultQuantity = (float) $consultation->medicine_quantity;
+                                $consultTimeIn = $consultation->time_in ?: optional($consultation->created_at)->format('H:i:s');
+                                $consultTimeOut = $consultation->time_out ?: optional($consultation->updated_at)->format('H:i:s');
+                                $consultComplaint = trim((string) $consultation->reason_for_visit);
+                                $consultImpression = trim((string) $consultation->comments);
+                            @endphp
+                            <tr>
+                                <td>{{ optional($consultation->consultation_date)->format('m/d/Y') ?: optional($consultation->created_at)->format('m/d/Y') ?: '-' }}</td>
+                                <td>{{ $consultTimeIn ? \Carbon\Carbon::parse($consultTimeIn)->format('g:i A') : '-' }}</td>
+                                <td>{{ $consultTimeOut ? \Carbon\Carbon::parse($consultTimeOut)->format('g:i A') : '-' }}</td>
+                                <td>{{ $consultation->service ?: 'Consultation' }}</td>
+                                <td>
+                                    <span class="treatment-table-entry">
+                                        <span class="treatment-table-entry-label">Complaint</span>
+                                        <span class="treatment-table-entry-value">{{ $consultComplaint ?: 'No complaint recorded.' }}</span>
+                                    </span>
+                                    <span class="treatment-table-entry">
+                                        <span class="treatment-table-entry-label">Impression</span>
+                                        <span class="treatment-table-entry-value">{{ $consultImpression ?: 'No assessment recorded.' }}</span>
+                                    </span>
+                                </td>
+                                <td>{{ $consultMedicine !== '' && strtolower($consultMedicine) !== 'none' ? $consultMedicine : 'No medicine issued' }}</td>
+                                <td class="treatment-quantity-col">{{ $consultQuantity > 0 ? rtrim(rtrim(number_format($consultQuantity, 2, '.', ''), '0'), '.') : '-' }}</td>
+                                <td>{{ $consultStaff ?: 'Clinic Staff' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="consultation-treatment-empty">No recent records are available for this student.</td>
+                            </tr>
+                        @endforelse
+                    @else
+                        <tr>
+                            <td colspan="8" class="consultation-treatment-empty">No recent records are available for this student.</td>
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
+        </div>
+    </section>
+
     <section class="utility-panel-pane" data-utility-pane="treatments">
         <p class="utility-pane-note">The 20 most recent finalized consultations for this patient.</p>
         <div class="consultation-treatment-table-wrap">
@@ -2244,8 +2385,103 @@
         const consultationForm = document.getElementById('consultationForm');
         const finalizeButton = document.getElementById('finalizeConsultationButton');
         const consultationSuccessOverlay = document.getElementById('consultationSuccessOverlay');
+        const bpInput = document.getElementById('consultBp');
         let isSubmittingConsultation = false;
         let activeUtility = '';
+
+        // Auto-format Blood Pressure with slash
+        if (bpInput) {
+            bpInput.addEventListener('input', function () {
+                let value = this.value.replace(/[^\d]/g, '');
+                if (value.length >= 3 && !this.value.includes('/')) {
+                    value = value.slice(0, value.length - 2) + '/' + value.slice(-2);
+                }
+                this.value = value.slice(0, 8);
+                validateVitalField(this);
+            });
+        }
+
+        // Real-time vital validation
+        function validateVitalField(input) {
+            const vital = input.dataset.vital;
+            const errorId = vital === 'height' ? 'heightError' :
+                           vital === 'weight' ? 'weightError' :
+                           vital === 'temp' ? 'tempError' :
+                           vital === 'bp' ? 'bpError' :
+                           vital === 'pulse_rate' ? 'pulseError' :
+                           vital === 'respiratory_rate' ? 'respiratoryError' : null;
+
+            const successId = vital === 'height' ? 'heightSuccess' :
+                             vital === 'weight' ? 'weightSuccess' :
+                             vital === 'temp' ? 'tempSuccess' :
+                             vital === 'bp' ? 'bpSuccess' :
+                             vital === 'pulse_rate' ? 'pulseSuccess' :
+                             vital === 'respiratory_rate' ? 'respiratorySuccess' : null;
+
+            const errorEl = document.getElementById(errorId);
+            const successEl = document.getElementById(successId);
+            const value = input.value.trim();
+
+            if (!value) {
+                input.classList.remove('is-valid', 'is-invalid');
+                if (errorEl) errorEl.classList.remove('show');
+                if (successEl) successEl.classList.remove('show');
+                return;
+            }
+
+            let isValid = false;
+            let errorMsg = '';
+
+            if (vital === 'bp') {
+                isValid = /^\d{2,3}\/\d{2,3}$/.test(value);
+                errorMsg = 'Format: 120/80';
+            } else if (vital === 'height') {
+                const num = parseFloat(value);
+                isValid = num >= 1 && num <= 300;
+                errorMsg = 'Height must be 1-300 cm';
+            } else if (vital === 'weight') {
+                const num = parseFloat(value);
+                isValid = num >= 1 && num <= 500;
+                errorMsg = 'Weight must be 1-500 kg';
+            } else if (vital === 'temp') {
+                const num = parseFloat(value);
+                isValid = num >= 30 && num <= 45;
+                errorMsg = 'Temperature must be 30-45°C';
+            } else if (vital === 'pulse_rate') {
+                const num = parseInt(value);
+                isValid = num >= 1 && num <= 300;
+                errorMsg = 'Pulse rate must be 1-300 bpm';
+            } else if (vital === 'respiratory_rate') {
+                const num = parseInt(value);
+                isValid = num >= 1 && num <= 120;
+                errorMsg = 'Respiratory rate must be 1-120 cpm';
+            }
+
+            if (isValid) {
+                input.classList.remove('is-invalid');
+                input.classList.add('is-valid');
+                if (errorEl) errorEl.classList.remove('show');
+                if (successEl) successEl.classList.add('show');
+            } else {
+                input.classList.remove('is-valid');
+                input.classList.add('is-invalid');
+                if (errorEl) {
+                    errorEl.textContent = errorMsg;
+                    errorEl.classList.add('show');
+                }
+                if (successEl) successEl.classList.remove('show');
+            }
+        }
+
+        // Add validation listeners to all vital fields
+        document.querySelectorAll('[data-vital]').forEach(function (field) {
+            field.addEventListener('input', function () {
+                validateVitalField(this);
+            });
+            field.addEventListener('change', function () {
+                validateVitalField(this);
+            });
+        });
 
         const formatQty = function (value) {
             const numeric = Number(value || 0);
@@ -2258,6 +2494,7 @@
         const utilityLabels = {
             documents: 'Uploaded Documents',
             inventory: 'Live Medicine Stock',
+            recent_records: 'Recent Records',
             treatments: 'Treatment Record'
         };
 
@@ -2306,9 +2543,9 @@
 
             activeUtility = target;
             utilityTitle.textContent = utilityLabels[target] || 'Consultation Tools';
-            const isTreatmentPanel = target === 'treatments';
-            expandUtilityPanel?.classList.toggle('is-visible', isTreatmentPanel);
-            if (!isTreatmentPanel) {
+            const isExpandablePanel = target === 'treatments' || target === 'recent_records';
+            expandUtilityPanel?.classList.toggle('is-visible', isExpandablePanel);
+            if (!isExpandablePanel) {
                 utilityPanel.classList.remove('is-expanded');
                 utilityRail.classList.remove('panel-expanded');
                 expandUtilityPanel?.setAttribute('aria-expanded', 'false');
@@ -2328,17 +2565,19 @@
         };
 
         const toggleUtilityExpansion = function () {
-            if (activeUtility !== 'treatments') return;
+            if (activeUtility !== 'treatments' && activeUtility !== 'recent_records') return;
             const isExpanded = utilityPanel.classList.toggle('is-expanded');
             utilityRail.classList.toggle('panel-expanded', isExpanded);
             expandUtilityPanel?.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+
+            const panelName = activeUtility === 'treatments' ? 'treatment record' : 'recent records';
             expandUtilityPanel?.setAttribute(
                 'aria-label',
-                isExpanded ? 'Collapse treatment record panel' : 'Expand treatment record panel'
+                isExpanded ? `Collapse ${panelName} panel` : `Expand ${panelName} panel`
             );
             expandUtilityPanel?.setAttribute(
                 'title',
-                isExpanded ? 'Collapse treatment record' : 'Expand treatment record'
+                isExpanded ? `Collapse ${panelName}` : `Expand ${panelName}`
             );
             if (expandUtilityPanel) {
                 expandUtilityPanel.textContent = isExpanded ? '>' : '<';
@@ -2422,6 +2661,25 @@
             menu.className = 'clinic-select-menu';
             menu.setAttribute('role', 'listbox');
 
+            // Add search input for searchable dropdowns
+            let searchInput = null;
+            const isConditionSelect = select.id === 'consultCondition';
+            const isMedicineSelect = select.id === 'consultMedicineSelect';
+            const isSearchable = isConditionSelect || isMedicineSelect;
+
+            if (isSearchable) {
+                searchInput = document.createElement('input');
+                searchInput.type = 'text';
+                searchInput.className = 'clinic-select-search';
+                searchInput.placeholder = isConditionSelect ? 'Search condition...' : 'Search medicine...';
+                searchInput.style.width = '100%';
+                searchInput.style.padding = '8px 12px';
+                searchInput.style.marginBottom = '8px';
+                searchInput.style.border = '1px solid #d1d5db';
+                searchInput.style.borderRadius = '4px';
+                searchInput.style.fontSize = '14px';
+            }
+
             const syncDisplay = function () {
                 const selected = select.options[select.selectedIndex];
                 display.textContent = selected ? selected.textContent.trim() : 'Select an option';
@@ -2456,6 +2714,32 @@
             });
 
             select.addEventListener('change', syncDisplay);
+
+            // Add search input to menu for condition select
+            if (searchInput) {
+                menu.insertBefore(searchInput, menu.firstChild);
+
+                searchInput.addEventListener('input', function () {
+                    const searchTerm = searchInput.value.toLowerCase();
+                    const options = menu.querySelectorAll('.clinic-select-option');
+                    options.forEach(function (option) {
+                        const optionText = option.textContent.toLowerCase();
+                        const matches = optionText.includes(searchTerm) || searchTerm === '';
+                        option.style.display = matches ? '' : 'none';
+                    });
+                });
+
+                searchInput.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                });
+
+                searchInput.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape') {
+                        closeClinicSelects();
+                    }
+                });
+            }
+
             shell.append(display, menu);
             syncDisplay();
         });
