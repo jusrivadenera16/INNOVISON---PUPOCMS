@@ -903,12 +903,21 @@ class AppointmentController extends Controller
                 : 'admission';
         }
 
-        if (in_array($normalizedIdpRole, ['student', 'guest', 'faculty', 'admin', 'superadmin', 'super_admin'], true)) {
-            return 'clinic';
-        }
-
         if ($lookupOutcome === 'found' || ($applicantIdentity['available'] ?? false) === true) {
             return 'admission';
+        }
+
+        if (
+            $normalizedIdpRole === 'student'
+            || strtolower(trim((string) ($user->user_type ?? ''))) === 'student'
+        ) {
+            return $lookupOutcome === 'unavailable'
+                ? 'verification_unavailable'
+                : 'admission';
+        }
+
+        if (in_array($normalizedIdpRole, ['student', 'guest', 'faculty', 'admin', 'superadmin', 'super_admin'], true)) {
+            return 'clinic';
         }
 
         $hasLinkedDirectoryProfile = $linkedAdminProfile instanceof Admin;
@@ -988,7 +997,7 @@ class AppointmentController extends Controller
         $applicantIdentity = $this->normalizePuptasApplicantIdentity($applicantData);
         $this->persistPuptasApplicantIdentity($user, $applicantIdentity);
         $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile, $applicantData, $lookupOutcome);
-        $usePuptasApplicantPrefill = $this->isApplicantAccount($user) && is_array($applicantData) && !empty($applicantData);
+        $usePuptasApplicantPrefill = $referenceMode === 'admission' && is_array($applicantData) && !empty($applicantData);
 
         $calculatedAge = null;
         if (!empty($user->DOB)) {
