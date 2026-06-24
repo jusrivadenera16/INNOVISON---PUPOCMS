@@ -1415,6 +1415,25 @@ class LoginController extends Controller
     private function enrichUserWithPuptasData(User $user): void
     {
         try {
+            $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
+            $userType = strtolower(trim((string) ($user->user_type ?? '')));
+            $isStudentRole = $idpRole === 'student' || ($idpRole === '' && $userType === 'student');
+
+            // Only process students
+            if (!$isStudentRole) {
+                return;
+            }
+
+            // Skip if already enriched from GUISIS
+            if ($user->is_student === true) {
+                Log::info('PUPTAS enrichment skipped - already enriched from GUISIS', [
+                    'user_id' => $user->id,
+                ]);
+                return;
+            }
+
+            Log::info('PUPTAS enrichment started', ['user_id' => $user->id]);
+
             $puptasService = app(\App\Services\PuptasWebhookService::class);
             $applicantData = null;
 
@@ -1433,6 +1452,10 @@ class LoginController extends Controller
             }
 
             if (!is_array($applicantData)) {
+                Log::info('PUPTAS lookup not found', [
+                    'user_id' => $user->id,
+                    'student_id' => $studentId,
+                ]);
                 return;
             }
 
@@ -1473,13 +1496,27 @@ class LoginController extends Controller
                 $shouldUpdate = true;
             }
 
+            if ($user->is_student !== false) {
+                $user->is_student = false;
+                $shouldUpdate = true;
+            }
+
             if ($shouldUpdate) {
                 $user->save();
+
+                // Get medical status from health_profile if exists
+                $healthProfile = $user->healthProfile;
+                $medicalStatus = $healthProfile?->puptas_sync_status ?? null;
+                $syncedAt = $healthProfile?->puptas_synced_at ?? null;
+
                 Log::info('User enriched with PUPTAS data during login', [
                     'user_id' => $user->id,
                     'reference_number' => $referenceNumber,
                     'first_name' => $firstName,
                     'last_name' => $lastName,
+                    'is_student' => false,
+                    'medical_status' => $medicalStatus,
+                    'synced_at' => $syncedAt,
                 ]);
             }
         } catch (\Throwable $exception) {
@@ -1597,10 +1634,16 @@ class LoginController extends Controller
                 return;
             }
 
+            Log::info('GUISIS enrichment started', ['user_id' => $user->id, 'email' => $email]);
+
             $guisisService = app(\App\Services\GuisisApiService::class);
             $guisisResult = $guisisService->getStudentByEmailDetailed($email);
 
             if (!($guisisResult['ok'] ?? false) || !is_array($guisisResult['data'] ?? null)) {
+                Log::info('GUISIS lookup not found', [
+                    'user_id' => $user->id,
+                    'status' => $guisisResult['status'] ?? 'unknown',
+                ]);
                 return;
             }
 
@@ -1625,6 +1668,11 @@ class LoginController extends Controller
                 $shouldUpdate = true;
             }
 
+            if (trim((string) $user->is_student) !== '1') {
+                $user->is_student = true;
+                $shouldUpdate = true;
+            }
+
             if ($shouldUpdate) {
                 $user->save();
                 Log::info('User enriched with GUISIS data during login', [
@@ -1632,6 +1680,7 @@ class LoginController extends Controller
                     'student_number' => $studentNumber,
                     'course' => $course,
                     'year' => $year,
+                    'is_student' => true,
                 ]);
             }
         } catch (\Throwable $exception) {
