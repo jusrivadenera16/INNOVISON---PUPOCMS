@@ -1866,14 +1866,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="form-field">
-                            <label class="form-label" for="height">Height (cm) <span class="required">*</span></label>
-                            <input id="height" type="number" step="0.01" class="form-control field-maroon" name="height" value="{{ old('height', $prefill['height'] ?? '') }}" min="1" required>
-                        </div>
-                        <div class="form-field">
-                            <label class="form-label" for="weight">Weight (kg) <span class="required">*</span></label>
-                            <input id="weight" type="number" step="0.01" class="form-control field-maroon" name="weight" value="{{ old('weight', $prefill['weight'] ?? '') }}" min="1" required>
-                        </div>
                         <div class="form-field span-2">
                             <label class="form-label" for="home_address">Home Address <span class="required">*</span></label>
                             <input id="home_address" class="form-control field-maroon" name="home_address" value="{{ old('home_address', $prefill['home_address'] ?? '') }}" required>

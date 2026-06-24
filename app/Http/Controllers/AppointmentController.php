@@ -269,6 +269,14 @@ class AppointmentController extends Controller
             && !$this->isClinicReference($referenceNumber)
         ) {
             $lookup = $puptasService->fetchApplicantByReferenceNumberDetailed($referenceNumber);
+            Log::info('PUPTAS applicant reference lookup finished.', [
+                'user_id' => $user->id,
+                'lookup_type' => 'reference',
+                'outcome' => $lookup['outcome'] ?? null,
+                'status' => $lookup['status'] ?? null,
+                'has_data' => is_array($lookup['data'] ?? null),
+                'has_reference_number' => trim((string) data_get($lookup, 'data.reference_number', data_get($lookup, 'data.user.reference_number', ''))) !== '',
+            ]);
             $lookupResults[] = $lookup;
             if (($lookup['outcome'] ?? '') === 'found' && is_array($lookup['data'] ?? null)) {
                 return $lookup;
@@ -278,6 +286,14 @@ class AppointmentController extends Controller
         $idpUserId = trim((string) ($user->student_id ?? ''));
         if ($idpUserId !== '') {
             $lookup = $puptasService->fetchApplicantByIdpUserIdDetailed($idpUserId);
+            Log::info('PUPTAS applicant IDP lookup finished.', [
+                'user_id' => $user->id,
+                'lookup_type' => 'idp',
+                'outcome' => $lookup['outcome'] ?? null,
+                'status' => $lookup['status'] ?? null,
+                'has_data' => is_array($lookup['data'] ?? null),
+                'has_reference_number' => trim((string) data_get($lookup, 'data.reference_number', data_get($lookup, 'data.user.reference_number', ''))) !== '',
+            ]);
             $lookupResults[] = $lookup;
             if (($lookup['outcome'] ?? '') === 'found' && is_array($lookup['data'] ?? null)) {
                 return $lookup;

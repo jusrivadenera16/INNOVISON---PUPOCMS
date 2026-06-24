@@ -1891,6 +1891,10 @@ class LoginController extends Controller
                 'user.sub',
                 'idp_user_id',
                 'user.idp_user_id',
+                'id',
+                'user.id',
+                'data.idp_user_id',
+                'data.user.id',
             ]) !== null,
         ]);
 

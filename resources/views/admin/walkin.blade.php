@@ -4888,30 +4888,44 @@
                             <p class="applicant-screening-panel-copy">Record the applicant's current vital signs during the nurse review.</p>
                             <div class="applicant-vitals-grid">
                                 <div class="applicant-condition-field">
+                                    <label for="applicantHeight">Height (cm) <span style="color:#dc2626;">*</span></label>
+                                    <input type="number" id="applicantHeight" name="height" class="applicant-condition-input vital-input" placeholder="e.g., 170" step="0.01" min="1" max="300" required>
+                                    <small style="color:#dc2626; display:none;" id="heightError">Height is required. Valid range: 1-300 cm.</small>
+                                </div>
+                                <div class="applicant-condition-field">
+                                    <label for="applicantWeight">Weight (kg) <span style="color:#dc2626;">*</span></label>
+                                    <input type="number" id="applicantWeight" name="weight" class="applicant-condition-input vital-input" placeholder="e.g., 65" step="0.01" min="1" max="500" required>
+                                    <small style="color:#dc2626; display:none;" id="weightError">Weight is required. Valid range: 1-500 kg.</small>
+                                </div>
+                                <div class="applicant-condition-field">
                                     <label for="applicantBloodPressure">Blood Pressure <span style="color:#dc2626;">*</span></label>
-                                    <input type="text" id="applicantBloodPressure" name="blood_pressure" class="applicant-condition-input" placeholder="e.g., 120/80" inputmode="numeric">
+                                    <input type="text" id="applicantBloodPressure" name="blood_pressure" class="applicant-condition-input vital-input" placeholder="e.g., 120/80" inputmode="numeric" required>
+                                    <small style="color:#dc2626; display:none;" id="bpError">Blood pressure must be in format: ###/## (e.g., 120/80). Normal range: 90-120 systolic, 60-80 diastolic.</small>
                                 </div>
                                 <div class="applicant-condition-field">
                                     <label for="applicantPulseRate">Pulse Rate (bpm) <span style="color:#dc2626;">*</span></label>
-                                    <input type="number" id="applicantPulseRate" name="pulse_rate" class="applicant-condition-input" placeholder="e.g., 72" min="1" max="300">
+                                    <input type="number" id="applicantPulseRate" name="pulse_rate" class="applicant-condition-input vital-input" placeholder="e.g., 72" min="1" max="300" required>
+                                    <small style="color:#dc2626; display:none;" id="prError">Pulse rate is required. Normal range: 60-100 bpm.</small>
                                 </div>
                                 <div class="applicant-condition-field">
                                     <label for="applicantRespiratoryRate">Respiratory Rate (cpm) <span style="color:#dc2626;">*</span></label>
-                                    <input type="number" id="applicantRespiratoryRate" name="respiratory_rate" class="applicant-condition-input" placeholder="e.g., 18" min="1" max="120">
+                                    <input type="number" id="applicantRespiratoryRate" name="respiratory_rate" class="applicant-condition-input vital-input" placeholder="e.g., 18" min="1" max="120" required>
+                                    <small style="color:#dc2626; display:none;" id="rrError">Respiratory rate is required. Normal range: 12-20 cpm.</small>
                                 </div>
                                 <div class="applicant-condition-field">
                                     <label for="applicantTemperature">Temperature (&deg;C) <span style="color:#dc2626;">*</span></label>
-                                    <input type="number" id="applicantTemperature" name="temperature" class="applicant-condition-input" placeholder="e.g., 36.5" min="30" max="45" step="0.1">
+                                    <input type="number" id="applicantTemperature" name="temperature" class="applicant-condition-input vital-input" placeholder="e.g., 36.5" min="30" max="45" step="0.1" required>
+                                    <small style="color:#dc2626; display:none;" id="tempError">Temperature is required. Normal range: 36.5-37.5°C. High fever if > 38.5°C.</small>
                                 </div>
                                 <div class="applicant-condition-field">
                                     <label>COVID Positive? <span style="color:#dc2626;">*</span></label>
                                     <div class="applicant-findings-options">
                                         <label class="applicant-findings-option">
-                                            <input type="radio" name="applicant_covid_positive" value="No">
+                                            <input type="radio" name="applicant_covid_positive" value="No" required>
                                             <span>No</span>
                                         </label>
                                         <label class="applicant-findings-option">
-                                            <input type="radio" name="applicant_covid_positive" value="Yes">
+                                            <input type="radio" name="applicant_covid_positive" value="Yes" required>
                                             <span>Yes</span>
                                         </label>
                                     </div>
@@ -4919,6 +4933,7 @@
                                 <div class="applicant-condition-field" id="applicantCovidDateField" style="display:none;">
                                     <label for="applicantCovidPositiveDate">COVID Positive Date <span style="color:#dc2626;">*</span></label>
                                     <input type="date" id="applicantCovidPositiveDate" name="covid_positive_date" class="applicant-condition-input">
+                                    <small style="color:#dc2626; display:none;" id="covidDateError">Date cannot be in the future. Please select today or an earlier date.</small>
                                 </div>
                             </div>
                         </section>
@@ -4953,6 +4968,8 @@
                     <div class="saved-review-card"><span>Pending Reasons</span><strong id="savedReviewReasons">-</strong></div>
                     <div class="saved-review-card"><span>Medical Condition</span><strong id="savedReviewCondition">-</strong></div>
                     <div class="saved-review-card"><span>Remarks</span><strong id="savedReviewRemarks">-</strong></div>
+                    <div class="saved-review-card"><span>Height</span><strong id="savedReviewHeight">-</strong></div>
+                    <div class="saved-review-card"><span>Weight</span><strong id="savedReviewWeight">-</strong></div>
                     <div class="saved-review-card"><span>Blood Pressure</span><strong id="savedReviewBloodPressure">-</strong></div>
                     <div class="saved-review-card"><span>Pulse Rate</span><strong id="savedReviewPulseRate">-</strong></div>
                     <div class="saved-review-card"><span>Respiratory Rate</span><strong id="savedReviewRespiratoryRate">-</strong></div>
@@ -6763,7 +6780,7 @@
             const normalRemarksFields = document.getElementById('applicantNormalRemarksFields');
             if (conditionFields) conditionFields.style.display = 'none';
             if (normalRemarksFields) normalRemarksFields.style.display = 'none';
-            ['applicantMedicalCondition', 'applicantConditionRemarks', 'applicantNormalRemarks', 'applicantBloodPressure', 'applicantPulseRate', 'applicantRespiratoryRate', 'applicantTemperature', 'applicantCovidPositiveDate', 'applicantOtherPendingReasonText'].forEach(function (id) {
+            ['applicantMedicalCondition', 'applicantConditionRemarks', 'applicantNormalRemarks', 'applicantHeight', 'applicantWeight', 'applicantBloodPressure', 'applicantPulseRate', 'applicantRespiratoryRate', 'applicantTemperature', 'applicantCovidPositiveDate', 'applicantOtherPendingReasonText'].forEach(function (id) {
                 const field = document.getElementById(id);
                 if (field) field.value = '';
             });
@@ -6849,6 +6866,8 @@
                 applicantMedicalCondition: savedReview.medical_condition || '',
                 applicantConditionRemarks: savedReview.condition_remarks || '',
                 applicantNormalRemarks: savedReview.normal_remarks || '',
+                applicantHeight: savedReview.height ?? '',
+                applicantWeight: savedReview.weight ?? '',
                 applicantBloodPressure: savedReview.blood_pressure || '',
                 applicantPulseRate: savedReview.pulse_rate ?? '',
                 applicantRespiratoryRate: savedReview.respiratory_rate ?? '',
@@ -6901,6 +6920,8 @@
                 savedReviewReasons: pendingReasons.join(', ') || '-',
                 savedReviewCondition: savedReview.medical_condition || '-',
                 savedReviewRemarks: savedReview.condition_remarks || savedReview.normal_remarks || '-',
+                savedReviewHeight: savedReview.height !== null && savedReview.height !== undefined && savedReview.height !== '' ? savedReview.height + ' cm' : '-',
+                savedReviewWeight: savedReview.weight !== null && savedReview.weight !== undefined && savedReview.weight !== '' ? savedReview.weight + ' kg' : '-',
                 savedReviewBloodPressure: savedReview.blood_pressure || '-',
                 savedReviewPulseRate: savedReview.pulse_rate !== null && savedReview.pulse_rate !== undefined && savedReview.pulse_rate !== '' ? savedReview.pulse_rate + ' bpm' : '-',
                 savedReviewRespiratoryRate: savedReview.respiratory_rate !== null && savedReview.respiratory_rate !== undefined && savedReview.respiratory_rate !== '' ? savedReview.respiratory_rate + ' cpm' : '-',
@@ -7353,6 +7374,109 @@
                     covidPositiveDateInput.value = '';
                 }
             }
+            validateCovidDate();
+        }
+
+        function validateVitals() {
+            const heightInput = document.getElementById('applicantHeight');
+            const weightInput = document.getElementById('applicantWeight');
+            const bpInput = document.getElementById('applicantBloodPressure');
+            const prInput = document.getElementById('applicantPulseRate');
+            const rrInput = document.getElementById('applicantRespiratoryRate');
+            const tempInput = document.getElementById('applicantTemperature');
+            const heightError = document.getElementById('heightError');
+            const weightError = document.getElementById('weightError');
+            const bpError = document.getElementById('bpError');
+            const prError = document.getElementById('prError');
+            const rrError = document.getElementById('rrError');
+            const tempError = document.getElementById('tempError');
+
+            // Validate Height
+            if (heightInput) {
+                const heightValue = heightInput.value;
+                if (heightValue && (heightValue < 1 || heightValue > 300)) {
+                    if (heightError) heightError.style.display = 'block';
+                } else {
+                    if (heightError) heightError.style.display = 'none';
+                }
+            }
+
+            // Validate Weight
+            if (weightInput) {
+                const weightValue = weightInput.value;
+                if (weightValue && (weightValue < 1 || weightValue > 500)) {
+                    if (weightError) weightError.style.display = 'block';
+                } else {
+                    if (weightError) weightError.style.display = 'none';
+                }
+            }
+
+            // Validate Blood Pressure
+            if (bpInput) {
+                const bpValue = bpInput.value.trim();
+                const bpRegex = /^\d{2,3}\s*\/\s*\d{2,3}$/;
+                if (bpValue && !bpRegex.test(bpValue)) {
+                    if (bpError) bpError.style.display = 'block';
+                } else {
+                    if (bpError) bpError.style.display = 'none';
+                }
+            }
+
+            // Validate Pulse Rate
+            if (prInput) {
+                const prValue = prInput.value;
+                if (prValue && (prValue < 1 || prValue > 300)) {
+                    if (prError) prError.style.display = 'block';
+                } else {
+                    if (prError) prError.style.display = 'none';
+                }
+            }
+
+            // Validate Respiratory Rate
+            if (rrInput) {
+                const rrValue = rrInput.value;
+                if (rrValue && (rrValue < 1 || rrValue > 120)) {
+                    if (rrError) rrError.style.display = 'block';
+                } else {
+                    if (rrError) rrError.style.display = 'none';
+                }
+            }
+
+            // Validate Temperature
+            if (tempInput) {
+                const tempValue = tempInput.value;
+                if (tempValue && (tempValue < 30 || tempValue > 45)) {
+                    if (tempError) tempError.style.display = 'block';
+                } else {
+                    if (tempError) tempError.style.display = 'none';
+                }
+            }
+        }
+
+        function validateCovidDate() {
+            const covidDateInput = document.getElementById('applicantCovidPositiveDate');
+            const covidDateError = document.getElementById('covidDateError');
+
+            if (covidDateInput && covidDateInput.value) {
+                const selectedDate = new Date(covidDateInput.value);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                if (selectedDate > today) {
+                    if (covidDateError) covidDateError.style.display = 'block';
+                    covidDateInput.value = '';
+                } else {
+                    if (covidDateError) covidDateError.style.display = 'none';
+                }
+            }
+        }
+
+        function restrictCovidDateInput() {
+            const covidDateInput = document.getElementById('applicantCovidPositiveDate');
+            if (covidDateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                covidDateInput.max = today;
+            }
         }
 
         function syncFindingsReviewFields() {
@@ -7414,7 +7538,23 @@
         covidPositiveInputs.forEach(function (input) {
             input.addEventListener('change', syncCovidPositiveFields);
         });
+
+        // Add event listeners for vital signs validation
+        const vitalInputs = document.querySelectorAll('.vital-input');
+        vitalInputs.forEach(function (input) {
+            input.addEventListener('input', validateVitals);
+            input.addEventListener('blur', validateVitals);
+        });
+
+        // Add event listener for COVID positive date validation
+        const covidDateInput = document.getElementById('applicantCovidPositiveDate');
+        if (covidDateInput) {
+            covidDateInput.addEventListener('change', validateCovidDate);
+            covidDateInput.addEventListener('blur', validateCovidDate);
+        }
+
         syncCovidPositiveFields();
+        restrictCovidDateInput();
 
         if (openBtn) openBtn.addEventListener('click', function (e) { e.preventDefault(); openApplicantsModal(); });
         if (openClinicBtn) openClinicBtn.addEventListener('click', function (e) { e.preventDefault(); openClinicLookupModal(); });

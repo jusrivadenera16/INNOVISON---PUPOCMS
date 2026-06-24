@@ -14,13 +14,14 @@ class Consultation extends Model
     protected $fillable = [
     'user_id', 'attending_staff_id', 'attending_staff_name', 'name', 'consultation_date',
     'time_in', 'time_out', 'user_type', 'user_role', 'consultation_source', 'service',
-    'medical_condition_id', 'temperature', 'blood_pressure', 'pulse_rate',
-    'respiratory_rate', 'covid_status', 'reason_for_visit', 'certificate_type', 'medicine', 'item_id',
+    'medical_condition_id', 'height', 'weight', 'temperature', 'blood_pressure', 'pulse_rate',
+    'respiratory_rate', 'covid_status', 'covid_positive_date', 'reason_for_visit', 'certificate_type', 'medicine', 'item_id',
     'medicine_quantity', 'comments'
 ];
 
     protected $casts = [
         'consultation_date' => 'date',
+        'covid_positive_date' => 'date',
         'medicine_quantity' => 'decimal:2',
     ];
 

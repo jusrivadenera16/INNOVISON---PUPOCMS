@@ -656,19 +656,24 @@ class WalkInController extends Controller
     {
         $profile->refresh();
 
+        $latestConsultation = \App\Models\Consultation::where('user_id', $profile->user_id)
+            ->orderBy('consultation_date', 'desc')
+            ->orderBy('time_out', 'desc')
+            ->first();
+
         $data = [
             'assessmentDate' => $this->formatMedicalAssessmentDate($profile->assessment_date ?: now()),
             'birthday' => $this->formatMedicalAssessmentDate($profile->birthday),
-            'height' => trim((string) $profile->height),
-            'weight' => trim((string) $profile->weight),
-            'bloodPressure' => trim((string) $profile->blood_pressure),
-            'pulseRate' => trim((string) $profile->pulse_rate),
-            'respiratoryRate' => trim((string) $profile->respiratory_rate),
-            'temperature' => trim((string) $profile->temperature),
-            'covidPositive' => trim((string) $profile->covid_positive),
-            'covidPositiveDate' => $profile->covid_positive === 'Yes'
-                ? $this->formatMedicalAssessmentDate($profile->covid_positive_date)
-                : '',
+            'height' => $latestConsultation ? trim((string) $latestConsultation->height) : '',
+            'weight' => $latestConsultation ? trim((string) $latestConsultation->weight) : '',
+            'bloodPressure' => $latestConsultation ? trim((string) $latestConsultation->blood_pressure) : trim((string) $profile->blood_pressure),
+            'pulseRate' => $latestConsultation ? trim((string) $latestConsultation->pulse_rate) : trim((string) $profile->pulse_rate),
+            'respiratoryRate' => $latestConsultation ? trim((string) $latestConsultation->respiratory_rate) : trim((string) $profile->respiratory_rate),
+            'temperature' => $latestConsultation ? trim((string) $latestConsultation->temperature) : trim((string) $profile->temperature),
+            'covidPositive' => $latestConsultation ? trim((string) $latestConsultation->covid_status) : trim((string) $profile->covid_positive),
+            'covidPositiveDate' => $latestConsultation && $latestConsultation->covid_status === 'Yes'
+                ? $this->formatMedicalAssessmentDate($latestConsultation->covid_positive_date)
+                : ($profile->covid_positive === 'Yes' ? $this->formatMedicalAssessmentDate($profile->covid_positive_date) : ''),
             'doctorName' => trim((string) ($profile->medical_certificate_issued_by ?: $profile->doctor_name)),
             'medicalCertificateDate' => $this->formatMedicalAssessmentDate($profile->medical_certificate_issued_at ?: $profile->med_cert_date),
             'xrayResult' => $this->normalizeMedicalAssessmentXrayResult($profile->chest_xray_result_text ?: $profile->xray_findings),
@@ -1354,19 +1359,21 @@ PROMPT;
             'remarks'      => 'required',
             'condition_id' => 'required|exists:medical_conditions,id',
             'dob'          => 'nullable|date',
-            'height'       => 'nullable|numeric|min:0|max:400',
-            'weight'       => 'nullable|numeric|min:0|max:1000',
-            'temp'         => 'nullable|numeric|min:30|max:45',
-            'bp'           => 'nullable|string|max:20',
-            'pulse_rate'   => 'nullable|integer|min:0|max:300',
-            'respiratory_rate' => 'nullable|integer|min:0|max:120',
+            'height'       => 'required|numeric|min:1|max:300',
+            'weight'       => 'required|numeric|min:1|max:500',
+            'temp'         => 'required|numeric|min:30|max:45',
+            'bp'           => 'required|string|max:20|regex:/^\d{2,3}\s*\/\s*\d{2,3}$/',
+            'pulse_rate'   => 'required|integer|min:1|max:300',
+            'respiratory_rate' => 'required|integer|min:1|max:120',
             'covid_status' => 'required|in:Yes,No',
+            'covid_positive_date' => 'required_if:covid_status,Yes|nullable|date|before_or_equal:today',
             'reason_for_visit' => 'nullable|string|max:255',
             'certificate_type' => 'nullable|in:none,excused_letter,coc_ijt,coc_ladderized',
             'item_id' => 'nullable|exists:items,id',
             'issued_quantity' => 'nullable|numeric|min:0.01',
             'consultation_started_at' => 'nullable|date_format:H:i:s',
         ]);
+
 
         $student = $this->findUserByIdentifier((string) $request->student_number);
 
@@ -1547,11 +1554,14 @@ PROMPT;
                 'consultation_source'  => $finalSource,
                 'service'              => $request->service,
                 'medical_condition_id' => $request->condition_id,
+                'height'               => $request->input('height'),
+                'weight'               => $request->input('weight'),
                 'temperature'          => $request->temp,
                 'blood_pressure'       => $request->bp,
                 'pulse_rate'           => $request->input('pulse_rate'),
                 'respiratory_rate'     => $request->input('respiratory_rate'),
                 'covid_status'         => $request->input('covid_status'),
+                'covid_positive_date'  => $request->input('covid_positive_date'),
                 'reason_for_visit'     => $request->input('reason_for_visit'),
                 'certificate_type'     => $request->input('certificate_type') ?: 'none',
                 'medicine'             => $medicineName,
