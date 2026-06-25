@@ -812,7 +812,7 @@
 
         .upload-preview-error {
             display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 12px;
             padding: 12px;
             background-color: #fde2e2;
@@ -820,15 +820,28 @@
             border-radius: 6px;
         }
 
+        .upload-preview-error-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
         .upload-preview-error-icon {
             font-size: 1.2rem;
             flex-shrink: 0;
+            margin-top: 2px;
         }
 
         .upload-preview-error-text {
             color: #991b1b;
             font-size: 0.84rem;
             line-height: 1.4;
+            flex: 1;
+        }
+
+        .upload-preview-error-actions {
+            display: flex;
+            gap: 8px;
         }
 
         .clinic-select-wrap {
@@ -2807,13 +2820,22 @@
                 if (file.size > maxSize) {
                     preview.innerHTML = `
                         <div class="upload-preview-error">
-                            <span class="upload-preview-error-icon">⚠️</span>
-                            <span class="upload-preview-error-text">File is too large (${formatFileSize(file.size)}). Maximum size is ${maxSizeLabel}. Please compress and try again.</span>
+                            <div class="upload-preview-error-header">
+                                <span class="upload-preview-error-icon">⚠️</span>
+                                <span class="upload-preview-error-text">File is too large (${formatFileSize(file.size)}). Maximum size is ${maxSizeLabel}.</span>
+                            </div>
+                            <div class="upload-preview-error-actions">
+                                <button type="button" class="upload-preview-btn" data-upload-replace>Choose Different File</button>
+                            </div>
                         </div>
                     `;
                     input.setCustomValidity(`File size exceeds ${maxSizeLabel} limit`);
                     previewScope?.classList.add('has-upload-preview');
                     preview.classList.add('is-visible');
+
+                    preview.querySelector('[data-upload-replace]')?.addEventListener('click', () => {
+                        input.click();
+                    });
                     return;
                 }
 
