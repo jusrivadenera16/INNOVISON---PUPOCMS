@@ -40,10 +40,11 @@ class HealthProfile extends Model
         'physical_assessment_status',
         'documents_valid',
         'verified_at',
+        'approved_by_user_id',
         'puptas_sync_status',
         'puptas_synced_at',
         'puptas_sync_message',
-        
+
     ];
 
     protected $casts = [
@@ -65,5 +66,10 @@ class HealthProfile extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by_user_id');
     }
 }

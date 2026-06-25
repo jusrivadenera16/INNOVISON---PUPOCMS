@@ -647,6 +647,78 @@ class ReportsController extends Controller
         ));
     }
 
+    public function healthFormsLogbook(Request $request)
+    {
+        $search = trim((string) $request->query('q', ''));
+        $courseFilter = trim((string) $request->query('course', ''));
+        $userTypeFilter = trim((string) $request->query('type', ''));
+        $genderFilter = trim((string) $request->query('gender', ''));
+        $conditionFilter = trim((string) $request->query('condition', ''));
+        $statusFilter = trim((string) $request->query('status', ''));
+
+        $query = HealthProfile::query()
+            ->with(['user', 'approvedBy'])
+            ->whereNotNull('clearance_status');
+
+        if ($search !== '') {
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($courseFilter !== '') {
+            $query->where(function ($q) use ($courseFilter) {
+                $q->where('course_college', 'like', "%{$courseFilter}%")
+                  ->orWhereHas('user', function ($uq) use ($courseFilter) {
+                      $uq->where('course', 'like', "%{$courseFilter}%");
+                  });
+            });
+        }
+
+        if ($userTypeFilter !== '') {
+            $query->whereHas('user', function ($q) use ($userTypeFilter) {
+                $q->where('user_type', '=', $userTypeFilter);
+            });
+        }
+
+        if ($genderFilter !== '') {
+            $query->whereHas('user', function ($q) use ($genderFilter) {
+                $q->where('gender', '=', $genderFilter);
+            });
+        }
+
+        if ($conditionFilter === 'yes') {
+            $query->where('has_disability', '=', 'Yes');
+        } elseif ($conditionFilter === 'no') {
+            $query->where('has_disability', '!=', 'Yes');
+        }
+
+        if ($statusFilter === 'pending') {
+            $query->where('clearance_status', '!=', 'Issued');
+        } elseif ($statusFilter === 'approved') {
+            $query->where('clearance_status', '=', 'Issued');
+        }
+
+        $logbookRecords = $query->orderByDesc('created_at')->paginate(25);
+
+        $courses = HealthProfile::distinct()
+            ->pluck('course_college')
+            ->filter()
+            ->sort()
+            ->values();
+
+        return view('admin.reports.health-forms-logbook', compact(
+            'logbookRecords',
+            'courses',
+            'search',
+            'courseFilter',
+            'userTypeFilter',
+            'genderFilter',
+            'conditionFilter',
+            'statusFilter'
+        ));
+    }
+
     public function feedbackReport(Request $request)
     {
         $search = trim((string) $request->query('q', ''));

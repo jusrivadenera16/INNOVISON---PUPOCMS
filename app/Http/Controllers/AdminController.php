@@ -1546,6 +1546,7 @@ public function updateClearance(Request $request, $id)
     $record->physical_assessment_status = $request->input('physical_assessment_status');
     $record->documents_valid = $documentsValid;
     $record->verified_at      = $isApproval ? ($request->verified_at ?? now()) : null;
+    $record->approved_by_user_id = $isApproval ? auth()->id() : null;
 
     if ($record->save()) {
         if ($record->user) {

@@ -256,6 +256,7 @@ Route::middleware(['auth:admin', 'audit'])->group(function () {
         Route::get('/admin/reports/daily-treatment-record', [ReportsController::class, 'dailyTreatmentRecord'])->name('reports.daily-treatment-record');
         Route::get('/admin/reports/appointment-statistics', [ReportsController::class, 'appointmentStatistics'])->name('reports.appointment-statistics');
         Route::get('/admin/reports/health-forms', [ReportsController::class, 'healthFormsReport'])->name('reports.health-forms');
+        Route::get('/admin/reports/health-forms-logbook', [ReportsController::class, 'healthFormsLogbook'])->name('reports.health-forms-logbook');
         Route::get('/admin/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->name('reports.feedbacks');
         Route::get('/admin/reports/export-hub', [ReportsController::class, 'exportHub'])->name('reports.exportHub');
         Route::get('/admin/reports/print-reports', [ReportsController::class, 'printReport'])->name('reports.print');
@@ -335,6 +336,7 @@ Route::middleware(['auth:admin', 'audit'])->group(function () {
         Route::get('/reports/daily-treatment-record', [ReportsController::class, 'dailyTreatmentRecord'])->name('reports.daily-treatment-record');
         Route::get('/reports/appointment-statistics', [ReportsController::class, 'appointmentStatistics'])->name('reports.appointment-statistics');
         Route::get('/reports/health-forms', [ReportsController::class, 'healthFormsReport'])->name('reports.health-forms');
+        Route::get('/reports/health-forms-logbook', [ReportsController::class, 'healthFormsLogbook'])->name('reports.health-forms-logbook');
         Route::get('/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->name('reports.feedbacks');
         Route::get('/reports/export-hub', [ReportsController::class, 'exportHub'])->name('reports.exportHub');
         Route::get('/reports/print-reports', [ReportsController::class, 'printReport'])->name('reports.print');

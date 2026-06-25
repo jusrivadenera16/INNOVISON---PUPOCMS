@@ -2495,8 +2495,6 @@ public function storeHealthForm(Request $request)
         'zipcode'           => 'required|string|max:20',
         'birthday'          => 'required|date',
         'student_photo'     => 'required|image|mimes:jpeg,png,jpg|max:1024',
-        'height'            => 'required|numeric|min:0',
-        'weight'            => 'required|numeric|min:0',
         'age'               => 'required|numeric|min:15|max:100',
         'sex'               => 'required|string',
         'civil_status'      => 'required|string',
@@ -2637,8 +2635,6 @@ public function storeHealthForm(Request $request)
         $officialReference = $this->resolveClinicReferenceNumber($user, $existingHealthProfile);
     }
 
-    $normalizedHeight = $this->normalizeMeasurement($request->input('height'), 'cm');
-    $normalizedWeight = $this->normalizeMeasurement($request->input('weight'), 'kg');
     $user->DOB = $request->input('birthday');
     $user->contact_no = $request->input('contact_no');
     $resolvedGender = trim((string) $request->input('sex'));
@@ -2669,8 +2665,6 @@ public function storeHealthForm(Request $request)
                 'zipcode'            => $request->zipcode,
                 'birthday'           => $request->input('birthday'),
                 'student_photo'      => $photoPath,
-                'height'             => $normalizedHeight,
-                'weight'             => $normalizedWeight,
                 'age'                => $request->age,
                 'sex'                => $request->sex,
                 'civil_status'       => $request->civil_status,

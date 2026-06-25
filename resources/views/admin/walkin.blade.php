@@ -4542,8 +4542,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5A1.5 1.5 0 0 1 4.5 6h15A1.5 1.5 0 0 1 21 7.5v9A1.5 1.5 0 0 1 19.5 18h-15A1.5 1.5 0 0 1 3 16.5v-9Zm3 3h12m-12 3h7.5" />
                         </svg>
                     </span>
-                    <h3 class="intake-option-title">OCR / Manual ID</h3>
-                    <p class="intake-option-copy">Use OCR ID scanning or manual student number entry to identify an existing school user and continue directly to consultation.</p>
+                    <h3 class="intake-option-title">Walk-in Patient</h3>
+                    <p class="intake-option-copy">Look up an existing patient record using ID scanning or manual entry to continue directly to consultation.</p>
                 </div>
             </a>
 
