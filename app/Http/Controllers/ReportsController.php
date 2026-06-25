@@ -701,7 +701,7 @@ class ReportsController extends Controller
 
         $logbookRecords = $query->orderByDesc('created_at')->paginate(25);
 
-        $courses = HealthProfile::distinct()
+        $courses = HealthProfile::distinct('course_college')
             ->pluck('course_college')
             ->filter()
             ->sort()
