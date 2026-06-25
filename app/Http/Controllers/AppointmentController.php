@@ -2578,14 +2578,36 @@ public function storeHealthForm(Request $request)
 
         $firstDoseDate = trim((string) $request->input('vaccine_history.first_dose.date'));
         $secondDoseDate = trim((string) $request->input('vaccine_history.second_dose.date'));
+        $booster1Date = trim((string) $request->input('vaccine_history.booster_1.date'));
+        $booster2Date = trim((string) $request->input('vaccine_history.booster_2.date'));
 
         if ($firstDoseDate !== '' && $secondDoseDate !== '') {
-            $minimumSecondDoseDate = Carbon::parse($firstDoseDate)->addWeeks(4)->startOfDay();
+            $minimumSecondDoseDate = Carbon::parse($firstDoseDate)->addWeeks(2)->startOfDay();
             $selectedSecondDoseDate = Carbon::parse($secondDoseDate)->startOfDay();
 
             if ($selectedSecondDoseDate->lt($minimumSecondDoseDate)) {
                 $dateErrors['vaccine_history.second_dose.date'] =
-                    'The 2nd Dose must be at least 4 weeks after the 1st Dose.';
+                    'The 2nd Dose must be at least 2 weeks after the 1st Dose.';
+            }
+        }
+
+        if ($secondDoseDate !== '' && $booster1Date !== '') {
+            $minimumBooster1Date = Carbon::parse($secondDoseDate)->addWeeks(2)->startOfDay();
+            $selectedBooster1Date = Carbon::parse($booster1Date)->startOfDay();
+
+            if ($selectedBooster1Date->lt($minimumBooster1Date)) {
+                $dateErrors['vaccine_history.booster_1.date'] =
+                    'Booster 1 must be at least 2 weeks after the 2nd Dose.';
+            }
+        }
+
+        if ($booster1Date !== '' && $booster2Date !== '') {
+            $minimumBooster2Date = Carbon::parse($booster1Date)->addWeeks(2)->startOfDay();
+            $selectedBooster2Date = Carbon::parse($booster2Date)->startOfDay();
+
+            if ($selectedBooster2Date->lt($minimumBooster2Date)) {
+                $dateErrors['vaccine_history.booster_2.date'] =
+                    'Booster 2 must be at least 2 weeks after Booster 1.';
             }
         }
 
