@@ -390,35 +390,44 @@
         align-items: center;
         justify-content: flex-end;
         gap: 6px;
+        color: #000000;
+        font-weight: 600;
     }
     .readonly-copy-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 22px;
-        height: 22px;
-        flex: 0 0 22px;
-        border: 1px solid rgba(112, 19, 27, 0.18);
+        width: 28px;
+        height: 28px;
+        flex: 0 0 28px;
+        border: 1.5px solid #7f1d2d;
         border-radius: 7px;
         background: #ffffff;
-        color: #70131B;
+        color: #7f1d2d;
         cursor: pointer;
-        transition: background-color .18s ease, border-color .18s ease, transform .18s ease;
+        transition: all .18s ease;
+        padding: 4px;
     }
     .readonly-copy-btn svg {
-        width: 13px;
-        height: 13px;
-        stroke-width: 2.4;
+        width: 16px;
+        height: 16px;
+        stroke-width: 2;
     }
     .readonly-copy-btn:hover {
-        background: #facc15;
-        border-color: #facc15;
-        transform: translateY(-1px);
+        background: #7f1d2d;
+        border-color: #7f1d2d;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(127, 29, 45, 0.2);
     }
     .readonly-copy-btn.is-copied {
         background: #dcfce7;
         border-color: #86efac;
         color: #166534;
+    }
+    .readonly-copy-btn.is-copied:hover {
+        background: #dcfce7;
+        box-shadow: 0 4px 12px rgba(22, 101, 52, 0.2);
     }
     .readonly-record-pill.status-flag-pill {
         background: #fef3c7;
