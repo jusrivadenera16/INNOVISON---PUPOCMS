@@ -49,18 +49,95 @@
         background: #ffffff;
         border-color: rgba(112, 19, 27, 0.48);
     }
-    .logbook-filters {
+    .logbook-toolbar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+    .filter-btn-open {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 12px;
+        background: #7f1d2d;
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        transition: all .18s ease;
+    }
+    .filter-btn-open:hover {
+        background: #5f1520;
+    }
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 23, 42, 0.6);
+        z-index: 999;
+    }
+    .modal-overlay.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-content {
         background: #ffffff;
         border-radius: 20px;
-        padding: 22px;
-        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+        padding: 32px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
+        animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    .modal-header {
         margin-bottom: 24px;
+    }
+    .modal-header h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 900;
+        color: #111827;
+    }
+    .modal-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: none;
+        border: none;
+        font-size: 28px;
+        color: #64748b;
+        cursor: pointer;
+        transition: color .18s ease;
+    }
+    .modal-close:hover {
+        color: #111827;
     }
     .filters-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: 1fr;
         gap: 16px;
-        margin-bottom: 16px;
+        margin-bottom: 24px;
     }
     .filter-group label {
         display: block;
@@ -81,6 +158,12 @@
         font-size: 14px;
         color: #111827;
     }
+    .filter-group input:focus,
+    .filter-group select:focus {
+        outline: none;
+        border-color: #7f1d2d;
+        box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.1);
+    }
     .filter-actions {
         display: flex;
         gap: 10px;
@@ -99,6 +182,7 @@
         text-transform: uppercase;
         letter-spacing: 0.04em;
         transition: all .18s ease;
+        flex: 1;
     }
     .filter-btn.primary {
         background: #7f1d2d;
@@ -197,65 +281,75 @@
         <a href="{{ $reportsUrl }}" class="logbook-back">&larr; Back</a>
     </div>
 
-    <div class="logbook-filters">
-        <form method="GET" class="filters-form">
-            <div class="filters-grid">
-                <div class="filter-group">
-                    <label>Search Name</label>
-                    <input type="text" name="q" placeholder="Applicant or student name" value="{{ $search }}">
-                </div>
-                <div class="filter-group">
-                    <label>Course</label>
-                    <select name="course">
-                        <option value="">All Courses</option>
-                        @foreach($courses as $course)
-                            <option value="{{ $course }}" {{ $courseFilter === $course ? 'selected' : '' }}>
-                                {{ $course }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>User Type</label>
-                    <select name="type">
-                        <option value="">All Types</option>
-                        <option value="Applicant" {{ $userTypeFilter === 'Applicant' ? 'selected' : '' }}>Applicant</option>
-                        <option value="Student" {{ $userTypeFilter === 'Student' ? 'selected' : '' }}>Student</option>
-                        <option value="Faculty" {{ $userTypeFilter === 'Faculty' ? 'selected' : '' }}>Faculty</option>
-                        <option value="Admin" {{ $userTypeFilter === 'Admin' ? 'selected' : '' }}>Admin</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Gender</label>
-                    <select name="gender">
-                        <option value="">All Genders</option>
-                        <option value="Male" {{ $genderFilter === 'Male' ? 'selected' : '' }}>Male</option>
-                        <option value="Female" {{ $genderFilter === 'Female' ? 'selected' : '' }}>Female</option>
-                        <option value="Non-binary" {{ $genderFilter === 'Non-binary' ? 'selected' : '' }}>Non-binary</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Condition</label>
-                    <select name="condition">
-                        <option value="">All Records</option>
-                        <option value="yes" {{ $conditionFilter === 'yes' ? 'selected' : '' }}>With Condition</option>
-                        <option value="no" {{ $conditionFilter === 'no' ? 'selected' : '' }}>No Condition</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Status</label>
-                    <select name="status">
-                        <option value="">All Status</option>
-                        <option value="pending" {{ $statusFilter === 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="approved" {{ $statusFilter === 'approved' ? 'selected' : '' }}>Approved</option>
-                    </select>
-                </div>
+    <div class="logbook-toolbar">
+        <button class="filter-btn-open" onclick="openFilterModal()">🔍 Filter</button>
+    </div>
+
+    <div class="modal-overlay" id="filterModal" onclick="closeFilterModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeFilterModal()">×</button>
+            <div class="modal-header">
+                <h2>Filter Records</h2>
             </div>
-            <div class="filter-actions">
-                <button type="submit" class="filter-btn primary">Apply Filters</button>
-                <a href="{{ route('reports.health-forms-logbook') }}" class="filter-btn secondary">Reset</a>
-            </div>
-        </form>
+            <form method="GET" class="filters-form" id="filterForm">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label>Search Name</label>
+                        <input type="text" name="q" placeholder="Applicant or student name" value="{{ $search }}">
+                    </div>
+                    <div class="filter-group">
+                        <label>Course</label>
+                        <select name="course">
+                            <option value="">All Courses</option>
+                            @foreach($courses as $course)
+                                <option value="{{ $course }}" {{ $courseFilter === $course ? 'selected' : '' }}>
+                                    {{ $course }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>User Type</label>
+                        <select name="type">
+                            <option value="">All Types</option>
+                            <option value="Applicant" {{ $userTypeFilter === 'Applicant' ? 'selected' : '' }}>Applicant</option>
+                            <option value="Student" {{ $userTypeFilter === 'Student' ? 'selected' : '' }}>Student</option>
+                            <option value="Faculty" {{ $userTypeFilter === 'Faculty' ? 'selected' : '' }}>Faculty</option>
+                            <option value="Admin" {{ $userTypeFilter === 'Admin' ? 'selected' : '' }}>Admin</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Gender</label>
+                        <select name="gender">
+                            <option value="">All Genders</option>
+                            <option value="Male" {{ $genderFilter === 'Male' ? 'selected' : '' }}>Male</option>
+                            <option value="Female" {{ $genderFilter === 'Female' ? 'selected' : '' }}>Female</option>
+                            <option value="Non-binary" {{ $genderFilter === 'Non-binary' ? 'selected' : '' }}>Non-binary</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Condition</label>
+                        <select name="condition">
+                            <option value="">All Records</option>
+                            <option value="yes" {{ $conditionFilter === 'yes' ? 'selected' : '' }}>With Condition</option>
+                            <option value="no" {{ $conditionFilter === 'no' ? 'selected' : '' }}>No Condition</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Status</label>
+                        <select name="status">
+                            <option value="">All Status</option>
+                            <option value="pending" {{ $statusFilter === 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="approved" {{ $statusFilter === 'approved' ? 'selected' : '' }}>Approved</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="filter-btn primary">Apply Filters</button>
+                    <a href="{{ route('reports.health-forms-logbook') }}" class="filter-btn secondary">Reset</a>
+                </div>
+            </form>
+        </div>
     </div>
 
     <div class="logbook-table-wrap">
@@ -327,5 +421,22 @@
         {{ $logbookRecords->withQueryString()->links() }}
     </div>
 </div>
+
+<script>
+function openFilterModal() {
+    document.getElementById('filterModal').classList.add('active');
+}
+
+function closeFilterModal(event) {
+    if (event && event.target.id !== 'filterModal') return;
+    document.getElementById('filterModal').classList.remove('active');
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeFilterModal();
+    }
+});
+</script>
 
 @endsection
