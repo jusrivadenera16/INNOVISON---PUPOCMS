@@ -810,6 +810,27 @@
             transform: translateY(-1px);
         }
 
+        .upload-preview-error {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background-color: #fde2e2;
+            border: 1px solid #f5a5a5;
+            border-radius: 6px;
+        }
+
+        .upload-preview-error-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .upload-preview-error-text {
+            color: #991b1b;
+            font-size: 0.84rem;
+            line-height: 1.4;
+        }
+
         .clinic-select-wrap {
             position: relative;
         }
@@ -2778,6 +2799,25 @@
                     preview.innerHTML = '';
                     return;
                 }
+
+                const isPhotoInput = input.name === 'student_photo';
+                const maxSize = isPhotoInput ? 1 * 1024 * 1024 : 2 * 1024 * 1024;
+                const maxSizeLabel = isPhotoInput ? '1MB' : '2MB';
+
+                if (file.size > maxSize) {
+                    preview.innerHTML = `
+                        <div class="upload-preview-error">
+                            <span class="upload-preview-error-icon">⚠️</span>
+                            <span class="upload-preview-error-text">File is too large (${formatFileSize(file.size)}). Maximum size is ${maxSizeLabel}. Please compress and try again.</span>
+                        </div>
+                    `;
+                    input.setCustomValidity(`File size exceeds ${maxSizeLabel} limit`);
+                    previewScope?.classList.add('has-upload-preview');
+                    preview.classList.add('is-visible');
+                    return;
+                }
+
+                input.setCustomValidity('');
 
                 const objectUrl = URL.createObjectURL(file);
                 preview.dataset.objectUrl = objectUrl;
