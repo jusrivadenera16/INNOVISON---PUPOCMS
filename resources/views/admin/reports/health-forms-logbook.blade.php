@@ -288,7 +288,7 @@
                         <td>{{ $user->gender ?? 'N/A' }}</td>
                         <td>{{ $record->course_college ?? $user->course ?? 'N/A' }}</td>
                         <td>{{ $user->user_type ?? 'N/A' }}</td>
-                        <td>{{ $record->created_at->format('M d, Y g:i A') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($record->created_at)->format('M d, Y g:i A') }}</td>
                         <td>
                             @if($approver)
                                 <strong>{{ $approver->name }}</strong>
@@ -298,7 +298,7 @@
                         </td>
                         <td>
                             @if($record->verified_at)
-                                {{ $record->verified_at->format('M d, Y g:i A') }}
+                                {{ \Carbon\Carbon::parse($record->verified_at)->format('M d, Y g:i A') }}
                             @else
                                 <span style="color: #94a3b8;">—</span>
                             @endif
