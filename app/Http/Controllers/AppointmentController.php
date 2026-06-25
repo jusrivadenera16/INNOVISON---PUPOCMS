@@ -2713,6 +2713,21 @@ public function storeHealthForm(Request $request)
             'user_agent'  => $request->userAgent(),
         ]);
 
+        $puptasService = new \App\Services\PuptasWebhookService();
+        $webhookResult = $puptasService->sendMedicalClearance(
+            $officialReference,
+            $request->input('student_id'),
+            false
+        );
+
+        if (!$webhookResult['success']) {
+            \Log::warning('PUPTAS webhook sync failed after health form submission', [
+                'user_id' => $user->id,
+                'reference_number' => $officialReference,
+                'webhook_message' => $webhookResult['message'] ?? 'Unknown error',
+            ]);
+        }
+
         return redirect('/student/account?view=health-record')
             ->with('success', 'Health Profile saved successfully.')
             ->with('health_profile_submitted', true)
