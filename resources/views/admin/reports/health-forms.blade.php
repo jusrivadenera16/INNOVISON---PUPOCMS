@@ -288,8 +288,15 @@
                     <input id="healthFormsDateTo" type="text" name="date_to" value="{{ $dateTo->format('d/m/Y') }}" placeholder="DD/MM/YYYY" inputmode="numeric" pattern="\d{2}/\d{2}/\d{4}" required>
                 </div>
                 <div class="health-forms-field">
-                    <label for="healthFormsSearch">Search</label>
-                    <input id="healthFormsSearch" type="text" name="q" value="{{ $search }}" placeholder="Course name">
+                    <label for="healthFormsSearch">Course</label>
+                    <select id="healthFormsSearch" name="q">
+                        <option value="">All Courses</option>
+                        @foreach($allCourses as $course)
+                            <option value="{{ $course }}" {{ $search === $course ? 'selected' : '' }}>
+                                {{ $course }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="health-forms-filter-actions">
                     <button type="submit" class="health-forms-btn primary">Apply</button>

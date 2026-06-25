@@ -635,6 +635,12 @@ class ReportsController extends Controller
         $issuedWithConditions = (clone $summaryQuery)->where('has_disability', 'Yes')->count();
         $topCourse = optional($issuedFormsCollection->first())->course ?? 'No course data yet';
 
+        $allCourses = HealthProfile::distinct('course_college')
+            ->pluck('course_college')
+            ->filter()
+            ->sort()
+            ->values();
+
         return view('admin.reports.health-forms', compact(
             'issuedForms',
             'totalIssued',
@@ -643,7 +649,8 @@ class ReportsController extends Controller
             'topCourse',
             'search',
             'dateFrom',
-            'dateTo'
+            'dateTo',
+            'allCourses'
         ));
     }
 
