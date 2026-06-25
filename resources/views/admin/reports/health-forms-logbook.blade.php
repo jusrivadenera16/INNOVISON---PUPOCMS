@@ -52,6 +52,7 @@
     .logbook-toolbar {
         display: flex;
         gap: 12px;
+        align-items: center;
         margin-bottom: 24px;
     }
     .filter-btn-open {
@@ -70,6 +71,7 @@
         letter-spacing: 0.04em;
         cursor: pointer;
         transition: all .18s ease;
+        white-space: nowrap;
     }
     .filter-btn-open:hover {
         background: #5f1520;
@@ -278,11 +280,14 @@
             <h1 class="logbook-title">Health Forms Approval Logbook</h1>
             <p class="logbook-copy">Track all health form submissions and approvals by applicants, students, and staff.</p>
         </div>
-        <a href="{{ $reportsUrl }}" class="logbook-back">&larr; Back</a>
+        <div style="display: flex; gap: 10px;">
+            <button class="filter-btn-open" onclick="openFilterModal()">🔍 Filter</button>
+            <a href="{{ $reportsUrl }}" class="logbook-back">&larr; Back</a>
+        </div>
     </div>
 
-    <div class="logbook-toolbar">
-        <button class="filter-btn-open" onclick="openFilterModal()">🔍 Filter</button>
+    <div class="logbook-toolbar" style="margin-bottom: 20px;">
+        <input type="text" id="searchInput" placeholder="Search by applicant or student name..." value="{{ $search }}" style="flex: 1; height: 44px; border: 1px solid #cbd5e1; border-radius: 12px; padding: 0 14px; font-size: 14px; color: #111827;" onkeyup="handleSearch()">
     </div>
 
     <div class="modal-overlay" id="filterModal" onclick="closeFilterModal(event)">
@@ -293,10 +298,6 @@
             </div>
             <form method="GET" class="filters-form" id="filterForm">
                 <div class="filters-grid">
-                    <div class="filter-group">
-                        <label>Search Name</label>
-                        <input type="text" name="q" placeholder="Applicant or student name" value="{{ $search }}">
-                    </div>
                     <div class="filter-group">
                         <label>Course</label>
                         <select name="course">
@@ -431,6 +432,46 @@ function closeFilterModal(event) {
     if (event && event.target.id !== 'filterModal') return;
     document.getElementById('filterModal').classList.remove('active');
 }
+
+function handleSearch() {
+    const searchValue = document.getElementById('searchInput').value;
+    const filterForm = document.getElementById('filterForm');
+
+    let params = new URLSearchParams();
+    params.append('q', searchValue);
+
+    const courseValue = filterForm.querySelector('[name="course"]').value;
+    if (courseValue) params.append('course', courseValue);
+
+    const typeValue = filterForm.querySelector('[name="type"]').value;
+    if (typeValue) params.append('type', typeValue);
+
+    const genderValue = filterForm.querySelector('[name="gender"]').value;
+    if (genderValue) params.append('gender', genderValue);
+
+    const conditionValue = filterForm.querySelector('[name="condition"]').value;
+    if (conditionValue) params.append('condition', conditionValue);
+
+    const statusValue = filterForm.querySelector('[name="status"]').value;
+    if (statusValue) params.append('status', statusValue);
+
+    window.location.href = '{{ route("reports.health-forms-logbook") }}?' + params.toString();
+}
+
+document.getElementById('filterForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const searchValue = document.getElementById('searchInput').value;
+
+    let params = new URLSearchParams();
+    params.append('q', searchValue);
+    params.append('course', this.querySelector('[name="course"]').value);
+    params.append('type', this.querySelector('[name="type"]').value);
+    params.append('gender', this.querySelector('[name="gender"]').value);
+    params.append('condition', this.querySelector('[name="condition"]').value);
+    params.append('status', this.querySelector('[name="status"]').value);
+
+    window.location.href = '{{ route("reports.health-forms-logbook") }}?' + params.toString();
+});
 
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
