@@ -270,8 +270,8 @@
             <strong>{{ $totalCourses }}</strong>
         </div>
         <div class="health-forms-stat-card">
-            <span>Top Course</span>
-            <strong style="font-size: 20px; line-height: 1.3;">{{ $topCourse }}</strong>
+            <span>With Condition</span>
+            <strong>{{ $issuedWithConditions }}</strong>
         </div>
     </div>
 

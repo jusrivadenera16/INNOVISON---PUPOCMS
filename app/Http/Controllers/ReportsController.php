@@ -646,7 +646,6 @@ class ReportsController extends Controller
             'totalIssued',
             'totalCourses',
             'issuedWithConditions',
-            'topCourse',
             'search',
             'dateFrom',
             'dateTo',
