@@ -3028,6 +3028,9 @@
         font-size: 14px;
         font-weight: 700;
         line-height: 1.6;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
     }
 
     .applicant-ref-result strong {
@@ -3038,6 +3041,34 @@
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+    }
+
+    .applicant-found-copy {
+        min-width: 0;
+    }
+
+    .applicant-condition-badge {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid #bfdbfe;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .03em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .applicant-condition-badge.has-condition {
+        border-color: #fecaca;
+        background: #fef2f2;
+        color: #991b1b;
     }
 
     .applicant-lookup-details {
@@ -3067,6 +3098,21 @@
     }
 
     .applicant-information-details.is-visible {
+        display: block;
+    }
+
+    .applicant-medical-condition-details {
+        display: none;
+        width: 100%;
+        margin-top: 12px;
+        padding: 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(112, 19, 27, 0.14);
+        background: linear-gradient(180deg, #fffdf8, #ffffff);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
+    }
+
+    .applicant-medical-condition-details.is-visible {
         display: block;
     }
 
@@ -3258,13 +3304,13 @@
         z-index: 0;
         overflow: hidden;
         min-height: 50px;
-        border: 1px solid #d6a900 !important;
+        border: 1px solid #70131b !important;
         border-radius: 10px !important;
-        background: linear-gradient(90deg, #fde047 0 50%, #facc15 50% 100%) !important;
+        background: linear-gradient(90deg, #facc15 0 50%, #70131b 50% 100%) !important;
         background-size: 205% 100% !important;
         background-position: 100% 0 !important;
-        color: #70131b !important;
-        box-shadow: 0 8px 18px rgba(202, 138, 4, .16);
+        color: #ffffff !important;
+        box-shadow: 0 8px 18px rgba(112, 19, 27, .16);
         isolation: isolate;
         transition: background-position .34s ease, color .2s ease, transform .2s ease, box-shadow .2s ease !important;
     }
@@ -3696,10 +3742,10 @@
         justify-content: center;
         gap: 9px;
         padding: 12px 16px;
-        border: 1px solid #d6a900;
+        border: 1px solid #70131b;
         border-radius: 10px;
-        background: #facc15;
-        color: #70131b;
+        background: #70131b;
+        color: #ffffff;
         font: inherit;
         font-size: 14px;
         font-weight: 800;
@@ -4648,8 +4694,11 @@
                     <div id="applicantRefStatus" class="ocr-status"></div>
 
                     <div id="applicantFoundCard" class="applicant-ref-result">
-                        Full Name
-                        <strong id="applicantFoundName"></strong>
+                        <div class="applicant-found-copy">
+                            Full Name
+                            <strong id="applicantFoundName"></strong>
+                        </div>
+                        <span id="applicantConditionBadge" class="applicant-condition-badge">Condition: No Medical Condition</span>
                     </div>
 
                     <div id="applicantLookupDetails" class="applicant-lookup-details">
@@ -4769,10 +4818,55 @@
                         </div>
                     </div>
 
+                    <div id="applicantMedicalConditionDetails" class="applicant-medical-condition-details" aria-hidden="true">
+                        <div class="applicant-lookup-grid">
+                            <div class="applicant-lookup-item">
+                                <div class="applicant-lookup-card">
+                                    <div class="applicant-lookup-icon is-maroon">MC</div>
+                                    <div class="applicant-lookup-content">
+                                        <p class="applicant-lookup-label">Condition</p>
+                                        <p class="applicant-lookup-value" id="applicantViewConditionStatus">No Medical Condition</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="applicant-lookup-item">
+                                <div class="applicant-lookup-card">
+                                    <div class="applicant-lookup-icon is-maroon">DX</div>
+                                    <div class="applicant-lookup-content">
+                                        <p class="applicant-lookup-label">Medical Condition</p>
+                                        <p class="applicant-lookup-value" id="applicantViewMedicalCondition">N/A</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="applicant-lookup-item">
+                                <div class="applicant-lookup-card">
+                                    <div class="applicant-lookup-icon is-maroon">PR</div>
+                                    <div class="applicant-lookup-content">
+                                        <p class="applicant-lookup-label">Pending Reasons</p>
+                                        <p class="applicant-lookup-value" id="applicantViewConditionReasons">N/A</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="applicant-lookup-item">
+                                <div class="applicant-lookup-card">
+                                    <div class="applicant-lookup-icon is-maroon">RM</div>
+                                    <div class="applicant-lookup-content">
+                                        <p class="applicant-lookup-label">Remarks</p>
+                                        <p class="applicant-lookup-value" id="applicantViewConditionRemarks">N/A</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="applicant-file-actions" id="applicantFileActions">
                         <button type="button" id="btnViewApplicantInformation" class="applicant-documents-trigger applicant-file-action">
                             <x-outline-icon name="identification" />
                             <span data-information-button-label>View Information</span>
+                        </button>
+                        <button type="button" id="btnViewMedicalCondition" class="applicant-documents-trigger applicant-file-action">
+                            <x-outline-icon name="clipboard-document-list" />
+                            <span data-condition-button-label>View Medical Condition</span>
                         </button>
                         <button type="button" id="btnViewApplicantDocuments" class="applicant-documents-trigger applicant-file-action">
                             <x-outline-icon name="document-text" />
@@ -4856,7 +4950,7 @@
                                         </label>
                                         <label class="applicant-pending-reason-option">
                                             <input type="checkbox" id="applicantIncompleteRequirements" name="incomplete_requirements" value="1">
-                                            <span>Incomplete Requirements</span>
+                                            <span>Request Document Resubmission</span>
                                         </label>
                                         <label class="applicant-pending-reason-option">
                                             <input type="checkbox" id="applicantNeedsPhysicianEvaluation" name="needs_physician_evaluation" value="1">
@@ -4876,6 +4970,27 @@
                                     <label for="applicantOtherPendingReasonText">Other Pending Reason <span style="color: #dc2626;">*</span></label>
                                     <input type="text" id="applicantOtherPendingReasonText" name="other_pending_reason" placeholder="Enter other pending reason..." class="applicant-condition-input">
                                 </div>
+                                <div id="applicantResubmissionDocsField" class="applicant-condition-field" style="display: none;">
+                                    <label>Documents to Resubmit <span style="color: #dc2626;">*</span></label>
+                                    <div class="applicant-pending-reasons">
+                                        <label class="applicant-pending-reason-option">
+                                            <input type="checkbox" name="resubmission_required_documents[]" value="student_photo">
+                                            <span>2x2 Photo</span>
+                                        </label>
+                                        <label class="applicant-pending-reason-option">
+                                            <input type="checkbox" name="resubmission_required_documents[]" value="medical_certificate">
+                                            <span>Medical Certificate</span>
+                                        </label>
+                                        <label class="applicant-pending-reason-option">
+                                            <input type="checkbox" name="resubmission_required_documents[]" value="chest_xray_result">
+                                            <span>Chest X-ray Result</span>
+                                        </label>
+                                        <label class="applicant-pending-reason-option">
+                                            <input type="checkbox" name="resubmission_required_documents[]" value="pwd_id_proof">
+                                            <span>PWD ID Proof</span>
+                                        </label>
+                                    </div>
+                                </div>
                                 <div class="applicant-condition-field">
                                     <label for="applicantConditionRemarks">Remarks <span style="color: #94a3b8;">(Optional)</span></label>
                                     <textarea id="applicantConditionRemarks" name="condition_remarks" placeholder="Additional notes about the findings..." class="applicant-condition-textarea" rows="3"></textarea>
@@ -4888,14 +5003,14 @@
                             <p class="applicant-screening-panel-copy">Record the applicant's current vital signs during the nurse review.</p>
                             <div class="applicant-vitals-grid">
                                 <div class="applicant-condition-field">
-                                    <label for="applicantHeight">Height (cm) <span style="color:#dc2626;">*</span></label>
-                                    <input type="number" id="applicantHeight" name="height" class="applicant-condition-input vital-input" placeholder="e.g., 170" step="0.01" min="1" max="300" required>
-                                    <small style="color:#dc2626; display:none;" id="heightError">Height is required. Valid range: 1-300 cm.</small>
+                                    <label for="applicantHeight">Height (ft) <span style="color:#dc2626;">*</span></label>
+                                    <input type="number" id="applicantHeight" name="height" class="applicant-condition-input vital-input" placeholder="e.g., 5.6" step="0.01" min="1" max="10" required>
+                                    <small style="color:#dc2626; display:none;" id="heightError">Height is required. Valid range: 1-10 ft.</small>
                                 </div>
                                 <div class="applicant-condition-field">
-                                    <label for="applicantWeight">Weight (kg) <span style="color:#dc2626;">*</span></label>
-                                    <input type="number" id="applicantWeight" name="weight" class="applicant-condition-input vital-input" placeholder="e.g., 65" step="0.01" min="1" max="500" required>
-                                    <small style="color:#dc2626; display:none;" id="weightError">Weight is required. Valid range: 1-500 kg.</small>
+                                    <label for="applicantWeight">Weight (lbs) <span style="color:#dc2626;">*</span></label>
+                                    <input type="number" id="applicantWeight" name="weight" class="applicant-condition-input vital-input" placeholder="e.g., 143" step="0.01" min="1" max="1100" required>
+                                    <small style="color:#dc2626; display:none;" id="weightError">Weight is required. Valid range: 1-1100 lbs.</small>
                                 </div>
                                 <div class="applicant-condition-field">
                                     <label for="applicantBloodPressure">Blood Pressure <span style="color:#dc2626;">*</span></label>
@@ -6554,11 +6669,18 @@
         const lookupAge       = document.getElementById('applicantLookupAge');
         const lookupGender    = document.getElementById('applicantLookupGender');
         const lookupContact   = document.getElementById('applicantLookupContact');
+        const conditionBadge  = document.getElementById('applicantConditionBadge');
         const lookupMedCertResult = document.getElementById('applicantLookupMedCertResult');
         const lookupMedCertDetails = document.getElementById('applicantLookupMedCertDetails');
         const lookupXrayResult = document.getElementById('applicantLookupXrayResult');
         const lookupXrayDetails = document.getElementById('applicantLookupXrayDetails');
         const informationButton = document.getElementById('btnViewApplicantInformation');
+        const medicalConditionButton = document.getElementById('btnViewMedicalCondition');
+        const medicalConditionDetails = document.getElementById('applicantMedicalConditionDetails');
+        const viewConditionStatus = document.getElementById('applicantViewConditionStatus');
+        const viewMedicalCondition = document.getElementById('applicantViewMedicalCondition');
+        const viewConditionReasons = document.getElementById('applicantViewConditionReasons');
+        const viewConditionRemarks = document.getElementById('applicantViewConditionRemarks');
         const documentsButton = document.getElementById('btnViewApplicantDocuments');
         const savedAssessmentButton = document.getElementById('btnViewSavedAssessment');
         const copyReferenceButton = document.getElementById('copyApplicantReference');
@@ -6751,11 +6873,25 @@
                 informationDetails.classList.remove('is-visible');
                 informationDetails.setAttribute('aria-hidden', 'true');
             }
+            if (medicalConditionDetails) {
+                medicalConditionDetails.classList.remove('is-visible');
+                medicalConditionDetails.setAttribute('aria-hidden', 'true');
+            }
             if (informationButton) {
                 informationButton.classList.remove('is-visible');
                 const label = informationButton.querySelector('[data-information-button-label]');
                 if (label) label.textContent = 'View Information';
                 informationButton.setAttribute('aria-expanded', 'false');
+            }
+            if (medicalConditionButton) {
+                medicalConditionButton.classList.remove('is-visible');
+                const label = medicalConditionButton.querySelector('[data-condition-button-label]');
+                if (label) label.textContent = 'View Medical Condition';
+                medicalConditionButton.setAttribute('aria-expanded', 'false');
+            }
+            if (conditionBadge) {
+                conditionBadge.classList.remove('has-condition');
+                conditionBadge.textContent = 'Condition: No Medical Condition';
             }
             if (documentsButton) documentsButton.classList.remove('is-visible');
             if (savedAssessmentButton) savedAssessmentButton.classList.remove('is-visible');
@@ -6785,6 +6921,9 @@
                 if (field) field.value = '';
             });
             document.querySelectorAll('input[name="applicant_covid_positive"]').forEach(function (input) {
+                input.checked = false;
+            });
+            document.querySelectorAll('input[name="resubmission_required_documents[]"]').forEach(function (input) {
                 input.checked = false;
             });
             ['applicantHasMedicalCondition', 'applicantIncompleteRequirements', 'applicantNeedsPhysicianEvaluation', 'applicantOtherPendingReason'].forEach(function (id) {
@@ -6890,6 +7029,12 @@
                 const field = document.getElementById(id);
                 if (field) field.checked = isChecked(value) || value === true;
             });
+            const savedResubmissionDocuments = Array.isArray(savedReview.resubmission_required_documents)
+                ? savedReview.resubmission_required_documents
+                : [];
+            document.querySelectorAll('input[name="resubmission_required_documents[]"]').forEach(function (input) {
+                input.checked = savedResubmissionDocuments.includes(input.value);
+            });
 
             document.querySelectorAll('input[name="applicant_covid_positive"]').forEach(function (input) {
                 input.checked = input.value === (savedReview.covid_positive || '');
@@ -6907,11 +7052,81 @@
             return Boolean(review && typeof review === 'object' && review.findings_status);
         }
 
+        function numericValue(value) {
+            const parsed = parseFloat(String(value ?? '').replace(/[^0-9.]/g, ''));
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function formatHeightFeet(value) {
+            const rawValue = String(value ?? '').trim();
+            if (!rawValue) return 'N/A';
+            if (/ft|in/i.test(rawValue)) return rawValue;
+            const feet = numericValue(rawValue);
+            return feet ? feet + ' ft' : 'N/A';
+        }
+
+        function formatWeightPounds(value) {
+            const rawValue = String(value ?? '').trim();
+            if (!rawValue) return 'N/A';
+            if (/lbs?|pounds?/i.test(rawValue)) return rawValue;
+            const pounds = numericValue(rawValue);
+            return pounds ? pounds + ' lbs' : 'N/A';
+        }
+
+        function getConditionSummary(review, lookupData) {
+            const savedReview = review && typeof review === 'object' ? review : {};
+            const conditionItems = Array.isArray(lookupData?.medical_condition_summary)
+                ? lookupData.medical_condition_summary.filter(function (item) {
+                    return item && String(item.value || '').trim() !== '';
+                })
+                : [];
+            const hasProfileCondition = lookupData?.has_medical_condition === true
+                || lookupData?.has_medical_condition === 1
+                || lookupData?.has_medical_condition === '1'
+                || conditionItems.length > 0;
+            const hasReviewCondition = savedReview.has_medical_condition === true
+                || savedReview.has_medical_condition === 1
+                || savedReview.has_medical_condition === '1'
+                || String(savedReview.medical_condition || '').trim() !== '';
+            const hasCondition = hasProfileCondition || hasReviewCondition;
+            const pendingReasons = [];
+            if (hasCondition) pendingReasons.push('With Medical Condition');
+            if (savedReview.incomplete_requirements) pendingReasons.push('Document Resubmission');
+            if (savedReview.needs_physician_evaluation) pendingReasons.push('For Physician Evaluation');
+            if (savedReview.other_pending_reason) pendingReasons.push('Others: ' + savedReview.other_pending_reason);
+            const profileConditionText = conditionItems.map(function (item) {
+                return (item.label ? item.label + ': ' : '') + item.value;
+            }).join('; ');
+
+            return {
+                hasCondition,
+                status: hasCondition ? 'With Medical Condition' : 'No Medical Condition',
+                condition: savedReview.medical_condition || profileConditionText || 'N/A',
+                reasons: pendingReasons.join(', ') || 'N/A',
+                remarks: savedReview.condition_remarks || savedReview.normal_remarks || 'N/A'
+            };
+        }
+
+        function renderMedicalConditionView(review, lookupData) {
+            const summary = getConditionSummary(review, lookupData || {});
+
+            if (conditionBadge) {
+                conditionBadge.classList.toggle('has-condition', summary.hasCondition);
+                conditionBadge.textContent = 'Condition: ' + summary.status;
+            }
+            if (viewConditionStatus) viewConditionStatus.textContent = summary.status;
+            if (viewMedicalCondition) viewMedicalCondition.textContent = summary.condition;
+            if (viewConditionReasons) viewConditionReasons.textContent = summary.reasons;
+            if (viewConditionRemarks) viewConditionRemarks.textContent = summary.remarks;
+
+            return summary;
+        }
+
         function renderSavedAssessmentReview(review, referenceNumber) {
             const savedReview = review && typeof review === 'object' ? review : {};
             const pendingReasons = [];
             if (savedReview.has_medical_condition) pendingReasons.push('With Medical Condition');
-            if (savedReview.incomplete_requirements) pendingReasons.push('Incomplete Requirements');
+            if (savedReview.incomplete_requirements) pendingReasons.push('Document Resubmission');
             if (savedReview.needs_physician_evaluation) pendingReasons.push('For Physician Evaluation');
             if (savedReview.other_pending_reason) pendingReasons.push('Others: ' + savedReview.other_pending_reason);
 
@@ -6920,8 +7135,8 @@
                 savedReviewReasons: pendingReasons.join(', ') || '-',
                 savedReviewCondition: savedReview.medical_condition || '-',
                 savedReviewRemarks: savedReview.condition_remarks || savedReview.normal_remarks || '-',
-                savedReviewHeight: savedReview.height !== null && savedReview.height !== undefined && savedReview.height !== '' ? savedReview.height + ' cm' : '-',
-                savedReviewWeight: savedReview.weight !== null && savedReview.weight !== undefined && savedReview.weight !== '' ? savedReview.weight + ' kg' : '-',
+                savedReviewHeight: savedReview.height !== null && savedReview.height !== undefined && savedReview.height !== '' ? formatHeightFeet(savedReview.height) : '-',
+                savedReviewWeight: savedReview.weight !== null && savedReview.weight !== undefined && savedReview.weight !== '' ? formatWeightPounds(savedReview.weight) : '-',
                 savedReviewBloodPressure: savedReview.blood_pressure || '-',
                 savedReviewPulseRate: savedReview.pulse_rate !== null && savedReview.pulse_rate !== undefined && savedReview.pulse_rate !== '' ? savedReview.pulse_rate + ' bpm' : '-',
                 savedReviewRespiratoryRate: savedReview.respiratory_rate !== null && savedReview.respiratory_rate !== undefined && savedReview.respiratory_rate !== '' ? savedReview.respiratory_rate + ' cpm' : '-',
@@ -6978,8 +7193,6 @@
             if (lookupYearSec) lookupYearSec.textContent = yearSection;
             if (lookupDob) lookupDob.textContent = data.dob || 'N/A';
             if (lookupEmail) lookupEmail.textContent = data.email || 'N/A';
-            if (lookupHeight) lookupHeight.textContent = data.height ? data.height + ' cm' : 'N/A';
-            if (lookupWeight) lookupWeight.textContent = data.weight ? data.weight + ' kg' : 'N/A';
             if (lookupCivilStatus) lookupCivilStatus.textContent = data.civil_status || 'N/A';
             if (lookupAge) lookupAge.textContent = data.age !== null && data.age !== undefined && data.age !== '' ? String(data.age) : 'N/A';
             if (lookupGender) lookupGender.textContent = data.sex || 'N/A';
@@ -7001,9 +7214,17 @@
             if (informationButton) {
                 informationButton.classList.add('is-visible');
                 informationButton.setAttribute('aria-expanded', 'false');
+                const label = informationButton.querySelector('[data-information-button-label]');
+                if (label) label.textContent = 'View Information';
+            }
+            if (medicalConditionButton) {
+                medicalConditionButton.classList.remove('is-visible');
+                medicalConditionButton.setAttribute('aria-expanded', 'false');
+                const label = medicalConditionButton.querySelector('[data-condition-button-label]');
+                if (label) label.textContent = 'View Medical Condition';
             }
             if (documentsButton) documentsButton.classList.add('is-visible');
-            if (foundCard) foundCard.style.display = 'block';
+            if (foundCard) foundCard.style.display = 'flex';
 
             const modalBody = document.querySelector('.applicant-modal-body');
             if (modalBody) {
@@ -7017,8 +7238,16 @@
             currentAssessmentReview = data.assessment_review && typeof data.assessment_review === 'object'
                 ? data.assessment_review
                 : {};
+            const preferredHeight = currentAssessmentReview.height || data.height || '';
+            const preferredWeight = currentAssessmentReview.weight || data.weight || '';
+            if (lookupHeight) lookupHeight.textContent = formatHeightFeet(preferredHeight);
+            if (lookupWeight) lookupWeight.textContent = formatWeightPounds(preferredWeight);
             const hasSavedReview = hasSavedAssessmentReview(currentAssessmentReview);
             renderSavedAssessmentReview(currentAssessmentReview, referenceNumber);
+            const conditionSummary = renderMedicalConditionView(currentAssessmentReview, data);
+            if (medicalConditionButton) {
+                medicalConditionButton.classList.toggle('is-visible', Boolean(conditionSummary?.hasCondition));
+            }
             if (savedAssessmentButton) {
                 savedAssessmentButton.classList.toggle('is-visible', hasSavedReview);
             }
@@ -7127,7 +7356,7 @@
                         setStatus('approved', 'Applicant Already Approved. This health profile has already been cleared by the clinic.');
                         if (foundCard && foundName) {
                             foundName.textContent = (applicantName || ref) + ' ✓';
-                            foundCard.style.display = 'block';
+                            foundCard.style.display = 'flex';
                         }
                         showLookupDetails(data, ref);
                         if (foundCard) foundCard.style.display = 'none';
@@ -7180,7 +7409,7 @@
                         setStatus(isLocalOnlyLookup ? 'info' : 'success', lookupFoundMessage);
                         if (foundCard && foundName) {
                             foundName.textContent = applicantName || ref;
-                            foundCard.style.display = 'block';
+                            foundCard.style.display = 'flex';
                         }
                         const hasSavedReview = showLookupDetails(data, ref);
                         // Hide input sections and show only results
@@ -7237,6 +7466,8 @@
             const physicianEvaluationCheckbox = document.getElementById('applicantNeedsPhysicianEvaluation');
             const otherPendingReasonCheckbox = document.getElementById('applicantOtherPendingReason');
             const otherPendingReasonInput = document.getElementById('applicantOtherPendingReasonText');
+            const heightInput = document.getElementById('applicantHeight');
+            const weightInput = document.getElementById('applicantWeight');
             const bloodPressureInput = document.getElementById('applicantBloodPressure');
             const pulseRateInput = document.getElementById('applicantPulseRate');
             const respiratoryRateInput = document.getElementById('applicantRespiratoryRate');
@@ -7254,6 +7485,8 @@
             const hasIncompleteRequirements = Boolean(incompleteRequirementsCheckbox?.checked);
             const needsPhysicianEvaluation = Boolean(physicianEvaluationCheckbox?.checked);
             const hasOtherPendingReason = Boolean(otherPendingReasonCheckbox?.checked);
+            const selectedResubmissionDocs = Array.from(document.querySelectorAll('input[name="resubmission_required_documents[]"]:checked'))
+                .map(function (input) { return input.value; });
 
             if (hasFindings && !hasMedicalCondition && !hasIncompleteRequirements && !needsPhysicianEvaluation && !hasOtherPendingReason) {
                 setStatus('error', 'Please select at least one pending reason.');
@@ -7265,13 +7498,18 @@
                 return;
             }
 
+            if (hasFindings && hasIncompleteRequirements && selectedResubmissionDocs.length === 0) {
+                setStatus('error', 'Please select at least one document for resubmission.');
+                return;
+            }
+
             if (hasFindings && hasOtherPendingReason && (!otherPendingReasonInput?.value.trim())) {
                 setStatus('error', 'Please enter the other pending reason.');
                 return;
             }
 
-            if (!bloodPressureInput?.value.trim() || !pulseRateInput?.value || !respiratoryRateInput?.value || !temperatureInput?.value) {
-                setStatus('error', 'Please complete the blood pressure, pulse rate, respiratory rate, and temperature fields.');
+            if (!heightInput?.value || !weightInput?.value || !bloodPressureInput?.value.trim() || !pulseRateInput?.value || !respiratoryRateInput?.value || !temperatureInput?.value) {
+                setStatus('error', 'Please complete the height, weight, blood pressure, pulse rate, respiratory rate, and temperature fields.');
                 return;
             }
 
@@ -7291,6 +7529,8 @@
                 reference_number: currentLookupRef,
                 lookup_scope: isClinicLookupMode() ? 'clinic_local' : 'default',
                 findings_status: findingsStatusInput.value,
+                height: heightInput.value,
+                weight: weightInput.value,
                 blood_pressure: bloodPressureInput.value.trim(),
                 pulse_rate: pulseRateInput.value,
                 respiratory_rate: respiratoryRateInput.value,
@@ -7302,6 +7542,7 @@
             if (hasFindings) {
                 approvalData.has_medical_condition = hasMedicalCondition;
                 approvalData.incomplete_requirements = hasIncompleteRequirements;
+                approvalData.resubmission_required_documents = hasIncompleteRequirements ? selectedResubmissionDocs : [];
                 approvalData.needs_physician_evaluation = needsPhysicianEvaluation;
                 approvalData.other_pending_reason = hasOtherPendingReason ? otherPendingReasonInput.value.trim() : '';
                 approvalData.medical_condition = hasMedicalCondition ? medicalConditionInput.value.trim() : '';
@@ -7353,10 +7594,11 @@
         const findingsInputs = document.querySelectorAll('input[name="applicant_findings_status"]');
         const pendingReasonInputs = document.querySelectorAll('#applicantHasMedicalCondition, #applicantIncompleteRequirements, #applicantNeedsPhysicianEvaluation, #applicantOtherPendingReason');
         const medicalConditionFields = document.getElementById('applicantConditionFields');
-        const normalRemarksFields = document.getElementById('applicantNormalRemarksFields');
-        const medicalConditionField = document.getElementById('applicantMedicalConditionField');
-        const otherPendingReasonField = document.getElementById('applicantOtherPendingReasonField');
-        const covidPositiveInputs = document.querySelectorAll('input[name="applicant_covid_positive"]');
+            const normalRemarksFields = document.getElementById('applicantNormalRemarksFields');
+            const medicalConditionField = document.getElementById('applicantMedicalConditionField');
+            const otherPendingReasonField = document.getElementById('applicantOtherPendingReasonField');
+            const resubmissionDocsField = document.getElementById('applicantResubmissionDocsField');
+            const covidPositiveInputs = document.querySelectorAll('input[name="applicant_covid_positive"]');
         const covidPositiveDateField = document.getElementById('applicantCovidDateField');
         const covidPositiveDateInput = document.getElementById('applicantCovidPositiveDate');
 
@@ -7403,8 +7645,8 @@
 
             // Validate Height
             if (heightInput) {
-                const heightValue = heightInput.value;
-                if (heightValue && (heightValue < 1 || heightValue > 300)) {
+                const heightValue = parseFloat(heightInput.value);
+                if (heightInput.value && (heightValue < 1 || heightValue > 10)) {
                     if (heightError) heightError.style.display = 'block';
                 } else {
                     if (heightError) heightError.style.display = 'none';
@@ -7413,8 +7655,8 @@
 
             // Validate Weight
             if (weightInput) {
-                const weightValue = weightInput.value;
-                if (weightValue && (weightValue < 1 || weightValue > 500)) {
+                const weightValue = parseFloat(weightInput.value);
+                if (weightInput.value && (weightValue < 1 || weightValue > 1100)) {
                     if (weightError) weightError.style.display = 'block';
                 } else {
                     if (weightError) weightError.style.display = 'none';
@@ -7494,6 +7736,7 @@
             const hasFindings = selectedFinding === 'With Findings';
             const hasNormalResult = selectedFinding === 'No Findings / Normal';
             const hasMedicalCondition = Boolean(document.getElementById('applicantHasMedicalCondition')?.checked);
+            const hasIncompleteRequirements = Boolean(document.getElementById('applicantIncompleteRequirements')?.checked);
             const hasOtherPendingReason = Boolean(document.getElementById('applicantOtherPendingReason')?.checked);
 
             if (medicalConditionFields) {
@@ -7508,6 +7751,9 @@
             if (otherPendingReasonField) {
                 otherPendingReasonField.style.display = hasFindings && hasOtherPendingReason ? 'flex' : 'none';
             }
+            if (resubmissionDocsField) {
+                resubmissionDocsField.style.display = hasFindings && hasIncompleteRequirements ? 'flex' : 'none';
+            }
 
             if (!hasFindings) {
                 const conditionInput = document.getElementById('applicantMedicalCondition');
@@ -7516,6 +7762,9 @@
                 if (conditionInput) conditionInput.value = '';
                 if (conditionRemarks) conditionRemarks.value = '';
                 if (otherPendingReason) otherPendingReason.value = '';
+                document.querySelectorAll('input[name="resubmission_required_documents[]"]').forEach(function (input) {
+                    input.checked = false;
+                });
                 pendingReasonInputs.forEach(function (input) {
                     input.checked = false;
                 });
@@ -7527,6 +7776,11 @@
                 if (!hasOtherPendingReason) {
                     const otherPendingReason = document.getElementById('applicantOtherPendingReasonText');
                     if (otherPendingReason) otherPendingReason.value = '';
+                }
+                if (!hasIncompleteRequirements) {
+                    document.querySelectorAll('input[name="resubmission_required_documents[]"]').forEach(function (input) {
+                        input.checked = false;
+                    });
                 }
             }
             if (!hasNormalResult) {
@@ -7583,6 +7837,21 @@
 
             if (willShow) {
                 informationDetails.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+        if (medicalConditionButton) medicalConditionButton.addEventListener('click', function () {
+            if (!medicalConditionDetails) return;
+
+            const willShow = !medicalConditionDetails.classList.contains('is-visible');
+            medicalConditionDetails.classList.toggle('is-visible', willShow);
+            medicalConditionDetails.setAttribute('aria-hidden', willShow ? 'false' : 'true');
+            medicalConditionButton.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+
+            const label = medicalConditionButton.querySelector('[data-condition-button-label]');
+            if (label) label.textContent = willShow ? 'Hide Medical Condition' : 'View Medical Condition';
+
+            if (willShow) {
+                medicalConditionDetails.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         });
         if (documentsButton) documentsButton.addEventListener('click', function () {

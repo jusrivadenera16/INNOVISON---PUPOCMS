@@ -309,6 +309,11 @@
         background: rgba(255, 255, 255, 0.96);
         box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
     }
+
+    .readonly-modal-search:focus-within {
+        border-color: rgba(112, 19, 27, 0.12);
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+    }
     .readonly-modal-search svg {
         width: 18px;
         height: 18px;
@@ -318,11 +323,20 @@
     .readonly-modal-search input {
         width: 100%;
         border: 0;
-        outline: 0;
+        outline: none !important;
         background: transparent;
         color: #111827;
         font-size: 14px;
         font-weight: 800;
+        box-shadow: none !important;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+    .readonly-modal-search input:focus {
+        outline: none !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+        background: transparent;
     }
     .readonly-modal-search input::placeholder {
         color: #94a3b8;
@@ -396,7 +410,7 @@
     }
     .readonly-record-head {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         gap: 14px;
         padding-bottom: 12px;
@@ -404,31 +418,43 @@
     }
     .readonly-record-meta {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: flex-end;
         gap: 10px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         text-align: right;
         flex: 0 0 auto;
-        max-width: 620px;
+        max-width: none;
     }
     .readonly-record-actions {
-        display: grid;
-        gap: 8px;
+        display: flex;
+        align-items: stretch;
         width: 126px;
         flex: 0 0 126px;
     }
     .readonly-record-pill {
-        display: grid;
-        gap: 3px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
         min-width: 142px;
-        padding: 7px 10px;
+        height: 52px;
+        padding: 6px 12px;
         border-radius: 12px;
         background: #ffffff;
         border: 1px solid rgba(112, 19, 27, 0.1);
     }
     .readonly-record-pill.reference-pill {
-        min-width: 168px;
+        min-width: 258px;
+        height: 52px;
+        align-items: center;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+    }
+    .readonly-record-pill.reference-pill > span {
+        white-space: nowrap;
     }
     .readonly-record-pill span {
         color: #64748b;
@@ -442,14 +468,19 @@
         font-size: 11px;
         font-weight: 900;
         word-break: break-word;
+        line-height: 1.15;
     }
     .readonly-reference-value {
         display: inline-flex;
         align-items: center;
-        justify-content: flex-end;
+        justify-content: center;
         gap: 6px;
-        color: #000000;
-        font-weight: 600;
+        color: #000000 !important;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+    .readonly-reference-value span {
+        color: #000000 !important;
     }
     .readonly-copy-btn {
         display: inline-flex;
@@ -487,17 +518,6 @@
         background: #dcfce7;
         box-shadow: 0 4px 12px rgba(22, 101, 52, 0.2);
     }
-    .readonly-record-pill.status-flag-pill {
-        background: #fef3c7;
-        border-color: #facc15;
-        box-shadow: 0 8px 18px rgba(250, 204, 21, 0.18);
-    }
-    .readonly-record-pill.status-flag-pill span {
-        color: #70131B;
-    }
-    .readonly-record-pill.status-flag-pill strong {
-        color: #70131B;
-    }
     .readonly-record-pill.condition-pill {
         background: #eff6ff;
         border-color: #bfdbfe;
@@ -524,7 +544,7 @@
         justify-content: center;
         width: 100%;
         min-width: 0;
-        min-height: 34px;
+        min-height: 46px;
         border: 1px solid #70131B;
         border-radius: 12px;
         background: #70131B;
@@ -685,15 +705,19 @@
         }
         .readonly-record-meta {
             justify-content: stretch;
+            flex-wrap: wrap;
             max-width: none;
         }
         .readonly-record-pill {
             flex: 1 1 180px;
         }
+        .readonly-record-pill.reference-pill {
+            min-width: 0;
+            flex: 1 1 100%;
+        }
         .readonly-record-actions {
             width: 100%;
             flex: 1 1 100%;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
     html[data-theme="dark"] .awaiting-info-row {
@@ -1988,11 +2012,51 @@
         background: #ffffff;
     }
 
-    .verify-approval-doc-title {
+    .verify-approval-doc-title,
+    .verify-condition-title {
         margin: 0 0 8px;
         font-size: 13px;
         font-weight: 800;
         color: #1e293b;
+    }
+
+    .verify-condition-wrap {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px;
+        background: #ffffff;
+    }
+
+    .verify-condition-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .verify-condition-item {
+        min-height: 58px;
+        border: 1px solid rgba(112, 19, 27, 0.10);
+        border-radius: 12px;
+        background: #fffaf7;
+        padding: 10px 12px;
+    }
+
+    .verify-condition-item span {
+        display: block;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+
+    .verify-condition-item strong {
+        display: block;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 900;
+        word-break: break-word;
     }
 
     .verify-approval-doc-frame {
@@ -2190,6 +2254,24 @@
     html[data-theme="dark"] .verify-approval-doc-wrap {
         background: #0f172a;
         border-color: #334155;
+    }
+
+    html[data-theme="dark"] .verify-condition-wrap {
+        background: #0f172a;
+        border-color: #334155;
+    }
+
+    html[data-theme="dark"] .verify-condition-item {
+        background: #111827;
+        border-color: rgba(250, 204, 21, 0.18);
+    }
+
+    html[data-theme="dark"] .verify-condition-item span {
+        color: #cbd5e1 !important;
+    }
+
+    html[data-theme="dark"] .verify-condition-item strong {
+        color: #ffffff !important;
     }
 
     html[data-theme="dark"] .verification-doc-card {
@@ -2809,13 +2891,61 @@
                                 'key' => 'chest_xray_result',
                                 'path' => $readonlyRecord->chest_xray_result,
                             ],
-                            'PWD ID Proof' => [
-                                'key' => 'pwd_id_proof',
-                                'path' => $readonlyRecord->pwd_id_proof,
+                            'Health Information Form' => [
+                                'key' => 'health_form',
+                                'path' => true,
+                                'url' => route('walkin.healthForm', [
+                                    'healthProfile' => $readonlyRecord->id,
+                                ]),
                             ],
                         ];
 
+                        if ($readonlyRecord->pwd_id_proof) {
+                            $readonlyUploadDocs['PWD ID Proof'] = [
+                                'key' => 'pwd_id_proof',
+                                'path' => $readonlyRecord->pwd_id_proof,
+                            ];
+                        }
+
                         $readonlyHasCondition = $readonlyRecord->hasMedicalCondition();
+                        $readonlyMedicalHistory = is_array($readonlyRecord->medical_history)
+                            ? implode(', ', array_filter($readonlyRecord->medical_history))
+                            : trim((string) $readonlyRecord->medical_history);
+                        $readonlyMedicineAllergies = is_array($readonlyRecord->medicine_allergies)
+                            ? implode(', ', array_filter($readonlyRecord->medicine_allergies))
+                            : trim((string) $readonlyRecord->medicine_allergies);
+                        $readonlyConditionItems = [];
+                        if ($readonlyHasCondition) {
+                            if (trim((string) $readonlyRecord->medical_condition_remarks) !== '') {
+                                $readonlyConditionItems['Remarks'] = $readonlyRecord->medical_condition_remarks;
+                            }
+                            if (trim((string) $readonlyRecord->has_illness) !== '' && strcasecmp((string) $readonlyRecord->has_illness, 'No') !== 0) {
+                                $readonlyConditionItems['Known Medical Illness'] = $readonlyRecord->has_illness;
+                            }
+                            if ($readonlyMedicalHistory !== '') {
+                                $readonlyConditionItems['Medical History'] = $readonlyMedicalHistory;
+                            }
+                            if (trim((string) $readonlyRecord->other_illness) !== '') {
+                                $readonlyConditionItems['Other Illness'] = $readonlyRecord->other_illness;
+                            }
+                            if (trim((string) $readonlyRecord->has_disability) !== '' && strcasecmp((string) $readonlyRecord->has_disability, 'No') !== 0) {
+                                $readonlyConditionItems['Disability'] = $readonlyRecord->disability_type ?: $readonlyRecord->has_disability;
+                            }
+                            if (trim((string) $readonlyRecord->food_allergies) !== '') {
+                                $readonlyConditionItems['Food Allergies'] = $readonlyRecord->food_allergies;
+                            }
+                            if ($readonlyMedicineAllergies !== '') {
+                                $readonlyConditionItems['Medicine Allergies'] = $readonlyMedicineAllergies;
+                            }
+                            if (trim((string) $readonlyRecord->other_med_allergies) !== '') {
+                                $readonlyConditionItems['Other Medicine Allergies'] = $readonlyRecord->other_med_allergies;
+                            }
+                            if (empty($readonlyConditionItems)) {
+                                $readonlyConditionItems['Condition'] = 'With Medical Condition';
+                            }
+                        } else {
+                            $readonlyConditionItems['Condition'] = 'No Medical Condition';
+                        }
                         $readonlyReference = $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-';
                         $readonlyRecordPayload = [
                             'id' => $readonlyRecord->id,
@@ -2892,10 +3022,6 @@
                                         @endif
                                     </strong>
                                 </div>
-                                <div class="readonly-record-pill status-flag-pill">
-                                    <span>Status Flag</span>
-                                    <strong>Pending Verification</strong>
-                                </div>
                                 <div class="readonly-record-pill condition-pill {{ $readonlyHasCondition ? 'has-condition' : '' }}">
                                     <span>Condition</span>
                                     <strong>{{ $readonlyHasCondition ? 'With Condition' : 'No Condition' }}</strong>
@@ -2910,15 +3036,7 @@
                                         data-review-student-id="{{ $readonlyRecord->student_id ?: optional($readonlyRecord->user)->student_id ?: optional($readonlyRecord->user)->student_number ?: '-' }}"
                                         data-review-approve-url="{{ route('admin.update_clearance', $readonlyRecord->id) }}"
                                     >
-                                        <span>Review</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="readonly-expand-btn"
-                                        aria-expanded="false"
-                                        onclick="event.stopPropagation(); const card = this.closest('.readonly-record-card'); if (card) { const expanded = !card.classList.contains('is-expanded'); card.classList.toggle('is-expanded', expanded); this.setAttribute('aria-expanded', expanded ? 'true' : 'false'); const label = this.querySelector('span'); if (label) label.textContent = expanded ? 'Hide' : 'View'; }"
-                                    >
-                                        <span>View</span>
+                                        <span>View Info</span>
                                     </button>
                                 </div>
                             </div>
@@ -2955,7 +3073,7 @@
                             @foreach($readonlyUploadDocs as $docLabel => $document)
                                 @if($document['path'])
                                     @php
-                                        $documentUrl = route('walkin.document', [
+                                        $documentUrl = $document['url'] ?? route('walkin.document', [
                                             'healthProfile' => $readonlyRecord->id,
                                             'document' => $document['key'],
                                         ]);
@@ -2968,13 +3086,15 @@
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >
-                                        <span class="verification-doc-preview">
-                                            @if($isPreviewImage)
+                                        @if(($document['key'] ?? '') !== 'health_form')
+                                            <span class="verification-doc-preview">
+                                                @if($isPreviewImage)
                                                 <img src="{{ $documentUrl }}" alt="{{ $docLabel }} preview" loading="lazy">
-                                            @else
+                                                @else
                                                 <iframe src="{{ $documentUrl }}" title="{{ $docLabel }} preview" loading="lazy"></iframe>
-                                            @endif
-                                        </span>
+                                                @endif
+                                            </span>
+                                        @endif
                                         <strong>{{ $docLabel }}</strong>
                                         <span>Open in new tab</span>
                                     </a>
@@ -2985,6 +3105,14 @@
                                         <span>Missing upload</span>
                                     </div>
                                 @endif
+                            @endforeach
+                        </template>
+                        <template data-review-condition-template>
+                            @foreach($readonlyConditionItems as $conditionLabel => $conditionValue)
+                                <div class="verify-condition-item">
+                                    <span>{{ $conditionLabel }}</span>
+                                    <strong>{{ $conditionValue }}</strong>
+                                </div>
                             @endforeach
                         </template>
                     </article>
@@ -3040,10 +3168,6 @@
                                         @endif
                                     </strong>
                                 </div>
-                                <div class="readonly-record-pill status-flag-pill">
-                                    <span>Status Flag</span>
-                                    <strong>Conditional / Flagged</strong>
-                                </div>
                                 <div class="readonly-record-pill condition-pill {{ $readonlyHasCondition ? 'has-condition' : '' }}">
                                     <span>Condition</span>
                                     <strong>{{ $readonlyHasCondition ? 'With Condition' : 'No Condition' }}</strong>
@@ -3084,10 +3208,10 @@
     <div class="verify-approval-modal-card">
         <div class="verify-approval-modal-head">
             <div class="verify-approval-modal-head-main">
-                <div class="verify-approval-modal-badge">RR</div>
+                <div class="verify-approval-modal-badge">VI</div>
                 <div>
-                    <h3 class="verify-approval-modal-title">Request Requirement Resubmission</h3>
-                    <p class="verify-approval-modal-copy">Use this only when uploaded requirements are blurred, unreadable, incorrect, or need replacement.</p>
+                    <h3 class="verify-approval-modal-title">View Submitted Requirements</h3>
+                    <p class="verify-approval-modal-copy">Review the student information and uploaded clinic requirement files.</p>
                 </div>
             </div>
             <button type="button" class="verify-approval-modal-close" id="verifyApprovalCloseBtn" aria-label="Close verification popup">
@@ -3105,8 +3229,12 @@
                     <div class="verify-approval-meta-v" id="verifyApprovalStudentNumber">-</div>
                 </div>
                 <div class="verify-approval-meta">
-                    <div class="verify-approval-meta-k">Reference / Student ID</div>
+                    <div class="verify-approval-meta-k">Course</div>
                     <div class="verify-approval-meta-v" id="verifyApprovalStudentCourse">-</div>
+                </div>
+                <div class="verify-approval-meta">
+                    <div class="verify-approval-meta-k">Reference Number</div>
+                    <div class="verify-approval-meta-v" id="verifyApprovalReferenceNumber">-</div>
                 </div>
             </div>
 
@@ -3115,68 +3243,10 @@
                 <div class="verification-doc-grid" id="verificationDocsGrid"></div>
             </div>
 
-            <form id="verifyApprovalForm" method="POST" action="">
-                @csrf
-                @method('PUT')
-                <input type="hidden" name="clearance_status" id="verifyClearanceStatus" value="Pending Resubmission">
-                <div class="verify-screening-grid">
-                    <div class="verify-screening-field">
-                        <label for="verifyPendingReasonSelect">Resubmission Reason</label>
-                        <select id="verifyPendingReasonSelect" class="verify-screening-control" required>
-                            <option value="">Select reason</option>
-                            <option value="Uploaded document is blurred and cannot be read.">Blurred document</option>
-                            <option value="Uploaded document is unreadable or incomplete.">Unreadable / incomplete document</option>
-                            <option value="Wrong document was uploaded.">Wrong document uploaded</option>
-                            <option value="Uploaded document is expired or not valid.">Expired / invalid document</option>
-                            <option value="others">Others</option>
-                        </select>
-                        <div class="verify-other-reason-field" id="verifyOtherReasonField">
-                            <textarea id="verifyPendingReasonOther" class="verify-screening-control" rows="3" placeholder="Type the resubmission reason."></textarea>
-                        </div>
-                        <input type="hidden" id="verifyPendingReason" name="pending_reason" required>
-                    </div>
-                    <div class="verify-screening-field">
-                        <label for="verifyMedicalRemarks">Remarks</label>
-                        <textarea id="verifyMedicalRemarks" name="medical_condition_remarks" class="verify-screening-control" rows="3" placeholder="Optional remarks for clinic tracking."></textarea>
-                    </div>
-                    <div class="verify-screening-field" style="display: none;">
-                        <label for="verifyAssessmentStatus">Physical Examination / Assessment Status</label>
-                        <select id="verifyAssessmentStatus" name="physical_assessment_status" class="verify-screening-control" required>
-                            <option value="Not Yet Conducted">Not Yet Conducted</option>
-                            <option value="Completed / Passed">Completed / Passed</option>
-                        </select>
-                    </div>
-                    <label class="verify-check-row" for="verifyDocumentsValid" style="display: none;">
-                        <input type="checkbox" id="verifyDocumentsValid" name="documents_valid" value="1">
-                        Documents are complete, readable, and valid for medical clearance.
-                    </label>
-                </div>
-                <div class="verify-resubmission-panel is-open" id="verifyResubmissionPanel">
-                    <p class="verify-resubmission-title">Documents requiring replacement</p>
-                    <div class="verify-resubmission-options">
-                        <label class="verify-resubmission-option">
-                            <input type="checkbox" name="resubmission_required_documents[]" value="student_photo">
-                            2x2 Student Photo
-                        </label>
-                        <label class="verify-resubmission-option">
-                            <input type="checkbox" name="resubmission_required_documents[]" value="medical_certificate">
-                            Medical Certificate
-                        </label>
-                        <label class="verify-resubmission-option">
-                            <input type="checkbox" name="resubmission_required_documents[]" value="chest_xray_result">
-                            Chest X-ray Result
-                        </label>
-                        <label class="verify-resubmission-option">
-                            <input type="checkbox" name="resubmission_required_documents[]" value="pwd_id_proof">
-                            PWD ID Proof
-                        </label>
-                    </div>
-                </div>
-                <div class="verify-approval-actions">
-                    <button type="button" class="verify-approval-btn verify-approval-btn-cancel" id="verifyApprovalCancelBtn">Cancel</button>
-                    <button type="submit" class="verify-approval-btn verify-approval-btn-resubmit" id="verifyResubmissionBtn">Request Resubmission</button>
-                </div>
-            </form>
+            <div class="verify-condition-wrap">
+                <p class="verify-condition-title">Medical Conditions</p>
+                <div class="verify-condition-grid" id="verificationConditionGrid"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -3336,6 +3406,7 @@
             var approvalModal = getNode('pendingApprovalInfoModal');
             var conditionalModal = getNode('pendingConditionalInfoModal');
             var docsGrid = getNode('verificationDocsGrid');
+            var conditionGrid = getNode('verificationConditionGrid');
             var docsValid = getNode('verifyDocumentsValid');
             var approveBtn = getNode('verifyApprovalApproveBtn');
             var assessmentStatus = getNode('verifyAssessmentStatus');
@@ -3360,16 +3431,10 @@
             payload.student_id = filledValue(payload.student_id, button.getAttribute('data-review-student-id'));
             payload.approve_url = filledValue(payload.approve_url, button.getAttribute('data-review-approve-url'));
 
-            if (approvalModal) {
-                approvalModal.style.display = 'none';
-            }
-            if (conditionalModal) {
-                conditionalModal.style.display = 'none';
-            }
-
             setText('verifyApprovalStudentName', payload.name || '-');
             setText('verifyApprovalStudentNumber', payload.email || '-');
-            setText('verifyApprovalStudentCourse', (payload.reference_number || '-') + ' / ' + (payload.student_id || '-'));
+            setText('verifyApprovalStudentCourse', payload.course || '-');
+            setText('verifyApprovalReferenceNumber', payload.reference_number || '-');
 
             if (form) {
                 form.setAttribute('action', payload.approve_url || '');
@@ -3406,6 +3471,13 @@
                         return '<div class="verification-doc-card"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" /></svg><strong>' + escapeValue(doc && doc.title ? doc.title : 'Requirement') + '</strong><span>Missing upload</span></div>';
                     }).join('');
                 }
+            }
+
+            if (conditionGrid) {
+                var conditionTemplate = row.querySelector('[data-review-condition-template]');
+                conditionGrid.innerHTML = conditionTemplate
+                    ? conditionTemplate.innerHTML.trim()
+                    : '<div class="verify-condition-item"><span>Condition</span><strong>No Medical Condition</strong></div>';
             }
 
             if (approveBtn) {
@@ -3469,6 +3541,8 @@
     const verifyApprovalStudentName = document.getElementById('verifyApprovalStudentName');
     const verifyApprovalStudentNumber = document.getElementById('verifyApprovalStudentNumber');
     const verifyApprovalStudentCourse = document.getElementById('verifyApprovalStudentCourse');
+    const verifyApprovalReferenceNumber = document.getElementById('verifyApprovalReferenceNumber');
+    const verificationConditionGrid = document.getElementById('verificationConditionGrid');
     const verifyApprovalForm = document.getElementById('verifyApprovalForm');
     const verifyApprovalApproveBtn = document.getElementById('verifyApprovalApproveBtn');
     const verifyPendingBtn = document.getElementById('verifyPendingBtn');
@@ -3618,19 +3692,24 @@
     };
 
     if (verifyApprovalCloseBtn) {
-        verifyApprovalCloseBtn.addEventListener('click', function () {
+        verifyApprovalCloseBtn.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
             setVerifyApprovalModalOpenState(false);
         });
     }
 
     if (verifyApprovalCancelBtn) {
-        verifyApprovalCancelBtn.addEventListener('click', function () {
+        verifyApprovalCancelBtn.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
             setVerifyApprovalModalOpenState(false);
         });
     }
 
     if (verifyApprovalModal) {
         verifyApprovalModal.addEventListener('click', function (event) {
+            event.stopPropagation();
             if (event.target === verifyApprovalModal) {
                 setVerifyApprovalModalOpenState(false);
             }
@@ -3885,7 +3964,10 @@
             verifyApprovalStudentNumber.textContent = payload.email || '-';
         }
         if (verifyApprovalStudentCourse) {
-            verifyApprovalStudentCourse.textContent = `${payload.reference_number || '-'} / ${payload.student_id || '-'}`;
+            verifyApprovalStudentCourse.textContent = payload.course || '-';
+        }
+        if (verifyApprovalReferenceNumber) {
+            verifyApprovalReferenceNumber.textContent = payload.reference_number || '-';
         }
         if (verifyApprovalForm) {
             verifyApprovalForm.setAttribute('action', payload.approve_url || '');
@@ -3922,6 +4004,12 @@
                 verificationDocsGrid.innerHTML = documentsTemplate.innerHTML.trim();
             }
         }
+        if (verificationConditionGrid) {
+            const conditionTemplate = row.querySelector('[data-review-condition-template]');
+            verificationConditionGrid.innerHTML = conditionTemplate
+                ? conditionTemplate.innerHTML.trim()
+                : '<div class="verify-condition-item"><span>Condition</span><strong>No Medical Condition</strong></div>';
+        }
         if (!row.querySelector('[data-review-documents-template]')) {
             renderVerificationDocuments(payload.documents || []);
         }
@@ -3931,15 +4019,6 @@
     function openHealthReviewFromButtonEnhanced(button) {
         if (!button) return;
         const row = button.closest('[data-health-row]');
-        const pendingApprovalModal = document.getElementById('pendingApprovalInfoModal');
-        const pendingConditionalModal = document.getElementById('pendingConditionalInfoModal');
-
-        if (pendingApprovalModal) {
-            pendingApprovalModal.style.display = 'none';
-        }
-        if (pendingConditionalModal) {
-            pendingConditionalModal.style.display = 'none';
-        }
 
         openVerificationModalFromRow(row, button);
     }

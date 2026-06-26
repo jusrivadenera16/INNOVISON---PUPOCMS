@@ -544,6 +544,55 @@ class WalkInController extends Controller
         return $documents;
     }
 
+    private function healthProfileConditionSummary(?HealthProfile $profile): array
+    {
+        if (!$profile) {
+            return [
+                'has_condition' => false,
+                'items' => [],
+            ];
+        }
+
+        $items = [];
+        $addItem = function (string $label, $value) use (&$items): void {
+            if (is_array($value)) {
+                $value = collect($value)
+                    ->map(fn ($item) => trim((string) $item))
+                    ->filter()
+                    ->implode(', ');
+            }
+
+            $value = trim((string) $value);
+            if ($value === '' || $value === '[]') {
+                return;
+            }
+
+            $items[] = [
+                'label' => $label,
+                'value' => $value,
+            ];
+        };
+
+        if ($profile->has_disability === 'Yes') {
+            $addItem('Disability', $profile->disability_type ?: 'Yes');
+        }
+
+        if ($profile->has_illness === 'Yes' || $profile->medical_history) {
+            $addItem('Medical History', $profile->medical_history ?: 'Yes');
+        }
+
+        $addItem('Other Illness', $profile->other_illness);
+        $addItem('Food Allergies', $profile->food_allergies);
+        $addItem('Medicine Allergies', $profile->medicine_allergies);
+        $addItem('Other Medicine Allergies', $profile->other_med_allergies);
+        $addItem('Nurse Remarks', $profile->medical_condition_remarks);
+
+        return [
+            'has_condition' => $profile->hasMedicalCondition(),
+            'items' => $items,
+        ];
+    }
+
     private function healthProfileAssessmentReview(?HealthProfile $profile): array
     {
         if (!$profile) {
@@ -613,12 +662,15 @@ class WalkInController extends Controller
             'has_medical_condition' => $hasMedicalCondition,
             'medical_condition' => $medicalCondition,
             'incomplete_requirements' => $hasIncompleteRequirements,
+            'resubmission_required_documents' => $profile->resubmission_required_documents ?: [],
             'needs_physician_evaluation' => $needsPhysicianEvaluation,
             'other_pending_reason' => $otherPendingReason,
             'condition_remarks' => $findingsStatus === 'With Findings'
                 ? trim($pendingRemarks !== '' ? $pendingRemarks : $medicalConditionRemarks)
                 : '',
             'normal_remarks' => $findingsStatus === 'No Findings / Normal' ? $assessmentRemarks : '',
+            'height' => trim((string) $profile->height),
+            'weight' => trim((string) $profile->weight),
             'blood_pressure' => trim((string) $profile->blood_pressure),
             'pulse_rate' => $profile->pulse_rate,
             'respiratory_rate' => $profile->respiratory_rate,
@@ -1022,6 +1074,7 @@ class WalkInController extends Controller
             $xrayDetails = \Schema::hasColumn('health_profiles', 'xray_findings_details')
                 ? trim((string) optional($healthProfile)->xray_findings_details)
                 : '';
+            $medicalConditionSummary = $this->healthProfileConditionSummary($healthProfile);
             $resolvedClinicStatus = match (true) {
                 in_array($rawClearanceStatus, ['Issued', 'Fully Cleared'], true) => 'Fully Cleared',
                 $rawClearanceStatus === 'Pending/Conditional' => 'Pending Compliance / Conditional',
@@ -1057,6 +1110,8 @@ class WalkInController extends Controller
                     'medical_certificate_findings_details' => $medicalCertificateDetails,
                     'xray_result' => $xrayResult,
                     'xray_findings_details' => $xrayDetails,
+                    'has_medical_condition' => $medicalConditionSummary['has_condition'],
+                    'medical_condition_summary' => $medicalConditionSummary['items'],
                     'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
                     'documents' => $this->healthProfileDocuments($request, $healthProfile),
                     'name_matches' => $lookupName !== '' ? $this->namesRoughlyMatch($lookupName, $student) : null,
@@ -1109,6 +1164,8 @@ class WalkInController extends Controller
                 'medical_certificate_findings_details' => $medicalCertificateDetails,
                 'xray_result' => $xrayResult,
                 'xray_findings_details' => $xrayDetails,
+                'has_medical_condition' => $medicalConditionSummary['has_condition'],
+                'medical_condition_summary' => $medicalConditionSummary['items'],
                 'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
                 'documents' => $this->healthProfileDocuments($request, $healthProfile),
                 'lookup_status' => $lookupStatus,
@@ -1591,10 +1648,14 @@ PROMPT;
                 'findings_status' => ['required', 'string', 'in:No Findings / Normal,With Findings'],
                 'has_medical_condition' => ['nullable', 'boolean'],
                 'incomplete_requirements' => ['nullable', 'boolean'],
+                'resubmission_required_documents' => ['nullable', 'array'],
+                'resubmission_required_documents.*' => ['string', 'in:student_photo,medical_certificate,chest_xray_result,pwd_id_proof'],
                 'needs_physician_evaluation' => ['nullable', 'boolean'],
                 'other_pending_reason' => ['nullable', 'string', 'max:1000'],
                 'medical_condition' => ['required_if:has_medical_condition,true', 'nullable', 'string', 'max:1000'],
                 'condition_remarks' => ['nullable', 'string', 'max:2000'],
+                'height' => ['required', 'numeric', 'min:1', 'max:305'],
+                'weight' => ['required', 'numeric', 'min:1', 'max:500'],
                 'blood_pressure' => ['required', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
                 'pulse_rate' => ['required', 'integer', 'min:1', 'max:300'],
                 'respiratory_rate' => ['required', 'integer', 'min:1', 'max:120'],
@@ -1608,10 +1669,21 @@ PROMPT;
             $findingsStatus = (string) $validated['findings_status'];
             $hasMedicalCondition = $request->boolean('has_medical_condition');
             $hasIncompleteRequirements = $request->boolean('incomplete_requirements');
+            $resubmissionRequiredDocuments = $hasIncompleteRequirements
+                ? array_values($validated['resubmission_required_documents'] ?? [])
+                : [];
+            if ($hasIncompleteRequirements && empty($resubmissionRequiredDocuments)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please select at least one document for resubmission.',
+                ], 422);
+            }
             $needsPhysicianEvaluation = $request->boolean('needs_physician_evaluation');
             $medicalCondition = trim((string) $request->input('medical_condition', ''));
             $otherPendingReason = trim((string) $request->input('other_pending_reason', ''));
             $conditionRemarks = trim((string) $request->input('condition_remarks', ''));
+            $height = (string) $validated['height'];
+            $weight = (string) $validated['weight'];
             $bloodPressure = preg_replace('/\s+/', '', (string) $validated['blood_pressure']);
             $pulseRate = (int) $validated['pulse_rate'];
             $respiratoryRate = (int) $validated['respiratory_rate'];
@@ -1626,7 +1698,18 @@ PROMPT;
                 $pendingReasons[] = $medicalCondition !== '' ? 'Medical Condition: ' . $medicalCondition : 'With Medical Condition';
             }
             if ($hasIncompleteRequirements) {
-                $pendingReasons[] = 'Incomplete Requirements';
+                $documentLabels = collect($resubmissionRequiredDocuments)
+                    ->map(fn ($document) => match ($document) {
+                        'student_photo' => '2x2 Photo',
+                        'medical_certificate' => 'Medical Certificate',
+                        'chest_xray_result' => 'Chest X-ray Result',
+                        'pwd_id_proof' => 'PWD ID Proof',
+                        default => $document,
+                    })
+                    ->implode(', ');
+                $pendingReasons[] = $documentLabels !== ''
+                    ? 'Document Resubmission: ' . $documentLabels
+                    : 'Document Resubmission';
             }
             if ($needsPhysicianEvaluation) {
                 $pendingReasons[] = 'For Physician Evaluation';
@@ -1700,11 +1783,15 @@ PROMPT;
                 $referenceNumber,
                 $clearanceStatus,
                 $hasMedicalCondition,
+                $hasIncompleteRequirements,
                 $hasPendingFinding,
                 $pendingReasons,
                 $medicalCondition,
                 $conditionRemarks,
                 $findingsStatus,
+                $height,
+                $weight,
+                $resubmissionRequiredDocuments,
                 $bloodPressure,
                 $pulseRate,
                 $respiratoryRate,
@@ -1737,6 +1824,8 @@ PROMPT;
                 $profile->xray_findings = trim((string) $profile->xray_findings) !== ''
                     ? $profile->xray_findings
                     : ($findingsStatus === 'No Findings / Normal' ? 'Normal' : 'With Findings');
+                $profile->height = $height;
+                $profile->weight = $weight;
                 $profile->blood_pressure = $bloodPressure;
                 $profile->pulse_rate = $pulseRate;
                 $profile->respiratory_rate = $respiratoryRate;
@@ -1766,6 +1855,12 @@ PROMPT;
                     ? 'Not Yet Conducted'
                     : 'Completed / Passed';
                 $profile->documents_valid = !$hasPendingFinding;
+                $profile->resubmission_required_documents = $hasIncompleteRequirements
+                    ? $resubmissionRequiredDocuments
+                    : null;
+                $profile->resubmission_requested_at = $hasIncompleteRequirements
+                    ? now()
+                    : null;
                 $profile->verified_at = $hasPendingFinding ? null : now();
                 $profile->puptas_sync_status = ($webhookResult['skipped'] ?? false)
                     ? null
