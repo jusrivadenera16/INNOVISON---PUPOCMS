@@ -199,20 +199,24 @@ class AppointmentController extends Controller
         $healthProfile = $user->healthProfile;
         $healthProfileStatus = optional($healthProfile)->clearance_status;
         $puptasSyncStatus = optional($healthProfile)->puptas_sync_status;
+        $isHealthProfileIssued = in_array($healthProfileStatus, ['Issued', 'Fully Cleared'], true);
+        $isHealthProfileResubmission = $healthProfileStatus === 'Pending Resubmission';
 
         if ($healthProfile) {
             $notifications[] = [
                 'id' => $this->buildNotificationId('health-record', [$healthProfile->id, $healthProfileStatus, optional($healthProfile->updated_at)->timestamp]),
-                'type' => $healthProfileStatus === 'Issued' ? 'success' : 'warning',
-                'icon' => $healthProfileStatus === 'Issued' ? 'OK' : '...',
-                'message' => $healthProfileStatus === 'Issued'
+                'type' => $isHealthProfileIssued ? 'success' : 'warning',
+                'icon' => $isHealthProfileIssued ? 'OK' : '...',
+                'message' => $isHealthProfileIssued
                     ? 'Your health profile has been approved by the clinic.'
-                    : 'Your health profile was submitted and is awaiting medical review.',
+                    : ($isHealthProfileResubmission
+                        ? 'The clinic requested replacement files for your health profile.'
+                        : 'Your health profile was submitted and is awaiting medical review.'),
                 'time' => 'Health profile status',
                 'link' => url('/student/account?view=health-record'),
             ];
 
-            if ($healthProfileStatus === 'Issued' && $puptasSyncStatus !== null) {
+            if ($isHealthProfileIssued && $puptasSyncStatus !== null) {
                 $notifications[] = [
                     'id' => $this->buildNotificationId('puptas-sync', [$healthProfile->id, $puptasSyncStatus, optional($healthProfile->puptas_synced_at)->timestamp, optional($healthProfile->updated_at)->timestamp]),
                     'type' => $puptasSyncStatus === 'synced' ? 'success' : ($puptasSyncStatus === 'syncing' ? 'info' : 'warning'),
@@ -1907,6 +1911,123 @@ public function account(Request $request)
             'X-Content-Type-Options' => 'nosniff',
             'Cache-Control' => 'private, max-age=300',
         ]);
+    }
+
+    public function resubmitHealthRecordRequirements(Request $request)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if (!$user) {
+            return redirect('/login-as-student')->with('error', 'Please login first.');
+        }
+
+        $healthProfile = HealthProfile::query()->where('user_id', $user->id)->first();
+        if (!$healthProfile) {
+            return redirect('/student/account?view=health-record')
+                ->with('error', 'Submit your health profile before uploading replacement requirements.');
+        }
+
+        $requiredDocuments = collect($healthProfile->resubmission_required_documents ?? [])
+            ->filter()
+            ->intersect(['student_photo', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])
+            ->values();
+
+        if (strcasecmp((string) $healthProfile->clearance_status, 'Pending Resubmission') !== 0 || $requiredDocuments->isEmpty()) {
+            return redirect('/student/account?view=health-record')
+                ->with('error', 'There are no replacement requirements requested for this record.');
+        }
+
+        $documentRules = [
+            'student_photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
+            'medical_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'chest_xray_result' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'pwd_id_proof' => ['required', 'file', 'mimes:pdf', 'max:2048'],
+        ];
+
+        $attributeNames = [
+            'student_photo' => '2x2 Student Photo',
+            'medical_certificate' => 'Medical Certificate',
+            'chest_xray_result' => 'Chest X-ray Result',
+            'pwd_id_proof' => 'PWD ID Proof',
+        ];
+
+        $rules = $requiredDocuments
+            ->mapWithKeys(fn ($document) => [$document => $documentRules[$document]])
+            ->all();
+
+        $request->validate($rules, [], $attributeNames);
+
+        $storageFolders = [
+            'student_photo' => 'health_profiles/photos',
+            'medical_certificate' => 'health_profiles/medical_certificates',
+            'chest_xray_result' => 'health_profiles/chest_xray_results',
+            'pwd_id_proof' => 'health_profiles/pwd_id_proofs',
+        ];
+
+        $storedPaths = [];
+        $oldPaths = [];
+
+        try {
+            foreach ($requiredDocuments as $document) {
+                if (!$request->hasFile($document)) {
+                    continue;
+                }
+
+                $oldPaths[$document] = ltrim((string) $healthProfile->{$document}, '/');
+                $storedPaths[$document] = $request->file($document)->store($storageFolders[$document], 'public');
+            }
+
+            foreach ($storedPaths as $document => $path) {
+                $healthProfile->{$document} = $path;
+            }
+
+            $healthProfile->clearance_status = 'For Verification';
+            $healthProfile->pending_reason = null;
+            $healthProfile->documents_valid = false;
+            $healthProfile->verified_at = null;
+            $healthProfile->approved_by_user_id = null;
+            $healthProfile->resubmission_required_documents = null;
+            $healthProfile->resubmission_requested_at = null;
+            $healthProfile->resubmitted_at = now();
+            $healthProfile->save();
+
+            $user->is_health_profile_completed = 0;
+            $user->save();
+
+            foreach ($oldPaths as $oldPath) {
+                $oldPath = preg_replace('#^(?:public/)?storage/#', '', $oldPath) ?? $oldPath;
+                if ($oldPath !== '' && Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+            }
+
+            \App\Models\ActivityLog::create([
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'action' => 'Health Requirements Resubmitted',
+                'description' => 'Student uploaded replacement health profile requirement files.',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            return redirect('/student/account?view=health-record')
+                ->with('success', 'Replacement requirement files uploaded successfully. Your record is back for clinic review.');
+        } catch (\Throwable $e) {
+            foreach ($storedPaths as $path) {
+                if ($path && Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
+                }
+            }
+
+            Log::error('Health requirement resubmission failed', [
+                'user_id' => $user->id,
+                'health_profile_id' => $healthProfile->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return back()->withInput()
+                ->with('error', 'Unable to upload replacement files right now. Please try again.');
+        }
     }
 
     public function openNotification(string $notificationId)

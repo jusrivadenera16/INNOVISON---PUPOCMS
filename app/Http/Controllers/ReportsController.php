@@ -844,43 +844,46 @@ class ReportsController extends Controller
         [$query] = $this->healthFormsLogbookQuery($request);
 
         $records = $query->orderByDesc('created_at')->get();
-        $filename = 'health-forms-approval-logbook-' . now()->format('Ymd-His') . '.xls';
+        $filename = 'health-forms-approval-logbook-' . now()->format('Ymd-His') . '.csv';
 
         return response()->streamDownload(function () use ($records) {
-            $esc = static fn ($value) => htmlspecialchars((string) ($value ?? 'N/A'), ENT_QUOTES, 'UTF-8');
-
             echo "\xEF\xBB\xBF";
-            echo '<html><head><meta charset="UTF-8"></head><body>';
-            echo '<table border="1">';
-            echo '<thead><tr>';
-            foreach (['Name', 'Gender', 'Course', 'Type', 'Submitted', 'Approved By', 'Approved Date', 'Status', 'Condition'] as $heading) {
-                echo '<th>' . $esc($heading) . '</th>';
-            }
-            echo '</tr></thead><tbody>';
+            $output = fopen('php://output', 'w');
+
+            fputcsv($output, [
+                'Name',
+                'Gender',
+                'Course',
+                'Type',
+                'Submitted',
+                'Approved By',
+                'Approved Date',
+                'Status',
+                'Condition',
+            ]);
 
             foreach ($records as $record) {
                 $user = $record->user;
                 $approver = $record->approvedBy;
-                $isApproved = $record->clearance_status === 'Issued';
+                $isApproved = in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true);
                 $hasCondition = $record->hasMedicalCondition();
 
-                echo '<tr>';
-                echo '<td>' . $esc(optional($user)->name) . '</td>';
-                echo '<td>' . $esc(optional($user)->gender) . '</td>';
-                echo '<td>' . $esc($record->course_college ?: optional($user)->course) . '</td>';
-                echo '<td>' . $esc(optional($user)->user_type) . '</td>';
-                echo '<td>' . $esc(optional($record->created_at)->format('M d, Y g:i A')) . '</td>';
-                echo '<td>' . $esc(optional($approver)->name) . '</td>';
-                echo '<td>' . $esc($record->verified_at ? Carbon::parse($record->verified_at)->format('M d, Y g:i A') : 'N/A') . '</td>';
-                echo '<td>' . $esc($isApproved ? 'Approved' : 'Pending') . '</td>';
-                echo '<td>' . $esc($hasCondition ? 'Yes' : 'No') . '</td>';
-                echo '</tr>';
+                fputcsv($output, [
+                    optional($user)->name ?: 'N/A',
+                    optional($user)->gender ?: 'N/A',
+                    $record->course_college ?: optional($user)->course ?: 'N/A',
+                    optional($user)->user_type ?: 'N/A',
+                    optional($record->created_at)->format('M d, Y g:i A') ?: 'N/A',
+                    optional($approver)->name ?: 'N/A',
+                    $record->verified_at ? Carbon::parse($record->verified_at)->format('M d, Y g:i A') : 'N/A',
+                    $isApproved ? 'Approved' : 'Pending',
+                    $hasCondition ? 'Yes' : 'No',
+                ]);
             }
 
-            echo '</tbody></table>';
-            echo '</body></html>';
+            fclose($output);
         }, $filename, [
-            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Cache-Control' => 'no-store, no-cache, must-revalidate',
         ]);
     }

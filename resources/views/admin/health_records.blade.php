@@ -502,6 +502,17 @@
     .readonly-expand-btn:hover::before {
         transform: translateX(135%);
     }
+    .readonly-review-btn {
+        min-width: 126px;
+        border-color: rgba(112, 19, 27, 0.22);
+        background: #70131B;
+        color: #ffffff;
+    }
+    .readonly-review-btn:hover {
+        background: #facc15;
+        color: #111827;
+        border-color: #facc15;
+    }
     .readonly-record-details {
         display: none;
         gap: 14px;
@@ -1873,6 +1884,54 @@
         cursor: not-allowed;
     }
 
+    .verify-approval-btn-resubmit {
+        background: #f59e0b;
+        color: #111827;
+        border-color: #f59e0b;
+    }
+
+    .verify-resubmission-panel {
+        display: none;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid #fecaca;
+        border-radius: 14px;
+        background: #fff7f7;
+    }
+
+    .verify-resubmission-panel.is-open {
+        display: grid;
+    }
+
+    .verify-resubmission-title {
+        margin: 0;
+        color: #7f1d2d;
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .verify-resubmission-options {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .verify-resubmission-option {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-height: 42px;
+        padding: 9px 11px;
+        border: 1px solid #f3d7dd;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
     html[data-theme="dark"] .verify-approval-modal-card {
         background: #0f172a;
         border-color: #334155;
@@ -2499,8 +2558,64 @@
                         }
 
                         $readonlyHasCondition = $readonlyRecord->hasMedicalCondition();
+                        $readonlyReference = $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-';
+                        $readonlyRecordPayload = [
+                            'id' => $readonlyRecord->id,
+                            'name' => optional($readonlyRecord->user)->name ?: '-',
+                            'email' => optional($readonlyRecord->user)->email ?: '-',
+                            'reference_number' => $readonlyReference,
+                            'student_id' => $readonlyRecord->student_id ?: optional($readonlyRecord->user)->student_id ?: '-',
+                            'student_number' => optional($readonlyRecord->user)->student_number ?: optional($readonlyRecord->user)->student_id ?: '-',
+                            'course' => trim((string) (($readonlyRecord->course_college ?: optional($readonlyRecord->user)->course) . ' ' . optional($readonlyRecord->user)->year . '-' . optional($readonlyRecord->user)->section)),
+                            'status' => $readonlyRecord->clearance_status ?: 'For Verification',
+                            'pending_reason' => $readonlyRecord->pending_reason ?: '',
+                            'medical_condition_remarks' => $readonlyRecord->medical_condition_remarks ?: '',
+                            'physical_assessment_status' => $readonlyRecord->physical_assessment_status ?: 'Not Yet Conducted',
+                            'documents_valid' => (bool) $readonlyRecord->documents_valid,
+                            'approve_url' => route('admin.update_clearance', $readonlyRecord->id),
+                            'documents' => [
+                                [
+                                    'title' => 'Medical Certificate',
+                                    'url' => $readonlyRecord->medical_certificate ? route('walkin.document', [
+                                        'healthProfile' => $readonlyRecord->id,
+                                        'document' => 'medical_certificate',
+                                    ]) : '',
+                                    'meta' => [
+                                        'Doctor' => $readonlyRecord->doctor_name ?: '-',
+                                        'Certificate Date' => optional($readonlyRecord->med_cert_date)->format('M d, Y') ?: '-',
+                                        'Findings' => $readonlyRecord->med_cert_findings ?: '-',
+                                    ],
+                                ],
+                                [
+                                    'title' => 'Chest X-ray Result',
+                                    'url' => $readonlyRecord->chest_xray_result ? route('walkin.document', [
+                                        'healthProfile' => $readonlyRecord->id,
+                                        'document' => 'chest_xray_result',
+                                    ]) : '',
+                                    'meta' => [
+                                        'Exam Date' => optional($readonlyRecord->xray_date)->format('M d, Y') ?: '-',
+                                        'Findings' => $readonlyRecord->xray_findings ?: '-',
+                                    ],
+                                ],
+                                [
+                                    'title' => '2x2 Photo',
+                                    'url' => $readonlyRecord->student_photo ? route('walkin.document', [
+                                        'healthProfile' => $readonlyRecord->id,
+                                        'document' => 'student_photo',
+                                    ]) : '',
+                                    'meta' => [
+                                        'Guideline' => 'Formal white-background photo.',
+                                    ],
+                                ],
+                            ],
+                        ];
                     @endphp
-                    <article class="readonly-record-card">
+                    <article
+                        class="readonly-record-card"
+                        data-health-row
+                        data-health-id="{{ $readonlyRecord->id }}"
+                        data-record-payload="{{ e(json_encode($readonlyRecordPayload)) }}"
+                    >
                         <div class="readonly-record-head">
                             <div>
                                 <h4 class="readonly-record-name">{{ optional($readonlyRecord->user)->name ?: 'Unnamed Student' }}</h4>
@@ -2509,7 +2624,6 @@
                             <div class="readonly-record-meta">
                                 <div class="readonly-record-pill reference-pill">
                                     <span>Reference Number</span>
-                                    @php($readonlyReference = $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-')
                                     <strong class="readonly-reference-value">
                                         <span>{{ $readonlyReference }}</span>
                                         @if($readonlyReference !== '-')
@@ -2527,6 +2641,13 @@
                                     <span>Condition</span>
                                     <strong>{{ $readonlyHasCondition ? 'With Condition' : 'No Condition' }}</strong>
                                 </div>
+                                <button
+                                    type="button"
+                                    class="readonly-expand-btn readonly-review-btn js-open-verify-modal"
+                                    onclick="event.stopPropagation();"
+                                >
+                                    <span>Review</span>
+                                </button>
                                 <button
                                     type="button"
                                     class="readonly-expand-btn"
@@ -2705,8 +2826,30 @@
                         Documents are complete, readable, and valid for medical clearance.
                     </label>
                 </div>
+                <div class="verify-resubmission-panel" id="verifyResubmissionPanel">
+                    <p class="verify-resubmission-title">Documents requiring replacement</p>
+                    <div class="verify-resubmission-options">
+                        <label class="verify-resubmission-option">
+                            <input type="checkbox" name="resubmission_required_documents[]" value="student_photo">
+                            2x2 Student Photo
+                        </label>
+                        <label class="verify-resubmission-option">
+                            <input type="checkbox" name="resubmission_required_documents[]" value="medical_certificate">
+                            Medical Certificate
+                        </label>
+                        <label class="verify-resubmission-option">
+                            <input type="checkbox" name="resubmission_required_documents[]" value="chest_xray_result">
+                            Chest X-ray Result
+                        </label>
+                        <label class="verify-resubmission-option">
+                            <input type="checkbox" name="resubmission_required_documents[]" value="pwd_id_proof">
+                            PWD ID Proof
+                        </label>
+                    </div>
+                </div>
                 <div class="verify-approval-actions">
                     <button type="button" class="verify-approval-btn verify-approval-btn-cancel" id="verifyApprovalCancelBtn">Cancel</button>
+                    <button type="submit" class="verify-approval-btn verify-approval-btn-resubmit" id="verifyResubmissionBtn">Request Resubmission</button>
                     <button type="submit" class="verify-approval-btn verify-approval-btn-pending" id="verifyPendingBtn">Set as Pending/Conditional</button>
                     <button type="submit" class="verify-approval-btn verify-approval-btn-approve" id="verifyApprovalApproveBtn">Approve & Issue Medical Clearance</button>
                 </div>
@@ -2802,6 +2945,8 @@
     const verifyApprovalForm = document.getElementById('verifyApprovalForm');
     const verifyApprovalApproveBtn = document.getElementById('verifyApprovalApproveBtn');
     const verifyPendingBtn = document.getElementById('verifyPendingBtn');
+    const verifyResubmissionBtn = document.getElementById('verifyResubmissionBtn');
+    const verifyResubmissionPanel = document.getElementById('verifyResubmissionPanel');
     const verifyClearanceStatus = document.getElementById('verifyClearanceStatus');
     const verifyMedicalRemarks = document.getElementById('verifyMedicalRemarks');
     const verifyPendingReason = document.getElementById('verifyPendingReason');
@@ -2809,6 +2954,7 @@
     const verifyDocumentsValid = document.getElementById('verifyDocumentsValid');
     const verificationDocsToggle = document.getElementById('verificationDocsToggle');
     const verificationDocsGrid = document.getElementById('verificationDocsGrid');
+    const verifyResubmissionInputs = Array.from(document.querySelectorAll('input[name="resubmission_required_documents[]"]'));
 
     function setHealthFilterOpenState(isOpen) {
         if (!healthFilterToggle || !healthFilterModal) {
@@ -3089,6 +3235,18 @@
         verifyApprovalApproveBtn.disabled = !canApprove;
     }
 
+    function setResubmissionPanelState(isOpen) {
+        if (verifyResubmissionPanel) {
+            verifyResubmissionPanel.classList.toggle('is-open', Boolean(isOpen));
+        }
+
+        verifyResubmissionInputs.forEach(function (input) {
+            if (!isOpen) {
+                input.checked = false;
+            }
+        });
+    }
+
     function getRecordPayloadFromRow(row) {
         let payload = {};
         try {
@@ -3128,6 +3286,10 @@
         if (verifyDocumentsValid) {
             verifyDocumentsValid.checked = Boolean(payload.documents_valid);
         }
+        if (verifyClearanceStatus) {
+            verifyClearanceStatus.value = 'Fully Cleared';
+        }
+        setResubmissionPanelState(false);
         if (verificationDocsGrid) {
             verificationDocsGrid.classList.remove('is-open');
         }
@@ -3159,6 +3321,7 @@
     if (verifyPendingBtn && verifyClearanceStatus && verifyApprovalForm) {
         verifyPendingBtn.addEventListener('click', function (event) {
             verifyClearanceStatus.value = 'Pending/Conditional';
+            setResubmissionPanelState(false);
             if (verifyPendingReason && verifyPendingReason.value.trim() === '') {
                 event.preventDefault();
                 verifyPendingReason.setCustomValidity('Nurse remarks are required for pending or conditional records.');
@@ -3168,9 +3331,39 @@
         });
     }
 
+    if (verifyResubmissionBtn && verifyClearanceStatus && verifyApprovalForm) {
+        verifyResubmissionBtn.addEventListener('click', function (event) {
+            verifyClearanceStatus.value = 'Pending Resubmission';
+            setResubmissionPanelState(true);
+
+            const hasSelectedDocument = verifyResubmissionInputs.some(function (input) {
+                return input.checked;
+            });
+
+            if (!hasSelectedDocument) {
+                event.preventDefault();
+                const firstInput = verifyResubmissionInputs[0];
+                if (firstInput) {
+                    firstInput.setCustomValidity('Select at least one document for resubmission.');
+                    firstInput.reportValidity();
+                    firstInput.setCustomValidity('');
+                }
+                return;
+            }
+
+            if (verifyPendingReason && verifyPendingReason.value.trim() === '') {
+                event.preventDefault();
+                verifyPendingReason.setCustomValidity('Clinic remarks are required when requesting resubmission.');
+                verifyPendingReason.reportValidity();
+                verifyPendingReason.setCustomValidity('');
+            }
+        });
+    }
+
     if (verifyApprovalApproveBtn && verifyClearanceStatus) {
         verifyApprovalApproveBtn.addEventListener('click', function (event) {
             verifyClearanceStatus.value = 'Fully Cleared';
+            setResubmissionPanelState(false);
             syncApprovalButtonState();
             if (verifyApprovalApproveBtn.disabled) {
                 event.preventDefault();

@@ -36,6 +36,9 @@ class HealthProfile extends Model
         'chest_xray_date',
         'assessment_remarks',
         'pending_reason',
+        'resubmission_required_documents',
+        'resubmission_requested_at',
+        'resubmitted_at',
         'medical_condition_remarks',
         'physical_assessment_status',
         'documents_valid',
@@ -60,6 +63,9 @@ class HealthProfile extends Model
         'med_cert_date' => 'date',
         'medical_certificate_issued_at' => 'date',
         'chest_xray_date' => 'date',
+        'resubmission_required_documents' => 'array',
+        'resubmission_requested_at' => 'datetime',
+        'resubmitted_at' => 'datetime',
 
     ];
 

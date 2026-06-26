@@ -2092,6 +2092,77 @@
         text-decoration: none;
         transform: translateY(-1px);
     }
+    .resubmission-doc-list {
+        display: grid;
+        gap: 14px;
+        margin-top: 14px;
+    }
+    .resubmission-doc-card {
+        display: grid;
+        gap: 10px;
+        padding: 16px;
+        border: 1px solid rgba(112, 19, 27, 0.14);
+        border-radius: 14px;
+        background: #fffafa;
+    }
+    .resubmission-doc-title {
+        margin: 0;
+        color: #70131B;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: .02em;
+        text-transform: uppercase;
+    }
+    .resubmission-doc-hint {
+        margin: -4px 0 0;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    .resubmission-file-input {
+        width: 100%;
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        border-radius: 12px;
+        background: #ffffff;
+        color: #111827;
+        padding: 12px;
+        font-size: 13px;
+        font-weight: 800;
+    }
+    .resubmission-reason {
+        margin: 0 0 14px;
+        padding: 14px 16px;
+        border: 1px solid rgba(245, 158, 11, 0.32);
+        border-radius: 14px;
+        background: #fffbeb;
+        color: #78350f;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.55;
+    }
+    .resubmission-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 18px;
+    }
+    .resubmission-submit {
+        border: 1px solid #70131B;
+        border-radius: 14px;
+        background: #70131B;
+        color: #ffffff;
+        padding: 13px 18px;
+        font-size: 13px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: background-color .25s ease, color .25s ease, transform .25s ease;
+    }
+    .resubmission-submit:hover {
+        background: #ffcc00;
+        color: #111827;
+        border-color: #ffcc00;
+        transform: translateY(-1px);
+    }
     html[data-theme="dark"] .record-modal {
         background: linear-gradient(180deg, #0f0f10 0%, #161618 100%) !important;
         border-color: rgba(250, 204, 21, 0.16) !important;
@@ -2613,16 +2684,35 @@ document.addEventListener('DOMContentLoaded', function () {
         $statusNormalized = strtolower(trim((string) $status));
         $isIssuedStatus = in_array($statusNormalized, ['issued', 'fully cleared'], true);
         $isRejectedStatus = $statusNormalized === 'rejected';
+        $isResubmissionStatus = $statusNormalized === 'pending resubmission';
         $isConditionalStatus = str_contains($statusNormalized, 'pending') || str_contains($statusNormalized, 'conditional');
         $isPendingStatus = !$isIssuedStatus && !$isRejectedStatus;
         $recordPendingReason = trim((string) optional($user->healthProfile)->pending_reason);
-        $recordSubmissionStatus = $isConditionalStatus ? 'Pending Compliance' : 'Waiting for clinic review';
-        $recordStatusMessage = $isConditionalStatus
-            ? 'Your health profile needs follow-up before it can be issued. Please check the pending reason and coordinate with the Medical Clinic.'
-            : 'Your health profile has been submitted. Please proceed to the Medical Clinic on your designated schedule for medical review.';
-        $recordStatusNote = $isConditionalStatus
-            ? 'Please complete the pending requirement before your record can be marked as issued.'
-            : 'Clinic approval is required before your record can be marked as issued.';
+        $resubmissionDocuments = collect(optional($user->healthProfile)->resubmission_required_documents ?? [])->filter()->values();
+        $resubmissionDocumentLabels = [
+            'student_photo' => '2x2 Student Photo',
+            'medical_certificate' => 'Medical Certificate',
+            'chest_xray_result' => 'Chest X-ray Result',
+            'pwd_id_proof' => 'PWD ID Proof',
+        ];
+        $resubmissionDocumentMeta = [
+            'student_photo' => ['accept' => '.jpg,.jpeg,.png,image/jpeg,image/png', 'hint' => 'JPG or PNG, up to 1 MB'],
+            'medical_certificate' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
+            'chest_xray_result' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
+            'pwd_id_proof' => ['accept' => '.pdf,application/pdf', 'hint' => 'PDF only, up to 2 MB'],
+        ];
+        $hasResubmissionUploadErrors = $resubmissionDocuments->contains(fn ($documentKey) => $errors->has($documentKey));
+        $recordSubmissionStatus = $isResubmissionStatus ? 'Pending Resubmission' : ($isConditionalStatus ? 'Pending Compliance' : 'Waiting for clinic review');
+        $recordStatusMessage = $isResubmissionStatus
+            ? 'The clinic requested replacement files for your health profile. Upload only the selected requirement/s below.'
+            : ($isConditionalStatus
+                ? 'Your health profile needs follow-up before it can be issued. Please check the pending reason and coordinate with the Medical Clinic.'
+                : 'Your health profile has been submitted. Please proceed to the Medical Clinic on your designated schedule for medical review.');
+        $recordStatusNote = $isResubmissionStatus
+            ? 'Your existing valid files will remain unchanged. Only the requested replacement file/s will be updated.'
+            : ($isConditionalStatus
+                ? 'Please complete the pending requirement before your record can be marked as issued.'
+                : 'Clinic approval is required before your record can be marked as issued.');
         $puptasSyncStatus = optional($user->healthProfile)->puptas_sync_status;
         $puptasSyncMessage = trim((string) optional($user->healthProfile)->puptas_sync_message);
         $puptasSyncedAt = optional(optional($user->healthProfile)->puptas_synced_at)->format('M d, Y g:i A');
@@ -2781,7 +2871,7 @@ document.addEventListener('DOMContentLoaded', function () {
             @else
                 <div class="health-status-summary">
                     @if($isConditionalStatus)
-                        <span class="health-status-state pending"><x-outline-icon name="clock" /> Pending Compliance</span>
+                        <span class="health-status-state pending"><x-outline-icon name="clock" /> {{ $isResubmissionStatus ? 'Pending Resubmission' : 'Pending Compliance' }}</span>
                     @endif
                     <p class="health-status-message">{{ $recordStatusMessage }}</p>
                 </div>
@@ -2806,10 +2896,17 @@ document.addEventListener('DOMContentLoaded', function () {
                         <x-outline-icon name="eye" />
                         View Submitted Record
                     </button>
-                    <button class="btn-print-form disabled" disabled>
-                        <x-outline-icon name="clock" />
-                        Approval Required
-                    </button>
+                    @if($isResubmissionStatus && $resubmissionDocuments->isNotEmpty())
+                        <button type="button" class="btn-print-form pending" onclick="openResubmissionModal()">
+                            <x-outline-icon name="document-text" />
+                            Upload Required Files
+                        </button>
+                    @else
+                        <button class="btn-print-form disabled" disabled>
+                            <x-outline-icon name="clock" />
+                            Approval Required
+                        </button>
+                    @endif
                 </div>
                 <span class="health-status-note">{{ $recordStatusNote }}</span>
             @endif
@@ -2994,6 +3091,56 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             </div>
         </div>
+        @if($isResubmissionStatus && $resubmissionDocuments->isNotEmpty())
+            <div class="record-modal-overlay" id="resubmissionModal" aria-hidden="true">
+                <div class="record-modal" role="dialog" aria-modal="true" aria-labelledby="resubmissionModalTitle">
+                    <div class="record-modal-head">
+                        <button type="button" class="record-modal-close" aria-label="Close resubmission upload" onclick="closeResubmissionModal()">
+                            <x-outline-icon name="x-mark" />
+                        </button>
+                        <div class="record-modal-head-main">
+                            <h2 class="record-modal-title" id="resubmissionModalTitle">Upload Required Files</h2>
+                            <p class="record-modal-subtitle">Replace only the requirement file/s requested by the Medical Clinic. Other submitted files will stay unchanged.</p>
+                        </div>
+                    </div>
+                    <div class="record-modal-body">
+                        @if($recordPendingReason !== '')
+                            <p class="resubmission-reason">
+                                Clinic note: {{ $recordPendingReason }}
+                            </p>
+                        @endif
+
+                        <form action="{{ route('student.health_record.resubmit') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <div class="resubmission-doc-list">
+                                @foreach($resubmissionDocuments as $documentKey)
+                                    @continue(!isset($resubmissionDocumentLabels[$documentKey]))
+                                    @php($documentMeta = $resubmissionDocumentMeta[$documentKey] ?? ['accept' => '', 'hint' => 'Upload the requested replacement file.'])
+                                    <label class="resubmission-doc-card">
+                                        <span class="resubmission-doc-title">{{ $resubmissionDocumentLabels[$documentKey] }}</span>
+                                        <span class="resubmission-doc-hint">{{ $documentMeta['hint'] }}</span>
+                                        <input
+                                            type="file"
+                                            name="{{ $documentKey }}"
+                                            class="resubmission-file-input"
+                                            accept="{{ $documentMeta['accept'] }}"
+                                            required
+                                        >
+                                        @error($documentKey)
+                                            <span class="text-danger" style="font-size: 12px; font-weight: 800;">{{ $message }}</span>
+                                        @enderror
+                                    </label>
+                                @endforeach
+                            </div>
+                            <div class="resubmission-actions">
+                                <button type="button" class="record-document-btn" onclick="closeResubmissionModal()">Cancel</button>
+                                <button type="submit" class="resubmission-submit">Submit Replacement Files</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endif
     @endif
 @else
     <div class="page-hero">
@@ -3080,6 +3227,26 @@ function closeHealthRecordModal() {
     document.body.style.overflow = '';
 }
 
+function openResubmissionModal() {
+    const modal = document.getElementById('resubmissionModal');
+    if (!modal) {
+        return;
+    }
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeResubmissionModal() {
+    const modal = document.getElementById('resubmissionModal');
+    if (!modal) {
+        return;
+    }
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+}
+
 function enableEditing() {
     const form = document.querySelector('form[action="{{ route('student.updateContact') }}"]');
     if (form) {
@@ -3109,22 +3276,34 @@ function enableEditing() {
 
 document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('healthRecordModal');
-    if (!modal) {
-        return;
-    }
-    const modalCard = modal.querySelector('.record-modal');
+    const resubmissionModal = document.getElementById('resubmissionModal');
+    const modalCard = modal?.querySelector('.record-modal');
+    const shouldOpenResubmissionModal = @json($hasResubmissionUploadErrors ?? false);
 
     modalCard?.addEventListener('scroll', updateHealthRecordModalIndicator);
 
-    modal.addEventListener('click', function (event) {
+    if (shouldOpenResubmissionModal) {
+        openResubmissionModal();
+    }
+
+    modal?.addEventListener('click', function (event) {
         if (event.target === modal) {
             closeHealthRecordModal();
         }
     });
 
+    resubmissionModal?.addEventListener('click', function (event) {
+        if (event.target === resubmissionModal) {
+            closeResubmissionModal();
+        }
+    });
+
     document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+        if (event.key === 'Escape' && modal?.classList.contains('is-open')) {
             closeHealthRecordModal();
+        }
+        if (event.key === 'Escape' && resubmissionModal?.classList.contains('is-open')) {
+            closeResubmissionModal();
         }
     });
 });

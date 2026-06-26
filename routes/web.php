@@ -173,6 +173,8 @@ Route::middleware(['auth:student', 'audit'])->group(function () {
         Route::get('/student/health-form/download', [AppointmentController::class, 'downloadHealthForm'])->name('student.health_form.download');
         Route::get('/student/health-record/document/{document}', [AppointmentController::class, 'showStudentHealthRecordDocument'])
             ->name('student.health_record.document');
+        Route::post('/student/health-record/resubmit', [AppointmentController::class, 'resubmitHealthRecordRequirements'])
+            ->name('student.health_record.resubmit');
 
         Route::get('/student/account', [AppointmentController::class, 'account']);
         Route::get('/student/history', [AppointmentController::class, 'history']);

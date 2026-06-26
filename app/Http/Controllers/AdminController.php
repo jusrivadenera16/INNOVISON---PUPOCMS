@@ -1517,12 +1517,14 @@ public function updateClearance(Request $request, $id)
     }
 
     $request->validate([
-        'clearance_status' => ['required', Rule::in(['Fully Cleared', 'Issued', 'For Verification', 'Pending/Conditional', 'Rejected'])],
+        'clearance_status' => ['required', Rule::in(['Fully Cleared', 'Issued', 'For Verification', 'Pending/Conditional', 'Pending Resubmission', 'Rejected'])],
         'pending_reason'   => ['nullable', 'string'],
         'verified_at'      => ['nullable', 'date'],
         'medical_condition_remarks' => ['nullable', 'string'],
         'physical_assessment_status' => ['required', Rule::in(['Not Yet Conducted', 'Completed / Passed'])],
         'documents_valid' => ['nullable', 'accepted'],
+        'resubmission_required_documents' => ['nullable', 'array'],
+        'resubmission_required_documents.*' => ['string', Rule::in(['student_photo', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])],
     ]);
 
     $record = HealthProfile::findOrFail($id);
@@ -1531,8 +1533,12 @@ public function updateClearance(Request $request, $id)
     $isApproval = in_array($requestedStatus, ['Issued', 'Fully Cleared'], true);
     $documentsValid = $request->boolean('documents_valid');
 
-    if ($requestedStatus === 'Pending/Conditional' && trim((string) $request->input('pending_reason')) === '') {
-        return back()->withInput()->with('error', 'Nurse remarks are required when setting a student as pending or conditional.');
+    if (in_array($requestedStatus, ['Pending/Conditional', 'Pending Resubmission'], true) && trim((string) $request->input('pending_reason')) === '') {
+        return back()->withInput()->with('error', 'Nurse remarks are required when setting a student as pending or requesting resubmission.');
+    }
+
+    if ($requestedStatus === 'Pending Resubmission' && empty($request->input('resubmission_required_documents', []))) {
+        return back()->withInput()->with('error', 'Select at least one document that needs resubmission.');
     }
 
     if ($isApproval && (!$documentsValid || $request->input('physical_assessment_status') !== 'Completed / Passed')) {
@@ -1544,9 +1550,14 @@ public function updateClearance(Request $request, $id)
     $record->pending_reason   = $isApproval ? null : $request->pending_reason;
     $record->medical_condition_remarks = $request->input('medical_condition_remarks');
     $record->physical_assessment_status = $request->input('physical_assessment_status');
-    $record->documents_valid = $documentsValid;
+    $record->documents_valid = $requestedStatus === 'Pending Resubmission' ? false : $documentsValid;
     $record->verified_at      = $isApproval ? ($request->verified_at ?? now()) : null;
     $record->approved_by_user_id = $isApproval ? auth()->id() : null;
+    $record->resubmission_required_documents = $requestedStatus === 'Pending Resubmission'
+        ? array_values(array_unique((array) $request->input('resubmission_required_documents', [])))
+        : null;
+    $record->resubmission_requested_at = $requestedStatus === 'Pending Resubmission' ? now() : null;
+    $record->resubmitted_at = $requestedStatus === 'Pending Resubmission' ? null : $record->resubmitted_at;
 
     if ($record->save()) {
         if ($record->user) {
