@@ -49,6 +49,7 @@
 @section('content')
 @php
     $documentRouteName = request()->routeIs('assistant.*') ? 'assistant.walkin.document' : 'walkin.document';
+    $hasMedicalCondition = $record->hasMedicalCondition();
 @endphp
 <div style="margin-bottom: 14px;">
     <a href="{{ route('admin.health_records') }}" style="text-decoration: none; color: #64748b; font-size: 14px;">&larr; Back to Health Records</a>
@@ -61,8 +62,8 @@
                 <h2>Verify Student Health Uploads</h2>
                 <p>Review the uploaded files and set the final verification status. Nurse digital e-sign is not required in this workflow.</p>
             </div>
-            <span class="verify-badge {{ ($record->has_disability ?? 'No') === 'Yes' ? 'verify-badge-alert' : 'verify-badge-ok' }}">
-                {{ ($record->has_disability ?? 'No') === 'Yes' ? 'With Condition' : 'No Condition' }}
+            <span class="verify-badge {{ $hasMedicalCondition ? 'verify-badge-alert' : 'verify-badge-ok' }}">
+                {{ $hasMedicalCondition ? 'With Condition' : 'No Condition' }}
             </span>
         </div>
 

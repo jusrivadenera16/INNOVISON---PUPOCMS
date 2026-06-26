@@ -281,13 +281,9 @@
 
     $medicalConditionValue = trim((string) ($profile->medical_condition_remarks ?? ''));
     if ($medicalConditionValue === '') {
-        $medicalConditionValue = (
-            ($profile->has_illness ?? 'No') === 'Yes'
-            || filled($profile->medical_history)
-            || filled($profile->other_illness)
-            || ($profile->med_cert_findings ?? '') === 'With Findings'
-            || ($profile->xray_findings ?? '') === 'With Findings'
-        ) ? 'With Condition' : 'No Medical Condition Recorded';
+        $medicalConditionValue = $profile->hasMedicalCondition()
+            ? 'With Condition'
+            : 'No Medical Condition Recorded';
     }
 
     $profileStatusRaw = trim((string) ($profile->clearance_status ?? ''));

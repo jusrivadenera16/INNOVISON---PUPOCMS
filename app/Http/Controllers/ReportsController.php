@@ -699,7 +699,7 @@ class ReportsController extends Controller
                     return $form->verified_at ?? $form->created_at;
                 })->values();
 
-                $withConditionCount = $forms->where('has_disability', 'Yes')->count();
+                $withConditionCount = $forms->filter(fn (HealthProfile $form) => $form->hasMedicalCondition())->count();
                 $issuedCount = $forms->count();
 
                 return (object) [
@@ -739,7 +739,7 @@ class ReportsController extends Controller
 
         $totalIssued = (clone $summaryQuery)->count();
         $totalCourses = $issuedFormsCollection->count();
-        $issuedWithConditions = (clone $summaryQuery)->where('has_disability', 'Yes')->count();
+        $issuedWithConditions = (clone $summaryQuery)->withMedicalCondition()->count();
         $topCourse = optional($issuedFormsCollection->first())->course ?? 'No course data yet';
 
         $allCourses = HealthProfile::distinct('course_college')
@@ -760,7 +760,7 @@ class ReportsController extends Controller
         ));
     }
 
-    public function healthFormsLogbook(Request $request)
+    private function healthFormsLogbookQuery(Request $request): array
     {
         $search = trim((string) $request->query('q', ''));
         $courseFilter = trim((string) $request->query('course', ''));
@@ -801,9 +801,9 @@ class ReportsController extends Controller
         }
 
         if ($conditionFilter === 'yes') {
-            $query->where('has_disability', '=', 'Yes');
+            $query->withMedicalCondition();
         } elseif ($conditionFilter === 'no') {
-            $query->where('has_disability', '!=', 'Yes');
+            $query->withoutMedicalCondition();
         }
 
         if ($statusFilter === 'pending') {
@@ -811,6 +811,13 @@ class ReportsController extends Controller
         } elseif ($statusFilter === 'approved') {
             $query->where('clearance_status', '=', 'Issued');
         }
+
+        return [$query, $search, $courseFilter, $userTypeFilter, $genderFilter, $conditionFilter, $statusFilter];
+    }
+
+    public function healthFormsLogbook(Request $request)
+    {
+        [$query, $search, $courseFilter, $userTypeFilter, $genderFilter, $conditionFilter, $statusFilter] = $this->healthFormsLogbookQuery($request);
 
         $logbookRecords = $query->orderByDesc('created_at')->paginate(25);
 
@@ -830,6 +837,52 @@ class ReportsController extends Controller
             'conditionFilter',
             'statusFilter'
         ));
+    }
+
+    public function exportHealthFormsLogbook(Request $request)
+    {
+        [$query] = $this->healthFormsLogbookQuery($request);
+
+        $records = $query->orderByDesc('created_at')->get();
+        $filename = 'health-forms-approval-logbook-' . now()->format('Ymd-His') . '.xls';
+
+        return response()->streamDownload(function () use ($records) {
+            $esc = static fn ($value) => htmlspecialchars((string) ($value ?? 'N/A'), ENT_QUOTES, 'UTF-8');
+
+            echo "\xEF\xBB\xBF";
+            echo '<html><head><meta charset="UTF-8"></head><body>';
+            echo '<table border="1">';
+            echo '<thead><tr>';
+            foreach (['Name', 'Gender', 'Course', 'Type', 'Submitted', 'Approved By', 'Approved Date', 'Status', 'Condition'] as $heading) {
+                echo '<th>' . $esc($heading) . '</th>';
+            }
+            echo '</tr></thead><tbody>';
+
+            foreach ($records as $record) {
+                $user = $record->user;
+                $approver = $record->approvedBy;
+                $isApproved = $record->clearance_status === 'Issued';
+                $hasCondition = $record->hasMedicalCondition();
+
+                echo '<tr>';
+                echo '<td>' . $esc(optional($user)->name) . '</td>';
+                echo '<td>' . $esc(optional($user)->gender) . '</td>';
+                echo '<td>' . $esc($record->course_college ?: optional($user)->course) . '</td>';
+                echo '<td>' . $esc(optional($user)->user_type) . '</td>';
+                echo '<td>' . $esc(optional($record->created_at)->format('M d, Y g:i A')) . '</td>';
+                echo '<td>' . $esc(optional($approver)->name) . '</td>';
+                echo '<td>' . $esc($record->verified_at ? Carbon::parse($record->verified_at)->format('M d, Y g:i A') : 'N/A') . '</td>';
+                echo '<td>' . $esc($isApproved ? 'Approved' : 'Pending') . '</td>';
+                echo '<td>' . $esc($hasCondition ? 'Yes' : 'No') . '</td>';
+                echo '</tr>';
+            }
+
+            echo '</tbody></table>';
+            echo '</body></html>';
+        }, $filename, [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
+        ]);
     }
 
     public function feedbackReport(Request $request)
@@ -1144,7 +1197,7 @@ public function printReport(Request $request)
                     return $form->verified_at ?? $form->created_at;
                 })->values();
 
-                $withConditionCount = $forms->where('has_disability', 'Yes')->count();
+                $withConditionCount = $forms->filter(fn (HealthProfile $form) => $form->hasMedicalCondition())->count();
                 $issuedCount = $forms->count();
 
                 return (object) [

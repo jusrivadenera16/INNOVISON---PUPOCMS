@@ -1795,6 +1795,11 @@ public function updateClearance(Request $request, $id)
             ? collect()
             : HealthProfile::query()
                 ->with('user')
+                ->where(function ($query) {
+                    $query->whereIn('clearance_status', ['Pending', 'For Verification'])
+                        ->orWhereNull('clearance_status')
+                        ->orWhere('clearance_status', '');
+                })
                 ->latest('created_at')
                 ->limit(3)
                 ->get();
@@ -1813,7 +1818,7 @@ public function updateClearance(Request $request, $id)
 
         foreach ($recentHealthFormSubmissions as $healthProfile) {
             $notifications->push([
-                'id' => 'health-form:' . $healthProfile->id . ':' . optional($healthProfile->updated_at)->timestamp,
+                'id' => 'health-form:' . $healthProfile->id . ':' . optional($healthProfile->created_at)->timestamp,
                 'kind' => 'health',
                 'title' => 'New health form submission',
                 'message' => 'A student submitted a health record for verification.',

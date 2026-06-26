@@ -138,7 +138,7 @@
 
     /* Read-only workflow modal styling */
     .awaiting-links-modal-shell {
-        width: min(900px, 95%);
+        width: min(980px, 96%);
         max-height: 85vh;
         overflow: hidden;
         border-radius: 18px;
@@ -362,15 +362,20 @@
         gap: 10px;
         flex-wrap: wrap;
         text-align: right;
+        flex: 0 0 auto;
+        max-width: 620px;
     }
     .readonly-record-pill {
         display: grid;
         gap: 3px;
-        min-width: 128px;
+        min-width: 142px;
         padding: 7px 10px;
         border-radius: 12px;
         background: #ffffff;
         border: 1px solid rgba(112, 19, 27, 0.1);
+    }
+    .readonly-record-pill.reference-pill {
+        min-width: 168px;
     }
     .readonly-record-pill span {
         color: #64748b;
@@ -439,6 +444,24 @@
     }
     .readonly-record-pill.status-flag-pill strong {
         color: #70131B;
+    }
+    .readonly-record-pill.condition-pill {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+        box-shadow: 0 8px 18px rgba(59, 130, 246, 0.1);
+    }
+    .readonly-record-pill.condition-pill.has-condition {
+        background: #fef2f2;
+        border-color: #fecaca;
+        box-shadow: 0 8px 18px rgba(239, 68, 68, 0.1);
+    }
+    .readonly-record-pill.condition-pill span,
+    .readonly-record-pill.condition-pill strong {
+        color: #1d4ed8;
+    }
+    .readonly-record-pill.condition-pill.has-condition span,
+    .readonly-record-pill.condition-pill.has-condition strong {
+        color: #991b1b;
     }
     .readonly-expand-btn {
         position: relative;
@@ -2209,11 +2232,7 @@
                 || trim((string) ($summaryRecord->pending_reason ?? '')) !== ''
                 || trim((string) ($summaryRecord->medical_condition_remarks ?? '')) !== '';
 
-            if (
-                $summaryRecord->has_disability === 'Yes'
-                || $summaryRecord->has_illness === 'Yes'
-                || trim((string) ($summaryRecord->medical_condition_remarks ?? '')) !== ''
-            ) {
+            if ($summaryRecord->hasMedicalCondition()) {
                 $healthSummaryStats['with_conditions']++;
             }
 
@@ -2284,7 +2303,7 @@
     {{-- Main Table Card --}}
 <div class="card health-summary-card">
     <div class="health-table-head">
-        <div class="health-table-title">Health Profile Summary</div>
+        <div class="health-table-title">Approved Health Records</div>
     </div>
     <table id="healthTable">
         <thead>
@@ -2367,7 +2386,7 @@
                     data-health-row
                     data-health-id="{{ $record->id }}"
                     data-health-tab="{{ $healthTabState }}"
-                    data-health-condition="{{ $record->has_disability == 'Yes' ? 'with_conditions' : 'none' }}"
+                    data-health-condition="{{ $record->hasMedicalCondition() ? 'with_conditions' : 'none' }}"
                     data-record-payload="{{ e(json_encode($recordPayload)) }}"
                     data-view-url="{{ in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true) ? route('admin.show_health', $record->id) : '' }}"
                     title="{{ in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true) ? 'Click to view' : '' }}"
@@ -2384,11 +2403,7 @@
                     
                     {{-- Column 1: Medical Condition Status --}}
                     <td>
-                        @if(
-                            $record->has_disability === 'Yes'
-                            || $record->has_illness === 'Yes'
-                            || trim((string) ($record->medical_condition_remarks ?? '')) !== ''
-                        )
+                        @if($record->hasMedicalCondition())
                             <span class="status review">With Condition</span>
                         @else
                             <span class="status submitted">No Condition</span>
@@ -2433,7 +2448,7 @@
 </div>
 
 <div id="pendingApprovalInfoModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px;" onclick="if(event.target.id==='pendingApprovalInfoModal') document.getElementById('pendingApprovalInfoModal').style.display='none';">
-    <div class="awaiting-links-modal-shell" style="max-width: 760px;">
+    <div class="awaiting-links-modal-shell" style="max-width: 980px;">
         <div class="awaiting-links-modal-head">
             <div class="awaiting-links-modal-head-main">
                 <div class="awaiting-links-modal-badge">PA</div>
@@ -2482,6 +2497,8 @@
                                 'url' => null,
                             ];
                         }
+
+                        $readonlyHasCondition = $readonlyRecord->hasMedicalCondition();
                     @endphp
                     <article class="readonly-record-card">
                         <div class="readonly-record-head">
@@ -2490,7 +2507,7 @@
                                 <p class="readonly-record-sub">{{ optional($readonlyRecord->user)->email ?: '-' }}</p>
                             </div>
                             <div class="readonly-record-meta">
-                                <div class="readonly-record-pill">
+                                <div class="readonly-record-pill reference-pill">
                                     <span>Reference Number</span>
                                     @php($readonlyReference = $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-')
                                     <strong class="readonly-reference-value">
@@ -2505,6 +2522,10 @@
                                 <div class="readonly-record-pill status-flag-pill">
                                     <span>Status Flag</span>
                                     <strong>Pending Verification</strong>
+                                </div>
+                                <div class="readonly-record-pill condition-pill {{ $readonlyHasCondition ? 'has-condition' : '' }}">
+                                    <span>Condition</span>
+                                    <strong>{{ $readonlyHasCondition ? 'With Condition' : 'No Condition' }}</strong>
                                 </div>
                                 <button
                                     type="button"
@@ -2554,7 +2575,7 @@
 </div>
 
 <div id="pendingConditionalInfoModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px;" onclick="if(event.target.id==='pendingConditionalInfoModal') document.getElementById('pendingConditionalInfoModal').style.display='none';">
-    <div class="awaiting-links-modal-shell" style="max-width: 760px;">
+    <div class="awaiting-links-modal-shell" style="max-width: 980px;">
         <div class="awaiting-links-modal-head">
             <div class="awaiting-links-modal-head-main">
                 <div class="awaiting-links-modal-badge">PC</div>
@@ -2570,6 +2591,7 @@
         <div class="awaiting-links-modal-body">
             <div class="pending-approval-list">
                 @forelse($records->whereIn('id', $pendingConditionalRecordIds) as $readonlyRecord)
+                    @php($readonlyHasCondition = $readonlyRecord->hasMedicalCondition())
                     <article class="readonly-record-card">
                         <div class="readonly-record-head">
                             <div>
@@ -2577,7 +2599,7 @@
                                 <p class="readonly-record-sub">{{ optional($readonlyRecord->user)->email ?: '-' }}</p>
                             </div>
                             <div class="readonly-record-meta">
-                                <div class="readonly-record-pill">
+                                <div class="readonly-record-pill reference-pill">
                                     <span>Reference Number</span>
                                     @php($readonlyReference = $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-')
                                     <strong class="readonly-reference-value">
@@ -2592,6 +2614,10 @@
                                 <div class="readonly-record-pill status-flag-pill">
                                     <span>Status Flag</span>
                                     <strong>Conditional / Flagged</strong>
+                                </div>
+                                <div class="readonly-record-pill condition-pill {{ $readonlyHasCondition ? 'has-condition' : '' }}">
+                                    <span>Condition</span>
+                                    <strong>{{ $readonlyHasCondition ? 'With Condition' : 'No Condition' }}</strong>
                                 </div>
                                 <button
                                     type="button"
@@ -2956,25 +2982,36 @@
                 }, 1200);
             };
 
+            const fallbackCopy = function () {
+                const tempInput = document.createElement('textarea');
+                tempInput.value = text;
+                tempInput.setAttribute('readonly', 'readonly');
+                tempInput.style.position = 'fixed';
+                tempInput.style.top = '0';
+                tempInput.style.left = '-9999px';
+                tempInput.style.opacity = '0';
+                document.body.appendChild(tempInput);
+                tempInput.focus();
+                tempInput.select();
+                tempInput.setSelectionRange(0, tempInput.value.length);
+
+                try {
+                    if (document.execCommand('copy')) {
+                        markCopied();
+                    }
+                } catch (error) {
+                    // Browser denied copy; leave the UI unchanged.
+                } finally {
+                    document.body.removeChild(tempInput);
+                }
+            };
+
             if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text).then(markCopied).catch(function () {});
+                navigator.clipboard.writeText(text).then(markCopied).catch(fallbackCopy);
                 return;
             }
 
-            const tempInput = document.createElement('textarea');
-            tempInput.value = text;
-            tempInput.setAttribute('readonly', 'readonly');
-            tempInput.style.position = 'fixed';
-            tempInput.style.left = '-9999px';
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            try {
-                document.execCommand('copy');
-                markCopied();
-            } catch (error) {
-                // Browser denied copy; leave the UI unchanged.
-            }
-            document.body.removeChild(tempInput);
+            fallbackCopy();
         };
 
         document.querySelectorAll('[data-copy-reference]').forEach(function (button) {

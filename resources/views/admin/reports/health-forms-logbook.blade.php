@@ -55,6 +55,67 @@
         align-items: center;
         margin-bottom: 24px;
     }
+    .logbook-search-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 260px;
+    }
+    .logbook-search-wrap .voice-field-wrap {
+        width: 100%;
+    }
+    .logbook-search-input {
+        width: 100%;
+        height: 44px;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 0 46px 0 14px;
+        font-size: 14px;
+        color: #111827;
+        background: #ffffff;
+        transition: border-color .18s ease, box-shadow .18s ease;
+    }
+    .logbook-search-input:focus {
+        outline: none;
+        border-color: #7f1d2d;
+        box-shadow: 0 0 0 3px rgba(127, 29, 45, 0.1);
+    }
+    .logbook-search-wrap .voice-field-inline-mic {
+        right: 10px;
+    }
+    .logbook-toolbar-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        flex: 0 0 auto;
+    }
+    .logbook-export-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 0 20px;
+        border: 1px solid rgba(250, 204, 21, 0.95);
+        border-radius: 12px;
+        background: #facc15;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        text-decoration: none;
+        box-shadow: 0 14px 28px rgba(250, 204, 21, 0.22);
+        transition: all .18s ease;
+        white-space: nowrap;
+    }
+    .logbook-export-btn:hover {
+        background: #eab308;
+        border-color: #eab308;
+        color: #111827;
+        transform: translateY(-1px);
+        box-shadow: 0 16px 30px rgba(234, 179, 8, 0.28);
+    }
     .filter-btn-open {
         display: inline-flex;
         align-items: center;
@@ -263,7 +324,71 @@
         margin-top: 18px;
     }
     .logbook-pagination .pagination {
+        display: flex;
+        align-items: center;
         justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 0;
+        padding: 0;
+    }
+    .logbook-pagination .pagination li {
+        display: inline-flex;
+    }
+    .logbook-pagination .pagination a,
+    .logbook-pagination .pagination span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 36px;
+        height: 36px;
+        padding: 0 12px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1;
+        text-decoration: none;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+    }
+    .logbook-pagination .pagination a:hover {
+        border-color: #facc15;
+        color: #7f1d2d;
+        transform: translateY(-1px);
+    }
+    .logbook-pagination .pagination .active span {
+        background: #7f1d2d;
+        border-color: #7f1d2d;
+        color: #ffffff;
+    }
+    .logbook-pagination .pagination .disabled span {
+        background: #f8fafc;
+        color: #94a3b8;
+        box-shadow: none;
+    }
+    .logbook-pagination .pagination svg {
+        width: 16px !important;
+        height: 16px !important;
+        max-width: 16px;
+        max-height: 16px;
+        flex: 0 0 16px;
+        display: block;
+        stroke-width: 2.2;
+    }
+    @media (max-width: 720px) {
+        .logbook-head,
+        .logbook-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .logbook-toolbar-actions,
+        .logbook-back,
+        .filter-btn-open,
+        .logbook-export-btn {
+            width: 100%;
+        }
     }
 </style>
 @endpush
@@ -272,6 +397,8 @@
 @php
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
     $reportsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
+    $logbookRouteName = request()->routeIs('assistant.*') ? 'assistant.reports.health-forms-logbook' : 'reports.health-forms-logbook';
+    $logbookExportRouteName = request()->routeIs('assistant.*') ? 'assistant.reports.health-forms-logbook.export' : 'reports.health-forms-logbook.export';
 @endphp
 
 <div class="logbook-shell">
@@ -286,8 +413,13 @@
         </div>
     </div>
 
-    <div class="logbook-toolbar" style="margin-bottom: 20px;">
-        <input type="text" id="searchInput" placeholder="Search by applicant or student name..." value="{{ $search }}" style="flex: 1; height: 44px; border: 1px solid #cbd5e1; border-radius: 12px; padding: 0 14px; font-size: 14px; color: #111827;" onkeyup="handleSearch()">
+    <div class="logbook-toolbar">
+        <div class="logbook-search-wrap">
+            <input type="text" id="searchInput" class="logbook-search-input" placeholder="Search by applicant or student name..." value="{{ $search }}" onkeyup="handleSearch()">
+        </div>
+        <div class="logbook-toolbar-actions">
+            <a href="{{ route($logbookExportRouteName, request()->query()) }}" class="logbook-export-btn">Export</a>
+        </div>
     </div>
 
     <div class="modal-overlay" id="filterModal" onclick="closeFilterModal(event)">
@@ -347,7 +479,7 @@
                 </div>
                 <div class="filter-actions">
                     <button type="submit" class="filter-btn primary">Apply Filters</button>
-                    <a href="{{ route('reports.health-forms-logbook') }}" class="filter-btn secondary">Reset</a>
+                    <a href="{{ route($logbookRouteName) }}" class="filter-btn secondary">Reset</a>
                 </div>
             </form>
         </div>
@@ -374,7 +506,7 @@
                         $user = $record->user;
                         $approver = $record->approvedBy;
                         $isApproved = $record->clearance_status === 'Issued';
-                        $hasCondition = $record->has_disability === 'Yes';
+                        $hasCondition = $record->hasMedicalCondition();
                     @endphp
                     <tr>
                         <td>
@@ -455,7 +587,7 @@ function handleSearch() {
     const statusValue = filterForm.querySelector('[name="status"]').value;
     if (statusValue) params.append('status', statusValue);
 
-    window.location.href = '{{ route("reports.health-forms-logbook") }}?' + params.toString();
+    window.location.href = '{{ route($logbookRouteName) }}?' + params.toString();
 }
 
 document.getElementById('filterForm').addEventListener('submit', function(e) {
@@ -470,7 +602,7 @@ document.getElementById('filterForm').addEventListener('submit', function(e) {
     params.append('condition', this.querySelector('[name="condition"]').value);
     params.append('status', this.querySelector('[name="status"]').value);
 
-    window.location.href = '{{ route("reports.health-forms-logbook") }}?' + params.toString();
+    window.location.href = '{{ route($logbookRouteName) }}?' + params.toString();
 });
 
 document.addEventListener('keydown', function(e) {

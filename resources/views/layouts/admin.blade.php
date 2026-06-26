@@ -4256,6 +4256,11 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         ? collect()
         : \App\Models\HealthProfile::query()
             ->with('user')
+            ->where(function ($query) {
+                $query->whereIn('clearance_status', ['Pending', 'For Verification'])
+                    ->orWhereNull('clearance_status')
+                    ->orWhere('clearance_status', '');
+            })
             ->latest('created_at')
             ->limit(3)
             ->get();
@@ -4324,7 +4329,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         $studentNumber = trim((string) ($profileUser->student_number ?? $profileUser->student_id ?? 'N/A'));
 
         $adminNotifications->push([
-            'id' => 'health-form:' . $healthProfile->id . ':' . optional($healthProfile->updated_at)->timestamp,
+            'id' => 'health-form:' . $healthProfile->id . ':' . optional($healthProfile->created_at)->timestamp,
             'type' => 'health-form',
             'title' => 'New health form submission',
             'link' => $healthRecordsUrl . '?tab=pending_approval&highlight_health=' . $healthProfile->id,
