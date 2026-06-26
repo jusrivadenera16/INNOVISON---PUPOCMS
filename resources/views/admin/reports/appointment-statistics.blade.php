@@ -31,8 +31,8 @@
         margin: 8px 0 0;
         max-width: 780px;
         color: #64748b;
-        font-size: 14px;
-        line-height: 1.6;
+        font-size: 12px;
+        line-height: 1.5;
         font-weight: 600;
     }
 
@@ -48,7 +48,50 @@
     .appointment-stats-filter-toggle,
     .appointment-stats-filter-button {
         display: inline-flex;
+        position: relative;
+        overflow: hidden;
         align-items: center;
+    }
+
+    .appointment-stats-back::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(250, 204, 21, 0) 0%, rgba(250, 204, 21, 0.46) 45%, rgba(250, 204, 21, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.5s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .appointment-stats-back:hover::after {
+        left: 125%;
+    }
+
+    .appointment-stats-back {
+        z-index: 1;
+        justify-content: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(112, 19, 27, 0.22);
+        background: #ffffff;
+        color: #70131B;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 900;
+        text-decoration: none;
+        cursor: pointer;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+        transition: all .18s ease;
+    }
+
+    .appointment-stats-filter-toggle,
+    .appointment-stats-filter-button {
         justify-content: center;
         gap: 8px;
         min-height: 42px;
@@ -474,6 +517,9 @@
             <p class="appointment-stats-subtitle">Clinic activity analytics for online appointments and walk-in consultations, filtered by date range, patient type, status, service, and source.</p>
         </div>
         <div class="appointment-stats-header-actions">
+            <a href="{{ route('reports.appointment-history') }}" class="appointment-stats-back" style="background: #7f1d2d; color: #ffffff; border-color: #7f1d2d;">
+                📋 Appointment History
+            </a>
             <a href="{{ $reportsHomeUrl }}" class="appointment-stats-back">
                 <x-outline-icon name="arrow-long-right" />
                 Back to Reports

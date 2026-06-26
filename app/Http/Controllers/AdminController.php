@@ -1462,7 +1462,7 @@ class AdminController extends Controller
     {
 
         $profile = HealthProfile::with('user')->findOrFail($id);
-        
+
 
         $calculatedAge = Carbon::parse($profile->user->DOB)->age;
 

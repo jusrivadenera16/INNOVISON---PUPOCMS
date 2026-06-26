@@ -550,6 +550,113 @@ class ReportsController extends Controller
         ];
     }
 
+    public function appointmentHistory(Request $request)
+    {
+        $search = trim((string) $request->query('q', ''));
+        $users = collect();
+        $consultations = collect();
+
+        if ($search !== '') {
+            $users = User::where('name', 'like', "%{$search}%")
+                ->select('id', 'name', 'email', 'course', 'user_type')
+                ->limit(20)
+                ->get();
+
+            $userId = $request->query('user_id');
+            if ($userId) {
+                $appointments = Appointment::where('user_id', $userId)
+                    ->with(['user'])
+                    ->orderByDesc('date')
+                    ->get();
+
+                $consultationRecords = Consultation::where('user_id', $userId)
+                    ->with(['user', 'attendingStaff'])
+                    ->orderByDesc('consultation_date')
+                    ->get();
+
+                $consultations = $appointments->map(function ($appointment) use ($consultationRecords) {
+                    $consultation = $consultationRecords->first(function ($c) use ($appointment) {
+                        if (!$appointment->date || !$c->consultation_date) {
+                            return false;
+                        }
+                        $appointmentDate = \Carbon\Carbon::parse($appointment->date)->format('Y-m-d');
+                        $consultationDate = \Carbon\Carbon::parse($c->consultation_date)->format('Y-m-d');
+                        return $appointmentDate === $consultationDate;
+                    });
+
+                    return (object) [
+                        'appointment' => $appointment,
+                        'consultation' => $consultation,
+                    ];
+                });
+            }
+        }
+
+        return view('admin.reports.appointment-history', compact(
+            'search',
+            'users',
+            'consultations'
+        ));
+    }
+
+    public function printAppointmentHistory(Request $request)
+    {
+        $userId = $request->query('user_id');
+
+        if (!$userId) {
+            abort(404, 'User ID not provided');
+        }
+
+        $user = User::findOrFail($userId);
+
+        $appointments = Appointment::where('user_id', $userId)
+            ->with(['user'])
+            ->orderByDesc('date')
+            ->get();
+
+        $consultationRecords = Consultation::where('user_id', $userId)
+            ->with(['user', 'attendingStaff'])
+            ->orderByDesc('consultation_date')
+            ->get();
+
+        $consultations = $appointments->map(function ($appointment) use ($consultationRecords) {
+            $consultation = $consultationRecords->first(function ($c) use ($appointment) {
+                if (!$appointment->date || !$c->consultation_date) {
+                    return false;
+                }
+                $appointmentDate = \Carbon\Carbon::parse($appointment->date)->format('Y-m-d');
+                $consultationDate = \Carbon\Carbon::parse($c->consultation_date)->format('Y-m-d');
+                return $appointmentDate === $consultationDate;
+            });
+
+            return (object) [
+                'appointment' => $appointment,
+                'consultation' => $consultation,
+            ];
+        });
+
+        $output = $request->query('output', 'pdf');
+
+        if ($output === 'pdf' && class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.reports.print-appointment-history', [
+                'user' => $user,
+                'consultations' => $consultations,
+                'isPdf' => true,
+            ])->setPaper('a4', 'landscape');
+
+            return $pdf->stream(
+                'appointment-history-' . $user->name . '-' . now()->format('YmdHis') . '.pdf',
+                ['Attachment' => false]
+            );
+        }
+
+        return view('admin.reports.print-appointment-history', [
+            'user' => $user,
+            'consultations' => $consultations,
+            'isPdf' => false,
+        ]);
+    }
+
     public function healthFormsReport(Request $request)
     {
         $search = trim((string) $request->query('q', ''));

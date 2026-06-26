@@ -327,7 +327,6 @@
                 <button type="button" class="profile-tab is-active" data-profile-tab-target="summaryPanel">Personal Information</button>
                 <button type="button" class="profile-tab" data-profile-tab-target="healthPanel">Health Profile</button>
                 <button type="button" class="profile-tab" data-profile-tab-target="docsPanel">Uploaded Documents</button>
-                <button type="button" class="profile-tab" data-profile-tab-target="appointmentPanel">Appointment History</button>
             </div>
             <span class="profile-status-badge {{ $profileStatusClass }}">
                 @if(in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true))
@@ -496,11 +495,6 @@
         </div>
     </div>
 
-    <div class="profile-card profile-panel" id="appointmentPanel">
-        <div class="appointment-history-wrap">
-            <p style="padding: 20px; text-align: center;">Appointment History feature coming soon</p>
-        </div>
-    </div>
 </div>
 @endsection
 

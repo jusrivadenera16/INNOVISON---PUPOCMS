@@ -1573,7 +1573,7 @@
             @endif
             @php
                 $selectedPwd = old('has_disability', $prefill['has_disability'] ?? 'No');
-                $personalErrorFields = ['school_year', 'course_code', 'course_college', 'home_address', 'zipcode', 'birthday', 'age', 'sex', 'civil_status', 'height', 'weight', 'blood_type', 'contact_no', 'guardian_name', 'landline', 'cellphone'];
+                $personalErrorFields = ['school_year', 'course_code', 'course_college', 'home_address', 'zipcode', 'birthday', 'age', 'sex', 'civil_status', 'blood_type', 'contact_no', 'guardian_name', 'landline', 'cellphone'];
                 $medicalErrorFields = ['has_illness', 'medical_history', 'other_illness', 'has_disability', 'disability_type', 'food_allergies', 'no_allergies', 'medicine_allergies', 'other_med_allergies', 'is_smoker', 'is_drinker'];
                 $covidErrorFields = ['covid_vaccinated', 'vaccine_history'];
                 $uploadErrorFields = ['medical_certificate', 'doctor_name', 'med_cert_date', 'med_cert_findings', 'med_cert_findings_details', 'chest_xray_result', 'xray_date', 'xray_findings', 'xray_findings_details', 'pwd_id_proof', 'student_photo', 'health_profile_certified'];
