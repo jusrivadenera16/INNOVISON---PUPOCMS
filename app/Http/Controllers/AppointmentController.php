@@ -2469,6 +2469,19 @@ public function validateHealthFormReference(Request $request)
     }
 
     $attemptKey = $this->healthReferenceAttemptKey($request, $user);
+
+    if ($this->isLocalHealthFormTestReference($referenceNumber)) {
+        $existingHealthProfile = HealthProfile::query()->where('user_id', $user->id)->first();
+        $this->persistResolvedReferenceNumber($user, $referenceNumber, $existingHealthProfile);
+        RateLimiter::clear($attemptKey);
+
+        return response()->json([
+            'success' => true,
+            'reference_number' => $referenceNumber,
+            'message' => 'Local test reference verified. This is only allowed in local testing.',
+        ]);
+    }
+
     if (RateLimiter::tooManyAttempts($attemptKey, 3)) {
         $retryAfter = RateLimiter::availableIn($attemptKey);
 
@@ -2559,6 +2572,25 @@ public function validateHealthFormReference(Request $request)
 private function healthReferenceAttemptKey(Request $request, User $user): string
 {
     return 'health-reference-verification:' . $user->id . ':' . sha1((string) $request->ip());
+}
+
+private function allowsLocalHealthFormTestReferences(): bool
+{
+    return app()->environment('local')
+        && (bool) config('health_form.allow_local_test_references', false);
+}
+
+private function isLocalHealthFormTestReference(string $referenceNumber): bool
+{
+    if (!$this->allowsLocalHealthFormTestReferences()) {
+        return false;
+    }
+
+    return in_array(
+        strtoupper(trim($referenceNumber)),
+        (array) config('health_form.local_test_references', []),
+        true
+    );
 }
 
 public function storeHealthForm(Request $request)
@@ -2745,6 +2777,10 @@ public function storeHealthForm(Request $request)
             if ($this->isClinicReference($officialReference)) {
                 $officialReference = '';
             }
+        }
+
+        if ($this->isLocalHealthFormTestReference($submittedReference)) {
+            $officialReference = $submittedReference;
         }
 
         if ($officialReference === '' || $submittedReference !== $officialReference) {

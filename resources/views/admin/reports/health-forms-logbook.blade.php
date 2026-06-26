@@ -314,6 +314,76 @@
         background: #eff6ff;
         color: #1d4ed8;
     }
+    .condition-tooltip-wrap {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+    }
+    .condition-tooltip-wrap .condition-yes {
+        cursor: help;
+        box-shadow: 0 8px 18px rgba(153, 27, 27, 0.08);
+    }
+    .condition-tooltip-bubble {
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 10px);
+        z-index: 30;
+        width: min(320px, 78vw);
+        padding: 14px 15px;
+        border: 1px solid rgba(112, 19, 27, 0.16);
+        border-radius: 14px;
+        background: #ffffff;
+        color: #111827;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(6px);
+        pointer-events: none;
+        transition: opacity .18s ease, visibility .18s ease, transform .18s ease;
+    }
+    .condition-tooltip-bubble::after {
+        content: '';
+        position: absolute;
+        right: 22px;
+        bottom: -7px;
+        width: 12px;
+        height: 12px;
+        background: #ffffff;
+        border-right: 1px solid rgba(112, 19, 27, 0.16);
+        border-bottom: 1px solid rgba(112, 19, 27, 0.16);
+        transform: rotate(45deg);
+    }
+    .condition-tooltip-wrap:hover .condition-tooltip-bubble,
+    .condition-tooltip-wrap:focus-within .condition-tooltip-bubble {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+    .condition-tooltip-title {
+        margin: 0 0 8px;
+        color: #70131B;
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+    .condition-tooltip-list {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .condition-tooltip-list li {
+        color: #334155;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+    .condition-tooltip-list strong {
+        color: #111827;
+        font-weight: 900;
+    }
     .logbook-empty {
         padding: 44px 24px;
         text-align: center;
@@ -321,16 +391,22 @@
         font-weight: 700;
     }
     .logbook-pagination {
-        margin-top: 18px;
+        margin-top: 20px;
+        padding: 14px 16px;
+        border: 1px solid rgba(112, 19, 27, 0.1);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.88);
+        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
     }
     .logbook-pagination .pagination {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 10px;
         flex-wrap: wrap;
         margin: 0;
         padding: 0;
+        list-style: none;
     }
     .logbook-pagination .pagination li {
         display: inline-flex;
@@ -340,42 +416,46 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 36px;
-        height: 36px;
-        padding: 0 12px;
-        border-radius: 10px;
-        border: 1px solid #e2e8f0;
+        min-width: 38px;
+        height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(112, 19, 27, 0.14);
         background: #ffffff;
-        color: #334155;
+        color: #70131B;
         font-size: 13px;
-        font-weight: 800;
+        font-weight: 900;
         line-height: 1;
         text-decoration: none;
-        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+        box-shadow: 0 10px 20px rgba(112, 19, 27, 0.07);
+        transition: transform .18s ease, border-color .18s ease, background-color .18s ease, color .18s ease, box-shadow .18s ease;
     }
     .logbook-pagination .pagination a:hover {
+        background: #facc15;
         border-color: #facc15;
-        color: #7f1d2d;
+        color: #111827;
         transform: translateY(-1px);
+        box-shadow: 0 14px 26px rgba(250, 204, 21, 0.24);
     }
     .logbook-pagination .pagination .active span {
         background: #7f1d2d;
         border-color: #7f1d2d;
         color: #ffffff;
+        box-shadow: 0 12px 24px rgba(127, 29, 45, 0.22);
     }
     .logbook-pagination .pagination .disabled span {
         background: #f8fafc;
         color: #94a3b8;
+        border-color: #e2e8f0;
         box-shadow: none;
+        cursor: not-allowed;
     }
     .logbook-pagination .pagination svg {
-        width: 16px !important;
-        height: 16px !important;
-        max-width: 16px;
-        max-height: 16px;
-        flex: 0 0 16px;
-        display: block;
-        stroke-width: 2.2;
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        max-width: 0 !important;
+        max-height: 0 !important;
     }
     @media (max-width: 720px) {
         .logbook-head,
@@ -507,6 +587,46 @@
                         $approver = $record->approvedBy;
                         $isApproved = $record->clearance_status === 'Issued';
                         $hasCondition = $record->hasMedicalCondition();
+                        $conditionDetails = collect();
+                        $formatList = static function ($value): string {
+                            if (is_array($value)) {
+                                return collect($value)
+                                    ->filter(fn ($item) => trim((string) $item) !== '')
+                                    ->implode(', ');
+                            }
+
+                            return trim((string) $value);
+                        };
+
+                        if ($record->has_disability === 'Yes') {
+                            $conditionDetails->push([
+                                'label' => 'Disability',
+                                'value' => trim((string) $record->disability_type) !== '' ? $record->disability_type : 'Yes',
+                            ]);
+                        }
+
+                        if ($record->has_illness === 'Yes' || $formatList($record->medical_history) !== '') {
+                            $conditionDetails->push([
+                                'label' => 'Medical History',
+                                'value' => $formatList($record->medical_history) !== '' ? $formatList($record->medical_history) : 'Yes',
+                            ]);
+                        }
+
+                        foreach ([
+                            'Other Illness' => $record->other_illness,
+                            'Food Allergies' => $record->food_allergies,
+                            'Medicine Allergies' => $record->medicine_allergies,
+                            'Other Medicine Allergies' => $record->other_med_allergies,
+                            'Nurse Remarks' => $record->medical_condition_remarks,
+                        ] as $label => $value) {
+                            $formattedValue = $formatList($value);
+                            if ($formattedValue !== '' && $formattedValue !== '[]') {
+                                $conditionDetails->push([
+                                    'label' => $label,
+                                    'value' => $formattedValue,
+                                ]);
+                            }
+                        }
                     @endphp
                     <tr>
                         <td>
@@ -536,9 +656,23 @@
                             </span>
                         </td>
                         <td>
-                            <span class="status-badge {{ $hasCondition ? 'condition-yes' : 'condition-no' }}">
-                                {{ $hasCondition ? 'Yes' : 'No' }}
-                            </span>
+                            @if($hasCondition)
+                                <span class="condition-tooltip-wrap">
+                                    <span class="status-badge condition-yes" tabindex="0">Yes</span>
+                                    <span class="condition-tooltip-bubble" role="tooltip">
+                                        <span class="condition-tooltip-title">Medical Condition Details</span>
+                                        <ul class="condition-tooltip-list">
+                                            @forelse($conditionDetails as $detail)
+                                                <li><strong>{{ $detail['label'] }}:</strong> {{ $detail['value'] }}</li>
+                                            @empty
+                                                <li>Medical condition was flagged, but no specific details were provided.</li>
+                                            @endforelse
+                                        </ul>
+                                    </span>
+                                </span>
+                            @else
+                                <span class="status-badge condition-no">No</span>
+                            @endif
                         </td>
                     </tr>
                 @empty

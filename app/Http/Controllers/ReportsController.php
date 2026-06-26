@@ -860,6 +860,7 @@ class ReportsController extends Controller
                 'Approved Date',
                 'Status',
                 'Condition',
+                'Medical Condition Details',
             ]);
 
             foreach ($records as $record) {
@@ -867,6 +868,38 @@ class ReportsController extends Controller
                 $approver = $record->approvedBy;
                 $isApproved = in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true);
                 $hasCondition = $record->hasMedicalCondition();
+                $formatList = static function ($value): string {
+                    if (is_array($value)) {
+                        return collect($value)
+                            ->filter(fn ($item) => trim((string) $item) !== '')
+                            ->implode(', ');
+                    }
+
+                    return trim((string) $value);
+                };
+                $conditionDetails = collect();
+
+                if ($record->has_disability === 'Yes') {
+                    $conditionDetails->push('Disability: ' . (trim((string) $record->disability_type) !== '' ? $record->disability_type : 'Yes'));
+                }
+
+                $medicalHistory = $formatList($record->medical_history);
+                if ($record->has_illness === 'Yes' || $medicalHistory !== '') {
+                    $conditionDetails->push('Medical History: ' . ($medicalHistory !== '' ? $medicalHistory : 'Yes'));
+                }
+
+                foreach ([
+                    'Other Illness' => $record->other_illness,
+                    'Food Allergies' => $record->food_allergies,
+                    'Medicine Allergies' => $record->medicine_allergies,
+                    'Other Medicine Allergies' => $record->other_med_allergies,
+                    'Nurse Remarks' => $record->medical_condition_remarks,
+                ] as $label => $value) {
+                    $formattedValue = $formatList($value);
+                    if ($formattedValue !== '' && $formattedValue !== '[]') {
+                        $conditionDetails->push($label . ': ' . $formattedValue);
+                    }
+                }
 
                 fputcsv($output, [
                     optional($user)->name ?: 'N/A',
@@ -878,6 +911,7 @@ class ReportsController extends Controller
                     $record->verified_at ? Carbon::parse($record->verified_at)->format('M d, Y g:i A') : 'N/A',
                     $isApproved ? 'Approved' : 'Pending',
                     $hasCondition ? 'Yes' : 'No',
+                    $hasCondition ? ($conditionDetails->isNotEmpty() ? $conditionDetails->implode(' | ') : 'Condition flagged, but no details provided.') : 'N/A',
                 ]);
             }
 
