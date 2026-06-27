@@ -962,46 +962,46 @@
     .health-summary-metric-card {
         position: relative;
         overflow: hidden;
+        min-height: 90px;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
         color: #111827 !important;
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08) !important;
+        box-shadow: none !important;
     }
     .health-summary-metric-card.is-approved {
-        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
-        border: 3px solid #2563eb !important;
+        background: #eff6ff !important;
+        border: 1.5px solid #93c5fd !important;
     }
     .health-summary-metric-card.is-condition {
-        background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%) !important;
-        border: 3px solid #be123c !important;
+        background: #fff1f2 !important;
+        border: 1.5px solid #fda4af !important;
     }
     .health-summary-metric-card * {
         color: inherit !important;
     }
     .health-summary-metric-label {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 7px 10px;
-        border-radius: 999px;
-        font-size: 9px;
-        font-weight: 800;
-        line-height: 1;
+        display: block;
+        padding: 0;
+        border-radius: 0;
+        font-size: 11px;
+        font-weight: 900;
+        line-height: 1.1;
         letter-spacing: 0.8px;
         text-transform: uppercase;
         white-space: nowrap;
     }
     .health-summary-metric-card.is-approved .health-summary-metric-label {
-        background: rgba(37, 99, 235, 0.10);
         color: #1d4ed8 !important;
     }
     .health-summary-metric-card.is-condition .health-summary-metric-label {
-        background: rgba(190, 18, 60, 0.10);
-        color: #9f1239 !important;
+        color: #dc2626 !important;
     }
     .health-summary-metric-count {
         display: block;
-        margin: 8px 0 0;
-        font-size: 24px;
-        font-weight: 800;
+        margin: 10px 0 0;
+        font-size: 28px;
+        font-weight: 900;
         line-height: 1;
     }
     .health-summary-metric-card.is-approved .health-summary-metric-count {
@@ -1513,10 +1513,11 @@
 
     .health-summary-row {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: center;
         flex-direction: column;
         gap: 0;
+        width: 100%;
     }
 
     .health-table-head {
@@ -1720,13 +1721,13 @@
     }
 
     html[data-theme="dark"] .health-summary-metric-card.is-approved {
-        background: linear-gradient(135deg, rgba(30, 58, 138, 0.28) 0%, rgba(37, 99, 235, 0.16) 100%) !important;
-        border: 3px solid #60a5fa !important;
+        background: rgba(37, 99, 235, 0.16) !important;
+        border: 1.5px solid #60a5fa !important;
     }
 
     html[data-theme="dark"] .health-summary-metric-card.is-condition {
-        background: linear-gradient(135deg, rgba(136, 19, 55, 0.34) 0%, rgba(190, 18, 60, 0.16) 100%) !important;
-        border: 3px solid #fb7185 !important;
+        background: rgba(190, 18, 60, 0.16) !important;
+        border: 1.5px solid #fb7185 !important;
     }
 
     html[data-theme="dark"] .health-summary-metric-card.is-approved .health-summary-metric-label,
