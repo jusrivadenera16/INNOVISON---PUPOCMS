@@ -1920,8 +1920,8 @@
                 </div>
                 <div class="form-grid-2">
                     <div class="form-group">
-                        <label for="consultHeight">Height (cm)</label>
-                        <input type="number" id="consultHeight" step="0.01" name="height" class="form-control @error('height') is-invalid @enderror" placeholder="165" value="{{ old('height', $consultationHeight ?? '') }}" data-vital="height" data-vital-min="1" data-vital-max="300" data-vital-name="Height">
+                        <label for="consultHeight">Height (ft)</label>
+                        <input type="number" id="consultHeight" step="0.01" name="height" class="form-control @error('height') is-invalid @enderror" placeholder="5.6" value="{{ old('height', $consultationHeight ?? '') }}" data-vital="height" data-vital-min="1" data-vital-max="10" data-vital-name="Height">
                         <div class="form-error" id="heightError"></div>
                         <div class="form-success" id="heightSuccess">✓ Valid height</div>
                         @error('height')
@@ -1929,8 +1929,8 @@
                         @enderror
                     </div>
                     <div class="form-group">
-                        <label for="consultWeight">Weight (kg)</label>
-                        <input type="number" id="consultWeight" step="0.01" name="weight" class="form-control @error('weight') is-invalid @enderror" placeholder="60" value="{{ old('weight', $consultationWeight ?? '') }}" data-vital="weight" data-vital-min="1" data-vital-max="500" data-vital-name="Weight">
+                        <label for="consultWeight">Weight (lbs)</label>
+                        <input type="number" id="consultWeight" step="0.01" name="weight" class="form-control @error('weight') is-invalid @enderror" placeholder="143" value="{{ old('weight', $consultationWeight ?? '') }}" data-vital="weight" data-vital-min="1" data-vital-max="1100" data-vital-name="Weight">
                         <div class="form-error" id="weightError"></div>
                         <div class="form-success" id="weightSuccess">✓ Valid weight</div>
                         @error('weight')
@@ -2437,12 +2437,12 @@
                 errorMsg = 'Format: 120/80';
             } else if (vital === 'height') {
                 const num = parseFloat(value);
-                isValid = num >= 1 && num <= 300;
-                errorMsg = 'Height must be 1-300 cm';
+                isValid = num >= 1 && num <= 10;
+                errorMsg = 'Height must be 1-10 ft';
             } else if (vital === 'weight') {
                 const num = parseFloat(value);
-                isValid = num >= 1 && num <= 500;
-                errorMsg = 'Weight must be 1-500 kg';
+                isValid = num >= 1 && num <= 1100;
+                errorMsg = 'Weight must be 1-1100 lbs';
             } else if (vital === 'temp') {
                 const num = parseFloat(value);
                 isValid = num >= 30 && num <= 45;

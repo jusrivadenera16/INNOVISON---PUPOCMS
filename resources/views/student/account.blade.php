@@ -2288,12 +2288,16 @@
     $guisisPendingText = 'Available once enrolled';
     $guisisValue = fn ($value) => trim((string) $value) !== '' ? trim((string) $value) : $guisisPendingText;
     $guisisPendingClass = fn ($value) => trim((string) $value) === '' ? ' guisis-pending-value' : '';
-    $heightRaw = old('height', $accountProfileData['height'] ?? $user->height ?? '');
-    $weightRaw = old('weight', $accountProfileData['weight'] ?? $user->weight ?? '');
+    $clinicMeasurementProfile = $user->relationLoaded('healthProfile')
+        ? $user->healthProfile
+        : \App\Models\HealthProfile::where('user_id', $user->id)->first();
+    $heightRaw = old('height', optional($clinicMeasurementProfile)->height ?? '');
+    $weightRaw = old('weight', optional($clinicMeasurementProfile)->weight ?? '');
     preg_match('/\d+(?:\.\d+)?/', (string) $heightRaw, $heightMatch);
     preg_match('/\d+(?:\.\d+)?/', (string) $weightRaw, $weightMatch);
     $heightDisplay = $heightMatch[0] ?? trim((string) $heightRaw);
     $weightDisplay = $weightMatch[0] ?? trim((string) $weightRaw);
+    $showClinicMeasurements = trim((string) $heightRaw) !== '' && trim((string) $weightRaw) !== '';
 @endphp
 <div class="container" style="padding: 0 20px 40px;">
 
@@ -2501,20 +2505,22 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['civil_status'] ?? '') }}" value="{{ $guisisValue($accountProfileData['civil_status'] ?? '') }}" readonly>
                             </div>
                         </div>
-                        <div class="profile-grid-2">
-                            <div>
-                                <label class="input-label">Height (cm)</label>
-                                <div class="metric-field">
-                                    <input type="text" name="height" class="form-control editable-input" inputmode="decimal" value="{{ $heightDisplay }}" disabled>
+                        @if($showClinicMeasurements)
+                            <div class="profile-grid-2">
+                                <div>
+                                    <label class="input-label">Height (ft)</label>
+                                    <div class="metric-field">
+                                        <input type="text" name="height" class="form-control editable-input" inputmode="decimal" value="{{ $heightDisplay }}" disabled>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="input-label">Weight (lbs)</label>
+                                    <div class="metric-field">
+                                        <input type="text" name="weight" class="form-control editable-input" inputmode="decimal" value="{{ $weightDisplay }}" disabled>
+                                    </div>
                                 </div>
                             </div>
-                            <div>
-                                <label class="input-label">Weight (kg)</label>
-                                <div class="metric-field">
-                                    <input type="text" name="weight" class="form-control editable-input" inputmode="decimal" value="{{ $weightDisplay }}" disabled>
-                                </div>
-                            </div>
-                        </div>
+                        @endif
                     </section>
                 </div>
 
@@ -2606,20 +2612,22 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 </div>
 
-                <div class="profile-grid-2">
-                    <div>
-                        <label class="input-label">Height (cm)</label>
-                        <div class="metric-field">
-                            <input type="text" name="height" class="form-control editable-input" inputmode="decimal" value="{{ $heightDisplay }}" disabled>
+                @if($showClinicMeasurements)
+                    <div class="profile-grid-2">
+                        <div>
+                            <label class="input-label">Height (ft)</label>
+                            <div class="metric-field">
+                                <input type="text" name="height" class="form-control editable-input" inputmode="decimal" value="{{ $heightDisplay }}" disabled>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="input-label">Weight (lbs)</label>
+                            <div class="metric-field">
+                                <input type="text" name="weight" class="form-control editable-input" inputmode="decimal" value="{{ $weightDisplay }}" disabled>
+                            </div>
                         </div>
                     </div>
-                    <div>
-                        <label class="input-label">Weight (kg)</label>
-                        <div class="metric-field">
-                            <input type="text" name="weight" class="form-control editable-input" inputmode="decimal" value="{{ $weightDisplay }}" disabled>
-                        </div>
-                    </div>
-                </div>
+                @endif
             </section>
 
             <section class="profile-form-section accent-gold">

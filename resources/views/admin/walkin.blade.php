@@ -7061,16 +7061,22 @@
             const rawValue = String(value ?? '').trim();
             if (!rawValue) return 'N/A';
             if (/ft|in/i.test(rawValue)) return rawValue;
-            const feet = numericValue(rawValue);
-            return feet ? feet + ' ft' : 'N/A';
+            let feet = numericValue(rawValue);
+            if (/cm/i.test(rawValue) || feet > 10) {
+                feet = feet / 30.48;
+            }
+            return feet ? Number(feet.toFixed(2)) + ' ft' : 'N/A';
         }
 
         function formatWeightPounds(value) {
             const rawValue = String(value ?? '').trim();
             if (!rawValue) return 'N/A';
             if (/lbs?|pounds?/i.test(rawValue)) return rawValue;
-            const pounds = numericValue(rawValue);
-            return pounds ? pounds + ' lbs' : 'N/A';
+            let pounds = numericValue(rawValue);
+            if (/kg/i.test(rawValue)) {
+                pounds = pounds * 2.20462;
+            }
+            return pounds ? Number(pounds.toFixed(2)) + ' lbs' : 'N/A';
         }
 
         function getConditionSummary(review, lookupData) {

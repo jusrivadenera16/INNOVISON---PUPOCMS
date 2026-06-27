@@ -1134,8 +1134,8 @@ class AppointmentController extends Controller
                 ?: ($usePuptasApplicantPrefill ? data_get($applicantData, 'postal_code') : '')
             )),
             'school_year' => (string) (optional($healthProfile)->school_year ?? $this->resolveSchoolYear($applicantData, $user)),
-            'height' => (string) (optional($healthProfile)->height ?? $user->height ?? ''),
-            'weight' => (string) (optional($healthProfile)->weight ?? $user->weight ?? ''),
+            'height' => (string) ($this->extractMeasurementNumber(optional($healthProfile)->height ?? $user->height ?? '') ?? ''),
+            'weight' => (string) ($this->extractMeasurementNumber(optional($healthProfile)->weight ?? $user->weight ?? '') ?? ''),
             'birthday' => $resolvedBirthday,
             'age' => $resolvedAge,
             'sex' => $resolvedSex,
@@ -2189,17 +2189,15 @@ public function updateContact(Request $request)
 
     // 2. GUISIS owns student profile details. Clinic profile edits only allow height and weight.
     $validated = $request->validate([
-        'height'     => ['nullable', 'string', 'max:20', 'regex:/^\s*\d+(\.\d+)?(\s*cm)?\s*$/i'],
-        'weight'     => ['nullable', 'string', 'max:20', 'regex:/^\s*\d+(\.\d+)?(\s*kg)?\s*$/i'],
+        'height'     => ['nullable', 'string', 'max:20', 'regex:/^\s*\d+(\.\d+)?(\s*ft)?\s*$/i'],
+        'weight'     => ['nullable', 'string', 'max:20', 'regex:/^\s*\d+(\.\d+)?(\s*lbs?)?\s*$/i'],
     ], [
-        'height.regex' => 'Height must be a valid number (optional unit: cm).',
-        'weight.regex' => 'Weight must be a valid number (optional unit: kg).',
+        'height.regex' => 'Height must be a valid number (optional unit: ft).',
+        'weight.regex' => 'Weight must be a valid number (optional unit: lbs).',
     ]);
 
     $heightNumeric = $this->extractMeasurementNumber($validated['height'] ?? null);
     $weightNumeric = $this->extractMeasurementNumber($validated['weight'] ?? null);
-    $normalizedHeight = $heightNumeric !== null ? $this->normalizeMeasurement($heightNumeric, 'cm') : null;
-    $normalizedWeight = $weightNumeric !== null ? $this->normalizeMeasurement($weightNumeric, 'kg') : null;
 
     // 3. Save only clinic-controlled measurements.
     $user->height = $heightNumeric ?? $user->height;
@@ -2208,11 +2206,11 @@ public function updateContact(Request $request)
 
     $healthProfile = $user->healthProfile()->first();
     if ($healthProfile) {
-        if ($normalizedHeight !== null) {
-            $healthProfile->height = $normalizedHeight;
+        if ($heightNumeric !== null) {
+            $healthProfile->height = $heightNumeric;
         }
-        if ($normalizedWeight !== null) {
-            $healthProfile->weight = $normalizedWeight;
+        if ($weightNumeric !== null) {
+            $healthProfile->weight = $weightNumeric;
         }
         $healthProfile->save();
     }
@@ -3030,8 +3028,8 @@ public function testingSkipHealthForm()
             'home_address' => 'Testing Address',
             'zipcode' => '0000',
             'birthday' => $birthday,
-            'height' => $user->height ?: '165 cm',
-            'weight' => $user->weight ?: '60 kg',
+            'height' => $user->height ?: '5.5 ft',
+            'weight' => $user->weight ?: '132 lbs',
             'age' => $age,
             'sex' => $user->gender ?: 'Male',
             'civil_status' => 'Single',

@@ -713,11 +713,36 @@ class WalkInController extends Controller
             ->orderBy('time_out', 'desc')
             ->first();
 
+        $formatMeasurement = function ($value, string $unit): string {
+            $value = trim((string) $value);
+            if ($value === '') {
+                return '';
+            }
+
+            if (!preg_match('/\d+(?:\.\d+)?/', $value, $matches)) {
+                return $value;
+            }
+
+            $number = (float) $matches[0];
+            if ($unit === 'ft' && (stripos($value, 'cm') !== false || $number > 10)) {
+                $number = round($number / 30.48, 2);
+                return rtrim(rtrim((string) $number, '0'), '.') . ' ft';
+            }
+            if ($unit === 'lbs' && stripos($value, 'kg') !== false) {
+                $number = round($number * 2.20462, 2);
+                return rtrim(rtrim((string) $number, '0'), '.') . ' lbs';
+            }
+
+            return preg_match('/\b' . preg_quote($unit, '/') . '\b/i', $value)
+                ? $value
+                : $value . ' ' . $unit;
+        };
+
         $data = [
             'assessmentDate' => $this->formatMedicalAssessmentDate($profile->assessment_date ?: now()),
             'birthday' => $this->formatMedicalAssessmentDate($profile->birthday),
-            'height' => $latestConsultation ? trim((string) $latestConsultation->height) : '',
-            'weight' => $latestConsultation ? trim((string) $latestConsultation->weight) : '',
+            'height' => $formatMeasurement($latestConsultation ? $latestConsultation->height : $profile->height, 'ft'),
+            'weight' => $formatMeasurement($latestConsultation ? $latestConsultation->weight : $profile->weight, 'lbs'),
             'bloodPressure' => $latestConsultation ? trim((string) $latestConsultation->blood_pressure) : trim((string) $profile->blood_pressure),
             'pulseRate' => $latestConsultation ? trim((string) $latestConsultation->pulse_rate) : trim((string) $profile->pulse_rate),
             'respiratoryRate' => $latestConsultation ? trim((string) $latestConsultation->respiratory_rate) : trim((string) $profile->respiratory_rate),
@@ -907,8 +932,15 @@ class WalkInController extends Controller
             }
         }
 
-        $consultationHeight = $student->healthProfile->height ?? $student->height ?? null;
-        $consultationWeight = $student->healthProfile->weight ?? $student->weight ?? null;
+        $extractMeasurementNumber = function ($value): string {
+            if (!preg_match('/\d+(?:\.\d+)?/', trim((string) $value), $matches)) {
+                return '';
+            }
+
+            return rtrim(rtrim($matches[0], '0'), '.');
+        };
+        $consultationHeight = $extractMeasurementNumber($student->healthProfile->height ?? $student->height ?? null);
+        $consultationWeight = $extractMeasurementNumber($student->healthProfile->weight ?? $student->weight ?? null);
 
         return view('admin.consult-form', compact(
             'student',
@@ -1416,8 +1448,8 @@ PROMPT;
             'remarks'      => 'required',
             'condition_id' => 'required|exists:medical_conditions,id',
             'dob'          => 'nullable|date',
-            'height'       => 'required|numeric|min:1|max:300',
-            'weight'       => 'required|numeric|min:1|max:500',
+            'height'       => 'required|numeric|min:1|max:10',
+            'weight'       => 'required|numeric|min:1|max:1100',
             'temp'         => 'required|numeric|min:30|max:45',
             'bp'           => 'required|string|max:20|regex:/^\d{2,3}\s*\/\s*\d{2,3}$/',
             'pulse_rate'   => 'required|integer|min:1|max:300',
@@ -1654,8 +1686,8 @@ PROMPT;
                 'other_pending_reason' => ['nullable', 'string', 'max:1000'],
                 'medical_condition' => ['required_if:has_medical_condition,true', 'nullable', 'string', 'max:1000'],
                 'condition_remarks' => ['nullable', 'string', 'max:2000'],
-                'height' => ['required', 'numeric', 'min:1', 'max:305'],
-                'weight' => ['required', 'numeric', 'min:1', 'max:500'],
+                'height' => ['required', 'numeric', 'min:1', 'max:10'],
+                'weight' => ['required', 'numeric', 'min:1', 'max:1100'],
                 'blood_pressure' => ['required', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
                 'pulse_rate' => ['required', 'integer', 'min:1', 'max:300'],
                 'respiratory_rate' => ['required', 'integer', 'min:1', 'max:120'],
