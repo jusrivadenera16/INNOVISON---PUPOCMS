@@ -1598,6 +1598,53 @@
         color: #70131B;
         margin-bottom: 10px;
     }
+    .verification-doc-card.health-form-doc-card {
+        position: relative;
+        overflow: hidden;
+        border-color: rgba(250, 204, 21, 0.82);
+        background: linear-gradient(180deg, #ffffff 0%, #fffafa 100%);
+    }
+    .health-form-doc-preview {
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 118px;
+        border-radius: 12px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        isolation: isolate;
+    }
+    .health-form-doc-preview::before {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        background: url('{{ asset('images/pup_logo_print.jpg') }}') center / contain no-repeat;
+        opacity: 0.12;
+        filter: blur(1.2px);
+        z-index: -1;
+    }
+    .health-form-doc-title {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        color: #70131B;
+        font-size: 16px;
+        font-weight: 900;
+        line-height: 1.02;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .verification-doc-card.health-form-doc-card strong {
+        margin-top: 8px;
+        text-align: left;
+    }
+    .verification-doc-card.health-form-doc-card > span:last-child {
+        text-align: left;
+    }
     .verification-doc-preview {
         width: 100%;
         aspect-ratio: 3 / 4;
@@ -3151,12 +3198,20 @@
                                         $isPreviewImage = in_array($documentExtension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true);
                                     @endphp
                                     <a
-                                        class="verification-doc-card"
+                                        class="verification-doc-card {{ ($document['key'] ?? '') === 'health_form' ? 'health-form-doc-card' : '' }}"
                                         href="{{ $documentUrl }}"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >
-                                        @if(($document['key'] ?? '') !== 'health_form')
+                                        @if(($document['key'] ?? '') === 'health_form')
+                                            <span class="health-form-doc-preview" aria-hidden="true">
+                                                <span class="health-form-doc-title">
+                                                    <span>Health</span>
+                                                    <span>Information</span>
+                                                    <span>Form</span>
+                                                </span>
+                                            </span>
+                                        @else
                                             <span class="verification-doc-preview">
                                                 @if($isPreviewImage)
                                                 <img src="{{ $documentUrl }}" alt="{{ $docLabel }} preview" loading="lazy">
@@ -3536,6 +3591,12 @@
                     var docs = Array.isArray(payload.documents) ? payload.documents : [];
                     docsGrid.innerHTML = docs.map(function (doc) {
                         if (doc && doc.url) {
+                            var docTitle = doc.title || 'Requirement';
+                            var isHealthForm = String(docTitle).toLowerCase() === 'health information form';
+                            if (isHealthForm) {
+                                return '<a class="verification-doc-card health-form-doc-card" href="' + escapeValue(doc.url) + '" target="_blank" rel="noopener noreferrer"><span class="health-form-doc-preview" aria-hidden="true"><span class="health-form-doc-title"><span>Health</span><span>Information</span><span>Form</span></span></span><strong>' + escapeValue(docTitle) + '</strong><span>Open in new tab</span></a>';
+                            }
+
                             return '<a class="verification-doc-card" href="' + escapeValue(doc.url) + '" target="_blank" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5A3.375 3.375 0 0 0 10.125 2.25H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg><strong>' + escapeValue(doc.title || 'Requirement') + '</strong><span>Open in new tab</span></a>';
                         }
 
@@ -3937,6 +3998,24 @@
         const docs = Array.isArray(documents) ? documents : [];
         verificationDocsGrid.innerHTML = docs.map(function (doc) {
             if (doc && doc.url) {
+                const docTitle = doc.title || 'Requirement';
+                const isHealthForm = String(docTitle).toLowerCase() === 'health information form';
+                if (isHealthForm) {
+                    return `
+                    <a class="verification-doc-card health-form-doc-card" href="${escapeHtml(doc.url)}" target="_blank" rel="noopener noreferrer">
+                        <span class="health-form-doc-preview" aria-hidden="true">
+                            <span class="health-form-doc-title">
+                                <span>Health</span>
+                                <span>Information</span>
+                                <span>Form</span>
+                            </span>
+                        </span>
+                        <strong>${escapeHtml(docTitle)}</strong>
+                        <span>Open in new tab</span>
+                    </a>
+                `;
+                }
+
                 return `
                     <a class="verification-doc-card" href="${escapeHtml(doc.url)}" target="_blank" rel="noopener noreferrer">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5A3.375 3.375 0 0 0 10.125 2.25H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>

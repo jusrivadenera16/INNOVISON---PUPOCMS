@@ -3382,30 +3382,7 @@ function initializeResubmissionFilePreviews(root = document) {
 }
 
 function enableEditing() {
-    const form = document.querySelector('form[action="{{ route('student.updateContact') }}"]');
-    if (form) {
-        form.classList.add('profile-is-editing');
-    }
-    const inputs = form
-        ? form.querySelectorAll('[name="height"], [name="weight"]')
-        : [];
-    
-    inputs.forEach(input => {
-        input.disabled = false;
-        input.readOnly = false;
-        input.style.borderColor = '#8B0000'; 
-        input.style.backgroundColor = document.documentElement.getAttribute('data-theme') === 'dark'
-            ? 'rgba(30, 41, 59, 0.92)'
-            : '#fff';
-
-        const editableRow = input.closest('.profile-info-row, .profile-grid-2 > div, .profile-grid-3 > div');
-        if (editableRow) {
-            editableRow.classList.add('is-editing');
-        }
-    });
-
-    document.getElementById('editBtn').style.display = 'none';
-    document.getElementById('saveAction').style.display = 'flex';
+    alert('Edit Profile is currently unavailable for now. Please contact the clinic staff if any information needs correction.');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
