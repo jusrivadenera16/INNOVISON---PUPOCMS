@@ -167,6 +167,10 @@ Route::middleware(['auth:student', 'audit'])->group(function () {
 
         // 2. Route para i-save ang data (Dito galing ang form submit)
         Route::post('/student/store-health-form', [AppointmentController::class, 'storeHealthForm'])->name('store.health.form');
+        Route::get('/student/store-health-form', function () {
+            return redirect()->route('health.form')
+                ->with('error', 'Your previous submission was interrupted. Please review the form, re-upload your files, and submit again.');
+        })->name('store.health.form.interrupted');
         if (app()->environment('local')) {
             Route::post('/student/health-form/testing-skip', [AppointmentController::class, 'testingSkipHealthForm'])
                 ->name('student.health_form.testing_skip');
