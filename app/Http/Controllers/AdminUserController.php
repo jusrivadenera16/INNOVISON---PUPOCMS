@@ -750,7 +750,7 @@ class AdminUserController extends Controller
                 $resolvedAccessLevel = $this->resolveEffectiveAdminAccessLevel($user, $linkedAdmin);
                 $rawRole = strtolower(trim((string) ($user->user_role ?? 'student')));
                 $role = User::normalizeRole($rawRole);
-                $source = $this->resolveUserSource($user);
+                $source = $this->resolveUserSource($user, $linkedAdmin);
                 $status = strtolower(trim((string) ($user->status ?? 'active')));
                 if ($status === '') {
                     $status = 'active';
@@ -773,7 +773,7 @@ class AdminUserController extends Controller
                     'id' => (string) $user->id,
                     'record_id' => (string) $user->id,
                     'source' => $source,
-                    'source_label' => $this->resolveUserSourceLabel($user),
+                    'source_label' => $this->resolveUserSourceLabel($user, $linkedAdmin),
                     'name' => $displayName !== '' ? $displayName : ($user->email ?? 'Unknown User'),
                     'first_name' => (string) ($user->first_name ?? ''),
                     'last_name' => (string) ($user->last_name ?? ''),
@@ -1012,13 +1012,16 @@ class AdminUserController extends Controller
             ->all();
     }
 
-    private function resolveUserSource(User $user): string
+    private function resolveUserSource(User $user, ?Admin $linkedAdmin = null): string
     {
         $rawRole = strtolower(trim((string) ($user->user_role ?? 'student')));
         $normalizedRole = User::normalizeRole($rawRole);
         $userType = strtolower(trim((string) ($user->user_type ?? '')));
+        $accessLevel = $normalizedRole === User::ROLE_ADMIN
+            ? $this->resolveEffectiveAdminAccessLevel($user, $linkedAdmin)
+            : '';
 
-        if ($normalizedRole === User::ROLE_SUPERADMIN) {
+        if ($normalizedRole === User::ROLE_SUPERADMIN || $accessLevel === 'superadmin') {
             return 'superadmin';
         }
 
@@ -1039,9 +1042,9 @@ class AdminUserController extends Controller
         };
     }
 
-    private function resolveUserSourceLabel(User $user): string
+    private function resolveUserSourceLabel(User $user, ?Admin $linkedAdmin = null): string
     {
-        return match ($this->resolveUserSource($user)) {
+        return match ($this->resolveUserSource($user, $linkedAdmin)) {
             'superadmin' => 'Super Admin',
             'admin' => 'Admin',
             'student_assistant' => 'Student Assistant',
@@ -1085,6 +1088,7 @@ class AdminUserController extends Controller
     private function adminRoleLabelForAccessLevel(string $accessLevel): string
     {
         return match (strtolower(trim($accessLevel))) {
+            'superadmin' => 'Super Admin',
             'designee' => 'Admin - Designee',
             'clinic_staff', 'clinic staff', 'staff' => 'Admin - Clinic Staff',
             default => 'Admin - Regular',
@@ -1266,13 +1270,17 @@ class AdminUserController extends Controller
         $currentUser = Auth::user();
         $currentUserRole = User::normalizeRole((string) ($currentUser?->user_role ?? ''));
         $recordRole = strtolower(trim((string) ($record['raw_role'] ?? $record['normalized_role'] ?? $record['source'] ?? 'student')));
+        $recordSource = strtolower(trim((string) ($record['source'] ?? '')));
         $recordId = (string) ($record['id'] ?? $record['record_id'] ?? '');
 
         if ($recordId !== '' && $currentUserId !== null && $recordId === (string) $currentUserId) {
             return false;
         }
 
-        if (in_array($recordRole, ['superadmin', 'super_admin'], true) && $currentUserRole === User::ROLE_SUPERADMIN) {
+        if (
+            ($recordSource === 'superadmin' || in_array($recordRole, ['superadmin', 'super_admin'], true))
+            && $currentUserRole === User::ROLE_SUPERADMIN
+        ) {
             return false;
         }
 
