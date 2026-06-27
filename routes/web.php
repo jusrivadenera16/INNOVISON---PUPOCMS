@@ -63,7 +63,7 @@ if (!function_exists('resolveWorkspaceRedirectForUser')) {
                 return '/student/home';
             }
 
-            return '/assistant/dashboard';
+            return '/student/home';
         }
 
         return '/student/home';

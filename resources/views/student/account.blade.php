@@ -277,6 +277,251 @@
         margin-bottom: 24px;
     }
 
+    .profile-dashboard {
+        max-width: 1180px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.38fr);
+        gap: 16px;
+        align-items: start;
+    }
+
+    .profile-dashboard .account-layout {
+        display: contents;
+    }
+
+    .profile-dashboard .widget-card {
+        display: contents;
+    }
+
+    .profile-dashboard .widget-card > form,
+    .profile-dashboard .profile-sections-grid {
+        display: contents;
+    }
+
+    .profile-dashboard .profile-card-head {
+        display: none;
+    }
+
+    .profile-dashboard .profile-hero {
+        grid-column: 1;
+        grid-row: 1;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: start;
+        margin: 0;
+        min-height: 126px;
+        padding: 26px 24px;
+        border-radius: 8px;
+        background:
+            radial-gradient(circle at top right, rgba(250, 204, 21, 0.12), transparent 34%),
+            linear-gradient(135deg, #7f1d2d 0%, #4c0519 100%);
+        box-shadow: 0 18px 36px rgba(76, 5, 25, 0.18);
+        gap: 18px;
+    }
+
+    .profile-dashboard .profile-hero.is-photo-expanded {
+        grid-template-columns: 1fr;
+        place-items: center;
+        min-height: 360px;
+        cursor: zoom-out;
+    }
+
+    .profile-dashboard .hero-info {
+        min-width: 0;
+    }
+
+    .profile-dashboard .hero-avatar {
+        position: relative;
+        flex: 0 0 auto;
+        margin-top: 4px;
+        padding: 0;
+        width: 78px;
+        height: 78px;
+        background: rgba(255, 255, 255, 0.90);
+        border: 2px solid rgba(250, 204, 21, 0.36);
+        color: #7f1d2d;
+        font-size: 28px;
+        overflow: visible;
+        cursor: zoom-in;
+        appearance: none;
+        transition: width 0.22s ease, height 0.22s ease, border-radius 0.22s ease, transform 0.22s ease;
+    }
+
+    .profile-dashboard .hero-avatar img {
+        border-radius: 50%;
+        overflow: hidden;
+    }
+
+    .profile-dashboard .hero-name {
+        font-size: 25px;
+        line-height: 1.1;
+        letter-spacing: 0;
+    }
+
+    .hero-active-dot {
+        position: absolute;
+        right: -1px;
+        bottom: 3px;
+        width: 22px;
+        height: 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #16a34a;
+        border: 3px solid #7f1d2d;
+        color: #ffffff;
+        box-shadow: 0 8px 16px rgba(22, 163, 74, 0.28);
+        z-index: 2;
+    }
+
+    .hero-active-dot svg {
+        width: 12px;
+        height: 12px;
+        stroke-width: 3;
+    }
+
+    .profile-dashboard .hero-name-main,
+    .profile-dashboard .hero-name-sub {
+        display: block;
+    }
+
+    .profile-dashboard .hero-name-sub {
+        margin-top: 3px;
+        font-size: 0.82em;
+        color: rgba(255, 255, 255, 0.88);
+    }
+
+    .hero-identity-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 10px;
+    }
+
+    .hero-identity-pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 26px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.13);
+        color: #fff7ed;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .profile-dashboard .profile-hero.is-photo-expanded .hero-avatar {
+        width: min(100%, 310px);
+        height: min(310px, 72vw);
+        margin-top: 0;
+        border-radius: 18px;
+        transform: none;
+        cursor: zoom-out;
+    }
+
+    .profile-dashboard .profile-hero.is-photo-expanded .hero-avatar img {
+        border-radius: 14px;
+    }
+
+    .profile-dashboard .profile-hero.is-photo-expanded .hero-info,
+    .profile-dashboard .profile-hero.is-photo-expanded .hero-stats,
+    .profile-dashboard .profile-hero.is-photo-expanded .hero-active-dot {
+        display: none;
+    }
+
+    .profile-dashboard .hero-course {
+        color: #fff7ed;
+        opacity: 1;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+
+    .profile-dashboard .hero-info > .hero-course {
+        display: none !important;
+    }
+
+    .profile-dashboard .hero-stats {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        width: 100%;
+        box-sizing: border-box;
+        gap: 0;
+        margin-top: 16px;
+        margin-left: 0;
+        margin-right: 0;
+        padding: 16px 8px 0;
+    }
+
+    .profile-dashboard .stat-item {
+        min-width: 0;
+        text-align: center;
+    }
+
+    .profile-dashboard .stat-label {
+        font-size: 10px;
+        white-space: normal;
+        word-break: normal;
+        letter-spacing: 0.02em;
+    }
+
+    .profile-dashboard .stat-val {
+        font-size: 20px;
+    }
+
+    .profile-dashboard .stat-label {
+        color: rgba(255, 255, 255, 0.88);
+        opacity: 1;
+    }
+
+    .profile-dashboard .profile-sections-grid {
+        margin-bottom: 0;
+    }
+
+    .profile-dashboard .profile-column-stack {
+        gap: 14px;
+    }
+
+    .profile-dashboard .profile-sections-grid > .profile-column-stack:first-child {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .profile-dashboard .profile-sections-grid > .profile-column-stack:last-child {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+    }
+
+    .profile-dashboard #profileActionBar,
+    .profile-dashboard .profile-enrollment-empty {
+        grid-column: 1 / -1;
+    }
+
+    .profile-dashboard .profile-form-section {
+        border-radius: 8px;
+        border-color: rgba(127, 29, 45, 0.15);
+        background: linear-gradient(180deg, #ffffff 0%, #fffdf9 100%);
+    }
+
+    .profile-dashboard .profile-form-section::before {
+        left: 14px;
+        right: 14px;
+        border-radius: 999px;
+    }
+
+    .profile-dashboard .profile-sections-grid .profile-form-section {
+        height: auto;
+        min-height: 0;
+    }
+
+    .profile-dashboard .profile-frame-equal {
+        min-height: 0;
+    }
+
     .profile-form-section {
         position: relative;
         overflow: visible;
@@ -1154,6 +1399,16 @@
     @media (max-width: 900px) {
         .account-layout { grid-template-columns: 1fr; }
         .hero-stats { gap: 20px; flex-wrap: wrap; }
+        .profile-dashboard {
+            grid-template-columns: 1fr;
+            max-width: 960px;
+        }
+        .profile-dashboard .profile-hero,
+        .profile-dashboard .profile-sections-grid > .profile-column-stack:first-child,
+        .profile-dashboard .profile-sections-grid > .profile-column-stack:last-child {
+            grid-column: 1;
+            grid-row: auto;
+        }
     }
 
     @media (max-width: 760px) {
@@ -1176,8 +1431,17 @@
             padding: 24px 18px;
             gap: 18px;
         }
+        .profile-dashboard .profile-hero {
+            border-radius: 8px;
+            align-items: start;
+        }
         .hero-name {
             font-size: 24px;
+        }
+        .profile-dashboard .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
         }
         .profile-grid-3,
         .profile-grid-2 {
@@ -2358,8 +2622,19 @@
     $referenceHeading = $referenceMode === 'admission' ? 'Admission Reference' : 'Clinic Reference';
     $idNumberHeading = $referenceMode === 'admission' ? 'Student Number' : 'ID Number';
     $displayCourse = trim((string) ($accountProfileData['course_college'] ?? ''));
+    $displayCourseCode = trim((string) ($accountProfileData['course_code'] ?? ''));
+    if ($displayCourseCode === '' && $displayCourse !== '') {
+        if (preg_match('/\(([A-Z0-9-]+)\)/', $displayCourse, $courseCodeMatch)) {
+            $displayCourseCode = $courseCodeMatch[1];
+        } elseif (preg_match('/\b(BS[A-Z0-9-]+|BSED-[A-Z]+|DIT|DOMT)\b/i', $displayCourse, $courseCodeMatch)) {
+            $displayCourseCode = strtoupper($courseCodeMatch[1]);
+        }
+    }
     $displayFullName = trim((string) ($accountProfileData['full_name'] ?? ''));
     $displayFullName = $displayFullName !== '' ? $displayFullName : ($hasGuisisAccountData ? 'Available once enrolled' : ($user->name ?? 'Student'));
+    $displayNameParts = preg_split('/\s+/', $displayFullName) ?: [];
+    $displayFirstName = $displayNameParts[0] ?? $displayFullName;
+    $displayRemainingName = trim(implode(' ', array_slice($displayNameParts, 1)));
     if ($looksLikeReferenceNumber($displayStudentNumber)) {
         $displayStudentNumber = '';
     }
@@ -2418,8 +2693,9 @@
     @endif
 
     @if($accountView === 'profile')
-    <div class="profile-hero">
-        <div class="hero-avatar">
+    <div class="profile-dashboard">
+    <div class="profile-hero" id="profileHeroCard">
+        <button type="button" class="hero-avatar" id="profilePhotoToggle" aria-label="Expand profile photo" aria-expanded="false">
             @php
                 $healthProfile = \App\Models\HealthProfile::where('user_id', $user->id)->first();
             @endphp
@@ -2428,9 +2704,29 @@
             @else
                 {{ strtoupper(substr($displayFullName, 0, 1)) }}
             @endif
-        </div>
+            <span class="hero-active-dot" aria-label="Active account">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M5 12.5l4.2 4.2L19 7" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </span>
+        </button>
         <div class="hero-info">
-            <h1 class="hero-name">{{ $displayFullName }} <span class="hero-badge">Active</span></h1>
+            <h1 class="hero-name">
+                <span class="hero-name-main">{{ $displayFirstName }}</span>
+                @if($displayRemainingName !== '')
+                    <span class="hero-name-sub">{{ $displayRemainingName }}</span>
+                @endif
+            </h1>
+            @if($displayStudentNumber !== '' || $displayCourseCode !== '')
+                <div class="hero-identity-meta">
+                    @if($displayStudentNumber !== '')
+                        <span class="hero-identity-pill">{{ $displayStudentNumber }}</span>
+                    @endif
+                    @if($displayCourseCode !== '')
+                        <span class="hero-identity-pill">{{ $displayCourseCode }}</span>
+                    @endif
+                </div>
+            @endif
             @if($isEnrolled)
                 @if(!empty($heroAcademicParts))
                     <div class="hero-course" @if($linkedRoleLabel) style="display: none;" @endif>
@@ -2524,36 +2820,6 @@ document.addEventListener('DOMContentLoaded', function () {
         @elseif(empty($linkedAdminProfile))
             <div class="profile-sections-grid">
                 <div class="profile-column-stack">
-                    <section class="profile-form-section accent-maroon profile-frame-equal">
-                        <h3 class="profile-form-section-title"><x-outline-icon name="document-text" />Academic Information</h3>
-                        <div class="profile-grid-3">
-                            @if($displayStudentNumber !== '')
-                                <div>
-                                    <label class="input-label">{{ $idNumberHeading }}</label>
-                                    <div class="form-control profile-static-field">{{ $displayStudentNumber }}</div>
-                                </div>
-                            @endif
-                            @if($displayCourse !== '')
-                                <div>
-                                    <label class="input-label">Course</label>
-                                    <div class="form-control profile-course-field profile-static-field">{{ $displayCourse }}</div>
-                                </div>
-                            @endif
-                            @if($displayYear !== '')
-                                <div>
-                                    <label class="input-label">Year</label>
-                                    <input type="text" name="year" class="form-control" value="{{ $displayYear }}" readonly>
-                                </div>
-                            @endif
-                            @if($displaySection !== '')
-                                <div>
-                                    <label class="input-label">Section</label>
-                                    <input type="text" name="section" class="form-control" value="{{ $displaySection }}" readonly>
-                                </div>
-                            @endif
-                        </div>
-                    </section>
-
                     <section class="profile-form-section accent-gold">
                         <h3 class="profile-form-section-title"><x-outline-icon name="information-circle" />Personal Details</h3>
                         <div class="profile-grid-3">
@@ -2610,6 +2876,36 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
 
                 <div class="profile-column-stack">
+                    <section class="profile-form-section accent-maroon profile-frame-equal">
+                        <h3 class="profile-form-section-title"><x-outline-icon name="document-text" />Academic Information</h3>
+                        <div class="profile-grid-3">
+                            @if($displayStudentNumber !== '')
+                                <div>
+                                    <label class="input-label">{{ $idNumberHeading }}</label>
+                                    <div class="form-control profile-static-field">{{ $displayStudentNumber }}</div>
+                                </div>
+                            @endif
+                            @if($displayCourse !== '')
+                                <div>
+                                    <label class="input-label">Course</label>
+                                    <div class="form-control profile-course-field profile-static-field">{{ $displayCourse }}</div>
+                                </div>
+                            @endif
+                            @if($displayYear !== '')
+                                <div>
+                                    <label class="input-label">Year</label>
+                                    <input type="text" name="year" class="form-control" value="{{ $displayYear }}" readonly>
+                                </div>
+                            @endif
+                            @if($displaySection !== '')
+                                <div>
+                                    <label class="input-label">Section</label>
+                                    <input type="text" name="section" class="form-control" value="{{ $displaySection }}" readonly>
+                                </div>
+                            @endif
+                        </div>
+                    </section>
+
                     <section class="profile-form-section accent-maroon profile-frame-equal">
                         <h3 class="profile-form-section-title"><x-outline-icon name="clock" />Contact Information</h3>
                         <div class="profile-info-row">
@@ -3306,6 +3602,9 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
 @endif
         </div>
+@if($accountView === 'profile')
+    </div>
+@endif
     </div>
 </div>
 
@@ -3398,10 +3697,18 @@ function enableEditing() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    const profileHeroCard = document.getElementById('profileHeroCard');
+    const profilePhotoToggle = document.getElementById('profilePhotoToggle');
     const modal = document.getElementById('healthRecordModal');
     const resubmissionModal = document.getElementById('resubmissionModal');
     const modalCard = modal?.querySelector('.record-modal');
     const shouldOpenResubmissionModal = @json($hasResubmissionUploadErrors ?? false);
+
+    profilePhotoToggle?.addEventListener('click', function () {
+        const isExpanded = profileHeroCard?.classList.toggle('is-photo-expanded') ?? false;
+        profilePhotoToggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        profilePhotoToggle.setAttribute('aria-label', isExpanded ? 'Collapse profile photo' : 'Expand profile photo');
+    });
 
     modalCard?.addEventListener('scroll', updateHealthRecordModalIndicator);
     initializeResubmissionFilePreviews(document);

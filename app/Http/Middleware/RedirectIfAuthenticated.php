@@ -44,7 +44,7 @@ class RedirectIfAuthenticated
         }
 
         return match ($normalizedRole) {
-            User::ROLE_ADMIN => '/assistant/dashboard',
+            User::ROLE_ADMIN => '/student/home',
             default => '/student/home',
         };
     }

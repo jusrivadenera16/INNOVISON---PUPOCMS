@@ -166,7 +166,7 @@ class LoginController extends Controller
         }
 
         if ($normalizedRole === User::normalizeRole($this->adminRoleValue())) {
-            return '/assistant/dashboard';
+            return '/student/home';
         }
 
         return '/student/home';
@@ -395,7 +395,7 @@ class LoginController extends Controller
                 return '/student/home';
             }
 
-            return '/assistant/dashboard';
+            return '/student/home';
         }
 
         return '/student/home';
@@ -2143,20 +2143,19 @@ class LoginController extends Controller
             'is_sa' => $isStudentAssistant,
         ]);
 
-        // Superadmin or Admin - redirect to dashboard
-        if ($normalizedRole === User::ROLE_SUPERADMIN || $normalizedRole === User::ROLE_ADMIN) {
+        if ($normalizedRole === User::ROLE_SUPERADMIN) {
+            Log::info('[WORKSPACE GATEWAY] Redirecting Superadmin to /admin/dashboard');
+            return redirect('/admin/dashboard');
+        }
+
+        if ($normalizedRole === User::ROLE_ADMIN) {
             if ($isStudentAssistant) {
                 Log::info('[WORKSPACE GATEWAY] Redirecting Student Assistant to landing with workspace selector');
-                // Student Assistant - show workspace selector
                 return redirect('/?workspace=sa');
-            } elseif ($this->isAdminDesigneeAccount($user)) {
-                Log::info('[WORKSPACE GATEWAY] Redirecting Admin Designee to student-side landing');
-                return redirect('/?workspace=student');
-            } else {
-                Log::info('[WORKSPACE GATEWAY] Redirecting Admin to /admin/dashboard');
-                // Regular admin - go to dashboard
-                return redirect('/admin/dashboard');
             }
+
+            Log::info('[WORKSPACE GATEWAY] Redirecting Admin Regular or unassigned Admin to student-side landing');
+            return redirect('/?workspace=student');
         }
 
         // Student - redirect to student side
@@ -2165,9 +2164,8 @@ class LoginController extends Controller
             return redirect('/?workspace=student');
         }
 
-        // Unknown role - redirect to landing
-        Log::info('[WORKSPACE GATEWAY] Unknown role - redirecting to landing');
-        return redirect('/');
+        Log::info('[WORKSPACE GATEWAY] Unknown role - redirecting to student-side landing');
+        return redirect('/?workspace=student');
     }
 
     public function apiCheckSession(Request $request)
