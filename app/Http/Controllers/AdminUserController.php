@@ -738,13 +738,51 @@ class AdminUserController extends Controller
                             }
                         }
                     });
+
+                    $builder->orWhereExists(function ($adminQuery) use ($search) {
+                        $adminQuery->select(DB::raw(1))
+                            ->from('admins')
+                            ->where(function ($linkQuery) {
+                                $hasLink = false;
+
+                                if (Admin::hasColumn('user_id')) {
+                                    $linkQuery->orWhereColumn('admins.user_id', 'users.id');
+                                    $hasLink = true;
+                                }
+
+                                if (Admin::hasColumn('email')) {
+                                    $linkQuery->orWhereColumn('admins.email', 'users.email');
+                                    $hasLink = true;
+                                }
+
+                                if (Admin::hasColumn('email_address')) {
+                                    $linkQuery->orWhereColumn('admins.email_address', 'users.email');
+                                    $hasLink = true;
+                                }
+
+                                if (!$hasLink) {
+                                    $linkQuery->whereRaw('1 = 0');
+                                }
+                            })
+                            ->where(function ($adminSearchQuery) use ($search) {
+                                foreach (['admin_id', 'external_identifier', 'name', 'email', 'email_address', 'access_level'] as $column) {
+                                    if (Admin::hasColumn($column)) {
+                                        $adminSearchQuery->orWhere('admins.' . $column, 'like', '%' . $search . '%');
+                                    }
+                                }
+                            });
+                    });
                 }
             });
         }
 
-        return $query->orderBy('first_name')
-            ->limit(100)
-            ->get()
+        $query->orderBy('first_name');
+
+        if ($search !== '') {
+            $query->limit(100);
+        }
+
+        return $query->get()
             ->map(function (User $user) {
                 $linkedAdmin = $this->findLinkedAdminProfile($user);
                 $resolvedAccessLevel = $this->resolveEffectiveAdminAccessLevel($user, $linkedAdmin);
