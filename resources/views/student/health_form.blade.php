@@ -2335,6 +2335,7 @@
             const xrayFindingsDetailsWrap = document.getElementById('xrayFindingsDetailsWrap');
             const xrayFindingsDetails = document.getElementById('xray_findings_details');
             const uploadInputs = Array.from(document.querySelectorAll('[data-upload-input]'));
+            const healthFormStoreUrl = @json(route('store.health.form'));
             let currentStep = {{ $startStep }};
             let isSubmitting = false;
             let isReferenceValidating = false;
@@ -3034,6 +3035,9 @@
                     btn.style.opacity = '0.72';
                 });
 
+                form.action = healthFormStoreUrl;
+                form.method = 'POST';
+                form.enctype = 'multipart/form-data';
                 form.submit();
             });
 

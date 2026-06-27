@@ -156,6 +156,8 @@ Route::middleware(['auth:student', 'audit'])->group(function () {
 
         // 1. Route para ipakita ang blankong form
         Route::get('/student/health-form', [AppointmentController::class, 'showHealthForm'])->name('health.form');
+        Route::post('/student/health-form', [AppointmentController::class, 'storeHealthForm'])
+            ->name('store.health.form.fallback');
         Route::get('/student/health-form/reference/validate', [AppointmentController::class, 'validateHealthFormReference'])
             ->middleware('throttle:15,1')
             ->name('student.health_form.reference.validate');
