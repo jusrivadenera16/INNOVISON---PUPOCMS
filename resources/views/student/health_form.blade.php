@@ -1905,7 +1905,15 @@
                         </div>
                         <div class="form-field span-2">
                             <label class="form-label" for="home_address">Home Address <span class="required">*</span></label>
-                            <input id="home_address" class="form-control field-maroon" name="home_address" value="{{ old('home_address', $prefill['home_address'] ?? '') }}" required>
+                            <input
+                                id="home_address"
+                                class="form-control field-maroon"
+                                name="home_address"
+                                value="{{ old('home_address', $prefill['home_address'] ?? '') }}"
+                                placeholder="House No./Street, Barangay, City/Municipality, Province"
+                                required
+                            >
+                            <div class="field-helper">Example: 123 Mabini St., Brgy. Central, Taguig City, Metro Manila</div>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="zipcode">ZIP Code <span class="required">*</span></label>
