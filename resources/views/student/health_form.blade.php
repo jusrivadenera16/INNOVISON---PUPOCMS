@@ -1921,7 +1921,20 @@
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="contact_no">Student Contact Number <span class="required">*</span></label>
-                            <input id="contact_no" class="form-control field-maroon" name="contact_no" value="{{ old('contact_no', $prefill['contact_number'] ?? $user->contact_no ?? '') }}" required>
+                            <input
+                                id="contact_no"
+                                class="form-control field-maroon"
+                                name="contact_no"
+                                value="{{ old('contact_no', $prefill['contact_number'] ?? $user->contact_no ?? '') }}"
+                                placeholder="09123456789"
+                                inputmode="numeric"
+                                pattern="[0-9]{11,20}"
+                                minlength="11"
+                                maxlength="20"
+                                data-numeric-contact
+                                data-validation-message="Enter numbers only, at least 11 digits."
+                                required
+                            >
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="guardian_name">Parent / Guardian Name <span class="required">*</span></label>
@@ -1929,7 +1942,20 @@
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="cellphone">Parent / Guardian Cellphone <span class="required">*</span></label>
-                            <input id="cellphone" class="form-control field-maroon" name="cellphone" value="{{ old('cellphone', $prefill['cellphone'] ?? '') }}" required>
+                            <input
+                                id="cellphone"
+                                class="form-control field-maroon"
+                                name="cellphone"
+                                value="{{ old('cellphone', $prefill['cellphone'] ?? '') }}"
+                                placeholder="09123456789"
+                                inputmode="numeric"
+                                pattern="[0-9]{11,20}"
+                                minlength="11"
+                                maxlength="20"
+                                data-numeric-contact
+                                data-validation-message="Enter numbers only, at least 11 digits."
+                                required
+                            >
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="landline">Landline</label>
@@ -2343,6 +2369,7 @@
             const xrayFindingsDetailsWrap = document.getElementById('xrayFindingsDetailsWrap');
             const xrayFindingsDetails = document.getElementById('xray_findings_details');
             const uploadInputs = Array.from(document.querySelectorAll('[data-upload-input]'));
+            const numericContactInputs = Array.from(document.querySelectorAll('[data-numeric-contact]'));
             const healthFormStoreUrl = @json(route('store.health.form'));
             let currentStep = {{ $startStep }};
             let isSubmitting = false;
@@ -2887,6 +2914,11 @@
             birthdayInput?.addEventListener('change', updateAgeFromBirthday);
             form?.addEventListener('input', clearValidationBubble);
             form?.addEventListener('change', clearValidationBubble);
+            numericContactInputs.forEach((input) => {
+                input.addEventListener('input', () => {
+                    input.value = input.value.replace(/\D/g, '');
+                });
+            });
             illnessRadios.forEach((radio) => {
                 radio.addEventListener('change', toggleIllnessDetails);
             });

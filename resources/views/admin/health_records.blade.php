@@ -960,29 +960,55 @@
         transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
     }
     .health-summary-metric-card {
-        background: #facc15 !important;
-        border: 1px solid #facc15 !important;
-        border-left: 5px solid #70131B !important;
-        color: #70131B !important;
-        box-shadow: 0 4px 12px rgba(112, 19, 27, 0.16) !important;
+        position: relative;
+        overflow: hidden;
+        color: #111827 !important;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08) !important;
+    }
+    .health-summary-metric-card.is-approved {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+        border: 3px solid #2563eb !important;
+    }
+    .health-summary-metric-card.is-condition {
+        background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%) !important;
+        border: 3px solid #be123c !important;
     }
     .health-summary-metric-card * {
-        color: #70131B !important;
+        color: inherit !important;
     }
     .health-summary-metric-label {
-        display: block;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 7px 10px;
+        border-radius: 999px;
         font-size: 9px;
         font-weight: 800;
-        line-height: 1.18;
+        line-height: 1;
         letter-spacing: 0.8px;
         text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .health-summary-metric-card.is-approved .health-summary-metric-label {
+        background: rgba(37, 99, 235, 0.10);
+        color: #1d4ed8 !important;
+    }
+    .health-summary-metric-card.is-condition .health-summary-metric-label {
+        background: rgba(190, 18, 60, 0.10);
+        color: #9f1239 !important;
     }
     .health-summary-metric-count {
-        margin: 3px 0 0 0;
-        font-size: 22px;
+        display: block;
+        margin: 8px 0 0;
+        font-size: 24px;
         font-weight: 800;
         line-height: 1;
-        color: #70131B;
+    }
+    .health-summary-metric-card.is-approved .health-summary-metric-count {
+        color: #1e3a8a !important;
+    }
+    .health-summary-metric-card.is-condition .health-summary-metric-count {
+        color: #881337 !important;
     }
     .health-summary-info-btn {
         cursor: pointer;
@@ -1487,9 +1513,10 @@
 
     .health-summary-row {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
+        align-items: flex-start;
+        justify-content: center;
+        flex-direction: column;
+        gap: 0;
     }
 
     .health-table-head {
@@ -1690,6 +1717,34 @@
     html[data-theme="dark"] .health-summary-metric-card .health-summary-metric-label span,
     html[data-theme="dark"] .health-summary-metric-card .health-summary-metric-count {
         color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .health-summary-metric-card.is-approved {
+        background: linear-gradient(135deg, rgba(30, 58, 138, 0.28) 0%, rgba(37, 99, 235, 0.16) 100%) !important;
+        border: 3px solid #60a5fa !important;
+    }
+
+    html[data-theme="dark"] .health-summary-metric-card.is-condition {
+        background: linear-gradient(135deg, rgba(136, 19, 55, 0.34) 0%, rgba(190, 18, 60, 0.16) 100%) !important;
+        border: 3px solid #fb7185 !important;
+    }
+
+    html[data-theme="dark"] .health-summary-metric-card.is-approved .health-summary-metric-label,
+    html[data-theme="dark"] .health-summary-metric-card.is-approved .health-summary-metric-label span {
+        color: #bfdbfe !important;
+    }
+
+    html[data-theme="dark"] .health-summary-metric-card.is-condition .health-summary-metric-label,
+    html[data-theme="dark"] .health-summary-metric-card.is-condition .health-summary-metric-label span {
+        color: #fecdd3 !important;
+    }
+
+    html[data-theme="dark"] .health-summary-metric-card.is-approved .health-summary-metric-count {
+        color: #dbeafe !important;
+    }
+
+    html[data-theme="dark"] .health-summary-metric-card.is-condition .health-summary-metric-count {
+        color: #ffe4e6 !important;
     }
 
     html[data-theme="dark"] .health-records-search-toggle {
@@ -2632,17 +2687,17 @@
     {{-- Summary Action Cards --}}
     <div class="summary-container">
         <div class="summary-item">
-            <div class="card p-3 health-summary-action-card health-summary-metric-card" style="padding: 15px 24px !important;">
+            <div class="card p-3 health-summary-action-card health-summary-metric-card is-approved" style="padding: 15px 24px !important;">
                 <div class="health-summary-row">
-                    <small class="health-summary-metric-label"><span>Total</span><span>Approved</span></small>
+                    <small class="health-summary-metric-label"><span>Total Approved</span></small>
                     <h3 class="health-summary-metric-count">{{ $healthSummaryStats['total_approved'] }}</h3>
                 </div>
             </div>
         </div>
         <div class="summary-item">
-            <div class="card p-3 health-summary-action-card health-summary-metric-card" style="padding: 15px 24px !important;">
+            <div class="card p-3 health-summary-action-card health-summary-metric-card is-condition" style="padding: 15px 24px !important;">
                 <div class="health-summary-row">
-                    <small class="health-summary-metric-label"><span>With Medical</span><span>Conditions</span></small>
+                    <small class="health-summary-metric-label"><span>With Medical Conditions</span></small>
                     <h3 class="health-summary-metric-count">{{ $healthSummaryStats['with_conditions'] }}</h3>
                 </div>
             </div>
