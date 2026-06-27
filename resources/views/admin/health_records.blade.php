@@ -3046,6 +3046,7 @@
                                         data-review-name="{{ optional($readonlyRecord->user)->name ?: 'Unnamed Student' }}"
                                         data-review-email="{{ optional($readonlyRecord->user)->email ?: '-' }}"
                                         data-review-reference="{{ $readonlyReference }}"
+                                        data-review-course="{{ $readonlyCourseDisplay !== '' ? $readonlyCourseDisplay : '-' }}"
                                         data-review-student-id="{{ $readonlyRecord->student_id ?: optional($readonlyRecord->user)->student_id ?: optional($readonlyRecord->user)->student_number ?: '-' }}"
                                         data-review-approve-url="{{ route('admin.update_clearance', $readonlyRecord->id) }}"
                                     >
@@ -3441,6 +3442,7 @@
             payload.name = filledValue(payload.name, button.getAttribute('data-review-name'));
             payload.email = filledValue(payload.email, button.getAttribute('data-review-email'));
             payload.reference_number = filledValue(payload.reference_number, button.getAttribute('data-review-reference'));
+            payload.course = filledValue(payload.course, button.getAttribute('data-review-course'));
             payload.student_id = filledValue(payload.student_id, button.getAttribute('data-review-student-id'));
             payload.approve_url = filledValue(payload.approve_url, button.getAttribute('data-review-approve-url'));
 
@@ -3966,6 +3968,7 @@
             payload.name = reviewFallbackValue(payload.name, button.getAttribute('data-review-name'));
             payload.email = reviewFallbackValue(payload.email, button.getAttribute('data-review-email'));
             payload.reference_number = reviewFallbackValue(payload.reference_number, button.getAttribute('data-review-reference'));
+            payload.course = reviewFallbackValue(payload.course, button.getAttribute('data-review-course'));
             payload.student_id = reviewFallbackValue(payload.student_id, button.getAttribute('data-review-student-id'));
             payload.approve_url = reviewFallbackValue(payload.approve_url, button.getAttribute('data-review-approve-url'));
         }

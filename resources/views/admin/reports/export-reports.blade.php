@@ -93,12 +93,12 @@
 
     .inventory-scope-display {
         width: 100%;
-        min-height: 47px;
-        padding: 11px 46px 11px 16px;
-        border-radius: 999px;
+        min-height: 48px;
+        padding: 11px 42px 11px 16px;
+        border-radius: 12px;
         border: 1px solid var(--admin-primary-btn-border, #8b0000);
-        background: var(--admin-primary-btn-bg, #8b0000);
-        color: #ffffff;
+        background: #ffffff;
+        color: #70131B;
         font-weight: 800;
         text-align: center;
         cursor: pointer;
@@ -132,8 +132,8 @@
         position: absolute;
         right: 18px;
         top: 50%;
-        width: 10px;
-        height: 10px;
+        width: 8px;
+        height: 8px;
         border-right: 2px solid currentColor;
         border-bottom: 2px solid currentColor;
         transform: translateY(-50%) rotate(-45deg);
@@ -223,13 +223,13 @@
     /* Buttons & Links */
     .btn-generate {
         width: 100%;
-        min-height: 47px;
+        min-height: 60px;
         border: 1px solid #8f2230;
-        padding: 11px 16px;
-        border-radius: 999px;
+        padding: 12px 16px;
+        border-radius: 12px;
         cursor: pointer;
-        font-weight: 800;
-        color: #ffffff;
+        font-weight: 900;
+        color: #70131B;
         text-align: center;
         text-decoration: none;
         display: inline-flex;
@@ -237,7 +237,7 @@
         justify-content: center;
         position: relative;
         overflow: hidden;
-        background: linear-gradient(135deg, #70131B, #8f2230);
+        background: #ffffff;
         box-shadow:
             0 0 0 3px rgba(112, 19, 27, 0.12),
             0 10px 22px rgba(112, 19, 27, 0.20);
@@ -280,24 +280,26 @@
 
     /* Dynamic Border & Button Colors */
     .border-mar { border-top: 5px solid #800000; }
-    .bg-mar { background: linear-gradient(135deg, #70131B, #8f2230); }
+    .bg-mar { background: #ffffff; color: #70131B; }
 
     .border-inventory { border-top: 5px solid #800000; }
-    .bg-inventory { background: #70131B; }
+    .bg-inventory { background: #ffffff; color: #70131B; }
 
     .border-appointment { border-top: 5px solid #800000; }
-    .bg-appointment { background: linear-gradient(135deg, #70131B, #8f2230); }
+    .bg-appointment { background: #ffffff; color: #70131B; }
 
-    .border-audit { border-top: 5px solid #7c3aed; }
+    .border-audit { border-top: 5px solid #800000; }
     .bg-audit {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
-        border-color: #a855f7 !important;
+        background: #ffffff !important;
+        border-color: #8f2230 !important;
+        color: #70131B !important;
     }
 
     .bg-audit:hover {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
-        border-color: #a855f7 !important;
-        box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18), 0 14px 24px rgba(168, 85, 247, 0.2) !important;
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #111827 !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.18), 0 14px 24px rgba(112, 19, 27, 0.16) !important;
     }
 
     @media (max-width: 900px) {
@@ -434,22 +436,22 @@
 
     .btn-select-month {
         width: 100%;
-        min-height: 47px;
+        min-height: 60px;
         border: 1px solid #8f2230;
-        padding: 11px 16px;
-        border-radius: 999px;
+        padding: 12px 16px;
+        border-radius: 12px;
         cursor: pointer;
-        font-weight: 800;
-        color: #ffffff;
+        font-weight: 900;
+        color: #70131B;
         text-align: center;
-        background: linear-gradient(135deg, #70131B, #8f2230);
+        background: #ffffff;
         box-shadow: 0 0 0 3px rgba(112, 19, 27, 0.12), 0 10px 22px rgba(112, 19, 27, 0.20);
         transition: all 0.2s;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        font-size: 14px;
+        font-size: 12px;
         position: relative;
         overflow: hidden;
     }
@@ -575,12 +577,25 @@
         overflow: visible;
         min-height: 260px;
         padding: 18px;
+        display: flex;
+        flex-direction: column;
         border-radius: 16px;
         border: 1px solid rgba(112, 19, 27, 0.14);
         background: #ffffff;
         box-shadow:
             0 0 0 1px rgba(112, 19, 27, 0.04),
             0 16px 32px rgba(15, 23, 42, 0.08);
+    }
+
+    .export-hub-container .report-card > div:first-child {
+        min-height: 148px;
+    }
+
+    .export-hub-container .report-card form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: auto;
     }
 
     .export-hub-container .report-card::before {
@@ -620,22 +635,30 @@
     }
 
     .export-hub-container .form-group {
-        margin-bottom: 12px;
+        margin: 0;
     }
 
     .export-hub-container .btn-select-month,
     .export-hub-container .inventory-scope-display,
     .export-hub-container .btn-generate {
+        width: 100%;
         border-radius: 12px;
-        min-height: 48px;
+        min-height: 60px;
+        padding: 12px 16px;
         font-size: 12px;
+        font-weight: 900;
+        line-height: 1.25;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
     }
 
     .export-hub-container .btn-select-month {
         flex-direction: column;
         gap: 2px;
-        background: linear-gradient(135deg, #70131B, #8f2230);
-        color: #ffffff;
+        background: #ffffff;
+        color: #70131B;
         border-color: #8f2230;
         box-shadow: 0 10px 22px rgba(112, 19, 27, 0.18);
     }
@@ -649,9 +672,14 @@
 
     .export-hub-container .btn-generate,
     .export-hub-container .inventory-scope-display {
-        background: linear-gradient(135deg, #70131B, #8f2230);
-        color: #ffffff;
+        background: #ffffff;
+        color: #70131B;
         border-color: #8f2230;
+        box-shadow: 0 10px 22px rgba(112, 19, 27, 0.18);
+    }
+
+    .export-hub-container .inventory-scope-display {
+        padding-right: 42px;
     }
 
     .export-hub-container .btn-generate:hover,
@@ -668,8 +696,9 @@
 
     .export-hub-container .bg-audit,
     .export-hub-container .bg-audit:not(:hover):not(:focus) {
-        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+        background: #ffffff !important;
         border-color: #8f2230 !important;
+        color: #70131B !important;
     }
 
     .export-hub-container .bg-audit:hover,
@@ -808,7 +837,7 @@
                             <option value="supplies">Inventory of Supplies</option>
                         </select>
                         <button type="button" class="inventory-scope-display" id="inventoryScopeDisplay" aria-haspopup="listbox" aria-expanded="false">
-                            Click here to generate
+                            Generate Inventory Report
                         </button>
                         <div class="inventory-scope-menu" id="inventoryScopeMenu" role="listbox" aria-label="Inventory report type">
                             <button type="button" class="inventory-scope-option" data-scope-value="medicines">Inventory of Medicines</button>
@@ -891,7 +920,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let hasSelectedScope = false;
 
     const syncDisplay = function() {
-        display.textContent = 'Click here to generate';
+        display.textContent = 'Generate Inventory Report';
         options.forEach(function(option) {
             option.classList.toggle('is-selected', hasSelectedScope && option.dataset.scopeValue === select.value);
         });

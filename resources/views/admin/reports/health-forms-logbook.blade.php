@@ -606,7 +606,7 @@
                     @php
                         $user = $record->user;
                         $approver = $record->approvedBy;
-                        $isApproved = $record->clearance_status === 'Issued';
+                        $isApproved = in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true);
                         $hasCondition = $record->hasMedicalCondition();
                         $conditionDetails = collect();
                         $formatList = static function ($value): string {
@@ -658,14 +658,14 @@
                         <td>{{ $user->user_type ?? 'N/A' }}</td>
                         <td>{{ \Carbon\Carbon::parse($record->created_at)->format('M d, Y g:i A') }}</td>
                         <td>
-                            @if($approver)
+                            @if($isApproved && $approver)
                                 <strong>{{ $approver->name }}</strong>
                             @else
                                 <span style="color: #94a3b8;">—</span>
                             @endif
                         </td>
                         <td>
-                            @if($record->verified_at)
+                            @if($isApproved && $record->verified_at)
                                 {{ \Carbon\Carbon::parse($record->verified_at)->format('M d, Y g:i A') }}
                             @else
                                 <span style="color: #94a3b8;">—</span>

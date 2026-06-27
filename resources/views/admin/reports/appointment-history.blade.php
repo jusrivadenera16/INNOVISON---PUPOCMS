@@ -164,12 +164,14 @@
         padding: 11px 18px;
         border: 0;
         background: #7f1d2d;
-        color: #ffffff;
+        color: #ffffff !important;
         font-size: 13px;
     }
     .appt-view-btn:hover,
+    .appt-view-btn:focus,
     .appt-search-btn:hover {
         background: #5f1520;
+        color: #ffffff !important;
     }
     .appt-selected-card {
         background: linear-gradient(135deg, #7f1d2d 0%, #540e18 100%);
