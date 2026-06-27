@@ -1462,6 +1462,12 @@
             font-weight: 600;
         }
 
+        .form-field .form-control.field-maroon::placeholder {
+            color: #a8b0bd;
+            font-weight: 500;
+            opacity: 1;
+        }
+
         .privacy-note {
             margin: 18px 0 0;
             padding-top: 14px;
@@ -1926,7 +1932,7 @@
                                 class="form-control field-maroon"
                                 name="contact_no"
                                 value="{{ old('contact_no', $prefill['contact_number'] ?? $user->contact_no ?? '') }}"
-                                placeholder="09123456789"
+                                placeholder="Enter 11-digit mobile number"
                                 inputmode="numeric"
                                 pattern="[0-9]{11,20}"
                                 minlength="11"
@@ -1935,19 +1941,20 @@
                                 data-validation-message="Enter numbers only, at least 11 digits."
                                 required
                             >
+                            <div class="field-helper">Example: 09123456789</div>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="guardian_name">Parent / Guardian Name <span class="required">*</span></label>
                             <input id="guardian_name" class="form-control field-maroon" name="guardian_name" value="{{ old('guardian_name', $prefill['guardian_name'] ?? '') }}" required>
                         </div>
                         <div class="form-field">
-                            <label class="form-label" for="cellphone">Parent / Guardian Cellphone <span class="required">*</span></label>
+                            <label class="form-label" for="cellphone">Parent / Guardian Contact Number <span class="required">*</span></label>
                             <input
                                 id="cellphone"
                                 class="form-control field-maroon"
                                 name="cellphone"
                                 value="{{ old('cellphone', $prefill['cellphone'] ?? '') }}"
-                                placeholder="09123456789"
+                                placeholder="Enter 11-digit mobile number"
                                 inputmode="numeric"
                                 pattern="[0-9]{11,20}"
                                 minlength="11"
@@ -1956,6 +1963,7 @@
                                 data-validation-message="Enter numbers only, at least 11 digits."
                                 required
                             >
+                            <div class="field-helper">Example: 09123456789</div>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="landline">Landline</label>
