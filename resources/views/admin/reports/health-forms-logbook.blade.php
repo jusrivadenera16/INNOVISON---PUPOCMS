@@ -89,6 +89,25 @@
         gap: 10px;
         flex: 0 0 auto;
     }
+    .logbook-total-card {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 18px;
+        border: 1px solid rgba(127, 29, 45, 0.18);
+        border-radius: 12px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 900;
+        white-space: nowrap;
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+    }
+    .logbook-total-card span {
+        color: #7f1d2d;
+        margin-left: 6px;
+    }
     .logbook-export-btn {
         display: inline-flex;
         align-items: center;
@@ -466,6 +485,7 @@
         .logbook-toolbar-actions,
         .logbook-back,
         .filter-btn-open,
+        .logbook-total-card,
         .logbook-export-btn {
             width: 100%;
         }
@@ -498,6 +518,7 @@
             <input type="text" id="searchInput" class="logbook-search-input" placeholder="Search by applicant or student name..." value="{{ $search }}" onkeyup="handleSearch()">
         </div>
         <div class="logbook-toolbar-actions">
+            <div class="logbook-total-card">Total:<span>{{ number_format($logbookRecords->total()) }}</span></div>
             <a href="{{ route($logbookExportRouteName, request()->query()) }}" class="logbook-export-btn">Export</a>
         </div>
     </div>

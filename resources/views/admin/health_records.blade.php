@@ -2626,6 +2626,7 @@
         $healthProfileSummaryRecords = $records
             ->filter(fn ($record) => in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true))
             ->values();
+        $healthSummaryStats['total_approved'] = $healthProfileSummaryRecords->count();
     @endphp
 
     {{-- Summary Action Cards --}}
@@ -2633,8 +2634,8 @@
         <div class="summary-item">
             <div class="card p-3 health-summary-action-card health-summary-metric-card" style="padding: 15px 24px !important;">
                 <div class="health-summary-row">
-                    <small class="health-summary-metric-label"><span>Total</span><span>Submissions</span></small>
-                    <h3 class="health-summary-metric-count">{{ $healthSummaryStats['total'] }}</h3>
+                    <small class="health-summary-metric-label"><span>Total</span><span>Approved</span></small>
+                    <h3 class="health-summary-metric-count">{{ $healthSummaryStats['total_approved'] }}</h3>
                 </div>
             </div>
         </div>
@@ -2707,6 +2708,12 @@
                     $healthTabState = $isConditional
                         ? 'pending_conditional'
                         : (in_array($recordStatus, ['Pending', 'For Verification', ''], true) ? 'pending_approval' : 'cleared');
+                    $recordCourseName = trim((string) ($record->course_college ?: optional($record->user)->course ?: ''));
+                    $recordYearSection = trim((string) implode('-', array_filter([
+                        trim((string) optional($record->user)->year),
+                        trim((string) optional($record->user)->section),
+                    ])));
+                    $recordCourseDisplay = trim($recordCourseName . ($recordYearSection !== '' ? ' ' . $recordYearSection : ''));
                     $recordPayload = [
                         'id' => $record->id,
                         'name' => optional($record->user)->name ?: '-',
@@ -2714,7 +2721,7 @@
                         'reference_number' => $record->reference_number ?: $record->student_number ?: optional($record->user)->student_number ?: '-',
                         'student_id' => $record->student_id ?: optional($record->user)->student_id ?: '-',
                         'student_number' => optional($record->user)->student_number ?: optional($record->user)->student_id ?: '-',
-                        'course' => trim((string) (($record->course_college ?: optional($record->user)->course) . ' ' . optional($record->user)->year . '-' . optional($record->user)->section)),
+                        'course' => $recordCourseDisplay !== '' ? $recordCourseDisplay : '-',
                         'status' => $recordStatus ?: 'For Verification',
                         'pending_reason' => $record->pending_reason ?: '',
                         'medical_condition_remarks' => $record->medical_condition_remarks ?: '',
@@ -2775,7 +2782,7 @@
                     <td>
                         <div class="student-name" style="font-weight: 700;">{{ $record->user->name }}</div>
                     </td>
-                    <td>{{ $record->course_college ?: $record->user->course }} {{ $record->user->year }}-{{ $record->user->section }}</td>
+                    <td>{{ $recordCourseDisplay !== '' ? $recordCourseDisplay : '-' }}</td>
                     
                     {{-- Column 1: Medical Condition Status --}}
                     <td>
@@ -2947,6 +2954,12 @@
                             $readonlyConditionItems['Condition'] = 'No Medical Condition';
                         }
                         $readonlyReference = $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-';
+                        $readonlyCourseName = trim((string) ($readonlyRecord->course_college ?: optional($readonlyRecord->user)->course ?: ''));
+                        $readonlyYearSection = trim((string) implode('-', array_filter([
+                            trim((string) optional($readonlyRecord->user)->year),
+                            trim((string) optional($readonlyRecord->user)->section),
+                        ])));
+                        $readonlyCourseDisplay = trim($readonlyCourseName . ($readonlyYearSection !== '' ? ' ' . $readonlyYearSection : ''));
                         $readonlyRecordPayload = [
                             'id' => $readonlyRecord->id,
                             'name' => optional($readonlyRecord->user)->name ?: '-',
@@ -2954,7 +2967,7 @@
                             'reference_number' => $readonlyReference,
                             'student_id' => $readonlyRecord->student_id ?: optional($readonlyRecord->user)->student_id ?: '-',
                             'student_number' => optional($readonlyRecord->user)->student_number ?: optional($readonlyRecord->user)->student_id ?: '-',
-                            'course' => trim((string) (($readonlyRecord->course_college ?: optional($readonlyRecord->user)->course) . ' ' . optional($readonlyRecord->user)->year . '-' . optional($readonlyRecord->user)->section)),
+                            'course' => $readonlyCourseDisplay !== '' ? $readonlyCourseDisplay : '-',
                             'status' => $readonlyRecord->clearance_status ?: 'For Verification',
                             'pending_reason' => $readonlyRecord->pending_reason ?: '',
                             'medical_condition_remarks' => $readonlyRecord->medical_condition_remarks ?: '',

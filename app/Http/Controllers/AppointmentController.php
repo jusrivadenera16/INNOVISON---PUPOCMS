@@ -339,7 +339,20 @@ class AppointmentController extends Controller
 
     private function isClinicReference(?string $referenceNumber): bool
     {
-        return str_starts_with(strtoupper(trim((string) $referenceNumber)), 'CLN-');
+        return str_starts_with(strtoupper(trim((string) $referenceNumber)), 'CLN');
+    }
+
+    private function looksLikeReferenceIdentifier(?string $value): bool
+    {
+        $value = strtoupper(trim((string) $value));
+
+        return $value === ''
+            || str_starts_with($value, 'CLN')
+            || str_starts_with($value, 'TEST-')
+            || str_starts_with($value, 'TESTLOCAL')
+            || str_starts_with($value, 'LOC-')
+            || (bool) preg_match('/^\d{4}-\d{4}-\d{4}/', $value)
+            || (bool) preg_match('/^\d{4}-[A-Z]+-\d+/', $value);
     }
 
     private function formatDisplayNameParts(?string $firstName, ?string $middleName, ?string $lastName, ?string $suffixName = ''): string
@@ -531,7 +544,7 @@ class AppointmentController extends Controller
         ];
 
         foreach ($candidates as $candidate) {
-            if ($candidate === '' || $this->looksLikeIdpIdentifier($candidate, $user)) {
+            if ($candidate === '' || $this->looksLikeIdpIdentifier($candidate, $user) || $this->looksLikeReferenceIdentifier($candidate)) {
                 continue;
             }
 
@@ -568,7 +581,7 @@ class AppointmentController extends Controller
     private function persistResolvedStudentNumber(User $user, ?HealthProfile $healthProfile, ?string $studentNumber): void
     {
         $studentNumber = trim((string) $studentNumber);
-        if ($studentNumber === '' || $this->looksLikeIdpIdentifier($studentNumber, $user)) {
+        if ($studentNumber === '' || $this->looksLikeIdpIdentifier($studentNumber, $user) || $this->looksLikeReferenceIdentifier($studentNumber)) {
             return;
         }
 
@@ -629,7 +642,12 @@ class AppointmentController extends Controller
 
         $shouldSave = false;
 
-        if ($resolvedStudentNumber !== '' && !$this->looksLikeIdpIdentifier($resolvedStudentNumber, $user) && trim((string) $user->student_number) === '') {
+        if (
+            $resolvedStudentNumber !== ''
+            && !$this->looksLikeIdpIdentifier($resolvedStudentNumber, $user)
+            && !$this->looksLikeReferenceIdentifier($resolvedStudentNumber)
+            && trim((string) $user->student_number) === ''
+        ) {
             $user->student_number = $resolvedStudentNumber;
             $shouldSave = true;
         }
@@ -1932,7 +1950,11 @@ public function account(Request $request)
             ->intersect(['student_photo', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])
             ->values();
 
-        if (strcasecmp((string) $healthProfile->clearance_status, 'Pending Resubmission') !== 0 || $requiredDocuments->isEmpty()) {
+        $statusNormalized = strtolower(trim((string) $healthProfile->clearance_status));
+        $allowsResubmission = $statusNormalized === 'pending resubmission'
+            || ($requiredDocuments->isNotEmpty() && (str_contains($statusNormalized, 'pending') || str_contains($statusNormalized, 'conditional')));
+
+        if (!$allowsResubmission || $requiredDocuments->isEmpty()) {
             return redirect('/student/account?view=health-record')
                 ->with('error', 'There are no replacement requirements requested for this record.');
         }

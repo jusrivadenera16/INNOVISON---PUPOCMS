@@ -1777,7 +1777,7 @@
         box-shadow:
             0 0 0 3px rgba(112, 19, 27, 0.12),
             0 10px 22px rgba(112, 19, 27, 0.20);
-        transition: color .08s linear, transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        transition: color .08s linear, box-shadow .18s ease, border-color .18s ease;
     }
     .record-modal-close svg {
         width: 18px;
@@ -1799,13 +1799,12 @@
                 rgba(255, 239, 181, 0.14) 72%,
                 rgba(255, 248, 196, 0) 100%);
         transform: translateX(-135%);
-        transition: transform 1.5s ease;
+        transition: transform .32s ease;
         pointer-events: none;
         z-index: 0;
     }
     .record-modal-close:hover {
         border-color: #facc15;
-        transform: translateY(-1px);
         box-shadow:
             0 0 0 3px rgba(250, 204, 21, 0.18),
             0 14px 24px rgba(112, 19, 27, 0.16);
@@ -2125,9 +2124,74 @@
         border-radius: 12px;
         background: #ffffff;
         color: #111827;
-        padding: 12px;
+        padding: 8px;
         font-size: 13px;
         font-weight: 800;
+        cursor: pointer;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 8px 18px rgba(15, 23, 42, .05);
+        transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .resubmission-file-input:hover,
+    .resubmission-file-input:focus {
+        border-color: #facc15;
+        background: #fffdf2;
+        box-shadow: 0 0 0 4px rgba(250, 204, 21, .14), 0 10px 22px rgba(112, 19, 27, .08);
+        outline: none;
+    }
+    .resubmission-file-input::file-selector-button {
+        margin-right: 12px;
+        padding: 10px 16px;
+        border: 1px solid #70131B;
+        border-radius: 10px;
+        background: #70131B;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: background .2s ease, color .2s ease, border-color .2s ease;
+    }
+    .resubmission-file-input:hover::file-selector-button,
+    .resubmission-file-input:focus::file-selector-button {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+    }
+    .resubmission-file-preview {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        min-height: 58px;
+        padding: 10px;
+        border: 1px dashed rgba(112, 19, 27, .22);
+        border-radius: 12px;
+        background: #ffffff;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 800;
+    }
+    .resubmission-file-preview.is-visible {
+        display: flex;
+    }
+    .resubmission-file-preview img {
+        width: 54px;
+        height: 54px;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 1px solid #f0c9ce;
+    }
+    .resubmission-file-preview-badge {
+        display: inline-flex;
+        width: 54px;
+        height: 54px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: #fff7ed;
+        color: #70131B;
+        border: 1px solid #f0c9ce;
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
     }
     .resubmission-reason {
         margin: 0 0 14px;
@@ -2269,13 +2333,22 @@
     $showOfficeField = in_array($linkedAccessLevel, ['clinic_staff', 'designee', 'admin_designee', 'superadmin', 'super_admin', 'faculty'], true) || str_contains($linkedAccessLevel, 'faculty');
     $hasGuisisAccountData = (bool) ($guisisAccountData['available'] ?? false);
     $displayStudentNumber = trim((string) ($accountProfileData['student_number'] ?? ''));
+    $looksLikeReferenceNumber = function ($value): bool {
+        $value = strtoupper(trim((string) $value));
+
+        return $value === ''
+            || \Illuminate\Support\Str::startsWith($value, ['CLN', 'TEST-', 'TESTLOCAL', 'LOC-'])
+            || (bool) preg_match('/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i', $value)
+            || (bool) preg_match('/^\d{4}-\d{4}-\d{4}/', $value)
+            || (bool) preg_match('/^\d{4}-[A-Z]+-\d+/', $value);
+    };
     $referenceMode = trim((string) ($accountProfileData['reference_mode'] ?? 'admission'));
     $referenceHeading = $referenceMode === 'admission' ? 'Admission Reference' : 'Clinic Reference';
     $idNumberHeading = $referenceMode === 'admission' ? 'Student Number' : 'ID Number';
     $displayCourse = trim((string) ($accountProfileData['course_college'] ?? ''));
     $displayFullName = trim((string) ($accountProfileData['full_name'] ?? ''));
     $displayFullName = $displayFullName !== '' ? $displayFullName : ($hasGuisisAccountData ? 'Available once enrolled' : ($user->name ?? 'Student'));
-    if (\Illuminate\Support\Str::startsWith(\Illuminate\Support\Str::upper($displayStudentNumber), 'CLN-')) {
+    if ($looksLikeReferenceNumber($displayStudentNumber)) {
         $displayStudentNumber = '';
     }
     $displayYear = trim((string) ($accountProfileData['year'] ?? $user->year ?? ''));
@@ -2692,11 +2765,11 @@ document.addEventListener('DOMContentLoaded', function () {
         $statusNormalized = strtolower(trim((string) $status));
         $isIssuedStatus = in_array($statusNormalized, ['issued', 'fully cleared'], true);
         $isRejectedStatus = $statusNormalized === 'rejected';
-        $isResubmissionStatus = $statusNormalized === 'pending resubmission';
         $isConditionalStatus = str_contains($statusNormalized, 'pending') || str_contains($statusNormalized, 'conditional');
         $isPendingStatus = !$isIssuedStatus && !$isRejectedStatus;
         $recordPendingReason = trim((string) optional($user->healthProfile)->pending_reason);
         $resubmissionDocuments = collect(optional($user->healthProfile)->resubmission_required_documents ?? [])->filter()->values();
+        $isResubmissionStatus = $statusNormalized === 'pending resubmission' || $resubmissionDocuments->isNotEmpty();
         $resubmissionDocumentLabels = [
             'student_photo' => '2x2 Student Photo',
             'medical_certificate' => 'Medical Certificate',
@@ -2726,7 +2799,14 @@ document.addEventListener('DOMContentLoaded', function () {
         $puptasSyncedAt = optional(optional($user->healthProfile)->puptas_synced_at)->format('M d, Y g:i A');
         $recordVerifiedAt = optional(optional($user->healthProfile)->verified_at)->format('M d, Y g:i A');
         $recordReferenceNumber = trim((string) optional($healthProfileRecord)->reference_number);
-        $recordReferenceNumber = $recordReferenceNumber !== '' ? $recordReferenceNumber : trim((string) (optional($healthProfileRecord)->student_number ?: ($accountProfileData['student_number'] ?? $user->student_number ?? $user->student_id ?? '-')));
+        $recordReferenceNumber = $recordReferenceNumber !== '' ? $recordReferenceNumber : trim((string) ($user->reference_number ?? '-'));
+        $recordStudentNumber = trim((string) (
+            optional($healthProfileRecord)->student_number
+            ?: ($accountProfileData['student_number'] ?? $user->student_number ?? '')
+        ));
+        if ($looksLikeReferenceNumber($recordStudentNumber)) {
+            $recordStudentNumber = '';
+        }
         $recordBirthday = trim((string) optional($healthProfileRecord)->birthday);
         $recordBirthday = $recordBirthday !== '' ? optional(\Carbon\Carbon::parse($recordBirthday))->format('M d, Y') : '-';
         $recordAssessmentDate = optional(optional($healthProfileRecord)->assessment_date)->format('M d, Y');
@@ -3133,7 +3213,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                             class="resubmission-file-input"
                                             accept="{{ $documentMeta['accept'] }}"
                                             required
+                                            data-resubmission-preview-input
                                         >
+                                        <span class="resubmission-file-preview" data-resubmission-preview>
+                                            <span>Selected file preview will appear here.</span>
+                                        </span>
                                         @error($documentKey)
                                             <span class="text-danger" style="font-size: 12px; font-weight: 800;">{{ $message }}</span>
                                         @enderror
@@ -3141,7 +3225,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                 @endforeach
                             </div>
                             <div class="resubmission-actions">
-                                <button type="button" class="record-document-btn" onclick="closeResubmissionModal()">Cancel</button>
                                 <button type="submit" class="resubmission-submit">Submit Replacement Files</button>
                             </div>
                         </form>
@@ -3255,6 +3338,49 @@ function closeResubmissionModal() {
     document.body.style.overflow = '';
 }
 
+function initializeResubmissionFilePreviews(root = document) {
+    root.querySelectorAll('[data-resubmission-preview-input]').forEach(function (input) {
+        if (input.dataset.previewBound === 'true') {
+            return;
+        }
+
+        input.dataset.previewBound = 'true';
+        input.addEventListener('change', function () {
+            const preview = input.closest('.resubmission-doc-card')?.querySelector('[data-resubmission-preview]');
+            const file = input.files && input.files[0] ? input.files[0] : null;
+            if (!preview) {
+                return;
+            }
+
+            preview.innerHTML = '';
+            preview.classList.remove('is-visible');
+            if (!file) {
+                return;
+            }
+
+            preview.classList.add('is-visible');
+            if (file.type && file.type.startsWith('image/')) {
+                const image = document.createElement('img');
+                image.alt = '';
+                image.src = URL.createObjectURL(file);
+                image.onload = function () {
+                    URL.revokeObjectURL(image.src);
+                };
+                preview.appendChild(image);
+            } else {
+                const badge = document.createElement('span');
+                badge.className = 'resubmission-file-preview-badge';
+                badge.textContent = (file.name.split('.').pop() || 'file').slice(0, 4);
+                preview.appendChild(badge);
+            }
+
+            const name = document.createElement('span');
+            name.textContent = file.name;
+            preview.appendChild(name);
+        });
+    });
+}
+
 function enableEditing() {
     const form = document.querySelector('form[action="{{ route('student.updateContact') }}"]');
     if (form) {
@@ -3289,6 +3415,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const shouldOpenResubmissionModal = @json($hasResubmissionUploadErrors ?? false);
 
     modalCard?.addEventListener('scroll', updateHealthRecordModalIndicator);
+    initializeResubmissionFilePreviews(document);
 
     if (shouldOpenResubmissionModal) {
         openResubmissionModal();

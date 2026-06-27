@@ -100,9 +100,30 @@
                 page-break-before: avoid;
             }
         }
-    </style>
+</style>
 </head>
 <body>
+    @php
+        $formatDate = function ($value) {
+            if (!$value) return '-';
+            try { return \Carbon\Carbon::parse($value)->format('M d, Y'); } catch (\Throwable $e) { return '-'; }
+        };
+        $formatTime = function ($value) {
+            if (!$value) return '-';
+            try { return \Carbon\Carbon::parse($value)->format('g:i A'); } catch (\Throwable $e) { return '-'; }
+        };
+        $validTimeOut = function ($timeIn, $timeOut) {
+            if (!$timeOut) return '-';
+            if (!$timeIn) return $timeOut;
+            try {
+                $in = \Carbon\Carbon::parse($timeIn);
+                $out = \Carbon\Carbon::parse($timeOut);
+                return $out->lt($in) ? 'Needs review' : $out->format('g:i A');
+            } catch (\Throwable $e) {
+                return '-';
+            }
+        };
+    @endphp
     <div class="content">
         <div class="report-title">
             History Report
@@ -142,20 +163,27 @@
                         @php
                             $appt = $record->appointment;
                             $cons = $record->consultation;
+                            $visitDate = $cons?->consultation_date ?: $appt?->date;
+                            $timeIn = $cons?->time_in ?: $appt?->time;
+                            $complaint = trim((string) ($appt?->problem ?: $cons?->reason_for_visit));
+                            $impression = trim((string) ($cons?->comments ?? ''));
                         @endphp
                         <tr>
-                            <td>{{ \Carbon\Carbon::parse($appt->date)->format('M d, Y') }}</td>
-                            <td>{{ $appt->time ?? '-' }}</td>
-                            <td>{{ $cons ? ($cons->time_out ?? '-') : '-' }}</td>
-                            <td>{{ $appt->service ?? '-' }}</td>
-                            <td>{{ $cons && $cons->medicine ? $cons->medicine : ($appt->notes ?? $appt->remarks ?? '-') }}</td>
+                            <td>{{ $formatDate($visitDate) }}</td>
+                            <td>{{ $formatTime($timeIn) }}</td>
+                            <td>{{ $validTimeOut($timeIn, $cons?->time_out) }}</td>
+                            <td>{{ $cons?->service ?: $appt?->service ?: '-' }}</td>
+                            <td>{{ $cons && $cons->medicine ? $cons->medicine : ($appt?->notes ?? $appt?->remarks ?? '-') }}</td>
                             <td>{{ $cons && $cons->medicine_quantity ? $cons->medicine_quantity : '-' }}</td>
                             <td>{{ $cons && $cons->pulse_rate ? $cons->pulse_rate . ' bpm' : '-' }}</td>
                             <td>{{ $cons && $cons->respiratory_rate ? $cons->respiratory_rate . ' /min' : '-' }}</td>
                             <td>{{ $cons && $cons->temperature ? $cons->temperature . '°C' : '-' }}</td>
                             <td>{{ $cons && $cons->blood_pressure ? $cons->blood_pressure : '-' }}</td>
-                            <td>{{ $cons ? (optional($cons->attendingStaff)->name ?? optional($cons->user)->name ?? '-') : (optional($appt->user)->name ?? '-') }}</td>
-                            <td>{{ $appt->problem ?? ($cons && $cons->reason_for_visit ? $cons->reason_for_visit : '-') }}</td>
+                            <td>{{ $cons ? (optional($cons->attendingStaff)->name ?? $cons->attending_staff_name ?? '-') : (optional($appt?->user)->name ?? '-') }}</td>
+                            <td>
+                                <strong>Complaint:</strong> {{ $complaint !== '' ? $complaint : '-' }}<br>
+                                <strong>Impression:</strong> {{ $impression !== '' ? $impression : '-' }}
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>

@@ -205,8 +205,17 @@ class WalkInController extends Controller
             $needsSave = true;
         }
         if (\Schema::hasColumn('users', 'student_number') && trim((string) ($user->student_number ?? '')) === '') {
-            $user->student_number = trim((string) ($profile->student_number ?: $referenceNumber));
-            $needsSave = true;
+            $profileStudentNumber = trim((string) $profile->student_number);
+            $studentNumberLooksLikeReference = $profileStudentNumber === ''
+                || Str::startsWith(Str::upper($profileStudentNumber), ['CLN', 'TEST-', 'TESTLOCAL', 'LOC-'])
+                || (bool) preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $profileStudentNumber)
+                || (bool) preg_match('/^\d{4}-\d{4}-\d{4}/', $profileStudentNumber)
+                || (bool) preg_match('/^\d{4}-[A-Z]+-\d+/', Str::upper($profileStudentNumber));
+
+            if (!$studentNumberLooksLikeReference) {
+                $user->student_number = $profileStudentNumber;
+                $needsSave = true;
+            }
         }
         if (trim((string) ($user->student_id ?? '')) === '' && trim((string) ($profile->student_id ?? '')) !== '') {
             $user->student_id = (string) $profile->student_id;
@@ -602,6 +611,7 @@ class WalkInController extends Controller
         $pendingReason = trim((string) $profile->pending_reason);
         $medicalRemarks = trim((string) $profile->medical_condition_remarks);
         $assessmentRemarks = trim((string) $profile->assessment_remarks);
+        $medAssessmentRemarks = trim((string) $profile->med_assessment_remarks);
         $clearanceStatus = trim((string) $profile->clearance_status);
         $hasSavedReview = trim((string) $profile->blood_pressure) !== ''
             || $profile->respiratory_rate !== null
@@ -639,7 +649,8 @@ class WalkInController extends Controller
             $medicalCondition = trim((string) $matches[1]);
         }
 
-        $hasIncompleteRequirements = stripos($pendingReasonLine, 'Incomplete Requirements') !== false;
+        $hasIncompleteRequirements = stripos($pendingReasonLine, 'Incomplete Requirements') !== false
+            || stripos($pendingReasonLine, 'Document Resubmission') !== false;
         $needsPhysicianEvaluation = stripos($pendingReasonLine, 'For Physician Evaluation') !== false;
         $otherPendingReason = '';
         if (preg_match('/(?:^|;\s*)Others:\s*(.+)$/i', $pendingReasonLine, $matches)) {
@@ -657,18 +668,24 @@ class WalkInController extends Controller
             $otherPendingReason = $pendingReasonLine;
         }
 
+        $clearanceDecision = $clearanceStatus === 'Pending/Conditional' ? 'pending' : 'approve';
+
         return [
             'findings_status' => $findingsStatus,
+            'clearance_decision' => $clearanceDecision,
             'has_medical_condition' => $hasMedicalCondition,
             'medical_condition' => $medicalCondition,
             'incomplete_requirements' => $hasIncompleteRequirements,
             'resubmission_required_documents' => $profile->resubmission_required_documents ?: [],
             'needs_physician_evaluation' => $needsPhysicianEvaluation,
             'other_pending_reason' => $otherPendingReason,
-            'condition_remarks' => $findingsStatus === 'With Findings'
-                ? trim($pendingRemarks !== '' ? $pendingRemarks : $medicalConditionRemarks)
+            'condition_remarks' => $clearanceDecision === 'pending'
+                ? trim($pendingRemarks !== '' ? $pendingRemarks : '')
                 : '',
-            'normal_remarks' => $findingsStatus === 'No Findings / Normal' ? $assessmentRemarks : '',
+            'med_assessment_remarks' => $medAssessmentRemarks,
+            'normal_remarks' => $clearanceDecision !== 'pending' && $findingsStatus === 'No Findings / Normal'
+                ? ($medAssessmentRemarks !== '' ? $medAssessmentRemarks : $assessmentRemarks)
+                : '',
             'height' => trim((string) $profile->height),
             'weight' => trim((string) $profile->weight),
             'blood_pressure' => trim((string) $profile->blood_pressure),
@@ -755,6 +772,7 @@ class WalkInController extends Controller
             'medicalCertificateDate' => $this->formatMedicalAssessmentDate($profile->medical_certificate_issued_at ?: $profile->med_cert_date),
             'xrayResult' => $this->normalizeMedicalAssessmentXrayResult($profile->chest_xray_result_text ?: $profile->xray_findings),
             'xrayDate' => $this->formatMedicalAssessmentDate($profile->chest_xray_date ?: $profile->xray_date),
+            'medAssessmentRemarks' => trim((string) ($profile->med_assessment_remarks ?: $profile->assessment_remarks)),
         ];
 
         $pdf = Pdf::loadView('admin.medical_assessment_copy', $data)->setPaper('letter');
@@ -1065,7 +1083,10 @@ class WalkInController extends Controller
                 ?: $student->reference_number
                 ?: optional($healthProfile)->reference_number
             ));
-            $resolvedCourse = trim((string) ($student->course ?? $student->course_college ?? ''));
+            $resolvedCourse = trim((string) (
+                optional($healthProfile)->course_college
+                ?: ($student->course ?? $student->course_college ?? '')
+            ));
             $resolvedYear = trim((string) ($student->year ?? ''));
             $resolvedSection = trim((string) ($student->section ?? ''));
             $resolvedDob = !empty($student->DOB) ? (string) $student->DOB : '';
@@ -1678,6 +1699,7 @@ PROMPT;
                 'reference_number' => ['required', 'string', 'max:120'],
                 'lookup_scope' => ['nullable', 'string', 'max:40'],
                 'findings_status' => ['required', 'string', 'in:No Findings / Normal,With Findings'],
+                'clearance_decision' => ['required', 'string', 'in:approve,pending'],
                 'has_medical_condition' => ['nullable', 'boolean'],
                 'incomplete_requirements' => ['nullable', 'boolean'],
                 'resubmission_required_documents' => ['nullable', 'array'],
@@ -1686,6 +1708,7 @@ PROMPT;
                 'other_pending_reason' => ['nullable', 'string', 'max:1000'],
                 'medical_condition' => ['required_if:has_medical_condition,true', 'nullable', 'string', 'max:1000'],
                 'condition_remarks' => ['nullable', 'string', 'max:2000'],
+                'med_assessment_remarks' => ['nullable', 'string', 'max:2000'],
                 'height' => ['required', 'numeric', 'min:1', 'max:10'],
                 'weight' => ['required', 'numeric', 'min:1', 'max:1100'],
                 'blood_pressure' => ['required', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
@@ -1699,8 +1722,10 @@ PROMPT;
             $lookupScope = strtolower(trim((string) ($validated['lookup_scope'] ?? 'default')));
             $forceLocalClinicApproval = $lookupScope === 'clinic_local';
             $findingsStatus = (string) $validated['findings_status'];
-            $hasMedicalCondition = $request->boolean('has_medical_condition');
-            $hasIncompleteRequirements = $request->boolean('incomplete_requirements');
+            $clearanceDecision = (string) $validated['clearance_decision'];
+            $hasPendingFinding = $clearanceDecision === 'pending';
+            $hasMedicalCondition = $findingsStatus === 'With Findings' && $request->boolean('has_medical_condition');
+            $hasIncompleteRequirements = $hasPendingFinding && $request->boolean('incomplete_requirements');
             $resubmissionRequiredDocuments = $hasIncompleteRequirements
                 ? array_values($validated['resubmission_required_documents'] ?? [])
                 : [];
@@ -1710,10 +1735,13 @@ PROMPT;
                     'message' => 'Please select at least one document for resubmission.',
                 ], 422);
             }
-            $needsPhysicianEvaluation = $request->boolean('needs_physician_evaluation');
+            $needsPhysicianEvaluation = $hasPendingFinding && $request->boolean('needs_physician_evaluation');
             $medicalCondition = trim((string) $request->input('medical_condition', ''));
-            $otherPendingReason = trim((string) $request->input('other_pending_reason', ''));
+            $otherPendingReason = $hasPendingFinding
+                ? trim((string) $request->input('other_pending_reason', ''))
+                : '';
             $conditionRemarks = trim((string) $request->input('condition_remarks', ''));
+            $medAssessmentRemarks = trim((string) $request->input('med_assessment_remarks', ''));
             $height = (string) $validated['height'];
             $weight = (string) $validated['weight'];
             $bloodPressure = preg_replace('/\s+/', '', (string) $validated['blood_pressure']);
@@ -1726,9 +1754,6 @@ PROMPT;
                 : null;
 
             $pendingReasons = [];
-            if ($hasMedicalCondition) {
-                $pendingReasons[] = $medicalCondition !== '' ? 'Medical Condition: ' . $medicalCondition : 'With Medical Condition';
-            }
             if ($hasIncompleteRequirements) {
                 $documentLabels = collect($resubmissionRequiredDocuments)
                     ->map(fn ($document) => match ($document) {
@@ -1749,7 +1774,6 @@ PROMPT;
             if ($otherPendingReason !== '') {
                 $pendingReasons[] = 'Others: ' . $otherPendingReason;
             }
-            $hasPendingFinding = $findingsStatus === 'With Findings';
 
             if ($hasPendingFinding && empty($pendingReasons)) {
                 return response()->json([
@@ -1794,7 +1818,9 @@ PROMPT;
                 $idpStudentId = trim((string) ($student->student_id ?? $localOnlyProfile?->student_id ?? ''));
                 $studentId = $idpStudentId !== '' ? $idpStudentId : $referenceNumber;
             }
-            $clearanceStatus = $hasPendingFinding ? 'Pending/Conditional' : 'Fully Cleared';
+            $clearanceStatus = $hasPendingFinding
+                ? ($hasIncompleteRequirements ? 'Pending Resubmission' : 'Pending/Conditional')
+                : 'Fully Cleared';
 
             // Conditional applicants remain uncleared in PUPTAS until compliance is resolved.
             $webhookResult = $isLocalOnlyApproval
@@ -1820,6 +1846,7 @@ PROMPT;
                 $pendingReasons,
                 $medicalCondition,
                 $conditionRemarks,
+                $medAssessmentRemarks,
                 $findingsStatus,
                 $height,
                 $weight,
@@ -1847,7 +1874,7 @@ PROMPT;
 
                 $profile = HealthProfile::firstOrNew(['user_id' => $student->id]);
                 $profile->student_id = (string) ($student->student_id ?: $studentId);
-                $profile->student_number = (string) ($student->student_number ?: $referenceNumber);
+                $profile->student_number = (string) ($student->student_number ?: '');
                 $profile->reference_number = $referenceNumber;
                 $profile->course_college = (string) ($profile->course_college ?: $student->course);
                 $profile->birthday = $profile->birthday ?: $student->DOB;
@@ -1875,12 +1902,14 @@ PROMPT;
                         . ($conditionRemarks !== '' ? "\n" . $conditionRemarks : ''))
                     : null;
                 $profile->medical_condition_remarks = $hasMedicalCondition
-                    ? trim(($medicalCondition !== '' ? $medicalCondition : 'With findings')
-                        . ($conditionRemarks !== '' ? "\n" . $conditionRemarks : ''))
+                    ? trim($medicalCondition !== '' ? $medicalCondition : 'With findings')
                     : null;
-                $profile->assessment_remarks = !$hasPendingFinding && $conditionRemarks !== ''
-                    ? $conditionRemarks
+                $profile->assessment_remarks = !$hasPendingFinding && $medAssessmentRemarks !== ''
+                    ? $medAssessmentRemarks
                     : $profile->assessment_remarks;
+                $profile->med_assessment_remarks = $medAssessmentRemarks !== ''
+                    ? $medAssessmentRemarks
+                    : null;
                 $profile->has_illness = $hasMedicalCondition ? 'Yes' : ($profile->has_illness ?: 'No');
                 $profile->other_illness = $hasMedicalCondition ? $medicalCondition : $profile->other_illness;
                 $profile->physical_assessment_status = $hasPendingFinding

@@ -2830,6 +2830,26 @@
         $showHealthFormModal = $studentUser
             && !(bool) ($studentUser->is_health_profile_completed ?? false)
             && !$studentUser->healthProfile;
+        $studentResubmissionDocuments = collect(optional($studentUser?->healthProfile)->resubmission_required_documents ?? [])
+            ->filter()
+            ->intersect(['student_photo', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])
+            ->values();
+        $showGlobalResubmissionModal = !$showHealthFormModal
+            && $studentUser
+            && $studentUser->healthProfile
+            && $studentResubmissionDocuments->isNotEmpty();
+        $studentResubmissionLabels = [
+            'student_photo' => '2x2 Student Photo',
+            'medical_certificate' => 'Medical Certificate',
+            'chest_xray_result' => 'Chest X-ray Result',
+            'pwd_id_proof' => 'PWD ID Proof',
+        ];
+        $studentResubmissionMeta = [
+            'student_photo' => ['accept' => '.jpg,.jpeg,.png,image/jpeg,image/png', 'hint' => 'JPG or PNG, up to 1 MB'],
+            'medical_certificate' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
+            'chest_xray_result' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
+            'pwd_id_proof' => ['accept' => '.pdf,application/pdf', 'hint' => 'PDF only, up to 2 MB'],
+        ];
     @endphp
 
     @if($showHealthFormModal)
@@ -2943,6 +2963,353 @@
             }
         }
     </style>
+    @endif
+
+    @if($showGlobalResubmissionModal)
+    <div id="globalResubmissionModal" class="global-resubmission-modal" role="dialog" aria-modal="true" aria-labelledby="globalResubmissionTitle">
+        <div class="global-resubmission-card">
+            <button type="button" class="global-resubmission-close" aria-label="Close upload required files modal" onclick="closeGlobalResubmissionModal()">
+                &times;
+            </button>
+            <div class="global-resubmission-head">
+                <h2 id="globalResubmissionTitle">Upload Required Files</h2>
+                <p>Replace only the requirement file/s requested by the Medical Clinic. Other submitted files will stay unchanged.</p>
+            </div>
+            @if(trim((string) optional($studentUser->healthProfile)->pending_reason) !== '')
+                <div class="global-resubmission-note">
+                    Clinic note: {{ optional($studentUser->healthProfile)->pending_reason }}
+                </div>
+            @endif
+            <form action="{{ route('student.health_record.resubmit') }}" method="POST" enctype="multipart/form-data" class="global-resubmission-form">
+                @csrf
+                <div class="global-resubmission-docs">
+                    @foreach($studentResubmissionDocuments as $documentKey)
+                        @continue(!isset($studentResubmissionLabels[$documentKey]))
+                        @php($documentMeta = $studentResubmissionMeta[$documentKey] ?? ['accept' => '', 'hint' => 'Upload the requested replacement file.'])
+                        <label class="global-resubmission-doc">
+                            <span class="global-resubmission-doc-title">{{ $studentResubmissionLabels[$documentKey] }}</span>
+                            <span class="global-resubmission-doc-hint">{{ $documentMeta['hint'] }}</span>
+                            <input type="file" name="{{ $documentKey }}" accept="{{ $documentMeta['accept'] }}" required data-resubmission-preview-input>
+                            <span class="global-resubmission-preview" data-resubmission-preview>
+                                <span class="global-resubmission-preview-placeholder">Selected file preview will appear here.</span>
+                            </span>
+                            @error($documentKey)
+                                <span class="global-resubmission-error">{{ $message }}</span>
+                            @enderror
+                        </label>
+                    @endforeach
+                </div>
+                <div class="global-resubmission-actions">
+                    <button type="submit" class="global-resubmission-submit">Submit Replacement Files</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <style>
+        .global-resubmission-modal {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 999998 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 24px;
+            background: rgba(15, 23, 42, .58);
+            backdrop-filter: blur(7px);
+        }
+        .global-resubmission-card {
+            position: relative;
+            width: min(860px, 96vw);
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 22px;
+            background: #ffffff;
+            border-top: 3px solid #facc15;
+            border-bottom: 3px solid #facc15;
+            box-shadow: 0 28px 80px rgba(15, 23, 42, .32);
+        }
+        .global-resubmission-head {
+            padding: 28px 32px 22px;
+            background: linear-gradient(135deg, #991b1b 0%, #7f1d2d 100%);
+            color: #ffffff;
+        }
+        .global-resubmission-head h2 {
+            margin: 0 0 8px;
+            color: #ffffff;
+            font-size: 25px;
+            font-weight: 900;
+        }
+        .global-resubmission-head p {
+            margin: 0;
+            max-width: 720px;
+            color: #ffffff;
+            font-size: 14px;
+            line-height: 1.55;
+        }
+        .global-resubmission-close {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            z-index: 2;
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, .18);
+            background: rgba(127, 29, 45, .5);
+            color: #ffffff;
+            font-size: 30px;
+            line-height: 1;
+            cursor: pointer;
+            overflow: hidden;
+            isolation: isolate;
+            transition: border-color .22s ease, color .22s ease, background .22s ease;
+        }
+        .global-resubmission-close::before {
+            position: absolute;
+            z-index: -1;
+            inset: 0;
+            background: #facc15;
+            content: "";
+            transform: translateX(-102%);
+            transition: transform .26s ease;
+        }
+        .global-resubmission-close:hover,
+        .global-resubmission-close:focus-visible {
+            border-color: #facc15;
+            background: rgba(127, 29, 45, .5);
+            color: #7f1d2d;
+            outline: none;
+        }
+        .global-resubmission-close:hover::before,
+        .global-resubmission-close:focus-visible::before {
+            transform: translateX(0);
+        }
+        .global-resubmission-note {
+            margin: 20px 24px 0;
+            padding: 13px 16px;
+            border-radius: 12px;
+            border: 1px solid #fbbf24;
+            background: #fffbeb;
+            color: #7c2d12;
+            font-size: 13px;
+            font-weight: 800;
+        }
+        .global-resubmission-form {
+            padding: 20px 24px 24px;
+        }
+        .global-resubmission-docs {
+            display: grid;
+            gap: 12px;
+        }
+        .global-resubmission-doc {
+            display: grid;
+            gap: 8px;
+            padding: 18px;
+            border-radius: 14px;
+            border: 1px solid #f0c9ce;
+            background: #fffafa;
+        }
+        .global-resubmission-doc-title {
+            color: #7f1d2d;
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .global-resubmission-doc-hint {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+        .global-resubmission-doc input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #111827;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 8px 18px rgba(15, 23, 42, .05);
+            transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+        .global-resubmission-doc input[type="file"]:hover,
+        .global-resubmission-doc input[type="file"]:focus {
+            border-color: #facc15;
+            background: #fffdf2;
+            box-shadow: 0 0 0 4px rgba(250, 204, 21, .14), 0 10px 22px rgba(112, 19, 27, .08);
+            outline: none;
+        }
+        .global-resubmission-doc input[type="file"]::file-selector-button {
+            margin-right: 12px;
+            padding: 10px 16px;
+            border: 1px solid #7f1d2d;
+            border-radius: 10px;
+            background: #7f1d2d;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: background .2s ease, color .2s ease, border-color .2s ease;
+        }
+        .global-resubmission-doc input[type="file"]:hover::file-selector-button,
+        .global-resubmission-doc input[type="file"]:focus::file-selector-button {
+            border-color: #facc15;
+            background: #facc15;
+            color: #7f1d2d;
+        }
+        .global-resubmission-preview {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            min-height: 58px;
+            padding: 10px;
+            border: 1px dashed rgba(112, 19, 27, .22);
+            border-radius: 12px;
+            background: #ffffff;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .global-resubmission-preview.is-visible {
+            display: flex;
+        }
+        .global-resubmission-preview img {
+            width: 54px;
+            height: 54px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid #f0c9ce;
+        }
+        .global-resubmission-preview-file {
+            display: inline-flex;
+            width: 54px;
+            height: 54px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: #fff7ed;
+            color: #7f1d2d;
+            border: 1px solid #f0c9ce;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .global-resubmission-error {
+            color: #dc2626;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .global-resubmission-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 18px;
+        }
+        .global-resubmission-submit {
+            min-height: 46px;
+            padding: 0 22px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+        .global-resubmission-submit {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            border: 1px solid #7f1d2d;
+            background: #7f1d2d;
+            color: #ffffff;
+            transition: color .22s ease, border-color .22s ease;
+        }
+        .global-resubmission-submit::before {
+            position: absolute;
+            z-index: -1;
+            inset: 0;
+            background: #facc15;
+            content: "";
+            transform: translateX(-102%);
+            transition: transform .28s ease;
+        }
+        .global-resubmission-submit:hover,
+        .global-resubmission-submit:focus-visible {
+            border-color: #facc15;
+            color: #7f1d2d;
+            outline: none;
+        }
+        .global-resubmission-submit:hover::before,
+        .global-resubmission-submit:focus-visible::before {
+            transform: translateX(0);
+        }
+        @media (max-width: 640px) {
+            .global-resubmission-modal {
+                align-items: flex-start !important;
+                padding: 14px;
+            }
+            .global-resubmission-head {
+                padding: 24px 24px 20px;
+            }
+            .global-resubmission-actions {
+                flex-direction: column;
+            }
+            .global-resubmission-submit {
+                width: 100%;
+            }
+        }
+    </style>
+    <script>
+        function closeGlobalResubmissionModal() {
+            const modal = document.getElementById('globalResubmissionModal');
+            if (!modal) {
+                return;
+            }
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById('globalResubmissionModal');
+            if (!modal) {
+                return;
+            }
+            document.body.style.overflow = 'hidden';
+
+            modal.querySelectorAll('[data-resubmission-preview-input]').forEach(function (input) {
+                input.addEventListener('change', function () {
+                    const preview = input.closest('.global-resubmission-doc')?.querySelector('[data-resubmission-preview]');
+                    const file = input.files && input.files[0] ? input.files[0] : null;
+                    if (!preview) return;
+
+                    preview.innerHTML = '';
+                    preview.classList.remove('is-visible');
+                    if (!file) return;
+
+                    preview.classList.add('is-visible');
+                    if (file.type && file.type.startsWith('image/')) {
+                        const image = document.createElement('img');
+                        image.alt = '';
+                        image.src = URL.createObjectURL(file);
+                        image.onload = function () {
+                            URL.revokeObjectURL(image.src);
+                        };
+                        preview.appendChild(image);
+                    } else {
+                        const badge = document.createElement('span');
+                        badge.className = 'global-resubmission-preview-file';
+                        badge.textContent = (file.name.split('.').pop() || 'file').slice(0, 4);
+                        preview.appendChild(badge);
+                    }
+
+                    const name = document.createElement('span');
+                    name.textContent = file.name;
+                    preview.appendChild(name);
+                });
+            });
+        });
+    </script>
     @endif
     @endauth
 </body>

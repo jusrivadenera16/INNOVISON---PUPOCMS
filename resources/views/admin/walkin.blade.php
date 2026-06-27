@@ -4934,6 +4934,19 @@
                                     </label>
                                 </div>
                             </div>
+                            <div id="applicantClearanceDecisionFields" class="applicant-findings-review" style="display: none;">
+                                <div class="applicant-findings-label">Clearance Decision <span style="color:#dc2626;">*</span></div>
+                                <div class="applicant-findings-options">
+                                    <label class="applicant-findings-option">
+                                        <input type="radio" name="applicant_clearance_decision" value="approve">
+                                        <span>Approve / Issue</span>
+                                    </label>
+                                    <label class="applicant-findings-option">
+                                        <input type="radio" name="applicant_clearance_decision" value="pending">
+                                        <span>Pending</span>
+                                    </label>
+                                </div>
+                            </div>
                             <div id="applicantNormalRemarksFields" class="applicant-condition-fields" style="display: none;">
                                 <div class="applicant-condition-field">
                                     <label for="applicantNormalRemarks">Remarks <span style="color: #94a3b8;">(Optional)</span></label>
@@ -4942,12 +4955,27 @@
                             </div>
                             <div id="applicantConditionFields" class="applicant-condition-fields" style="display: none;">
                                 <div class="applicant-condition-field">
-                                    <label>Pending Reason <span style="color: #dc2626;">*</span></label>
+                                    <label>Finding Details</label>
                                     <div class="applicant-pending-reasons">
                                         <label class="applicant-pending-reason-option">
                                             <input type="checkbox" id="applicantHasMedicalCondition" name="has_medical_condition" value="1">
                                             <span>With Medical Condition</span>
                                         </label>
+                                    </div>
+                                </div>
+                                <div id="applicantMedicalConditionField" class="applicant-condition-field" style="display: none;">
+                                    <label for="applicantMedicalCondition">Medical Condition <span style="color: #dc2626;">*</span></label>
+                                    <input type="text" id="applicantMedicalCondition" name="medical_condition" placeholder="e.g., Asthma, Diabetes, Hypertension..." class="applicant-condition-input">
+                                </div>
+                                <div id="applicantFindingRemarksField" class="applicant-condition-field">
+                                    <label for="applicantFindingRemarks">Remarks <span style="color: #94a3b8;">(Optional)</span></label>
+                                    <textarea id="applicantFindingRemarks" name="med_assessment_remarks" placeholder="Additional notes about the findings..." class="applicant-condition-textarea" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <div id="applicantPendingDecisionFields" class="applicant-condition-fields" style="display: none;">
+                                <div class="applicant-condition-field">
+                                    <label>Pending Reason <span style="color: #dc2626;">*</span></label>
+                                    <div class="applicant-pending-reasons">
                                         <label class="applicant-pending-reason-option">
                                             <input type="checkbox" id="applicantIncompleteRequirements" name="incomplete_requirements" value="1">
                                             <span>Request Document Resubmission</span>
@@ -4962,9 +4990,9 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div id="applicantMedicalConditionField" class="applicant-condition-field" style="display: none;">
-                                    <label for="applicantMedicalCondition">Medical Condition <span style="color: #dc2626;">*</span></label>
-                                    <input type="text" id="applicantMedicalCondition" name="medical_condition" placeholder="e.g., Asthma, Diabetes, Hypertension..." class="applicant-condition-input">
+                                <div class="applicant-condition-field">
+                                    <label for="applicantConditionRemarks">Remarks <span style="color: #94a3b8;">(Optional)</span></label>
+                                    <textarea id="applicantConditionRemarks" name="condition_remarks" placeholder="Additional notes about the pending decision..." class="applicant-condition-textarea" rows="3"></textarea>
                                 </div>
                                 <div id="applicantOtherPendingReasonField" class="applicant-condition-field" style="display: none;">
                                     <label for="applicantOtherPendingReasonText">Other Pending Reason <span style="color: #dc2626;">*</span></label>
@@ -4990,10 +5018,6 @@
                                             <span>PWD ID Proof</span>
                                         </label>
                                     </div>
-                                </div>
-                                <div class="applicant-condition-field">
-                                    <label for="applicantConditionRemarks">Remarks <span style="color: #94a3b8;">(Optional)</span></label>
-                                    <textarea id="applicantConditionRemarks" name="condition_remarks" placeholder="Additional notes about the findings..." class="applicant-condition-textarea" rows="3"></textarea>
                                 </div>
                             </div>
                         </section>
@@ -6912,11 +6936,20 @@
             document.querySelectorAll('input[name="applicant_findings_status"]').forEach(function (input) {
                 input.checked = false;
             });
+            document.querySelectorAll('input[name="applicant_clearance_decision"]').forEach(function (input) {
+                input.checked = false;
+            });
             const conditionFields = document.getElementById('applicantConditionFields');
+            const clearanceDecisionFields = document.getElementById('applicantClearanceDecisionFields');
+            const pendingDecisionFields = document.getElementById('applicantPendingDecisionFields');
             const normalRemarksFields = document.getElementById('applicantNormalRemarksFields');
+            const findingRemarksField = document.getElementById('applicantFindingRemarksField');
             if (conditionFields) conditionFields.style.display = 'none';
+            if (clearanceDecisionFields) clearanceDecisionFields.style.display = 'none';
+            if (pendingDecisionFields) pendingDecisionFields.style.display = 'none';
             if (normalRemarksFields) normalRemarksFields.style.display = 'none';
-            ['applicantMedicalCondition', 'applicantConditionRemarks', 'applicantNormalRemarks', 'applicantHeight', 'applicantWeight', 'applicantBloodPressure', 'applicantPulseRate', 'applicantRespiratoryRate', 'applicantTemperature', 'applicantCovidPositiveDate', 'applicantOtherPendingReasonText'].forEach(function (id) {
+            if (findingRemarksField) findingRemarksField.style.display = 'none';
+            ['applicantMedicalCondition', 'applicantFindingRemarks', 'applicantConditionRemarks', 'applicantNormalRemarks', 'applicantHeight', 'applicantWeight', 'applicantBloodPressure', 'applicantPulseRate', 'applicantRespiratoryRate', 'applicantTemperature', 'applicantCovidPositiveDate', 'applicantOtherPendingReasonText'].forEach(function (id) {
                 const field = document.getElementById(id);
                 if (field) field.value = '';
             });
@@ -7000,9 +7033,13 @@
             document.querySelectorAll('input[name="applicant_findings_status"]').forEach(function (input) {
                 input.checked = input.value === (savedReview.findings_status || '');
             });
+            document.querySelectorAll('input[name="applicant_clearance_decision"]').forEach(function (input) {
+                input.checked = input.value === (savedReview.clearance_decision || 'approve');
+            });
 
             const fieldValues = {
                 applicantMedicalCondition: savedReview.medical_condition || '',
+                applicantFindingRemarks: savedReview.med_assessment_remarks || '',
                 applicantConditionRemarks: savedReview.condition_remarks || '',
                 applicantNormalRemarks: savedReview.normal_remarks || '',
                 applicantHeight: savedReview.height ?? '',
@@ -7096,7 +7133,6 @@
                 || String(savedReview.medical_condition || '').trim() !== '';
             const hasCondition = hasProfileCondition || hasReviewCondition;
             const pendingReasons = [];
-            if (hasCondition) pendingReasons.push('With Medical Condition');
             if (savedReview.incomplete_requirements) pendingReasons.push('Document Resubmission');
             if (savedReview.needs_physician_evaluation) pendingReasons.push('For Physician Evaluation');
             if (savedReview.other_pending_reason) pendingReasons.push('Others: ' + savedReview.other_pending_reason);
@@ -7109,7 +7145,7 @@
                 status: hasCondition ? 'With Medical Condition' : 'No Medical Condition',
                 condition: savedReview.medical_condition || profileConditionText || 'N/A',
                 reasons: pendingReasons.join(', ') || 'N/A',
-                remarks: savedReview.condition_remarks || savedReview.normal_remarks || 'N/A'
+                remarks: savedReview.med_assessment_remarks || savedReview.condition_remarks || savedReview.normal_remarks || 'N/A'
             };
         }
 
@@ -7131,7 +7167,6 @@
         function renderSavedAssessmentReview(review, referenceNumber) {
             const savedReview = review && typeof review === 'object' ? review : {};
             const pendingReasons = [];
-            if (savedReview.has_medical_condition) pendingReasons.push('With Medical Condition');
             if (savedReview.incomplete_requirements) pendingReasons.push('Document Resubmission');
             if (savedReview.needs_physician_evaluation) pendingReasons.push('For Physician Evaluation');
             if (savedReview.other_pending_reason) pendingReasons.push('Others: ' + savedReview.other_pending_reason);
@@ -7140,7 +7175,7 @@
                 savedReviewResult: savedReview.findings_status || '-',
                 savedReviewReasons: pendingReasons.join(', ') || '-',
                 savedReviewCondition: savedReview.medical_condition || '-',
-                savedReviewRemarks: savedReview.condition_remarks || savedReview.normal_remarks || '-',
+                savedReviewRemarks: savedReview.med_assessment_remarks || savedReview.condition_remarks || savedReview.normal_remarks || '-',
                 savedReviewHeight: savedReview.height !== null && savedReview.height !== undefined && savedReview.height !== '' ? formatHeightFeet(savedReview.height) : '-',
                 savedReviewWeight: savedReview.weight !== null && savedReview.weight !== undefined && savedReview.weight !== '' ? formatWeightPounds(savedReview.weight) : '-',
                 savedReviewBloodPressure: savedReview.blood_pressure || '-',
@@ -7464,9 +7499,11 @@
             }
 
             const medicalConditionInput = document.getElementById('applicantMedicalCondition');
+            const findingRemarksInput = document.getElementById('applicantFindingRemarks');
             const conditionRemarksInput = document.getElementById('applicantConditionRemarks');
             const normalRemarksInput = document.getElementById('applicantNormalRemarks');
             const findingsStatusInput = document.querySelector('input[name="applicant_findings_status"]:checked');
+            const clearanceDecisionInput = document.querySelector('input[name="applicant_clearance_decision"]:checked');
             const medicalConditionCheckbox = document.getElementById('applicantHasMedicalCondition');
             const incompleteRequirementsCheckbox = document.getElementById('applicantIncompleteRequirements');
             const physicianEvaluationCheckbox = document.getElementById('applicantNeedsPhysicianEvaluation');
@@ -7485,8 +7522,13 @@
                 setStatus('error', 'Please select the nurse findings review result.');
                 return;
             }
+            if (!clearanceDecisionInput) {
+                setStatus('error', 'Please select the clearance decision.');
+                return;
+            }
 
             const hasFindings = findingsStatusInput.value === 'With Findings';
+            const isPendingDecision = clearanceDecisionInput.value === 'pending';
             const hasMedicalCondition = Boolean(medicalConditionCheckbox?.checked);
             const hasIncompleteRequirements = Boolean(incompleteRequirementsCheckbox?.checked);
             const needsPhysicianEvaluation = Boolean(physicianEvaluationCheckbox?.checked);
@@ -7494,7 +7536,7 @@
             const selectedResubmissionDocs = Array.from(document.querySelectorAll('input[name="resubmission_required_documents[]"]:checked'))
                 .map(function (input) { return input.value; });
 
-            if (hasFindings && !hasMedicalCondition && !hasIncompleteRequirements && !needsPhysicianEvaluation && !hasOtherPendingReason) {
+            if (isPendingDecision && !hasIncompleteRequirements && !needsPhysicianEvaluation && !hasOtherPendingReason) {
                 setStatus('error', 'Please select at least one pending reason.');
                 return;
             }
@@ -7504,12 +7546,12 @@
                 return;
             }
 
-            if (hasFindings && hasIncompleteRequirements && selectedResubmissionDocs.length === 0) {
+            if (isPendingDecision && hasIncompleteRequirements && selectedResubmissionDocs.length === 0) {
                 setStatus('error', 'Please select at least one document for resubmission.');
                 return;
             }
 
-            if (hasFindings && hasOtherPendingReason && (!otherPendingReasonInput?.value.trim())) {
+            if (isPendingDecision && hasOtherPendingReason && (!otherPendingReasonInput?.value.trim())) {
                 setStatus('error', 'Please enter the other pending reason.');
                 return;
             }
@@ -7529,12 +7571,13 @@
                 return;
             }
 
-            setStatus('info', hasFindings ? 'Saving pending compliance...' : 'Approving applicant...');
+            setStatus('info', isPendingDecision ? 'Saving pending compliance...' : 'Approving applicant...');
 
             const approvalData = {
                 reference_number: currentLookupRef,
                 lookup_scope: isClinicLookupMode() ? 'clinic_local' : 'default',
                 findings_status: findingsStatusInput.value,
+                clearance_decision: clearanceDecisionInput.value,
                 height: heightInput.value,
                 weight: weightInput.value,
                 blood_pressure: bloodPressureInput.value.trim(),
@@ -7542,19 +7585,22 @@
                 respiratory_rate: respiratoryRateInput.value,
                 temperature: temperatureInput.value,
                 covid_positive: covidPositiveInput.value,
-                covid_positive_date: covidPositiveInput.value === 'Yes' ? covidPositiveDateInput.value : ''
+                covid_positive_date: covidPositiveInput.value === 'Yes' ? covidPositiveDateInput.value : '',
+                med_assessment_remarks: hasFindings
+                    ? (findingRemarksInput?.value.trim() || '')
+                    : (normalRemarksInput?.value.trim() || '')
             };
 
-            if (hasFindings) {
+            if (hasFindings || isPendingDecision) {
                 approvalData.has_medical_condition = hasMedicalCondition;
-                approvalData.incomplete_requirements = hasIncompleteRequirements;
-                approvalData.resubmission_required_documents = hasIncompleteRequirements ? selectedResubmissionDocs : [];
-                approvalData.needs_physician_evaluation = needsPhysicianEvaluation;
-                approvalData.other_pending_reason = hasOtherPendingReason ? otherPendingReasonInput.value.trim() : '';
+                approvalData.incomplete_requirements = isPendingDecision && hasIncompleteRequirements;
+                approvalData.resubmission_required_documents = isPendingDecision && hasIncompleteRequirements ? selectedResubmissionDocs : [];
+                approvalData.needs_physician_evaluation = isPendingDecision && needsPhysicianEvaluation;
+                approvalData.other_pending_reason = isPendingDecision && hasOtherPendingReason ? otherPendingReasonInput.value.trim() : '';
                 approvalData.medical_condition = hasMedicalCondition ? medicalConditionInput.value.trim() : '';
-                approvalData.condition_remarks = conditionRemarksInput?.value.trim() || '';
+                approvalData.condition_remarks = isPendingDecision ? (conditionRemarksInput?.value.trim() || '') : '';
             } else {
-                approvalData.condition_remarks = normalRemarksInput?.value.trim() || '';
+                approvalData.condition_remarks = '';
             }
 
             fetch("{{ route('admin.walkin.approve_applicant') }}", {
@@ -7598,9 +7644,13 @@
         }
 
         const findingsInputs = document.querySelectorAll('input[name="applicant_findings_status"]');
+        const clearanceDecisionInputs = document.querySelectorAll('input[name="applicant_clearance_decision"]');
         const pendingReasonInputs = document.querySelectorAll('#applicantHasMedicalCondition, #applicantIncompleteRequirements, #applicantNeedsPhysicianEvaluation, #applicantOtherPendingReason');
         const medicalConditionFields = document.getElementById('applicantConditionFields');
+            const clearanceDecisionFields = document.getElementById('applicantClearanceDecisionFields');
+            const pendingDecisionFields = document.getElementById('applicantPendingDecisionFields');
             const normalRemarksFields = document.getElementById('applicantNormalRemarksFields');
+            const findingRemarksField = document.getElementById('applicantFindingRemarksField');
             const medicalConditionField = document.getElementById('applicantMedicalConditionField');
             const otherPendingReasonField = document.getElementById('applicantOtherPendingReasonField');
             const resubmissionDocsField = document.getElementById('applicantResubmissionDocsField');
@@ -7739,46 +7789,75 @@
 
         function syncFindingsReviewFields() {
             const selectedFinding = document.querySelector('input[name="applicant_findings_status"]:checked')?.value || '';
+            let selectedDecision = document.querySelector('input[name="applicant_clearance_decision"]:checked')?.value || '';
             const hasFindings = selectedFinding === 'With Findings';
             const hasNormalResult = selectedFinding === 'No Findings / Normal';
+            const hasReviewResult = hasFindings || hasNormalResult;
+            if (hasReviewResult && !selectedDecision) {
+                const approveDecision = document.querySelector('input[name="applicant_clearance_decision"][value="approve"]');
+                if (approveDecision) {
+                    approveDecision.checked = true;
+                    selectedDecision = 'approve';
+                }
+            }
+            const isPendingDecision = selectedDecision === 'pending';
             const hasMedicalCondition = Boolean(document.getElementById('applicantHasMedicalCondition')?.checked);
             const hasIncompleteRequirements = Boolean(document.getElementById('applicantIncompleteRequirements')?.checked);
             const hasOtherPendingReason = Boolean(document.getElementById('applicantOtherPendingReason')?.checked);
 
+            if (clearanceDecisionFields) {
+                clearanceDecisionFields.style.display = hasReviewResult ? 'block' : 'none';
+            }
             if (medicalConditionFields) {
                 medicalConditionFields.style.display = hasFindings ? 'flex' : 'none';
             }
+            if (pendingDecisionFields) {
+                pendingDecisionFields.style.display = isPendingDecision ? 'flex' : 'none';
+            }
             if (normalRemarksFields) {
-                normalRemarksFields.style.display = hasNormalResult ? 'flex' : 'none';
+                normalRemarksFields.style.display = hasNormalResult && !isPendingDecision ? 'flex' : 'none';
+            }
+            if (findingRemarksField) {
+                findingRemarksField.style.display = hasFindings && !isPendingDecision ? 'flex' : 'none';
             }
             if (medicalConditionField) {
                 medicalConditionField.style.display = hasFindings && hasMedicalCondition ? 'flex' : 'none';
             }
             if (otherPendingReasonField) {
-                otherPendingReasonField.style.display = hasFindings && hasOtherPendingReason ? 'flex' : 'none';
+                otherPendingReasonField.style.display = isPendingDecision && hasOtherPendingReason ? 'flex' : 'none';
             }
             if (resubmissionDocsField) {
-                resubmissionDocsField.style.display = hasFindings && hasIncompleteRequirements ? 'flex' : 'none';
+                resubmissionDocsField.style.display = isPendingDecision && hasIncompleteRequirements ? 'flex' : 'none';
             }
 
             if (!hasFindings) {
                 const conditionInput = document.getElementById('applicantMedicalCondition');
-                const conditionRemarks = document.getElementById('applicantConditionRemarks');
-                const otherPendingReason = document.getElementById('applicantOtherPendingReasonText');
+                const findingRemarks = document.getElementById('applicantFindingRemarks');
                 if (conditionInput) conditionInput.value = '';
-                if (conditionRemarks) conditionRemarks.value = '';
-                if (otherPendingReason) otherPendingReason.value = '';
-                document.querySelectorAll('input[name="resubmission_required_documents[]"]').forEach(function (input) {
-                    input.checked = false;
-                });
-                pendingReasonInputs.forEach(function (input) {
-                    input.checked = false;
-                });
+                if (findingRemarks) findingRemarks.value = '';
+                const conditionToggle = document.getElementById('applicantHasMedicalCondition');
+                if (conditionToggle) conditionToggle.checked = false;
             } else {
                 if (!hasMedicalCondition) {
                     const conditionInput = document.getElementById('applicantMedicalCondition');
                     if (conditionInput) conditionInput.value = '';
                 }
+            }
+            if (!isPendingDecision) {
+                ['applicantIncompleteRequirements', 'applicantNeedsPhysicianEvaluation', 'applicantOtherPendingReason'].forEach(function (id) {
+                    const input = document.getElementById(id);
+                    if (input) input.checked = false;
+                });
+                const otherPendingReason = document.getElementById('applicantOtherPendingReasonText');
+                const pendingRemarks = document.getElementById('applicantConditionRemarks');
+                if (otherPendingReason) otherPendingReason.value = '';
+                if (pendingRemarks) pendingRemarks.value = '';
+                document.querySelectorAll('input[name="resubmission_required_documents[]"]').forEach(function (input) {
+                    input.checked = false;
+                });
+            } else {
+                const findingRemarks = document.getElementById('applicantFindingRemarks');
+                if (findingRemarks) findingRemarks.value = '';
                 if (!hasOtherPendingReason) {
                     const otherPendingReason = document.getElementById('applicantOtherPendingReasonText');
                     if (otherPendingReason) otherPendingReason.value = '';
@@ -7795,11 +7874,14 @@
             }
 
             if (findBtn && isApprovalMode) {
-                findBtn.textContent = hasFindings ? 'Pending' : 'Approve';
+                findBtn.textContent = isPendingDecision ? 'Pending' : 'Approve';
             }
         }
 
         findingsInputs.forEach(function (input) {
+            input.addEventListener('change', syncFindingsReviewFields);
+        });
+        clearanceDecisionInputs.forEach(function (input) {
             input.addEventListener('change', syncFindingsReviewFields);
         });
         pendingReasonInputs.forEach(function (input) {

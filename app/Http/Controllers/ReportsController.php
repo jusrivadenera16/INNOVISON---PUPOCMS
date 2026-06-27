@@ -555,27 +555,47 @@ class ReportsController extends Controller
         $search = trim((string) $request->query('q', ''));
         $users = collect();
         $consultations = collect();
+        $selectedUser = null;
+        $summary = [
+            'total' => 0,
+            'last_visit' => null,
+            'common_complaint' => null,
+            'has_condition' => false,
+            'condition_details' => [],
+        ];
 
         if ($search !== '') {
-            $users = User::where('name', 'like', "%{$search}%")
-                ->select('id', 'name', 'email', 'course', 'user_type')
+            $users = User::where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('student_number', 'like', "%{$search}%")
+                        ->orWhere('student_id', 'like', "%{$search}%");
+                })
+                ->select('id', 'first_name', 'middle_name', 'last_name', 'name', 'email', 'course', 'year', 'section', 'student_number', 'student_id', 'user_type', 'user_role')
                 ->limit(20)
                 ->get();
 
             $userId = $request->query('user_id');
             if ($userId) {
+                $selectedUser = User::find($userId);
                 $appointments = Appointment::where('user_id', $userId)
                     ->with(['user'])
                     ->orderByDesc('date')
+                    ->orderByDesc('time')
                     ->get();
 
                 $consultationRecords = Consultation::where('user_id', $userId)
                     ->with(['user', 'attendingStaff'])
                     ->orderByDesc('consultation_date')
+                    ->orderByDesc('time_in')
                     ->get();
 
-                $consultations = $appointments->map(function ($appointment) use ($consultationRecords) {
-                    $consultation = $consultationRecords->first(function ($c) use ($appointment) {
+                $usedConsultationIds = [];
+                $appointmentRows = $appointments->map(function ($appointment) use ($consultationRecords, &$usedConsultationIds) {
+                    $matches = $consultationRecords->filter(function ($c) use ($appointment, $usedConsultationIds) {
+                        if (in_array($c->id, $usedConsultationIds, true)) {
+                            return false;
+                        }
                         if (!$appointment->date || !$c->consultation_date) {
                             return false;
                         }
@@ -583,19 +603,91 @@ class ReportsController extends Controller
                         $consultationDate = \Carbon\Carbon::parse($c->consultation_date)->format('Y-m-d');
                         return $appointmentDate === $consultationDate;
                     });
+                    $consultation = $matches->sortBy(function ($c) use ($appointment) {
+                        if (!$appointment->time || !$c->time_in) {
+                            return PHP_INT_MAX;
+                        }
+                        try {
+                            $appointmentTime = \Carbon\Carbon::parse($appointment->time);
+                            $consultationTime = \Carbon\Carbon::parse($c->time_in);
+                            return abs($consultationTime->diffInSeconds($appointmentTime, false));
+                        } catch (\Throwable $e) {
+                            return PHP_INT_MAX;
+                        }
+                    })->first();
+
+                    if ($consultation) {
+                        $usedConsultationIds[] = $consultation->id;
+                    }
 
                     return (object) [
                         'appointment' => $appointment,
                         'consultation' => $consultation,
+                        'sort_date' => $appointment->date,
+                        'sort_time' => $consultation->time_in ?? $appointment->time,
                     ];
                 });
+
+                $consultationRows = $consultationRecords
+                    ->reject(fn ($consultation) => in_array($consultation->id, $usedConsultationIds, true))
+                    ->map(function ($consultation) {
+                        return (object) [
+                            'appointment' => null,
+                            'consultation' => $consultation,
+                            'sort_date' => optional($consultation->consultation_date)->format('Y-m-d'),
+                            'sort_time' => $consultation->time_in,
+                        ];
+                    });
+
+                $consultations = $appointmentRows
+                    ->merge($consultationRows)
+                    ->sortByDesc(fn ($record) => trim((string) $record->sort_date) . ' ' . trim((string) $record->sort_time))
+                    ->values();
+
+                $summaryConsultations = $consultations->filter(fn ($record) => $record->consultation);
+                $healthProfile = HealthProfile::query()
+                    ->where('user_id', $userId)
+                    ->latest()
+                    ->first();
+                $conditionDetails = collect([
+                        'Disability' => $healthProfile?->has_disability === 'Yes'
+                            ? ($healthProfile->disability_type ?: 'Yes')
+                            : null,
+                        'Illness' => $healthProfile?->has_illness === 'Yes'
+                            ? (is_array($healthProfile->medical_history) ? implode(', ', array_filter($healthProfile->medical_history)) : $healthProfile?->medical_history)
+                            : null,
+                        'Other Illness' => $healthProfile?->other_illness,
+                        'Food Allergies' => $healthProfile?->food_allergies,
+                        'Medicine Allergies' => is_array($healthProfile?->medicine_allergies)
+                            ? implode(', ', array_filter($healthProfile->medicine_allergies))
+                            : $healthProfile?->medicine_allergies,
+                        'Other Medicine Allergies' => $healthProfile?->other_med_allergies,
+                        'Nurse Remarks' => $healthProfile?->medical_condition_remarks,
+                    ])
+                    ->filter(fn ($value) => trim((string) $value) !== '' && trim((string) $value) !== '[]')
+                    ->all();
+                $summary = [
+                    'total' => $summaryConsultations->count(),
+                    'last_visit' => optional($summaryConsultations->first()?->consultation?->consultation_date)->format('M d, Y'),
+                    'common_complaint' => $summaryConsultations
+                        ->map(fn ($record) => trim((string) ($record->consultation->reason_for_visit ?? $record->consultation->comments ?? '')))
+                        ->filter()
+                        ->countBy()
+                        ->sortDesc()
+                        ->keys()
+                        ->first(),
+                    'has_condition' => $healthProfile?->hasMedicalCondition() ?? false,
+                    'condition_details' => $conditionDetails,
+                ];
             }
         }
 
         return view('admin.reports.appointment-history', compact(
             'search',
             'users',
-            'consultations'
+            'consultations',
+            'selectedUser',
+            'summary'
         ));
     }
 
@@ -617,10 +709,15 @@ class ReportsController extends Controller
         $consultationRecords = Consultation::where('user_id', $userId)
             ->with(['user', 'attendingStaff'])
             ->orderByDesc('consultation_date')
+            ->orderByDesc('time_in')
             ->get();
 
-        $consultations = $appointments->map(function ($appointment) use ($consultationRecords) {
-            $consultation = $consultationRecords->first(function ($c) use ($appointment) {
+        $usedConsultationIds = [];
+        $appointmentRows = $appointments->map(function ($appointment) use ($consultationRecords, &$usedConsultationIds) {
+            $matches = $consultationRecords->filter(function ($c) use ($appointment, $usedConsultationIds) {
+                if (in_array($c->id, $usedConsultationIds, true)) {
+                    return false;
+                }
                 if (!$appointment->date || !$c->consultation_date) {
                     return false;
                 }
@@ -628,12 +725,46 @@ class ReportsController extends Controller
                 $consultationDate = \Carbon\Carbon::parse($c->consultation_date)->format('Y-m-d');
                 return $appointmentDate === $consultationDate;
             });
+            $consultation = $matches->sortBy(function ($c) use ($appointment) {
+                if (!$appointment->time || !$c->time_in) {
+                    return PHP_INT_MAX;
+                }
+                try {
+                    $appointmentTime = \Carbon\Carbon::parse($appointment->time);
+                    $consultationTime = \Carbon\Carbon::parse($c->time_in);
+                    return abs($consultationTime->diffInSeconds($appointmentTime, false));
+                } catch (\Throwable $e) {
+                    return PHP_INT_MAX;
+                }
+            })->first();
+
+            if ($consultation) {
+                $usedConsultationIds[] = $consultation->id;
+            }
 
             return (object) [
                 'appointment' => $appointment,
                 'consultation' => $consultation,
+                'sort_date' => $appointment->date,
+                'sort_time' => $consultation->time_in ?? $appointment->time,
             ];
         });
+
+        $consultationRows = $consultationRecords
+            ->reject(fn ($consultation) => in_array($consultation->id, $usedConsultationIds, true))
+            ->map(function ($consultation) {
+                return (object) [
+                    'appointment' => null,
+                    'consultation' => $consultation,
+                    'sort_date' => optional($consultation->consultation_date)->format('Y-m-d'),
+                    'sort_time' => $consultation->time_in,
+                ];
+            });
+
+        $consultations = $appointmentRows
+            ->merge($consultationRows)
+            ->sortByDesc(fn ($record) => trim((string) $record->sort_date) . ' ' . trim((string) $record->sort_time))
+            ->values();
 
         $output = $request->query('output', 'pdf');
 

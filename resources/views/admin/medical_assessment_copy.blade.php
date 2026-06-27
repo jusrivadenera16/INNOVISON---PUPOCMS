@@ -56,6 +56,11 @@
         .value-medium { width: 24%; }
         .value-wide { width: 40%; }
         .value-xray { width: 46%; }
+        .value-remarks {
+            white-space: normal !important;
+            line-height: 1.35;
+            min-height: 26px;
+        }
     </style>
 </head>
 <body>
@@ -118,6 +123,10 @@
                 <td colspan="4" class="value-line value-xray">{{ $xrayResult }}</td>
                 <td class="label-short">Date:</td>
                 <td colspan="2" class="value-line value-medium">{{ $xrayDate }}</td>
+            </tr>
+            <tr>
+                <td class="label">Remarks:</td>
+                <td colspan="7" class="value-line value-remarks">{{ $medAssessmentRemarks }}</td>
             </tr>
         </table>
     </div>

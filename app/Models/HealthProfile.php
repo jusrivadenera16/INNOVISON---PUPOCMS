@@ -35,6 +35,7 @@ class HealthProfile extends Model
         'chest_xray_result_text',
         'chest_xray_date',
         'assessment_remarks',
+        'med_assessment_remarks',
         'pending_reason',
         'resubmission_required_documents',
         'resubmission_requested_at',
