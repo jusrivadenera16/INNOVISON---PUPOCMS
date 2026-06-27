@@ -1185,11 +1185,17 @@
         }
         .profile-sections-grid {
             grid-template-columns: 1fr;
-            gap: 12px;
+            gap: 18px;
+        }
+        .profile-sections-grid .profile-form-section {
+            height: auto;
+            min-height: 0;
+            overflow: visible;
         }
         .profile-frame-equal {
             height: auto;
             min-height: 0;
+            overflow: visible;
         }
         .profile-card-head {
             flex-direction: column;
@@ -1218,6 +1224,12 @@
         .profile-grid-2 > div .form-control,
         .profile-info-row .form-control {
             text-align: left;
+        }
+        .profile-info-row textarea.form-control {
+            min-height: 92px;
+            height: auto;
+            line-height: 1.45;
+            overflow: visible;
         }
         .health-status-meta-grid,
         .record-modal-summary,

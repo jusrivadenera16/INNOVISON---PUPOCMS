@@ -584,10 +584,39 @@
       .empty-illustration {
           position: relative;
           width: 230px;
-          height: 220px;
+          height: 120px;
           display: flex;
-          align-items: flex-end;
+          align-items: center;
           justify-content: center;
+      }
+
+      .empty-dot-wave {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          min-width: 122px;
+          min-height: 64px;
+          padding: 8px 12px;
+      }
+
+      .empty-dot-wave span {
+          width: 14px;
+          height: 14px;
+          border-radius: 999px;
+          background: #8B0000;
+          box-shadow: 0 8px 16px rgba(139, 0, 0, 0.18);
+          animation: historyDotWave 1.15s ease-in-out infinite;
+      }
+
+      .empty-dot-wave span:nth-child(2) {
+          animation-delay: 0.16s;
+          background: #b91c1c;
+      }
+
+      .empty-dot-wave span:nth-child(3) {
+          animation-delay: 0.32s;
+          background: #facc15;
       }
 
       .empty-shadow {
@@ -804,6 +833,17 @@
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-10px); }
       }
+
+      @keyframes historyDotWave {
+          0%, 80%, 100% {
+              transform: translateY(0) scale(0.92);
+              opacity: 0.62;
+          }
+          40% {
+              transform: translateY(-14px) scale(1.08);
+              opacity: 1;
+          }
+      }
       html[data-theme="dark"] .page-header {
           background: linear-gradient(180deg, #0f0f10 0%, #161618 100%) !important;
           border-color: rgba(250, 204, 21, 0.16) !important;
@@ -961,33 +1001,35 @@
       </div>
 
       <section class="card-history">
-        <div class="history-summary-grid">
-          <div class="history-summary-card">
-            <span class="history-summary-label">Total Appointments</span>
-            <span class="history-summary-value">{{ $totalAppointments }}</span>
-            <div class="history-summary-note">Your complete clinic appointment trail.</div>
+        @if($appointments->isNotEmpty())
+          <div class="history-summary-grid">
+            <div class="history-summary-card">
+              <span class="history-summary-label">Total Appointments</span>
+              <span class="history-summary-value">{{ $totalAppointments }}</span>
+              <div class="history-summary-note">Your complete clinic appointment trail.</div>
+            </div>
+            <div class="history-summary-card">
+              <span class="history-summary-label">Pending</span>
+              <span class="history-summary-value">{{ $pendingAppointments }}</span>
+              <div class="history-summary-note">Waiting for clinic review.</div>
+            </div>
+            <div class="history-summary-card">
+              <span class="history-summary-label">Approved</span>
+              <span class="history-summary-value">{{ $approvedAppointments }}</span>
+              <div class="history-summary-note">Confirmed and scheduled.</div>
+            </div>
+            <div class="history-summary-card">
+              <span class="history-summary-label">Completed</span>
+              <span class="history-summary-value">{{ $completedAppointments }}</span>
+              <div class="history-summary-note">Finished consultations on record.</div>
+            </div>
+            <div class="history-summary-card">
+              <span class="history-summary-label">Missed</span>
+              <span class="history-summary-value">{{ $missedAppointments }}</span>
+              <div class="history-summary-note">Appointments marked as not attended.</div>
+            </div>
           </div>
-          <div class="history-summary-card">
-            <span class="history-summary-label">Pending</span>
-            <span class="history-summary-value">{{ $pendingAppointments }}</span>
-            <div class="history-summary-note">Waiting for clinic review.</div>
-          </div>
-          <div class="history-summary-card">
-            <span class="history-summary-label">Approved</span>
-            <span class="history-summary-value">{{ $approvedAppointments }}</span>
-            <div class="history-summary-note">Confirmed and scheduled.</div>
-          </div>
-          <div class="history-summary-card">
-            <span class="history-summary-label">Completed</span>
-            <span class="history-summary-value">{{ $completedAppointments }}</span>
-            <div class="history-summary-note">Finished consultations on record.</div>
-          </div>
-          <div class="history-summary-card">
-            <span class="history-summary-label">Missed</span>
-            <span class="history-summary-value">{{ $missedAppointments }}</span>
-            <div class="history-summary-note">Appointments marked as not attended.</div>
-          </div>
-        </div>
+        @endif
 
         @if($appointments->isNotEmpty())
           <div class="history-toolbar">
@@ -1066,28 +1108,13 @@
             @empty
                 <div class="empty-state" id="emptyHistoryState">
                   <div class="empty-illustration" aria-hidden="true">
-                    <h2 class="empty-title">You have no appointment history yet</h2>
-                    <div class="empty-bubble">
-                        <span class="bubble-text bubble-text-book">Book Now!</span>
-                        <span class="bubble-text bubble-text-yay">Yay!</span>
+                    <div class="empty-dot-wave">
+                        <span></span>
+                        <span></span>
+                        <span></span>
                     </div>
-                    <!-- <div class="empty-shadow"></div> 
-                    <div class="clinic-cartoon">
-                        <div class="cartoon-hair"></div>
-                        <div class="cartoon-head"></div>
-                        <div class="cartoon-eye left"></div>
-                        <div class="cartoon-eye right"></div>
-                        <div class="cartoon-smile"></div>
-                        <div class="cartoon-arm left"></div>
-                        <div class="cartoon-arm right"></div>
-                        <div class="cartoon-body"></div>
-                        <div class="cartoon-cross-v"></div>
-                        <div class="cartoon-cross-h"></div>
-                        <div class="cartoon-leg left"></div>
-                        <div class="cartoon-leg right"></div>
-                    </div>-->
                   </div>
-                
+                  <h2 class="empty-title">You have no appointment history yet</h2>
                   <a href="{{ url('/student/booking') }}" class="btn-outline empty-cta" id="emptyHistoryCta">Book your first appointment</a>
                 </div>
             @endforelse
