@@ -2874,11 +2874,11 @@
             </p>
             <div class="health-profile-prompt-actions" style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
                 <a class="health-profile-fill-button" href="{{ route('health.form') }}">
+                    <span>Get Started</span>
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M14 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-linecap="round"/>
-                        <path d="M9 3.5h6v3H9zM8 12h8M8 16h5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M5 12h14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="m13 6 6 6-6 6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    <span>Fill Up Form</span>
                 </a>
                 @env('local')
                     <button type="button" onclick="document.getElementById('healthFormModal').style.display='none'" style="display: inline-block; background: #e5e7eb; color: #1f2937; border: none; padding: 14px 30px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer;">

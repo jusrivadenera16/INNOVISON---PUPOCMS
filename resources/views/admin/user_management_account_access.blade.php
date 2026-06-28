@@ -427,6 +427,54 @@
     .um-table-wrap {
         overflow-x: auto;
     }
+    .um-lookup-pagination {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 14px 0 0;
+        padding: 12px;
+        border: 1px solid rgba(112, 19, 27, 0.12);
+        border-radius: 16px;
+        background: #fffaf7;
+    }
+    .um-lookup-pagination.is-visible {
+        display: flex;
+    }
+    .um-lookup-pagination-summary {
+        color: #64748b;
+        font-size: .75rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+    .um-lookup-pagination-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .um-lookup-page-btn {
+        min-width: 92px;
+        min-height: 40px;
+        border: 1px solid rgba(112, 19, 27, 0.35);
+        border-radius: 999px;
+        background: #fff;
+        color: #70131B;
+        font-size: .78rem;
+        font-weight: 900;
+        cursor: pointer;
+        transition: background-color .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+    }
+    .um-lookup-page-btn:hover:not(:disabled) {
+        background: #ffcc00;
+        border-color: #ffcc00;
+        color: #111827;
+        transform: translateY(-1px);
+    }
+    .um-lookup-page-btn:disabled {
+        cursor: not-allowed;
+        opacity: .45;
+    }
 
     .um-table {
         width: 100%;
@@ -1355,10 +1403,11 @@
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="lookupResultsBody">
                         @forelse($lookupRecords as $record)
                             <tr
                                 data-user-card
+                                data-lookup-result-row
                                 data-update-url="{{ $record['can_edit'] ? route('admin.user-management.update', $record['id']) : '' }}"
                                 data-delete-url="{{ $record['can_edit'] ? route('admin.user-management.destroy', $record['id']) : '' }}"
                                 data-create-url="{{ !$record['can_edit'] && !empty($record['can_onboard']) ? route('admin.user-management.store-from-lookup') : '' }}"
@@ -1407,6 +1456,15 @@
                     </tbody>
                 </table>
             </div>
+            @if($lookupSearch !== '' && count($lookupRecords) > 0)
+                <div class="um-lookup-pagination" id="lookupPagination" data-page-size="8">
+                    <span class="um-lookup-pagination-summary" id="lookupPaginationSummary">Showing 0-0 of 0</span>
+                    <div class="um-lookup-pagination-actions">
+                        <button type="button" class="um-lookup-page-btn" id="lookupPrevPage">Previous</button>
+                        <button type="button" class="um-lookup-page-btn" id="lookupNextPage">Next</button>
+                    </div>
+                </div>
+            @endif
             </div>
         </div>
     </div>
@@ -1580,6 +1638,64 @@
     const lookupManagementViewField = document.getElementById('lookupManagementViewField');
     const userHoverHint = document.getElementById('userHoverHint');
     const currentLookupContext = 'account-access';
+    const lookupResultsBody = document.getElementById('lookupResultsBody');
+    const lookupPagination = document.getElementById('lookupPagination');
+    const lookupPaginationSummary = document.getElementById('lookupPaginationSummary');
+    const lookupPrevPage = document.getElementById('lookupPrevPage');
+    const lookupNextPage = document.getElementById('lookupNextPage');
+    let lookupCurrentPage = 1;
+
+    const updateLookupPagination = () => {
+        if (!lookupResultsBody || !lookupPagination) {
+            return;
+        }
+
+        const rows = Array.from(lookupResultsBody.querySelectorAll('[data-lookup-result-row]'));
+        const pageSize = Math.max(1, parseInt(lookupPagination.dataset.pageSize || '8', 10));
+        const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+        lookupCurrentPage = Math.min(Math.max(lookupCurrentPage, 1), totalPages);
+
+        rows.forEach((row) => {
+            row.style.display = 'none';
+        });
+
+        const startIndex = (lookupCurrentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        rows.slice(startIndex, endIndex).forEach((row) => {
+            row.style.display = '';
+        });
+
+        lookupPagination.classList.toggle('is-visible', rows.length > pageSize);
+
+        if (lookupPaginationSummary) {
+            const showingStart = rows.length === 0 ? 0 : startIndex + 1;
+            const showingEnd = Math.min(endIndex, rows.length);
+            lookupPaginationSummary.textContent = `Showing ${showingStart}-${showingEnd} of ${rows.length}`;
+        }
+
+        if (lookupPrevPage) {
+            lookupPrevPage.disabled = lookupCurrentPage <= 1;
+        }
+        if (lookupNextPage) {
+            lookupNextPage.disabled = lookupCurrentPage >= totalPages;
+        }
+    };
+
+    if (lookupPrevPage) {
+        lookupPrevPage.addEventListener('click', () => {
+            lookupCurrentPage -= 1;
+            updateLookupPagination();
+        });
+    }
+
+    if (lookupNextPage) {
+        lookupNextPage.addEventListener('click', () => {
+            lookupCurrentPage += 1;
+            updateLookupPagination();
+        });
+    }
+
+    updateLookupPagination();
 
     const applySettingsSectionMode = (managementView, canEdit, canOnboard) => {
         const isAdminHubOnly = managementView === 'admin-hub';

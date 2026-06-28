@@ -84,6 +84,7 @@ class AdminUserController extends Controller
 
         $lookupRecords = $lookupSearch !== ''
             ? collect($this->collectLocalUsers($lookupSearch))
+                ->merge($this->collectStandaloneAdminLookupRecords($lookupSearch))
                 ->merge($this->collectFacultyUsers($facultySyncService, $lookupSearch))
                 ->map(function (array $record) use ($managementView) {
                     if ($managementView === 'admin-hub' && ($record['source'] ?? '') !== 'faculty') {
@@ -316,7 +317,7 @@ class AdminUserController extends Controller
             : ['admin_clinic_staff', 'student_assistant', 'super_admin'];
 
         $request->validate([
-            'lookup_source' => ['required', Rule::in(['faculty'])],
+            'lookup_source' => ['required', Rule::in(['faculty', 'admin_profile'])],
             'management_view' => ['nullable', Rule::in(['account-access', 'admin-hub'])],
             'user_role' => ['required', Rule::in($allowedRoles)],
             'status' => ['required', Rule::in(['active', 'inactive'])],
@@ -407,21 +408,22 @@ class AdminUserController extends Controller
         $user = User::query()->where('email', $baseEmail)->first();
 
         if (!$user) {
+            $lookupSource = trim((string) $request->input('lookup_source', 'faculty'));
             $studentIdSeed = trim((string) $request->input('external_identifier', ''));
             if ($studentIdSeed === '') {
-                $studentIdSeed = 'faculty-' . strtolower(substr(md5($baseEmail), 0, 10));
+                $studentIdSeed = ($lookupSource === 'admin_profile' ? 'admin-' : 'faculty-') . strtolower(substr(md5($baseEmail), 0, 10));
             }
 
             $user = new User();
             $user->student_id = $this->resolveUniqueLocalIdentifier($studentIdSeed);
-            $user->first_name = $firstName !== '' ? $firstName : 'Faculty';
+            $user->first_name = $firstName !== '' ? $firstName : ($lookupSource === 'admin_profile' ? 'Admin' : 'Faculty');
             $user->middle_name = $middleName !== '' ? $middleName : null;
             $user->last_name = $lastName !== '' ? $lastName : 'User';
             $user->name = $fullName !== '' ? $fullName : trim($user->first_name . ' ' . $user->last_name);
             $user->email = $baseEmail;
             $user->password = bcrypt(\Illuminate\Support\Str::random(40));
             if (Schema::hasColumn('users', 'idp_role')) {
-                $user->idp_role = 'faculty';
+                $user->idp_role = $lookupSource === 'admin_profile' ? 'admin' : 'faculty';
             }
         } elseif (
             Schema::hasColumn('users', 'idp_role')
@@ -722,8 +724,6 @@ class AdminUserController extends Controller
                     'course',
                     'year',
                     'section',
-                    'user_role',
-                    'idp_role',
                 ] as $column) {
                     if (Schema::hasColumn('users', $column)) {
                         $builder->orWhere($column, 'like', '%' . $search . '%');
@@ -843,6 +843,95 @@ class AdminUserController extends Controller
                         'admin_profile_name' => (string) ($linkedAdmin?->name ?? ''),
                         'office' => (string) ($linkedAdmin?->office ?? ''),
                         'updated_at' => optional($user->updated_at)->toIso8601String(),
+                    ],
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function collectStandaloneAdminLookupRecords(string $search): array
+    {
+        if ($search === '' || !Schema::hasTable('admins')) {
+            return [];
+        }
+
+        $query = Admin::query()
+            ->where(function ($builder) use ($search) {
+                foreach (['admin_id', 'external_identifier', 'name', 'first_name', 'last_name', 'email', 'email_address', 'office', 'status', 'access_level'] as $column) {
+                    if (Admin::hasColumn($column)) {
+                        $builder->orWhere($column, 'like', '%' . $search . '%');
+                    }
+                }
+            })
+            ->limit(100);
+
+        return $query->get()
+            ->filter(function (Admin $admin) {
+                if (Admin::hasColumn('user_id') && $admin->user_id && User::query()->whereKey($admin->user_id)->exists()) {
+                    return false;
+                }
+
+                $emailCandidates = array_filter([
+                    trim((string) ($admin->email ?? '')),
+                    trim((string) ($admin->email_address ?? '')),
+                ]);
+
+                if (!empty($emailCandidates) && User::query()->whereIn('email', $emailCandidates)->exists()) {
+                    return false;
+                }
+
+                return true;
+            })
+            ->map(function (Admin $admin) {
+                $displayName = trim((string) ($admin->name ?? ''));
+                if ($displayName === '') {
+                    $displayName = trim(implode(' ', array_filter([
+                        $admin->first_name ?? '',
+                        $admin->last_name ?? '',
+                    ])));
+                }
+
+                $email = trim((string) ($admin->email_address ?? $admin->email ?? ''));
+                $status = strtolower(trim((string) ($admin->status ?? 'active')));
+                if (!in_array($status, ['active', 'inactive'], true)) {
+                    $status = 'active';
+                }
+
+                $adminId = trim((string) ($admin->admin_id ?? ''));
+                $externalIdentifier = trim((string) ($admin->external_identifier ?? ''));
+                $identifier = $adminId !== '' ? $adminId : ($externalIdentifier !== '' ? $externalIdentifier : $email);
+
+                return [
+                    'id' => $identifier,
+                    'record_id' => $identifier,
+                    'source' => 'admin_profile',
+                    'source_label' => 'Admin Profile',
+                    'name' => $displayName !== '' ? $displayName : ($email !== '' ? $email : 'Admin Profile'),
+                    'first_name' => (string) ($admin->first_name ?? ''),
+                    'last_name' => (string) ($admin->last_name ?? ''),
+                    'student_id' => $identifier,
+                    'email' => $email,
+                    'role' => 'Admin - Regular',
+                    'raw_role' => 'admin',
+                    'status' => $status,
+                    'avatar_url' => null,
+                    'avatar_letter' => strtoupper(substr($displayName !== '' ? $displayName : ($email ?: 'A'), 0, 1)),
+                    'can_edit' => false,
+                    'can_onboard' => true,
+                    'is_external' => false,
+                    'meta' => [
+                        'email' => $email,
+                        'idp_role' => 'admin',
+                        'user_type' => 'Regular',
+                        'access_level' => trim((string) ($admin->access_level ?? '')),
+                        'admin_login_email' => $email,
+                        'admin_profile_id' => $adminId,
+                        'admin_profile_name' => $displayName,
+                        'external_identifier' => $identifier,
+                        'office' => (string) ($admin->office ?? ''),
+                        'lookup_source' => 'admin_profile',
+                        'updated_at' => optional($admin->updated_at)->toIso8601String(),
                     ],
                 ];
             })
@@ -1282,6 +1371,7 @@ class AdminUserController extends Controller
         return match ($source) {
             'superadmin' => 0,
             'admin' => 1,
+            'admin_profile' => 1,
             'student_assistant' => 2,
             'student' => 3,
             'faculty' => 4,

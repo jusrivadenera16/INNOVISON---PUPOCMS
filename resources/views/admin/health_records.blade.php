@@ -400,6 +400,54 @@
         font-size: 14px;
         font-weight: 700;
     }
+    .readonly-modal-pagination {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 16px;
+        padding: 12px;
+        border: 1px solid rgba(112, 19, 27, 0.12);
+        border-radius: 16px;
+        background: #fffaf7;
+    }
+    .readonly-modal-pagination.is-visible {
+        display: flex;
+    }
+    .readonly-pagination-summary {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .readonly-pagination-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .readonly-pagination-btn {
+        min-width: 92px;
+        min-height: 40px;
+        border: 1px solid rgba(112, 19, 27, 0.35);
+        border-radius: 999px;
+        background: #fff;
+        color: #70131B;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+    .readonly-pagination-btn:hover:not(:disabled) {
+        background: #ffcc00;
+        border-color: #ffcc00;
+        color: #111827;
+        transform: translateY(-1px);
+    }
+    .readonly-pagination-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+    }
     .readonly-record-card {
         display: grid;
         gap: 14px;
@@ -3246,6 +3294,18 @@
                 @endforelse
                 <div class="readonly-search-empty" data-readonly-search-empty>No matching pending approval records found.</div>
             </div>
+            <div
+                class="readonly-modal-pagination"
+                data-readonly-pagination="pendingApprovalRecordsList"
+                data-page-size="5"
+                aria-label="Pending approval pagination"
+            >
+                <span class="readonly-pagination-summary" data-pagination-summary>Showing 0-0 of 0</span>
+                <div class="readonly-pagination-actions">
+                    <button type="button" class="readonly-pagination-btn" data-pagination-prev>Previous</button>
+                    <button type="button" class="readonly-pagination-btn" data-pagination-next>Next</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -3914,6 +3974,54 @@
             fallbackCopy();
         };
 
+        const getReadonlyPagination = function (list) {
+            if (!list?.id) return null;
+            return document.querySelector(`[data-readonly-pagination="${list.id}"]`);
+        };
+
+        const paginateReadonlyList = function (list) {
+            if (!list) return;
+
+            const pagination = getReadonlyPagination(list);
+            const cards = Array.from(list.querySelectorAll('.readonly-record-card'));
+            const visibleCards = cards.filter(function (card) {
+                return card.dataset.searchVisible !== '0';
+            });
+            const pageSize = Math.max(1, parseInt(pagination?.getAttribute('data-page-size') || '5', 10));
+            const totalPages = Math.max(1, Math.ceil(visibleCards.length / pageSize));
+            let currentPage = parseInt(list.dataset.currentPage || '1', 10);
+            if (!Number.isFinite(currentPage) || currentPage < 1) currentPage = 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            list.dataset.currentPage = String(currentPage);
+
+            cards.forEach(function (card) {
+                card.style.display = 'none';
+            });
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            visibleCards.slice(startIndex, endIndex).forEach(function (card) {
+                card.style.display = '';
+            });
+
+            if (!pagination) return;
+
+            const shouldShowPagination = visibleCards.length > pageSize;
+            pagination.classList.toggle('is-visible', shouldShowPagination);
+
+            const summary = pagination.querySelector('[data-pagination-summary]');
+            if (summary) {
+                const showingStart = visibleCards.length === 0 ? 0 : startIndex + 1;
+                const showingEnd = Math.min(endIndex, visibleCards.length);
+                summary.textContent = `Showing ${showingStart}-${showingEnd} of ${visibleCards.length}`;
+            }
+
+            const previousBtn = pagination.querySelector('[data-pagination-prev]');
+            const nextBtn = pagination.querySelector('[data-pagination-next]');
+            if (previousBtn) previousBtn.disabled = currentPage <= 1;
+            if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+        };
+
         const filterReadonlyCards = function (input) {
             const listId = input?.getAttribute('data-readonly-modal-search') || '';
             const list = listId ? document.getElementById(listId) : null;
@@ -3926,11 +4034,14 @@
             cards.forEach(function (card) {
                 const searchText = (card.getAttribute('data-search-text') || card.innerText || '').toLowerCase();
                 const isVisible = query === '' || searchText.includes(query);
-                card.style.display = isVisible ? '' : 'none';
+                card.dataset.searchVisible = isVisible ? '1' : '0';
                 if (isVisible) {
                     visibleCount += 1;
                 }
             });
+
+            list.dataset.currentPage = '1';
+            paginateReadonlyList(list);
 
             const emptyState = list.querySelector('[data-readonly-search-empty]');
             if (emptyState) {
@@ -3942,6 +4053,27 @@
             input.addEventListener('input', function () {
                 filterReadonlyCards(input);
             });
+        });
+
+        document.querySelectorAll('[data-readonly-pagination]').forEach(function (pagination) {
+            const listId = pagination.getAttribute('data-readonly-pagination') || '';
+            const list = listId ? document.getElementById(listId) : null;
+            if (!list) return;
+
+            pagination.querySelector('[data-pagination-prev]')?.addEventListener('click', function () {
+                list.dataset.currentPage = String(Math.max(1, parseInt(list.dataset.currentPage || '1', 10) - 1));
+                paginateReadonlyList(list);
+            });
+
+            pagination.querySelector('[data-pagination-next]')?.addEventListener('click', function () {
+                list.dataset.currentPage = String(parseInt(list.dataset.currentPage || '1', 10) + 1);
+                paginateReadonlyList(list);
+            });
+
+            list.querySelectorAll('.readonly-record-card').forEach(function (card) {
+                card.dataset.searchVisible = '1';
+            });
+            paginateReadonlyList(list);
         });
 
         const resetReadonlyModalSearch = function (modal) {
