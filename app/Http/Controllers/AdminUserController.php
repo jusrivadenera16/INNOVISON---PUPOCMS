@@ -718,6 +718,7 @@ class AdminUserController extends Controller
                     'student_id',
                     'student_number',
                     'first_name',
+                    'middle_name',
                     'last_name',
                     'name',
                     'email',
@@ -730,12 +731,30 @@ class AdminUserController extends Controller
                     }
                 }
 
+                if (Schema::hasColumn('users', 'first_name') && Schema::hasColumn('users', 'last_name')) {
+                    $userNameParts = ["COALESCE(first_name, '')"];
+                    if (Schema::hasColumn('users', 'middle_name')) {
+                        $userNameParts[] = "COALESCE(middle_name, '')";
+                    }
+                    $userNameParts[] = "COALESCE(last_name, '')";
+                    $builder->orWhereRaw('CONCAT_WS(" ", ' . implode(', ', $userNameParts) . ') LIKE ?', ['%' . $search . '%']);
+                }
+
                 if (Schema::hasTable('admins')) {
                     $builder->orWhereHas('adminProfile', function ($adminQuery) use ($search) {
-                        foreach (['admin_id', 'external_identifier', 'name', 'email', 'email_address'] as $column) {
+                        foreach (['admin_id', 'external_identifier', 'name', 'first_name', 'middle_name', 'last_name', 'email', 'email_address'] as $column) {
                             if (Admin::hasColumn($column)) {
                                 $adminQuery->orWhere($column, 'like', '%' . $search . '%');
                             }
+                        }
+
+                        if (Admin::hasColumn('first_name') && Admin::hasColumn('last_name')) {
+                            $adminNameParts = ["COALESCE(first_name, '')"];
+                            if (Admin::hasColumn('middle_name')) {
+                                $adminNameParts[] = "COALESCE(middle_name, '')";
+                            }
+                            $adminNameParts[] = "COALESCE(last_name, '')";
+                            $adminQuery->orWhereRaw('CONCAT_WS(" ", ' . implode(', ', $adminNameParts) . ') LIKE ?', ['%' . $search . '%']);
                         }
                     });
 
@@ -765,10 +784,19 @@ class AdminUserController extends Controller
                                 }
                             })
                             ->where(function ($adminSearchQuery) use ($search) {
-                                foreach (['admin_id', 'external_identifier', 'name', 'email', 'email_address', 'access_level'] as $column) {
+                                foreach (['admin_id', 'external_identifier', 'name', 'first_name', 'middle_name', 'last_name', 'email', 'email_address', 'access_level'] as $column) {
                                     if (Admin::hasColumn($column)) {
                                         $adminSearchQuery->orWhere('admins.' . $column, 'like', '%' . $search . '%');
                                     }
+                                }
+
+                                if (Admin::hasColumn('first_name') && Admin::hasColumn('last_name')) {
+                                    $adminNameParts = ["COALESCE(admins.first_name, '')"];
+                                    if (Admin::hasColumn('middle_name')) {
+                                        $adminNameParts[] = "COALESCE(admins.middle_name, '')";
+                                    }
+                                    $adminNameParts[] = "COALESCE(admins.last_name, '')";
+                                    $adminSearchQuery->orWhereRaw('CONCAT_WS(" ", ' . implode(', ', $adminNameParts) . ') LIKE ?', ['%' . $search . '%']);
                                 }
                             });
                     });
@@ -858,31 +886,24 @@ class AdminUserController extends Controller
 
         $query = Admin::query()
             ->where(function ($builder) use ($search) {
-                foreach (['admin_id', 'external_identifier', 'name', 'first_name', 'last_name', 'email', 'email_address', 'office', 'status', 'access_level'] as $column) {
+                foreach (['admin_id', 'external_identifier', 'name', 'first_name', 'middle_name', 'last_name', 'email', 'email_address', 'office', 'status', 'access_level'] as $column) {
                     if (Admin::hasColumn($column)) {
                         $builder->orWhere($column, 'like', '%' . $search . '%');
                     }
+                }
+
+                if (Admin::hasColumn('first_name') && Admin::hasColumn('last_name')) {
+                    $adminNameParts = ["COALESCE(first_name, '')"];
+                    if (Admin::hasColumn('middle_name')) {
+                        $adminNameParts[] = "COALESCE(middle_name, '')";
+                    }
+                    $adminNameParts[] = "COALESCE(last_name, '')";
+                    $builder->orWhereRaw('CONCAT_WS(" ", ' . implode(', ', $adminNameParts) . ') LIKE ?', ['%' . $search . '%']);
                 }
             })
             ->limit(100);
 
         return $query->get()
-            ->filter(function (Admin $admin) {
-                if (Admin::hasColumn('user_id') && $admin->user_id && User::query()->whereKey($admin->user_id)->exists()) {
-                    return false;
-                }
-
-                $emailCandidates = array_filter([
-                    trim((string) ($admin->email ?? '')),
-                    trim((string) ($admin->email_address ?? '')),
-                ]);
-
-                if (!empty($emailCandidates) && User::query()->whereIn('email', $emailCandidates)->exists()) {
-                    return false;
-                }
-
-                return true;
-            })
             ->map(function (Admin $admin) {
                 $displayName = trim((string) ($admin->name ?? ''));
                 if ($displayName === '') {
