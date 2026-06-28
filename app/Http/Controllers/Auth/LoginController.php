@@ -1647,10 +1647,54 @@ class LoginController extends Controller
                 return;
             }
 
-            $guisisData = $guisisResult['data'];
-            $studentNumber = trim((string) data_get($guisisData, 'student_number', ''));
-            $course = trim((string) data_get($guisisData, 'program.name', ''));
-            $year = trim((string) data_get($guisisData, 'year', ''));
+            $guisisPayload = $guisisResult['data'];
+            $guisisData = is_array(data_get($guisisPayload, 'data'))
+                ? data_get($guisisPayload, 'data')
+                : $guisisPayload;
+
+            $studentNumber = $this->firstNonEmptyScalar($guisisPayload, [
+                'data.studentNumber',
+                'data.student_number',
+                'data.studentNo',
+                'data.student_no',
+                'studentNumber',
+                'student_number',
+                'studentNo',
+                'student_no',
+            ]) ?? '';
+
+            $courseCode = $this->firstNonEmptyScalar($guisisPayload, [
+                'data.course.code',
+                'data.program.code',
+                'data.course_code',
+                'data.courseCode',
+                'course.code',
+                'program.code',
+                'course_code',
+                'courseCode',
+            ]) ?? '';
+
+            $courseName = $this->firstNonEmptyScalar($guisisPayload, [
+                'data.course.name',
+                'data.program.name',
+                'data.course_name',
+                'data.courseName',
+                'course.name',
+                'program.name',
+                'course_name',
+                'courseName',
+            ]) ?? '';
+
+            $course = trim(implode(' - ', array_unique(array_filter([$courseCode, $courseName]))));
+
+            $year = $this->firstNonEmptyScalar($guisisPayload, [
+                'data.yearLevel',
+                'data.year_level',
+                'data.year',
+                'yearLevel',
+                'year_level',
+                'year',
+            ]) ?? '';
 
             $shouldUpdate = false;
             if ($studentNumber !== '' && trim((string) $user->student_number) === '') {
@@ -1681,6 +1725,14 @@ class LoginController extends Controller
                     'course' => $course,
                     'year' => $year,
                     'is_student' => true,
+                ]);
+            } else {
+                Log::info('GUISIS enrichment completed without local changes', [
+                    'user_id' => $user->id,
+                    'student_number_found' => $studentNumber !== '',
+                    'course_found' => $course !== '',
+                    'year_found' => $year !== '',
+                    'payload_keys' => array_keys($guisisData),
                 ]);
             }
         } catch (\Throwable $exception) {

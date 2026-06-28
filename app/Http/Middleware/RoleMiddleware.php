@@ -48,6 +48,10 @@ class RoleMiddleware
             return true;
         }
 
+        if (in_array(User::ROLE_STUDENT, $allowedRoles, true) && $this->isAdminRegularStudentSideUser($user)) {
+            return true;
+        }
+
         return false;
     }
 
@@ -97,6 +101,35 @@ class RoleMiddleware
         $userType = strtolower(trim((string) ($user->user_type ?? '')));
 
         return in_array($userType, ['assistant', 'student assistant', 'student_assistant'], true);
+    }
+
+    private function isAdminRegularStudentSideUser($user): bool
+    {
+        if (!$user || User::normalizeRole((string) ($user->user_role ?? '')) !== User::ROLE_ADMIN) {
+            return false;
+        }
+
+        $userType = strtolower(trim((string) ($user->user_type ?? '')));
+        if (in_array($userType, ['assistant', 'student assistant', 'student_assistant'], true)) {
+            return false;
+        }
+
+        $linkedAdmin = $this->findLinkedAdminProfile($user);
+        $accessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
+
+        if (in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff', 'superadmin'], true)) {
+            return false;
+        }
+
+        if ($accessLevel === 'designee') {
+            return false;
+        }
+
+        $adminHubEnabled = Admin::hasColumn('admin_hub_enabled')
+            && (bool) ($linkedAdmin?->admin_hub_enabled ?? false);
+        $adminHubRole = strtolower(trim((string) ($linkedAdmin?->admin_hub_role ?? '')));
+
+        return !$adminHubEnabled || !in_array($adminHubRole, ['designee', 'admin_designee'], true);
     }
 
     private function findLinkedAdminProfile($user): ?Admin
