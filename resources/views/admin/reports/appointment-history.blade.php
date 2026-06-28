@@ -586,6 +586,7 @@
                 <table class="appt-table">
                     <thead>
                         <tr>
+                            <th>Appointment Number</th>
                             <th>Visit</th>
                             <th>Time</th>
                             <th>Service</th>
@@ -612,6 +613,7 @@
                                     : '-';
                             @endphp
                             <tr>
+                                <td>{{ $appt?->apt_id ?: 'N/A' }}</td>
                                 <td>
                                     <span class="appt-date-main">{{ $formatDate($visitDate) }}</span>
                                     <span class="appt-date-sub">{{ $appt ? ucfirst((string) ($appt->type ?: 'Appointment')) : 'Consultation only' }}</span>
@@ -643,7 +645,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="appt-empty">No consultation history found for this patient.</td>
+                                <td colspan="8" class="appt-empty">No consultation history found for this patient.</td>
                             </tr>
                         @endforelse
                     </tbody>

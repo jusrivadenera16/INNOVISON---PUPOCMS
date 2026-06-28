@@ -799,34 +799,54 @@
     .confirmation-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(15, 23, 42, 0.58);
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 20px;
         z-index: 1100;
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
     }
     .confirmation-modal {
-        width: min(520px, 100%);
-        background: rgba(255, 255, 255, 0.4);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border-radius: 18px;
-        border-left: 1px solid rgba(112, 19, 27, 0.12);
-        border-right: 1px solid rgba(112, 19, 27, 0.12);
-        border-top: 4px solid #facc15;
+        width: min(720px, 100%);
+        background: #ffffff;
+        border-radius: 22px;
+        border: 1px solid rgba(255, 255, 255, 0.72);
+        border-top: 3px solid #facc15;
         border-bottom: 4px solid #facc15;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 34px 84px rgba(15, 23, 42, 0.34);
         padding: 0;
         position: relative;
         overflow: hidden;
     }
     .confirmation-head {
-        padding: 24px 24px 18px;
-        background: linear-gradient(135deg, #70131B, #8f2230);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 24px 70px 24px 28px;
+        background:
+            radial-gradient(circle at 92% 10%, rgba(250, 204, 21, .16), transparent 34%),
+            linear-gradient(135deg, #8f1823 0%, #70131B 55%, #5f1017 100%);
         border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .confirmation-head-badge {
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        color: #ffffff;
+        font-size: 1.35rem;
+        font-weight: 900;
+        background: rgba(255, 255, 255, .14);
+        border: 1px solid rgba(255, 255, 255, .24);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.16);
+    }
+    .confirmation-head-copy {
+        min-width: 0;
     }
     .confirmation-close {
         position: absolute;
@@ -872,46 +892,70 @@
         transform: translateX(135%);
     }
     .confirmation-title {
-        margin: 0 0 8px 0;
+        margin: 0 0 6px 0;
         color: #ffffff;
-        font-size: 24px;
-        font-weight: 800;
+        font-size: clamp(1.5rem, 3vw, 2rem);
+        font-weight: 900;
+        letter-spacing: 0;
     }
     .confirmation-subtitle {
         margin: 0;
         color: rgba(255, 255, 255, 0.88);
         font-size: 14px;
+        line-height: 1.55;
     }
     .confirmation-body {
-        padding: 20px 24px 24px;
+        padding: 24px 28px 28px;
+        background: #fff;
     }
     .confirmation-grid {
         display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
-        margin-bottom: 18px;
+        margin-bottom: 22px;
     }
     .confirmation-item {
-        border: 1px solid rgba(112, 19, 27, 0.10);
+        min-height: 82px;
+        border: 1px solid rgba(112, 19, 27, 0.12);
+        border-radius: 16px;
+        padding: 15px 16px;
+        background: linear-gradient(180deg, #ffffff 0%, #fffafa 100%);
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.04);
+    }
+    .confirmation-item.is-reference {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 14px;
+        align-items: center;
+        border-color: rgba(250, 204, 21, .70);
+        background: linear-gradient(135deg, #fff8dc 0%, #fffef8 100%);
+    }
+    .confirmation-ref-icon {
+        width: 48px;
+        height: 48px;
         border-radius: 14px;
-        padding: 14px 16px;
-        background: rgba(255, 255, 255, 0.78);
-        box-shadow:
-            0 10px 18px rgba(15, 23, 42, 0.06),
-            inset 0 1px 0 rgba(255,255,255,0.82);
+        background: #facc15;
+        color: #111827;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
     }
     .confirmation-label {
         display: block;
-        font-size: 12px;
+        font-size: 11px;
         color: #64748b;
-        margin-bottom: 2px;
+        margin-bottom: 5px;
         text-transform: uppercase;
-        letter-spacing: 0.4px;
-        font-weight: 700;
+        letter-spacing: .06em;
+        font-weight: 900;
     }
     .confirmation-value {
         color: #111827;
         font-size: 15px;
-        font-weight: 800;
+        font-weight: 900;
+        overflow-wrap: anywhere;
     }
     .confirmation-status {
         display: inline-flex;
@@ -929,40 +973,41 @@
         gap: 10px;
         justify-content: flex-end;
         flex-wrap: wrap;
+        padding-top: 4px;
     }
     .confirmation-btn {
         border-radius: 999px;
-        padding: 11px 16px;
-        font-weight: 800;
+        min-height: 46px;
+        padding: 12px 20px;
+        font-weight: 900;
         text-decoration: none;
         border: 1px solid transparent;
         cursor: pointer;
         font-size: 14px;
-        box-shadow:
-            0 12px 22px rgba(15, 23, 42, 0.08),
-            0 1px 0 rgba(255,255,255,0.75) inset;
         transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
     }
     .confirmation-btn-primary {
-        background: linear-gradient(135deg, #70131B, #8f2230);
+        background: #8f1823;
         color: #fff;
-        border-color: #8f2230;
+        border-color: #8f1823;
+        box-shadow: 0 16px 28px rgba(143, 24, 35, .18);
     }
     .confirmation-btn-primary:hover {
-        background: linear-gradient(135deg, #70131B, #8f2230);
+        background: #facc15;
+        color: #111827;
         border-color: #facc15;
-        transform: translateY(-1px);
+        transform: translateY(-2px);
         box-shadow: 0 16px 26px rgba(112, 19, 27, 0.20);
     }
     .confirmation-btn-secondary {
-        background: rgba(255, 255, 255, 0.86);
+        background: #ffffff;
         color: #70131B;
-        border-color: rgba(112, 19, 27, 0.14);
+        border-color: rgba(112, 19, 27, 0.22);
     }
     .confirmation-btn-secondary:hover {
-        background: #fff5f5;
-        transform: translateY(-1px);
-        box-shadow: 0 16px 26px rgba(139, 0, 0, 0.14);
+        background: #fffaf0;
+        border-color: #facc15;
+        transform: translateY(-2px);
     }
 
     html[data-theme="dark"] .page-header,
@@ -1206,6 +1251,15 @@
         }
         .confirmation-modal {
             padding: 18px;
+        }
+        .confirmation-head {
+            padding: 22px 62px 22px 20px;
+        }
+        .confirmation-body {
+            padding: 20px;
+        }
+        .confirmation-grid {
+            grid-template-columns: 1fr;
         }
         .confirmation-actions {
             justify-content: stretch;
@@ -1485,11 +1539,21 @@
         <div class="confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="appointmentConfirmationTitle">
             <button type="button" class="confirmation-close" id="appointmentConfirmationClose" aria-label="Close confirmation">x</button>
             <div class="confirmation-head">
-                <h2 class="confirmation-title" id="appointmentConfirmationTitle">Appointment Submitted</h2>
-                <p class="confirmation-subtitle">Your request has been received. Go to your profile to check your appointment status and updates.</p>
+                <div class="confirmation-head-badge">AP</div>
+                <div class="confirmation-head-copy">
+                    <h2 class="confirmation-title" id="appointmentConfirmationTitle">Appointment Submitted</h2>
+                    <p class="confirmation-subtitle">Your request has been received. Keep your appointment number for tracking and updates.</p>
+                </div>
             </div>
             <div class="confirmation-body">
                 <div class="confirmation-grid">
+                    <div class="confirmation-item is-reference">
+                        <span class="confirmation-ref-icon">#</span>
+                        <span>
+                            <span class="confirmation-label">Appointment Number</span>
+                            <span class="confirmation-value">{{ $confirmation['apt_id'] ?? 'N/A' }}</span>
+                        </span>
+                    </div>
                     <div class="confirmation-item">
                         <span class="confirmation-label">Service</span>
                         <span class="confirmation-value">{{ $confirmation['service'] ?? '-' }}</span>

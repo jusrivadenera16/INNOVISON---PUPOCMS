@@ -1592,6 +1592,11 @@ PROMPT;
                 }
 
                 if ($existingAppt) {
+                    if (empty($existingAppt->apt_id)) {
+                        $existingAppt->apt_id = Appointment::generateAppointmentNumber(
+                            trim((string) $existingAppt->date) . ' ' . trim((string) ($existingAppt->time ?: now()->format('H:i:s')))
+                        );
+                    }
                     $existingAppt->status = 'Completed';
                     $existingAppt->service = $request->service;
                     $existingAppt->save();
@@ -1601,6 +1606,7 @@ PROMPT;
 
             if ($finalSource !== 'online') {
                 $appointment = new Appointment();
+                $appointment->apt_id     = Appointment::generateAppointmentNumber(now());
                 $appointment->user_id    = $student->id;
                 $appointment->student_id = $student->student_id;
                 $appointment->student_number = $student->student_number ?? null;

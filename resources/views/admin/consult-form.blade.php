@@ -1865,6 +1865,7 @@
                     <div class="patient-badges">
                         <span class="patient-badge">{{ $studentDisplayRole }}</span>
                         <span class="patient-badge">Student No. {{ $student->student_number ?: $student->student_id ?: 'N/A' }}</span>
+                        <span class="patient-badge">Appointment No. {{ optional($latestAppointment)->apt_id ?: 'N/A' }}</span>
                     </div>
                     <div class="patient-meta">
                         <div class="patient-meta-row">

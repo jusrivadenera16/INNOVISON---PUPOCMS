@@ -144,6 +144,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th>Appointment Number</th>
                         <th>Day</th>
                         <th>Time In</th>
                         <th>Time Out</th>
@@ -169,6 +170,7 @@
                             $impression = trim((string) ($cons?->comments ?? ''));
                         @endphp
                         <tr>
+                            <td>{{ $appt?->apt_id ?: 'N/A' }}</td>
                             <td>{{ $formatDate($visitDate) }}</td>
                             <td>{{ $formatTime($timeIn) }}</td>
                             <td>{{ $validTimeOut($timeIn, $cons?->time_out) }}</td>

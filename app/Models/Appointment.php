@@ -14,6 +14,7 @@ class Appointment extends Model
      * Mass assignable fields
      */
     protected $fillable = [
+        'apt_id',       // Public appointment number
         'user_id',      // Link to User table
         'student_id',   // Student ID
         'student_number', // Student number
@@ -46,6 +47,34 @@ class Appointment extends Model
         ];
 
         return $map[$key] ?? 'Student';
+    }
+
+    /**
+     * Generate the public appointment number:
+     * APT-ddmmyy-HHmmNN, where NN increments per appointment minute.
+     */
+    public static function generateAppointmentNumber($scheduledAt = null): string
+    {
+        if ($scheduledAt instanceof Carbon) {
+            $baseTime = $scheduledAt->copy();
+        } elseif ($scheduledAt) {
+            $baseTime = Carbon::parse($scheduledAt);
+        } else {
+            $baseTime = Carbon::now();
+        }
+
+        $prefix = 'APT-' . $baseTime->format('dmy-Hi');
+        $lastNumber = static::query()
+            ->where('apt_id', 'like', $prefix . '%')
+            ->orderByDesc('apt_id')
+            ->value('apt_id');
+
+        $nextSequence = 1;
+        if ($lastNumber && preg_match('/(\d{2})$/', (string) $lastNumber, $matches)) {
+            $nextSequence = ((int) $matches[1]) + 1;
+        }
+
+        return $prefix . str_pad((string) $nextSequence, 2, '0', STR_PAD_LEFT);
     }
 
     /**

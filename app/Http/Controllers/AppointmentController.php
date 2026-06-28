@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Admin;
 use App\Models\Appointment;
 use App\Models\AppointmentFeedback;
+use App\Models\Consultation;
 use App\Models\HealthProfile;
 use App\Models\User;
 use App\Services\GuisisApiService;
@@ -1645,6 +1646,7 @@ class AppointmentController extends Controller
         $studentContext = $this->resolveStudentContext($user);
 
         $appointment = new Appointment();
+        $appointment->apt_id = Appointment::generateAppointmentNumber($selectedDateTime);
         $appointment->user_id = $user->id;
         $appointment->student_id = $request->input('student_id', $studentContext['student_id'] ?: '2025-0000-TG-0');
         $appointment->student_number = $request->input('student_number', $studentContext['student_number']);
@@ -1666,6 +1668,7 @@ class AppointmentController extends Controller
         return redirect()->back()
             ->with('success', $successMessage)
             ->with('appointment_confirmation', [
+                'apt_id' => $appointment->apt_id,
                 'service' => $appointment->service,
                 'date' => Carbon::parse($appointment->date)->format('M d, Y'),
                 'time' => Carbon::parse($appointment->time)->format('g:i A'),
@@ -2104,10 +2107,16 @@ public function account(Request $request)
         }
 
         $appointment->load('feedback');
+        $consultation = Consultation::query()
+            ->where('user_id', $appointment->user_id)
+            ->whereDate('consultation_date', $appointment->date)
+            ->orderByDesc('time_in')
+            ->first();
 
         return view('student.feedback', [
             'appointment' => $appointment,
             'existingFeedback' => $appointment->feedback,
+            'consultation' => $consultation,
         ]);
     }
 

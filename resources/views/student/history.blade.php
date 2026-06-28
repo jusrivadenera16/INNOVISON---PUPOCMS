@@ -1066,6 +1066,7 @@
                     <div>
                       <div class="apt-service">{{ $appt->service }}</div>
                       <div class="apt-meta">
+                        <span class="apt-meta-pill">Appointment No. {{ $appt->apt_id ?: 'N/A' }}</span>
                         <span class="apt-meta-pill">{{ $appt->name }}</span>
                         <span class="apt-meta-pill">{{ $appt->student_number ?: optional(optional($appt->user)->healthProfile)->student_number ?: optional($appt->user)->student_number ?: ($studentContext['student_number'] ?? $appt->student_id) }}</span>
                         <span class="apt-meta-pill">{{ $appt->email }}</span>

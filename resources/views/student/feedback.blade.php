@@ -5,167 +5,314 @@
 @push('styles')
 <style>
     .feedback-shell {
-        max-width: 760px;
+        max-width: 1040px;
         margin: 0 auto;
-        padding: 20px 20px 60px;
+        padding: 28px 20px 70px;
     }
 
-    .feedback-card {
-        background: #fff;
-        border: 1px solid #eef2f3;
-        border-radius: 18px;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
-        padding: 28px;
+    .feedback-duo {
+        display: grid;
+        grid-template-columns: minmax(280px, .92fr) minmax(360px, 1.08fr);
+        border-radius: 24px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid rgba(112, 19, 27, .18);
+        box-shadow: 0 26px 60px rgba(15, 23, 42, .12);
+    }
+
+    .feedback-left,
+    .feedback-right {
+        min-height: 560px;
+        padding: clamp(26px, 4vw, 42px);
+    }
+
+    .feedback-left {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 34px;
+        background:
+            radial-gradient(circle at 18% 8%, rgba(255, 255, 255, .14), transparent 34%),
+            linear-gradient(145deg, #9b1722 0%, #73121b 48%, #530a12 100%);
+        color: #ffffff;
+    }
+
+    .feedback-kicker {
+        display: inline-flex;
+        width: fit-content;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .14);
+        border: 1px solid rgba(255, 255, 255, .22);
+        color: #ffdb4d;
+        font-size: .72rem;
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
     }
 
     .feedback-title {
-        margin: 0;
-        font-size: 28px;
-        font-weight: 800;
-        color: #600000;
+        margin: 16px 0 10px;
+        color: #ffffff;
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: .98;
+        font-weight: 900;
+        letter-spacing: 0;
     }
 
     .feedback-subtitle {
-        margin: 8px 0 0;
-        color: #64748b;
-        line-height: 1.6;
-        font-size: 14px;
+        max-width: 440px;
+        margin: 0;
+        color: rgba(255, 255, 255, .82);
+        line-height: 1.65;
+        font-size: .98rem;
     }
 
-    .feedback-meta {
-        margin-top: 20px;
+    .feedback-appointment-chip {
+        margin-top: 24px;
         padding: 16px 18px;
-        border-radius: 14px;
-        background: #fff8f6;
-        border: 1px solid #f7d7d2;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, .12);
+        border: 1px solid rgba(255, 255, 255, .18);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
     }
 
-    .feedback-meta strong {
-        color: #7f1d1d;
+    .feedback-appointment-chip strong {
+        display: block;
+        color: #ffffff;
+        font-size: 1.05rem;
+        font-weight: 900;
+    }
+
+    .feedback-appointment-chip span {
+        display: block;
+        margin-top: 5px;
+        color: rgba(255, 255, 255, .82);
+        font-weight: 600;
     }
 
     .feedback-label {
         display: block;
-        margin-bottom: 8px;
-        font-size: 13px;
-        font-weight: 800;
-        color: #7c2d12;
+        margin-bottom: 10px;
+        color: inherit;
+        font-size: .78rem;
+        font-weight: 900;
+        letter-spacing: .06em;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
     }
 
     .feedback-rating {
         display: flex;
         gap: 10px;
         flex-wrap: wrap;
-        margin: 12px 0 22px;
     }
 
     .feedback-rating input {
-        display: none;
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
     }
 
     .feedback-rating label {
-        min-width: 54px;
-        padding: 12px 14px;
-        border-radius: 12px;
-        border: 1px solid #d6dbe0;
-        background: #fff;
-        color: #475569;
-        font-weight: 800;
-        text-align: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, .24);
+        background: rgba(255, 255, 255, .12);
+        color: rgba(255, 255, 255, .72);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.45rem;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: transform .18s ease, background-color .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
     }
 
-    .feedback-rating label:hover {
-        border-color: #8b0000;
-        color: #8b0000;
-        background: #fff7f7;
+    .feedback-rating label:hover,
+    .feedback-rating input:focus-visible + label {
+        transform: translateY(-3px) scale(1.04);
+        color: #ffdb4d;
+        border-color: rgba(255, 219, 77, .72);
     }
 
-    .feedback-rating input:checked + label {
-        background: #8b0000;
-        border-color: #8b0000;
-        color: #fff;
-        box-shadow: 0 10px 22px rgba(139, 0, 0, 0.18);
+    .feedback-rating input:checked + label,
+    .feedback-rating label.is-active {
+        color: #111827;
+        background: #ffcf19;
+        border-color: #ffcf19;
+        box-shadow: 0 16px 30px rgba(255, 207, 25, .28);
+        animation: feedbackStarPop .32s ease;
     }
 
-    .feedback-textarea {
-        width: 100%;
-        min-height: 140px;
-        border-radius: 14px;
-        border: 1px solid #d6dbe0;
+    @keyframes feedbackStarPop {
+        0% { transform: scale(.82) rotate(-8deg); }
+        60% { transform: scale(1.15) rotate(5deg); }
+        100% { transform: scale(1) rotate(0); }
+    }
+
+    .feedback-right {
+        background: #ffffff;
+        color: #172033;
+    }
+
+    .feedback-right-head {
+        margin-bottom: 20px;
+    }
+
+    .feedback-right-title {
+        margin: 0;
+        color: #172033;
+        font-size: clamp(1.4rem, 2.6vw, 2rem);
+        font-weight: 900;
+    }
+
+    .feedback-right-copy {
+        margin: 8px 0 0;
+        color: #64748b;
+        line-height: 1.55;
+        font-size: .92rem;
+    }
+
+    .feedback-detail-grid {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .feedback-detail {
         padding: 14px 16px;
-        font-size: 14px;
+        border-radius: 16px;
+        border: 1px solid #e5edf6;
+        background: #fbfdff;
+    }
+
+    .feedback-detail span {
+        display: block;
+        color: #6b7a90;
+        font-size: .72rem;
+        font-weight: 900;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .feedback-detail strong,
+    .feedback-detail p {
+        display: block;
+        margin: 5px 0 0;
+        color: #172033;
+        font-size: .95rem;
+        font-weight: 800;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+    }
+
+    .feedback-detail p {
+        font-weight: 600;
         color: #334155;
+    }
+
+    .feedback-textarea,
+    .feedback-text-static {
+        width: 100%;
+        min-height: 142px;
+        border-radius: 18px;
+        border: 1px solid #d8e2ee;
+        background: #ffffff;
+        padding: 15px 16px;
+        color: #172033;
+        font-size: .95rem;
+        line-height: 1.55;
         resize: vertical;
     }
 
     .feedback-textarea:focus {
         outline: none;
-        border-color: #8b0000;
-        box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.08);
+        border-color: #8b1721;
+        box-shadow: 0 0 0 4px rgba(139, 23, 33, .09);
+    }
+
+    .feedback-text-static {
+        background: #f8fafc;
+        white-space: pre-wrap;
+    }
+
+    .feedback-errors,
+    .feedback-readonly-banner {
+        margin-bottom: 16px;
+        padding: 13px 15px;
+        border-radius: 14px;
+        font-size: .9rem;
+        line-height: 1.55;
+    }
+
+    .feedback-errors {
+        border: 1px solid #fecaca;
+        background: #fff1f2;
+        color: #b91c1c;
+    }
+
+    .feedback-readonly-banner {
+        border: 1px solid #bbf7d0;
+        background: #f0fdf4;
+        color: #166534;
     }
 
     .feedback-actions {
         display: flex;
-        gap: 12px;
         justify-content: flex-end;
-        margin-top: 22px;
+        gap: 12px;
+        margin-top: 20px;
         flex-wrap: wrap;
     }
 
     .feedback-btn {
-        padding: 12px 18px;
+        min-height: 46px;
+        padding: 12px 20px;
         border-radius: 999px;
-        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
         text-decoration: none;
-        border: none;
+        border: 1px solid transparent;
         cursor: pointer;
+        transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease, color .18s ease;
     }
 
     .feedback-btn.primary {
-        background: #8b0000;
-        color: #fff;
+        background: #8b1721;
+        color: #ffffff;
+        box-shadow: 0 16px 28px rgba(139, 23, 33, .18);
+    }
+
+    .feedback-btn.primary:hover,
+    .feedback-btn.primary:focus {
+        transform: translateY(-2px);
+        background: #ffcf19;
+        color: #111827;
     }
 
     .feedback-btn.secondary {
-        background: #f1f5f9;
-        color: #334155;
+        background: #ffffff;
+        color: #8b1721;
+        border-color: rgba(139, 23, 33, .28);
     }
 
-    .feedback-errors {
-        margin-top: 18px;
-        padding: 12px 14px;
-        border-radius: 12px;
-        border: 1px solid #fecaca;
-        background: #fff1f2;
-        color: #b91c1c;
-        font-size: 14px;
+    .feedback-btn.secondary:hover,
+    .feedback-btn.secondary:focus {
+        transform: translateY(-2px);
+        border-color: #ffcf19;
     }
 
-    .feedback-readonly-banner {
-        margin-top: 18px;
-        padding: 14px 16px;
-        border-radius: 12px;
-        border: 1px solid #bbf7d0;
-        background: #f0fdf4;
-        color: #166534;
-        font-size: 14px;
-        line-height: 1.6;
-    }
+    @media (max-width: 820px) {
+        .feedback-duo {
+            grid-template-columns: 1fr;
+        }
 
-    .feedback-text-static {
-        width: 100%;
-        min-height: 140px;
-        border-radius: 14px;
-        border: 1px solid #d6dbe0;
-        padding: 14px 16px;
-        font-size: 14px;
-        color: #334155;
-        background: #f8fafc;
-        white-space: pre-wrap;
+        .feedback-left,
+        .feedback-right {
+            min-height: auto;
+        }
     }
 </style>
 @endpush
@@ -173,70 +320,117 @@
 @section('content')
 @php
     $isReadonly = (bool) optional($existingFeedback)->submitted_at;
+    $appointmentNumber = trim((string) ($appointment->apt_id ?? '')) ?: 'N/A';
+    $appointmentNotes = trim((string) ($appointment->notes ?? $appointment->remarks ?? ''));
+    $nurseRemarks = trim((string) optional($consultation)->comments);
+    $selectedRating = (string) old('rating', optional($existingFeedback)->rating);
 @endphp
 <div class="feedback-shell">
-    <div class="feedback-card">
-        <h1 class="feedback-title">Appointment Feedback</h1>
-        <p class="feedback-subtitle">
-            {{ $isReadonly
-                ? 'Your feedback has already been submitted. You can review it here anytime from your notifications.'
-                : 'Your appointment is complete. A short review helps the clinic improve service quality and student experience.' }}
-        </p>
-
-        <div class="feedback-meta">
-            <strong>{{ $appointment->service }}</strong><br>
-            {{ \Carbon\Carbon::parse($appointment->date)->format('M d, Y') }}
-            at {{ \Carbon\Carbon::parse($appointment->time)->format('g:i A') }}
-        </div>
-
-        @if($isReadonly)
-            <div class="feedback-readonly-banner">
-                Feedback submitted {{ optional($existingFeedback->submitted_at)->format('M d, Y g:i A') }}. Editing is disabled after submission.
-            </div>
-        @endif
-
-        @if($errors->any())
-            <div class="feedback-errors">{{ $errors->first() }}</div>
-        @endif
-
-        @if($isReadonly)
-            <div style="margin-top: 24px;">
-                <label class="feedback-label">Your Rating</label>
-                <div class="feedback-rating">
-                    @for($i = 1; $i <= 5; $i++)
-                        <input type="radio" id="ratingRead{{ $i }}" value="{{ $i }}" {{ (string) optional($existingFeedback)->rating === (string) $i ? 'checked' : '' }} disabled>
-                        <label for="ratingRead{{ $i }}" style="{{ (string) optional($existingFeedback)->rating === (string) $i ? '' : 'cursor:default;' }}">{{ $i }}</label>
-                    @endfor
+    @if($isReadonly)
+        <div class="feedback-duo">
+            <section class="feedback-left">
+                <div>
+                    <span class="feedback-kicker">Completed Visit</span>
+                    <h1 class="feedback-title">Appointment Feedback</h1>
+                    <p class="feedback-subtitle">Your feedback has already been submitted. You can review it here anytime from your notifications.</p>
+                    <div class="feedback-appointment-chip">
+                        <strong>{{ $appointment->service }}</strong>
+                        <span>{{ \Carbon\Carbon::parse($appointment->date)->format('M d, Y') }} at {{ \Carbon\Carbon::parse($appointment->time)->format('g:i A') }}</span>
+                    </div>
                 </div>
+                <div>
+                    <label class="feedback-label">Your Rating</label>
+                    <div class="feedback-rating" aria-label="Submitted rating">
+                        @for($i = 1; $i <= 5; $i++)
+                            <input type="radio" id="ratingRead{{ $i }}" value="{{ $i }}" {{ (string) optional($existingFeedback)->rating === (string) $i ? 'checked' : '' }} disabled>
+                            <label for="ratingRead{{ $i }}" class="{{ (int) optional($existingFeedback)->rating >= $i ? 'is-active' : '' }}">&#9733;</label>
+                        @endfor
+                    </div>
+                </div>
+            </section>
 
-                <label class="feedback-label">Comments</label>
+            <section class="feedback-right">
+                <div class="feedback-right-head">
+                    <h2 class="feedback-right-title">Review Summary</h2>
+                    <p class="feedback-right-copy">Feedback submitted {{ optional($existingFeedback->submitted_at)->format('M d, Y g:i A') }}. Editing is disabled after submission.</p>
+                </div>
+                <div class="feedback-readonly-banner">Thank you for helping the clinic improve student care.</div>
+                <div class="feedback-detail-grid">
+                    <div class="feedback-detail"><span>Appointment Number</span><strong>{{ $appointmentNumber }}</strong></div>
+                    <div class="feedback-detail"><span>Notes</span><p>{{ $appointmentNotes !== '' ? $appointmentNotes : 'No appointment notes recorded.' }}</p></div>
+                    <div class="feedback-detail"><span>Nurse Remarks</span><p>{{ $nurseRemarks !== '' ? $nurseRemarks : 'No nurse remarks recorded.' }}</p></div>
+                </div>
+                <label class="feedback-label">Comment</label>
                 <div class="feedback-text-static">{{ trim((string) optional($existingFeedback)->feedback) !== '' ? $existingFeedback->feedback : 'No written comments were added.' }}</div>
-
                 <div class="feedback-actions">
                     <a href="{{ url('/student/account?view=notifications') }}" class="feedback-btn secondary">Back to Notifications</a>
                 </div>
-            </div>
-        @else
-            <form action="{{ route('student.feedback.store', ['appointment' => $appointment->id]) }}" method="POST" style="margin-top: 24px;">
-                @csrf
-
-                <label class="feedback-label">How would you rate your appointment?</label>
-                <div class="feedback-rating">
-                    @for($i = 1; $i <= 5; $i++)
-                        <input type="radio" name="rating" id="rating{{ $i }}" value="{{ $i }}" {{ (string) old('rating', optional($existingFeedback)->rating) === (string) $i ? 'checked' : '' }}>
-                        <label for="rating{{ $i }}">{{ $i }}</label>
-                    @endfor
+            </section>
+        </div>
+    @else
+        <form action="{{ route('student.feedback.store', ['appointment' => $appointment->id]) }}" method="POST" class="feedback-duo">
+            @csrf
+            <section class="feedback-left">
+                <div>
+                    <span class="feedback-kicker">Completed Visit</span>
+                    <h1 class="feedback-title">Appointment Feedback</h1>
+                    <p class="feedback-subtitle">Your appointment is complete. A short review helps the clinic improve service quality and student experience.</p>
+                    <div class="feedback-appointment-chip">
+                        <strong>{{ $appointment->service }}</strong>
+                        <span>{{ \Carbon\Carbon::parse($appointment->date)->format('M d, Y') }} at {{ \Carbon\Carbon::parse($appointment->time)->format('g:i A') }}</span>
+                    </div>
                 </div>
+                <div>
+                    <label class="feedback-label">How would you rate your appointment?</label>
+                    <div class="feedback-rating" id="feedbackRatingGroup">
+                        @for($i = 1; $i <= 5; $i++)
+                            <input type="radio" name="rating" id="rating{{ $i }}" value="{{ $i }}" {{ $selectedRating === (string) $i ? 'checked' : '' }}>
+                            <label for="rating{{ $i }}" class="{{ (int) $selectedRating >= $i ? 'is-active' : '' }}" data-rating-star="{{ $i }}">&#9733;</label>
+                        @endfor
+                    </div>
+                </div>
+            </section>
 
-                <label class="feedback-label" for="feedbackText">Comments</label>
+            <section class="feedback-right">
+                @if($errors->any())
+                    <div class="feedback-errors">{{ $errors->first() }}</div>
+                @endif
+                <div class="feedback-detail-grid">
+                    <div class="feedback-detail"><span>Appointment Number</span><strong>{{ $appointmentNumber }}</strong></div>
+                    <div class="feedback-detail"><span>Notes</span><p>{{ $appointmentNotes !== '' ? $appointmentNotes : 'No appointment notes recorded.' }}</p></div>
+                    <div class="feedback-detail"><span>Nurse Remarks</span><p>{{ $nurseRemarks !== '' ? $nurseRemarks : 'No nurse remarks recorded.' }}</p></div>
+                </div>
+                <label class="feedback-label" for="feedbackText">Comment</label>
                 <textarea id="feedbackText" name="feedback" class="feedback-textarea" placeholder="Share anything helpful about your clinic experience.">{{ old('feedback', optional($existingFeedback)->feedback) }}</textarea>
-
                 <div class="feedback-actions">
                     <a href="{{ url('/student/account?view=notifications') }}" class="feedback-btn secondary">Back</a>
                     <button type="submit" class="feedback-btn primary">Submit Feedback</button>
                 </div>
-            </form>
-        @endif
-    </div>
+            </section>
+        </form>
+    @endif
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ratingGroup = document.getElementById('feedbackRatingGroup');
+        if (!ratingGroup) return;
+
+        const stars = Array.from(ratingGroup.querySelectorAll('[data-rating-star]'));
+        const paintStars = (rating) => {
+            stars.forEach((star) => {
+                const starValue = Number(star.dataset.ratingStar || 0);
+                star.classList.toggle('is-active', starValue <= rating);
+            });
+        };
+
+        stars.forEach((star) => {
+            star.addEventListener('click', () => {
+                paintStars(Number(star.dataset.ratingStar || 0));
+            });
+        });
+    });
+</script>
+@endpush
