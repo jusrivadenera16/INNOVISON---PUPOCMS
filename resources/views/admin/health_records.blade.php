@@ -2755,9 +2755,12 @@
                 && filled($summaryRecord->chest_xray_result)
                 && filled($summaryRecord->student_photo);
             $summaryStatus = trim((string) ($summaryRecord->clearance_status ?? ''));
-            $summaryIsConditional = in_array($summaryStatus, ['Pending/Conditional', 'Rejected'], true)
+            $summaryIsApproved = in_array($summaryStatus, ['Issued', 'Fully Cleared'], true);
+            $summaryIsConditional = !$summaryIsApproved && (
+                in_array($summaryStatus, ['Pending/Conditional', 'Pending Resubmission', 'Rejected'], true)
                 || trim((string) ($summaryRecord->pending_reason ?? '')) !== ''
-                || trim((string) ($summaryRecord->medical_condition_remarks ?? '')) !== '';
+                || trim((string) ($summaryRecord->medical_condition_remarks ?? '')) !== ''
+            );
 
             if ($summaryRecord->hasMedicalCondition()) {
                 $healthSummaryStats['with_conditions']++;
