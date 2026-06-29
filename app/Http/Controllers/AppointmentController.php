@@ -136,11 +136,26 @@ class AppointmentController extends Controller
             $dateStr = $appt->date ? date('M d', strtotime($appt->date)) : 'N/A';
 
             if ($appt->status === 'Approved') {
+                $approvalExtras = [];
+                $approvalMessage = trim((string) ($appt->approval_message ?? ''));
+                $approvalReminders = collect((array) ($appt->approval_reminders ?? []))
+                    ->map(fn ($reminder) => trim((string) $reminder))
+                    ->filter()
+                    ->values();
+
+                if ($approvalMessage !== '') {
+                    $approvalExtras[] = 'Message: ' . $approvalMessage;
+                }
+
+                if ($approvalReminders->isNotEmpty()) {
+                    $approvalExtras[] = 'Reminder: ' . $approvalReminders->implode(', ');
+                }
+
                 $notifications[] = [
                     'id' => $this->buildNotificationId('appointment-approved', [$appt->id, $appt->status, optional($appt->updated_at)->timestamp]),
                     'type' => 'success',
                     'icon' => 'OK',
-                    'message' => "Your {$appt->service} on {$dateStr} has been approved.",
+                    'message' => "Your {$appt->service} on {$dateStr} has been approved." . ($approvalExtras ? ' ' . implode(' ', $approvalExtras) : ''),
                     'time' => $timeAgo,
                     'link' => url('/student/history'),
                 ];
@@ -1646,7 +1661,7 @@ class AppointmentController extends Controller
         $studentContext = $this->resolveStudentContext($user);
 
         $appointment = new Appointment();
-        $appointment->apt_id = Appointment::generateAppointmentNumber($selectedDateTime);
+        $appointment->apt_id = Appointment::generateAppointmentNumber(now(), 'online');
         $appointment->user_id = $user->id;
         $appointment->student_id = $request->input('student_id', $studentContext['student_id'] ?: '2025-0000-TG-0');
         $appointment->student_number = $request->input('student_number', $studentContext['student_number']);

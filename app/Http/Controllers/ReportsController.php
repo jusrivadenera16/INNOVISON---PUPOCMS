@@ -800,7 +800,7 @@ class ReportsController extends Controller
 
         $issuedBaseQuery = HealthProfile::query()
             ->with('user')
-            ->where('clearance_status', 'Issued');
+            ->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
 
         $issuedBaseQuery->where(function ($builder) use ($dateFrom, $dateTo) {
                 $builder->whereBetween('verified_at', [$dateFrom, $dateTo])
@@ -858,7 +858,7 @@ class ReportsController extends Controller
             ]
         );
 
-        $summaryQuery = HealthProfile::query()->where('clearance_status', 'Issued');
+        $summaryQuery = HealthProfile::query()->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
 
         $summaryQuery->where(function ($builder) use ($dateFrom, $dateTo) {
                 $builder->whereBetween('verified_at', [$dateFrom, $dateTo])
@@ -938,9 +938,9 @@ class ReportsController extends Controller
         }
 
         if ($statusFilter === 'pending') {
-            $query->where('clearance_status', '!=', 'Issued');
+            $query->whereNotIn('clearance_status', ['Issued', 'Fully Cleared']);
         } elseif ($statusFilter === 'approved') {
-            $query->where('clearance_status', '=', 'Issued');
+            $query->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
         }
 
         return [$query, $search, $courseFilter, $userTypeFilter, $genderFilter, $conditionFilter, $statusFilter];

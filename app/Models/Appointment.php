@@ -28,7 +28,13 @@ class Appointment extends Model
         'type',         // Source: online or walkin
         'user_type',    // Role enum: Student/Faculty/Admin/Dependent
         'notes',        // Stored DB field for notes
+        'approval_message',
+        'approval_reminders',
         'remarks',      // Backward-compatible virtual alias to notes
+    ];
+
+    protected $casts = [
+        'approval_reminders' => 'array',
     ];
 
     /**
@@ -51,30 +57,36 @@ class Appointment extends Model
 
     /**
      * Generate the public appointment number:
-     * APT-ddmmyy-HHmmNN, where NN increments per appointment minute.
+     * OAPT/WAPT-ddmmyy-HHmmNN, where NN increments per source per day.
      */
-    public static function generateAppointmentNumber($scheduledAt = null): string
+    public static function generateAppointmentNumber($baseAt = null, ?string $source = 'online'): string
     {
-        if ($scheduledAt instanceof Carbon) {
-            $baseTime = $scheduledAt->copy();
-        } elseif ($scheduledAt) {
-            $baseTime = Carbon::parse($scheduledAt);
+        if ($baseAt instanceof Carbon) {
+            $baseTime = $baseAt->copy();
+        } elseif ($baseAt) {
+            $baseTime = Carbon::parse($baseAt);
         } else {
             $baseTime = Carbon::now();
         }
 
-        $prefix = 'APT-' . $baseTime->format('dmy-Hi');
-        $lastNumber = static::query()
-            ->where('apt_id', 'like', $prefix . '%')
-            ->orderByDesc('apt_id')
-            ->value('apt_id');
+        $sourceKey = strtolower(trim((string) $source));
+        $sourcePrefix = in_array($sourceKey, ['walkin', 'walk-in', 'walk_in'], true) ? 'WAPT' : 'OAPT';
+        $dayPrefix = $sourcePrefix . '-' . $baseTime->format('dmy') . '-';
+        $timePrefix = $dayPrefix . $baseTime->format('Hi');
 
-        $nextSequence = 1;
-        if ($lastNumber && preg_match('/(\d{2})$/', (string) $lastNumber, $matches)) {
-            $nextSequence = ((int) $matches[1]) + 1;
-        }
+        $highestSequence = static::query()
+            ->where('apt_id', 'like', $dayPrefix . '%')
+            ->pluck('apt_id')
+            ->map(function ($appointmentNumber) {
+                return preg_match('/(\d{2,})$/', (string) $appointmentNumber, $matches)
+                    ? (int) $matches[1]
+                    : 0;
+            })
+            ->max() ?? 0;
 
-        return $prefix . str_pad((string) $nextSequence, 2, '0', STR_PAD_LEFT);
+        $nextSequence = $highestSequence + 1;
+
+        return $timePrefix . str_pad((string) $nextSequence, 2, '0', STR_PAD_LEFT);
     }
 
     /**

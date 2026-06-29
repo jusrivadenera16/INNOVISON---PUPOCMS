@@ -826,6 +826,30 @@
         line-height: 1.6;
         overflow-wrap: anywhere;
     }
+    .appointment-clinical-findings {
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(245, 158, 11, 0.24);
+    }
+    .appointment-clinical-findings > span {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+        color: #70131B;
+        font-size: .78rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+    .appointment-clinical-findings svg {
+        width: 17px;
+        height: 17px;
+    }
+    .appointment-clinical-findings p {
+        font-size: .95rem;
+        font-weight: 700;
+    }
     .appointment-timeline-panel {
         padding: 22px 26px 28px;
     }
@@ -920,7 +944,8 @@
         background: rgba(34, 197, 94, 0.22);
         color: #15803d;
     }
-    #statusActionModal .status-action-detail-modal {
+    #statusActionModal .status-action-detail-modal,
+    #rescheduleModal .status-action-detail-modal {
         width: min(100%, 900px);
         max-height: min(640px, calc(100dvh - 42px));
         border: 1px solid rgba(255, 255, 255, 0.78) !important;
@@ -930,11 +955,13 @@
         background: #ffffff !important;
         box-shadow: 0 34px 78px rgba(15, 23, 42, 0.28);
     }
-    #statusActionModal .appointment-detail-header {
+    #statusActionModal .appointment-detail-header,
+    #rescheduleModal .appointment-detail-header {
         min-height: 84px;
         padding: 18px 28px;
     }
-    #statusActionModal .appointment-detail-status {
+    #statusActionModal .appointment-detail-status,
+    #rescheduleModal .appointment-detail-status {
         min-width: 0;
         width: fit-content;
         min-height: 36px;
@@ -944,10 +971,12 @@
         border-radius: 999px;
         align-self: center;
     }
-    #statusActionModal .appointment-detail-status small {
+    #statusActionModal .appointment-detail-status small,
+    #rescheduleModal .appointment-detail-status small {
         display: none !important;
     }
-    #statusActionModal #sStatusText {
+    #statusActionModal #sStatusText,
+    #rescheduleModal #rStatusText {
         font-size: .76rem;
         line-height: 1;
     }
@@ -985,6 +1014,9 @@
         border-radius: 14px;
         border: 1px solid rgba(112, 19, 27, 0.12);
         background: linear-gradient(180deg, #ffffff 0%, #fffafa 100%);
+    }
+    .approval-detail-card.is-full {
+        grid-column: 1 / -1;
     }
     .approval-detail-card span {
         display: block;
@@ -1094,6 +1126,27 @@
         border-color: #70131B;
         box-shadow: 0 0 0 3px rgba(112, 19, 27, .08);
     }
+    .approval-detail-input {
+        width: 100%;
+        min-height: 44px;
+        border-radius: 12px;
+        border: 1px solid rgba(112, 19, 27, 0.15);
+        padding: 10px 12px;
+        color: #111827;
+        font-size: .84rem;
+        font-weight: 800;
+        background: #ffffff;
+    }
+    .approval-detail-input:focus {
+        outline: none;
+        border-color: #70131B;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, .08);
+    }
+    #rescheduleModal .approval-detail-card span,
+    #rescheduleModal .approval-detail-input,
+    #rescheduleModal .approval-message-field textarea {
+        color: #111827 !important;
+    }
     .approval-timeline-row {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 260px;
@@ -1177,15 +1230,22 @@
         color: #c2410c;
         border-color: #fed7aa;
     }
-    #statusActionModal .dialog-actions {
+    #statusActionModal .dialog-actions,
+    #rescheduleModal .dialog-actions {
         margin: 0;
         padding-top: 2px;
     }
-    #statusActionModal .dialog-btn {
+    #statusActionModal .dialog-btn,
+    #rescheduleModal .dialog-btn {
         min-height: 44px;
         border-radius: 14px;
     }
-    #statusActionModal .dialog-btn-approve {
+    #statusActionModal [hidden],
+    #rescheduleModal [hidden] {
+        display: none !important;
+    }
+    #statusActionModal .dialog-btn-approve,
+    #rescheduleModal .dialog-btn-approve {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -1198,7 +1258,8 @@
         position: relative;
         overflow: hidden;
     }
-    #statusActionModal .dialog-btn-approve::before {
+    #statusActionModal .dialog-btn-approve::before,
+    #rescheduleModal .dialog-btn-approve::before {
         content: "";
         position: absolute;
         inset: 0;
@@ -1207,33 +1268,62 @@
         transition: transform .52s ease;
     }
     #statusActionModal .dialog-btn-approve:hover,
-    #statusActionModal .dialog-btn-approve:focus-visible {
+    #statusActionModal .dialog-btn-approve:focus-visible,
+    #rescheduleModal .dialog-btn-approve:hover,
+    #rescheduleModal .dialog-btn-approve:focus-visible {
         background: #facc15;
         border-color: #facc15;
         color: #111827;
         transform: translateY(-1px);
     }
     #statusActionModal .dialog-btn-approve:hover::before,
-    #statusActionModal .dialog-btn-approve:focus-visible::before {
+    #statusActionModal .dialog-btn-approve:focus-visible::before,
+    #rescheduleModal .dialog-btn-approve:hover::before,
+    #rescheduleModal .dialog-btn-approve:focus-visible::before {
         transform: translateX(120%);
     }
     #statusActionModal .dialog-btn-approve svg,
-    #statusActionModal .dialog-btn-approve span {
+    #statusActionModal .dialog-btn-approve span,
+    #rescheduleModal .dialog-btn-approve svg,
+    #rescheduleModal .dialog-btn-approve span {
         position: relative;
         z-index: 1;
     }
-    #statusActionModal .dialog-btn-approve svg {
+    #statusActionModal .dialog-btn-approve svg,
+    #rescheduleModal .dialog-btn-approve svg {
         width: 17px;
         height: 17px;
     }
-    #statusActionModal .dialog-btn-secondary {
+    #statusActionModal .dialog-btn-reject,
+    #statusActionModal .dialog-btn-warning {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 10px 18px;
+        border-radius: 14px;
+        font-size: .86rem;
+        line-height: 1.1;
+        white-space: nowrap;
+    }
+    #statusActionModal .dialog-btn-reject svg,
+    #statusActionModal .dialog-btn-warning svg {
+        width: 17px;
+        height: 17px;
+        flex: 0 0 auto;
+    }
+    #statusActionModal .dialog-btn-secondary,
+    #rescheduleModal .dialog-btn-secondary {
         background: #ffffff;
         color: #70131B;
         border: 1px solid rgba(112, 19, 27, 0.22);
         box-shadow: 0 12px 22px rgba(15, 23, 42, 0.06);
     }
     #statusActionModal .dialog-btn-secondary:hover,
-    #statusActionModal .dialog-btn-secondary:focus-visible {
+    #statusActionModal .dialog-btn-secondary:focus-visible,
+    #rescheduleModal .dialog-btn-secondary:hover,
+    #rescheduleModal .dialog-btn-secondary:focus-visible {
         border-color: #facc15;
         transform: translateY(-1px);
     }
@@ -2601,7 +2691,7 @@
             <thead>
                 <tr>
                     <th>Full Name</th>
-                    <th>ID Number</th>
+                    <th>Appointment ID</th>
                     <th>Appointment Type</th> <th>Service</th>
                     <th>Date & Time</th>
                     <th>Status</th>
@@ -2629,6 +2719,7 @@
                         data-view-date="{{ $appt->date }}"
                         data-view-time="{{ $appt->time }}"
                         data-view-remarks="{{ $appt->remarks ?? 'No notes provided.' }}"
+                        data-view-clinical-findings="{{ $appt->clinical_findings_comment ?: '' }}"
                         data-view-email="{{ $appt->email }}"
                         data-view-status="{{ $appt->status }}"
                         data-view-type="{{ $currentType === 'walkin' ? 'Walk-in' : 'Online' }}"
@@ -2648,7 +2739,7 @@
                             <div style="font-weight: 700;" class="student-name">{{ $appt->name }}</div>
                             <div style="font-size: 12px; color: #111827;">{{ $appt->student_number ?: optional(optional($appt->user)->healthProfile)->student_number ?: optional($appt->user)->student_number ?: 'N/A' }}</div>
                         </td>
-                        <td>{{ $appt->student_number ?: optional(optional($appt->user)->healthProfile)->student_number ?: optional($appt->user)->student_number ?: 'N/A' }}</td>
+                        <td>{{ $appt->apt_id ?: 'N/A' }}</td>
                        <td>
     @if($currentType === 'walkin')
         <span class="type-badge type-walkin">Walk-in</span>
@@ -2696,6 +2787,7 @@
                                     data-date="{{ $appt->date }}"
                                     data-time="{{ $appt->time }}"
                                     data-remarks="{{ $appt->remarks ?? 'No notes provided.' }}"
+                                    data-clinical-findings="{{ $appt->clinical_findings_comment ?: '' }}"
                                     data-email="{{ $appt->email }}"
                                     data-status="{{ $appt->status }}"
                                     data-appointment-id="{{ $appt->id }}"
@@ -2719,6 +2811,7 @@
                                             data-date="{{ $appt->date }}"
                                             data-time="{{ $appt->time }}"
                                             data-remarks="{{ $appt->remarks ?? 'No notes provided.' }}"
+                                            data-clinical-findings="{{ $appt->clinical_findings_comment ?: '' }}"
                                             data-email="{{ $appt->email }}"
                                             data-status="{{ $appt->status }}"
                                             data-appointment-id="{{ $appt->id }}"
@@ -2838,6 +2931,10 @@
                         </button>
                     </div>
                     <p id="mNotes">N/A</p>
+                    <div class="appointment-clinical-findings">
+                        <span><x-outline-icon name="clipboard-document-list" /> Clinical Findings</span>
+                        <p id="mClinicalFindings">N/A</p>
+                    </div>
                 </section>
 
                 <section class="appointment-timeline-panel">
@@ -2950,17 +3047,17 @@
                 </div>
 
                 <section class="approval-details-panel">
-                    <h4><x-outline-icon name="check" /> Approval Details</h4>
+                    <h4><x-outline-icon name="check" /> <span id="sDecisionDetailsTitle">Approval Details</span></h4>
                     <div class="approval-detail-grid">
-                        <div class="approval-detail-card">
-                            <span>Consultation Type</span>
-                            <strong><span class="appointment-type-badge" id="sApprovalConsultationType">N/A</span></strong>
+                        <div class="approval-detail-card" id="sDecisionTypeCard">
+                            <span id="sDecisionTypeLabel">Consultation Type</span>
+                            <strong id="sDecisionTypeWrap"><span class="appointment-type-badge" id="sApprovalConsultationType">N/A</span></strong>
                             <div class="approval-message-field">
-                                <label for="sApprovalMessage">Message (Optional)</label>
+                                <label for="sApprovalMessage" id="sDecisionMessageLabel">Message (Optional)</label>
                                 <textarea id="sApprovalMessage" placeholder="Your appointment has been approved. Please come to the clinic on your scheduled date and time."></textarea>
                             </div>
                         </div>
-                        <div class="approval-detail-card">
+                        <div class="approval-detail-card" id="sDecisionReminderCard">
                             <span>Reminder to Student</span>
                             <ul class="approval-reminder-list">
                                 <li>
@@ -2984,7 +3081,7 @@
                     </div>
                 </section>
 
-                <div class="approval-timeline-row">
+                <div class="approval-timeline-row" id="sDecisionTimelineRow">
                     <section class="appointment-timeline-panel">
                         <h4><x-outline-icon name="clock" /> Appointment Timeline</h4>
                         <div class="appointment-timeline" id="sApprovalTimeline">
@@ -3038,29 +3135,95 @@
     </div>
 
     <div id="rescheduleModal" class="modal-overlay">
-        <div class="modal-box">
+        <div class="modal-box appointment-detail-modal status-action-detail-modal">
             <form id="rescheduleForm" method="POST" action="">
                 @csrf
-                <div class="modal-header">
-                    <div class="modal-header-main">
+                <div class="modal-header appointment-detail-header">
+                    <div class="modal-header-main appointment-detail-header-main">
                         <h3 class="modal-title">Reschedule Appointment</h3>
-                        <p class="modal-subtitle">Select a new date and time for this appointment.</p>
+                        <p class="appointment-detail-id-line">
+                            <span>Appointment ID:</span>
+                            <strong id="rAppointmentId">N/A</strong>
+                        </p>
                     </div>
-                    <span class="modal-status-badge action-reschedule">Reschedule</span>
+                    <span class="modal-status-badge appointment-detail-status action-reschedule">
+                        <span class="appointment-status-dot"></span>
+                        <span id="rStatusText">Reschedule</span>
+                    </span>
                     <button type="button" class="modal-header-close" onclick="closeRescheduleModal()" aria-label="Close reschedule modal">
                         <x-outline-icon name="x-mark" />
                     </button>
                 </div>
-                <div class="modal-row"><div class="modal-label">Student Name</div><div class="modal-val" id="rName"></div></div>
-                <div class="modal-row"><div class="modal-label">Service Request</div><div class="modal-val" id="rService"></div></div>
-                <div class="modal-row"><div class="modal-label">Current Schedule</div><div class="modal-val" id="rCurrentSchedule"></div></div>
-                <div class="modal-row is-form"><label class="modal-label">New Date</label><input type="date" name="date" id="rDate" class="form-input" required></div>
-                <div class="modal-row is-form"><label class="modal-label">New Time</label><input type="time" name="time" id="rTime" class="form-input" required></div>
-                <div class="dialog-actions">
-                    <button type="submit" class="dialog-btn dialog-btn-confirm">
-                        <x-outline-icon name="check" />
-                        <span>Confirm New Schedule</span>
-                    </button>
+                <div class="appointment-detail-body">
+                    <div class="appointment-detail-grid">
+                        <section class="appointment-detail-card">
+                            <h4><x-outline-icon name="users" /> Student Information</h4>
+                            <div class="appointment-student-layout">
+                                <div class="appointment-avatar" id="rAvatar">NA</div>
+                                <div class="appointment-student-info">
+                                    <strong id="rName">N/A</strong>
+                                    <p><x-outline-icon name="envelope" /> <span id="rEmail">N/A</span></p>
+                                    <p><x-outline-icon name="phone" /> <span id="rContact">N/A</span></p>
+                                    <p><x-outline-icon name="information-circle" /> <span id="rStudentId">ID Number: N/A</span></p>
+                                    <p><x-outline-icon name="academic-cap" /> <span id="rProgram">Program: N/A</span></p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="appointment-detail-card">
+                            <h4><x-outline-icon name="calendar-days" /> Appointment Information</h4>
+                            <div class="appointment-info-list">
+                                <div>
+                                    <span><x-outline-icon name="clipboard-document-list" /> Service Request</span>
+                                    <strong class="appointment-service-pill" id="rService">N/A</strong>
+                                </div>
+                                <div>
+                                    <span><x-outline-icon name="calendar-days" /> Current Date</span>
+                                    <strong id="rCurrentDate">N/A</strong>
+                                </div>
+                                <div>
+                                    <span><x-outline-icon name="clock" /> Current Time</span>
+                                    <strong id="rCurrentTime">N/A</strong>
+                                </div>
+                                <div>
+                                    <span><x-outline-icon name="check" /> Consultation Type</span>
+                                    <strong><span class="appointment-type-badge" id="rConsultationType">N/A</span></strong>
+                                </div>
+                                <div>
+                                    <span><x-outline-icon name="document-text" /> Notes</span>
+                                    <strong id="rNotes">N/A</strong>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <section class="approval-details-panel">
+                        <h4><x-outline-icon name="calendar-days" /> Reschedule Details</h4>
+                        <div class="approval-detail-grid">
+                            <div class="approval-detail-card">
+                                <span>New Date</span>
+                                <input type="date" name="date" id="rDate" class="approval-detail-input" required>
+                            </div>
+                            <div class="approval-detail-card">
+                                <span>New Time</span>
+                                <input type="time" name="time" id="rTime" class="approval-detail-input" required>
+                            </div>
+                            <div class="approval-detail-card is-full">
+                                <span>Reason for Rescheduling</span>
+                                <div class="approval-message-field">
+                                    <textarea name="reschedule_reason" id="rReason" placeholder="Add a short message or reason for the new schedule."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="dialog-actions">
+                        <button type="button" class="dialog-btn dialog-btn-secondary" onclick="closeRescheduleModal()">Cancel</button>
+                        <button type="submit" class="dialog-btn dialog-btn-approve">
+                            <x-outline-icon name="check" />
+                            <span>Confirm New Schedule</span>
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -3075,6 +3238,21 @@
 
     function safeText(value) {
         return (value ?? '').toString().trim() || '-';
+    }
+
+    function getNameInitials(value) {
+        const parts = (value || 'NA')
+            .toString()
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+
+        if (!parts.length) {
+            return 'NA';
+        }
+
+        return ((parts[0]?.charAt(0) || '') + (parts.length > 1 ? parts[parts.length - 1].charAt(0) : ''))
+            .toUpperCase() || 'NA';
     }
 
     function formatSchedule(date, time) {
@@ -3150,6 +3328,7 @@
             date,
             time,
             remarks,
+            clinicalFindings: '',
             email,
             status: '',
             id: '',
@@ -3171,6 +3350,7 @@
                 date: triggerOrName.dataset.date || rowData.viewDate || '',
                 time: triggerOrName.dataset.time || rowData.viewTime || '',
                 remarks: triggerOrName.dataset.remarks || rowData.viewRemarks || '',
+                clinicalFindings: triggerOrName.dataset.clinicalFindings || rowData.viewClinicalFindings || '',
                 email: triggerOrName.dataset.email || rowData.viewEmail || '',
                 status: triggerOrName.dataset.status || triggerOrName.dataset.viewStatus || rowData.viewStatus || '',
                 id: triggerOrName.dataset.appointmentId || rowData.appointmentId || '',
@@ -3192,31 +3372,19 @@
         const dateText = safeOrNA(payload.date ? formatDateLong(payload.date) : '');
         const timeText = safeOrNA(payload.time ? formatTime(payload.time) : '');
         const appointmentId = safeOrNA(payload.aptId);
-        const initials = (payload.name || 'NA')
-            .split(/\s+/)
-            .filter(Boolean)
-            .slice(0, 2)
-            .map((part) => part.charAt(0).toUpperCase())
-            .join('') || 'NA';
 
         document.getElementById('mAppointmentId').innerText = appointmentId;
         const avatar = document.getElementById('mAvatar');
         if (avatar) {
-            avatar.textContent = '';
-            if (payload.photoUrl) {
-                const avatarImg = document.createElement('img');
-                avatarImg.src = payload.photoUrl;
-                avatarImg.alt = safeOrNA(payload.name) + ' profile photo';
-                avatar.appendChild(avatarImg);
-            } else {
-                avatar.textContent = initials;
-            }
+            avatar.innerHTML = '';
+            avatar.textContent = getNameInitials(payload.name);
         }
         document.getElementById('mName').innerText = safeOrNA(payload.name);
         document.getElementById('mService').innerText = safeOrNA(payload.service);
         document.getElementById('mDate').innerText = dateText;
         document.getElementById('mTime').innerText = timeText;
         document.getElementById('mNotes').innerText = safeOrNA(payload.remarks);
+        document.getElementById('mClinicalFindings').innerText = safeOrNA(payload.clinicalFindings);
         document.getElementById('mEmail').innerText = safeOrNA(payload.email);
         document.getElementById('mContact').innerText = safeOrNA(payload.contact);
         document.getElementById('mStudentId').innerText = 'ID Number: ' + safeOrNA(payload.studentNumber);
@@ -3246,15 +3414,19 @@
         const timelineSteps = ['submitted', 'pending', 'approved', 'scheduled', 'completed'];
         const normalizedTimelineStatus = statusText.toLowerCase();
         const isRejectedTimeline = ['rejected', 'cancelled', 'canceled', 'declined'].includes(normalizedTimelineStatus);
+        const isExpiredTimeline = normalizedTimelineStatus === 'expired';
+        const isMissedTimeline = normalizedTimelineStatus === 'missed';
         const currentStep = isRejectedTimeline
             ? 'approved'
-            : (normalizedTimelineStatus === 'completed'
+            : ((isExpiredTimeline || isMissedTimeline)
+                ? 'completed'
+                : (normalizedTimelineStatus === 'completed'
                 ? 'completed'
                 : (normalizedTimelineStatus === 'scheduled'
                     ? 'scheduled'
                     : (normalizedTimelineStatus === 'approved'
                         ? 'approved'
-                        : 'pending')));
+                        : 'pending'))));
         const currentIndex = timelineSteps.indexOf(currentStep);
 
         timelineSteps.forEach((step, index) => {
@@ -3290,6 +3462,28 @@
                 }
 
                 return;
+            }
+
+            if (isExpiredTimeline || isMissedTimeline) {
+                if (index < currentIndex) {
+                    stepEl.classList.add('is-done');
+                } else if (step === 'completed') {
+                    stepEl.classList.add('is-rejected');
+                    stepEl.querySelector('strong').innerText = isExpiredTimeline ? 'Expired' : 'Missed';
+                    document.getElementById('mTimelineCompleted').innerText = timelineDate(payload.updated);
+                } else {
+                    stepEl.classList.add('is-muted');
+                }
+
+                if (lineEl && index < currentIndex) {
+                    lineEl.classList.add('is-done');
+                }
+
+                return;
+            }
+
+            if (step === 'completed') {
+                stepEl.querySelector('strong').innerText = 'Completed';
             }
 
             if (normalizedTimelineStatus === 'completed') {
@@ -3337,8 +3531,6 @@
         const created = safeText(rowData.viewCreated) === '-' ? 'N/A' : rowData.viewCreated;
         const notes = safeText(rowData.viewRemarks) === '-' ? 'N/A' : rowData.viewRemarks;
         const consultationType = safeText(rowData.viewType) === '-' ? 'Online' : rowData.viewType;
-        const photoUrl = rowData.viewPhotoUrl || '';
-
         const isApprove = statusTarget === 'Approved';
         const isReject = statusTarget === 'Cancelled';
         const isMissed = statusTarget === 'Missed Scheduled';
@@ -3362,7 +3554,7 @@
         document.getElementById('sTime').innerText = safeText(time ? formatTime(time) : '');
         document.getElementById('sCreated').innerText = created;
         document.getElementById('sNotes').innerText = notes;
-        document.getElementById('sStatusText').innerText = isApprove ? 'Pending' : (isMissed ? 'Approved' : 'Pending');
+        document.getElementById('sStatusText').innerText = isApprove ? 'Pending' : (isMissed ? 'Missed' : 'Reject');
         document.getElementById('sTimelineSubmitted').innerText = created.replace(' ', '\n');
         document.getElementById('sTimelinePending').innerText = safeText(rowData.viewUpdated).replace(' ', '\n');
         document.getElementById('sTimelineScheduled').innerText = formatSchedule(date, time).replace(' at ', '\n');
@@ -3376,29 +3568,70 @@
 
         const avatar = document.getElementById('sAvatar');
         if (avatar) {
-            const initials = (name || 'NA')
-                .split(/\s+/)
-                .filter(Boolean)
-                .slice(0, 2)
-                .map((part) => part.charAt(0).toUpperCase())
-                .join('') || 'NA';
-            avatar.textContent = '';
-            if (photoUrl) {
-                const avatarImg = document.createElement('img');
-                avatarImg.src = photoUrl;
-                avatarImg.alt = safeText(name) + ' profile photo';
-                avatar.appendChild(avatarImg);
-            } else {
-                avatar.textContent = initials;
-            }
+            avatar.innerHTML = '';
+            avatar.textContent = getNameInitials(name);
         }
 
         if (statusBadge) {
             statusBadge.className = 'modal-status-badge appointment-detail-status ' + (isApprove ? 'pending' : (isMissed ? 'missed' : 'cancelled'));
         }
 
+        const decisionTitle = document.getElementById('sDecisionDetailsTitle');
+        const decisionTypeCard = document.getElementById('sDecisionTypeCard');
+        const decisionTypeLabel = document.getElementById('sDecisionTypeLabel');
+        const decisionTypeWrap = document.getElementById('sDecisionTypeWrap');
+        const decisionMessageLabel = document.getElementById('sDecisionMessageLabel');
+        const decisionReminderCard = document.getElementById('sDecisionReminderCard');
+        const decisionTimelineRow = document.getElementById('sDecisionTimelineRow');
+        const decisionMessage = document.getElementById('sApprovalMessage');
+
+        if (decisionTitle) {
+            decisionTitle.innerText = isApprove ? 'Approval Details' : (isMissed ? 'Missed Appointment Details' : 'Rejection Details');
+        }
+        if (decisionTypeCard) {
+            decisionTypeCard.classList.toggle('is-full', !isApprove);
+        }
+        if (decisionTypeLabel) {
+            decisionTypeLabel.innerText = isApprove ? 'Consultation Type' : 'Message';
+        }
+        if (decisionTypeWrap) {
+            decisionTypeWrap.hidden = !isApprove;
+        }
+        if (decisionMessageLabel) {
+            decisionMessageLabel.hidden = !isApprove;
+        }
+        if (decisionReminderCard) {
+            decisionReminderCard.hidden = !isApprove;
+        }
+        if (decisionTimelineRow) {
+            decisionTimelineRow.hidden = !isApprove;
+        }
+        if (decisionMessage) {
+            decisionMessage.value = '';
+            decisionMessage.placeholder = isApprove
+                ? 'Your appointment has been approved. Please come to the clinic on your scheduled date and time.'
+                : (isMissed
+                    ? 'Add a short note about why this appointment is marked as missed.'
+                    : 'Add a short rejection message or reason for the student.');
+        }
+
         const confirmBtn = document.getElementById('statusActionConfirm');
         confirmBtn.href = actionUrl;
+        confirmBtn.onclick = function () {
+            const message = (document.getElementById('sApprovalMessage')?.value || '').trim();
+            const selectedReminders = Array.from(document.querySelectorAll('#sDecisionReminderCard input[type="checkbox"]:checked'))
+                .map((input) => document.querySelector('label[for="' + input.id + '"]')?.textContent?.trim() || '')
+                .filter(Boolean);
+
+            const params = new URLSearchParams();
+            if (message) params.append('message', message);
+            selectedReminders.forEach((reminder) => params.append('reminders[]', reminder));
+
+            confirmBtn.href = params.toString()
+                ? actionUrl + (actionUrl.includes('?') ? '&' : '?') + params.toString()
+                : actionUrl;
+            return true;
+        };
         const confirmText = isApprove
             ? 'Confirm Approval'
             : (isMissed ? 'Confirm Missed Status' : 'Confirm Rejection');
@@ -3419,18 +3652,21 @@
         let time = currentTime || '';
         let name = '';
         let service = '';
+        let rowData = {};
 
         if (triggerOrId && typeof triggerOrId === 'object' && triggerOrId.dataset) {
+            const row = triggerOrId.closest?.('[data-appointment-row]');
+            rowData = row?.dataset || {};
             id = triggerOrId.dataset.id || '';
-            name = triggerOrId.dataset.name || '';
-            service = triggerOrId.dataset.service || '';
-            date = triggerOrId.dataset.date || '';
-            time = triggerOrId.dataset.time || '';
+            name = triggerOrId.dataset.name || rowData.viewName || '';
+            service = triggerOrId.dataset.service || rowData.viewService || '';
+            date = triggerOrId.dataset.date || rowData.viewDate || '';
+            time = triggerOrId.dataset.time || rowData.viewTime || '';
 
             if (!id) {
                 const fallback = getRowDataFromElement(triggerOrId);
-                name = fallback.name;
-                service = fallback.service;
+                name = name || fallback.name;
+                service = service || fallback.service;
                 date = date || fallback.date;
                 time = time || fallback.time;
 
@@ -3441,9 +3677,11 @@
         } else {
             id = (triggerOrId ?? '').toString();
             const lookupTrigger = document.querySelector('a.btn-approve[href$="/' + id + '/Approved"]');
+            const row = lookupTrigger?.closest?.('[data-appointment-row]');
+            rowData = row?.dataset || {};
             const fallback = getRowDataFromElement(lookupTrigger);
-            name = fallback.name;
-            service = fallback.service;
+            name = rowData.viewName || fallback.name;
+            service = rowData.viewService || fallback.service;
             date = date || fallback.date;
             time = time || fallback.time;
         }
@@ -3453,11 +3691,37 @@
         }
 
         form.action = appointmentsBaseUrl + '/' + id + '/reschedule';
+        const appointmentId = safeText(rowData.viewAptId) === '-' ? 'N/A' : rowData.viewAptId;
+        const email = safeText(rowData.viewEmail) === '-' ? 'N/A' : rowData.viewEmail;
+        const contact = safeText(rowData.viewContact) === '-' ? 'N/A' : rowData.viewContact;
+        const studentNumber = safeText(rowData.viewStudentNumber) === '-' ? 'N/A' : rowData.viewStudentNumber;
+        const program = safeText(rowData.viewProgram) === '-' ? 'N/A' : rowData.viewProgram;
+        const notes = safeText(rowData.viewRemarks) === '-' ? 'N/A' : rowData.viewRemarks;
+        const consultationType = safeText(rowData.viewType) === '-' ? 'Online' : rowData.viewType;
+
+        document.getElementById('rAppointmentId').innerText = appointmentId || 'N/A';
         document.getElementById('rName').innerText = safeText(name);
+        document.getElementById('rEmail').innerText = email;
+        document.getElementById('rContact').innerText = contact;
+        document.getElementById('rStudentId').innerText = 'ID Number: ' + studentNumber;
+        document.getElementById('rProgram').innerText = 'Program: ' + program;
         document.getElementById('rService').innerText = safeText(service);
-        document.getElementById('rCurrentSchedule').innerText = formatSchedule(date, time);
+        document.getElementById('rCurrentDate').innerText = safeText(date ? formatDateLong(date) : '');
+        document.getElementById('rCurrentTime').innerText = safeText(time ? formatTime(time) : '');
+        document.getElementById('rNotes').innerText = notes;
+        const rType = document.getElementById('rConsultationType');
+        if (rType) {
+            rType.textContent = consultationType;
+            rType.className = 'appointment-type-badge ' + (consultationType.toLowerCase().includes('walk') ? 'is-walkin' : 'is-online');
+        }
+        const rAvatar = document.getElementById('rAvatar');
+        if (rAvatar) {
+            rAvatar.innerHTML = '';
+            rAvatar.textContent = getNameInitials(name);
+        }
         document.getElementById('rDate').value = date;
         document.getElementById('rTime').value = (time || '').toString().slice(0, 5);
+        document.getElementById('rReason').value = '';
         document.getElementById('rDate').setAttribute('min', new Date().toISOString().slice(0, 10));
         document.getElementById('rescheduleModal').style.display = 'flex';
     }
@@ -3883,6 +4147,7 @@
                         date: row.dataset.viewDate || '',
                         time: row.dataset.viewTime || '',
                         remarks: row.dataset.viewRemarks || '',
+                        clinicalFindings: row.dataset.viewClinicalFindings || '',
                         email: row.dataset.viewEmail || '',
                         status: row.dataset.viewStatus || '',
                         studentNumber: row.dataset.viewStudentNumber || '',

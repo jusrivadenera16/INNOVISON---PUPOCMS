@@ -2830,7 +2830,17 @@
             }
         });
         consultationForm?.addEventListener('submit', function (event) {
-            if (!consultationForm.checkValidity() || !finalizeButton || isSubmittingConsultation) return;
+            if (!consultationForm.checkValidity()) {
+                event.preventDefault();
+                consultationForm.reportValidity();
+                return;
+            }
+
+            if (!finalizeButton || isSubmittingConsultation) {
+                event.preventDefault();
+                return;
+            }
+
             event.preventDefault();
             isSubmittingConsultation = true;
             finalizeButton.classList.add('is-finalizing');

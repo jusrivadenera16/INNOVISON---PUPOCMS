@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Appointment;
 use App\Models\ActivityLog;
+use App\Models\Consultation;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\MedicineType;
@@ -1687,7 +1688,20 @@ public function updateClearance(Request $request, $id)
     {
         Appointment::expireOverduePending();
 
-        $appointments = Appointment::latest()->get();
+        $appointments = Appointment::with('user')->latest()->get();
+        $consultationComments = Consultation::query()
+            ->whereIn('user_id', $appointments->pluck('user_id')->filter()->unique())
+            ->whereIn('consultation_date', $appointments->pluck('date')->filter()->unique())
+            ->latest('consultation_date')
+            ->latest('time_in')
+            ->get()
+            ->groupBy(fn ($consultation) => $consultation->user_id . '|' . optional($consultation->consultation_date)->format('Y-m-d'));
+
+        $appointments->each(function ($appointment) use ($consultationComments) {
+            $key = $appointment->user_id . '|' . Carbon::parse($appointment->date)->format('Y-m-d');
+            $appointment->clinical_findings_comment = trim((string) optional($consultationComments->get($key)?->first())->comments);
+        });
+
         return view('admin.appointments', compact('appointments'));
     }
 
@@ -1895,13 +1909,27 @@ public function updateClearance(Request $request, $id)
         $appointment = Appointment::find($id);
         if ($appointment) {
             $appointment->status = $status;
+            if ($status === 'Approved') {
+                if (Schema::hasColumn('appointments', 'approval_message')) {
+                    $appointment->approval_message = trim((string) request()->query('message', '')) ?: null;
+                }
+
+                if (Schema::hasColumn('appointments', 'approval_reminders')) {
+                    $appointment->approval_reminders = collect((array) request()->query('reminders', []))
+                        ->map(fn ($reminder) => trim((string) $reminder))
+                        ->filter()
+                        ->values()
+                        ->all();
+                }
+            }
             $appointment->save();
+            $actionMessage = trim((string) request()->query('message', ''));
 
             \App\Models\ActivityLog::create([
             'user_id'     => auth()->id(), 
             'user_name'   => auth()->user()->name,
             'action'      => 'Status Updated',
-            'description' => "Updated Appointment #$id status to $status",
+            'description' => "Updated Appointment #$id status to $status" . ($actionMessage !== '' ? ". Message: {$actionMessage}" : ''),
             'ip_address'  => request()->ip(),
             'user_agent'  => request()->userAgent(),
         ]);
@@ -1913,6 +1941,12 @@ public function updateClearance(Request $request, $id)
 
     public function reschedule($id, Request $request)
     {
+        $request->validate([
+            'date' => ['required', 'date'],
+            'time' => ['required'],
+            'reschedule_reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
         $appointment = Appointment::find($id);
         if ($appointment) {
             $appointment->date = $request->date;
@@ -1925,7 +1959,7 @@ public function updateClearance(Request $request, $id)
             'user_id'     => auth()->id(),
             'user_name'   => auth()->user()->name,
             'action'      => 'Appointment Rescheduled', 
-            'description' => "Rescheduled Appointment #$id to $request->date at $request->time. Status set to Approved.", 
+            'description' => "Rescheduled Appointment #$id to $request->date at $request->time. Status set to Approved." . ($request->filled('reschedule_reason') ? " Reason: {$request->reschedule_reason}" : ''), 
             'ip_address'  => request()->ip(),
             'user_agent'  => request()->userAgent(),
         ]);

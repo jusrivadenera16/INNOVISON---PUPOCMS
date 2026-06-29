@@ -660,6 +660,8 @@
                         <td>
                             @if($isApproved && $approver)
                                 <strong>{{ $approver->name }}</strong>
+                            @elseif($isApproved)
+                                <span style="color: #64748b;">Not recorded</span>
                             @else
                                 <span style="color: #94a3b8;">—</span>
                             @endif
