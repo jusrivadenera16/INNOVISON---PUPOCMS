@@ -2706,6 +2706,27 @@
         width: min(1040px, 100%);
     }
 
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow {
+        width: min(900px, 100%);
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-medical-condition-section.show {
+        grid-template-columns: 1fr;
+        justify-items: center;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-medical-condition-section.show .applicant-screening-panel {
+        width: min(650px, 100%);
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-vitals-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-final-review-workflow {
+        width: min(840px, 100%);
+    }
+
     .applicant-ref-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -2778,6 +2799,461 @@
         flex-direction: column;
         gap: 14px;
         align-items: center;
+    }
+
+    .applicant-workflow-grid {
+        width: min(760px, 100%);
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .applicant-workflow-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 58px;
+        border: 1px solid #facc15;
+        border-radius: 14px;
+        background: #8b1722;
+        color: #facc15 !important;
+        text-align: center;
+        padding: 0 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        box-shadow: 0 18px 30px rgba(112, 19, 27, 0.24);
+        transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
+    }
+
+    .applicant-workflow-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(120deg,
+                rgba(255, 248, 196, 0) 0%,
+                rgba(255, 239, 181, 0.14) 22%,
+                rgba(255, 239, 181, 0.52) 48%,
+                rgba(255, 239, 181, 0.14) 72%,
+                rgba(255, 248, 196, 0) 100%);
+        transform: translateX(-135%);
+        transition: transform 1.2s ease;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .applicant-workflow-card:hover,
+    .applicant-workflow-card:focus-visible {
+        transform: translateY(-2px);
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B !important;
+        box-shadow: 0 22px 38px rgba(112, 19, 27, 0.28);
+        outline: none;
+    }
+
+    .applicant-workflow-card:hover::before,
+    .applicant-workflow-card:focus-visible::before {
+        transform: translateX(135%);
+    }
+
+    .applicant-workflow-card svg {
+        width: 18px;
+        height: 18px;
+        stroke-width: 2.2;
+        flex: 0 0 auto;
+        color: inherit !important;
+        stroke: currentColor !important;
+        position: relative;
+        z-index: 1;
+    }
+
+    .applicant-workflow-card strong {
+        display: inline;
+        color: inherit !important;
+        font-size: 14px;
+        font-weight: 900;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .applicant-workflow-card span {
+        display: none;
+    }
+
+    .applicant-final-review-list {
+        width: min(920px, 100%);
+        display: none;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: -8px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-modal-body {
+        justify-content: flex-start !important;
+        min-height: 0 !important;
+        padding-top: 26px !important;
+    }
+
+    .applicant-final-review-list.is-visible {
+        display: flex;
+    }
+
+    .applicant-final-review-toolbar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        width: 100%;
+    }
+
+    .applicant-final-review-search {
+        width: 100%;
+        min-height: 50px;
+        border: 1px solid rgba(112, 19, 27, 0.18);
+        border-radius: 14px;
+        padding: 0 54px 0 60px;
+        font-weight: 800;
+        color: #1f2937;
+        outline: none;
+        background: linear-gradient(180deg, #ffffff, #fffefe);
+        box-shadow: 0 12px 26px rgba(112, 19, 27, 0.05);
+        box-sizing: border-box;
+    }
+
+    .applicant-final-review-search::placeholder {
+        color: #94a3b8;
+        opacity: 1;
+    }
+
+    .applicant-final-review-search:focus {
+        border-color: rgba(112, 19, 27, 0.32);
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, 0.06), 0 12px 26px rgba(112, 19, 27, 0.07);
+    }
+
+    .applicant-final-review-search-wrap {
+        position: relative;
+        flex: 1 1 0;
+        min-width: 0;
+        display: block;
+    }
+
+    .applicant-final-review-search-wrap > svg {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 17px;
+        height: 17px;
+        color: #8b1722;
+        pointer-events: none;
+        z-index: 3;
+    }
+
+    .applicant-final-review-search-wrap::after {
+        content: '';
+        position: absolute;
+        left: 46px;
+        top: 50%;
+        width: 1px;
+        height: 24px;
+        background: rgba(112, 19, 27, 0.18);
+        transform: translateY(-50%);
+        z-index: 3;
+        pointer-events: none;
+    }
+
+    .applicant-final-review-search-wrap .voice-field-wrap {
+        width: 100%;
+        display: block;
+        position: relative;
+    }
+
+    .applicant-final-review-search-wrap .voice-field-wrap .applicant-final-review-search {
+        padding-left: 60px !important;
+        padding-right: 58px !important;
+    }
+
+    .applicant-final-review-search-wrap .voice-field-inline-mic {
+        right: 12px;
+        top: 50%;
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        min-height: 28px;
+        transform: translateY(-50%);
+        border: 1px solid rgba(112, 19, 27, 0.08);
+        background: #e8bec1;
+        color: #8b1722;
+        box-shadow: none;
+    }
+
+    .applicant-final-review-search-wrap .voice-field-inline-mic:hover,
+    .applicant-final-review-search-wrap .voice-field-inline-mic:focus-visible {
+        background: #facc15;
+        color: #70131B;
+        border-color: #facc15;
+    }
+
+    .applicant-final-review-card {
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) minmax(210px, 0.8fr) auto;
+        gap: 12px;
+        align-items: center;
+        padding: 16px;
+        border: 1px solid rgba(112, 19, 27, 0.15);
+        border-radius: 18px;
+        background: rgba(255, 250, 250, 0.92);
+    }
+
+    .applicant-final-review-reference-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        min-height: 34px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(112, 19, 27, 0.16);
+        background: #fff7ed;
+        color: #70131b !important;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.01em;
+    }
+
+    .applicant-final-review-card small,
+    .applicant-final-review-card span {
+        display: block;
+    }
+
+    .applicant-final-review-card small {
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .applicant-final-review-card strong,
+    .applicant-final-review-card span {
+        color: #111827;
+        font-weight: 900;
+        font-size: 13px;
+    }
+
+    .applicant-final-review-btn,
+    .applicant-final-review-back {
+        position: relative;
+        overflow: hidden;
+        min-height: 42px;
+        border-radius: 14px;
+        border: 1px solid #70131B;
+        background: #70131B;
+        color: #facc15 !important;
+        font-weight: 900;
+        padding: 0 16px;
+        transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+    }
+
+    .applicant-final-review-btn::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(120deg,
+                rgba(255, 248, 196, 0) 0%,
+                rgba(255, 239, 181, 0.14) 22%,
+                rgba(255, 239, 181, 0.52) 48%,
+                rgba(255, 239, 181, 0.14) 72%,
+                rgba(255, 248, 196, 0) 100%);
+        transform: translateX(-135%);
+        transition: transform 1.2s ease;
+        pointer-events: none;
+    }
+
+    .applicant-final-review-btn > *,
+    .applicant-final-review-btn {
+        isolation: isolate;
+    }
+
+    .applicant-final-review-btn > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .applicant-final-review-toolbar .applicant-final-review-btn {
+        flex: 0 0 210px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 50px;
+        white-space: nowrap;
+    }
+
+    .applicant-final-review-toolbar .applicant-final-review-refresh-btn {
+        flex: 0 0 56px;
+        width: 56px;
+        padding: 0;
+    }
+
+    .applicant-final-review-toolbar .applicant-final-review-refresh-btn svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor;
+        stroke: none;
+    }
+
+    .applicant-final-review-toolbar .applicant-final-review-btn span {
+        display: inline;
+        white-space: nowrap;
+    }
+
+    .applicant-final-review-toolbar .applicant-final-review-btn svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .applicant-final-review-btn:hover,
+    .applicant-final-review-back:hover {
+        transform: translateY(-1px);
+        background: #facc15;
+        color: #70131B !important;
+        border-color: #facc15;
+    }
+
+    .applicant-final-review-btn:hover::after,
+    .applicant-final-review-btn:focus-visible::after {
+        transform: translateX(135%);
+    }
+
+    .applicant-final-review-back {
+        display: none;
+        align-self: flex-start;
+        background: #70131B;
+        color: #facc15 !important;
+    }
+
+    .applicant-final-review-back.is-visible {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #applicantFinalReviewRows {
+        min-height: 96px;
+    }
+
+    .applicant-final-review-empty {
+        display: none;
+        min-height: 92px;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        border: 1px dashed rgba(112, 19, 27, 0.22);
+        border-radius: 18px;
+        background: rgba(255, 250, 250, 0.72);
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .applicant-final-review-empty.is-visible {
+        display: flex;
+    }
+
+    .applicant-final-review-pagination {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding-top: 4px;
+    }
+
+    .applicant-final-review-pagination.is-visible {
+        display: flex;
+    }
+
+    .applicant-final-review-page-btn {
+        min-height: 38px;
+        border-radius: 999px;
+        border: 1px solid rgba(112, 19, 27, 0.22);
+        background: #ffffff;
+        color: #70131B;
+        font-size: 12px;
+        font-weight: 900;
+        padding: 0 15px;
+    }
+
+    .applicant-final-review-page-btn:disabled {
+        opacity: .45;
+        cursor: not-allowed;
+    }
+
+    .applicant-final-review-page-label {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    .applicant-ref-status.encoded {
+        display: block;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        color: #9a3412;
+    }
+
+    @media (max-width: 760px) {
+        .applicant-workflow-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .applicant-final-review-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .applicant-final-review-toolbar .applicant-final-review-btn {
+            width: auto;
+        }
+
+        .applicant-final-review-toolbar > .applicant-final-review-btn {
+            flex: 0 0 52px;
+            min-height: 52px;
+        }
+
+        .applicant-final-review-toolbar {
+            display: grid;
+            grid-template-columns: 52px minmax(0, 1fr);
+            gap: 10px;
+        }
+
+        .applicant-final-review-search-wrap {
+            grid-column: 1 / -1;
+        }
+
+        .applicant-final-review-toolbar .applicant-final-review-refresh-btn {
+            width: 52px;
+            padding: 0;
+        }
+
+        .applicant-final-review-toolbar #btnFinalReviewManualLookup {
+            flex-basis: auto;
+            width: 100%;
+            padding: 0 14px;
+        }
+
+        .applicant-final-review-card {
+            grid-template-columns: 1fr;
+        }
+
+        .applicant-final-review-card .applicant-final-review-btn,
+        .applicant-final-review-back {
+            width: 100%;
+        }
     }
 
     .applicant-ref-copy {
@@ -3000,22 +3476,42 @@
     .applicant-ref-find-btn {
         position: relative;
         overflow: hidden;
-        background: linear-gradient(90deg, #facc15 0 50%, #7f1d1d 50% 100%);
-        background-size: 205% 100%;
-        background-position: 100% 0;
-        color: #ffffff;
+        background: #70131b;
+        color: #facc15;
+        border-color: #facc15;
         box-shadow: 0 12px 24px rgba(127, 29, 29, 0.24);
         isolation: isolate;
-        transition: background-position .34s ease, color .2s ease, transform .2s ease, box-shadow .2s ease;
+        transition: background .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .applicant-ref-find-btn::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(120deg,
+                rgba(255, 248, 196, 0) 0%,
+                rgba(255, 239, 181, 0.14) 22%,
+                rgba(255, 239, 181, 0.52) 48%,
+                rgba(255, 239, 181, 0.14) 72%,
+                rgba(255, 248, 196, 0) 100%);
+        transform: translateX(-135%);
+        transition: transform 1.2s ease;
+        pointer-events: none;
     }
 
     .applicant-ref-find-btn:hover,
     .applicant-ref-find-btn:focus {
-        background-position: 0 0;
+        background: #facc15;
         transform: translateY(-1px);
         box-shadow: 0 16px 28px rgba(127, 29, 29, 0.3);
         color: #70131b;
         outline: none;
+    }
+
+    .applicant-ref-find-btn:hover::after,
+    .applicant-ref-find-btn:focus::after {
+        transform: translateX(135%);
     }
 
     .applicant-ref-result {
@@ -3306,22 +3802,47 @@
         min-height: 50px;
         border: 1px solid #70131b !important;
         border-radius: 10px !important;
-        background: linear-gradient(90deg, #facc15 0 50%, #70131b 50% 100%) !important;
-        background-size: 205% 100% !important;
-        background-position: 100% 0 !important;
-        color: #ffffff !important;
+        background: #70131b !important;
+        color: #facc15 !important;
         box-shadow: 0 8px 18px rgba(112, 19, 27, .16);
         isolation: isolate;
-        transition: background-position .34s ease, color .2s ease, transform .2s ease, box-shadow .2s ease !important;
+        transition: background .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease, border-color .18s ease !important;
+    }
+
+    .applicant-file-action::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(120deg,
+                rgba(255, 248, 196, 0) 0%,
+                rgba(255, 239, 181, 0.14) 22%,
+                rgba(255, 239, 181, 0.52) 48%,
+                rgba(255, 239, 181, 0.14) 72%,
+                rgba(255, 248, 196, 0) 100%);
+        transform: translateX(-135%);
+        transition: transform 1.2s ease;
+        pointer-events: none;
+    }
+
+    .applicant-file-action > * {
+        position: relative;
+        z-index: 1;
     }
 
     .applicant-file-action:hover,
     .applicant-file-action:focus {
-        background-position: 0 0 !important;
+        background: #facc15 !important;
         color: #70131b !important;
+        border-color: #facc15 !important;
         transform: translateY(-1px);
         box-shadow: 0 12px 22px rgba(202, 138, 4, .24);
         outline: none;
+    }
+
+    .applicant-file-action:hover::after,
+    .applicant-file-action:focus::after {
+        transform: translateX(135%);
     }
 
     .applicant-upload-preview-area {
@@ -3568,7 +4089,12 @@
 
     .applicant-vitals-grid {
         display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
+    }
+
+    .applicant-vitals-grid .applicant-condition-field.is-full {
+        grid-column: 1 / -1;
     }
 
     .applicant-condition-header {
@@ -3607,6 +4133,8 @@
     }
 
     .applicant-findings-option span {
+        position: relative;
+        overflow: hidden;
         min-height: 42px;
         display: flex;
         align-items: center;
@@ -3619,13 +4147,44 @@
         font-size: 13px;
         font-weight: 750;
         text-align: center;
-        transition: background-color .18s ease, border-color .18s ease, color .18s ease;
+        isolation: isolate;
+        transition: background-color .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+
+    .applicant-findings-option span::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(120deg,
+                rgba(255, 248, 196, 0) 0%,
+                rgba(255, 239, 181, 0.14) 22%,
+                rgba(255, 239, 181, 0.52) 48%,
+                rgba(255, 239, 181, 0.14) 72%,
+                rgba(255, 248, 196, 0) 100%);
+        transform: translateX(-135%);
+        transition: transform 1.2s ease;
+        pointer-events: none;
     }
 
     .applicant-findings-option input:checked + span {
         border-color: #70131b;
         background: #70131b;
         color: #facc15;
+    }
+
+    .applicant-findings-option:hover span,
+    .applicant-findings-option input:focus-visible + span {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        transform: translateY(-1px);
+        box-shadow: 0 10px 18px rgba(202, 138, 4, .18);
+    }
+
+    .applicant-findings-option:hover span::after,
+    .applicant-findings-option input:focus-visible + span::after {
+        transform: translateX(135%);
     }
 
     .applicant-condition-toggle {
@@ -3727,6 +4286,12 @@
     .applicant-condition-textarea {
         resize: vertical;
         min-height: 120px;
+    }
+
+    .applicant-condition-textarea[readonly] {
+        background: #f8fafc;
+        color: #334155;
+        cursor: default;
     }
 
     #applicantRefModal .has-lookup-result .applicant-condition-input {
@@ -4670,17 +5235,82 @@
                 <div class="applicant-ref-mode" id="applicantRefDefault">
                     <div class="applicant-ref-copy">
                         <p class="applicant-ref-kicker">Proceed</p>
-                        <h4 id="lookupModalEntryTitle">Reference Lookup</h4>
-                        <p id="lookupModalEntrySubtitle">Use the reference number to open the applicant record.</p>
+                        <h4 id="lookupModalEntryTitle">Applicant Workflow</h4>
+                        <p id="lookupModalEntrySubtitle">Choose encoding for the first station or final review for approval.</p>
                     </div>
 
-                    <button type="button" id="btnShowApplicantRefInput" class="applicant-ref-toggle-btn" style="max-width:360px;">
+                    <div class="applicant-workflow-grid" id="applicantWorkflowChoices">
+                        <button type="button" class="applicant-workflow-card" id="btnStartApplicantEncoding">
+                            <x-outline-icon name="clipboard-document-list" />
+                            <strong>Encode Assessment</strong>
+                        </button>
+                        <button type="button" class="applicant-workflow-card" id="btnStartApplicantFinalReview">
+                            <x-outline-icon name="document-text" />
+                            <strong>Final Review</strong>
+                        </button>
+                    </div>
+
+                    <button type="button" id="btnShowApplicantRefInput" class="applicant-ref-toggle-btn" style="max-width:360px; display:none;">
                         <x-outline-icon name="magnifying-glass" />
                         <span id="lookupModalEntryButtonText">Input Reference Number</span>
                     </button>
+
+                    <div class="applicant-final-review-list" id="applicantFinalReviewList">
+                        <div class="applicant-final-review-toolbar">
+                            <label class="applicant-final-review-search-wrap" for="applicantFinalReviewSearch">
+                                <x-outline-icon name="magnifying-glass" />
+                                <input type="search" class="applicant-final-review-search" id="applicantFinalReviewSearch" placeholder="Search by name, email, or reference number">
+                            </label>
+                            <button type="button" class="applicant-final-review-btn applicant-final-review-refresh-btn" id="btnRefreshFinalReviewList" aria-label="Refresh final review list" title="Refresh final review list">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+                                    <path d="M16 4C10.886719 4 6.617188 7.160156 4.875 11.625L6.71875 12.375C8.175781 8.640625 11.710938 6 16 6C19.242188 6 22.132813 7.589844 23.9375 10H20V12H27V5H25V8.09375C22.808594 5.582031 19.570313 4 16 4ZM25.28125 19.625C23.824219 23.359375 20.289063 26 16 26C12.722656 26 9.84375 24.386719 8.03125 22H12V20H5V27H7V23.90625C9.1875 26.386719 12.394531 28 16 28C21.113281 28 25.382813 24.839844 27.125 20.375Z"></path>
+                                </svg>
+                            </button>
+                            <button type="button" class="applicant-final-review-btn" id="btnFinalReviewManualLookup">
+                                <x-outline-icon name="magnifying-glass" />
+                                <span>Reference Lookup</span>
+                            </button>
+                        </div>
+                        <div id="applicantFinalReviewRows">
+                            @forelse($finalReviewApplicants as $reviewApplicant)
+                                @php
+                                    $reviewUser = $reviewApplicant->user;
+                                    $reviewName = $reviewUser?->name
+                                        ?: trim(implode(' ', array_filter([
+                                            $reviewUser?->first_name,
+                                            $reviewUser?->middle_name,
+                                            $reviewUser?->last_name,
+                                        ])))
+                                        ?: 'Applicant';
+                                    $reviewRef = $reviewApplicant->reference_number ?: 'N/A';
+                                @endphp
+                                <article class="applicant-final-review-card" data-final-review-row data-search="{{ strtolower($reviewName . ' ' . ($reviewUser?->email ?? '') . ' ' . $reviewRef) }}">
+                                    <div>
+                                        <small>Applicant</small>
+                                        <strong>{{ $reviewName }}</strong>
+                                        <span>{{ $reviewUser?->email ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <small>Reference Number</small>
+                                        <strong class="applicant-final-review-reference-badge">{{ $reviewRef }}</strong>
+                                    </div>
+                                    <button type="button" class="applicant-final-review-btn" data-final-review-reference="{{ $reviewRef }}"><span>Review</span></button>
+                                </article>
+                            @empty
+                                <div class="applicant-documents-empty">No encoded applicants are ready for final review.</div>
+                            @endforelse
+                        </div>
+                        <div class="applicant-final-review-empty" id="applicantFinalReviewEmpty">No encoded applicant matches your search.</div>
+                        <div class="applicant-final-review-pagination" id="applicantFinalReviewPagination">
+                            <button type="button" class="applicant-final-review-page-btn" id="applicantFinalReviewPrev">Previous</button>
+                            <span class="applicant-final-review-page-label" id="applicantFinalReviewPageLabel">Page 1 of 1</span>
+                            <button type="button" class="applicant-final-review-page-btn" id="applicantFinalReviewNext">Next</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="applicant-ref-panel" id="applicantRefEntry">
+                    <button type="button" class="applicant-final-review-back" id="btnBackToFinalReviewList">&larr; Back</button>
                     <div class="applicant-ref-lookup-row">
                     <div class="applicant-ref-instruction">
                         <span class="applicant-ref-help-copy" id="lookupModalHelpCopy">Find the reference number in the <strong>Admission System</strong> under the applicant's profile or registration form.</span>
@@ -4870,7 +5500,7 @@
                         </button>
                         <button type="button" id="btnViewApplicantDocuments" class="applicant-documents-trigger applicant-file-action">
                             <x-outline-icon name="document-text" />
-                            <span>View Uploaded Documents</span>
+                            <span>View Documents</span>
                             <span class="applicant-documents-count" id="applicantDocumentsCount">0</span>
                         </button>
                         <button type="button" id="btnViewSavedAssessment" class="applicant-documents-trigger applicant-file-action">
@@ -4881,7 +5511,7 @@
 
                     {{-- Medical Condition Section --}}
                     <div class="applicant-medical-condition-section">
-                        <section class="applicant-screening-panel applicant-review-panel">
+                        <section class="applicant-screening-panel applicant-review-panel" id="applicantNurseReviewPanel">
                             <h4 class="applicant-screening-panel-title">Nurse Findings Review</h4>
                             <div class="applicant-lookup-grid applicant-review-source-grid">
                                 <div class="applicant-lookup-item">
@@ -4990,13 +5620,13 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div class="applicant-condition-field">
-                                    <label for="applicantConditionRemarks">Remarks <span style="color: #94a3b8;">(Optional)</span></label>
-                                    <textarea id="applicantConditionRemarks" name="condition_remarks" placeholder="Additional notes about the pending decision..." class="applicant-condition-textarea" rows="3"></textarea>
-                                </div>
                                 <div id="applicantOtherPendingReasonField" class="applicant-condition-field" style="display: none;">
                                     <label for="applicantOtherPendingReasonText">Other Pending Reason <span style="color: #dc2626;">*</span></label>
                                     <input type="text" id="applicantOtherPendingReasonText" name="other_pending_reason" placeholder="Enter other pending reason..." class="applicant-condition-input">
+                                </div>
+                                <div class="applicant-condition-field">
+                                    <label for="applicantConditionRemarks">Remarks <span style="color: #94a3b8;">(Optional)</span></label>
+                                    <textarea id="applicantConditionRemarks" name="condition_remarks" placeholder="Additional notes about the pending decision..." class="applicant-condition-textarea" rows="3"></textarea>
                                 </div>
                                 <div id="applicantResubmissionDocsField" class="applicant-condition-field" style="display: none;">
                                     <label>Documents to Resubmit <span style="color: #dc2626;">*</span></label>
@@ -5073,6 +5703,10 @@
                                     <label for="applicantCovidPositiveDate">COVID Positive Date <span style="color:#dc2626;">*</span></label>
                                     <input type="date" id="applicantCovidPositiveDate" name="covid_positive_date" class="applicant-condition-input">
                                     <small style="color:#dc2626; display:none;" id="covidDateError">Date cannot be in the future. Please select today or an earlier date.</small>
+                                </div>
+                                <div class="applicant-condition-field is-full" id="applicantEncodeRemarksField">
+                                    <label for="applicantEncodeRemarks">Assessment Remarks <span style="color:#94a3b8;">(Optional)</span></label>
+                                    <textarea id="applicantEncodeRemarks" name="encode_remarks" placeholder="Optional assessment notes from the encoding station..." class="applicant-condition-textarea" rows="3"></textarea>
                                 </div>
                             </div>
                         </section>
@@ -6673,6 +7307,20 @@
         const defaultPane     = document.getElementById('applicantRefDefault');
         const entryPane       = document.getElementById('applicantRefEntry');
         const showEntryBtn    = document.getElementById('btnShowApplicantRefInput');
+        const workflowChoices = document.getElementById('applicantWorkflowChoices');
+        const startEncodingBtn = document.getElementById('btnStartApplicantEncoding');
+        const startFinalReviewBtn = document.getElementById('btnStartApplicantFinalReview');
+        const finalReviewList = document.getElementById('applicantFinalReviewList');
+        const finalReviewRows = document.getElementById('applicantFinalReviewRows');
+        const finalReviewSearch = document.getElementById('applicantFinalReviewSearch');
+        const finalReviewRefresh = document.getElementById('btnRefreshFinalReviewList');
+        const finalReviewManualLookup = document.getElementById('btnFinalReviewManualLookup');
+        const finalReviewPagination = document.getElementById('applicantFinalReviewPagination');
+        const finalReviewPrev = document.getElementById('applicantFinalReviewPrev');
+        const finalReviewNext = document.getElementById('applicantFinalReviewNext');
+        const finalReviewPageLabel = document.getElementById('applicantFinalReviewPageLabel');
+        const finalReviewEmpty = document.getElementById('applicantFinalReviewEmpty');
+        const backToFinalReviewList = document.getElementById('btnBackToFinalReviewList');
         const cancelEntryBtn  = document.getElementById('btnCancelApplicantRef');
         const refInput        = document.getElementById('applicantRefInput');
         const refStatus       = document.getElementById('applicantRefStatus');
@@ -6698,6 +7346,7 @@
         const lookupMedCertDetails = document.getElementById('applicantLookupMedCertDetails');
         const lookupXrayResult = document.getElementById('applicantLookupXrayResult');
         const lookupXrayDetails = document.getElementById('applicantLookupXrayDetails');
+        const nurseReviewPanel = document.getElementById('applicantNurseReviewPanel');
         const informationButton = document.getElementById('btnViewApplicantInformation');
         const medicalConditionButton = document.getElementById('btnViewMedicalCondition');
         const medicalConditionDetails = document.getElementById('applicantMedicalConditionDetails');
@@ -6732,12 +7381,24 @@
         let currentLookupRef  = '';
         let currentDocuments  = [];
         let currentLookupMode = 'applicant';
+        let currentApplicantWorkflow = 'select';
+        let finalReviewPage = 1;
         let currentLookupRedirect = '';
         let currentAssessmentReview = {};
         const getStudentUrl   = '{{ url($basePrefix . '/walkin/get-student') }}';
+        const finalReviewApplicantsUrl = '{{ url($basePrefix . '/walkin/final-review-applicants') }}';
+        const saveEncodingUrl = '{{ url($basePrefix . '/walkin/applicant-encoding') }}';
 
         function isClinicLookupMode() {
             return currentLookupMode === 'clinic';
+        }
+
+        function isEncodeWorkflow() {
+            return currentApplicantWorkflow === 'encode' && !isClinicLookupMode();
+        }
+
+        function isFinalReviewWorkflow() {
+            return currentApplicantWorkflow === 'final_review' && !isClinicLookupMode();
         }
 
         function applyLookupMode(mode) {
@@ -6751,7 +7412,7 @@
             if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isClinicLookupMode() ? 'Clinic Reference Lookup' : 'Reference Lookup';
             if (lookupModalEntrySubtitle) lookupModalEntrySubtitle.textContent = isClinicLookupMode()
                 ? 'Use the clinic reference number to open the saved local clinic record.'
-                : 'Use the reference number to open the applicant record.';
+                : 'Choose encoding for the first station or final review for approval.';
             if (lookupModalEntryButtonText) lookupModalEntryButtonText.textContent = isClinicLookupMode() ? 'Input Clinic Reference' : 'Input Reference Number';
             if (lookupModalHelpCopy) {
                 lookupModalHelpCopy.innerHTML = isClinicLookupMode()
@@ -6760,6 +7421,56 @@
             }
             if (lookupModalFieldLabel) lookupModalFieldLabel.textContent = isClinicLookupMode() ? 'Clinic Reference Number' : 'Reference Number';
             if (refInput) refInput.placeholder = isClinicLookupMode() ? 'Enter clinic reference number' : 'Enter reference number';
+
+            if (workflowChoices) workflowChoices.style.display = isClinicLookupMode() ? 'none' : 'grid';
+            if (showEntryBtn) showEntryBtn.style.display = isClinicLookupMode() ? 'inline-flex' : 'none';
+            if (finalReviewList) finalReviewList.classList.remove('is-visible');
+            if (backToFinalReviewList) backToFinalReviewList.classList.remove('is-visible');
+        }
+
+        function setApplicantWorkflow(workflow) {
+            currentApplicantWorkflow = workflow;
+            const isEncode = workflow === 'encode';
+            const isFinalReview = workflow === 'final_review';
+
+            if (modalShell) {
+                modalShell.classList.toggle('is-encode-workflow', isEncode);
+                modalShell.classList.toggle('is-final-review-workflow', isFinalReview);
+            }
+            if (lookupModalTitle) lookupModalTitle.textContent = isEncode ? 'Encode Assessment' : (isFinalReview ? 'Final Review' : 'Applicants');
+            if (lookupModalSubtitle) lookupModalSubtitle.textContent = isEncode
+                ? 'Enter the applicant reference number and save the physical assessment for final review.'
+                : (isFinalReview ? 'Review encoded applicants and approve or mark pending compliance.' : "Enter the applicant's reference number to look up the record.");
+            if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isEncode ? 'Assessment Encoding' : (isFinalReview ? 'Encoded Applicants' : 'Applicant Workflow');
+            if (lookupModalEntrySubtitle) lookupModalEntrySubtitle.textContent = isEncode
+                ? 'Use the applicant reference number to open the record for physical assessment.'
+                : (isFinalReview ? 'Select a ready applicant below or use reference lookup.' : 'Choose encoding for the first station or final review for approval.');
+            if (lookupModalEntryButtonText) lookupModalEntryButtonText.textContent = isEncode ? 'Input Reference Number' : 'Reference Lookup';
+            if (lookupModalHelpCopy) lookupModalHelpCopy.innerHTML = isEncode
+                ? 'Encode only the physical assessment here. Final approval and PUPTAS sync remain in <strong>Final Review</strong>.'
+                : "Find the reference number in the <strong>Admission System</strong> under the applicant's profile or registration form.";
+        }
+
+        function resetLookupButtonToFind() {
+            if (!findBtn) return;
+
+            findBtn.textContent = 'Find';
+            findBtn.disabled = false;
+            findBtn.style.opacity = '';
+            findBtn.style.cursor = 'pointer';
+            findBtn.style.background = '';
+            findBtn.style.color = '';
+            findBtn.style.fontWeight = '';
+            findBtn.style.fontSize = '';
+            findBtn.style.letterSpacing = '';
+            findBtn.style.boxShadow = '';
+            findBtn.style.border = '';
+            findBtn.onclick = null;
+            findBtn.removeEventListener('click', doLookup);
+            findBtn.removeEventListener('click', doApprove);
+            findBtn.removeEventListener('click', saveApplicantEncoding);
+            findBtn.removeEventListener('click', enterSavedReviewEditMode);
+            findBtn.addEventListener('click', doLookup);
         }
 
         function closeDocumentPreview() {
@@ -6878,6 +7589,9 @@
         function setEntryMode(isActive) {
             if (defaultPane) defaultPane.style.display = isActive ? 'none' : 'flex';
             if (entryPane) entryPane.classList.toggle('is-visible', isActive);
+            if (backToFinalReviewList) {
+                backToFinalReviewList.classList.toggle('is-visible', isActive && currentApplicantWorkflow === 'final_review' && !isClinicLookupMode());
+            }
             if (!isActive) resetLookupState();
             if (isActive && refInput) {
                 setTimeout(() => refInput.focus(), 0);
@@ -6926,8 +7640,15 @@
             currentLookupRef = '';
             currentLookupRedirect = '';
             currentAssessmentReview = {};
+            if (!isClinicLookupMode()) currentApplicantWorkflow = 'select';
             if (defaultPane) defaultPane.style.display = 'flex';
+            const introCopy = defaultPane?.querySelector('.applicant-ref-copy');
+            if (introCopy) introCopy.style.display = '';
             if (entryPane) entryPane.classList.remove('is-visible');
+            if (workflowChoices) workflowChoices.style.display = isClinicLookupMode() ? 'none' : 'grid';
+            if (finalReviewList) finalReviewList.classList.remove('is-visible');
+            if (showEntryBtn) showEntryBtn.style.display = isClinicLookupMode() ? 'inline-flex' : 'none';
+            if (backToFinalReviewList) backToFinalReviewList.classList.remove('is-visible');
             const medicalConditionSection = document.querySelector('.applicant-medical-condition-section');
             if (medicalConditionSection) {
                 medicalConditionSection.classList.remove('show');
@@ -6949,10 +7670,15 @@
             if (pendingDecisionFields) pendingDecisionFields.style.display = 'none';
             if (normalRemarksFields) normalRemarksFields.style.display = 'none';
             if (findingRemarksField) findingRemarksField.style.display = 'none';
-            ['applicantMedicalCondition', 'applicantFindingRemarks', 'applicantConditionRemarks', 'applicantNormalRemarks', 'applicantHeight', 'applicantWeight', 'applicantBloodPressure', 'applicantPulseRate', 'applicantRespiratoryRate', 'applicantTemperature', 'applicantCovidPositiveDate', 'applicantOtherPendingReasonText'].forEach(function (id) {
+            ['applicantMedicalCondition', 'applicantFindingRemarks', 'applicantConditionRemarks', 'applicantNormalRemarks', 'applicantHeight', 'applicantWeight', 'applicantBloodPressure', 'applicantPulseRate', 'applicantRespiratoryRate', 'applicantTemperature', 'applicantCovidPositiveDate', 'applicantOtherPendingReasonText', 'applicantEncodeRemarks'].forEach(function (id) {
                 const field = document.getElementById(id);
                 if (field) field.value = '';
             });
+            const encodeRemarksInput = document.getElementById('applicantEncodeRemarks');
+            if (encodeRemarksInput) {
+                encodeRemarksInput.readOnly = false;
+                encodeRemarksInput.placeholder = 'Optional assessment notes from the encoding station...';
+            }
             document.querySelectorAll('input[name="applicant_covid_positive"]').forEach(function (input) {
                 input.checked = false;
             });
@@ -6971,24 +7697,7 @@
             if (lookupRow) lookupRow.style.display = 'flex';
 
             // Reset button text and events back to Find mode
-            if (findBtn) {
-                findBtn.textContent = 'Find';
-                findBtn.disabled = false;
-                findBtn.style.opacity = '';
-                findBtn.style.cursor = 'pointer';
-                findBtn.style.background = '';
-                findBtn.style.color = '';
-                findBtn.style.fontWeight = '';
-                findBtn.style.fontSize = '';
-                findBtn.style.letterSpacing = '';
-                findBtn.style.boxShadow = '';
-                findBtn.style.border = '';
-                findBtn.onclick = null;
-                findBtn.removeEventListener('click', doLookup);
-                findBtn.removeEventListener('click', doApprove);
-                findBtn.removeEventListener('click', enterSavedReviewEditMode);
-                findBtn.addEventListener('click', doLookup);
-            }
+            resetLookupButtonToFind();
 
             const modalBody = document.querySelector('.applicant-modal-body');
             if (modalBody) {
@@ -7001,6 +7710,7 @@
         function openApplicantsModal() {
             if (!backdrop) return;
             applyLookupMode('applicant');
+            setApplicantWorkflow('select');
             backdrop.classList.add('show');
             setEntryMode(false);
             if (refInput) refInput.value = '';
@@ -7009,6 +7719,7 @@
         function openClinicLookupModal() {
             if (!backdrop) return;
             applyLookupMode('clinic');
+            currentApplicantWorkflow = 'review';
             backdrop.classList.add('show');
             setEntryMode(false);
             if (refInput) refInput.value = '';
@@ -7049,7 +7760,8 @@
                 applicantRespiratoryRate: savedReview.respiratory_rate ?? '',
                 applicantTemperature: savedReview.temperature ?? '',
                 applicantCovidPositiveDate: savedReview.covid_positive_date || '',
-                applicantOtherPendingReasonText: savedReview.other_pending_reason || ''
+                applicantOtherPendingReasonText: savedReview.other_pending_reason || '',
+                applicantEncodeRemarks: savedReview.encode_remarks || ''
             };
             Object.entries(fieldValues).forEach(function ([id, value]) {
                 const field = document.getElementById(id);
@@ -7086,7 +7798,20 @@
         }
 
         function hasSavedAssessmentReview(review) {
-            return Boolean(review && typeof review === 'object' && review.findings_status);
+            if (!review || typeof review !== 'object') return false;
+            const status = String(review.clearance_status || '').trim();
+            return Boolean(review.findings_status && [
+                'Pending/Conditional',
+                'Pending Resubmission'
+            ].includes(status));
+        }
+
+        function isEncodedForFinalReview(review, data) {
+            const status = String(review?.clearance_status || data?.clearance_status || data?.clinic_status || '').trim();
+            const physicalStatus = String(review?.physical_assessment_status || data?.physical_assessment_status || '').trim();
+
+            return status === 'For Final Review'
+                || physicalStatus === 'Encoded / For Final Review';
         }
 
         function numericValue(value) {
@@ -7295,11 +8020,23 @@
 
             const medicalConditionSection = document.querySelector('.applicant-medical-condition-section');
             if (medicalConditionSection) {
-                medicalConditionSection.classList.toggle('show', !hasSavedReview);
-                medicalConditionSection.style.display = hasSavedReview ? 'none' : 'grid';
+                const shouldShowAssessment = isEncodeWorkflow() || isFinalReviewWorkflow() || !hasSavedReview;
+                medicalConditionSection.classList.toggle('show', shouldShowAssessment);
+                medicalConditionSection.style.display = shouldShowAssessment ? 'grid' : 'none';
+            }
+
+            if (nurseReviewPanel) {
+                nurseReviewPanel.style.display = isEncodeWorkflow() ? 'none' : '';
             }
 
             populateAssessmentReview(currentAssessmentReview);
+            const encodeRemarksInput = document.getElementById('applicantEncodeRemarks');
+            if (encodeRemarksInput) {
+                encodeRemarksInput.readOnly = isFinalReviewWorkflow();
+                encodeRemarksInput.placeholder = isFinalReviewWorkflow()
+                    ? 'No encode remarks recorded.'
+                    : 'Optional notes from the encoding station...';
+            }
 
             console.log('showLookupDetails completed');
             return hasSavedReview;
@@ -7431,6 +8168,7 @@
                         if (findBtn) {
                             findBtn.removeEventListener('click', doLookup);
                             findBtn.removeEventListener('click', doApprove);
+                            findBtn.removeEventListener('click', saveApplicantEncoding);
                             findBtn.removeEventListener('click', enterSavedReviewEditMode);
 
                             findBtn.textContent = '✓ Already Approved';
@@ -7453,6 +8191,9 @@
                             foundCard.style.display = 'flex';
                         }
                         const hasSavedReview = showLookupDetails(data, ref);
+                        if (isEncodeWorkflow() && isEncodedForFinalReview(currentAssessmentReview, data)) {
+                            setStatus('encoded', 'This applicant is already encoded and is ready for Final Review / Approval.');
+                        }
                         // Hide input sections and show only results
                         if (defaultPane) defaultPane.style.display = 'none';
 
@@ -7460,18 +8201,27 @@
                         const lookupRow = document.querySelector('.applicant-ref-lookup-row');
                         if (lookupRow) lookupRow.style.display = 'none';
 
-                        // Change button to Approve mode for both admission applicants and local clinic references.
-                        isApprovalMode = true;
+                        // Change button mode based on the selected applicant workflow.
+                        isApprovalMode = !isEncodeWorkflow();
                         if (findBtn) {
-                            findBtn.textContent = hasSavedReview ? 'Edit Review' : 'Approve';
+                            findBtn.textContent = isEncodeWorkflow()
+                                ? 'Save Assessment'
+                                : (isFinalReviewWorkflow() ? 'Approve' : (hasSavedReview ? 'Edit Review' : 'Approve'));
                             findBtn.disabled = false;
                             findBtn.style.opacity = '1';
                             findBtn.style.cursor = 'pointer';
                             findBtn.removeEventListener('click', doLookup);
                             findBtn.removeEventListener('click', doApprove);
+                            findBtn.removeEventListener('click', saveApplicantEncoding);
                             findBtn.removeEventListener('click', enterSavedReviewEditMode);
                             findBtn.onclick = null;
-                            findBtn.addEventListener('click', hasSavedReview ? enterSavedReviewEditMode : doApprove);
+                            if (isEncodeWorkflow()) {
+                                findBtn.addEventListener('click', saveApplicantEncoding);
+                            } else if (isFinalReviewWorkflow()) {
+                                findBtn.addEventListener('click', doApprove);
+                            } else {
+                                findBtn.addEventListener('click', hasSavedReview ? enterSavedReviewEditMode : doApprove);
+                            }
                         }
                         if (!hasSavedReview) syncFindingsReviewFields();
                     }
@@ -7491,6 +8241,75 @@
         refInput?.addEventListener('blur', () => {
             refInput.value = formatApplicantReferenceInput(refInput.value);
         });
+
+        function saveApplicantEncoding() {
+            if (!currentLookupRef) {
+                setStatus('error', 'No applicant to encode.');
+                return;
+            }
+
+            const heightInput = document.getElementById('applicantHeight');
+            const weightInput = document.getElementById('applicantWeight');
+            const bloodPressureInput = document.getElementById('applicantBloodPressure');
+            const pulseRateInput = document.getElementById('applicantPulseRate');
+            const respiratoryRateInput = document.getElementById('applicantRespiratoryRate');
+            const temperatureInput = document.getElementById('applicantTemperature');
+            const covidPositiveInput = document.querySelector('input[name="applicant_covid_positive"]:checked');
+            const covidPositiveDateInput = document.getElementById('applicantCovidPositiveDate');
+            const encodeRemarksInput = document.getElementById('applicantEncodeRemarks');
+
+            if (!heightInput?.value || !weightInput?.value || !bloodPressureInput?.value.trim() || !pulseRateInput?.value || !respiratoryRateInput?.value || !temperatureInput?.value) {
+                setStatus('error', 'Please complete the height, weight, blood pressure, pulse rate, respiratory rate, and temperature fields.');
+                return;
+            }
+
+            if (!covidPositiveInput) {
+                setStatus('error', 'Please select if the student is COVID Positive.');
+                return;
+            }
+
+            if (covidPositiveInput.value === 'Yes' && !covidPositiveDateInput?.value) {
+                setStatus('error', 'Please enter the COVID Positive date.');
+                return;
+            }
+
+            setStatus('info', 'Saving assessment for final review...');
+
+            fetch(saveEncodingUrl, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    reference_number: currentLookupRef,
+                    height: heightInput.value,
+                    weight: weightInput.value,
+                    blood_pressure: bloodPressureInput.value.trim(),
+                    pulse_rate: pulseRateInput.value,
+                    respiratory_rate: respiratoryRateInput.value,
+                    temperature: temperatureInput.value,
+                    covid_positive: covidPositiveInput.value,
+                    covid_positive_date: covidPositiveInput.value === 'Yes' ? covidPositiveDateInput.value : '',
+                    encode_remarks: encodeRemarksInput?.value.trim() || ''
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    setStatus('success', data.message || 'Assessment saved for final review.');
+                    setTimeout(() => {
+                        closeApplicantsModal();
+                        window.location.reload();
+                    }, 900);
+                } else {
+                    setStatus('error', data.message || 'Failed to save assessment.');
+                }
+            })
+            .catch(() => setStatus('error', 'Unable to save assessment right now. Please try again.'));
+        }
 
         function doApprove() {
             if (!currentLookupRef) {
@@ -7628,11 +8447,7 @@
                         approvalOverlay?.setAttribute('aria-hidden', 'true');
                         closeApplicantsModal();
                         isApprovalMode = false;
-                        if (findBtn) {
-                            findBtn.textContent = 'Find';
-                            findBtn.removeEventListener('click', doApprove);
-                            findBtn.addEventListener('click', doLookup);
-                        }
+                        resetLookupButtonToFind();
                         resetLookupState();
                         if (refInput) refInput.value = '';
                     }, 1250);
@@ -7907,6 +8722,220 @@
 
         syncCovidPositiveFields();
         restrictCovidDateInput();
+
+        function showApplicantReferenceEntry(workflow) {
+            resetLookupState();
+            setApplicantWorkflow(workflow);
+            if (workflowChoices) workflowChoices.style.display = 'none';
+            if (finalReviewList) finalReviewList.classList.remove('is-visible');
+            if (showEntryBtn) showEntryBtn.style.display = 'none';
+            if (refInput) refInput.value = '';
+            setEntryMode(true);
+        }
+
+        function showFinalReviewList() {
+            setApplicantWorkflow('final_review');
+            if (defaultPane) defaultPane.style.display = 'flex';
+            if (entryPane) entryPane.classList.remove('is-visible');
+            if (workflowChoices) workflowChoices.style.display = 'none';
+            if (showEntryBtn) showEntryBtn.style.display = 'none';
+            const introCopy = defaultPane?.querySelector('.applicant-ref-copy');
+            if (introCopy) introCopy.style.display = 'none';
+            if (finalReviewList) finalReviewList.classList.add('is-visible');
+            if (backToFinalReviewList) backToFinalReviewList.classList.remove('is-visible');
+            updateFinalReviewPagination(1);
+            if (finalReviewSearch) finalReviewSearch.focus();
+        }
+
+        function openFinalReviewReference(referenceNumber) {
+            showApplicantReferenceEntry('final_review');
+            if (refInput) {
+                refInput.value = referenceNumber || '';
+            }
+            doLookup();
+        }
+
+        function buildFinalReviewCard(applicant) {
+            const article = document.createElement('article');
+            article.className = 'applicant-final-review-card';
+            article.setAttribute('data-final-review-row', '');
+            article.setAttribute('data-search', applicant.search || '');
+
+            const applicantBlock = document.createElement('div');
+            const applicantLabel = document.createElement('small');
+            applicantLabel.textContent = 'Applicant';
+            const applicantName = document.createElement('strong');
+            applicantName.textContent = applicant.name || 'Applicant';
+            const applicantEmail = document.createElement('span');
+            applicantEmail.textContent = applicant.email || 'N/A';
+            applicantBlock.append(applicantLabel, applicantName, applicantEmail);
+
+            const referenceBlock = document.createElement('div');
+            const referenceLabel = document.createElement('small');
+            referenceLabel.textContent = 'Reference Number';
+            const referenceValue = document.createElement('strong');
+            referenceValue.className = 'applicant-final-review-reference-badge';
+            referenceValue.textContent = applicant.reference_number || 'N/A';
+            referenceBlock.append(referenceLabel, referenceValue);
+
+            const reviewButton = document.createElement('button');
+            reviewButton.type = 'button';
+            reviewButton.className = 'applicant-final-review-btn';
+            reviewButton.dataset.finalReviewReference = applicant.reference_number || '';
+            const reviewButtonLabel = document.createElement('span');
+            reviewButtonLabel.textContent = 'Review';
+            reviewButton.appendChild(reviewButtonLabel);
+
+            article.append(applicantBlock, referenceBlock, reviewButton);
+
+            return article;
+        }
+
+        function renderFinalReviewApplicants(applicants) {
+            if (!finalReviewRows) return;
+
+            finalReviewRows.replaceChildren();
+
+            if (!Array.isArray(applicants) || applicants.length === 0) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'applicant-documents-empty';
+                emptyState.textContent = 'No encoded applicants are ready for final review.';
+                finalReviewRows.appendChild(emptyState);
+                if (finalReviewEmpty) finalReviewEmpty.classList.remove('is-visible');
+                updateFinalReviewPagination(1);
+                return;
+            }
+
+            applicants.forEach(function (applicant) {
+                finalReviewRows.appendChild(buildFinalReviewCard(applicant));
+            });
+
+            if (finalReviewEmpty) finalReviewEmpty.textContent = 'No encoded applicant matches your search.';
+            updateFinalReviewPagination(1);
+        }
+
+        function refreshFinalReviewApplicants() {
+            if (!finalReviewRefresh) return;
+
+            const label = finalReviewRefresh.querySelector('span');
+            const originalLabel = label ? label.textContent : '';
+            finalReviewRefresh.disabled = true;
+            finalReviewRefresh.style.opacity = '0.72';
+            if (label) label.textContent = 'Refreshing';
+
+            fetch(finalReviewApplicantsUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message || 'Unable to refresh the final review list.');
+                    }
+
+                    renderFinalReviewApplicants(data.applicants || []);
+                })
+                .catch(error => {
+                    console.error(error);
+                    if (finalReviewEmpty) {
+                        finalReviewEmpty.textContent = 'Unable to refresh the list. Please try again.';
+                        finalReviewEmpty.classList.add('is-visible');
+                    }
+                })
+                .finally(() => {
+                    finalReviewRefresh.disabled = false;
+                    finalReviewRefresh.style.opacity = '';
+                    if (label) label.textContent = originalLabel || 'Refresh';
+                });
+        }
+
+        function updateFinalReviewPagination(targetPage) {
+            const allRows = Array.from((finalReviewRows || document).querySelectorAll('[data-final-review-row]'));
+            const query = finalReviewSearch ? finalReviewSearch.value.trim().toLowerCase() : '';
+            const matchingRows = allRows.filter(function (row) {
+                const haystack = row.getAttribute('data-search') || '';
+                return !query || haystack.includes(query);
+            });
+            const pageSize = 5;
+            const totalPages = Math.max(1, Math.ceil(matchingRows.length / pageSize));
+            finalReviewPage = Math.min(Math.max(targetPage || finalReviewPage || 1, 1), totalPages);
+            const start = (finalReviewPage - 1) * pageSize;
+            const end = start + pageSize;
+
+            allRows.forEach(function (row) {
+                row.style.display = 'none';
+            });
+            matchingRows.slice(start, end).forEach(function (row) {
+                row.style.display = '';
+            });
+
+            if (finalReviewEmpty) {
+                finalReviewEmpty.classList.toggle('is-visible', allRows.length > 0 && matchingRows.length === 0);
+            }
+            if (finalReviewPagination) {
+                finalReviewPagination.classList.toggle('is-visible', matchingRows.length > pageSize);
+            }
+            if (finalReviewPrev) finalReviewPrev.disabled = finalReviewPage <= 1;
+            if (finalReviewNext) finalReviewNext.disabled = finalReviewPage >= totalPages;
+            if (finalReviewPageLabel) finalReviewPageLabel.textContent = 'Page ' + finalReviewPage + ' of ' + totalPages;
+        }
+
+        if (startEncodingBtn) {
+            startEncodingBtn.addEventListener('click', function () {
+                showApplicantReferenceEntry('encode');
+            });
+        }
+
+        if (startFinalReviewBtn) {
+            startFinalReviewBtn.addEventListener('click', showFinalReviewList);
+        }
+
+        if (finalReviewManualLookup) {
+            finalReviewManualLookup.addEventListener('click', function () {
+                showApplicantReferenceEntry('final_review');
+            });
+        }
+
+        if (backToFinalReviewList) {
+            backToFinalReviewList.addEventListener('click', function () {
+                resetLookupState();
+                showFinalReviewList();
+            });
+        }
+
+        if (finalReviewRows) {
+            finalReviewRows.addEventListener('click', function (event) {
+                const button = event.target.closest('[data-final-review-reference]');
+                if (!button) return;
+
+                openFinalReviewReference(button.getAttribute('data-final-review-reference') || '');
+            });
+        }
+
+        if (finalReviewRefresh) {
+            finalReviewRefresh.addEventListener('click', refreshFinalReviewApplicants);
+        }
+
+        if (finalReviewSearch) {
+            finalReviewSearch.addEventListener('input', function () {
+                updateFinalReviewPagination(1);
+            });
+        }
+
+        if (finalReviewPrev) {
+            finalReviewPrev.addEventListener('click', function () {
+                updateFinalReviewPagination(finalReviewPage - 1);
+            });
+        }
+
+        if (finalReviewNext) {
+            finalReviewNext.addEventListener('click', function () {
+                updateFinalReviewPagination(finalReviewPage + 1);
+            });
+        }
 
         if (openBtn) openBtn.addEventListener('click', function (e) { e.preventDefault(); openApplicantsModal(); });
         if (openClinicBtn) openClinicBtn.addEventListener('click', function (e) { e.preventDefault(); openClinicLookupModal(); });

@@ -42,6 +42,7 @@ class HealthProfile extends Model
         'resubmitted_at',
         'medical_condition_remarks',
         'physical_assessment_status',
+        'encode_remarks',
         'documents_valid',
         'verified_at',
         'approved_by_user_id',

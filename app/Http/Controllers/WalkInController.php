@@ -694,6 +694,9 @@ class WalkInController extends Controller
             'temperature' => $profile->temperature,
             'covid_positive' => trim((string) $profile->covid_positive),
             'covid_positive_date' => optional($profile->covid_positive_date)->format('Y-m-d'),
+            'clearance_status' => $clearanceStatus,
+            'physical_assessment_status' => trim((string) $profile->physical_assessment_status),
+            'encode_remarks' => trim((string) ($profile->encode_remarks ?? '')),
         ];
     }
 
@@ -878,9 +881,63 @@ class WalkInController extends Controller
 
     $mode = $request->query('mode', '');
     $walkins = Appointment::latest()->take(10)->get();
+    $finalReviewApplicants = $this->finalReviewApplicantQuery()->get();
     
-    return view('admin.walkin', compact('walkins', 'mode'));
+    return view('admin.walkin', compact('walkins', 'mode', 'finalReviewApplicants'));
 }
+
+    private function finalReviewApplicantQuery()
+    {
+        return HealthProfile::with('user')
+            ->where('clearance_status', 'For Final Review')
+            ->latest('updated_at')
+            ->take(30);
+    }
+
+    private function finalReviewApplicantPayload(HealthProfile $profile): array
+    {
+        $user = $profile->user;
+        $name = trim((string) ($user?->name ?: trim(implode(' ', array_filter([
+            $user?->first_name,
+            $user?->middle_name,
+            $user?->last_name,
+        ])))));
+        if ($name === '') {
+            $name = trim((string) ($profile->student_name ?? ''));
+        }
+        if ($name === '') {
+            $name = 'Applicant';
+        }
+
+        $email = trim((string) ($user?->email ?? ''));
+        $referenceNumber = trim((string) (
+            $profile->reference_number
+            ?: $profile->student_number
+            ?: $profile->student_id
+            ?: $profile->id
+        ));
+
+        return [
+            'id' => $profile->id,
+            'name' => $name,
+            'email' => $email,
+            'reference_number' => $referenceNumber,
+            'search' => Str::lower(trim($name . ' ' . $email . ' ' . $referenceNumber)),
+        ];
+    }
+
+    public function finalReviewApplicants(Request $request)
+    {
+        $applicants = $this->finalReviewApplicantQuery()
+            ->get()
+            ->map(fn (HealthProfile $profile) => $this->finalReviewApplicantPayload($profile))
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'applicants' => $applicants,
+        ]);
+    }
 
     // 2. SHOW WALKIN FORM
     public function showWalkinForm(Request $request, $student_id)
@@ -1697,6 +1754,128 @@ PROMPT;
         }
 
         return redirect()->route($this->walkinRouteName($request, 'index'))->with('consultation_done', true);
+    }
+
+    public function saveApplicantEncoding(Request $request, PuptasWebhookService $webhookService)
+    {
+        try {
+            $validated = $request->validate([
+                'reference_number' => ['required', 'string', 'max:120'],
+                'height' => ['required', 'numeric', 'min:1', 'max:10'],
+                'weight' => ['required', 'numeric', 'min:1', 'max:1100'],
+                'blood_pressure' => ['required', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
+                'pulse_rate' => ['required', 'integer', 'min:1', 'max:300'],
+                'respiratory_rate' => ['required', 'integer', 'min:1', 'max:120'],
+                'temperature' => ['required', 'numeric', 'min:30', 'max:45'],
+                'covid_positive' => ['required', 'string', 'in:Yes,No'],
+                'covid_positive_date' => ['required_if:covid_positive,Yes', 'nullable', 'date'],
+                'encode_remarks' => ['nullable', 'string', 'max:2000'],
+            ]);
+
+            $referenceNumber = trim((string) $validated['reference_number']);
+            $applicantData = $webhookService->fetchApplicantByStudentNumber($referenceNumber);
+            $localOnlyProfile = null;
+
+            if ($applicantData) {
+                $student = $this->resolveLocalUserFromApplicant($applicantData, true, $referenceNumber);
+                $studentId = trim((string) ($applicantData['idp_user_id'] ?? $student->student_id ?? ''));
+            } else {
+                $localOnlyProfile = $this->findHealthProfileByReference($referenceNumber);
+                if (!$localOnlyProfile) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Applicant not found in PUPTAS or local submitted health profiles.',
+                    ], 404);
+                }
+
+                $student = $this->ensureLocalUserFromHealthProfile($localOnlyProfile, $referenceNumber);
+                if (!$student) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Local health profile was found, but no linked student account is available.',
+                    ], 404);
+                }
+                $studentId = trim((string) ($student->student_id ?? $localOnlyProfile->student_id ?? ''));
+            }
+
+            $profile = DB::transaction(function () use ($student, $studentId, $referenceNumber, $validated) {
+                $profile = HealthProfile::firstOrNew(['user_id' => $student->id]);
+                $profile->student_id = (string) ($student->student_id ?: $studentId ?: $referenceNumber);
+                $profile->student_number = (string) ($student->student_number ?: $profile->student_number ?: '');
+                $profile->reference_number = $referenceNumber;
+                $profile->course_college = (string) ($profile->course_college ?: $student->course);
+                $profile->birthday = $profile->birthday ?: $student->DOB;
+                $profile->sex = (string) ($profile->sex ?: $student->gender);
+                $profile->height = (string) $validated['height'];
+                $profile->weight = (string) $validated['weight'];
+                $profile->blood_pressure = preg_replace('/\s+/', '', (string) $validated['blood_pressure']);
+                $profile->pulse_rate = (int) $validated['pulse_rate'];
+                $profile->respiratory_rate = (int) $validated['respiratory_rate'];
+                $profile->temperature = (float) $validated['temperature'];
+                $profile->covid_positive = (string) $validated['covid_positive'];
+                $profile->covid_positive_date = $validated['covid_positive'] === 'Yes'
+                    ? $validated['covid_positive_date']
+                    : null;
+                $profile->clearance_status = 'For Final Review';
+                $profile->physical_assessment_status = 'Encoded / For Final Review';
+                $profile->encode_remarks = trim((string) ($validated['encode_remarks'] ?? '')) ?: null;
+                $profile->verified_at = null;
+                $profile->approved_by_user_id = null;
+                $profile->puptas_sync_status = null;
+                $profile->puptas_synced_at = null;
+                $profile->puptas_sync_message = null;
+                $profile->save();
+
+                return $profile;
+            });
+
+            ActivityLog::create([
+                'user_id' => auth()->id(),
+                'user_name' => auth()->user()?->name ?? auth()->user()?->email ?? 'System',
+                'user_role' => strtolower((string) (auth()->user()?->user_role ?? '')),
+                'action' => 'Applicant Assessment Encoded',
+                'module' => 'Patient Intake',
+                'event_type' => 'applicant_assessment_encoded',
+                'description' => "Applicant assessment encoded for final review: {$referenceNumber}",
+                'route_name' => optional($request->route())->getName(),
+                'http_method' => 'POST',
+                'request_path' => '/' . ltrim((string) $request->path(), '/'),
+                'status_code' => 200,
+                'subject_type' => HealthProfile::class,
+                'subject_id' => (string) $profile->id,
+                'metadata' => [
+                    'reference_number' => $referenceNumber,
+                    'health_profile_id' => $profile->id,
+                    'clearance_status' => 'For Final Review',
+                ],
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 255),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Assessment saved for final review.',
+                'status' => 'For Final Review',
+                'health_profile_id' => $profile->id,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => collect($e->errors())->flatten()->first() ?: 'Please check the assessment details.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Throwable $e) {
+            Log::error('Applicant encoding exception', [
+                'error' => $e->getMessage(),
+                'reference_number' => $request->input('reference_number'),
+                'user_id' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to save assessment right now.',
+            ], 500);
+        }
     }
 
     public function approveApplicant(Request $request, PuptasWebhookService $webhookService)

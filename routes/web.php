@@ -250,12 +250,14 @@ Route::middleware(['auth:admin', 'audit'])->group(function () {
 
         Route::get('/admin/walkin', [WalkInController::class, 'index'])->name('walkin.index');
         Route::get('/admin/walkin/get-student', [WalkInController::class, 'getStudent'])->name('walkin.getStudent');
+        Route::get('/admin/walkin/final-review-applicants', [WalkInController::class, 'finalReviewApplicants'])->name('walkin.final-review-applicants');
         Route::post('/admin/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->name('walkin.verify-id-ai');
         Route::post('/admin/walkin/register', [WalkInController::class, 'registerStudent'])->name('walkin.registerStudent');
         Route::get('/admin/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->name('walkin.form');
         Route::get('/admin/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->name('walkin.healthForm');
         Route::get('/admin/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->name('walkin.document');
         Route::post('/admin/walkin/store', [WalkInController::class, 'store'])->name('walkin.store');
+        Route::post('/admin/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->name('admin.walkin.applicant_encoding');
         Route::post('/admin/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->name('admin.walkin.approve_applicant');
 
         Route::get('/admin/reports', [AdminController::class, 'reports'])->name('admin.reports');
@@ -333,12 +335,14 @@ Route::middleware(['auth:admin', 'audit'])->group(function () {
 
         Route::get('/walkin', [WalkInController::class, 'index'])->name('walkin.index');
         Route::get('/walkin/get-student', [WalkInController::class, 'getStudent'])->name('walkin.getStudent');
+        Route::get('/walkin/final-review-applicants', [WalkInController::class, 'finalReviewApplicants'])->name('walkin.final-review-applicants');
         Route::post('/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->name('walkin.verify-id-ai');
         Route::post('/walkin/register', [WalkInController::class, 'registerStudent'])->name('walkin.registerStudent');
         Route::get('/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->name('walkin.form');
         Route::get('/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->name('walkin.healthForm');
         Route::get('/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->name('walkin.document');
         Route::post('/walkin/store', [WalkInController::class, 'store'])->name('walkin.store');
+        Route::post('/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->name('walkin.applicant_encoding');
         Route::post('/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->name('walkin.approve_applicant');
 
         Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
