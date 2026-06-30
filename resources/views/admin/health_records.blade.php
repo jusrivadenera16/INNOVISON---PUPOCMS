@@ -1613,7 +1613,7 @@
         gap: 10px;
     }
     .verification-doc-card {
-        min-height: 158px;
+        min-height: 252px;
         border: 1px solid rgba(112, 19, 27, 0.14);
         border-radius: 14px;
         background: linear-gradient(180deg, #ffffff 0%, #fff7f7 100%);
@@ -1622,6 +1622,7 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        gap: 8px;
         transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
     }
     .verification-doc-card:hover {
@@ -1655,7 +1656,7 @@
     .health-form-doc-preview {
         position: relative;
         flex: 1 1 auto;
-        min-height: 118px;
+        min-height: 190px;
         border-radius: 12px;
         overflow: hidden;
         display: flex;
@@ -1695,7 +1696,7 @@
     }
     .verification-doc-preview {
         width: 100%;
-        aspect-ratio: 3 / 4;
+        height: 190px;
         border-radius: 10px;
         border: 1px solid rgba(112, 19, 27, 0.12);
         background: #ffffff;
@@ -1711,6 +1712,13 @@
         border: 0;
         object-fit: cover;
         background: #ffffff;
+    }
+    .verification-doc-card:not(a) {
+        justify-content: center;
+    }
+    .verification-doc-card:not(a) strong,
+    .verification-doc-card:not(a) span {
+        text-align: center;
     }
     .verify-screening-grid {
         display: grid;
@@ -2884,6 +2892,25 @@
                         'approve_url' => route('admin.update_clearance', $record->id),
                         'documents' => [
                             [
+                                'title' => '2x2 Photo',
+                                'url' => $record->student_photo ? route('walkin.document', [
+                                    'healthProfile' => $record->id,
+                                    'document' => 'student_photo',
+                                ]) : '',
+                                'meta' => [
+                                    'Guideline' => 'Formal white-background photo.',
+                                ],
+                            ],
+                            [
+                                'title' => 'Health Information Form',
+                                'url' => route('walkin.healthForm', [
+                                    'healthProfile' => $record->id,
+                                ]),
+                                'meta' => [
+                                    'Type' => 'Official health form layout',
+                                ],
+                            ],
+                            [
                                 'title' => 'Medical Certificate',
                                 'url' => $record->medical_certificate ? route('walkin.document', [
                                     'healthProfile' => $record->id,
@@ -2907,13 +2934,13 @@
                                 ],
                             ],
                             [
-                                'title' => '2x2 Photo',
-                                'url' => $record->student_photo ? route('walkin.document', [
+                                'title' => 'Health Declaration',
+                                'url' => $record->health_declaration ? route('walkin.document', [
                                     'healthProfile' => $record->id,
-                                    'document' => 'student_photo',
+                                    'document' => 'health_declaration',
                                 ]) : '',
                                 'meta' => [
-                                    'Guideline' => 'Formal white-background photo.',
+                                    'Status' => $record->health_declaration ? 'Uploaded' : 'Missing / Not yet uploaded',
                                 ],
                             ],
                         ],
@@ -3007,16 +3034,6 @@
                 @forelse($records->whereIn('id', $pendingApprovalRecordIds) as $readonlyRecord)
                     @php
                         $readonlyDocs = [
-                            'Medical Certificate' => [
-                                'key' => 'medical_certificate',
-                                'path' => $readonlyRecord->medical_certificate,
-                                'url' => null,
-                            ],
-                            'Chest X-ray Result' => [
-                                'key' => 'chest_xray_result',
-                                'path' => $readonlyRecord->chest_xray_result,
-                                'url' => null,
-                            ],
                             '2x2 Photo' => [
                                 'key' => 'student_photo',
                                 'path' => $readonlyRecord->student_photo,
@@ -3028,6 +3045,21 @@
                                 'url' => route('walkin.healthForm', [
                                     'healthProfile' => $readonlyRecord->id,
                                 ]),
+                            ],
+                            'Medical Certificate' => [
+                                'key' => 'medical_certificate',
+                                'path' => $readonlyRecord->medical_certificate,
+                                'url' => null,
+                            ],
+                            'Chest X-ray Result' => [
+                                'key' => 'chest_xray_result',
+                                'path' => $readonlyRecord->chest_xray_result,
+                                'url' => null,
+                            ],
+                            'Health Declaration' => [
+                                'key' => 'health_declaration',
+                                'path' => $readonlyRecord->health_declaration,
+                                'url' => null,
                             ],
                         ];
 
@@ -3044,6 +3076,13 @@
                                 'key' => 'student_photo',
                                 'path' => $readonlyRecord->student_photo,
                             ],
+                            'Health Information Form' => [
+                                'key' => 'health_form',
+                                'path' => true,
+                                'url' => route('walkin.healthForm', [
+                                    'healthProfile' => $readonlyRecord->id,
+                                ]),
+                            ],
                             'Medical Certificate' => [
                                 'key' => 'medical_certificate',
                                 'path' => $readonlyRecord->medical_certificate,
@@ -3052,12 +3091,9 @@
                                 'key' => 'chest_xray_result',
                                 'path' => $readonlyRecord->chest_xray_result,
                             ],
-                            'Health Information Form' => [
-                                'key' => 'health_form',
-                                'path' => true,
-                                'url' => route('walkin.healthForm', [
-                                    'healthProfile' => $readonlyRecord->id,
-                                ]),
+                            'Health Declaration' => [
+                                'key' => 'health_declaration',
+                                'path' => $readonlyRecord->health_declaration,
                             ],
                         ];
 
@@ -3129,37 +3165,56 @@
                             'documents_valid' => (bool) $readonlyRecord->documents_valid,
                             'approve_url' => route('admin.update_clearance', $readonlyRecord->id),
                             'documents' => [
-                                [
-                                    'title' => 'Medical Certificate',
-                                    'url' => $readonlyRecord->medical_certificate ? route('walkin.document', [
-                                        'healthProfile' => $readonlyRecord->id,
-                                        'document' => 'medical_certificate',
+                            [
+                                'title' => '2x2 Photo',
+                                'url' => $readonlyRecord->student_photo ? route('walkin.document', [
+                                    'healthProfile' => $readonlyRecord->id,
+                                    'document' => 'student_photo',
                                     ]) : '',
                                     'meta' => [
-                                        'Doctor' => $readonlyRecord->doctor_name ?: '-',
-                                        'Certificate Date' => optional($readonlyRecord->med_cert_date)->format('M d, Y') ?: '-',
-                                        'Findings' => $readonlyRecord->med_cert_findings ?: '-',
-                                    ],
+                                    'Guideline' => 'Formal white-background photo.',
                                 ],
-                                [
-                                    'title' => 'Chest X-ray Result',
-                                    'url' => $readonlyRecord->chest_xray_result ? route('walkin.document', [
-                                        'healthProfile' => $readonlyRecord->id,
-                                        'document' => 'chest_xray_result',
-                                    ]) : '',
-                                    'meta' => [
-                                        'Exam Date' => optional($readonlyRecord->xray_date)->format('M d, Y') ?: '-',
-                                        'Findings' => $readonlyRecord->xray_findings ?: '-',
-                                    ],
+                            ],
+                            [
+                                'title' => 'Health Information Form',
+                                'url' => route('walkin.healthForm', [
+                                    'healthProfile' => $readonlyRecord->id,
+                                ]),
+                                'meta' => [
+                                    'Type' => 'Official health form layout',
                                 ],
-                                [
-                                    'title' => '2x2 Photo',
-                                    'url' => $readonlyRecord->student_photo ? route('walkin.document', [
+                            ],
+                            [
+                                'title' => 'Medical Certificate',
+                                'url' => $readonlyRecord->medical_certificate ? route('walkin.document', [
+                                    'healthProfile' => $readonlyRecord->id,
+                                    'document' => 'medical_certificate',
+                                ]) : '',
+                                'meta' => [
+                                    'Doctor' => $readonlyRecord->doctor_name ?: '-',
+                                    'Certificate Date' => optional($readonlyRecord->med_cert_date)->format('M d, Y') ?: '-',
+                                    'Findings' => $readonlyRecord->med_cert_findings ?: '-',
+                                ],
+                            ],
+                            [
+                                'title' => 'Chest X-ray Result',
+                                'url' => $readonlyRecord->chest_xray_result ? route('walkin.document', [
+                                    'healthProfile' => $readonlyRecord->id,
+                                    'document' => 'chest_xray_result',
+                                ]) : '',
+                                'meta' => [
+                                    'Exam Date' => optional($readonlyRecord->xray_date)->format('M d, Y') ?: '-',
+                                    'Findings' => $readonlyRecord->xray_findings ?: '-',
+                                ],
+                            ],
+                            [
+                                'title' => 'Health Declaration',
+                                'url' => $readonlyRecord->health_declaration ? route('walkin.document', [
                                         'healthProfile' => $readonlyRecord->id,
-                                        'document' => 'student_photo',
+                                        'document' => 'health_declaration',
                                     ]) : '',
                                     'meta' => [
-                                        'Guideline' => 'Formal white-background photo.',
+                                        'Status' => $readonlyRecord->health_declaration ? 'Uploaded' : 'Missing / Not yet uploaded',
                                     ],
                                 ],
                             ],
@@ -3379,6 +3434,16 @@
                                 <div class="readonly-field"><span>Student Full Name</span><strong>{{ optional($readonlyRecord->user)->name ?: 'Unnamed Student' }}</strong></div>
                                 <div class="readonly-field"><span>Student ID Number</span><strong>{{ $readonlyRecord->student_id ?: optional($readonlyRecord->user)->student_id ?: optional($readonlyRecord->user)->student_number ?: '-' }}</strong></div>
                                 <div class="readonly-field"><span>Submission Reference Number</span><strong>{{ $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-' }}</strong></div>
+                                <div class="readonly-field">
+                                    <span>Health Declaration</span>
+                                    <strong>
+                                        @if($readonlyRecord->health_declaration)
+                                            <a href="{{ route('walkin.document', ['healthProfile' => $readonlyRecord->id, 'document' => 'health_declaration']) }}" target="_blank" rel="noopener noreferrer">Open uploaded file</a>
+                                        @else
+                                            Missing / Not yet uploaded
+                                        @endif
+                                    </strong>
+                                </div>
                                 <div class="readonly-field"><span>Last Updated Nurse Tracking Remarks</span><strong>{{ $readonlyRecord->medical_condition_remarks ?: $readonlyRecord->pending_reason ?: '-' }}</strong></div>
                             </div>
                         </div>

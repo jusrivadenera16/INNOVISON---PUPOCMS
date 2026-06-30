@@ -443,6 +443,21 @@
             </div>
 
             <div class="doc-file">
+                <h4>Health Declaration</h4>
+                @if(!empty($profile->health_declaration))
+                    @php($healthDeclarationUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'health_declaration']))
+                    <div class="doc-actions">
+                        <a class="doc-link" href="{{ $healthDeclarationUrl }}" target="_blank" rel="noopener">
+                            <x-outline-icon name="document-text" /> Open
+                        </a>
+                    </div>
+                    <div class="doc-preview"><iframe src="{{ $healthDeclarationUrl }}"></iframe></div>
+                @else
+                    <div class="doc-missing">No health declaration uploaded.</div>
+                @endif
+            </div>
+
+            <div class="doc-file">
                 <h4>Chest X-ray Result (PDF)</h4>
                 @if(!empty($profile->chest_xray_result))
                     @php($chestXrayUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'chest_xray_result']))

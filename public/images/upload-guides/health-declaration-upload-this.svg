@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="560" viewBox="0 0 420 560" role="img" aria-label="Upload signed readable health declaration">
+  <rect width="420" height="560" fill="#f8fafc"/>
+  <rect x="20" y="18" width="380" height="524" rx="4" fill="#fff" stroke="#334155" stroke-width="2"/>
+  <circle cx="57" cy="55" r="20" fill="#8b0000"/>
+  <path d="M57 37 62 51h15L65 60l5 15-13-9-13 9 5-15-12-9h15z" fill="#facc15"/>
+  <text x="87" y="47" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#111827">Republic of the Philippines</text>
+  <text x="87" y="64" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#111827">POLYTECHNIC UNIVERSITY OF THE PHILIPPINES</text>
+  <text x="87" y="80" font-family="Arial, sans-serif" font-size="11" fill="#111827">Medical Services Department</text>
+  <text x="210" y="118" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#111827">Declaration of Medical Information</text>
+  <text x="210" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">and Data Subject Consent Form</text>
+  <g font-family="Arial, sans-serif" font-size="12" fill="#111827">
+    <text x="58" y="176">I hereby certify that the medical health information given to the physician</text>
+    <text x="58" y="194">and nurses is true, correct, and complete to the best of my knowledge.</text>
+    <text x="58" y="222">I understand that my personal health information will be used for clinic</text>
+    <text x="58" y="240">documentation, health assessment, treatment, and research purposes.</text>
+    <text x="58" y="268">In compliance with the Data Privacy Act of 2012, I voluntarily consent</text>
+    <text x="58" y="286">to the collection and processing of my medical information.</text>
+  </g>
+  <path d="M245 360c14-16 32-19 44-9 7 6-4 14-14 12-16-3-25-4-36 6" fill="none" stroke="#111827" stroke-width="2"/>
+  <line x1="214" y1="374" x2="344" y2="374" stroke="#111827" stroke-width="2"/>
+  <text x="279" y="391" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#111827">Student's Signature Over Printed Name / Date</text>
+  <text x="279" y="411" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#111827">Juan D. Dela Cruz / May 25, 2025</text>
+  <line x1="214" y1="456" x2="344" y2="456" stroke="#111827" stroke-width="2"/>
+  <text x="279" y="473" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#111827">Guardian's Signature Over Printed Name / Date</text>
+  <circle cx="76" cy="510" r="15" fill="#2563eb" opacity=".9"/>
+  <circle cx="122" cy="510" r="15" fill="#0f766e" opacity=".9"/>
+  <circle cx="168" cy="510" r="15" fill="#f59e0b" opacity=".9"/>
+  <text x="210" y="530" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="800" fill="#166534">Upload the signed, clear, and readable form.</text>
+</svg>

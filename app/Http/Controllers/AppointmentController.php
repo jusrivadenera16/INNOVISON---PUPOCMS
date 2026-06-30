@@ -1926,6 +1926,7 @@ public function account(Request $request)
             'medical_certificate',
             'chest_xray_result',
             'student_photo',
+            'health_declaration',
             'pwd_id_proof',
             'medical_assessment_upload',
         ];
@@ -1965,7 +1966,7 @@ public function account(Request $request)
 
         $requiredDocuments = collect($healthProfile->resubmission_required_documents ?? [])
             ->filter()
-            ->intersect(['student_photo', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])
+            ->intersect(['student_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])
             ->values();
 
         $statusNormalized = strtolower(trim((string) $healthProfile->clearance_status));
@@ -1979,6 +1980,7 @@ public function account(Request $request)
 
         $documentRules = [
             'student_photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
+            'health_declaration' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
             'medical_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
             'chest_xray_result' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
             'pwd_id_proof' => ['required', 'file', 'mimes:pdf', 'max:2048'],
@@ -1986,6 +1988,7 @@ public function account(Request $request)
 
         $attributeNames = [
             'student_photo' => '2x2 Student Photo',
+            'health_declaration' => 'Health Declaration',
             'medical_certificate' => 'Medical Certificate',
             'chest_xray_result' => 'Chest X-ray Result',
             'pwd_id_proof' => 'PWD ID Proof',
@@ -1999,6 +2002,7 @@ public function account(Request $request)
 
         $storageFolders = [
             'student_photo' => 'health_profiles/photos',
+            'health_declaration' => 'health_profiles/health_declarations',
             'medical_certificate' => 'health_profiles/medical_certificates',
             'chest_xray_result' => 'health_profiles/chest_xray_results',
             'pwd_id_proof' => 'health_profiles/pwd_id_proofs',
@@ -2067,6 +2071,61 @@ public function account(Request $request)
 
             return back()->withInput()
                 ->with('error', 'Unable to upload replacement files right now. Please try again.');
+        }
+    }
+
+    public function uploadHealthDeclaration(Request $request)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if (!$user) {
+            return redirect('/login-as-student')->with('error', 'Please login first.');
+        }
+
+        $healthProfile = HealthProfile::query()->where('user_id', $user->id)->first();
+        if (!$healthProfile) {
+            return redirect('/student/account?view=health-record')
+                ->with('error', 'Submit your health profile before uploading your Health Declaration.');
+        }
+
+        $request->validate([
+            'health_declaration' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
+        ], [], [
+            'health_declaration' => 'Health Declaration',
+        ]);
+
+        $oldPath = ltrim((string) $healthProfile->health_declaration, '/');
+
+        try {
+            $newPath = $request->file('health_declaration')->store('health_profiles/health_declarations', 'public');
+            $healthProfile->health_declaration = $newPath;
+            $healthProfile->save();
+
+            $oldPath = preg_replace('#^(?:public/)?storage/#', '', $oldPath) ?? $oldPath;
+            if ($oldPath !== '' && Storage::disk('public')->exists($oldPath)) {
+                Storage::disk('public')->delete($oldPath);
+            }
+
+            \App\Models\ActivityLog::create([
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'action' => 'Health Declaration Uploaded',
+                'description' => 'Student uploaded a Health Declaration document.',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            return redirect('/student/account?view=health-record')
+                ->with('success', 'Health Declaration uploaded successfully.');
+        } catch (\Throwable $e) {
+            Log::error('Health Declaration upload failed', [
+                'user_id' => $user->id,
+                'health_profile_id' => $healthProfile->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return back()->withInput()
+                ->with('error', 'Unable to upload the Health Declaration right now. Please try again.');
         }
     }
 
@@ -2692,6 +2751,7 @@ public function storeHealthForm(Request $request)
         'zipcode'           => 'required|string|max:20',
         'birthday'          => 'required|date',
         'student_photo'     => 'required|image|mimes:jpeg,png,jpg|max:1024',
+        'health_declaration' => 'required|file|mimes:pdf,jpg,jpeg,png|max:1024',
         'age'               => 'required|numeric|min:15|max:100',
         'sex'               => 'required|string',
         'civil_status'      => 'required|string',
@@ -2871,6 +2931,9 @@ public function storeHealthForm(Request $request)
         $medicalCertificatePath = $request->hasFile('medical_certificate')
             ? $request->file('medical_certificate')->store('health_profiles/medical_certificates', 'public')
             : null;
+        $healthDeclarationPath = $request->hasFile('health_declaration')
+            ? $request->file('health_declaration')->store('health_profiles/health_declarations', 'public')
+            : null;
         \App\Models\HealthProfile::updateOrCreate(
             ['user_id' => $user->id],
             [
@@ -2881,6 +2944,7 @@ public function storeHealthForm(Request $request)
                 'zipcode'            => $request->zipcode,
                 'birthday'           => $request->input('birthday'),
                 'student_photo'      => $photoPath,
+                'health_declaration' => $healthDeclarationPath,
                 'age'                => $request->age,
                 'sex'                => $request->sex,
                 'civil_status'       => $request->civil_status,

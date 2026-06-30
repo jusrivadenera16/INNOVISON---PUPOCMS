@@ -1743,6 +1743,245 @@
         margin-top: 12px;
         display: block;
     }
+    .health-declaration-card {
+        margin: 18px 0;
+        padding: 18px;
+        overflow: hidden;
+        border: 1px solid #fecaca;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #fff1f2, #ffffff);
+        box-shadow: 0 14px 34px rgba(112, 19, 27, 0.08);
+    }
+    .health-declaration-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 14px;
+    }
+    .health-declaration-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #70131b;
+        font-size: 18px;
+        font-weight: 900;
+    }
+    .health-declaration-title svg {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 auto;
+    }
+    .health-declaration-note {
+        margin: 6px 0 0;
+        color: #475569;
+        font-size: 14px;
+        line-height: 1.55;
+    }
+    .health-declaration-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        border: 1px solid #fca5a5;
+        background: #fef2f2;
+        color: #991b1b;
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .health-declaration-badge.is-uploaded {
+        border-color: #86efac;
+        background: #f0fdf4;
+        color: #166534;
+    }
+    .health-declaration-form,
+    .health-declaration-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+    }
+    .health-declaration-actions {
+        align-items: stretch;
+    }
+    .health-declaration-upload {
+        flex: 1 1 280px;
+        display: grid;
+        gap: 8px;
+    }
+    .health-declaration-picker {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        min-height: 46px;
+        padding: 7px 10px;
+        border: 1px solid rgba(112, 19, 27, 0.18);
+        border-radius: 12px;
+        background: #ffffff;
+        color: #1f2937;
+        font-size: 13px;
+        cursor: pointer;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+    .health-declaration-picker:hover,
+    .health-declaration-picker:focus-within {
+        border-color: #70131b;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, 0.08);
+    }
+    .health-declaration-file {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    .health-declaration-choose {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 32px;
+        padding: 0 12px;
+        border-radius: 9px;
+        background: #70131b;
+        color: #facc15;
+        font-size: 12px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+    .health-declaration-filename {
+        min-width: 0;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .health-declaration-limit {
+        color: #991b1b;
+        font-size: 12px;
+        font-weight: 800;
+    }
+    .health-declaration-preview {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        padding: 10px;
+        border: 1px solid rgba(112, 19, 27, 0.12);
+        border-radius: 12px;
+        background: #ffffff;
+    }
+    .health-declaration-preview.is-visible {
+        display: flex;
+    }
+    .health-declaration-preview-thumb {
+        width: 58px;
+        height: 58px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: #fff1f2;
+        color: #70131b;
+        font-size: 11px;
+        font-weight: 900;
+        overflow: hidden;
+        flex: 0 0 auto;
+    }
+    .health-declaration-preview-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .health-declaration-preview-copy {
+        min-width: 0;
+        display: grid;
+        gap: 3px;
+        color: #1f2937;
+        font-size: 13px;
+        font-weight: 800;
+    }
+    .health-declaration-preview-copy small {
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 800;
+    }
+    .health-declaration-preview-copy strong,
+    .health-declaration-preview-copy small {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    .health-declaration-submit {
+        min-height: 46px;
+        padding: 0 18px;
+        border: 1px solid #70131b;
+        border-radius: 12px;
+        background: #70131b;
+        color: #facc15;
+        font-weight: 900;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, 0.2);
+    }
+    .health-declaration-submit:hover,
+    .health-declaration-submit:focus {
+        background: #facc15;
+        color: #70131b;
+        border-color: #facc15;
+        outline: none;
+    }
+    @media (max-width: 640px) {
+        .health-declaration-card {
+            padding: 16px;
+        }
+        .health-declaration-head {
+            display: grid;
+            gap: 12px;
+        }
+        .health-declaration-badge {
+            width: fit-content;
+            max-width: 100%;
+            white-space: normal;
+            text-align: center;
+        }
+        .health-declaration-form,
+        .health-declaration-actions {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            width: 100%;
+        }
+        .health-declaration-upload {
+            min-width: 0;
+            width: 100%;
+        }
+        .health-declaration-picker {
+            align-items: stretch;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .health-declaration-choose {
+            width: fit-content;
+        }
+        .health-declaration-filename {
+            width: 100%;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        .health-declaration-submit {
+            width: 100%;
+        }
+    }
     .health-status-meta-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3080,12 +3319,14 @@ document.addEventListener('DOMContentLoaded', function () {
         $isResubmissionStatus = $statusNormalized === 'pending resubmission' || $resubmissionDocuments->isNotEmpty();
         $resubmissionDocumentLabels = [
             'student_photo' => '2x2 Student Photo',
+            'health_declaration' => 'Health Declaration',
             'medical_certificate' => 'Medical Certificate',
             'chest_xray_result' => 'Chest X-ray Result',
             'pwd_id_proof' => 'PWD ID Proof',
         ];
         $resubmissionDocumentMeta = [
             'student_photo' => ['accept' => '.jpg,.jpeg,.png,image/jpeg,image/png', 'hint' => 'JPG or PNG, up to 1 MB'],
+            'health_declaration' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 1 MB'],
             'medical_certificate' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
             'chest_xray_result' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
             'pwd_id_proof' => ['accept' => '.pdf,application/pdf', 'hint' => 'PDF only, up to 2 MB'],
@@ -3108,6 +3349,8 @@ document.addEventListener('DOMContentLoaded', function () {
         $recordVerifiedAt = optional(optional($user->healthProfile)->verified_at)->format('M d, Y g:i A');
         $recordReferenceNumber = trim((string) optional($healthProfileRecord)->reference_number);
         $recordReferenceNumber = $recordReferenceNumber !== '' ? $recordReferenceNumber : trim((string) ($user->reference_number ?? '-'));
+        $hasHealthDeclaration = filled(optional($healthProfileRecord)->health_declaration);
+        $healthDeclarationUploadError = $errors->has('health_declaration');
         $recordStudentNumber = trim((string) (
             optional($healthProfileRecord)->student_number
             ?: ($accountProfileData['student_number'] ?? $user->student_number ?? '')
@@ -3144,6 +3387,46 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         </div>
     </div>
+    @if($healthFormSubmitted && $healthProfileRecord && !$hasHealthDeclaration)
+        <div class="health-declaration-card">
+            <div class="health-declaration-head">
+                <div>
+                    <div class="health-declaration-title">
+                        <x-outline-icon name="document-text" />
+                        Health Declaration
+                    </div>
+                    <p class="health-declaration-note">
+                        Please upload your Health Declaration form. This additional file will be included in your clinic verification documents.
+                    </p>
+                </div>
+                <span class="health-declaration-badge {{ $hasHealthDeclaration ? 'is-uploaded' : '' }}">
+                    {{ $hasHealthDeclaration ? 'Uploaded' : 'Missing Health Declaration' }}
+                </span>
+            </div>
+            <form class="health-declaration-form" method="POST" action="{{ route('student.health_record.health_declaration') }}" enctype="multipart/form-data">
+                @csrf
+                <div class="health-declaration-upload">
+                    <label class="health-declaration-picker">
+                        <input class="health-declaration-file" type="file" name="health_declaration" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required data-health-declaration-input onchange="window.updateHealthDeclarationPreview && window.updateHealthDeclarationPreview(this)">
+                        <span class="health-declaration-choose">Choose File</span>
+                        <span class="health-declaration-filename" data-health-declaration-filename>No file chosen</span>
+                    </label>
+                    <span class="health-declaration-limit">PDF, JPG, or PNG only. Maximum file size: 1 MB.</span>
+                    <div class="health-declaration-preview" data-health-declaration-preview>
+                        <span class="health-declaration-preview-thumb" data-health-declaration-preview-thumb>FILE</span>
+                        <span class="health-declaration-preview-copy">
+                            <strong data-health-declaration-preview-name>Selected file</strong>
+                            <small data-health-declaration-preview-size>Ready to upload</small>
+                        </span>
+                    </div>
+                </div>
+                <button type="submit" class="health-declaration-submit">Upload Health Declaration</button>
+            </form>
+            @if($healthDeclarationUploadError)
+                <div class="field-error-message">{{ $errors->first('health_declaration') }}</div>
+            @endif
+        </div>
+    @endif
     <div class="health-status-card">
         <div class="health-status-head">
             <span class="health-status-title">
@@ -3426,6 +3709,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                         'is_image' => true,
                                     ],
                                     [
+                                        'key' => 'health_declaration',
+                                        'title' => 'Health Declaration',
+                                        'meta' => 'PDF or Image Upload',
+                                        'path' => optional($healthProfileRecord)->health_declaration,
+                                        'is_image' => false,
+                                    ],
+                                    [
                                         'key' => 'medical_certificate',
                                         'title' => 'Medical Certificate',
                                         'meta' => 'PDF or Image Upload',
@@ -3692,6 +3982,67 @@ function initializeResubmissionFilePreviews(root = document) {
     });
 }
 
+function initializeHealthDeclarationPreview(root = document) {
+    root.querySelectorAll('[data-health-declaration-input]').forEach(function (input) {
+        if (input.dataset.previewBound === 'true') {
+            return;
+        }
+
+        input.dataset.previewBound = 'true';
+        input.addEventListener('change', function () {
+            window.updateHealthDeclarationPreview(input);
+        });
+    });
+}
+
+window.updateHealthDeclarationPreview = function (input) {
+    const form = input.closest('form');
+    const file = input.files && input.files[0] ? input.files[0] : null;
+    const filename = form?.querySelector('[data-health-declaration-filename]');
+    const preview = form?.querySelector('[data-health-declaration-preview]');
+    const thumb = form?.querySelector('[data-health-declaration-preview-thumb]');
+    const previewName = form?.querySelector('[data-health-declaration-preview-name]');
+    const previewSize = form?.querySelector('[data-health-declaration-preview-size]');
+    const submitButton = form?.querySelector('.health-declaration-submit');
+
+    if (filename) {
+        filename.textContent = file ? file.name : 'No file chosen';
+    }
+
+    if (!preview || !thumb || !previewName || !previewSize) {
+        return;
+    }
+
+    preview.classList.remove('is-visible');
+    thumb.replaceChildren();
+    thumb.textContent = 'FILE';
+    previewName.textContent = 'Selected file';
+    previewSize.textContent = 'Ready to upload';
+
+    if (!file) {
+        return;
+    }
+
+    preview.classList.add('is-visible');
+    previewName.textContent = file.name;
+    previewSize.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB / 1 MB limit`;
+    if (submitButton && submitButton.textContent.trim() === 'Upload Health Declaration') {
+        submitButton.textContent = 'Upload Selected File';
+    }
+
+    if (file.type && file.type.startsWith('image/')) {
+        const image = document.createElement('img');
+        image.alt = '';
+        image.src = URL.createObjectURL(file);
+        image.onload = function () {
+            URL.revokeObjectURL(image.src);
+        };
+        thumb.replaceChildren(image);
+    } else {
+        thumb.textContent = (file.name.split('.').pop() || 'PDF').slice(0, 4).toUpperCase();
+    }
+};
+
 function enableEditing() {
     alert('Edit Profile is currently unavailable for now. Please contact the clinic staff if any information needs correction.');
 }
@@ -3712,6 +4063,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     modalCard?.addEventListener('scroll', updateHealthRecordModalIndicator);
     initializeResubmissionFilePreviews(document);
+    initializeHealthDeclarationPreview(document);
 
     if (shouldOpenResubmissionModal) {
         openResubmissionModal();

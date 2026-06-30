@@ -52,14 +52,31 @@
             font-weight: 700;
             min-height: 16px;
         }
+        .doctor-value {
+            padding-left: 14px !important;
+        }
         .value-small { width: 14%; }
         .value-medium { width: 24%; }
         .value-wide { width: 40%; }
         .value-xray { width: 46%; }
-        .value-remarks {
+        .section-spacer td {
+            height: 8px;
+            padding: 0;
+        }
+        .block-label {
+            padding-top: 4px !important;
+            font-weight: 700;
+            vertical-align: top !important;
+        }
+        .block-value {
+            padding-top: 2px !important;
             white-space: normal !important;
-            line-height: 1.35;
-            min-height: 26px;
+            line-height: 1.45;
+            font-weight: 700;
+            vertical-align: top !important;
+        }
+        .block-value div {
+            margin: 0 0 3px;
         }
     </style>
 </head>
@@ -114,7 +131,7 @@
             </tr>
             <tr>
                 <td class="label-wide">Medical certificate issued by: Dr.</td>
-                <td colspan="3" class="value-line value-wide">{{ $doctorName }}</td>
+                <td colspan="3" class="value-line value-wide doctor-value">{{ $doctorName }}</td>
                 <td class="label-short">Date:</td>
                 <td colspan="3" class="value-line value-medium">{{ $medicalCertificateDate }}</td>
             </tr>
@@ -124,9 +141,25 @@
                 <td class="label-short">Date:</td>
                 <td colspan="2" class="value-line value-medium">{{ $xrayDate }}</td>
             </tr>
+            @if(!empty($hasMedicalCondition) && !empty($medicalConditionLines))
+                <tr class="section-spacer"><td colspan="8"></td></tr>
+                <tr>
+                    <td colspan="8" class="block-label">Medical Condition:</td>
+                </tr>
+                <tr>
+                    <td colspan="8" class="block-value">
+                        @foreach($medicalConditionLines as $conditionLine)
+                            <div>{{ $conditionLine }}</div>
+                        @endforeach
+                    </td>
+                </tr>
+            @endif
+            <tr class="section-spacer"><td colspan="8"></td></tr>
             <tr>
-                <td class="label">Remarks:</td>
-                <td colspan="7" class="value-line value-remarks">{{ $medAssessmentRemarks }}</td>
+                <td colspan="8" class="block-label">Remarks:</td>
+            </tr>
+            <tr>
+                <td colspan="8" class="block-value">{{ $medAssessmentRemarks }}</td>
             </tr>
         </table>
     </div>

@@ -1525,7 +1525,7 @@ public function updateClearance(Request $request, $id)
         'physical_assessment_status' => ['required', Rule::in(['Not Yet Conducted', 'Completed / Passed'])],
         'documents_valid' => ['nullable', 'accepted'],
         'resubmission_required_documents' => ['nullable', 'array'],
-        'resubmission_required_documents.*' => ['string', Rule::in(['student_photo', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])],
+        'resubmission_required_documents.*' => ['string', Rule::in(['student_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])],
     ]);
 
     $record = HealthProfile::findOrFail($id);

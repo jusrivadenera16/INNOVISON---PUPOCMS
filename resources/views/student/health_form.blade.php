@@ -628,6 +628,107 @@
             background: #eef1f4;
         }
 
+        .health-declaration-guide-preview {
+            position: relative;
+            height: 148px;
+            margin: 0;
+            overflow: hidden;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .health-declaration-guide-sheet {
+            position: relative;
+            width: 76%;
+            height: 132px;
+            border: 1px solid #334155;
+            background: #ffffff;
+            padding: 10px 12px;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+        }
+
+        .health-declaration-guide-head {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 8px;
+        }
+
+        .health-declaration-guide-seal {
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            background: radial-gradient(circle at center, #facc15 0 28%, #991b1b 30% 100%);
+            flex: 0 0 auto;
+        }
+
+        .health-declaration-guide-lines {
+            display: grid;
+            gap: 4px;
+            flex: 1 1 auto;
+        }
+
+        .health-declaration-guide-line {
+            height: 4px;
+            border-radius: 999px;
+            background: #111827;
+            opacity: 0.78;
+        }
+
+        .health-declaration-guide-title {
+            width: 88%;
+            height: 5px;
+            margin: 0 auto 9px;
+            border-radius: 999px;
+            background: #111827;
+        }
+
+        .health-declaration-guide-body {
+            display: grid;
+            gap: 5px;
+        }
+
+        .health-declaration-guide-signature {
+            width: 48%;
+            height: 2px;
+            margin: 14px 0 0 auto;
+            background: #111827;
+        }
+
+        .health-declaration-guide-name {
+            width: 42%;
+            height: 4px;
+            margin: 5px 0 0 auto;
+            border-radius: 999px;
+            background: #111827;
+        }
+
+        .health-declaration-guide-preview.is-declaration-wrong .health-declaration-guide-sheet {
+            filter: blur(0.7px);
+            opacity: 0.72;
+        }
+
+        .health-declaration-guide-preview.is-declaration-wrong::before,
+        .health-declaration-guide-preview.is-declaration-wrong::after {
+            content: "";
+            position: absolute;
+            width: 88%;
+            height: 5px;
+            border-radius: 999px;
+            background: #dc2626;
+            z-index: 2;
+        }
+
+        .health-declaration-guide-preview.is-declaration-wrong::before {
+            transform: rotate(42deg);
+        }
+
+        .health-declaration-guide-preview.is-declaration-wrong::after {
+            transform: rotate(-42deg);
+        }
+
         .upload-example-caption {
             min-height: 48px;
             margin: 0;
@@ -1582,7 +1683,7 @@
                 $personalErrorFields = ['school_year', 'course_code', 'course_college', 'home_address', 'zipcode', 'birthday', 'age', 'sex', 'civil_status', 'blood_type', 'contact_no', 'guardian_name', 'landline', 'cellphone'];
                 $medicalErrorFields = ['has_illness', 'medical_history', 'other_illness', 'has_disability', 'disability_type', 'food_allergies', 'no_allergies', 'medicine_allergies', 'other_med_allergies', 'is_smoker', 'is_drinker'];
                 $covidErrorFields = ['covid_vaccinated', 'vaccine_history'];
-                $uploadErrorFields = ['medical_certificate', 'doctor_name', 'med_cert_date', 'med_cert_findings', 'med_cert_findings_details', 'chest_xray_result', 'xray_date', 'xray_findings', 'xray_findings_details', 'pwd_id_proof', 'student_photo', 'health_profile_certified'];
+                $uploadErrorFields = ['medical_certificate', 'doctor_name', 'med_cert_date', 'med_cert_findings', 'med_cert_findings_details', 'chest_xray_result', 'xray_date', 'xray_findings', 'xray_findings_details', 'pwd_id_proof', 'student_photo', 'health_declaration', 'health_profile_certified'];
                 $startStep = collect($uploadErrorFields)->contains(fn ($field) => $errors->has($field)) ? 5
                     : (collect($covidErrorFields)->contains(fn ($field) => $errors->has($field)) ? 4
                     : (collect($medicalErrorFields)->contains(fn ($field) => $errors->has($field)) ? 3
@@ -2160,6 +2261,86 @@
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             <small>Required only when PWD. Allowed: PDF only, max 2MB. Compress the file if needed to meet the size requirement.</small>
                         </div>
+                        <div class="requirement-card">
+                            <div class="requirement-card-header">
+                                <strong>2x2 Photo (Image) <span class="required">*</span></strong>
+                                <span class="requirement-badge">JPG/PNG</span>
+                            </div>
+                            <p class="requirement-guideline">Must be a formal photo on a plain white background, taken within the last 6 months.</p>
+                            <div class="upload-example-grid" aria-label="2x2 photo upload examples">
+                                <div class="upload-example is-wrong">
+                                    <div class="upload-example-status"><span aria-hidden="true">&times;</span> Do Not Upload</div>
+                                    <img src="{{ asset('images/upload-guides/photo-casual-do-not-upload.jpg') }}" alt="Casual outdoor selfie that should not be uploaded">
+                                    <p class="upload-example-caption">No selfies, casual poses, scenery, filters, or distracting backgrounds.</p>
+                                </div>
+                                <div class="upload-example is-correct">
+                                    <div class="upload-example-status"><span aria-hidden="true">&#10003;</span> Upload This</div>
+                                    <img src="{{ asset('images/upload-guides/photo-formal-upload.jpg') }}" alt="Formal front-facing ID photo on a plain white background">
+                                    <p class="upload-example-caption">Formal, front-facing photo with even lighting and a plain white background.</p>
+                                </div>
+                            </div>
+                            <input type="file" name="student_photo" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" required data-upload-input data-preview-kind="image">
+                            <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
+                            <small>Allowed: JPG/PNG only, max 1MB. Compress the image if needed to meet the size requirement.</small>
+                        </div>
+                        <div class="requirement-card">
+                            <div class="requirement-card-header">
+                                <strong>Health Declaration <span class="required">*</span></strong>
+                                <span class="requirement-badge">PDF/IMG</span>
+                            </div>
+                            <p class="requirement-guideline">Upload the signed, clear, and readable Health Declaration form. Do not upload without signature, blurry, or unreadable copies.</p>
+                            <div class="upload-example-grid" aria-label="Health Declaration upload examples">
+                                <div class="upload-example is-wrong">
+                                    <div class="upload-example-status"><span aria-hidden="true">&times;</span> Do Not Upload</div>
+                                    <div class="health-declaration-guide-preview is-declaration-wrong" role="img" aria-label="Unsigned, blurry, or unreadable Health Declaration that should not be uploaded">
+                                        <div class="health-declaration-guide-sheet">
+                                            <div class="health-declaration-guide-head">
+                                                <span class="health-declaration-guide-seal"></span>
+                                                <span class="health-declaration-guide-lines">
+                                                    <span class="health-declaration-guide-line"></span>
+                                                    <span class="health-declaration-guide-line"></span>
+                                                </span>
+                                            </div>
+                                            <div class="health-declaration-guide-title"></div>
+                                            <div class="health-declaration-guide-body">
+                                                <span class="health-declaration-guide-line"></span>
+                                                <span class="health-declaration-guide-line"></span>
+                                                <span class="health-declaration-guide-line"></span>
+                                                <span class="health-declaration-guide-line"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p class="upload-example-caption">Do not upload without sign, blurry, or unreadable.</p>
+                                </div>
+                                <div class="upload-example is-correct">
+                                    <div class="upload-example-status"><span aria-hidden="true">&#10003;</span> Upload This</div>
+                                    <div class="health-declaration-guide-preview is-declaration-correct" role="img" aria-label="Signed and readable Health Declaration form that should be uploaded">
+                                        <div class="health-declaration-guide-sheet">
+                                            <div class="health-declaration-guide-head">
+                                                <span class="health-declaration-guide-seal"></span>
+                                                <span class="health-declaration-guide-lines">
+                                                    <span class="health-declaration-guide-line"></span>
+                                                    <span class="health-declaration-guide-line"></span>
+                                                </span>
+                                            </div>
+                                            <div class="health-declaration-guide-title"></div>
+                                            <div class="health-declaration-guide-body">
+                                                <span class="health-declaration-guide-line"></span>
+                                                <span class="health-declaration-guide-line"></span>
+                                                <span class="health-declaration-guide-line"></span>
+                                                <span class="health-declaration-guide-line"></span>
+                                            </div>
+                                            <div class="health-declaration-guide-signature"></div>
+                                            <div class="health-declaration-guide-name"></div>
+                                        </div>
+                                    </div>
+                                    <p class="upload-example-caption">Upload the signed, clear, and readable Health Declaration form.</p>
+                                </div>
+                            </div>
+                            <input type="file" name="health_declaration" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required data-requirement-file data-upload-input>
+                            <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
+                            <small>Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.</small>
+                        </div>
                         <div class="requirement-card {{ old('doctor_name') || old('med_cert_date') || old('med_cert_findings') || old('med_cert_findings_details') ? 'has-old-data' : '' }}" data-requirement-card>
                             <div class="requirement-card-header">
                                 <strong>Medical Certificate <span class="required">*</span></strong>
@@ -2277,28 +2458,6 @@
                                     >{{ old('xray_findings_details') }}</textarea>
                                 </div>
                             </div>
-                        </div>
-                        <div class="requirement-card">
-                            <div class="requirement-card-header">
-                                <strong>2x2 Photo (Image) <span class="required">*</span></strong>
-                                <span class="requirement-badge">JPG/PNG</span>
-                            </div>
-                            <p class="requirement-guideline">Must be a formal photo on a plain white background, taken within the last 6 months.</p>
-                            <div class="upload-example-grid" aria-label="2x2 photo upload examples">
-                                <div class="upload-example is-wrong">
-                                    <div class="upload-example-status"><span aria-hidden="true">&times;</span> Do Not Upload</div>
-                                    <img src="{{ asset('images/upload-guides/photo-casual-do-not-upload.jpg') }}" alt="Casual outdoor selfie that should not be uploaded">
-                                    <p class="upload-example-caption">No selfies, casual poses, scenery, filters, or distracting backgrounds.</p>
-                                </div>
-                                <div class="upload-example is-correct">
-                                    <div class="upload-example-status"><span aria-hidden="true">&#10003;</span> Upload This</div>
-                                    <img src="{{ asset('images/upload-guides/photo-formal-upload.jpg') }}" alt="Formal front-facing ID photo on a plain white background">
-                                    <p class="upload-example-caption">Formal, front-facing photo with even lighting and a plain white background.</p>
-                                </div>
-                            </div>
-                            <input type="file" name="student_photo" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" required data-upload-input data-preview-kind="image">
-                            <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
-                            <small>Allowed: JPG/PNG only, max 1MB. Compress the image if needed to meet the size requirement.</small>
                         </div>
                     </div>
                     <div class="certify-row final-certification">
@@ -2857,9 +3016,9 @@
                     return;
                 }
 
-                const isPhotoInput = input.name === 'student_photo';
-                const maxSize = isPhotoInput ? 1 * 1024 * 1024 : 2 * 1024 * 1024;
-                const maxSizeLabel = isPhotoInput ? '1MB' : '2MB';
+                const isOneMbInput = input.name === 'student_photo' || input.name === 'health_declaration';
+                const maxSize = isOneMbInput ? 1 * 1024 * 1024 : 2 * 1024 * 1024;
+                const maxSizeLabel = isOneMbInput ? '1MB' : '2MB';
 
                 if (file.size > maxSize) {
                     preview.innerHTML = `

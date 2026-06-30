@@ -524,19 +524,22 @@ class WalkInController extends Controller
             ['key' => 'medical_certificate', 'label' => 'Medical Certificate', 'path' => $profile->medical_certificate],
             ['key' => 'chest_xray_result', 'label' => 'Chest X-Ray Result', 'path' => $profile->chest_xray_result],
             ['key' => 'student_photo', 'label' => '2x2 Photo', 'path' => $profile->student_photo],
+            ['key' => 'health_declaration', 'label' => 'Health Declaration', 'path' => $profile->health_declaration],
             ['key' => 'pwd_id_proof', 'label' => 'PWD ID Proof', 'path' => $profile->pwd_id_proof],
             ['key' => 'medical_assessment_upload', 'label' => 'Medical Assessment Copy', 'path' => $profile->medical_assessment_upload],
-        ])->filter(fn (array $document) => filled($document['path']))
+        ])->filter(fn (array $document) => filled($document['path']) || $document['key'] === 'health_declaration')
             ->map(function (array $document) use ($request, $profile) {
                 $extension = strtolower(pathinfo((string) $document['path'], PATHINFO_EXTENSION));
+                $isMissing = blank($document['path']);
 
                 return [
                     'key' => $document['key'],
                     'label' => $document['label'],
-                    'url' => route($this->walkinRouteName($request, 'document'), [
+                    'url' => $isMissing ? '' : route($this->walkinRouteName($request, 'document'), [
                         'healthProfile' => $profile->id,
                         'document' => $document['key'],
                     ]),
+                    'missing' => $isMissing,
                     'type' => in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true) ? 'image' : 'file',
                 ];
             })
@@ -758,6 +761,20 @@ class WalkInController extends Controller
                 : $value . ' ' . $unit;
         };
 
+        $conditionSummary = $this->healthProfileConditionSummary($profile);
+        $medicalConditionLines = collect($conditionSummary['items'] ?? [])
+            ->map(function (array $item): string {
+                $label = ($item['label'] ?? '') === 'Nurse Remarks'
+                    ? 'Final Review Condition'
+                    : (string) ($item['label'] ?? 'Condition');
+                $value = trim((string) ($item['value'] ?? ''));
+
+                return $value !== '' ? trim($label) . ': ' . $value : '';
+            })
+            ->filter()
+            ->values()
+            ->all();
+
         $data = [
             'assessmentDate' => $this->formatMedicalAssessmentDate($profile->assessment_date ?: now()),
             'birthday' => $this->formatMedicalAssessmentDate($profile->birthday),
@@ -775,6 +792,8 @@ class WalkInController extends Controller
             'medicalCertificateDate' => $this->formatMedicalAssessmentDate($profile->medical_certificate_issued_at ?: $profile->med_cert_date),
             'xrayResult' => $this->normalizeMedicalAssessmentXrayResult($profile->chest_xray_result_text ?: $profile->xray_findings),
             'xrayDate' => $this->formatMedicalAssessmentDate($profile->chest_xray_date ?: $profile->xray_date),
+            'hasMedicalCondition' => (bool) ($conditionSummary['has_condition'] ?? false) || $medicalConditionLines !== [],
+            'medicalConditionLines' => $medicalConditionLines,
             'medAssessmentRemarks' => trim((string) ($profile->med_assessment_remarks ?: $profile->assessment_remarks)),
         ];
 
@@ -797,6 +816,7 @@ class WalkInController extends Controller
             'medical_certificate',
             'chest_xray_result',
             'student_photo',
+            'health_declaration',
             'pwd_id_proof',
             'medical_assessment_upload',
         ];
@@ -1903,7 +1923,7 @@ PROMPT;
                 'has_medical_condition' => ['nullable', 'boolean'],
                 'incomplete_requirements' => ['nullable', 'boolean'],
                 'resubmission_required_documents' => ['nullable', 'array'],
-                'resubmission_required_documents.*' => ['string', 'in:student_photo,medical_certificate,chest_xray_result,pwd_id_proof'],
+                'resubmission_required_documents.*' => ['string', 'in:student_photo,health_declaration,medical_certificate,chest_xray_result,pwd_id_proof'],
                 'needs_physician_evaluation' => ['nullable', 'boolean'],
                 'other_pending_reason' => ['nullable', 'string', 'max:1000'],
                 'medical_condition' => ['required_if:has_medical_condition,true', 'nullable', 'string', 'max:1000'],
@@ -1958,6 +1978,7 @@ PROMPT;
                 $documentLabels = collect($resubmissionRequiredDocuments)
                     ->map(fn ($document) => match ($document) {
                         'student_photo' => '2x2 Photo',
+                        'health_declaration' => 'Health Declaration',
                         'medical_certificate' => 'Medical Certificate',
                         'chest_xray_result' => 'Chest X-ray Result',
                         'pwd_id_proof' => 'PWD ID Proof',

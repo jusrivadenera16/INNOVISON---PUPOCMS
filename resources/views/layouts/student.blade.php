@@ -2832,7 +2832,7 @@
             && !$studentUser->healthProfile;
         $studentResubmissionDocuments = collect(optional($studentUser?->healthProfile)->resubmission_required_documents ?? [])
             ->filter()
-            ->intersect(['student_photo', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])
+            ->intersect(['student_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])
             ->values();
         $showGlobalResubmissionModal = !$showHealthFormModal
             && $studentUser
@@ -2840,12 +2840,14 @@
             && $studentResubmissionDocuments->isNotEmpty();
         $studentResubmissionLabels = [
             'student_photo' => '2x2 Student Photo',
+            'health_declaration' => 'Health Declaration',
             'medical_certificate' => 'Medical Certificate',
             'chest_xray_result' => 'Chest X-ray Result',
             'pwd_id_proof' => 'PWD ID Proof',
         ];
         $studentResubmissionMeta = [
             'student_photo' => ['accept' => '.jpg,.jpeg,.png,image/jpeg,image/png', 'hint' => 'JPG or PNG, up to 1 MB'],
+            'health_declaration' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 1 MB'],
             'medical_certificate' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
             'chest_xray_result' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
             'pwd_id_proof' => ['accept' => '.pdf,application/pdf', 'hint' => 'PDF only, up to 2 MB'],

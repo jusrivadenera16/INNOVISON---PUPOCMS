@@ -5181,6 +5181,11 @@
         box-shadow: 0 0 0 2px rgba(128, 0, 0, 0.08);
     }
 
+    .applicant-document-card.is-missing {
+        border-color: #fecaca;
+        background: #fff1f2;
+    }
+
     .applicant-document-icon {
         width: 36px;
         height: 36px;
@@ -5247,6 +5252,14 @@
     .applicant-document-view:hover {
         background: #800000;
         color: #facc15;
+    }
+
+    .applicant-document-view.is-disabled,
+    .applicant-document-view.is-disabled:hover {
+        border-color: #fecaca;
+        background: #fee2e2;
+        color: #991b1b;
+        cursor: default;
     }
 
     .applicant-documents-empty {
@@ -6429,6 +6442,10 @@
                                         <label class="applicant-pending-reason-option">
                                             <input type="checkbox" name="resubmission_required_documents[]" value="student_photo">
                                             <span>2x2 Photo</span>
+                                        </label>
+                                        <label class="applicant-pending-reason-option">
+                                            <input type="checkbox" name="resubmission_required_documents[]" value="health_declaration">
+                                            <span>Health Declaration</span>
                                         </label>
                                         <label class="applicant-pending-reason-option">
                                             <input type="checkbox" name="resubmission_required_documents[]" value="medical_certificate">
@@ -8362,36 +8379,47 @@
                 const title = document.createElement('strong');
                 title.textContent = documentItem.label || 'Clinic Document';
                 const type = document.createElement('span');
-                type.textContent = documentItem.type === 'form'
+                type.textContent = documentItem.missing
+                    ? 'Missing upload'
+                    : (documentItem.type === 'form'
                     ? 'Official health form layout'
-                    : (documentItem.type === 'image' ? 'Uploaded image' : 'Uploaded document');
+                    : (documentItem.type === 'image' ? 'Uploaded image' : 'Uploaded document'));
                 copy.append(title, type);
 
                 const actions = document.createElement('div');
                 actions.className = 'applicant-document-actions';
 
-                const previewButton = document.createElement('button');
-                previewButton.type = 'button';
-                previewButton.className = 'applicant-document-view';
-                previewButton.textContent = 'Preview';
-                previewButton.addEventListener('click', function () {
-                    previewDocument(documentItem, card);
-                });
+                if (documentItem.missing || !documentItem.url) {
+                    const missingBadge = document.createElement('span');
+                    missingBadge.className = 'applicant-document-view is-disabled';
+                    missingBadge.textContent = 'Missing';
+                    actions.append(missingBadge);
+                    card.classList.add('is-missing');
+                } else {
+                    const previewButton = document.createElement('button');
+                    previewButton.type = 'button';
+                    previewButton.className = 'applicant-document-view';
+                    previewButton.textContent = 'Preview';
+                    previewButton.addEventListener('click', function () {
+                        previewDocument(documentItem, card);
+                    });
 
-                const openLink = document.createElement('a');
-                openLink.className = 'applicant-document-view';
-                openLink.href = documentItem.url || '#';
-                openLink.target = '_blank';
-                openLink.rel = 'noopener noreferrer';
-                openLink.textContent = 'Open in New Tab';
+                    const openLink = document.createElement('a');
+                    openLink.className = 'applicant-document-view';
+                    openLink.href = documentItem.url || '#';
+                    openLink.target = '_blank';
+                    openLink.rel = 'noopener noreferrer';
+                    openLink.textContent = 'Open in New Tab';
 
-                actions.append(previewButton, openLink);
+                    actions.append(previewButton, openLink);
+                }
                 card.append(icon, copy, actions);
                 documentsGrid.appendChild(card);
             });
 
-            const firstCard = documentsGrid.querySelector('.applicant-document-card');
-            if (firstCard) previewDocument(currentDocuments[0], firstCard);
+            const firstPreviewableIndex = currentDocuments.findIndex((documentItem) => documentItem.url && !documentItem.missing);
+            const firstCard = documentsGrid.querySelectorAll('.applicant-document-card')[firstPreviewableIndex];
+            if (firstCard && currentDocuments[firstPreviewableIndex]) previewDocument(currentDocuments[firstPreviewableIndex], firstCard);
         }
 
         function setEntryMode(isActive) {
@@ -8785,26 +8813,13 @@
             });
         }
 
-        function renderApplicantReviewSource(element, status, detail, fallbackDetail) {
+        function renderApplicantReviewSource(element, value, fallbackText) {
             if (!element) return;
 
-            const normalizedStatus = String(status || '').trim();
-            const normalizedDetail = String(detail || '').trim();
-            const isNormal = !normalizedStatus
-                || normalizedStatus === 'N/A'
-                || normalizedStatus === '-'
-                || /normal|without findings|no findings/i.test(normalizedStatus);
-            const badgeText = isNormal ? 'Normal' : 'Needs Review';
-            const badgeClass = isNormal ? '' : ' needs-review';
-            const detailText = normalizedDetail && normalizedDetail !== '-'
-                ? normalizedDetail
-                : (fallbackDetail || (isNormal ? 'No findings declared' : normalizedStatus || 'For Clinic Review'));
-
-            element.innerHTML = '<span class="applicant-review-result-badge' + badgeClass + '">'
-                + escapeApplicantHtml(badgeText)
-                + '</span><span class="applicant-review-result-detail">'
-                + escapeApplicantHtml(detailText)
-                + '</span>';
+            const normalizedValue = String(value || '').trim();
+            element.textContent = normalizedValue && normalizedValue !== '-'
+                ? normalizedValue
+                : (fallbackText || 'N/A');
         }
 
         function showLookupDetails(data, fallbackRef) {
@@ -8839,24 +8854,20 @@
             renderApplicantReviewSource(
                 lookupMedCertResult,
                 data.medical_certificate_result || 'N/A',
-                data.medical_certificate_findings_details || '',
                 'For Clinic Review'
             );
             renderApplicantReviewSource(
                 lookupMedCertDetails,
-                data.medical_certificate_findings_details ? 'With Findings' : 'Normal',
                 data.medical_certificate_findings_details || '',
                 'No findings declared'
             );
             renderApplicantReviewSource(
                 lookupXrayResult,
                 data.xray_result || 'N/A',
-                data.xray_findings_details || '',
-                'No abnormal findings'
+                'For Clinic Review'
             );
             renderApplicantReviewSource(
                 lookupXrayDetails,
-                data.xray_findings_details ? 'With Findings' : 'Normal',
                 data.xray_findings_details || '',
                 'No findings declared'
             );
