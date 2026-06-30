@@ -2715,8 +2715,8 @@ public function storeHealthForm(Request $request)
         'is_drinker'        => 'required|string|in:Yes,No',
         'covid_vaccinated'  => 'required|string|in:Yes,No',
         'vaccine_history'   => 'nullable|array',
-        'vaccine_history.first_dose.date' => 'required_if:covid_vaccinated,Yes|nullable|date|after_or_equal:2021-03-01|before_or_equal:today',
-        'vaccine_history.first_dose.brand' => 'required_if:covid_vaccinated,Yes|nullable|string|max:100',
+        'vaccine_history.first_dose.date' => 'nullable|required_with:vaccine_history.first_dose.brand|date|after_or_equal:2021-03-01|before_or_equal:today',
+        'vaccine_history.first_dose.brand' => 'nullable|required_with:vaccine_history.first_dose.date|string|max:100',
         'vaccine_history.second_dose.date' => 'nullable|required_with:vaccine_history.second_dose.brand|date|after_or_equal:2021-03-01|before_or_equal:today',
         'vaccine_history.second_dose.brand' => 'nullable|required_with:vaccine_history.second_dose.date|string|max:100',
         'vaccine_history.booster_1.date' => 'nullable|required_with:vaccine_history.booster_1.brand|date|after_or_equal:2021-03-01|before_or_equal:today',
@@ -2811,6 +2811,21 @@ public function storeHealthForm(Request $request)
         }
     }
 
+    $submittedVaccineHistory = [];
+    if ($request->input('covid_vaccinated') === 'Yes') {
+        foreach (['first_dose', 'second_dose', 'booster_1', 'booster_2'] as $doseKey) {
+            $date = trim((string) $request->input("vaccine_history.{$doseKey}.date"));
+            $brand = trim((string) $request->input("vaccine_history.{$doseKey}.brand"));
+
+            if ($date !== '' || $brand !== '') {
+                $submittedVaccineHistory[$doseKey] = [
+                    'date' => $date,
+                    'brand' => $brand,
+                ];
+            }
+        }
+    }
+
     if ($referenceMode === 'admission') {
         $officialReference = strtoupper(trim((string) ($user->reference_number ?? '')));
         if ($this->isClinicReference($officialReference)) {
@@ -2889,9 +2904,7 @@ public function storeHealthForm(Request $request)
                 'is_smoker'          => $request->input('is_smoker'),
                 'is_drinker'         => $request->input('is_drinker'),
                 'covid_vaccinated'   => $request->input('covid_vaccinated'),
-                'vaccine_history'    => $request->input('covid_vaccinated') === 'Yes'
-                    ? $request->input('vaccine_history', [])
-                    : [],
+                'vaccine_history'    => $submittedVaccineHistory,
                 'chest_xray_result'  => $chestXrayPath,
                 'xray_date'          => $request->input('xray_date'),
                 'xray_findings'      => $request->input('xray_findings'),

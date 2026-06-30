@@ -2100,7 +2100,7 @@
 
                 <div class="step-panel {{ $startStep === 4 ? '' : 'is-hidden' }}" id="stepPanel4">
                     <h2 class="section-title step-page-title">COVID-19</h2>
-                    <p class="step-fill-note">Select your vaccination status. If vaccinated, provide at least your first dose details.</p>
+                    <p class="step-fill-note">Select your vaccination status. If vaccinated, provide dose details if available.</p>
                     @php
                         $selectedCovidVaccinated = old('covid_vaccinated', $prefill['covid_vaccinated'] ?? '');
                     @endphp
@@ -2116,9 +2116,9 @@
                     <div id="vaccineHistoryDetails" class="conditional-section {{ $selectedCovidVaccinated === 'Yes' ? '' : 'is-hidden' }}">
                         <div class="dose-grid">
                             @foreach(['first_dose' => '1st Dose', 'second_dose' => '2nd Dose', 'booster_1' => 'Booster 1', 'booster_2' => 'Booster 2'] as $doseKey => $doseLabel)
-                                @php $doseRequired = $doseKey === 'first_dose'; @endphp
+                                @php $doseRequired = false; @endphp
                                 <div class="dose-row">
-                                    <div class="dose-label">{{ $doseLabel }}{{ $doseRequired ? '' : ' (Optional)' }}</div>
+                                    <div class="dose-label">{{ $doseLabel }} (Optional)</div>
                                     <div class="form-field">
                                         <label class="form-label" for="{{ $doseKey }}_date">Date Received @if($doseRequired)<span class="required">*</span>@endif</label>
                                         <input id="{{ $doseKey }}_date" type="date" name="vaccine_history[{{ $doseKey }}][date]" class="form-control field-maroon" value="{{ old("vaccine_history.$doseKey.date") }}" min="2021-03-01" max="{{ now()->toDateString() }}" data-vaccine-field data-dose-required="{{ $doseRequired ? 'true' : 'false' }}">
@@ -2624,7 +2624,7 @@
 
                 vaccineFields.forEach((field) => {
                     field.disabled = !isVaccinated;
-                    field.required = isVaccinated && field.dataset.doseRequired === 'true';
+                    field.required = false;
 
                     if (!isVaccinated) {
                         field.value = '';
