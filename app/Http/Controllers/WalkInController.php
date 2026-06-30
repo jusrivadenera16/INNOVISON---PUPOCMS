@@ -1798,6 +1798,20 @@ PROMPT;
                 $studentId = trim((string) ($student->student_id ?? $localOnlyProfile->student_id ?? ''));
             }
 
+            $existingProfile = HealthProfile::where('user_id', $student->id)
+                ->orWhere('reference_number', $referenceNumber)
+                ->first();
+
+            if ($existingProfile
+                && strcasecmp((string) $existingProfile->clearance_status, 'For Final Review') === 0
+                && stripos((string) $existingProfile->physical_assessment_status, 'Encoded') !== false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This applicant is already encoded and is ready for Final Review / Approval.',
+                    'status' => 'For Final Review',
+                ], 409);
+            }
+
             $profile = DB::transaction(function () use ($student, $studentId, $referenceNumber, $validated) {
                 $profile = HealthProfile::firstOrNew(['user_id' => $student->id]);
                 $profile->student_id = (string) ($student->student_id ?: $studentId ?: $referenceNumber);
