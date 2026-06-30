@@ -2852,6 +2852,7 @@
                 <th>Course / Yr / Sec</th>
                 <th>Medical Condition</th>
                 <th>Clearance Status</th>
+                <th>PUPTAS Status</th>
                 <th>Submitted At</th>
                 <th style="text-align: center;">Actions</th>
             </tr>
@@ -2876,6 +2877,29 @@
                         trim((string) optional($record->user)->section),
                     ])));
                     $recordCourseDisplay = trim($recordCourseName . ($recordYearSection !== '' ? ' ' . $recordYearSection : ''));
+                    $puptasStatusRaw = strtolower(trim((string) ($record->puptas_sync_status ?? '')));
+                    $puptasReference = strtoupper(trim((string) ($record->reference_number ?: $record->student_number ?: optional($record->user)->student_number)));
+                    $isLocalPuptasReference = $puptasReference === ''
+                        || \Illuminate\Support\Str::startsWith($puptasReference, ['CLN-', 'LOC-', 'TEST-LOCAL']);
+                    if ($puptasStatusRaw === '' && $isLocalPuptasReference) {
+                        $puptasStatusRaw = 'not_applicable';
+                    }
+                    $puptasStatusLabel = match ($puptasStatusRaw) {
+                        'synced' => 'Synced',
+                        'failed' => 'Failed',
+                        'syncing' => 'Syncing',
+                        'pending' => 'Pending',
+                        'not_applicable' => 'N/A',
+                        'missing_reference_number' => 'Missing Ref',
+                        default => 'Not Synced',
+                    };
+                    $puptasStatusClass = match ($puptasStatusRaw) {
+                        'synced' => 'issued',
+                        'failed', 'missing_reference_number' => 'review',
+                        'syncing', 'pending' => 'pending',
+                        'not_applicable' => 'submitted',
+                        default => 'pending',
+                    };
                     $recordPayload = [
                         'id' => $record->id,
                         'name' => optional($record->user)->name ?: '-',
@@ -2989,6 +3013,10 @@
                         @endif
                     </td>
 
+                    <td>
+                        <span class="status {{ $puptasStatusClass }}">{{ $puptasStatusLabel }}</span>
+                    </td>
+
                     <td style="color: #94a3b8; font-size: 12px;">
                         {{ $record->created_at->format('M d, Y') }}
                     </td>
@@ -3004,7 +3032,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">No issued health profiles found.</td>
+                    <td colspan="8" style="text-align: center; padding: 40px; color: #94a3b8;">No issued health profiles found.</td>
                 </tr>
             @endforelse
         </tbody>

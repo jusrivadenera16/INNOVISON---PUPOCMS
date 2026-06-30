@@ -152,6 +152,60 @@
         color: #334155;
         border-color: #cbd5e1;
     }
+    .profile-sync-panel {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 14px 16px;
+        background: #f8fafc;
+    }
+    .profile-sync-main {
+        display: grid;
+        gap: 6px;
+    }
+    .profile-sync-title {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 900;
+        color: #64748b;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+    .profile-sync-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .profile-sync-message {
+        margin: 0;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .profile-sync-button {
+        border: 1px solid #8f2230;
+        border-radius: 999px;
+        background: #70131B;
+        color: #facc15;
+        min-height: 42px;
+        padding: 10px 16px;
+        font-size: 13px;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 10px 22px rgba(112, 19, 27, 0.18);
+        transition: transform .18s ease, background .18s ease, color .18s ease;
+    }
+    .profile-sync-button:hover,
+    .profile-sync-button:focus {
+        transform: translateY(-1px);
+        background: #facc15;
+        color: #70131B;
+    }
     .profile-panel { display: none; }
     .profile-panel.is-active { display: block; }
 
@@ -209,6 +263,14 @@
         background: rgba(51, 65, 85, 0.6);
         color: #e2e8f0;
         border-color: rgba(148, 163, 184, 0.35);
+    }
+    [data-theme="dark"] .profile-sync-panel {
+        background: #111827;
+        border-color: #334155;
+    }
+    [data-theme="dark"] .profile-sync-title,
+    [data-theme="dark"] .profile-sync-message {
+        color: #cbd5e1;
     }
 
     @media (max-width: 1024px) {
@@ -300,6 +362,31 @@
     if ($displayStudentNumber === '' || \Illuminate\Support\Str::startsWith(\Illuminate\Support\Str::upper($displayStudentNumber), 'CLN-')) {
         $displayStudentNumber = 'N/A';
     }
+    $puptasSyncRaw = strtolower(trim((string) ($profile->puptas_sync_status ?? '')));
+    $puptasReference = strtoupper(trim((string) ($profile->reference_number ?: $profile->student_number ?: optional($profile->user)->student_number)));
+    $isLocalPuptasReference = $puptasReference === ''
+        || \Illuminate\Support\Str::startsWith($puptasReference, ['CLN-', 'LOC-', 'TEST-LOCAL']);
+    if ($puptasSyncRaw === '' && $isLocalPuptasReference) {
+        $puptasSyncRaw = 'not_applicable';
+    }
+    $puptasSyncLabel = match ($puptasSyncRaw) {
+        'synced' => 'Synced to PUPTAS',
+        'failed' => 'Sync Failed',
+        'syncing' => 'Syncing',
+        'pending' => 'Pending Sync',
+        'not_applicable' => 'Not Applicable',
+        'missing_reference_number' => 'Missing Reference',
+        default => 'Not Synced',
+    };
+    $puptasSyncClass = match ($puptasSyncRaw) {
+        'synced' => 'profile-status-issued',
+        'failed', 'missing_reference_number' => 'profile-status-rejected',
+        'syncing', 'pending' => 'profile-status-pending',
+        'not_applicable' => 'profile-status-default',
+        default => 'profile-status-pending',
+    };
+    $canResyncPuptas = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
+        && !in_array($puptasSyncRaw, ['synced', 'not_applicable'], true);
 @endphp
 <div class="health-profile-wrap">
     <div class="profile-card">
@@ -314,6 +401,41 @@
                     Back
                 </a>
             </div>
+        </div>
+    </div>
+
+    <div class="profile-card">
+        <div class="profile-sync-panel">
+            <div class="profile-sync-main">
+                <p class="profile-sync-title">PUPTAS Sync Status</p>
+                <div class="profile-sync-row">
+                    <span class="profile-status-badge {{ $puptasSyncClass }}">
+                        @if($puptasSyncRaw === 'synced')
+                            <x-outline-icon name="check" />
+                        @elseif(in_array($puptasSyncRaw, ['failed', 'missing_reference_number'], true))
+                            <x-outline-icon name="exclamation-triangle" />
+                        @elseif(in_array($puptasSyncRaw, ['syncing', 'pending'], true))
+                            <x-outline-icon name="clock" />
+                        @else
+                            <x-outline-icon name="information-circle" />
+                        @endif
+                        {{ $puptasSyncLabel }}
+                    </span>
+                    @if($profile->puptas_synced_at)
+                        <span class="profile-sync-message">Last synced: {{ $profile->puptas_synced_at->format('M d, Y h:i A') }}</span>
+                    @endif
+                </div>
+                @if(filled($profile->puptas_sync_message))
+                    <p class="profile-sync-message">{{ $profile->puptas_sync_message }}</p>
+                @endif
+            </div>
+
+            @if($canResyncPuptas)
+                <form method="POST" action="{{ route('admin.health_profile.resync_puptas', $profile->id) }}">
+                    @csrf
+                    <button type="submit" class="profile-sync-button">Resync to PUPTAS</button>
+                </form>
+            @endif
         </div>
     </div>
 

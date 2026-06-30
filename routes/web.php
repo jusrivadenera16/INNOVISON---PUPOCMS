@@ -229,6 +229,9 @@ Route::middleware(['auth:admin', 'audit'])->group(function () {
     Route::get('/health-profile/{id}/pdf', [AdminController::class, 'exportHealthPdf'])
         ->middleware('role:superadmin,admin')
         ->name('admin.health_pdf');
+    Route::post('/health-profile/{id}/resync-puptas', [AdminController::class, 'resyncPuptasHealthProfile'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.health_profile.resync_puptas');
     Route::post('/health-profile/medical-assessment-upload', [AdminController::class, 'uploadMedicalAssessmentCopy'])
         ->middleware('role:superadmin,admin,nurse')
         ->name('admin.medical_assessment_upload');

@@ -1470,6 +1470,55 @@ class AdminController extends Controller
         return view('admin.show_health', compact('profile', 'calculatedAge'));
     }
 
+    public function resyncPuptasHealthProfile($id, PuptasWebhookService $puptasService)
+    {
+        $profile = HealthProfile::with('user')->findOrFail($id);
+
+        if (!in_array((string) $profile->clearance_status, ['Issued', 'Fully Cleared'], true)) {
+            return back()->with('error', 'Only issued health records can be synced to PUPTAS.');
+        }
+
+        $referenceNumber = $this->resolvePuptasReferenceNumber($profile);
+        $idpStudentId = $this->resolvePuptasIdpStudentId($profile);
+        $upperReference = strtoupper($referenceNumber);
+
+        if ($referenceNumber === '') {
+            $this->updatePuptasSyncState($profile, 'missing_reference_number', 'PUPTAS resync skipped because the reference number is missing.');
+            $this->logActivity('PUPTAS Resync Skipped', "PUPTAS resync skipped for health profile #{$profile->id}: missing reference number.", 'Health Records', 'ACTION');
+
+            return back()->with('error', 'PUPTAS resync skipped because the reference number is missing.');
+        }
+
+        if (
+            str_starts_with($upperReference, 'CLN-')
+            || str_starts_with($upperReference, 'LOC-')
+            || str_starts_with($upperReference, 'TEST-LOCAL')
+        ) {
+            $this->updatePuptasSyncState($profile, 'not_applicable', 'PUPTAS resync skipped because this is a local clinic reference.');
+            $this->logActivity('PUPTAS Resync Skipped', "PUPTAS resync skipped for {$referenceNumber}: local clinic reference.", 'Health Records', 'ACTION');
+
+            return back()->with('info', 'PUPTAS resync is not applicable for local clinic references.');
+        }
+
+        $this->updatePuptasSyncState($profile, 'syncing', 'Manual PUPTAS resync is in progress.');
+        $this->logActivity('PUPTAS Resync Attempted', "Manual PUPTAS resync attempted for {$referenceNumber}.", 'Health Records', 'ACTION');
+
+        $syncResult = $puptasService->sendWithRetry($referenceNumber, $idpStudentId, true);
+
+        if ($syncResult['success'] ?? false) {
+            $this->updatePuptasSyncState($profile, 'synced', 'Approved health clearance synced to PUPTAS.', true);
+            $this->logActivity('PUPTAS Resync Successful', "Manual PUPTAS resync succeeded for {$referenceNumber}.", 'Health Records', 'ACTION');
+
+            return back()->with('success', 'PUPTAS resync completed successfully.');
+        }
+
+        $message = $syncResult['message'] ?? 'The PUPTAS resync attempt failed.';
+        $this->updatePuptasSyncState($profile, 'failed', $message);
+        $this->logActivity('PUPTAS Resync Failed', "Manual PUPTAS resync failed for {$referenceNumber}: {$message}", 'Health Records', 'ERROR');
+
+        return back()->with('error', 'PUPTAS resync failed: ' . $message);
+    }
+
     public function exportHealthPdf($id)
     {
         $profile = HealthProfile::with('user')->findOrFail($id);
