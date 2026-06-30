@@ -3319,7 +3319,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $isResubmissionStatus = $statusNormalized === 'pending resubmission' || $resubmissionDocuments->isNotEmpty();
         $resubmissionDocumentLabels = [
             'student_photo' => '2x2 Student Photo',
-            'health_declaration' => 'Health Declaration',
+            'health_declaration' => 'Declaration of Medical Information and Data Subject Consent Form',
             'medical_certificate' => 'Medical Certificate',
             'chest_xray_result' => 'Chest X-ray Result',
             'pwd_id_proof' => 'PWD ID Proof',
@@ -3393,14 +3393,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div>
                     <div class="health-declaration-title">
                         <x-outline-icon name="document-text" />
-                        Health Declaration
+                        Declaration of Medical Information and Data Subject Consent Form
                     </div>
                     <p class="health-declaration-note">
-                        Please upload your Health Declaration form. This additional file will be included in your clinic verification documents.
+                        Please upload your Declaration of Medical Information and Data Subject Consent Form. This additional file will be included in your clinic verification documents.
                     </p>
                 </div>
                 <span class="health-declaration-badge {{ $hasHealthDeclaration ? 'is-uploaded' : '' }}">
-                    {{ $hasHealthDeclaration ? 'Uploaded' : 'Missing Health Declaration' }}
+                    {{ $hasHealthDeclaration ? 'Uploaded' : 'Missing Consent Form' }}
                 </span>
             </div>
             <form class="health-declaration-form" method="POST" action="{{ route('student.health_record.health_declaration') }}" enctype="multipart/form-data">
@@ -3420,7 +3420,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         </span>
                     </div>
                 </div>
-                <button type="submit" class="health-declaration-submit">Upload Health Declaration</button>
+                <button type="submit" class="health-declaration-submit">Upload Consent Form</button>
             </form>
             @if($healthDeclarationUploadError)
                 <div class="field-error-message">{{ $errors->first('health_declaration') }}</div>
@@ -3710,7 +3710,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     ],
                                     [
                                         'key' => 'health_declaration',
-                                        'title' => 'Health Declaration',
+                                        'title' => 'Declaration of Medical Information and Data Subject Consent Form',
                                         'meta' => 'PDF or Image Upload',
                                         'path' => optional($healthProfileRecord)->health_declaration,
                                         'is_image' => false,
@@ -4026,7 +4026,7 @@ window.updateHealthDeclarationPreview = function (input) {
     preview.classList.add('is-visible');
     previewName.textContent = file.name;
     previewSize.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB / 1 MB limit`;
-    if (submitButton && submitButton.textContent.trim() === 'Upload Health Declaration') {
+    if (submitButton && submitButton.textContent.trim() === 'Upload Consent Form') {
         submitButton.textContent = 'Upload Selected File';
     }
 
