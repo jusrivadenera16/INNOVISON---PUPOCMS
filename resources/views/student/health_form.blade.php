@@ -628,106 +628,6 @@
             background: #eef1f4;
         }
 
-        .health-declaration-guide-preview {
-            position: relative;
-            height: 148px;
-            margin: 0;
-            overflow: hidden;
-            background: #f8fafc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .health-declaration-guide-sheet {
-            position: relative;
-            width: 76%;
-            height: 132px;
-            border: 1px solid #334155;
-            background: #ffffff;
-            padding: 10px 12px;
-            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
-        }
-
-        .health-declaration-guide-head {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            margin-bottom: 8px;
-        }
-
-        .health-declaration-guide-seal {
-            width: 18px;
-            height: 18px;
-            border-radius: 999px;
-            background: radial-gradient(circle at center, #facc15 0 28%, #991b1b 30% 100%);
-            flex: 0 0 auto;
-        }
-
-        .health-declaration-guide-lines {
-            display: grid;
-            gap: 4px;
-            flex: 1 1 auto;
-        }
-
-        .health-declaration-guide-line {
-            height: 4px;
-            border-radius: 999px;
-            background: #111827;
-            opacity: 0.78;
-        }
-
-        .health-declaration-guide-title {
-            width: 88%;
-            height: 5px;
-            margin: 0 auto 9px;
-            border-radius: 999px;
-            background: #111827;
-        }
-
-        .health-declaration-guide-body {
-            display: grid;
-            gap: 5px;
-        }
-
-        .health-declaration-guide-signature {
-            width: 48%;
-            height: 2px;
-            margin: 14px 0 0 auto;
-            background: #111827;
-        }
-
-        .health-declaration-guide-name {
-            width: 42%;
-            height: 4px;
-            margin: 5px 0 0 auto;
-            border-radius: 999px;
-            background: #111827;
-        }
-
-        .health-declaration-guide-preview.is-declaration-wrong .health-declaration-guide-sheet {
-            filter: blur(0.7px);
-            opacity: 0.72;
-        }
-
-        .health-declaration-guide-preview.is-declaration-wrong::before,
-        .health-declaration-guide-preview.is-declaration-wrong::after {
-            content: "";
-            position: absolute;
-            width: 88%;
-            height: 5px;
-            border-radius: 999px;
-            background: #dc2626;
-            z-index: 2;
-        }
-
-        .health-declaration-guide-preview.is-declaration-wrong::before {
-            transform: rotate(42deg);
-        }
-
-        .health-declaration-guide-preview.is-declaration-wrong::after {
-            transform: rotate(-42deg);
-        }
 
         .upload-example-caption {
             min-height: 48px;
@@ -2285,56 +2185,20 @@
                         </div>
                         <div class="requirement-card">
                             <div class="requirement-card-header">
-                                <strong>Health Declaration <span class="required">*</span></strong>
+                                <strong>Declaration of Medical Information and Data Subject Consent Form <span class="required">*</span></strong>
                                 <span class="requirement-badge">PDF/IMG</span>
                             </div>
-                            <p class="requirement-guideline">Upload the signed, clear, and readable Health Declaration form. Do not upload without signature, blurry, or unreadable copies.</p>
-                            <div class="upload-example-grid" aria-label="Health Declaration upload examples">
+                            <p class="requirement-guideline">Upload the signed, clear, and readable Declaration of Medical Information and Data Subject Consent Form. Do not upload without signature, blurry, or unreadable copies.</p>
+                            <div class="upload-example-grid" aria-label="Declaration of Medical Information and Data Subject Consent Form upload examples">
                                 <div class="upload-example is-wrong">
                                     <div class="upload-example-status"><span aria-hidden="true">&times;</span> Do Not Upload</div>
-                                    <div class="health-declaration-guide-preview is-declaration-wrong" role="img" aria-label="Unsigned, blurry, or unreadable Health Declaration that should not be uploaded">
-                                        <div class="health-declaration-guide-sheet">
-                                            <div class="health-declaration-guide-head">
-                                                <span class="health-declaration-guide-seal"></span>
-                                                <span class="health-declaration-guide-lines">
-                                                    <span class="health-declaration-guide-line"></span>
-                                                    <span class="health-declaration-guide-line"></span>
-                                                </span>
-                                            </div>
-                                            <div class="health-declaration-guide-title"></div>
-                                            <div class="health-declaration-guide-body">
-                                                <span class="health-declaration-guide-line"></span>
-                                                <span class="health-declaration-guide-line"></span>
-                                                <span class="health-declaration-guide-line"></span>
-                                                <span class="health-declaration-guide-line"></span>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <img src="{{ asset('images/upload-guides/health-declaration-do-not-upload.png') }}" alt="Unsigned, blurry, or unreadable Declaration of Medical Information and Data Subject Consent Form that should not be uploaded">
                                     <p class="upload-example-caption">Do not upload without sign, blurry, or unreadable.</p>
                                 </div>
                                 <div class="upload-example is-correct">
                                     <div class="upload-example-status"><span aria-hidden="true">&#10003;</span> Upload This</div>
-                                    <div class="health-declaration-guide-preview is-declaration-correct" role="img" aria-label="Signed and readable Health Declaration form that should be uploaded">
-                                        <div class="health-declaration-guide-sheet">
-                                            <div class="health-declaration-guide-head">
-                                                <span class="health-declaration-guide-seal"></span>
-                                                <span class="health-declaration-guide-lines">
-                                                    <span class="health-declaration-guide-line"></span>
-                                                    <span class="health-declaration-guide-line"></span>
-                                                </span>
-                                            </div>
-                                            <div class="health-declaration-guide-title"></div>
-                                            <div class="health-declaration-guide-body">
-                                                <span class="health-declaration-guide-line"></span>
-                                                <span class="health-declaration-guide-line"></span>
-                                                <span class="health-declaration-guide-line"></span>
-                                                <span class="health-declaration-guide-line"></span>
-                                            </div>
-                                            <div class="health-declaration-guide-signature"></div>
-                                            <div class="health-declaration-guide-name"></div>
-                                        </div>
-                                    </div>
-                                    <p class="upload-example-caption">Upload the signed, clear, and readable Health Declaration form.</p>
+                                    <img src="{{ asset('images/upload-guides/health-declaration-upload-this.png') }}" alt="Signed and readable Declaration of Medical Information and Data Subject Consent Form that should be uploaded">
+                                    <p class="upload-example-caption">Upload the signed, clear, and readable consent form.</p>
                                 </div>
                             </div>
                             <input type="file" name="health_declaration" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required data-requirement-file data-upload-input>
