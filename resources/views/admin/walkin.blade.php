@@ -1127,6 +1127,43 @@
         transform: translateX(135%);
     }
 
+    .applicant-ref-head-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 18px;
+        margin-left: auto;
+        flex: 0 0 auto;
+    }
+
+    .applicant-final-review-total-badge {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        min-height: 38px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(250, 204, 21, 0.62);
+        background: rgba(255, 247, 214, 0.16);
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-total-badge {
+        display: inline-flex;
+    }
+
+    .applicant-final-review-total-badge strong {
+        color: #facc15;
+        font-size: 15px;
+        line-height: 1;
+    }
+
     .applicant-modal-body {
         padding: 18px;
         overflow-y: auto;
@@ -5555,6 +5592,20 @@
             gap: 12px;
         }
 
+        .applicant-final-review-total-badge {
+            position: absolute;
+            top: 15px;
+            right: 64px;
+            min-height: 34px;
+            padding: 7px 10px;
+            font-size: 10px;
+            letter-spacing: 0.04em;
+        }
+
+        .applicant-final-review-total-badge strong {
+            font-size: 13px;
+        }
+
         .applicant-modal-close {
             position: absolute !important;
             top: 14px !important;
@@ -6034,9 +6085,15 @@
                         <p id="lookupModalSubtitle">Enter the applicant's reference number to look up the record.</p>
                     </div>
                 </div>
-                <button type="button" class="applicant-modal-close" id="closeApplicantRefModal" aria-label="Close modal">
-                    <x-outline-icon name="x-mark" />
-                </button>
+                <div class="applicant-ref-head-actions">
+                    <div class="applicant-final-review-total-badge" id="applicantFinalReviewTotalBadge">
+                        <span>Total Applicants</span>
+                        <strong id="applicantFinalReviewTotalCount">{{ $finalReviewApplicants->count() }}</strong>
+                    </div>
+                    <button type="button" class="applicant-modal-close" id="closeApplicantRefModal" aria-label="Close modal">
+                        <x-outline-icon name="x-mark" />
+                    </button>
+                </div>
             </div>
 
             <div class="applicant-modal-body" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:220px; gap:18px;">
@@ -8141,6 +8198,7 @@
         const finalReviewNext = document.getElementById('applicantFinalReviewNext');
         const finalReviewPageLabel = document.getElementById('applicantFinalReviewPageLabel');
         const finalReviewEmpty = document.getElementById('applicantFinalReviewEmpty');
+        const finalReviewTotalCount = document.getElementById('applicantFinalReviewTotalCount');
         const backToFinalReviewList = document.getElementById('btnBackToFinalReviewList');
         const cancelEntryBtn  = document.getElementById('btnCancelApplicantRef');
         const refInput        = document.getElementById('applicantRefInput');
@@ -9797,6 +9855,7 @@
                 const haystack = row.getAttribute('data-search') || '';
                 return !query || haystack.includes(query);
             });
+            if (finalReviewTotalCount) finalReviewTotalCount.textContent = allRows.length.toString();
             const pageSize = 5;
             const totalPages = Math.max(1, Math.ceil(matchingRows.length / pageSize));
             finalReviewPage = Math.min(Math.max(targetPage || finalReviewPage || 1, 1), totalPages);

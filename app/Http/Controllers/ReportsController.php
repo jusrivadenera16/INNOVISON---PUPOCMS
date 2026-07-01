@@ -1274,7 +1274,106 @@ public function update(Request $request, $id)
 // Para sa Export Hub Landing Page
 public function exportHub() 
 {
-    return view('admin.reports.export-reports'); 
+    $healthFormCourses = HealthProfile::query()
+        ->with('user:id,course')
+        ->get()
+        ->map(function (HealthProfile $profile) {
+            return trim((string) ($profile->course_college ?: optional($profile->user)->course));
+        })
+        ->filter()
+        ->unique()
+        ->sort()
+        ->values();
+
+    return view('admin.reports.export-reports', compact('healthFormCourses'));
+}
+
+public function exportHealthForms(Request $request)
+{
+    $dateFromInput = trim((string) $request->query('date_from', now()->startOfMonth()->toDateString()));
+    $dateToInput = trim((string) $request->query('date_to', now()->toDateString()));
+    $courseFilter = trim((string) $request->query('course', ''));
+    $statusFilter = strtolower(trim((string) $request->query('status', '')));
+
+    $dateFrom = $dateFromInput !== ''
+        ? Carbon::parse($dateFromInput)->startOfDay()
+        : now()->startOfMonth();
+    $dateTo = $dateToInput !== ''
+        ? Carbon::parse($dateToInput)->endOfDay()
+        : now()->endOfDay();
+
+    if ($dateFrom->gt($dateTo)) {
+        [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
+    }
+
+    $query = HealthProfile::query()
+        ->with('user')
+        ->whereNotNull('clearance_status')
+        ->where(function ($builder) use ($dateFrom, $dateTo) {
+            $builder->whereBetween('verified_at', [$dateFrom, $dateTo])
+                ->orWhere(function ($fallback) use ($dateFrom, $dateTo) {
+                    $fallback->whereNull('verified_at')
+                        ->whereBetween('created_at', [$dateFrom, $dateTo]);
+                });
+        });
+
+    if ($courseFilter !== '') {
+        $query->where(function ($builder) use ($courseFilter) {
+            $builder->where('course_college', 'like', "%{$courseFilter}%")
+                ->orWhereHas('user', function ($userQuery) use ($courseFilter) {
+                    $userQuery->where('course', 'like', "%{$courseFilter}%");
+                });
+        });
+    }
+
+    if ($statusFilter === 'approved') {
+        $query->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
+    } elseif ($statusFilter === 'pending') {
+        $query->whereNotIn('clearance_status', ['Issued', 'Fully Cleared', 'Rejected']);
+    } elseif ($statusFilter === 'rejected') {
+        $query->where('clearance_status', 'Rejected');
+    }
+
+    $records = $query->orderByDesc(DB::raw('COALESCE(verified_at, created_at)'))->get();
+    $filename = 'health-forms-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '-' . now()->format('His') . '.csv';
+
+    return response()->streamDownload(function () use ($records) {
+        echo "\xEF\xBB\xBF";
+        $output = fopen('php://output', 'w');
+
+        fputcsv($output, [
+            'Reference Number',
+            'Full Name',
+            'Course',
+            'Gender',
+            'Status',
+            'Medical Condition',
+            'Approval Date and Time',
+        ]);
+
+        foreach ($records as $record) {
+            $status = match (true) {
+                in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true) => 'Approved',
+                $record->clearance_status === 'Rejected' => 'Rejected',
+                default => 'Pending',
+            };
+
+            fputcsv($output, [
+                $record->reference_number ?: $record->student_number ?: optional($record->user)->student_number ?: 'N/A',
+                optional($record->user)->name ?: 'N/A',
+                $record->course_college ?: optional($record->user)->course ?: 'N/A',
+                $record->sex ?: optional($record->user)->gender ?: 'N/A',
+                $status,
+                $record->hasMedicalCondition() ? 'Yes' : 'No',
+                $record->verified_at ? Carbon::parse($record->verified_at)->format('M d, Y g:i A') : 'N/A',
+            ]);
+        }
+
+        fclose($output);
+    }, $filename, [
+        'Content-Type' => 'text/csv; charset=UTF-8',
+        'Cache-Control' => 'no-store, no-cache, must-revalidate',
+    ]);
 }
 
 // Para sa Universal Printing System

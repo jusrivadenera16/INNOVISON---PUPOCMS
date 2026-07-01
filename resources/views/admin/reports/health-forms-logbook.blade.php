@@ -515,7 +515,7 @@
 
     <div class="logbook-toolbar">
         <div class="logbook-search-wrap">
-            <input type="text" id="searchInput" class="logbook-search-input" placeholder="Search by applicant or student name..." value="{{ $search }}" onkeyup="handleSearch()">
+            <input type="text" id="searchInput" class="logbook-search-input" placeholder="Search by applicant or student name..." value="{{ $search }}">
         </div>
         <div class="logbook-toolbar-actions">
             <div class="logbook-total-card">Total:<span>{{ number_format($logbookRecords->total()) }}</span></div>
@@ -722,12 +722,11 @@ function closeFilterModal(event) {
     document.getElementById('filterModal').classList.remove('active');
 }
 
-function handleSearch() {
-    const searchValue = document.getElementById('searchInput').value;
+function buildLogbookSearchUrl(searchValue) {
     const filterForm = document.getElementById('filterForm');
 
     let params = new URLSearchParams();
-    params.append('q', searchValue);
+    if (searchValue) params.append('q', searchValue);
 
     const courseValue = filterForm.querySelector('[name="course"]').value;
     if (courseValue) params.append('course', courseValue);
@@ -744,8 +743,30 @@ function handleSearch() {
     const statusValue = filterForm.querySelector('[name="status"]').value;
     if (statusValue) params.append('status', statusValue);
 
-    window.location.href = '{{ route($logbookRouteName) }}?' + params.toString();
+    const queryString = params.toString();
+    return '{{ route($logbookRouteName) }}' + (queryString ? '?' + queryString : '');
 }
+
+function handleSearch() {
+    const searchValue = document.getElementById('searchInput').value.trim();
+    window.location.href = buildLogbookSearchUrl(searchValue);
+}
+
+let logbookSearchTimer = null;
+const logbookSearchInput = document.getElementById('searchInput');
+
+logbookSearchInput?.addEventListener('input', function () {
+    clearTimeout(logbookSearchTimer);
+    logbookSearchTimer = setTimeout(handleSearch, 600);
+});
+
+logbookSearchInput?.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        clearTimeout(logbookSearchTimer);
+        handleSearch();
+    }
+});
 
 document.getElementById('filterForm').addEventListener('submit', function(e) {
     e.preventDefault();

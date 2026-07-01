@@ -273,6 +273,7 @@ Route::middleware(['auth:admin', 'audit'])->group(function () {
         Route::get('/admin/reports/appointment-history', [ReportsController::class, 'appointmentHistory'])->name('reports.appointment-history');
         Route::get('/admin/reports/appointment-history/print', [ReportsController::class, 'printAppointmentHistory'])->name('reports.appointment-history-print');
         Route::get('/admin/reports/health-forms', [ReportsController::class, 'healthFormsReport'])->name('reports.health-forms');
+        Route::get('/admin/reports/health-forms/export', [ReportsController::class, 'exportHealthForms'])->name('reports.health-forms.export');
         Route::get('/admin/reports/health-forms-logbook', [ReportsController::class, 'healthFormsLogbook'])->name('reports.health-forms-logbook');
         Route::get('/admin/reports/health-forms-logbook/export', [ReportsController::class, 'exportHealthFormsLogbook'])->name('reports.health-forms-logbook.export');
         Route::get('/admin/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->name('reports.feedbacks');
@@ -357,6 +358,7 @@ Route::middleware(['auth:admin', 'audit'])->group(function () {
         Route::get('/reports/appointment-statistics', [ReportsController::class, 'appointmentStatistics'])->name('reports.appointment-statistics');
         Route::get('/reports/appointment-history', [ReportsController::class, 'appointmentHistory'])->name('reports.appointment-history');
         Route::get('/reports/health-forms', [ReportsController::class, 'healthFormsReport'])->name('reports.health-forms');
+        Route::get('/reports/health-forms/export', [ReportsController::class, 'exportHealthForms'])->name('reports.health-forms.export');
         Route::get('/reports/health-forms-logbook', [ReportsController::class, 'healthFormsLogbook'])->name('reports.health-forms-logbook');
         Route::get('/reports/health-forms-logbook/export', [ReportsController::class, 'exportHealthFormsLogbook'])->name('reports.health-forms-logbook.export');
         Route::get('/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->name('reports.feedbacks');

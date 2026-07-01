@@ -5,6 +5,8 @@
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
     $printReportUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/print-reports') : url('/admin/reports/print-reports');
     $reportsHomeUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
+    $healthFormsExportRouteName = request()->routeIs('assistant.*') ? 'assistant.reports.health-forms.export' : 'reports.health-forms.export';
+    $healthFormCourses = $healthFormCourses ?? collect();
 @endphp
 <style>
     /* Main Container */
@@ -433,6 +435,48 @@
         color: #111827;
         box-shadow: 0 14px 24px rgba(112, 19, 27, 0.16);
     }
+
+    .health-filter-grid {
+        display: grid;
+        gap: 16px;
+    }
+
+    .health-filter-field label {
+        display: block;
+        margin-bottom: 8px;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .health-filter-field input,
+    .health-filter-field select {
+        width: 100%;
+        min-height: 46px;
+        padding: 10px 13px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 700;
+        transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .health-filter-field input:focus,
+    .health-filter-field select:focus {
+        outline: none;
+        border-color: #8b0000;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, 0.10);
+    }
+
+    .health-status-select {
+        cursor: pointer;
+    }
+
+    .border-health-forms { border-top: 5px solid #800000; }
 
     .btn-select-month {
         width: 100%;
@@ -903,6 +947,18 @@
             </form>
         </div>
 
+        <div class="report-card border-health-forms">
+            <div>
+                <div class="export-card-kicker">Medical Clearance</div>
+                <h3>Health Forms</h3>
+                <p>Export health form records with reference number, course, status, condition, and approval timestamp.</p>
+            </div>
+            <button type="button" class="btn-select-month" onclick="openHealthFormsFilterModal()">
+                <span>Filter</span>
+                <span class="selected-date-range" id="healthFormsFilterSummary">{{ now()->startOfMonth()->format('M d, Y') }} to {{ now()->format('M d, Y') }}</span>
+            </button>
+        </div>
+
         </div>
     </div>
 </div>
@@ -986,6 +1042,34 @@ function closeDateRangeModal() {
     currentReportType = null;
 }
 
+function openHealthFormsFilterModal() {
+    document.getElementById('healthFormsFilterModal')?.classList.add('is-open');
+}
+
+function closeHealthFormsFilterModal() {
+    document.getElementById('healthFormsFilterModal')?.classList.remove('is-open');
+}
+
+function updateHealthFormsFilterSummary() {
+    const form = document.getElementById('healthFormsExportForm');
+    const summary = document.getElementById('healthFormsFilterSummary');
+    if (!form || !summary) return;
+
+    const dateFrom = form.querySelector('[name="date_from"]')?.value || '';
+    const dateTo = form.querySelector('[name="date_to"]')?.value || '';
+    const status = form.querySelector('[name="status"]')?.selectedOptions?.[0]?.textContent?.trim() || 'All Status';
+
+    const formatDate = function(value) {
+        if (!value) return '';
+        return new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    };
+
+    const dateText = dateFrom && dateTo
+        ? (dateFrom === dateTo ? formatDate(dateFrom) : formatDate(dateFrom) + ' to ' + formatDate(dateTo))
+        : 'Date range';
+    summary.textContent = dateText + ' • ' + status;
+}
+
 function applyDateRange() {
     if (!currentReportType) return;
 
@@ -1040,13 +1124,27 @@ document.addEventListener('click', function(event) {
     if (modal && modal.classList.contains('is-open') && !modalContent.contains(event.target) && !event.target.closest('.btn-select-month')) {
         closeDateRangeModal();
     }
+
+    const healthModal = document.getElementById('healthFormsFilterModal');
+    const healthModalContent = document.getElementById('healthFormsFilterModalContent');
+    if (healthModal && healthModal.classList.contains('is-open') && healthModalContent && !healthModalContent.contains(event.target) && !event.target.closest('[onclick="openHealthFormsFilterModal()"]')) {
+        closeHealthFormsFilterModal();
+    }
 });
 
 // Close modal on Escape key
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         closeDateRangeModal();
+        closeHealthFormsFilterModal();
     }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateHealthFormsFilterSummary();
+    document.querySelectorAll('#healthFormsExportForm input, #healthFormsExportForm select').forEach(function(field) {
+        field.addEventListener('change', updateHealthFormsFilterSummary);
+    });
 });
 </script>
 
@@ -1074,6 +1172,53 @@ document.addEventListener('keydown', function(event) {
                 Select
             </button>
         </div>
+    </div>
+</div>
+
+<!-- Health Forms Filter Modal -->
+<div class="date-range-modal" id="healthFormsFilterModal">
+    <div class="date-range-modal-content" id="healthFormsFilterModalContent">
+        <div class="date-range-modal-header">
+            <h3>Filter Health Forms</h3>
+        </div>
+        <form action="{{ route($healthFormsExportRouteName) }}" method="GET" id="healthFormsExportForm">
+            <div class="date-range-modal-body health-filter-grid">
+                <div class="health-filter-field">
+                    <label for="healthFormsDateFrom">From Date</label>
+                    <input type="date" id="healthFormsDateFrom" name="date_from" value="{{ now()->startOfMonth()->toDateString() }}">
+                </div>
+                <div class="health-filter-field">
+                    <label for="healthFormsDateTo">To Date</label>
+                    <input type="date" id="healthFormsDateTo" name="date_to" value="{{ now()->toDateString() }}">
+                </div>
+                <div class="health-filter-field">
+                    <label for="healthFormsCourse">Course</label>
+                    <select id="healthFormsCourse" name="course">
+                        <option value="">All Courses</option>
+                        @foreach($healthFormCourses as $course)
+                            <option value="{{ $course }}">{{ $course }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="health-filter-field">
+                    <label for="healthFormsStatus">Status</label>
+                    <select id="healthFormsStatus" name="status" class="health-status-select">
+                        <option value="">All Status</option>
+                        <option value="approved">Approved</option>
+                        <option value="pending">Pending</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+            </div>
+            <div class="date-range-modal-actions">
+                <button type="button" class="date-range-modal-btn date-range-modal-btn-cancel" onclick="closeHealthFormsFilterModal()">
+                    Cancel
+                </button>
+                <button type="submit" class="date-range-modal-btn date-range-modal-btn-select">
+                    Generate CSV
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
