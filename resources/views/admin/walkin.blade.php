@@ -6576,6 +6576,15 @@
         </div>
     </div>
 
+    <div class="clinic-success-overlay" id="applicantEncodeOverlay" aria-live="assertive" aria-hidden="true">
+        <div class="clinic-success-card">
+            <div class="clinic-success-check" aria-hidden="true">
+                <x-outline-icon name="check" />
+            </div>
+            <strong>Done Encoding</strong>
+        </div>
+    </div>
+
     <div class="applicant-modal-backdrop" id="applicantDocumentsModal">
         <div class="applicant-modal-shell applicant-documents-modal">
             <div class="applicant-modal-head">
@@ -8203,6 +8212,7 @@
         };
         const previewOpen     = document.getElementById('applicantDocumentPreviewOpen');
         const approvalOverlay = document.getElementById('applicantApprovalOverlay');
+        const encodeOverlay   = document.getElementById('applicantEncodeOverlay');
         let currentLookupRef  = '';
         let currentDocuments  = [];
         let currentLookupMode = 'applicant';
@@ -9215,10 +9225,14 @@
             .then(data => {
                 if (data.success) {
                     setStatus('success', data.message || 'Assessment saved for final review.');
+                    encodeOverlay?.classList.add('is-open');
+                    encodeOverlay?.setAttribute('aria-hidden', 'false');
                     setTimeout(() => {
+                        encodeOverlay?.classList.remove('is-open');
+                        encodeOverlay?.setAttribute('aria-hidden', 'true');
                         closeApplicantsModal();
                         window.location.reload();
-                    }, 900);
+                    }, 1250);
                 } else {
                     setStatus('error', data.message || 'Failed to save assessment.');
                 }
