@@ -132,6 +132,7 @@ return [
         'webhook_secret' => env('PUPTAS_WEBHOOK_SECRET', env('MEDICAL_WEBHOOK_SECRET')),
         'signature_header' => env('PUPTAS_SIGNATURE_HEADER', 'X-Medical-Signature'),
         'timestamp_header' => env('PUPTAS_TIMESTAMP_HEADER', 'X-Timestamp'),
+        'nonce_header' => env('PUPTAS_NONCE_HEADER', 'X-Nonce'),
         'timeout' => (int) env('PUPTAS_TIMEOUT', 20),
         'scope' => env('PUPTAS_SCOPE', 'medical-read medical-write'),
         'token_url' => env('PUPTAS_TOKEN_URL'),

@@ -16,6 +16,7 @@ class PuptasWebhookService
     private string $webhookSecret;
     private string $signatureHeader;
     private string $timestampHeader;
+    private string $nonceHeader;
     private int $timeout;
     private string $scope;
     private string $tokenUrl;
@@ -29,6 +30,7 @@ class PuptasWebhookService
         $this->webhookSecret = (string) config('services.puptas.webhook_secret', '');
         $this->signatureHeader = (string) config('services.puptas.signature_header', 'X-Medical-Signature');
         $this->timestampHeader = (string) config('services.puptas.timestamp_header', 'X-Timestamp');
+        $this->nonceHeader = (string) config('services.puptas.nonce_header', 'X-Nonce');
         $this->timeout = (int) config('services.puptas.timeout', 20);
         $this->scope = (string) config('services.puptas.scope', 'medical-read medical-write');
         $this->tokenUrl = $this->resolveTokenUrl((string) config('services.puptas.token_url', ''));
@@ -519,6 +521,7 @@ class PuptasWebhookService
             }
 
             $timestamp = now()->utc()->toIso8601String();
+            $nonce = (string) \Illuminate\Support\Str::uuid();
             $payloadData = [];
             if ($studentId !== '') {
                 $payloadData['student_id'] = $studentId;
@@ -528,6 +531,7 @@ class PuptasWebhookService
             }
             $payloadData['is_health_profile_completed'] = 1;
             $payloadData['timestamp'] = $timestamp;
+            $payloadData['nonce'] = $nonce;
 
             $payload = json_encode($payloadData, JSON_UNESCAPED_SLASHES);
 
@@ -543,6 +547,7 @@ class PuptasWebhookService
                 'Accept' => 'application/json',
                 $this->signatureHeader => $signature,
                 $this->timestampHeader => $timestamp,
+                $this->nonceHeader => $nonce,
             ];
 
             if ($this->signatureHeader !== 'X-Medical-Signature') {
@@ -553,6 +558,12 @@ class PuptasWebhookService
             }
             if (strtolower($this->timestampHeader) !== 'x-timestamp') {
                 $headers['X-Timestamp'] = $timestamp;
+            }
+            if (strtolower($this->nonceHeader) !== 'nonce') {
+                $headers['nonce'] = $nonce;
+            }
+            if (strtolower($this->nonceHeader) !== 'x-nonce') {
+                $headers['X-Nonce'] = $nonce;
             }
 
             $response = Http::timeout($this->timeout)
@@ -566,6 +577,7 @@ class PuptasWebhookService
                     'reference_number' => $referenceNumber,
                     'student_id' => $studentId,
                     'timestamp' => $timestamp,
+                    'nonce' => $nonce,
                 ]);
                 return ['success' => true, 'message' => 'Synced successfully'];
             }
@@ -576,6 +588,7 @@ class PuptasWebhookService
                 'reference_number' => $referenceNumber,
                 'student_id' => $studentId,
                 'timestamp' => $timestamp,
+                'nonce' => $nonce,
                 'error' => $response->body(),
             ]);
             return ['success' => false, 'message' => $errorMessage];
