@@ -569,14 +569,6 @@
                             <option value="no" {{ $conditionFilter === 'no' ? 'selected' : '' }}>No Condition</option>
                         </select>
                     </div>
-                    <div class="filter-group">
-                        <label>Status</label>
-                        <select name="status">
-                            <option value="">All Status</option>
-                            <option value="pending" {{ $statusFilter === 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="approved" {{ $statusFilter === 'approved' ? 'selected' : '' }}>Approved</option>
-                        </select>
-                    </div>
                 </div>
                 <div class="filter-actions">
                     <button type="submit" class="filter-btn primary">Apply Filters</button>
@@ -595,9 +587,7 @@
                     <th>Course</th>
                     <th>Type</th>
                     <th>Submitted</th>
-                    <th>Time In</th>
                     <th>Reviewed By</th>
-                    <th>Time Out</th>
                     <th>Approved By</th>
                     <th>Status</th>
                     <th>Condition</th>
@@ -661,22 +651,8 @@
                         <td>{{ $user->user_type ?? 'N/A' }}</td>
                         <td>{{ \Carbon\Carbon::parse($record->created_at)->format('M d, Y g:i A') }}</td>
                         <td>
-                            @if($record->review_started_at)
-                                {{ \Carbon\Carbon::parse($record->review_started_at)->format('M d, Y g:i A') }}
-                            @else
-                                <span style="color: #94a3b8;">&mdash;</span>
-                            @endif
-                        </td>
-                        <td>
                             @if($reviewer)
                                 <strong>{{ $reviewer->name }}</strong>
-                            @else
-                                <span style="color: #94a3b8;">&mdash;</span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($isApproved && $record->verified_at)
-                                {{ \Carbon\Carbon::parse($record->verified_at)->format('M d, Y g:i A') }}
                             @else
                                 <span style="color: #94a3b8;">&mdash;</span>
                             @endif
@@ -717,7 +693,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="11" class="logbook-empty">No health form records found matching your filters.</td>
+                        <td colspan="9" class="logbook-empty">No health form records found matching your filters.</td>
                     </tr>
                 @endforelse
             </tbody>

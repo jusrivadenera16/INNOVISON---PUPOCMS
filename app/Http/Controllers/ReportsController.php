@@ -903,11 +903,11 @@ class ReportsController extends Controller
         $userTypeFilter = trim((string) $request->query('type', ''));
         $genderFilter = trim((string) $request->query('gender', ''));
         $conditionFilter = trim((string) $request->query('condition', ''));
-        $statusFilter = trim((string) $request->query('status', ''));
+        $statusFilter = 'approved';
 
         $query = HealthProfile::query()
             ->with(['user', 'approvedBy', 'reviewStartedBy'])
-            ->whereNotNull('clearance_status');
+            ->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
@@ -946,12 +946,6 @@ class ReportsController extends Controller
             $query->withMedicalCondition();
         } elseif ($conditionFilter === 'no') {
             $query->withoutMedicalCondition();
-        }
-
-        if ($statusFilter === 'pending') {
-            $query->whereNotIn('clearance_status', ['Issued', 'Fully Cleared']);
-        } elseif ($statusFilter === 'approved') {
-            $query->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
         }
 
         return [$query, $search, $courseFilter, $userTypeFilter, $genderFilter, $conditionFilter, $statusFilter];
