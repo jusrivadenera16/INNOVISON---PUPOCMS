@@ -6480,6 +6480,14 @@
                                             <span>For Physician Evaluation</span>
                                         </label>
                                         <label class="applicant-pending-reason-option">
+                                            <input type="checkbox" id="applicantNeedsFurtherEvaluation" name="needs_further_evaluation" value="1">
+                                            <span>For Further Evaluation</span>
+                                        </label>
+                                        <label class="applicant-pending-reason-option">
+                                            <input type="checkbox" id="applicantNeedsHealthFormCorrection" name="needs_health_form_correction" value="1">
+                                            <span>Health Form Correction</span>
+                                        </label>
+                                        <label class="applicant-pending-reason-option">
                                             <input type="checkbox" id="applicantOtherPendingReason" name="other_pending_reason_selected" value="1">
                                             <span>Others</span>
                                         </label>
@@ -8595,7 +8603,7 @@
             document.querySelectorAll('input[name="resubmission_required_documents[]"]').forEach(function (input) {
                 input.checked = false;
             });
-            ['applicantHasMedicalCondition', 'applicantIncompleteRequirements', 'applicantNeedsPhysicianEvaluation', 'applicantOtherPendingReason'].forEach(function (id) {
+            ['applicantHasMedicalCondition', 'applicantIncompleteRequirements', 'applicantNeedsPhysicianEvaluation', 'applicantNeedsFurtherEvaluation', 'applicantNeedsHealthFormCorrection', 'applicantOtherPendingReason'].forEach(function (id) {
                 const field = document.getElementById(id);
                 if (field) field.checked = false;
             });
@@ -8708,6 +8716,8 @@
                 applicantHasMedicalCondition: savedReview.has_medical_condition,
                 applicantIncompleteRequirements: savedReview.incomplete_requirements,
                 applicantNeedsPhysicianEvaluation: savedReview.needs_physician_evaluation,
+                applicantNeedsFurtherEvaluation: savedReview.needs_further_evaluation,
+                applicantNeedsHealthFormCorrection: savedReview.needs_health_form_correction,
                 applicantOtherPendingReason: Boolean(savedReview.other_pending_reason)
             };
             Object.entries(checkboxValues).forEach(function ([id, value]) {
@@ -8796,6 +8806,8 @@
             const pendingReasons = [];
             if (savedReview.incomplete_requirements) pendingReasons.push('Document Resubmission');
             if (savedReview.needs_physician_evaluation) pendingReasons.push('For Physician Evaluation');
+            if (savedReview.needs_further_evaluation) pendingReasons.push('For Further Evaluation');
+            if (savedReview.needs_health_form_correction) pendingReasons.push('Health Form Correction');
             if (savedReview.other_pending_reason) pendingReasons.push('Others: ' + savedReview.other_pending_reason);
             const profileConditionText = conditionItems.map(function (item) {
                 return (item.label ? item.label + ': ' : '') + item.value;
@@ -8830,6 +8842,8 @@
             const pendingReasons = [];
             if (savedReview.incomplete_requirements) pendingReasons.push('Document Resubmission');
             if (savedReview.needs_physician_evaluation) pendingReasons.push('For Physician Evaluation');
+            if (savedReview.needs_further_evaluation) pendingReasons.push('For Further Evaluation');
+            if (savedReview.needs_health_form_correction) pendingReasons.push('Health Form Correction');
             if (savedReview.other_pending_reason) pendingReasons.push('Others: ' + savedReview.other_pending_reason);
 
             const values = {
@@ -9314,6 +9328,8 @@
             const medicalConditionCheckbox = document.getElementById('applicantHasMedicalCondition');
             const incompleteRequirementsCheckbox = document.getElementById('applicantIncompleteRequirements');
             const physicianEvaluationCheckbox = document.getElementById('applicantNeedsPhysicianEvaluation');
+            const furtherEvaluationCheckbox = document.getElementById('applicantNeedsFurtherEvaluation');
+            const healthFormCorrectionCheckbox = document.getElementById('applicantNeedsHealthFormCorrection');
             const otherPendingReasonCheckbox = document.getElementById('applicantOtherPendingReason');
             const otherPendingReasonInput = document.getElementById('applicantOtherPendingReasonText');
             const heightInput = document.getElementById('applicantHeight');
@@ -9339,11 +9355,13 @@
             const hasMedicalCondition = Boolean(medicalConditionCheckbox?.checked);
             const hasIncompleteRequirements = Boolean(incompleteRequirementsCheckbox?.checked);
             const needsPhysicianEvaluation = Boolean(physicianEvaluationCheckbox?.checked);
+            const needsFurtherEvaluation = Boolean(furtherEvaluationCheckbox?.checked);
+            const needsHealthFormCorrection = Boolean(healthFormCorrectionCheckbox?.checked);
             const hasOtherPendingReason = Boolean(otherPendingReasonCheckbox?.checked);
             const selectedResubmissionDocs = Array.from(document.querySelectorAll('input[name="resubmission_required_documents[]"]:checked'))
                 .map(function (input) { return input.value; });
 
-            if (isPendingDecision && !hasIncompleteRequirements && !needsPhysicianEvaluation && !hasOtherPendingReason) {
+            if (isPendingDecision && !hasIncompleteRequirements && !needsPhysicianEvaluation && !needsFurtherEvaluation && !needsHealthFormCorrection && !hasOtherPendingReason) {
                 setStatus('error', 'Please select at least one pending reason.');
                 return;
             }
@@ -9403,6 +9421,8 @@
                 approvalData.incomplete_requirements = isPendingDecision && hasIncompleteRequirements;
                 approvalData.resubmission_required_documents = isPendingDecision && hasIncompleteRequirements ? selectedResubmissionDocs : [];
                 approvalData.needs_physician_evaluation = isPendingDecision && needsPhysicianEvaluation;
+                approvalData.needs_further_evaluation = isPendingDecision && needsFurtherEvaluation;
+                approvalData.needs_health_form_correction = isPendingDecision && needsHealthFormCorrection;
                 approvalData.other_pending_reason = isPendingDecision && hasOtherPendingReason ? otherPendingReasonInput.value.trim() : '';
                 approvalData.medical_condition = hasMedicalCondition ? medicalConditionInput.value.trim() : '';
                 approvalData.condition_remarks = isPendingDecision ? (conditionRemarksInput?.value.trim() || '') : '';

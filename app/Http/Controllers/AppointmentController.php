@@ -2093,7 +2093,8 @@ public function account(Request $request)
         $pendingReasonBeforeUpload = trim((string) $healthProfile->pending_reason);
         $pendingReasonSearch = strtolower($pendingReasonBeforeUpload);
         $requiresManualComplianceAfterUpload = str_contains($pendingReasonSearch, 'others:')
-            || str_contains($pendingReasonSearch, 'health information form');
+            || str_contains($pendingReasonSearch, 'health information form')
+            || str_contains($pendingReasonSearch, 'health form correction');
 
         $documentRules = [
             'student_photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],

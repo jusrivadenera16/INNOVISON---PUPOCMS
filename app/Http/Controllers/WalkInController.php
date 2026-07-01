@@ -655,6 +655,11 @@ class WalkInController extends Controller
         $hasIncompleteRequirements = stripos($pendingReasonLine, 'Incomplete Requirements') !== false
             || stripos($pendingReasonLine, 'Document Resubmission') !== false;
         $needsPhysicianEvaluation = stripos($pendingReasonLine, 'For Physician Evaluation') !== false;
+        $needsFurtherEvaluation = stripos($pendingReasonLine, 'For Further Evaluation') !== false;
+        $needsHealthFormCorrection = stripos($pendingReasonLine, 'Health Form Correction') !== false
+            || stripos($pendingReasonLine, 'Health Information Form') !== false
+            || stripos($pendingReasonLine, 'Correct Address') !== false
+            || stripos($pendingReasonLine, 'Correct Information') !== false;
         $otherPendingReason = '';
         if (preg_match('/(?:^|;\s*)Others:\s*(.+)$/i', $pendingReasonLine, $matches)) {
             $otherPendingReason = trim((string) $matches[1]);
@@ -665,6 +670,8 @@ class WalkInController extends Controller
             && !$hasMedicalCondition
             && !$hasIncompleteRequirements
             && !$needsPhysicianEvaluation
+            && !$needsFurtherEvaluation
+            && !$needsHealthFormCorrection
             && $otherPendingReason === ''
             && $pendingReasonLine !== ''
         ) {
@@ -681,6 +688,8 @@ class WalkInController extends Controller
             'incomplete_requirements' => $hasIncompleteRequirements,
             'resubmission_required_documents' => $profile->resubmission_required_documents ?: [],
             'needs_physician_evaluation' => $needsPhysicianEvaluation,
+            'needs_further_evaluation' => $needsFurtherEvaluation,
+            'needs_health_form_correction' => $needsHealthFormCorrection,
             'other_pending_reason' => $otherPendingReason,
             'condition_remarks' => $clearanceDecision === 'pending'
                 ? trim($pendingRemarks !== '' ? $pendingRemarks : '')
@@ -1957,6 +1966,8 @@ PROMPT;
                 'resubmission_required_documents' => ['nullable', 'array'],
                 'resubmission_required_documents.*' => ['string', 'in:student_photo,health_declaration,medical_certificate,chest_xray_result,pwd_id_proof'],
                 'needs_physician_evaluation' => ['nullable', 'boolean'],
+                'needs_further_evaluation' => ['nullable', 'boolean'],
+                'needs_health_form_correction' => ['nullable', 'boolean'],
                 'other_pending_reason' => ['nullable', 'string', 'max:1000'],
                 'medical_condition' => ['required_if:has_medical_condition,true', 'nullable', 'string', 'max:1000'],
                 'condition_remarks' => ['nullable', 'string', 'max:2000'],
@@ -1988,6 +1999,8 @@ PROMPT;
                 ], 422);
             }
             $needsPhysicianEvaluation = $hasPendingFinding && $request->boolean('needs_physician_evaluation');
+            $needsFurtherEvaluation = $hasPendingFinding && $request->boolean('needs_further_evaluation');
+            $needsHealthFormCorrection = $hasPendingFinding && $request->boolean('needs_health_form_correction');
             $medicalCondition = trim((string) $request->input('medical_condition', ''));
             $otherPendingReason = $hasPendingFinding
                 ? trim((string) $request->input('other_pending_reason', ''))
@@ -2023,6 +2036,12 @@ PROMPT;
             }
             if ($needsPhysicianEvaluation) {
                 $pendingReasons[] = 'For Physician Evaluation';
+            }
+            if ($needsFurtherEvaluation) {
+                $pendingReasons[] = 'For Further Evaluation';
+            }
+            if ($needsHealthFormCorrection) {
+                $pendingReasons[] = 'Health Form Correction';
             }
             if ($otherPendingReason !== '') {
                 $pendingReasons[] = 'Others: ' . $otherPendingReason;
