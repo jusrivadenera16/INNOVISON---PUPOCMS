@@ -1188,6 +1188,36 @@ class AppointmentController extends Controller
             'landline' => (string) (optional($healthProfile)->landline ?? ''),
             'office' => trim((string) (optional($linkedAdminProfile)->office ?? '')),
             'access_level' => trim((string) (optional($linkedAdminProfile)->access_level ?? '')),
+            'health_form_correction_mode' => $this->healthProfileNeedsFormCorrection($healthProfile),
+            'health_form_correction_notes' => trim((string) (optional($healthProfile)->pending_reason ?? '')),
+            'resubmission_required_documents' => $this->requestedHealthProfileDocuments($healthProfile),
+            'existing_documents' => [
+                'student_photo' => trim((string) (optional($healthProfile)->student_photo ?? '')),
+                'health_declaration' => trim((string) (optional($healthProfile)->health_declaration ?? '')),
+                'medical_certificate' => trim((string) (optional($healthProfile)->medical_certificate ?? '')),
+                'chest_xray_result' => trim((string) (optional($healthProfile)->chest_xray_result ?? '')),
+                'pwd_id_proof' => trim((string) (optional($healthProfile)->pwd_id_proof ?? '')),
+            ],
+            'has_illness' => (string) (optional($healthProfile)->has_illness ?? 'No'),
+            'medical_history' => is_array(optional($healthProfile)->medical_history) ? $healthProfile->medical_history : [],
+            'other_illness' => (string) (optional($healthProfile)->other_illness ?? ''),
+            'has_disability' => (string) (optional($healthProfile)->has_disability ?? 'No'),
+            'disability_type' => (string) (optional($healthProfile)->disability_type ?? ''),
+            'food_allergies' => (string) (optional($healthProfile)->food_allergies ?? ''),
+            'no_allergies' => (bool) (optional($healthProfile)->no_allergies ?? false),
+            'medicine_allergies' => is_array(optional($healthProfile)->medicine_allergies) ? $healthProfile->medicine_allergies : [],
+            'other_med_allergies' => (string) (optional($healthProfile)->other_med_allergies ?? ''),
+            'is_smoker' => (string) (optional($healthProfile)->is_smoker ?? 'No'),
+            'is_drinker' => (string) (optional($healthProfile)->is_drinker ?? 'No'),
+            'covid_vaccinated' => (string) (optional($healthProfile)->covid_vaccinated ?? ''),
+            'vaccine_history' => is_array(optional($healthProfile)->vaccine_history) ? $healthProfile->vaccine_history : [],
+            'doctor_name' => (string) (optional($healthProfile)->doctor_name ?? ''),
+            'med_cert_date' => (string) (optional($healthProfile)->med_cert_date ?? ''),
+            'med_cert_findings' => (string) (optional($healthProfile)->med_cert_findings ?? ''),
+            'med_cert_findings_details' => (string) (optional($healthProfile)->med_cert_findings_details ?? ''),
+            'xray_date' => (string) (optional($healthProfile)->xray_date ?? ''),
+            'xray_findings' => (string) (optional($healthProfile)->xray_findings ?? ''),
+            'xray_findings_details' => (string) (optional($healthProfile)->xray_findings_details ?? ''),
         ];
     }
 
@@ -1465,6 +1495,85 @@ class AppointmentController extends Controller
         }
 
         return HealthProfile::query()->where('user_id', $user->id)->exists();
+    }
+
+    private function healthProfileNeedsFormCorrection(?HealthProfile $healthProfile): bool
+    {
+        if (!$healthProfile) {
+            return false;
+        }
+
+        $status = strtolower(trim((string) $healthProfile->clearance_status));
+        if (!str_contains($status, 'pending') && !str_contains($status, 'conditional')) {
+            return false;
+        }
+
+        $reason = strtolower(trim((string) $healthProfile->pending_reason));
+        if ($reason === '') {
+            return false;
+        }
+
+        foreach ([
+            'health information form',
+            'health form',
+            'correct address',
+            'home address',
+            'correct information',
+            'correct details',
+        ] as $needle) {
+            if (str_contains($reason, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function requestedHealthProfileDocuments(?HealthProfile $healthProfile): array
+    {
+        if (!$healthProfile) {
+            return [];
+        }
+
+        return collect($healthProfile->resubmission_required_documents ?? [])
+            ->filter()
+            ->intersect(['student_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])
+            ->values()
+            ->all();
+    }
+
+    private function healthProfileFileRule(
+        bool $isCorrectionMode,
+        array $requestedDocuments,
+        string $document,
+        array $rules,
+        bool $requiredOnFirstSubmission = true
+    ): array {
+        $presenceRule = $isCorrectionMode
+            ? (in_array($document, $requestedDocuments, true) ? 'required' : 'nullable')
+            : ($requiredOnFirstSubmission ? 'required' : 'nullable');
+
+        return array_merge([$presenceRule], $rules);
+    }
+
+    private function storeHealthProfileFileOrKeep(
+        Request $request,
+        ?HealthProfile $existingHealthProfile,
+        string $document,
+        string $folder,
+        array &$oldPaths
+    ): ?string {
+        $existingPath = trim((string) (optional($existingHealthProfile)->{$document} ?? ''));
+
+        if (!$request->hasFile($document)) {
+            return $existingPath !== '' ? $existingPath : null;
+        }
+
+        if ($existingPath !== '') {
+            $oldPaths[$document] = ltrim($existingPath, '/');
+        }
+
+        return $request->file($document)->store($folder, 'public');
     }
 
     private function resolveStudentContext(?User $user): array
@@ -1981,6 +2090,10 @@ public function account(Request $request)
         $preserveApprovalHistory = !empty($healthProfile->verified_at)
             || !empty($healthProfile->approved_by_user_id)
             || in_array(strtolower(trim((string) $healthProfile->clearance_status)), ['issued', 'fully cleared'], true);
+        $pendingReasonBeforeUpload = trim((string) $healthProfile->pending_reason);
+        $pendingReasonSearch = strtolower($pendingReasonBeforeUpload);
+        $requiresManualComplianceAfterUpload = str_contains($pendingReasonSearch, 'others:')
+            || str_contains($pendingReasonSearch, 'health information form');
 
         $documentRules = [
             'student_photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
@@ -2029,8 +2142,8 @@ public function account(Request $request)
                 $healthProfile->{$document} = $path;
             }
 
-            $healthProfile->clearance_status = 'For Verification';
-            $healthProfile->pending_reason = null;
+            $healthProfile->clearance_status = $requiresManualComplianceAfterUpload ? 'Pending/Conditional' : 'For Verification';
+            $healthProfile->pending_reason = $requiresManualComplianceAfterUpload ? $pendingReasonBeforeUpload : null;
             $healthProfile->documents_valid = false;
             if (!$preserveApprovalHistory) {
                 $healthProfile->verified_at = null;
@@ -2060,8 +2173,12 @@ public function account(Request $request)
                 'user_agent' => $request->userAgent(),
             ]);
 
+            $successMessage = $requiresManualComplianceAfterUpload
+                ? 'Replacement files uploaded successfully. Your record remains pending compliance until the remaining correction is reviewed.'
+                : 'Replacement requirement files uploaded successfully. Your record is back for clinic review.';
+
             return redirect('/student/account?view=health-record')
-                ->with('success', 'Replacement requirement files uploaded successfully. Your record is back for clinic review.');
+                ->with('success', $successMessage);
         } catch (\Throwable $e) {
             foreach ($storedPaths as $path) {
                 if ($path && Storage::disk('public')->exists($path)) {
@@ -2491,14 +2608,19 @@ public function showHealthForm()
         $user = User::find($user->id);
     }
 
-    if ($this->hasSubmittedHealthProfile($user)) {
+    $existingHealthProfile = $user
+        ? HealthProfile::query()->where('user_id', $user->id)->first()
+        : null;
+    $isHealthFormCorrectionMode = $this->healthProfileNeedsFormCorrection($existingHealthProfile);
+
+    if ($this->hasSubmittedHealthProfile($user) && !$isHealthFormCorrectionMode) {
         return redirect('/student/account?view=health-record')
             ->with('info', 'You have already submitted your health profile.');
     }
 
     // Resolve the linked admin profile (Required by your view to avoid Undefined Variable error)
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
-    $healthFormPrefill = $this->buildHealthFormPrefill($user, $linkedAdminProfile);
+    $healthFormPrefill = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $existingHealthProfile);
     $this->persistResolvedUserProfileFields($user, $healthFormPrefill);
     $this->persistResolvedReferenceNumber($user, $healthFormPrefill['reference_number'] ?? '');
     $calculatedAge = $healthFormPrefill['age'] ?? null;
@@ -2706,7 +2828,13 @@ public function storeHealthForm(Request $request)
 {
     /** @var \App\Models\User|null $user */
     $user = Auth::user();
-    if ($this->hasSubmittedHealthProfile($user)) {
+    $existingHealthProfile = $user?->relationLoaded('healthProfile') && $user?->healthProfile
+        ? $user->healthProfile
+        : \App\Models\HealthProfile::where('user_id', $user?->id)->first();
+    $isHealthFormCorrectionMode = $this->healthProfileNeedsFormCorrection($existingHealthProfile);
+    $requestedCorrectionDocuments = $this->requestedHealthProfileDocuments($existingHealthProfile);
+
+    if ($this->hasSubmittedHealthProfile($user) && !$isHealthFormCorrectionMode) {
         return redirect('/student/account?view=health-record')
             ->with('info', 'Your health profile is already submitted.');
     }
@@ -2725,10 +2853,6 @@ public function storeHealthForm(Request $request)
             'reference_number' => 'PUPTAS verification is temporarily unavailable. Please try again later or contact Admissions or clinic staff.',
         ]);
     }
-    $existingHealthProfile = $user?->relationLoaded('healthProfile') && $user?->healthProfile
-        ? $user->healthProfile
-        : \App\Models\HealthProfile::where('user_id', $user?->id)->first();
-
     $resolvedCourse = $user
         ? $this->resolveHealthFormCourse($user, $existingHealthProfile, $accountApplicantData, $request)
         : ['code' => '', 'name' => '', 'label' => ''];
@@ -2756,8 +2880,8 @@ public function storeHealthForm(Request $request)
         'home_address'      => 'required|string|max:255',
         'zipcode'           => 'required|string|max:20',
         'birthday'          => 'required|date',
-        'student_photo'     => 'required|image|mimes:jpeg,png,jpg|max:1024',
-        'health_declaration' => 'required|file|mimes:pdf,jpg,jpeg,png|max:1024',
+        'student_photo'     => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'student_photo', ['image', 'mimes:jpeg,png,jpg', 'max:1024']),
+        'health_declaration' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'health_declaration', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:1024']),
         'age'               => 'required|numeric|min:15|max:100',
         'sex'               => 'required|string',
         'civil_status'      => 'required|string',
@@ -2790,14 +2914,16 @@ public function storeHealthForm(Request $request)
         'vaccine_history.booster_2.date' => 'nullable|required_with:vaccine_history.booster_2.brand|date|after_or_equal:2021-03-01|before_or_equal:today',
         'vaccine_history.booster_2.brand' => 'nullable|required_with:vaccine_history.booster_2.date|string|max:100',
 
-        'chest_xray_result' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+        'chest_xray_result' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'chest_xray_result', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:2048']),
         'xray_date'         => 'required|date',
         'xray_findings'     => 'required|string|in:Normal,With Findings,Not Sure / For Clinic Review',
         'xray_findings_details' => 'required_if:xray_findings,With Findings|nullable|string|max:1000',
         'has_disability'    => 'required|string',
         'disability_type'   => 'required_if:has_disability,Yes|nullable|string|max:255',
-        'pwd_id_proof'      => 'required_if:has_disability,Yes|file|mimes:pdf|max:2048',
-        'medical_certificate' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+        'pwd_id_proof'      => $isHealthFormCorrectionMode
+            ? $this->healthProfileFileRule(true, $requestedCorrectionDocuments, 'pwd_id_proof', ['file', 'mimes:pdf', 'max:2048'], false)
+            : ['required_if:has_disability,Yes', 'file', 'mimes:pdf', 'max:2048'],
+        'medical_certificate' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'medical_certificate', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:2048']),
         'doctor_name'       => 'required|string|max:255',
         'med_cert_date'     => 'required|date',
         'med_cert_findings' => 'required|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review',
@@ -2926,21 +3052,16 @@ public function storeHealthForm(Request $request)
     $user->reference_number = $officialReference;
     $user->save();
 
+    $oldPaths = [];
+
     try {
-        $photoPath = $request->file('student_photo')->store('health_profiles/photos', 'public');
-        $chestXrayPath = $request->hasFile('chest_xray_result')
-            ? $request->file('chest_xray_result')->store('health_profiles/chest_xray_results', 'public')
-            : null;
-        $pwdIdProofPath = $request->hasFile('pwd_id_proof')
-            ? $request->file('pwd_id_proof')->store('health_profiles/pwd_id_proofs', 'public')
-            : null;
-        $medicalCertificatePath = $request->hasFile('medical_certificate')
-            ? $request->file('medical_certificate')->store('health_profiles/medical_certificates', 'public')
-            : null;
-        $healthDeclarationPath = $request->hasFile('health_declaration')
-            ? $request->file('health_declaration')->store('health_profiles/health_declarations', 'public')
-            : null;
-        \App\Models\HealthProfile::updateOrCreate(
+        $photoPath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'student_photo', 'health_profiles/photos', $oldPaths);
+        $chestXrayPath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'chest_xray_result', 'health_profiles/chest_xray_results', $oldPaths);
+        $pwdIdProofPath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'pwd_id_proof', 'health_profiles/pwd_id_proofs', $oldPaths);
+        $medicalCertificatePath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'medical_certificate', 'health_profiles/medical_certificates', $oldPaths);
+        $healthDeclarationPath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'health_declaration', 'health_profiles/health_declarations', $oldPaths);
+
+        $healthProfile = \App\Models\HealthProfile::updateOrCreate(
             ['user_id' => $user->id],
             [
                 'student_id'         => $request->student_id,
@@ -2997,9 +3118,19 @@ public function storeHealthForm(Request $request)
                     : null,
                 'clearance_status'   => 'For Verification',
                 'pending_reason'     => null,
+                'resubmission_required_documents' => null,
+                'resubmission_requested_at' => null,
+                'resubmitted_at'      => $isHealthFormCorrectionMode ? now() : optional($existingHealthProfile)->resubmitted_at,
                 'verified_at'        => null,
             ]
         );
+
+        foreach ($oldPaths as $oldPath) {
+            $oldPath = preg_replace('#^(?:public/)?storage/#', '', $oldPath) ?? $oldPath;
+            if ($oldPath !== '' && Storage::disk('public')->exists($oldPath)) {
+                Storage::disk('public')->delete($oldPath);
+            }
+        }
 
         $user->is_health_profile_completed = 0;
         $user->save();
@@ -3007,31 +3138,39 @@ public function storeHealthForm(Request $request)
         \App\Models\ActivityLog::create([
             'user_id'     => $user->id,
             'user_name'   => $user->name,
-            'action'      => 'Health Profile Completed',
-            'description' => 'Student completed the Health Profile requirements.',
+            'action'      => $isHealthFormCorrectionMode ? 'Health Profile Correction Submitted' : 'Health Profile Completed',
+            'description' => $isHealthFormCorrectionMode
+                ? 'Student submitted requested Health Form corrections.'
+                : 'Student completed the Health Profile requirements.',
             'ip_address'  => $request->ip(),
             'user_agent'  => $request->userAgent(),
         ]);
 
-        $puptasService = new \App\Services\PuptasWebhookService();
-        $webhookResult = $puptasService->sendMedicalClearance(
-            $officialReference,
-            $request->input('student_id'),
-            false
-        );
+        if (!$isHealthFormCorrectionMode) {
+            $puptasService = new \App\Services\PuptasWebhookService();
+            $webhookResult = $puptasService->sendMedicalClearance(
+                $officialReference,
+                $request->input('student_id'),
+                false
+            );
 
-        if (!$webhookResult['success']) {
-            \Log::warning('PUPTAS webhook sync failed after health form submission', [
-                'user_id' => $user->id,
-                'reference_number' => $officialReference,
-                'webhook_message' => $webhookResult['message'] ?? 'Unknown error',
-            ]);
+            if (!$webhookResult['success']) {
+                \Log::warning('PUPTAS webhook sync failed after health form submission', [
+                    'user_id' => $user->id,
+                    'reference_number' => $officialReference,
+                    'webhook_message' => $webhookResult['message'] ?? 'Unknown error',
+                ]);
+            }
         }
 
+        $successMessage = $isHealthFormCorrectionMode
+            ? 'Health Form corrections submitted successfully. Your record is back for clinic review.'
+            : 'Health Profile saved successfully.';
+
         return redirect('/student/account?view=health-record')
-            ->with('success', 'Health Profile saved successfully.')
+            ->with('success', $successMessage)
             ->with('health_profile_submitted', true)
-            ->with('show_health_print_reminder', true);
+            ->with('show_health_print_reminder', !$isHealthFormCorrectionMode);
 
     } catch (\Exception $e) {
    

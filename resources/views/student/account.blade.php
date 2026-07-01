@@ -3315,6 +3315,15 @@ document.addEventListener('DOMContentLoaded', function () {
         $isConditionalStatus = str_contains($statusNormalized, 'pending') || str_contains($statusNormalized, 'conditional');
         $isPendingStatus = !$isIssuedStatus && !$isRejectedStatus;
         $recordPendingReason = trim((string) optional($user->healthProfile)->pending_reason);
+        $recordPendingReasonSearch = strtolower($recordPendingReason);
+        $requiresHealthFormCorrection = $isConditionalStatus && collect([
+            'health information form',
+            'health form',
+            'correct address',
+            'home address',
+            'correct information',
+            'correct details',
+        ])->contains(fn ($needle) => str_contains($recordPendingReasonSearch, $needle));
         $resubmissionDocuments = collect(optional($user->healthProfile)->resubmission_required_documents ?? [])->filter()->values();
         $isResubmissionStatus = $statusNormalized === 'pending resubmission' || $resubmissionDocuments->isNotEmpty();
         $resubmissionDocumentLabels = [
@@ -3575,6 +3584,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         <x-outline-icon name="eye" />
                         View Submitted Record
                     </button>
+                    @if($requiresHealthFormCorrection)
+                        <a href="{{ route('health.form') }}" class="btn-print-form pending">
+                            <x-outline-icon name="document-text" />
+                            Edit Health Form
+                        </a>
+                    @endif
                     @if($isResubmissionStatus && $resubmissionDocuments->isNotEmpty())
                         <button type="button" class="btn-print-form pending" onclick="openResubmissionModal()">
                             <x-outline-icon name="document-text" />

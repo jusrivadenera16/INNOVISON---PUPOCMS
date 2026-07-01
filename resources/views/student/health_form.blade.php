@@ -722,6 +722,51 @@
             display: flex;
         }
 
+        .correction-mode-note {
+            margin-bottom: 16px;
+            padding: 14px 16px;
+            border: 1px solid #facc15;
+            border-radius: 14px;
+            background: #fffbeb;
+            color: #78350f;
+            font-size: 0.86rem;
+            font-weight: 700;
+            line-height: 1.55;
+        }
+
+        .existing-upload-preview {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 12px 0;
+            padding: 12px;
+            border: 1px solid #dbeafe;
+            border-radius: 14px;
+            background: #eff6ff;
+            color: #1e3a8a;
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+
+        .existing-upload-preview a {
+            color: #7f1d2d;
+            text-decoration: none;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .file-locked-note {
+            margin: 8px 0 0;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
         .requirement-card.has-upload-preview > input[type="file"],
         .upload-card.has-upload-preview > input[type="file"] {
             display: none;
@@ -1588,9 +1633,16 @@
                     : (collect($covidErrorFields)->contains(fn ($field) => $errors->has($field)) ? 4
                     : (collect($medicalErrorFields)->contains(fn ($field) => $errors->has($field)) ? 3
                     : (collect($personalErrorFields)->contains(fn ($field) => $errors->has($field)) ? 2 : 1)));
-                $selectedMedicalHistory = old('medical_history', []);
-                $selectedMedicineAllergies = old('medicine_allergies', []);
-                $selectedHasIllness = old('has_illness', 'No');
+                $selectedMedicalHistory = old('medical_history', $prefill['medical_history'] ?? []);
+                $selectedMedicineAllergies = old('medicine_allergies', $prefill['medicine_allergies'] ?? []);
+                $selectedHasIllness = old('has_illness', $prefill['has_illness'] ?? 'No');
+                $isHealthFormCorrectionMode = (bool) ($prefill['health_form_correction_mode'] ?? false);
+                $healthFormCorrectionNotes = trim((string) ($prefill['health_form_correction_notes'] ?? ''));
+                $requestedCorrectionDocuments = collect($prefill['resubmission_required_documents'] ?? [])->filter()->values()->all();
+                $existingCorrectionDocuments = $prefill['existing_documents'] ?? [];
+                $isDocumentRequested = fn ($documentKey) => in_array($documentKey, $requestedCorrectionDocuments, true);
+                $hasExistingDocument = fn ($documentKey) => trim((string) ($existingCorrectionDocuments[$documentKey] ?? '')) !== '';
+                $documentOpenUrl = fn ($documentKey) => route('student.health_record.document', ['document' => $documentKey]);
                 $displayFirstName = trim((string) (
                     ($prefill['puptas_first_name'] ?? '')
                     ?: ($prefill['first_name'] ?? '')
@@ -2010,7 +2062,7 @@
                         </div>
                         <div class="form-field mt-3">
                             <label class="form-label" for="other_illness">Other Illness / Medical Notes</label>
-                            <textarea id="other_illness" name="other_illness" class="form-control field-maroon" rows="3">{{ old('other_illness') }}</textarea>
+                            <textarea id="other_illness" name="other_illness" class="form-control field-maroon" rows="3">{{ old('other_illness', $prefill['other_illness'] ?? '') }}</textarea>
                         </div>
                     </div>
 
@@ -2047,13 +2099,13 @@
 
                     <h2 class="section-title mt-4">Allergies</h2>
                     <label class="choice-card mb-3">
-                        <input id="no_allergies" type="checkbox" name="no_allergies" value="1" {{ old('no_allergies') ? 'checked' : '' }}>
+                        <input id="no_allergies" type="checkbox" name="no_allergies" value="1" {{ old('no_allergies', $prefill['no_allergies'] ?? false) ? 'checked' : '' }}>
                         <span>No Known Allergies</span>
                     </label>
                     <div id="allergyDetails" class="conditional-section">
                         <div class="form-field mb-3">
                             <label class="form-label" for="food_allergies">Food Allergies</label>
-                            <input id="food_allergies" name="food_allergies" class="form-control field-maroon" value="{{ old('food_allergies') }}" placeholder="Specify food allergies">
+                            <input id="food_allergies" name="food_allergies" class="form-control field-maroon" value="{{ old('food_allergies', $prefill['food_allergies'] ?? '') }}" placeholder="Specify food allergies">
                         </div>
                         <div class="choice-grid">
                             @foreach(['Aspirin', 'Ibuprofen', 'Amoxicillin', 'Mefenamic Acid', 'Penicillin'] as $medicine)
@@ -2065,7 +2117,7 @@
                         </div>
                         <div class="form-field mt-3">
                             <label class="form-label" for="other_med_allergies">Other Medicine Allergies</label>
-                            <input id="other_med_allergies" name="other_med_allergies" class="form-control field-maroon" value="{{ old('other_med_allergies') }}">
+                            <input id="other_med_allergies" name="other_med_allergies" class="form-control field-maroon" value="{{ old('other_med_allergies', $prefill['other_med_allergies'] ?? '') }}">
                         </div>
                     </div>
 
@@ -2076,7 +2128,7 @@
                                 <label class="form-label">{{ $label }} <span class="required">*</span></label>
                                 <div class="pwd-toggle">
                                     @foreach(['No', 'Yes'] as $option)
-                                        <input class="pwd-radio" type="radio" name="{{ $field }}" id="{{ $field }}_{{ strtolower($option) }}" value="{{ $option }}" required {{ old($field, 'No') === $option ? 'checked' : '' }}>
+                                        <input class="pwd-radio" type="radio" name="{{ $field }}" id="{{ $field }}_{{ strtolower($option) }}" value="{{ $option }}" required {{ old($field, $prefill[$field] ?? 'No') === $option ? 'checked' : '' }}>
                                         <label class="pwd-option" for="{{ $field }}_{{ strtolower($option) }}">{{ $option }}</label>
                                     @endforeach
                                 </div>
@@ -2122,11 +2174,11 @@
                                     <div class="dose-label">{{ $doseLabel }} (Optional)</div>
                                     <div class="form-field">
                                         <label class="form-label" for="{{ $doseKey }}_date">Date Received @if($doseRequired)<span class="required">*</span>@endif</label>
-                                        <input id="{{ $doseKey }}_date" type="date" name="vaccine_history[{{ $doseKey }}][date]" class="form-control field-maroon" value="{{ old("vaccine_history.$doseKey.date") }}" min="2021-03-01" max="{{ now()->toDateString() }}" data-vaccine-field data-dose-required="{{ $doseRequired ? 'true' : 'false' }}">
+                                        <input id="{{ $doseKey }}_date" type="date" name="vaccine_history[{{ $doseKey }}][date]" class="form-control field-maroon" value="{{ old("vaccine_history.$doseKey.date", $prefill['vaccine_history'][$doseKey]['date'] ?? '') }}" min="2021-03-01" max="{{ now()->toDateString() }}" data-vaccine-field data-dose-required="{{ $doseRequired ? 'true' : 'false' }}">
                                     </div>
                                     <div class="form-field">
                                         <label class="form-label" for="{{ $doseKey }}_brand">Vaccine Brand @if($doseRequired)<span class="required">*</span>@endif</label>
-                                        <input id="{{ $doseKey }}_brand" name="vaccine_history[{{ $doseKey }}][brand]" class="form-control field-maroon" value="{{ old("vaccine_history.$doseKey.brand") }}" placeholder="e.g. Pfizer, Moderna" data-vaccine-field data-dose-required="{{ $doseRequired ? 'true' : 'false' }}">
+                                        <input id="{{ $doseKey }}_brand" name="vaccine_history[{{ $doseKey }}][brand]" class="form-control field-maroon" value="{{ old("vaccine_history.$doseKey.brand", $prefill['vaccine_history'][$doseKey]['brand'] ?? '') }}" placeholder="e.g. Pfizer, Moderna" data-vaccine-field data-dose-required="{{ $doseRequired ? 'true' : 'false' }}">
                                     </div>
                                 </div>
                             @endforeach
@@ -2150,17 +2202,49 @@
 
                 <div class="step-panel {{ $startStep === 5 ? '' : 'is-hidden' }}" id="stepPanel5">
                     <h2 class="section-title step-page-title">Clinic Requirements</h2>
+                    @if($isHealthFormCorrectionMode)
+                        <div class="correction-mode-note">
+                            Clinic note: {{ $healthFormCorrectionNotes !== '' ? $healthFormCorrectionNotes : 'Please review and correct your Health Information Form details.' }}
+                            Existing documents are locked unless the clinic requested a replacement for that specific file.
+                        </div>
+                    @endif
                     <div class="requirement-grid">
+                        @php
+                            $pwdRequested = $isDocumentRequested('pwd_id_proof');
+                            $pwdUploaded = $hasExistingDocument('pwd_id_proof');
+                            $pwdLocked = $isHealthFormCorrectionMode && !$pwdRequested && $pwdUploaded;
+                        @endphp
                         <div class="requirement-card" id="pwdUploadWrap" data-requirement-card>
                             <div class="requirement-card-header">
                                 <strong>PWD ID <span class="required">*</span></strong>
                                 <span class="requirement-badge">PDF</span>
                             </div>
                             <p class="requirement-guideline">Please upload a clear and readable scanned copy of the front of your valid PWD ID.</p>
-                            <input id="pwd_id_proof" type="file" name="pwd_id_proof" class="form-control" accept=".pdf,application/pdf" data-requirement-file data-upload-input data-preview-kind="pdf">
+                            @if($isHealthFormCorrectionMode && $pwdUploaded)
+                                <div class="existing-upload-preview">
+                                    <span>PWD ID Proof already uploaded.</span>
+                                    <a href="{{ $documentOpenUrl('pwd_id_proof') }}" target="_blank" rel="noopener">Open</a>
+                                </div>
+                            @endif
+                            <input id="pwd_id_proof" type="file" name="pwd_id_proof" class="form-control" accept=".pdf,application/pdf" data-requirement-file data-upload-input data-preview-kind="pdf" data-correction-locked="{{ $pwdLocked ? 'true' : 'false' }}" {{ $pwdLocked ? 'disabled' : '' }}>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
+                            @if($pwdLocked)
+                                <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
+                            @elseif($isHealthFormCorrectionMode && $pwdRequested)
+                                <div class="file-locked-note">Replacement requested by the clinic. Upload a new PWD ID Proof.</div>
+                            @endif
                             <small>Required only when PWD. Allowed: PDF only, max 2MB. Compress the file if needed to meet the size requirement.</small>
                         </div>
+                        @php
+                            $photoRequested = $isDocumentRequested('student_photo');
+                            $photoUploaded = $hasExistingDocument('student_photo');
+                            $photoLocked = $isHealthFormCorrectionMode && !$photoRequested && $photoUploaded;
+                        @endphp
+                        @php
+                            $declarationRequested = $isDocumentRequested('health_declaration');
+                            $declarationUploaded = $hasExistingDocument('health_declaration');
+                            $declarationLocked = $isHealthFormCorrectionMode && !$declarationRequested && $declarationUploaded;
+                        @endphp
                         <div class="requirement-card">
                             <div class="requirement-card-header">
                                 <strong>2x2 Photo (Image) <span class="required">*</span></strong>
@@ -2179,8 +2263,19 @@
                                     <p class="upload-example-caption">Formal, front-facing photo with even lighting and a plain white background.</p>
                                 </div>
                             </div>
-                            <input type="file" name="student_photo" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" required data-upload-input data-preview-kind="image">
+                            @if($isHealthFormCorrectionMode && $photoUploaded)
+                                <div class="existing-upload-preview">
+                                    <span>2x2 Student Photo already uploaded.</span>
+                                    <a href="{{ $documentOpenUrl('student_photo') }}" target="_blank" rel="noopener">Open</a>
+                                </div>
+                            @endif
+                            <input type="file" name="student_photo" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" {{ (!$isHealthFormCorrectionMode || $photoRequested) ? 'required' : '' }} {{ $photoLocked ? 'disabled' : '' }} data-upload-input data-preview-kind="image">
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
+                            @if($photoLocked)
+                                <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
+                            @elseif($isHealthFormCorrectionMode && $photoRequested)
+                                <div class="file-locked-note">Replacement requested by the clinic. Upload a new 2x2 photo.</div>
+                            @endif
                             <small>Allowed: JPG/PNG only, max 1MB. Compress the image if needed to meet the size requirement.</small>
                         </div>
                         <div class="requirement-card">
@@ -2201,11 +2296,28 @@
                                     <p class="upload-example-caption">Upload the signed, clear, and readable consent form.</p>
                                 </div>
                             </div>
-                            <input type="file" name="health_declaration" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required data-requirement-file data-upload-input>
+                            @if($isHealthFormCorrectionMode && $declarationUploaded)
+                                <div class="existing-upload-preview">
+                                    <span>Declaration form already uploaded.</span>
+                                    <a href="{{ $documentOpenUrl('health_declaration') }}" target="_blank" rel="noopener">Open</a>
+                                </div>
+                            @endif
+                            <input type="file" name="health_declaration" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ (!$isHealthFormCorrectionMode || $declarationRequested) ? 'required' : '' }} {{ $declarationLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
+                            @if($declarationLocked)
+                                <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
+                            @elseif($isHealthFormCorrectionMode && $declarationRequested)
+                                <div class="file-locked-note">Replacement requested by the clinic. Upload a new declaration form.</div>
+                            @endif
                             <small>Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.</small>
                         </div>
-                        <div class="requirement-card {{ old('doctor_name') || old('med_cert_date') || old('med_cert_findings') || old('med_cert_findings_details') ? 'has-old-data' : '' }}" data-requirement-card>
+                        @php
+                            $medicalCertificateRequested = $isDocumentRequested('medical_certificate');
+                            $medicalCertificateUploaded = $hasExistingDocument('medical_certificate');
+                            $medicalCertificateLocked = $isHealthFormCorrectionMode && !$medicalCertificateRequested && $medicalCertificateUploaded;
+                            $selectedMedCertFindings = old('med_cert_findings', $prefill['med_cert_findings'] ?? '');
+                        @endphp
+                        <div class="requirement-card {{ old('doctor_name', $prefill['doctor_name'] ?? '') || old('med_cert_date', $prefill['med_cert_date'] ?? '') || $selectedMedCertFindings || old('med_cert_findings_details', $prefill['med_cert_findings_details'] ?? '') ? 'has-old-data' : '' }}" data-requirement-card>
                             <div class="requirement-card-header">
                                 <strong>Medical Certificate <span class="required">*</span></strong>
                                 <span class="requirement-badge">PDF/IMG</span>
@@ -2223,26 +2335,37 @@
                                     <p class="upload-example-caption">Complete certificate with the doctor's signature and PRC License Number.</p>
                                 </div>
                             </div>
-                            <input type="file" name="medical_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required data-requirement-file data-upload-input>
+                            @if($isHealthFormCorrectionMode && $medicalCertificateUploaded)
+                                <div class="existing-upload-preview">
+                                    <span>Medical Certificate already uploaded.</span>
+                                    <a href="{{ $documentOpenUrl('medical_certificate') }}" target="_blank" rel="noopener">Open</a>
+                                </div>
+                            @endif
+                            <input type="file" name="medical_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ (!$isHealthFormCorrectionMode || $medicalCertificateRequested) ? 'required' : '' }} {{ $medicalCertificateLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
+                            @if($medicalCertificateLocked)
+                                <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
+                            @elseif($isHealthFormCorrectionMode && $medicalCertificateRequested)
+                                <div class="file-locked-note">Replacement requested by the clinic. Upload a new medical certificate.</div>
+                            @endif
                             <small>Allowed: PDF, JPG, JPEG, or PNG, max 2MB. Compress the file if needed to meet the size requirement.</small>
                             <div class="requirement-extra">
                                 <div class="form-field span-2">
                                     <label class="form-label" for="doctor_name">Doctor's Full Name <span class="required">*</span></label>
-                                    <input id="doctor_name" type="text" name="doctor_name" class="form-control" value="{{ old('doctor_name') }}" maxlength="255" required data-requirement-extra-field>
+                                    <input id="doctor_name" type="text" name="doctor_name" class="form-control" value="{{ old('doctor_name', $prefill['doctor_name'] ?? '') }}" maxlength="255" required data-requirement-extra-field>
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="med_cert_date">Date of Certificate <span class="required">*</span></label>
-                                    <input id="med_cert_date" type="date" name="med_cert_date" class="form-control" value="{{ old('med_cert_date') }}" required data-requirement-extra-field>
+                                    <input id="med_cert_date" type="date" name="med_cert_date" class="form-control" value="{{ old('med_cert_date', $prefill['med_cert_date'] ?? '') }}" required data-requirement-extra-field>
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="med_cert_findings">Findings <span class="required">*</span></label>
                                     <div class="clinic-select-wrap" data-clinic-select>
                                         <select id="med_cert_findings" name="med_cert_findings" class="form-select clinic-select-native" required data-requirement-extra-field>
                                             <option value="">Select findings</option>
-                                            <option value="No Findings / Normal" {{ old('med_cert_findings') === 'No Findings / Normal' ? 'selected' : '' }}>No Findings / Normal</option>
-                                            <option value="With Findings" {{ old('med_cert_findings') === 'With Findings' ? 'selected' : '' }}>With Findings</option>
-                                            <option value="Not Sure / For Clinic Review" {{ old('med_cert_findings') === 'Not Sure / For Clinic Review' ? 'selected' : '' }}>Not Sure / For Clinic Review</option>
+                                            <option value="No Findings / Normal" {{ $selectedMedCertFindings === 'No Findings / Normal' ? 'selected' : '' }}>No Findings / Normal</option>
+                                            <option value="With Findings" {{ $selectedMedCertFindings === 'With Findings' ? 'selected' : '' }}>With Findings</option>
+                                            <option value="Not Sure / For Clinic Review" {{ $selectedMedCertFindings === 'Not Sure / For Clinic Review' ? 'selected' : '' }}>Not Sure / For Clinic Review</option>
                                         </select>
                                         <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select findings</button>
                                         <div class="clinic-select-menu" role="listbox" aria-label="Medical certificate findings options">
@@ -2252,7 +2375,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-field span-2 {{ old('med_cert_findings') === 'With Findings' ? '' : 'is-hidden' }}" id="medCertFindingsDetailsWrap">
+                                <div class="form-field span-2 {{ $selectedMedCertFindings === 'With Findings' ? '' : 'is-hidden' }}" id="medCertFindingsDetailsWrap">
                                     <label class="form-label" for="med_cert_findings_details">Medical Certificate Findings <span class="required">*</span></label>
                                     <textarea
                                         id="med_cert_findings_details"
@@ -2262,11 +2385,17 @@
                                         maxlength="1000"
                                         placeholder="Type the findings written in your medical certificate."
                                         data-requirement-extra-field
-                                    >{{ old('med_cert_findings_details') }}</textarea>
+                                    >{{ old('med_cert_findings_details', $prefill['med_cert_findings_details'] ?? '') }}</textarea>
                                 </div>
                             </div>
                         </div>
-                        <div class="requirement-card {{ old('xray_date') || old('xray_findings') || old('xray_findings_details') ? 'has-old-data' : '' }}" data-requirement-card>
+                        @php
+                            $xrayRequested = $isDocumentRequested('chest_xray_result');
+                            $xrayUploaded = $hasExistingDocument('chest_xray_result');
+                            $xrayLocked = $isHealthFormCorrectionMode && !$xrayRequested && $xrayUploaded;
+                            $selectedXrayFindings = old('xray_findings', $prefill['xray_findings'] ?? '');
+                        @endphp
+                        <div class="requirement-card {{ old('xray_date', $prefill['xray_date'] ?? '') || $selectedXrayFindings || old('xray_findings_details', $prefill['xray_findings_details'] ?? '') ? 'has-old-data' : '' }}" data-requirement-card>
                             <div class="requirement-card-header">
                                 <strong>Chest X-ray Result <span class="required">*</span></strong>
                                 <span class="requirement-badge">PDF/IMG</span>
@@ -2284,22 +2413,33 @@
                                     <p class="upload-example-caption">Upload the official written report containing findings and impression.</p>
                                 </div>
                             </div>
-                            <input type="file" name="chest_xray_result" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required data-requirement-file data-upload-input>
+                            @if($isHealthFormCorrectionMode && $xrayUploaded)
+                                <div class="existing-upload-preview">
+                                    <span>Chest X-ray Result already uploaded.</span>
+                                    <a href="{{ $documentOpenUrl('chest_xray_result') }}" target="_blank" rel="noopener">Open</a>
+                                </div>
+                            @endif
+                            <input type="file" name="chest_xray_result" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ (!$isHealthFormCorrectionMode || $xrayRequested) ? 'required' : '' }} {{ $xrayLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
+                            @if($xrayLocked)
+                                <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
+                            @elseif($isHealthFormCorrectionMode && $xrayRequested)
+                                <div class="file-locked-note">Replacement requested by the clinic. Upload a new Chest X-ray Result.</div>
+                            @endif
                             <small>Allowed: PDF, JPG, JPEG, or PNG, max 2MB. Compress the file if needed to meet the size requirement.</small>
                             <div class="requirement-extra">
                                 <div class="form-field">
                                     <label class="form-label" for="xray_date">Date of Examination <span class="required">*</span></label>
-                                    <input id="xray_date" type="date" name="xray_date" class="form-control" value="{{ old('xray_date') }}" required data-requirement-extra-field>
+                                    <input id="xray_date" type="date" name="xray_date" class="form-control" value="{{ old('xray_date', $prefill['xray_date'] ?? '') }}" required data-requirement-extra-field>
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="xray_findings">Findings <span class="required">*</span></label>
                                     <div class="clinic-select-wrap" data-clinic-select>
                                         <select id="xray_findings" name="xray_findings" class="form-select clinic-select-native" required data-requirement-extra-field>
                                             <option value="">Select findings</option>
-                                            <option value="Normal" {{ old('xray_findings') === 'Normal' ? 'selected' : '' }}>Normal</option>
-                                            <option value="With Findings" {{ old('xray_findings') === 'With Findings' ? 'selected' : '' }}>With Findings</option>
-                                            <option value="Not Sure / For Clinic Review" {{ old('xray_findings') === 'Not Sure / For Clinic Review' ? 'selected' : '' }}>Not Sure / For Clinic Review</option>
+                                            <option value="Normal" {{ $selectedXrayFindings === 'Normal' ? 'selected' : '' }}>Normal</option>
+                                            <option value="With Findings" {{ $selectedXrayFindings === 'With Findings' ? 'selected' : '' }}>With Findings</option>
+                                            <option value="Not Sure / For Clinic Review" {{ $selectedXrayFindings === 'Not Sure / For Clinic Review' ? 'selected' : '' }}>Not Sure / For Clinic Review</option>
                                         </select>
                                         <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select findings</button>
                                         <div class="clinic-select-menu" role="listbox" aria-label="Chest X-ray findings options">
@@ -2309,7 +2449,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-field span-2 {{ old('xray_findings') === 'With Findings' ? '' : 'is-hidden' }}" id="xrayFindingsDetailsWrap">
+                                <div class="form-field span-2 {{ $selectedXrayFindings === 'With Findings' ? '' : 'is-hidden' }}" id="xrayFindingsDetailsWrap">
                                     <label class="form-label" for="xray_findings_details">Chest X-ray Findings <span class="required">*</span></label>
                                     <textarea
                                         id="xray_findings_details"
@@ -2319,7 +2459,7 @@
                                         maxlength="1000"
                                         placeholder="Type the findings written in your chest X-ray report."
                                         data-requirement-extra-field
-                                    >{{ old('xray_findings_details') }}</textarea>
+                                    >{{ old('xray_findings_details', $prefill['xray_findings_details'] ?? '') }}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -2597,11 +2737,12 @@
                 if (!disabilityTypeInput || !pwdProofInput) return;
                 const selected = document.querySelector('input[name="has_disability"]:checked');
                 const isPwd = selected?.value === 'Yes';
+                const isPwdFileLocked = pwdProofInput.dataset.correctionLocked === 'true';
 
                 disabilityTypeInput.required = isPwd;
                 disabilityTypeInput.disabled = !isPwd;
-                pwdProofInput.required = isPwd;
-                pwdProofInput.disabled = !isPwd;
+                pwdProofInput.required = isPwd && !isPwdFileLocked;
+                pwdProofInput.disabled = !isPwd || isPwdFileLocked;
                 disabilityTypeWrap?.classList.toggle('is-hidden', !isPwd);
                 pwdUploadWrap?.classList.toggle('is-hidden', !isPwd);
 

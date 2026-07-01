@@ -2252,6 +2252,106 @@
         border-top: 1px solid rgba(112, 19, 27, 0.10);
     }
 
+    .verify-approval-review-form {
+        margin-top: 18px;
+        padding: 16px;
+        border: 1px solid rgba(112, 19, 27, 0.14);
+        border-radius: 18px;
+        background: linear-gradient(180deg, #ffffff 0%, #fffafa 100%);
+    }
+
+    .verify-review-grid,
+    .verify-pending-reason-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .verify-select-field,
+    .verify-text-field,
+    .verify-textarea-field {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        font-size: 12px;
+        font-weight: 800;
+        color: #1f2937;
+    }
+
+    .verify-select-field select,
+    .verify-text-field input,
+    .verify-textarea-field textarea {
+        width: 100%;
+        border: 1px solid rgba(148, 163, 184, 0.55);
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 700;
+        outline: none;
+    }
+
+    .verify-textarea-field {
+        margin-top: 12px;
+    }
+
+    .verify-textarea-field textarea {
+        min-height: 84px;
+        resize: vertical;
+    }
+
+    .verify-pending-reason-row {
+        margin-top: 12px;
+    }
+
+    .verify-text-field {
+        display: none;
+    }
+
+    .verify-text-field.is-open {
+        display: flex;
+    }
+
+    .verify-approval-btn svg {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+    }
+
+    .readonly-final-review-field form {
+        margin: 0;
+    }
+
+    .readonly-final-review-btn {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 1px solid rgba(112, 19, 27, 0.28);
+        border-radius: 12px;
+        background: #70131B;
+        color: #facc15;
+        font-size: 12px;
+        font-weight: 900;
+        padding: 11px 12px;
+        cursor: pointer;
+        transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+    }
+
+    .readonly-final-review-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .readonly-final-review-btn:hover {
+        transform: translateY(-1px);
+        background: #facc15;
+        color: #70131B;
+        border-color: #f59e0b;
+    }
+
     .verify-approval-btn {
         border-radius: 999px;
         padding: 9px 16px;
@@ -2847,7 +2947,6 @@
     <table id="healthTable">
         <thead>
             <tr>
-                <th>ID Number</th>
                 <th>Full Name</th>
                 <th>Course / Yr / Sec</th>
                 <th>Medical Condition</th>
@@ -2983,7 +3082,6 @@
                         in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true) ? 'health-row-clickable' : '',
                     ])) }}"
                 >
-                    <td class="fw-bold">{{ $record->user->student_number ?: $record->user->student_id }}</td>
                     <td>
                         <div class="student-name" style="font-weight: 700;">{{ $record->user->name }}</div>
                     </td>
@@ -3032,7 +3130,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 40px; color: #94a3b8;">No issued health profiles found.</td>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">No issued health profiles found.</td>
                 </tr>
             @endforelse
         </tbody>
@@ -3472,6 +3570,16 @@
                                         @endif
                                     </strong>
                                 </div>
+                                <div class="readonly-field readonly-final-review-field">
+                                    <span>Final Review</span>
+                                    <form method="POST" action="{{ route('admin.health_profile.for_final_review', $readonlyRecord->id) }}">
+                                        @csrf
+                                        <button type="submit" class="readonly-final-review-btn">
+                                            <x-outline-icon name="check" />
+                                            For Final Review
+                                        </button>
+                                    </form>
+                                </div>
                                 <div class="readonly-field"><span>Last Updated Nurse Tracking Remarks</span><strong>{{ $readonlyRecord->medical_condition_remarks ?: $readonlyRecord->pending_reason ?: '-' }}</strong></div>
                             </div>
                         </div>
@@ -3540,6 +3648,88 @@
                 <p class="verify-condition-title">Medical Conditions</p>
                 <div class="verify-condition-grid" id="verificationConditionGrid"></div>
             </div>
+
+            <form method="POST" class="verify-approval-review-form" id="verifyApprovalForm">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="clearance_status" id="verifyClearanceStatus" value="Fully Cleared">
+                <input type="hidden" name="pending_reason" id="verifyPendingReason" value="">
+
+                <div class="verify-review-grid">
+                    <label class="verify-check-row">
+                        <input type="checkbox" name="documents_valid" id="verifyDocumentsValid" value="1">
+                        <span>
+                            <strong>Documents Valid</strong>
+                            <small>Uploaded files are readable and acceptable.</small>
+                        </span>
+                    </label>
+
+                    <label class="verify-select-field">
+                        <span>Physical Assessment Status</span>
+                        <select name="physical_assessment_status" id="verifyAssessmentStatus" required>
+                            <option value="Not Yet Conducted">Not Yet Conducted</option>
+                            <option value="Completed / Passed">Completed / Passed</option>
+                        </select>
+                    </label>
+                </div>
+
+                <label class="verify-textarea-field">
+                    <span>Nurse Remarks</span>
+                    <textarea id="verifyMedicalRemarks" name="medical_condition_remarks" rows="3" placeholder="Optional clinical remarks or medical-condition notes."></textarea>
+                </label>
+
+                <div class="verify-resubmission-panel" id="verifyResubmissionPanel">
+                    <p class="verify-resubmission-title">Documents Requiring Replacement</p>
+                    <div class="verify-resubmission-options">
+                        <label class="verify-resubmission-option">
+                            <input type="checkbox" name="resubmission_required_documents[]" value="student_photo">
+                            <span>2x2 Student Photo</span>
+                        </label>
+                        <label class="verify-resubmission-option">
+                            <input type="checkbox" name="resubmission_required_documents[]" value="health_declaration">
+                            <span>Declaration Form</span>
+                        </label>
+                        <label class="verify-resubmission-option">
+                            <input type="checkbox" name="resubmission_required_documents[]" value="medical_certificate">
+                            <span>Medical Certificate</span>
+                        </label>
+                        <label class="verify-resubmission-option">
+                            <input type="checkbox" name="resubmission_required_documents[]" value="chest_xray_result">
+                            <span>Chest X-ray Result</span>
+                        </label>
+                        <label class="verify-resubmission-option">
+                            <input type="checkbox" name="resubmission_required_documents[]" value="pwd_id_proof">
+                            <span>PWD ID Proof</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="verify-pending-reason-row">
+                    <label class="verify-select-field">
+                        <span>Pending Reason</span>
+                        <select id="verifyPendingReasonSelect">
+                            <option value="">Select reason when pending or resubmission is needed</option>
+                            <option value="Document Resubmission">Document Resubmission</option>
+                            <option value="For Physician Evaluation">For Physician Evaluation</option>
+                            <option value="others">Others</option>
+                        </select>
+                    </label>
+                    <label class="verify-text-field" id="verifyOtherReasonField">
+                        <span>Other Pending Reason</span>
+                        <input type="text" id="verifyPendingReasonOther" maxlength="1000" placeholder="Type the reason">
+                    </label>
+                </div>
+
+                <div class="verify-approval-actions">
+                    <button type="button" class="verify-approval-btn verify-approval-btn-cancel" id="verifyApprovalCancelBtn">Cancel</button>
+                    <button type="submit" class="verify-approval-btn verify-approval-btn-pending" id="verifyPendingBtn">Save Pending</button>
+                    <button type="submit" class="verify-approval-btn verify-approval-btn-resubmit" id="verifyResubmissionBtn">Request Resubmission</button>
+                    <button type="submit" class="verify-approval-btn verify-approval-btn-approve" id="verifyApprovalApproveBtn">
+                        <x-outline-icon name="check" />
+                        Approve / Issue
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -3735,16 +3925,18 @@
             }
 
             setValue('verifyMedicalRemarks', payload.medical_condition_remarks || '');
-            setValue('verifyPendingReason', payload.pending_reason || '');
+            setValue('verifyPendingReason', '');
+            setValue('verifyPendingReasonSelect', '');
+            setValue('verifyPendingReasonOther', '');
             setValue('verifyAssessmentStatus', payload.physical_assessment_status || 'Not Yet Conducted');
-            setValue('verifyClearanceStatus', 'Pending Resubmission');
+            setValue('verifyClearanceStatus', 'Fully Cleared');
 
             if (docsValid) {
                 docsValid.checked = Boolean(payload.documents_valid);
             }
 
             if (resubmissionPanel) {
-                resubmissionPanel.classList.add('is-open');
+                resubmissionPanel.classList.remove('is-open');
             }
 
             Array.prototype.forEach.call(document.querySelectorAll('input[name="resubmission_required_documents[]"]'), function (input) {
@@ -3780,8 +3972,8 @@
                     : '<div class="verify-condition-item"><span>Condition</span><strong>No Medical Condition</strong></div>';
             }
 
-            if (approveBtn) {
-                approveBtn.disabled = true;
+            if (approveBtn && assessmentStatus && docsValid) {
+                approveBtn.disabled = !(docsValid.checked && assessmentStatus.value === 'Completed / Passed');
             }
 
             verifyModal.classList.add('is-open');

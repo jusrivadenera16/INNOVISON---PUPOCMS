@@ -1709,6 +1709,45 @@ public function updateClearance(Request $request, $id)
             ->with('success', 'Replacement file request sent. The student will see the reupload prompt in Health Records.');
     }
 
+    public function markHealthProfileForFinalReview(Request $request, $id)
+    {
+        $record = HealthProfile::with('user')->findOrFail($id);
+
+        $record->clearance_status = 'For Final Review';
+        $record->physical_assessment_status = 'Encoded / For Final Review';
+        $record->verified_at = null;
+        $record->approved_by_user_id = null;
+        $record->save();
+
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_name' => auth()->user()?->name ?? auth()->user()?->email ?? 'System',
+            'user_role' => strtolower((string) (auth()->user()?->user_role ?? '')),
+            'action' => 'Health Profile Moved to Final Review',
+            'module' => 'Health Records',
+            'event_type' => 'health_profile_for_final_review',
+            'description' => 'Pending compliance record was moved to Final Review without triggering PUPTAS sync.',
+            'route_name' => optional($request->route())->getName(),
+            'http_method' => 'POST',
+            'request_path' => '/' . ltrim((string) $request->path(), '/'),
+            'status_code' => 200,
+            'subject_type' => HealthProfile::class,
+            'subject_id' => (string) $record->id,
+            'metadata' => [
+                'health_profile_id' => $record->id,
+                'reference_number' => $record->reference_number,
+                'student_id' => $record->student_id,
+                'previous_pending_reason' => $record->pending_reason,
+            ],
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 255),
+        ]);
+
+        return redirect()
+            ->route('admin.health_records')
+            ->with('success', 'Record moved to Final Review. It will appear in the Final Review applicant list.');
+    }
+
     public function uploadMedicalAssessmentCopy(Request $request)
     {
         $validated = $request->validate([
