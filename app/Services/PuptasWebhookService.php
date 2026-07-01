@@ -15,6 +15,7 @@ class PuptasWebhookService
     private string $clientSecret;
     private string $webhookSecret;
     private string $signatureHeader;
+    private string $timestampHeader;
     private int $timeout;
     private string $scope;
     private string $tokenUrl;
@@ -27,6 +28,7 @@ class PuptasWebhookService
         $this->clientSecret = (string) config('services.puptas.client_secret', '');
         $this->webhookSecret = (string) config('services.puptas.webhook_secret', '');
         $this->signatureHeader = (string) config('services.puptas.signature_header', 'X-Medical-Signature');
+        $this->timestampHeader = (string) config('services.puptas.timestamp_header', 'X-Timestamp');
         $this->timeout = (int) config('services.puptas.timeout', 20);
         $this->scope = (string) config('services.puptas.scope', 'medical-read medical-write');
         $this->tokenUrl = $this->resolveTokenUrl((string) config('services.puptas.token_url', ''));
@@ -533,15 +535,23 @@ class PuptasWebhookService
 
             $signature = $this->buildHmacSignature($payload);
             $accessToken = $this->getAccessToken();
+            $timestamp = now()->utc()->toIso8601String();
 
             $headers = [
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
                 $this->signatureHeader => $signature,
+                $this->timestampHeader => $timestamp,
             ];
 
             if ($this->signatureHeader !== 'X-Medical-Signature') {
                 $headers['X-Medical-Signature'] = $signature;
+            }
+            if (strtolower($this->timestampHeader) !== 'timestamp') {
+                $headers['timestamp'] = $timestamp;
+            }
+            if (strtolower($this->timestampHeader) !== 'x-timestamp') {
+                $headers['X-Timestamp'] = $timestamp;
             }
 
             $response = Http::timeout($this->timeout)
@@ -554,6 +564,7 @@ class PuptasWebhookService
                 Log::info('PUPTAS webhook sent successfully', [
                     'reference_number' => $referenceNumber,
                     'student_id' => $studentId,
+                    'timestamp' => $timestamp,
                 ]);
                 return ['success' => true, 'message' => 'Synced successfully'];
             }
