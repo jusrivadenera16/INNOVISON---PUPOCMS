@@ -518,6 +518,7 @@ class PuptasWebhookService
                 throw new \RuntimeException('PUPTAS webhook configuration is incomplete.');
             }
 
+            $timestamp = now()->utc()->toIso8601String();
             $payloadData = [];
             if ($studentId !== '') {
                 $payloadData['student_id'] = $studentId;
@@ -526,6 +527,7 @@ class PuptasWebhookService
                 $payloadData['reference_number'] = $referenceNumber;
             }
             $payloadData['is_health_profile_completed'] = 1;
+            $payloadData['timestamp'] = $timestamp;
 
             $payload = json_encode($payloadData, JSON_UNESCAPED_SLASHES);
 
@@ -535,7 +537,6 @@ class PuptasWebhookService
 
             $signature = $this->buildHmacSignature($payload);
             $accessToken = $this->getAccessToken();
-            $timestamp = now()->utc()->toIso8601String();
 
             $headers = [
                 'Content-Type' => 'application/json',
@@ -574,6 +575,7 @@ class PuptasWebhookService
                 'status' => $response->status(),
                 'reference_number' => $referenceNumber,
                 'student_id' => $studentId,
+                'timestamp' => $timestamp,
                 'error' => $response->body(),
             ]);
             return ['success' => false, 'message' => $errorMessage];
