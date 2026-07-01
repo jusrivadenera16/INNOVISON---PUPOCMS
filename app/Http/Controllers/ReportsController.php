@@ -55,6 +55,11 @@ class ReportsController extends Controller
         return $fallback->copy();
     }
 
+    public function digitalLogbook(Request $request)
+    {
+        return view('admin.reports.digital-logbook');
+    }
+
     public function dailyTreatmentRecord(Request $request)
     {
         $dateFrom = $this->parseReportDate(
@@ -901,12 +906,18 @@ class ReportsController extends Controller
         $statusFilter = trim((string) $request->query('status', ''));
 
         $query = HealthProfile::query()
-            ->with(['user', 'approvedBy'])
+            ->with(['user', 'approvedBy', 'reviewStartedBy'])
             ->whereNotNull('clearance_status');
 
         if ($search !== '') {
-            $query->whereHas('user', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
+            $query->where(function ($builder) use ($search) {
+                $builder->where('reference_number', 'like', "%{$search}%")
+                    ->orWhere('student_number', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('student_number', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -987,8 +998,10 @@ class ReportsController extends Controller
                 'Course',
                 'Type',
                 'Submitted',
+                'Time In',
+                'Reviewed By',
+                'Time Out',
                 'Approved By',
-                'Approved Date',
                 'Status',
                 'Condition',
                 'Medical Condition Details',
@@ -997,6 +1010,7 @@ class ReportsController extends Controller
             foreach ($records as $record) {
                 $user = $record->user;
                 $approver = $record->approvedBy;
+                $reviewer = $record->reviewStartedBy;
                 $isApproved = in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true);
                 $hasCondition = $record->hasMedicalCondition();
                 $formatList = static function ($value): string {
@@ -1038,8 +1052,10 @@ class ReportsController extends Controller
                     $record->course_college ?: optional($user)->course ?: 'N/A',
                     optional($user)->user_type ?: 'N/A',
                     optional($record->created_at)->format('M d, Y g:i A') ?: 'N/A',
-                    $isApproved ? (optional($approver)->name ?: 'N/A') : 'N/A',
+                    $record->review_started_at ? Carbon::parse($record->review_started_at)->format('M d, Y g:i A') : 'N/A',
+                    optional($reviewer)->name ?: 'N/A',
                     $isApproved && $record->verified_at ? Carbon::parse($record->verified_at)->format('M d, Y g:i A') : 'N/A',
+                    $isApproved ? (optional($approver)->name ?: 'N/A') : 'N/A',
                     $isApproved ? 'Approved' : 'Pending',
                     $hasCondition ? 'Yes' : 'No',
                     $hasCondition ? ($conditionDetails->isNotEmpty() ? $conditionDetails->implode(' | ') : 'Condition flagged, but no details provided.') : 'N/A',

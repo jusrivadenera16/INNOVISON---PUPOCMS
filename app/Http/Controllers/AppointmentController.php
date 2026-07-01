@@ -1978,6 +1978,10 @@ public function account(Request $request)
                 ->with('error', 'There are no replacement requirements requested for this record.');
         }
 
+        $preserveApprovalHistory = !empty($healthProfile->verified_at)
+            || !empty($healthProfile->approved_by_user_id)
+            || in_array(strtolower(trim((string) $healthProfile->clearance_status)), ['issued', 'fully cleared'], true);
+
         $documentRules = [
             'student_photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
             'health_declaration' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
@@ -2028,8 +2032,10 @@ public function account(Request $request)
             $healthProfile->clearance_status = 'For Verification';
             $healthProfile->pending_reason = null;
             $healthProfile->documents_valid = false;
-            $healthProfile->verified_at = null;
-            $healthProfile->approved_by_user_id = null;
+            if (!$preserveApprovalHistory) {
+                $healthProfile->verified_at = null;
+                $healthProfile->approved_by_user_id = null;
+            }
             $healthProfile->resubmission_required_documents = null;
             $healthProfile->resubmission_requested_at = null;
             $healthProfile->resubmitted_at = now();

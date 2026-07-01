@@ -206,6 +206,185 @@
         background: #facc15;
         color: #70131B;
     }
+    .profile-correction-panel {
+        border: 1px solid #fecaca;
+        border-radius: 14px;
+        padding: 16px;
+        background: linear-gradient(135deg, #fff7f7, #ffffff);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+    .profile-correction-title {
+        margin: 0;
+        color: #7f1d2d;
+        font-size: 14px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .profile-correction-copy {
+        margin: 5px 0 0;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.55;
+        max-width: 680px;
+    }
+    .profile-correction-button,
+    .correction-submit {
+        border: 1px solid #8f2230;
+        border-radius: 999px;
+        background: #70131B;
+        color: #facc15;
+        min-height: 42px;
+        padding: 10px 16px;
+        font-size: 13px;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 10px 22px rgba(112, 19, 27, 0.18);
+        transition: transform .18s ease, background .18s ease, color .18s ease;
+    }
+    .profile-correction-button:hover,
+    .profile-correction-button:focus,
+    .correction-submit:hover,
+    .correction-submit:focus {
+        transform: translateY(-1px);
+        background: #facc15;
+        color: #70131B;
+    }
+    .correction-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 2147482500;
+        background: rgba(15, 23, 42, 0.62);
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .correction-modal.is-open {
+        display: flex;
+    }
+    .correction-card {
+        width: min(720px, 100%);
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid #fecaca;
+        border-bottom: 4px solid #facc15;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+    }
+    .correction-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 18px 20px;
+        background: linear-gradient(135deg, #7f1d1d, #b91c1c);
+        color: #ffffff;
+    }
+    .correction-head h3 {
+        margin: 0;
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: 900;
+    }
+    .correction-head p {
+        margin: 4px 0 0;
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 13px;
+    }
+    .correction-close {
+        width: 38px;
+        height: 38px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.24);
+        background: rgba(112, 19, 27, 0.45);
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+    .correction-close svg {
+        width: 18px;
+        height: 18px;
+    }
+    .correction-body {
+        padding: 20px;
+        display: grid;
+        gap: 16px;
+    }
+    .correction-note {
+        border: 1px solid #fed7aa;
+        border-radius: 12px;
+        background: #fffbeb;
+        color: #7c2d12;
+        padding: 12px 14px;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.55;
+    }
+    .correction-doc-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    .correction-doc-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid #fecaca;
+        border-radius: 12px;
+        padding: 12px;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 800;
+        background: #fff7f7;
+    }
+    .correction-doc-option input {
+        width: 18px;
+        height: 18px;
+        accent-color: #7f1d2d;
+    }
+    .correction-field label {
+        display: block;
+        margin-bottom: 7px;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .correction-field textarea {
+        width: 100%;
+        min-height: 120px;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 12px;
+        color: #111827;
+        font-size: 14px;
+        resize: vertical;
+    }
+    .correction-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .correction-cancel {
+        border: 1px solid #cbd5e1;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #334155;
+        min-height: 42px;
+        padding: 10px 16px;
+        font-size: 13px;
+        font-weight: 900;
+        cursor: pointer;
+    }
     .profile-panel { display: none; }
     .profile-panel.is-active { display: block; }
 
@@ -267,6 +446,25 @@
     [data-theme="dark"] .profile-sync-panel {
         background: #111827;
         border-color: #334155;
+    }
+    [data-theme="dark"] .profile-correction-panel,
+    [data-theme="dark"] .correction-card {
+        background: #111827;
+        border-color: rgba(248, 113, 113, 0.45);
+    }
+    [data-theme="dark"] .correction-doc-option {
+        background: #0f172a;
+        border-color: rgba(248, 113, 113, 0.36);
+        color: #f8fafc;
+    }
+    [data-theme="dark"] .correction-field label,
+    [data-theme="dark"] .profile-correction-copy {
+        color: #cbd5e1;
+    }
+    [data-theme="dark"] .correction-field textarea {
+        background: #0f172a;
+        border-color: #334155;
+        color: #f8fafc;
     }
     [data-theme="dark"] .profile-sync-title,
     [data-theme="dark"] .profile-sync-message {
@@ -387,6 +585,7 @@
     };
     $canResyncPuptas = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && !in_array($puptasSyncRaw, ['synced', 'not_applicable'], true);
+    $canRequestFileCorrection = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true);
 @endphp
 <div class="health-profile-wrap">
     <div class="profile-card">
@@ -438,6 +637,20 @@
             @endif
         </div>
     </div>
+
+    @if($canRequestFileCorrection)
+        <div class="profile-card">
+            <div class="profile-correction-panel">
+                <div>
+                    <p class="profile-correction-title">File Correction</p>
+                    <p class="profile-correction-copy">Request replacement of a specific uploaded requirement without deleting approval history or PUPTAS sync records.</p>
+                </div>
+                <button type="button" class="profile-correction-button" id="openCorrectionModal">
+                    Request File Correction
+                </button>
+            </div>
+        </div>
+    @endif
 
     <div class="profile-card">
         <div class="profile-switch-head">
@@ -629,6 +842,58 @@
     </div>
 
 </div>
+
+@if($canRequestFileCorrection)
+    <div class="correction-modal" id="correctionModal" aria-hidden="true">
+        <div class="correction-card">
+            <div class="correction-head">
+                <div>
+                    <h3>Request File Correction</h3>
+                    <p>Select only the file/s that need replacement. The student will see a reupload prompt.</p>
+                </div>
+                <button type="button" class="correction-close" id="closeCorrectionModal" aria-label="Close correction modal">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </div>
+            <form method="POST" action="{{ route('admin.health_profile.request_resubmission', $profile->id) }}" class="correction-body">
+                @csrf
+                <div class="correction-note">
+                    This will move the record to Pending Resubmission while keeping the original approval date, approver, and PUPTAS sync history.
+                </div>
+                <div class="correction-doc-grid">
+                    <label class="correction-doc-option">
+                        <input type="checkbox" name="resubmission_required_documents[]" value="student_photo">
+                        <span>2x2 Student Photo</span>
+                    </label>
+                    <label class="correction-doc-option">
+                        <input type="checkbox" name="resubmission_required_documents[]" value="health_declaration">
+                        <span>Declaration Form</span>
+                    </label>
+                    <label class="correction-doc-option">
+                        <input type="checkbox" name="resubmission_required_documents[]" value="medical_certificate">
+                        <span>Medical Certificate</span>
+                    </label>
+                    <label class="correction-doc-option">
+                        <input type="checkbox" name="resubmission_required_documents[]" value="chest_xray_result">
+                        <span>Chest X-ray Result</span>
+                    </label>
+                    <label class="correction-doc-option">
+                        <input type="checkbox" name="resubmission_required_documents[]" value="pwd_id_proof">
+                        <span>PWD ID Proof</span>
+                    </label>
+                </div>
+                <div class="correction-field">
+                    <label for="correctionReason">Reason</label>
+                    <textarea id="correctionReason" name="pending_reason" required placeholder="Example: Medical certificate has no signature and must be replaced."></textarea>
+                </div>
+                <div class="correction-actions">
+                    <button type="button" class="correction-cancel" id="cancelCorrectionModal">Cancel</button>
+                    <button type="submit" class="correction-submit">Send Correction Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endif
 @endsection
 
 @push('scripts')
@@ -651,6 +916,35 @@
                 targetPanel.classList.add('is-active');
             }
         });
+    });
+
+    const correctionModal = document.getElementById('correctionModal');
+    const openCorrectionModal = document.getElementById('openCorrectionModal');
+    const closeCorrectionModal = document.getElementById('closeCorrectionModal');
+    const cancelCorrectionModal = document.getElementById('cancelCorrectionModal');
+
+    function setCorrectionModal(open) {
+        if (!correctionModal) return;
+        correctionModal.classList.toggle('is-open', open);
+        correctionModal.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+
+    openCorrectionModal?.addEventListener('click', function () {
+        setCorrectionModal(true);
+    });
+
+    closeCorrectionModal?.addEventListener('click', function () {
+        setCorrectionModal(false);
+    });
+
+    cancelCorrectionModal?.addEventListener('click', function () {
+        setCorrectionModal(false);
+    });
+
+    correctionModal?.addEventListener('click', function (event) {
+        if (event.target === correctionModal) {
+            setCorrectionModal(false);
+        }
     });
 </script>
 @endpush

@@ -232,6 +232,9 @@ Route::middleware(['auth:admin', 'audit'])->group(function () {
     Route::post('/health-profile/{id}/resync-puptas', [AdminController::class, 'resyncPuptasHealthProfile'])
         ->middleware('role:superadmin,admin')
         ->name('admin.health_profile.resync_puptas');
+    Route::post('/health-profile/{id}/request-resubmission', [AdminController::class, 'requestHealthProfileResubmission'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.health_profile.request_resubmission');
     Route::post('/health-profile/medical-assessment-upload', [AdminController::class, 'uploadMedicalAssessmentCopy'])
         ->middleware('role:superadmin,admin,nurse')
         ->name('admin.medical_assessment_upload');
@@ -263,9 +266,11 @@ Route::middleware(['auth:admin', 'audit'])->group(function () {
         Route::get('/admin/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->name('walkin.document');
         Route::post('/admin/walkin/store', [WalkInController::class, 'store'])->name('walkin.store');
         Route::post('/admin/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->name('admin.walkin.applicant_encoding');
+        Route::post('/admin/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->name('admin.walkin.final_review.time_in');
         Route::post('/admin/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->name('admin.walkin.approve_applicant');
 
         Route::get('/admin/reports', [AdminController::class, 'reports'])->name('admin.reports');
+        Route::get('/admin/reports/digital-logbook', [ReportsController::class, 'digitalLogbook'])->name('reports.digital-logbook');
         Route::get('/admin/reports/mar', [ReportsController::class, 'marReport'])->name('reports.mar');
         Route::get('/admin/reports/inventory-summary', [AdminController::class, 'inventorySummary'])->name('reports.inventory-summary');
         Route::get('/admin/reports/daily-treatment-record', [ReportsController::class, 'dailyTreatmentRecord'])->name('reports.daily-treatment-record');
@@ -349,9 +354,11 @@ Route::middleware(['auth:admin', 'audit'])->group(function () {
         Route::get('/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->name('walkin.document');
         Route::post('/walkin/store', [WalkInController::class, 'store'])->name('walkin.store');
         Route::post('/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->name('walkin.applicant_encoding');
+        Route::post('/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->name('walkin.final_review.time_in');
         Route::post('/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->name('walkin.approve_applicant');
 
         Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
+        Route::get('/reports/digital-logbook', [ReportsController::class, 'digitalLogbook'])->name('reports.digital-logbook');
         Route::get('/reports/mar', [ReportsController::class, 'marReport'])->name('reports.mar');
         Route::get('/reports/inventory-summary', [AdminController::class, 'inventorySummary'])->name('reports.inventory-summary');
         Route::get('/reports/daily-treatment-record', [ReportsController::class, 'dailyTreatmentRecord'])->name('reports.daily-treatment-record');

@@ -40,6 +40,8 @@ class HealthProfile extends Model
         'resubmission_required_documents',
         'resubmission_requested_at',
         'resubmitted_at',
+        'review_started_at',
+        'review_started_by_user_id',
         'medical_condition_remarks',
         'physical_assessment_status',
         'encode_remarks',
@@ -68,6 +70,7 @@ class HealthProfile extends Model
         'resubmission_required_documents' => 'array',
         'resubmission_requested_at' => 'datetime',
         'resubmitted_at' => 'datetime',
+        'review_started_at' => 'datetime',
 
     ];
 
@@ -79,6 +82,11 @@ class HealthProfile extends Model
     public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by_user_id');
+    }
+
+    public function reviewStartedBy()
+    {
+        return $this->belongsTo(User::class, 'review_started_by_user_id');
     }
 
     public function hasMedicalCondition(): bool

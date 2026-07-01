@@ -8280,6 +8280,7 @@
         let currentAssessmentReview = {};
         const getStudentUrl   = '{{ url($basePrefix . '/walkin/get-student') }}';
         const finalReviewApplicantsUrl = '{{ url($basePrefix . '/walkin/final-review-applicants') }}';
+        const finalReviewTimeInUrl = '{{ url($basePrefix . '/walkin/final-review/time-in') }}';
         const saveEncodingUrl = '{{ url($basePrefix . '/walkin/applicant-encoding') }}';
 
         function isClinicLookupMode() {
@@ -9751,6 +9752,25 @@
             doLookup();
         }
 
+        function markFinalReviewTimeIn(referenceNumber) {
+            if (!referenceNumber || !finalReviewTimeInUrl) {
+                return Promise.resolve();
+            }
+
+            return fetch(finalReviewTimeInUrl, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ reference_number: referenceNumber })
+            }).catch(function (error) {
+                console.warn('Unable to mark final review time-in.', error);
+            });
+        }
+
         function buildFinalReviewCard(applicant) {
             const article = document.createElement('article');
             article.className = 'applicant-final-review-card';
@@ -9908,7 +9928,10 @@
                 const button = event.target.closest('[data-final-review-reference]');
                 if (!button) return;
 
-                openFinalReviewReference(button.getAttribute('data-final-review-reference') || '');
+                const referenceNumber = button.getAttribute('data-final-review-reference') || '';
+                markFinalReviewTimeIn(referenceNumber).finally(function () {
+                    openFinalReviewReference(referenceNumber);
+                });
             });
         }
 

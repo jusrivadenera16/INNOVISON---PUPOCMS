@@ -685,7 +685,7 @@
     $dashboardUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/dashboard') : url('/admin/dashboard');
     $marUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/mar') : url('/admin/reports/mar');
     $inventorySummaryUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/inventory-summary') : url('/admin/reports/inventory-summary');
-    $dailyTreatmentRecordUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/daily-treatment-record') : url('/admin/reports/daily-treatment-record');
+    $digitalLogbookUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/digital-logbook') : url('/admin/reports/digital-logbook');
     $appointmentStatisticsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/appointment-statistics') : url('/admin/reports/appointment-statistics');
     $healthFormsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/health-forms') : url('/admin/reports/health-forms');
     $feedbacksUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/feedbacks') : url('/admin/reports/feedbacks');
@@ -723,13 +723,13 @@
             </div>
         </a>
 
-        <a href="{{ $dailyTreatmentRecordUrl }}" class="report-card report-card-primary">
+        <a href="{{ $digitalLogbookUrl }}" class="report-card report-card-primary">
             <div>
-                <div class="report-label">Form B</div>
-                <div class="report-main-title">Daily Treatment Record</div>
+                <div class="report-label">Clinic Monitoring</div>
+                <div class="report-main-title">Digital Logbook</div>
             </div>
             <div class="report-card-footer">
-                <div class="report-badge">Treatment Log</div>
+                <div class="report-badge">Treatment & Forms</div>
                 <span class="report-card-icon"><x-outline-icon name="clipboard-document-list" /></span>
             </div>
         </a>

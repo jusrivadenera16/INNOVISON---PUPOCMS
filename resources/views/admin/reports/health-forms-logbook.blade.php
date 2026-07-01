@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Health Forms Approval Logbook')
+@section('title', 'Health Form Logbook')
 
 @push('styles')
 <style>
@@ -496,7 +496,7 @@
 @section('content')
 @php
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
-    $reportsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
+    $reportsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/digital-logbook') : url('/admin/reports/digital-logbook');
     $logbookRouteName = request()->routeIs('assistant.*') ? 'assistant.reports.health-forms-logbook' : 'reports.health-forms-logbook';
     $logbookExportRouteName = request()->routeIs('assistant.*') ? 'assistant.reports.health-forms-logbook.export' : 'reports.health-forms-logbook.export';
 @endphp
@@ -504,8 +504,8 @@
 <div class="logbook-shell">
     <div class="logbook-head">
         <div>
-            <h1 class="logbook-title">Health Forms Approval Logbook</h1>
-            <p class="logbook-copy">Track all health form submissions and approvals by applicants, students, and staff.</p>
+            <h1 class="logbook-title">Health Form Logbook</h1>
+            <p class="logbook-copy">Track applicant health form visits from Final Review time-in to approval time-out.</p>
         </div>
         <div style="display: flex; gap: 10px;">
             <button class="filter-btn-open" onclick="openFilterModal()">🔍 Filter</button>
@@ -595,8 +595,10 @@
                     <th>Course</th>
                     <th>Type</th>
                     <th>Submitted</th>
+                    <th>Time In</th>
+                    <th>Reviewed By</th>
+                    <th>Time Out</th>
                     <th>Approved By</th>
-                    <th>Approved Date</th>
                     <th>Status</th>
                     <th>Condition</th>
                 </tr>
@@ -606,6 +608,7 @@
                     @php
                         $user = $record->user;
                         $approver = $record->approvedBy;
+                        $reviewer = $record->reviewStartedBy;
                         $isApproved = in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true);
                         $hasCondition = $record->hasMedicalCondition();
                         $conditionDetails = collect();
@@ -658,19 +661,33 @@
                         <td>{{ $user->user_type ?? 'N/A' }}</td>
                         <td>{{ \Carbon\Carbon::parse($record->created_at)->format('M d, Y g:i A') }}</td>
                         <td>
-                            @if($isApproved && $approver)
-                                <strong>{{ $approver->name }}</strong>
-                            @elseif($isApproved)
-                                <span style="color: #64748b;">Not recorded</span>
+                            @if($record->review_started_at)
+                                {{ \Carbon\Carbon::parse($record->review_started_at)->format('M d, Y g:i A') }}
                             @else
-                                <span style="color: #94a3b8;">—</span>
+                                <span style="color: #94a3b8;">&mdash;</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($reviewer)
+                                <strong>{{ $reviewer->name }}</strong>
+                            @else
+                                <span style="color: #94a3b8;">&mdash;</span>
                             @endif
                         </td>
                         <td>
                             @if($isApproved && $record->verified_at)
                                 {{ \Carbon\Carbon::parse($record->verified_at)->format('M d, Y g:i A') }}
                             @else
-                                <span style="color: #94a3b8;">—</span>
+                                <span style="color: #94a3b8;">&mdash;</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($isApproved && $approver)
+                                <strong>{{ $approver->name }}</strong>
+                            @elseif($isApproved)
+                                <span style="color: #64748b;">Not recorded</span>
+                            @else
+                                <span style="color: #94a3b8;">&mdash;</span>
                             @endif
                         </td>
                         <td>
@@ -700,7 +717,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="logbook-empty">No health form records found matching your filters.</td>
+                        <td colspan="11" class="logbook-empty">No health form records found matching your filters.</td>
                     </tr>
                 @endforelse
             </tbody>

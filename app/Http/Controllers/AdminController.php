@@ -1658,6 +1658,57 @@ public function updateClearance(Request $request, $id)
     return back()->with('error', 'Failed to save to database.');
 }
 
+    public function requestHealthProfileResubmission(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'pending_reason' => ['required', 'string', 'max:2000'],
+            'resubmission_required_documents' => ['required', 'array', 'min:1'],
+            'resubmission_required_documents.*' => ['string', Rule::in([
+                'student_photo',
+                'health_declaration',
+                'medical_certificate',
+                'chest_xray_result',
+                'pwd_id_proof',
+            ])],
+        ]);
+
+        $record = HealthProfile::with('user')->findOrFail($id);
+        $requestedDocuments = array_values(array_unique((array) $validated['resubmission_required_documents']));
+
+        $record->clearance_status = 'Pending Resubmission';
+        $record->pending_reason = trim((string) $validated['pending_reason']);
+        $record->documents_valid = false;
+        $record->resubmission_required_documents = $requestedDocuments;
+        $record->resubmission_requested_at = now();
+        $record->resubmitted_at = null;
+
+        $record->save();
+
+        if ($record->user) {
+            $record->user->is_health_profile_completed = 0;
+            $record->user->save();
+        }
+
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_name' => auth()->user()?->name ?? auth()->user()?->email ?? 'System',
+            'user_role' => strtolower((string) (auth()->user()?->user_role ?? '')),
+            'action' => 'Health Profile Resubmission Requested',
+            'module' => 'Health Records',
+            'event_type' => 'health_profile_resubmission_requested',
+            'description' => 'Requested replacement file/s for approved health profile #' . $record->id . ': ' . implode(', ', $requestedDocuments),
+            'route_name' => optional(request()->route())->getName(),
+            'request_method' => request()->method(),
+            'request_path' => request()->path(),
+            'response_status' => 200,
+            'ip_address' => request()->ip(),
+        ]);
+
+        return redirect()
+            ->route('admin.show_health', $record->id)
+            ->with('success', 'Replacement file request sent. The student will see the reupload prompt in Health Records.');
+    }
+
     public function uploadMedicalAssessmentCopy(Request $request)
     {
         $validated = $request->validate([

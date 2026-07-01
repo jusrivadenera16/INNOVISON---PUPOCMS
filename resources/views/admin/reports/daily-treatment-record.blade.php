@@ -636,7 +636,7 @@
 @section('content')
 @php
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
-    $reportsHomeUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
+    $reportsHomeUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/digital-logbook') : url('/admin/reports/digital-logbook');
     $rangeStartLabel = $dateFrom->format('d M Y');
     $rangeEndLabel = $dateTo->format('d M Y');
     $selectedMonthLabel = $dateFrom->isSameDay($dateTo)
@@ -657,7 +657,7 @@
             </button>
             <a href="{{ $reportsHomeUrl }}" class="treatment-record-back">
                 <x-outline-icon name="arrow-long-right" />
-                Back to Reports
+                Back
             </a>
         </div>
     </header>

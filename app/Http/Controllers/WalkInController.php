@@ -959,6 +959,38 @@ class WalkInController extends Controller
         ]);
     }
 
+    public function markFinalReviewTimeIn(Request $request)
+    {
+        $validated = $request->validate([
+            'reference_number' => ['required', 'string', 'max:120'],
+        ]);
+
+        $referenceNumber = trim((string) $validated['reference_number']);
+
+        $profile = HealthProfile::query()
+            ->where('reference_number', $referenceNumber)
+            ->latest()
+            ->first();
+
+        if (!$profile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Health profile not found for final review time-in.',
+            ], 404);
+        }
+
+        if (!$profile->review_started_at) {
+            $profile->review_started_at = now();
+            $profile->review_started_by_user_id = auth()->id();
+            $profile->save();
+        }
+
+        return response()->json([
+            'success' => true,
+            'review_started_at' => optional($profile->review_started_at)->toIso8601String(),
+        ]);
+    }
+
     // 2. SHOW WALKIN FORM
     public function showWalkinForm(Request $request, $student_id)
     {
@@ -2136,6 +2168,10 @@ PROMPT;
                 $profile->physical_assessment_status = $hasPendingFinding
                     ? 'Not Yet Conducted'
                     : 'Completed / Passed';
+                if (!$profile->review_started_at) {
+                    $profile->review_started_at = now();
+                    $profile->review_started_by_user_id = auth()->id();
+                }
                 $profile->documents_valid = !$hasPendingFinding;
                 $profile->resubmission_required_documents = $hasIncompleteRequirements
                     ? $resubmissionRequiredDocuments

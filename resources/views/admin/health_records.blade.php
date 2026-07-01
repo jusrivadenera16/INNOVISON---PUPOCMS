@@ -3481,6 +3481,18 @@
                 @endforelse
                 <div class="readonly-search-empty" data-readonly-search-empty>No matching pending compliance records found.</div>
             </div>
+            <div
+                class="readonly-modal-pagination"
+                data-readonly-pagination="pendingComplianceRecordsList"
+                data-page-size="5"
+                aria-label="Pending compliance pagination"
+            >
+                <span class="readonly-pagination-summary" data-pagination-summary>Showing 0-0 of 0</span>
+                <div class="readonly-pagination-actions">
+                    <button type="button" class="readonly-pagination-btn" data-pagination-prev>Previous</button>
+                    <button type="button" class="readonly-pagination-btn" data-pagination-next>Next</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
