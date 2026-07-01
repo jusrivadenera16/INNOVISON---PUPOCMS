@@ -255,7 +255,7 @@
             <p class="health-forms-copy">Issued health forms summarized by course for the selected date range.</p>
         </div>
         <div style="display: flex; gap: 10px;">
-            <a href="{{ route('reports.health-forms-logbook') }}" class="health-forms-back" style="background: #7f1d2d; color: #ffffff; border-color: #7f1d2d;">📋 View Logbook</a>
+            <a href="{{ route('reports.health-forms-logbook') }}" class="health-forms-back" style="background: #7f1d2d; color: #ffffff; border-color: #7f1d2d;">📋 View List</a>
             <a href="{{ $reportsUrl }}" class="health-forms-back">&larr; Back to Reports</a>
         </div>
     </div>

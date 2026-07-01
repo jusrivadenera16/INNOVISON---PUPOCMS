@@ -2870,7 +2870,7 @@
                 || trim((string) ($summaryRecord->medical_condition_remarks ?? '')) !== ''
             );
 
-            if ($summaryRecord->hasMedicalCondition()) {
+            if ($summaryIsApproved && $summaryRecord->hasMedicalCondition()) {
                 $healthSummaryStats['with_conditions']++;
             }
 
