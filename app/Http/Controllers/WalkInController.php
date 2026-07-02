@@ -30,6 +30,39 @@ class WalkInController extends Controller
             : 'walkin';
     }
 
+    private function normalizeHeightToDecimalFeet($value): ?string
+    {
+        $rawValue = trim((string) $value);
+        if ($rawValue === '') {
+            return null;
+        }
+
+        if (preg_match('/^(\d+)\s*(?:\'|ft|feet)\s*(\d{1,2})?\s*(?:"|in|inch|inches)?\s*$/i', $rawValue, $matches)) {
+            $feet = (int) $matches[1];
+            $inches = isset($matches[2]) ? (int) $matches[2] : 0;
+
+            if ($inches < 0 || $inches > 11) {
+                return null;
+            }
+
+            $decimalFeet = $feet + ($inches / 12);
+
+            return $decimalFeet >= 1 && $decimalFeet <= 10
+                ? number_format($decimalFeet, 2, '.', '')
+                : null;
+        }
+
+        if (preg_match('/^\d+(?:\.\d+)?(?:\s*ft)?$/i', $rawValue)) {
+            $decimalFeet = (float) preg_replace('/\s*ft\s*$/i', '', $rawValue);
+
+            return $decimalFeet >= 1 && $decimalFeet <= 10
+                ? number_format($decimalFeet, 2, '.', '')
+                : null;
+        }
+
+        return null;
+    }
+
     private function consultationStartSessionKey($staffId, $studentId, string $source): string
     {
         $identity = implode('|', [
@@ -1822,7 +1855,7 @@ PROMPT;
         try {
             $validated = $request->validate([
                 'reference_number' => ['required', 'string', 'max:120'],
-                'height' => ['required', 'numeric', 'min:1', 'max:10'],
+                'height' => ['required', 'string', 'max:20'],
                 'weight' => ['required', 'numeric', 'min:1', 'max:1100'],
                 'blood_pressure' => ['required', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
                 'pulse_rate' => ['required', 'integer', 'min:1', 'max:300'],
@@ -1834,6 +1867,13 @@ PROMPT;
             ]);
 
             $referenceNumber = trim((string) $validated['reference_number']);
+            $height = $this->normalizeHeightToDecimalFeet($validated['height']);
+            if ($height === null) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'height' => ['Height must use feet and inches, e.g., 5\'6". Valid range: 1\'0"-10\'0".'],
+                ]);
+            }
+
             $applicantData = $webhookService->fetchApplicantByStudentNumber($referenceNumber);
             $localOnlyProfile = null;
 
@@ -1873,7 +1913,7 @@ PROMPT;
                 ], 409);
             }
 
-            $profile = DB::transaction(function () use ($student, $studentId, $referenceNumber, $validated) {
+            $profile = DB::transaction(function () use ($student, $studentId, $referenceNumber, $validated, $height) {
                 $profile = HealthProfile::firstOrNew(['user_id' => $student->id]);
                 $profile->student_id = (string) ($student->student_id ?: $studentId ?: $referenceNumber);
                 $profile->student_number = (string) ($student->student_number ?: $profile->student_number ?: '');
@@ -1881,7 +1921,7 @@ PROMPT;
                 $profile->course_college = (string) ($profile->course_college ?: $student->course);
                 $profile->birthday = $profile->birthday ?: $student->DOB;
                 $profile->sex = (string) ($profile->sex ?: $student->gender);
-                $profile->height = (string) $validated['height'];
+                $profile->height = $height;
                 $profile->weight = (string) $validated['weight'];
                 $profile->blood_pressure = preg_replace('/\s+/', '', (string) $validated['blood_pressure']);
                 $profile->pulse_rate = (int) $validated['pulse_rate'];
@@ -1972,7 +2012,7 @@ PROMPT;
                 'medical_condition' => ['required_if:has_medical_condition,true', 'nullable', 'string', 'max:1000'],
                 'condition_remarks' => ['nullable', 'string', 'max:2000'],
                 'med_assessment_remarks' => ['nullable', 'string', 'max:2000'],
-                'height' => ['required', 'numeric', 'min:1', 'max:10'],
+                'height' => ['required', 'string', 'max:20'],
                 'weight' => ['required', 'numeric', 'min:1', 'max:1100'],
                 'blood_pressure' => ['required', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
                 'pulse_rate' => ['required', 'integer', 'min:1', 'max:300'],
@@ -2007,7 +2047,12 @@ PROMPT;
                 : '';
             $conditionRemarks = trim((string) $request->input('condition_remarks', ''));
             $medAssessmentRemarks = trim((string) $request->input('med_assessment_remarks', ''));
-            $height = (string) $validated['height'];
+            $height = $this->normalizeHeightToDecimalFeet($validated['height']);
+            if ($height === null) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'height' => ['Height must use feet and inches, e.g., 5\'6". Valid range: 1\'0"-10\'0".'],
+                ]);
+            }
             $weight = (string) $validated['weight'];
             $bloodPressure = preg_replace('/\s+/', '', (string) $validated['blood_pressure']);
             $pulseRate = (int) $validated['pulse_rate'];

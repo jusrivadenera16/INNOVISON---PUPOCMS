@@ -4728,6 +4728,24 @@
         background: #fffbea;
     }
 
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-vitals-grid .applicant-condition-field::after {
+        content: none !important;
+        display: none !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-vitals-grid .applicant-condition-field small {
+        grid-column: 2 / -1;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-vitals-grid .vital-status {
+        align-self: center;
+        justify-self: end;
+        min-width: 88px;
+        font-size: 11px;
+        text-align: center;
+        white-space: nowrap;
+    }
+
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-vitals-grid .applicant-findings-options {
         display: flex;
         gap: 6px;
@@ -5084,6 +5102,48 @@
         outline: none;
         border-color: #0369a1;
         box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1);
+    }
+
+    .vital-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        align-self: flex-start;
+        min-height: 28px;
+        max-width: 100%;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        color: #475569;
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 1.25;
+        white-space: normal;
+    }
+
+    .vital-status.is-normal {
+        border-color: #bbf7d0;
+        background: #ecfdf3;
+        color: #15803d;
+    }
+
+    .vital-status.is-warning {
+        border-color: #fde68a;
+        background: #fffbeb;
+        color: #92400e;
+    }
+
+    .vital-status.is-danger {
+        border-color: #fecaca;
+        background: #fef2f2;
+        color: #b91c1c;
+    }
+
+    .vital-status.is-muted {
+        border-color: #e2e8f0;
+        background: #f8fafc;
+        color: #64748b;
     }
 
     .applicant-condition-textarea {
@@ -6534,33 +6594,39 @@
                             <p class="applicant-screening-panel-copy">Record the applicant's current vital signs during the nurse review.</p>
                             <div class="applicant-vitals-grid">
                                 <div class="applicant-condition-field">
-                                    <label for="applicantHeight">Height (ft) <span style="color:#dc2626;">*</span></label>
-                                    <input type="number" id="applicantHeight" name="height" class="applicant-condition-input vital-input" placeholder="e.g., 5.6" step="0.01" min="1" max="10" required>
-                                    <small style="color:#dc2626; display:none;" id="heightError">Height is required. Valid range: 1-10 ft.</small>
+                                    <label for="applicantHeight">Height <span style="color:#dc2626;">*</span></label>
+                                    <input type="text" id="applicantHeight" name="height" class="applicant-condition-input vital-input" placeholder="e.g., 5'6&quot;" inputmode="text" required>
+                                    <span class="vital-status is-muted" id="heightStatus">Pending</span>
+                                    <small style="color:#dc2626; display:none;" id="heightError">Height must use feet and inches, e.g., 5'6&quot;. Valid range: 1'0&quot;-10'0&quot;.</small>
                                 </div>
                                 <div class="applicant-condition-field">
                                     <label for="applicantWeight">Weight (lbs) <span style="color:#dc2626;">*</span></label>
                                     <input type="number" id="applicantWeight" name="weight" class="applicant-condition-input vital-input" placeholder="e.g., 143" step="0.01" min="1" max="1100" required>
+                                    <span class="vital-status is-muted" id="weightStatus">BMI pending</span>
                                     <small style="color:#dc2626; display:none;" id="weightError">Weight is required. Valid range: 1-1100 lbs.</small>
                                 </div>
                                 <div class="applicant-condition-field">
                                     <label for="applicantBloodPressure">Blood Pressure <span style="color:#dc2626;">*</span></label>
                                     <input type="text" id="applicantBloodPressure" name="blood_pressure" class="applicant-condition-input vital-input" placeholder="e.g., 120/80" inputmode="numeric" required>
+                                    <span class="vital-status is-muted" id="bpStatus">Pending</span>
                                     <small style="color:#dc2626; display:none;" id="bpError">Blood pressure must be in format: ###/## (e.g., 120/80). Normal range: 90-120 systolic, 60-80 diastolic.</small>
                                 </div>
                                 <div class="applicant-condition-field">
                                     <label for="applicantPulseRate">Pulse Rate (bpm) <span style="color:#dc2626;">*</span></label>
                                     <input type="number" id="applicantPulseRate" name="pulse_rate" class="applicant-condition-input vital-input" placeholder="e.g., 72" min="1" max="300" required>
+                                    <span class="vital-status is-muted" id="pulseStatus">Pending</span>
                                     <small style="color:#dc2626; display:none;" id="prError">Pulse rate is required. Normal range: 60-100 bpm.</small>
                                 </div>
                                 <div class="applicant-condition-field">
                                     <label for="applicantRespiratoryRate">Respiratory Rate (cpm) <span style="color:#dc2626;">*</span></label>
                                     <input type="number" id="applicantRespiratoryRate" name="respiratory_rate" class="applicant-condition-input vital-input" placeholder="e.g., 18" min="1" max="120" required>
+                                    <span class="vital-status is-muted" id="respiratoryStatus">Pending</span>
                                     <small style="color:#dc2626; display:none;" id="rrError">Respiratory rate is required. Normal range: 12-20 cpm.</small>
                                 </div>
                                 <div class="applicant-condition-field">
                                     <label for="applicantTemperature">Temperature (&deg;C) <span style="color:#dc2626;">*</span></label>
                                     <input type="number" id="applicantTemperature" name="temperature" class="applicant-condition-input vital-input" placeholder="e.g., 36.5" min="30" max="45" step="0.1" required>
+                                    <span class="vital-status is-muted" id="temperatureStatus">Pending</span>
                                     <small style="color:#dc2626; display:none;" id="tempError">Temperature is required. Normal range: 36.5-37.5°C. High fever if > 38.5°C.</small>
                                 </div>
                                 <div class="applicant-condition-field">
@@ -6575,6 +6641,7 @@
                                             <span>Yes</span>
                                         </label>
                                     </div>
+                                    <span class="vital-status is-muted" id="covidStatus">Pending</span>
                                 </div>
                                 <div class="applicant-condition-field" id="applicantCovidDateField" style="display:none;">
                                     <label for="applicantCovidPositiveDate">COVID Positive Date <span style="color:#dc2626;">*</span></label>
@@ -8697,7 +8764,7 @@
                 applicantFindingRemarks: savedReview.med_assessment_remarks || '',
                 applicantConditionRemarks: savedReview.condition_remarks || '',
                 applicantNormalRemarks: savedReview.normal_remarks || '',
-                applicantHeight: savedReview.height ?? '',
+                applicantHeight: savedReview.height !== null && savedReview.height !== undefined && savedReview.height !== '' ? formatHeightFeet(savedReview.height) : '',
                 applicantWeight: savedReview.weight ?? '',
                 applicantBloodPressure: savedReview.blood_pressure || '',
                 applicantPulseRate: savedReview.pulse_rate ?? '',
@@ -8741,6 +8808,9 @@
             if (typeof syncCovidPositiveFields === 'function') {
                 syncCovidPositiveFields();
             }
+            if (typeof validateVitals === 'function') {
+                validateVitals();
+            }
         }
 
         function hasSavedAssessmentReview(review) {
@@ -8765,9 +8835,38 @@
             return Number.isFinite(parsed) ? parsed : null;
         }
 
+        function parseHeightFeet(value) {
+            const rawValue = String(value ?? '').trim();
+            if (!rawValue) return null;
+
+            const feetInchesMatch = rawValue.match(/^(\d+)\s*(?:'|ft|feet)\s*(\d{1,2})?\s*(?:"|in|inch|inches)?\s*$/i);
+            if (feetInchesMatch) {
+                const feetPart = Number(feetInchesMatch[1]);
+                const inchesPart = feetInchesMatch[2] === undefined ? 0 : Number(feetInchesMatch[2]);
+                if (!Number.isFinite(feetPart) || !Number.isFinite(inchesPart) || inchesPart < 0 || inchesPart > 11) {
+                    return null;
+                }
+                return feetPart + (inchesPart / 12);
+            }
+
+            const decimalFeetMatch = rawValue.match(/^\d+(?:\.\d+)?(?:\s*ft)?$/i);
+            if (decimalFeetMatch) {
+                return numericValue(rawValue);
+            }
+
+            return null;
+        }
+
         function formatHeightFeet(value) {
             const rawValue = String(value ?? '').trim();
             if (!rawValue) return 'N/A';
+            const parsedFeet = parseHeightFeet(rawValue);
+            if (parsedFeet !== null) {
+                const totalInches = Math.round(parsedFeet * 12);
+                const feetPart = Math.floor(totalInches / 12);
+                const inchesPart = totalInches % 12;
+                return feetPart + "'" + inchesPart + '"';
+            }
             if (/ft|in/i.test(rawValue)) return rawValue;
             let feet = numericValue(rawValue);
             if (/cm/i.test(rawValue) || feet > 10) {
@@ -8785,6 +8884,112 @@
                 pounds = pounds * 2.20462;
             }
             return pounds ? Number(pounds.toFixed(2)) + ' lbs' : 'N/A';
+        }
+
+        function setVitalStatus(id, text, tone = 'muted') {
+            const status = document.getElementById(id);
+            if (!status) return;
+            status.textContent = text;
+            status.className = 'vital-status is-' + tone;
+        }
+
+        function classifyBmi(heightFeet, weightPounds) {
+            if (!heightFeet || !weightPounds || heightFeet <= 0 || weightPounds <= 0) {
+                return null;
+            }
+
+            const heightInches = heightFeet * 12;
+            const bmi = (weightPounds * 703) / (heightInches * heightInches);
+            const rounded = Number(bmi.toFixed(1));
+
+            if (rounded < 18.5) {
+                return { text: 'BMI ' + rounded + ' Underweight', tone: 'warning' };
+            }
+            if (rounded < 25) {
+                return { text: 'BMI ' + rounded + ' Normal', tone: 'normal' };
+            }
+            if (rounded < 30) {
+                return { text: 'BMI ' + rounded + ' Overweight', tone: 'warning' };
+            }
+
+            return { text: 'BMI ' + rounded + ' Obese', tone: 'danger' };
+        }
+
+        function classifyBloodPressure(value) {
+            const match = String(value ?? '').trim().match(/^(\d{2,3})\s*\/\s*(\d{2,3})$/);
+            if (!match) return null;
+
+            const systolic = Number(match[1]);
+            const diastolic = Number(match[2]);
+            if (!Number.isFinite(systolic) || !Number.isFinite(diastolic)) return null;
+            if (systolic < 90 || diastolic < 60) return { text: 'Low', tone: 'warning' };
+            if (systolic > 120 || diastolic > 80) return { text: 'High', tone: 'warning' };
+
+            return { text: 'Normal', tone: 'normal' };
+        }
+
+        function classifyNumberRange(value, normalMin, normalMax, invalidMin, invalidMax, lowText = 'Low', highText = 'High') {
+            const number = Number(value);
+            if (!Number.isFinite(number)) return null;
+            if (number < invalidMin || number > invalidMax) return { text: 'Invalid', tone: 'danger' };
+            if (number < normalMin) return { text: lowText, tone: 'warning' };
+            if (number > normalMax) return { text: highText, tone: 'warning' };
+
+            return { text: 'Normal', tone: 'normal' };
+        }
+
+        function updateVitalIndicators() {
+            const heightInput = document.getElementById('applicantHeight');
+            const weightInput = document.getElementById('applicantWeight');
+            const bpInput = document.getElementById('applicantBloodPressure');
+            const prInput = document.getElementById('applicantPulseRate');
+            const rrInput = document.getElementById('applicantRespiratoryRate');
+            const tempInput = document.getElementById('applicantTemperature');
+            const covidValue = document.querySelector('input[name="applicant_covid_positive"]:checked')?.value || '';
+
+            const heightFeet = parseHeightFeet(heightInput?.value);
+            const weightPounds = Number(weightInput?.value);
+
+            if (!heightInput?.value) {
+                setVitalStatus('heightStatus', 'Pending');
+            } else if (heightFeet === null || heightFeet < 1 || heightFeet > 10) {
+                setVitalStatus('heightStatus', 'Invalid', 'danger');
+            } else {
+                setVitalStatus('heightStatus', 'Valid', 'normal');
+            }
+
+            if (!weightInput?.value) {
+                setVitalStatus('weightStatus', 'BMI pending');
+            } else if (!Number.isFinite(weightPounds) || weightPounds < 1 || weightPounds > 1100) {
+                setVitalStatus('weightStatus', 'Invalid', 'danger');
+            } else {
+                const bmiStatus = classifyBmi(heightFeet, weightPounds);
+                if (bmiStatus) {
+                    setVitalStatus('weightStatus', bmiStatus.text, bmiStatus.tone);
+                } else {
+                    setVitalStatus('weightStatus', 'BMI needs height', 'muted');
+                }
+            }
+
+            const bpStatus = bpInput?.value ? classifyBloodPressure(bpInput.value) : null;
+            setVitalStatus('bpStatus', bpInput?.value ? (bpStatus?.text || 'Invalid') : 'Pending', bpStatus?.tone || (bpInput?.value ? 'danger' : 'muted'));
+
+            const pulseStatus = prInput?.value ? classifyNumberRange(prInput.value, 60, 100, 1, 300) : null;
+            setVitalStatus('pulseStatus', prInput?.value ? (pulseStatus?.text || 'Invalid') : 'Pending', pulseStatus?.tone || (prInput?.value ? 'danger' : 'muted'));
+
+            const respiratoryStatus = rrInput?.value ? classifyNumberRange(rrInput.value, 12, 20, 1, 120) : null;
+            setVitalStatus('respiratoryStatus', rrInput?.value ? (respiratoryStatus?.text || 'Invalid') : 'Pending', respiratoryStatus?.tone || (rrInput?.value ? 'danger' : 'muted'));
+
+            const temperatureStatus = tempInput?.value ? classifyNumberRange(tempInput.value, 36.5, 37.5, 30, 45, 'Low', Number(tempInput?.value) > 38.5 ? 'High fever' : 'High') : null;
+            setVitalStatus('temperatureStatus', tempInput?.value ? (temperatureStatus?.text || 'Invalid') : 'Pending', temperatureStatus?.tone || (tempInput?.value ? 'danger' : 'muted'));
+
+            if (!covidValue) {
+                setVitalStatus('covidStatus', 'Pending');
+            } else if (covidValue === 'No') {
+                setVitalStatus('covidStatus', 'Negative', 'normal');
+            } else {
+                setVitalStatus('covidStatus', 'Positive', 'danger');
+            }
         }
 
         function getConditionSummary(review, lookupData) {
@@ -9261,6 +9466,12 @@
                 return;
             }
 
+            const heightValue = parseHeightFeet(heightInput.value);
+            if (heightValue === null || heightValue < 1 || heightValue > 10) {
+                setStatus('error', 'Height must use feet and inches, e.g., 5\'6".');
+                return;
+            }
+
             if (!covidPositiveInput) {
                 setStatus('error', 'Please select if the student is COVID Positive.');
                 return;
@@ -9386,6 +9597,12 @@
                 return;
             }
 
+            const heightValue = parseHeightFeet(heightInput.value);
+            if (heightValue === null || heightValue < 1 || heightValue > 10) {
+                setStatus('error', 'Height must use feet and inches, e.g., 5\'6".');
+                return;
+            }
+
             if (!covidPositiveInput) {
                 setStatus('error', 'Please select if the student is COVID Positive.');
                 return;
@@ -9506,6 +9723,7 @@
             }
 
             validateCovidDate();
+            updateVitalIndicators();
         }
 
         function validateVitals() {
@@ -9524,8 +9742,8 @@
 
             // Validate Height
             if (heightInput) {
-                const heightValue = parseFloat(heightInput.value);
-                if (heightInput.value && (heightValue < 1 || heightValue > 10)) {
+                const heightValue = parseHeightFeet(heightInput.value);
+                if (heightInput.value && (heightValue === null || heightValue < 1 || heightValue > 10)) {
                     if (heightError) heightError.style.display = 'block';
                 } else {
                     if (heightError) heightError.style.display = 'none';
@@ -9582,6 +9800,8 @@
                     if (tempError) tempError.style.display = 'none';
                 }
             }
+
+            updateVitalIndicators();
         }
 
         function validateCovidDate() {
