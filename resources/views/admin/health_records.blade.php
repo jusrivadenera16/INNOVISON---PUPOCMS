@@ -1267,6 +1267,11 @@
         opacity: 1;
         pointer-events: auto;
         transform: translateX(0) scaleX(1);
+        background: #ffffff !important;
+        border: 1px solid rgba(112, 19, 27, 0.18) !important;
+        border-radius: 14px !important;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08) !important;
+        padding: 0 8px !important;
     }
 
     .health-filter-shell {
@@ -1402,6 +1407,10 @@
 
     .health-records-search {
         width: 280px;
+        background: #ffffff !important;
+        border: 0 !important;
+        border-bottom: 0 !important;
+        border-radius: 12px !important;
     }
     .health-records-search::placeholder {
         color: #7f1d2d;
@@ -3152,10 +3161,7 @@
             }
         }
 
-        $healthProfileSummaryRecords = $records
-            ->filter(fn ($record) => in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true))
-            ->values();
-        $healthSummaryStats['total_approved'] = $healthProfileSummaryRecords->count();
+        $healthSummaryStats['total_approved'] = $healthProfileSummaryRecords->total();
     @endphp
 
     {{-- Summary Action Cards --}}
@@ -3209,7 +3215,7 @@
     {{-- Main Table Card --}}
 <div class="card health-summary-card">
     <div class="health-table-head">
-        <div class="health-table-title">Approved Health Records</div>
+        <div class="health-table-title">Issued Medical Clearance</div>
     </div>
     <table id="healthTable">
         <thead>
@@ -3403,6 +3409,11 @@
             @endforelse
         </tbody>
     </table>
+    @if($healthProfileSummaryRecords->hasPages())
+        <div class="mt-3 d-flex justify-content-end">
+            {{ $healthProfileSummaryRecords->links() }}
+        </div>
+    @endif
 </div>
 
 <div id="pendingApprovalInfoModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px;" onclick="if(event.target.id==='pendingApprovalInfoModal') document.getElementById('pendingApprovalInfoModal').style.display='none';">

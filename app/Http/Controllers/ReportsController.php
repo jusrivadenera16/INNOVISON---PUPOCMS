@@ -896,6 +896,98 @@ class ReportsController extends Controller
         ));
     }
 
+    private function healthFormsApplicantsListQuery(Request $request): array
+    {
+        $search = trim((string) $request->query('q', ''));
+        $courseFilter = trim((string) $request->query('course', ''));
+        $userTypeFilter = trim((string) $request->query('type', ''));
+        $genderFilter = trim((string) $request->query('gender', ''));
+        $conditionFilter = trim((string) $request->query('condition', ''));
+        $statusFilter = trim((string) $request->query('status', ''));
+
+        $query = HealthProfile::query()
+            ->with(['user', 'approvedBy', 'reviewStartedBy']);
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                $builder->where('reference_number', 'like', "%{$search}%")
+                    ->orWhere('student_number', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('student_number', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($courseFilter !== '') {
+            $query->where(function ($q) use ($courseFilter) {
+                $q->where('course_college', 'like', "%{$courseFilter}%")
+                    ->orWhereHas('user', function ($uq) use ($courseFilter) {
+                        $uq->where('course', 'like', "%{$courseFilter}%");
+                    });
+            });
+        }
+
+        if ($userTypeFilter !== '') {
+            $query->whereHas('user', function ($q) use ($userTypeFilter) {
+                $q->where('user_type', '=', $userTypeFilter);
+            });
+        }
+
+        if ($genderFilter !== '') {
+            $query->where(function ($q) use ($genderFilter) {
+                $q->where('sex', '=', $genderFilter)
+                    ->orWhereHas('user', function ($uq) use ($genderFilter) {
+                        $uq->where('gender', '=', $genderFilter);
+                    });
+            });
+        }
+
+        if ($conditionFilter === 'yes') {
+            $query->withMedicalCondition();
+        } elseif ($conditionFilter === 'no') {
+            $query->withoutMedicalCondition();
+        }
+
+        if ($statusFilter === 'approved') {
+            $query->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
+        } elseif ($statusFilter === 'pending') {
+            $query->where(function ($q) {
+                $q->whereNull('clearance_status')
+                    ->orWhereIn('clearance_status', ['', 'Pending', 'For Verification', 'Pending/Conditional', 'Pending Resubmission']);
+            });
+        } elseif ($statusFilter === 'rejected') {
+            $query->where('clearance_status', 'Rejected');
+        }
+
+        return [$query, $search, $courseFilter, $userTypeFilter, $genderFilter, $conditionFilter, $statusFilter];
+    }
+
+    public function healthFormsApplicantsList(Request $request)
+    {
+        [$query, $search, $courseFilter, $userTypeFilter, $genderFilter, $conditionFilter, $statusFilter] = $this->healthFormsApplicantsListQuery($request);
+
+        $logbookRecords = $query->orderByDesc('created_at')->paginate(25);
+
+        $courses = HealthProfile::distinct('course_college')
+            ->pluck('course_college')
+            ->filter()
+            ->sort()
+            ->values();
+
+        return view('admin.reports.health-forms-applicants-list', compact(
+            'logbookRecords',
+            'courses',
+            'search',
+            'courseFilter',
+            'userTypeFilter',
+            'genderFilter',
+            'conditionFilter',
+            'statusFilter'
+        ));
+    }
+
     private function healthFormsLogbookQuery(Request $request): array
     {
         $search = trim((string) $request->query('q', ''));
@@ -953,26 +1045,34 @@ class ReportsController extends Controller
 
     public function healthFormsLogbook(Request $request)
     {
-        [$query, $search, $courseFilter, $userTypeFilter, $genderFilter, $conditionFilter, $statusFilter] = $this->healthFormsLogbookQuery($request);
+        $dateFrom = $this->parseReportDate(
+            (string) $request->query('date_from', ''),
+            now()->startOfMonth()
+        )->startOfDay();
+        $dateTo = $this->parseReportDate(
+            (string) $request->query('date_to', ''),
+            now()
+        )->endOfDay();
 
-        $logbookRecords = $query->orderByDesc('created_at')->paginate(25);
+        if ($dateFrom->gt($dateTo)) {
+            [$dateFrom, $dateTo] = [$dateTo->copy()->startOfDay(), $dateFrom->copy()->endOfDay()];
+        }
 
-        $courses = HealthProfile::distinct('course_college')
-            ->pluck('course_college')
-            ->filter()
-            ->sort()
-            ->values();
+        $records = HealthProfile::query()
+            ->with(['user', 'approvedBy', 'reviewStartedBy'])
+            ->whereIn('clearance_status', ['Issued', 'Fully Cleared'])
+            ->where(function ($query) use ($dateFrom, $dateTo) {
+                $query->whereBetween('verified_at', [$dateFrom, $dateTo])
+                    ->orWhere(function ($fallback) use ($dateFrom, $dateTo) {
+                        $fallback->whereNull('verified_at')
+                            ->whereBetween('created_at', [$dateFrom, $dateTo]);
+                    });
+            })
+            ->orderBy('verified_at')
+            ->orderBy('created_at')
+            ->get();
 
-        return view('admin.reports.health-forms-logbook', compact(
-            'logbookRecords',
-            'courses',
-            'search',
-            'courseFilter',
-            'userTypeFilter',
-            'genderFilter',
-            'conditionFilter',
-            'statusFilter'
-        ));
+        return view('admin.reports.health_forms_logbook', compact('records', 'dateFrom', 'dateTo'));
     }
 
     public function exportHealthFormsLogbook(Request $request)

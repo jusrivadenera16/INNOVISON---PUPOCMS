@@ -247,6 +247,7 @@
 @php
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
     $reportsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
+    $applicantsListUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/health-forms/applicants-list') : url('/admin/reports/health-forms/applicants-list');
 @endphp
 <div class="health-forms-shell">
     <div class="health-forms-head">
@@ -255,7 +256,7 @@
             <p class="health-forms-copy">Issued health forms summarized by course for the selected date range.</p>
         </div>
         <div style="display: flex; gap: 10px;">
-            <a href="{{ route('reports.health-forms-logbook') }}" class="health-forms-back" style="background: #7f1d2d; color: #ffffff; border-color: #7f1d2d;">📋 View List</a>
+            <a href="{{ $applicantsListUrl }}" class="health-forms-back" style="background: #7f1d2d; color: #ffffff; border-color: #7f1d2d;">Applicants List</a>
             <a href="{{ $reportsUrl }}" class="health-forms-back">&larr; Back to Reports</a>
         </div>
     </div>

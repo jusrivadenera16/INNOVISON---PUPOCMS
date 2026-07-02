@@ -1433,6 +1433,11 @@ class AdminController extends Controller
             });
         }
 
+        $healthProfileSummaryRecords = (clone $query)
+            ->whereIn('clearance_status', ['Issued', 'Fully Cleared'])
+            ->paginate(20, ['*'], 'issued_page')
+            ->withQueryString();
+
         $records = $query->get();
 
           $courseOptions = HealthProfile::query()
@@ -1450,6 +1455,7 @@ class AdminController extends Controller
 
         return view('admin.health_records', compact(
             'records',
+            'healthProfileSummaryRecords',
             'search',
             'courseFilter',
             'monthFilter',
