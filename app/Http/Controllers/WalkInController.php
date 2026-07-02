@@ -745,6 +745,86 @@ class WalkInController extends Controller
         ];
     }
 
+    private function formatHealthProfileDateValue($value): string
+    {
+        if ($value instanceof \Carbon\CarbonInterface) {
+            return $value->format('Y-m-d');
+        }
+
+        $raw = trim((string) $value);
+        if ($raw === '') {
+            return '';
+        }
+
+        try {
+            return \Carbon\Carbon::parse($raw)->format('Y-m-d');
+        } catch (\Throwable $exception) {
+            return $raw;
+        }
+    }
+
+    private function healthProfileInformationPayload(?HealthProfile $profile, ?User $user = null): array
+    {
+        if (!$profile) {
+            return [];
+        }
+
+        $user = $user ?: $profile->user;
+        $medicalHistory = is_array($profile->medical_history) ? $profile->medical_history : [];
+        $medicineAllergies = is_array($profile->medicine_allergies) ? $profile->medicine_allergies : [];
+        $vaccineHistory = is_array($profile->vaccine_history) ? $profile->vaccine_history : [];
+
+        return [
+            'profile_id' => $profile->id,
+            'full_name' => trim((string) ($user->name ?? '')),
+            'personal_information' => [
+                'birthday' => $this->formatHealthProfileDateValue($profile->birthday),
+                'age' => (string) ($profile->age ?? ''),
+                'sex' => (string) ($profile->sex ?? ''),
+                'civil_status' => (string) ($profile->civil_status ?? ''),
+                'blood_type' => (string) ($profile->blood_type ?? ''),
+                'course_college' => (string) ($profile->course_college ?? ''),
+                'course_code' => (string) ($profile->course_code ?? ''),
+                'school_year' => (string) ($profile->school_year ?? ''),
+            ],
+            'contact_information' => [
+                'cellphone' => (string) ($profile->cellphone ?? ''),
+                'landline' => (string) ($profile->landline ?? ''),
+                'guardian_name' => (string) ($profile->guardian_name ?? ''),
+            ],
+            'address_information' => [
+                'home_address' => (string) ($profile->home_address ?? ''),
+                'zipcode' => (string) ($profile->zipcode ?? ''),
+            ],
+            'medical_history' => [
+                'has_illness' => (string) ($profile->has_illness ?? ''),
+                'medical_history' => implode(', ', array_filter(array_map('strval', $medicalHistory))),
+                'other_illness' => (string) ($profile->other_illness ?? ''),
+                'has_disability' => (string) ($profile->has_disability ?? ''),
+                'disability_type' => (string) ($profile->disability_type ?? ''),
+                'food_allergies' => (string) ($profile->food_allergies ?? ''),
+                'no_allergies' => (bool) $profile->no_allergies,
+                'medicine_allergies' => implode(', ', array_filter(array_map('strval', $medicineAllergies))),
+                'other_med_allergies' => (string) ($profile->other_med_allergies ?? ''),
+            ],
+            'personal_social_history' => [
+                'is_smoker' => (string) ($profile->is_smoker ?? ''),
+                'is_drinker' => (string) ($profile->is_drinker ?? ''),
+                'covid_vaccinated' => (string) ($profile->covid_vaccinated ?? ''),
+                'vaccine_history' => $vaccineHistory,
+            ],
+            'clinic_requirements' => [
+                'med_cert_findings' => (string) ($profile->med_cert_findings ?? ''),
+                'med_cert_findings_details' => (string) ($profile->med_cert_findings_details ?? ''),
+                'doctor_name' => (string) ($profile->doctor_name ?? ''),
+                'med_cert_date' => $this->formatHealthProfileDateValue($profile->med_cert_date),
+                'xray_findings' => (string) ($profile->xray_findings ?? ''),
+                'xray_findings_details' => (string) ($profile->xray_findings_details ?? ''),
+                'xray_date' => $this->formatHealthProfileDateValue($profile->xray_date),
+            ],
+        ];
+    }
+
     private function formatMedicalAssessmentDate($value): string
     {
         if (blank($value)) {
@@ -1316,6 +1396,7 @@ class WalkInController extends Controller
                     'xray_findings_details' => $xrayDetails,
                     'has_medical_condition' => $medicalConditionSummary['has_condition'],
                     'medical_condition_summary' => $medicalConditionSummary['items'],
+                    'health_form_information' => $this->healthProfileInformationPayload($healthProfile, $student),
                     'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
                     'documents' => $this->healthProfileDocuments($request, $healthProfile),
                     'name_matches' => $lookupName !== '' ? $this->namesRoughlyMatch($lookupName, $student) : null,
@@ -1370,6 +1451,7 @@ class WalkInController extends Controller
                 'xray_findings_details' => $xrayDetails,
                 'has_medical_condition' => $medicalConditionSummary['has_condition'],
                 'medical_condition_summary' => $medicalConditionSummary['items'],
+                'health_form_information' => $this->healthProfileInformationPayload($healthProfile, $student),
                 'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
                 'documents' => $this->healthProfileDocuments($request, $healthProfile),
                 'lookup_status' => $lookupStatus,
@@ -1848,6 +1930,94 @@ PROMPT;
         }
 
         return redirect()->route($this->walkinRouteName($request, 'index'))->with('consultation_done', true);
+    }
+
+    public function updateHealthProfileInformation(Request $request, HealthProfile $healthProfile)
+    {
+        $validated = $request->validate([
+            'birthday' => ['nullable', 'date'],
+            'age' => ['nullable', 'integer', 'min:0', 'max:130'],
+            'sex' => ['nullable', 'string', 'max:30'],
+            'civil_status' => ['nullable', 'string', 'max:50'],
+            'blood_type' => ['nullable', 'string', 'max:10'],
+            'course_college' => ['nullable', 'string', 'max:255'],
+            'course_code' => ['nullable', 'string', 'max:30'],
+            'school_year' => ['nullable', 'string', 'max:30'],
+            'cellphone' => ['nullable', 'string', 'max:30'],
+            'landline' => ['nullable', 'string', 'max:30'],
+            'guardian_name' => ['nullable', 'string', 'max:255'],
+            'home_address' => ['nullable', 'string', 'max:500'],
+            'zipcode' => ['nullable', 'string', 'max:20'],
+            'has_illness' => ['nullable', 'string', 'max:10'],
+            'medical_history' => ['nullable', 'string', 'max:1000'],
+            'other_illness' => ['nullable', 'string', 'max:500'],
+            'has_disability' => ['nullable', 'string', 'max:10'],
+            'disability_type' => ['nullable', 'string', 'max:255'],
+            'food_allergies' => ['nullable', 'string', 'max:500'],
+            'no_allergies' => ['nullable', 'boolean'],
+            'medicine_allergies' => ['nullable', 'string', 'max:1000'],
+            'other_med_allergies' => ['nullable', 'string', 'max:500'],
+            'is_smoker' => ['nullable', 'string', 'max:10'],
+            'is_drinker' => ['nullable', 'string', 'max:10'],
+            'covid_vaccinated' => ['nullable', 'string', 'max:10'],
+            'med_cert_findings' => ['nullable', 'string', 'max:100'],
+            'med_cert_findings_details' => ['nullable', 'string', 'max:1000'],
+            'doctor_name' => ['nullable', 'string', 'max:255'],
+            'med_cert_date' => ['nullable', 'date'],
+            'xray_findings' => ['nullable', 'string', 'max:100'],
+            'xray_findings_details' => ['nullable', 'string', 'max:1000'],
+            'xray_date' => ['nullable', 'date'],
+        ]);
+
+        $csvToArray = static function ($value): array {
+            return array_values(array_filter(array_map(
+                static fn ($item) => trim((string) $item),
+                explode(',', (string) $value)
+            )));
+        };
+
+        $healthProfile->fill([
+            'birthday' => $validated['birthday'] ?? null,
+            'age' => $validated['age'] ?? null,
+            'sex' => $validated['sex'] ?? null,
+            'civil_status' => $validated['civil_status'] ?? null,
+            'blood_type' => $validated['blood_type'] ?? null,
+            'course_college' => $validated['course_college'] ?? null,
+            'course_code' => $validated['course_code'] ?? null,
+            'school_year' => $validated['school_year'] ?? null,
+            'cellphone' => $validated['cellphone'] ?? null,
+            'landline' => $validated['landline'] ?? null,
+            'guardian_name' => $validated['guardian_name'] ?? null,
+            'home_address' => $validated['home_address'] ?? null,
+            'zipcode' => $validated['zipcode'] ?? null,
+            'has_illness' => $validated['has_illness'] ?? null,
+            'medical_history' => $csvToArray($validated['medical_history'] ?? ''),
+            'other_illness' => $validated['other_illness'] ?? null,
+            'has_disability' => $validated['has_disability'] ?? null,
+            'disability_type' => $validated['disability_type'] ?? null,
+            'food_allergies' => $validated['food_allergies'] ?? null,
+            'no_allergies' => (bool) ($validated['no_allergies'] ?? false),
+            'medicine_allergies' => $csvToArray($validated['medicine_allergies'] ?? ''),
+            'other_med_allergies' => $validated['other_med_allergies'] ?? null,
+            'is_smoker' => $validated['is_smoker'] ?? null,
+            'is_drinker' => $validated['is_drinker'] ?? null,
+            'covid_vaccinated' => $validated['covid_vaccinated'] ?? null,
+            'med_cert_findings' => $validated['med_cert_findings'] ?? null,
+            'med_cert_findings_details' => $validated['med_cert_findings_details'] ?? null,
+            'doctor_name' => $validated['doctor_name'] ?? null,
+            'med_cert_date' => $validated['med_cert_date'] ?? null,
+            'xray_findings' => $validated['xray_findings'] ?? null,
+            'xray_findings_details' => $validated['xray_findings_details'] ?? null,
+            'xray_date' => $validated['xray_date'] ?? null,
+        ]);
+        $healthProfile->save();
+        $healthProfile->refresh()->loadMissing('user');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Health form information updated.',
+            'health_form_information' => $this->healthProfileInformationPayload($healthProfile),
+        ]);
     }
 
     public function saveApplicantEncoding(Request $request, PuptasWebhookService $webhookService)

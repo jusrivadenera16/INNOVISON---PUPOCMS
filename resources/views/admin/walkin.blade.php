@@ -4171,6 +4171,191 @@
         word-break: break-word;
     }
 
+    .health-info-editor {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        border-radius: 14px;
+        overflow: hidden;
+        background: #ffffff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+    }
+
+    .health-info-tabs {
+        display: flex;
+        flex-direction: column;
+        padding: 12px;
+        gap: 6px;
+        background: linear-gradient(180deg, #fffaf0 0%, #ffffff 72%);
+        border-right: 1px solid rgba(148, 163, 184, 0.22);
+    }
+
+    .health-info-tab {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 42px;
+        padding: 10px 12px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: transparent;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 850;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .health-info-tab.is-active {
+        border-color: rgba(250, 204, 21, 0.85);
+        background: #fffbeb;
+        color: #70131b;
+        box-shadow: inset 3px 0 0 #facc15;
+    }
+
+    .health-info-tab svg {
+        width: 16px;
+        height: 16px;
+        color: currentColor;
+    }
+
+    .health-info-content {
+        min-width: 0;
+        padding: 18px;
+    }
+
+    .health-info-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+    }
+
+    .health-info-kicker {
+        margin: 0 0 3px;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .health-info-header h4 {
+        margin: 0;
+        color: #111827;
+        font-size: 15px;
+        font-weight: 900;
+    }
+
+    .health-info-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .health-info-edit-btn,
+    .health-info-cancel-btn,
+    .health-info-save-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 34px;
+        padding: 8px 13px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    .health-info-edit-btn,
+    .health-info-cancel-btn {
+        border: 1px solid rgba(112, 19, 27, 0.18);
+        background: #ffffff;
+        color: #70131b;
+    }
+
+    .health-info-save-btn {
+        border: 1px solid #facc15;
+        background: #facc15;
+        color: #70131b;
+        box-shadow: 0 10px 18px rgba(202, 138, 4, .18);
+    }
+
+    .health-info-edit-btn svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .health-info-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 22px;
+        padding-top: 8px;
+    }
+
+    .health-info-field {
+        min-width: 0;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .health-info-field label {
+        display: block;
+        margin-bottom: 5px;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .health-info-value {
+        min-height: 28px;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.45;
+        word-break: break-word;
+    }
+
+    .health-info-input {
+        width: 100%;
+        min-height: 38px;
+        padding: 9px 11px;
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        border-radius: 8px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    textarea.health-info-input {
+        min-height: 78px;
+        resize: vertical;
+    }
+
+    @media (max-width: 760px) {
+        .health-info-editor {
+            grid-template-columns: 1fr;
+        }
+
+        .health-info-tabs {
+            border-right: 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+        }
+
+        .health-info-fields {
+            grid-template-columns: 1fr;
+        }
+    }
+
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-file-actions {
         display: flex;
         justify-content: flex-start;
@@ -6608,61 +6793,25 @@
                     </div>
 
                     <div id="applicantInformationDetails" class="applicant-information-details" aria-hidden="true">
-                        <div class="applicant-lookup-grid">
-                            <div class="applicant-lookup-item">
-                                <div class="applicant-lookup-card">
-                                    <div class="applicant-lookup-icon">HT</div>
-                                    <div class="applicant-lookup-content">
-                                        <p class="applicant-lookup-label">Height</p>
-                                        <p class="applicant-lookup-value" id="applicantLookupHeight">N/A</p>
+                        <div class="health-info-editor" id="healthInfoEditor">
+                            <aside class="health-info-tabs" id="healthInfoTabs"></aside>
+                            <section class="health-info-content">
+                                <div class="health-info-header">
+                                    <div>
+                                        <p class="health-info-kicker">Health Form</p>
+                                        <h4 id="healthInfoSectionTitle">Health Form Information</h4>
+                                    </div>
+                                    <div class="health-info-actions">
+                                        <button type="button" id="healthInfoEditBtn" class="health-info-edit-btn">
+                                            <x-outline-icon name="pencil-square" />
+                                            <span>Edit</span>
+                                        </button>
+                                        <button type="button" id="healthInfoCancelBtn" class="health-info-cancel-btn" style="display: none;">Cancel</button>
+                                        <button type="button" id="healthInfoSaveBtn" class="health-info-save-btn" style="display: none;">Save</button>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="applicant-lookup-item">
-                                <div class="applicant-lookup-card">
-                                    <div class="applicant-lookup-icon">WT</div>
-                                    <div class="applicant-lookup-content">
-                                        <p class="applicant-lookup-label">Weight</p>
-                                        <p class="applicant-lookup-value" id="applicantLookupWeight">N/A</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="applicant-lookup-item">
-                                <div class="applicant-lookup-card">
-                                    <div class="applicant-lookup-icon">CS</div>
-                                    <div class="applicant-lookup-content">
-                                        <p class="applicant-lookup-label">Civil Status</p>
-                                        <p class="applicant-lookup-value" id="applicantLookupCivilStatus">N/A</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="applicant-lookup-item">
-                                <div class="applicant-lookup-card">
-                                    <div class="applicant-lookup-icon">AGE</div>
-                                    <div class="applicant-lookup-content">
-                                        <p class="applicant-lookup-label">Age</p>
-                                        <p class="applicant-lookup-value" id="applicantLookupAge">N/A</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="applicant-lookup-item">
-                                <div class="applicant-lookup-card">
-                                    <div class="applicant-lookup-icon">G</div>
-                                    <div class="applicant-lookup-content">
-                                        <p class="applicant-lookup-label">Gender</p>
-                                        <p class="applicant-lookup-value" id="applicantLookupGender">N/A</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="applicant-lookup-item">
-                                <div class="applicant-lookup-card">
-                                    <div class="applicant-lookup-icon">CN</div>
-                                    <div class="applicant-lookup-content">
-                                        <p class="applicant-lookup-label">Contact Number</p>
-                                        <p class="applicant-lookup-value" id="applicantLookupContact">N/A</p>
-                                    </div>
-                                </div>
-                            </div>
+                                <div class="health-info-fields" id="healthInfoFields"></div>
+                            </section>
                         </div>
                     </div>
 
@@ -8703,6 +8852,16 @@
         const finalReviewApplicantsUrl = '{{ url($basePrefix . '/walkin/final-review-applicants') }}';
         const finalReviewTimeInUrl = '{{ url($basePrefix . '/walkin/final-review/time-in') }}';
         const saveEncodingUrl = '{{ url($basePrefix . '/walkin/applicant-encoding') }}';
+        const healthInfoUpdateBaseUrl = '{{ url($basePrefix . '/walkin/health-profile-information') }}';
+        const healthInfoTabs = document.getElementById('healthInfoTabs');
+        const healthInfoFields = document.getElementById('healthInfoFields');
+        const healthInfoSectionTitle = document.getElementById('healthInfoSectionTitle');
+        const healthInfoEditBtn = document.getElementById('healthInfoEditBtn');
+        const healthInfoCancelBtn = document.getElementById('healthInfoCancelBtn');
+        const healthInfoSaveBtn = document.getElementById('healthInfoSaveBtn');
+        let currentHealthInfoData = {};
+        let currentHealthInfoSection = 'personal_information';
+        let isHealthInfoEditing = false;
 
         function isClinicLookupMode() {
             return currentLookupMode === 'clinic';
@@ -8968,6 +9127,9 @@
             }
             if (pendingHistoryReason) pendingHistoryReason.textContent = '-';
             if (pendingHistoryOther) pendingHistoryOther.textContent = '-';
+            currentHealthInfoData = {};
+            currentHealthInfoSection = 'personal_information';
+            setHealthInfoEditing(false);
             if (savedAssessmentButton) savedAssessmentButton.classList.remove('is-visible');
             if (savedAssessmentModal) {
                 savedAssessmentModal.classList.remove('show');
@@ -9557,6 +9719,226 @@
             });
         }
 
+        const healthInfoSections = [
+            {
+                key: 'personal_information',
+                title: 'Personal Information',
+                icon: 'PI',
+                fields: [
+                    ['full_name', 'Full Name', 'readonly', 'root'],
+                    ['birthday', 'Date of Birth', 'date'],
+                    ['age', 'Age', 'number'],
+                    ['sex', 'Gender'],
+                    ['civil_status', 'Civil Status'],
+                    ['blood_type', 'Blood Type'],
+                    ['course_college', 'Course / Program'],
+                    ['course_code', 'Course Code'],
+                    ['school_year', 'School Year']
+                ]
+            },
+            {
+                key: 'contact_information',
+                title: 'Contact Information',
+                icon: 'CN',
+                fields: [
+                    ['cellphone', 'Contact Number'],
+                    ['landline', 'Landline'],
+                    ['guardian_name', 'Parent / Guardian / Spouse']
+                ]
+            },
+            {
+                key: 'address_information',
+                title: 'Address Information',
+                icon: 'AD',
+                fields: [
+                    ['home_address', 'Home Address', 'textarea'],
+                    ['zipcode', 'Zip Code']
+                ]
+            },
+            {
+                key: 'medical_history',
+                title: 'Medical History',
+                icon: 'MH',
+                fields: [
+                    ['has_illness', 'Known Medical Illness'],
+                    ['medical_history', 'Medical History / Conditions', 'textarea'],
+                    ['other_illness', 'Other Illness', 'textarea'],
+                    ['has_disability', 'Has Disability'],
+                    ['disability_type', 'Disability Type'],
+                    ['food_allergies', 'Food Allergies', 'textarea'],
+                    ['no_allergies', 'No Known Allergies', 'checkbox'],
+                    ['medicine_allergies', 'Medicine Allergies', 'textarea'],
+                    ['other_med_allergies', 'Other Medicine Allergies', 'textarea']
+                ]
+            },
+            {
+                key: 'personal_social_history',
+                title: 'Personal Social History',
+                icon: 'SH',
+                fields: [
+                    ['is_smoker', 'Cigarette Smoking'],
+                    ['is_drinker', 'Alcohol Drinking'],
+                    ['covid_vaccinated', 'COVID Vaccinated']
+                ]
+            },
+            {
+                key: 'clinic_requirements',
+                title: 'Clinic Requirements',
+                icon: 'CR',
+                fields: [
+                    ['med_cert_findings', 'Medical Certificate Result'],
+                    ['med_cert_findings_details', 'Medical Certificate Findings', 'textarea'],
+                    ['doctor_name', 'Doctor Name'],
+                    ['med_cert_date', 'Medical Certificate Date', 'date'],
+                    ['xray_findings', 'Chest X-ray Result'],
+                    ['xray_findings_details', 'Chest X-ray Findings', 'textarea'],
+                    ['xray_date', 'Chest X-ray Date', 'date']
+                ]
+            }
+        ];
+
+        function getHealthInfoFieldValue(sectionKey, fieldKey, sourceType) {
+            if (sourceType === 'root') {
+                return currentHealthInfoData?.[fieldKey] ?? '';
+            }
+
+            return currentHealthInfoData?.[sectionKey]?.[fieldKey] ?? '';
+        }
+
+        function renderHealthInfoTabs() {
+            if (!healthInfoTabs) return;
+
+            healthInfoTabs.innerHTML = healthInfoSections.map(function (section) {
+                const activeClass = section.key === currentHealthInfoSection ? ' is-active' : '';
+                return `
+                    <button type="button" class="health-info-tab${activeClass}" data-health-info-section="${escapeApplicantHtml(section.key)}">
+                        <span>${escapeApplicantHtml(section.icon)}</span>
+                        <strong>${escapeApplicantHtml(section.title)}</strong>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function renderHealthInfoFields() {
+            if (!healthInfoFields) return;
+
+            const section = healthInfoSections.find(item => item.key === currentHealthInfoSection) || healthInfoSections[0];
+            if (healthInfoSectionTitle) healthInfoSectionTitle.textContent = section.title;
+
+            healthInfoFields.innerHTML = section.fields.map(function ([fieldKey, label, type, sourceType]) {
+                const rawValue = getHealthInfoFieldValue(section.key, fieldKey, sourceType);
+                const value = rawValue === true ? 'Yes' : (rawValue === false ? 'No' : String(rawValue ?? ''));
+                const escapedValue = escapeApplicantHtml(value);
+                const isReadonly = type === 'readonly';
+
+                if (isHealthInfoEditing && !isReadonly) {
+                    if (type === 'textarea') {
+                        return `
+                            <div class="health-info-field">
+                                <label for="healthInfo_${escapeApplicantHtml(fieldKey)}">${escapeApplicantHtml(label)}</label>
+                                <textarea class="health-info-input" id="healthInfo_${escapeApplicantHtml(fieldKey)}" data-health-field="${escapeApplicantHtml(fieldKey)}">${escapedValue}</textarea>
+                            </div>
+                        `;
+                    }
+                    if (type === 'checkbox') {
+                        return `
+                            <div class="health-info-field">
+                                <label>${escapeApplicantHtml(label)}</label>
+                                <input class="health-info-input" type="checkbox" data-health-field="${escapeApplicantHtml(fieldKey)}" ${rawValue ? 'checked' : ''}>
+                            </div>
+                        `;
+                    }
+
+                    return `
+                        <div class="health-info-field">
+                            <label for="healthInfo_${escapeApplicantHtml(fieldKey)}">${escapeApplicantHtml(label)}</label>
+                            <input class="health-info-input" id="healthInfo_${escapeApplicantHtml(fieldKey)}" type="${type === 'date' ? 'date' : (type === 'number' ? 'number' : 'text')}" data-health-field="${escapeApplicantHtml(fieldKey)}" value="${escapedValue}">
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="health-info-field">
+                        <label>${escapeApplicantHtml(label)}</label>
+                        <div class="health-info-value">${escapedValue || 'N/A'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderHealthInfoEditor(data) {
+            currentHealthInfoData = data && typeof data === 'object' ? data : {};
+            if (!healthInfoSections.some(section => section.key === currentHealthInfoSection)) {
+                currentHealthInfoSection = 'personal_information';
+            }
+            renderHealthInfoTabs();
+            renderHealthInfoFields();
+        }
+
+        function setHealthInfoEditing(editing) {
+            isHealthInfoEditing = Boolean(editing);
+            if (healthInfoEditBtn) healthInfoEditBtn.style.display = isHealthInfoEditing ? 'none' : 'inline-flex';
+            if (healthInfoCancelBtn) healthInfoCancelBtn.style.display = isHealthInfoEditing ? 'inline-flex' : 'none';
+            if (healthInfoSaveBtn) healthInfoSaveBtn.style.display = isHealthInfoEditing ? 'inline-flex' : 'none';
+            renderHealthInfoFields();
+        }
+
+        function collectHealthInfoFields() {
+            const payload = {};
+
+            healthInfoSections.forEach(function (section) {
+                section.fields.forEach(function ([fieldKey, , type, sourceType]) {
+                    if (type === 'readonly' || sourceType === 'root') return;
+                    const field = healthInfoFields?.querySelector(`[data-health-field="${fieldKey}"]`);
+                    if (!field) {
+                        const existing = currentHealthInfoData?.[section.key]?.[fieldKey];
+                        payload[fieldKey] = existing === undefined ? '' : existing;
+                        return;
+                    }
+                    payload[fieldKey] = field.type === 'checkbox' ? field.checked : field.value;
+                });
+            });
+
+            return payload;
+        }
+
+        function saveHealthInfoEditor() {
+            const profileId = currentHealthInfoData?.profile_id;
+            if (!profileId) {
+                setStatus('error', 'No health profile is loaded for editing.');
+                return;
+            }
+
+            if (healthInfoSaveBtn) healthInfoSaveBtn.disabled = true;
+            setStatus('info', 'Saving health form information...');
+
+            fetch(`${healthInfoUpdateBaseUrl}/${profileId}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(collectHealthInfoFields())
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.message || 'Unable to update health form information.');
+                }
+                currentHealthInfoData = data.health_form_information || currentHealthInfoData;
+                setHealthInfoEditing(false);
+                setStatus('success', data.message || 'Health form information updated.');
+            })
+            .catch(error => {
+                setStatus('error', error.message || 'Unable to update health form information.');
+            })
+            .finally(() => {
+                if (healthInfoSaveBtn) healthInfoSaveBtn.disabled = false;
+            });
+        }
+
         function renderApplicantReviewSource(element, value, fallbackText) {
             if (!element) return;
 
@@ -9631,6 +10013,7 @@
                 const label = informationButton.querySelector('[data-information-button-label]');
                 if (label) label.textContent = 'Health Form Information';
             }
+            renderHealthInfoEditor(data.health_form_information || {});
             if (medicalConditionButton) {
                 medicalConditionButton.classList.remove('is-visible');
                 medicalConditionButton.setAttribute('aria-expanded', 'false');
@@ -10727,6 +11110,28 @@
         if (documentsButton) documentsButton.addEventListener('click', function () {
             if (documentsModal) documentsModal.classList.add('show');
         });
+        if (healthInfoTabs) {
+            healthInfoTabs.addEventListener('click', function (event) {
+                const tab = event.target.closest('[data-health-info-section]');
+                if (!tab) return;
+                currentHealthInfoSection = tab.dataset.healthInfoSection || 'personal_information';
+                renderHealthInfoTabs();
+                renderHealthInfoFields();
+            });
+        }
+        if (healthInfoEditBtn) {
+            healthInfoEditBtn.addEventListener('click', function () {
+                setHealthInfoEditing(true);
+            });
+        }
+        if (healthInfoCancelBtn) {
+            healthInfoCancelBtn.addEventListener('click', function () {
+                setHealthInfoEditing(false);
+            });
+        }
+        if (healthInfoSaveBtn) {
+            healthInfoSaveBtn.addEventListener('click', saveHealthInfoEditor);
+        }
         if (pendingHistoryButton && pendingHistoryWrap) {
             pendingHistoryButton.addEventListener('click', function (event) {
                 event.preventDefault();

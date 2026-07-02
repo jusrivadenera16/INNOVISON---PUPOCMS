@@ -267,6 +267,7 @@ Route::middleware(['auth:admin', 'audit'])->group(function () {
         Route::get('/admin/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->name('walkin.form');
         Route::get('/admin/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->name('walkin.healthForm');
         Route::get('/admin/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->name('walkin.document');
+        Route::post('/admin/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->name('walkin.health-profile-information.update');
         Route::post('/admin/walkin/store', [WalkInController::class, 'store'])->name('walkin.store');
         Route::post('/admin/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->name('admin.walkin.applicant_encoding');
         Route::post('/admin/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->name('admin.walkin.final_review.time_in');
@@ -355,6 +356,7 @@ Route::middleware(['auth:admin', 'audit'])->group(function () {
         Route::get('/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->name('walkin.form');
         Route::get('/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->name('walkin.healthForm');
         Route::get('/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->name('walkin.document');
+        Route::post('/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->name('walkin.health-profile-information.update');
         Route::post('/walkin/store', [WalkInController::class, 'store'])->name('walkin.store');
         Route::post('/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->name('walkin.applicant_encoding');
         Route::post('/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->name('walkin.final_review.time_in');
