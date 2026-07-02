@@ -5146,6 +5146,223 @@
         color: #64748b;
     }
 
+    .bmi-gauge-card {
+        margin-top: 14px;
+        padding: 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    .bmi-gauge-summary {
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        text-align: center;
+        flex-wrap: wrap;
+    }
+
+    .bmi-gauge-summary strong {
+        color: #020617;
+        font-size: 20px;
+        font-weight: 900;
+    }
+
+    .bmi-gauge-summary span {
+        color: #64748b;
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+    .bmi-gauge-card.is-underweight .bmi-gauge-summary span,
+    .bmi-gauge-card.is-overweight .bmi-gauge-summary span {
+        color: #ca8a04;
+    }
+
+    .bmi-gauge-card.is-normal .bmi-gauge-summary span {
+        color: #15803d;
+    }
+
+    .bmi-gauge-card.is-obese .bmi-gauge-summary span {
+        color: #b91c1c;
+    }
+
+    .bmi-gauge-layout {
+        display: grid;
+        grid-template-columns: minmax(260px, 420px) minmax(220px, 1fr);
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+    }
+
+    .bmi-gauge-meter {
+        position: relative;
+        width: min(420px, 100%);
+        aspect-ratio: 2 / 1.08;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+
+    .bmi-gauge-arc {
+        position: absolute;
+        left: 4%;
+        right: 4%;
+        bottom: 0;
+        height: 184%;
+        border-radius: 999px 999px 0 0;
+        background: conic-gradient(
+            from 270deg at 50% 100%,
+            #dc2626 0deg 35deg,
+            #facc15 35deg 49deg,
+            #059669 49deg 76deg,
+            #fde047 76deg 116deg,
+            #d88487 116deg 148deg,
+            #b91c1c 148deg 180deg,
+            transparent 180deg 360deg
+        );
+    }
+
+    .bmi-gauge-arc::after {
+        content: "";
+        position: absolute;
+        left: 17%;
+        right: 17%;
+        bottom: 0;
+        height: 66%;
+        border-radius: 999px 999px 0 0;
+        background: #ffffff;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .bmi-gauge-needle {
+        position: absolute;
+        left: 50%;
+        bottom: 11px;
+        width: 4px;
+        height: 43%;
+        border-radius: 999px;
+        background: #525252;
+        transform: translateX(-50%) rotate(-90deg);
+        transform-origin: 50% 100%;
+        transition: transform 520ms cubic-bezier(.22, .9, .28, 1.12);
+        z-index: 4;
+    }
+
+    .bmi-gauge-needle::before {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-left: 9px solid transparent;
+        border-right: 9px solid transparent;
+        border-bottom: 18px solid #111827;
+        transform: translateX(-50%);
+    }
+
+    .bmi-gauge-pivot {
+        position: absolute;
+        left: 50%;
+        bottom: 5px;
+        width: 13px;
+        height: 13px;
+        border-radius: 999px;
+        background: #737373;
+        transform: translateX(-50%);
+        z-index: 5;
+    }
+
+    .bmi-gauge-value {
+        position: absolute;
+        left: 50%;
+        bottom: 17%;
+        transform: translateX(-50%);
+        color: #020617;
+        font-size: clamp(22px, 6vw, 38px);
+        font-weight: 900;
+        line-height: 1;
+        white-space: nowrap;
+        z-index: 3;
+    }
+
+    .bmi-gauge-label {
+        position: absolute;
+        z-index: 4;
+        color: #0f172a;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
+    .bmi-gauge-label-under {
+        left: 0;
+        bottom: 34%;
+        transform: rotate(-72deg);
+    }
+
+    .bmi-gauge-label-normal {
+        left: 16%;
+        top: 22%;
+        transform: rotate(-48deg);
+    }
+
+    .bmi-gauge-label-over {
+        left: 48%;
+        top: 4%;
+        transform: translateX(-50%) rotate(-10deg);
+    }
+
+    .bmi-gauge-label-obese {
+        right: 3%;
+        top: 28%;
+        transform: rotate(46deg);
+    }
+
+    .bmi-gauge-details {
+        margin: 0;
+        padding-left: 20px;
+        color: #0f172a;
+        font-size: 13px;
+        line-height: 1.45;
+    }
+
+    .bmi-gauge-details li + li {
+        margin-top: 4px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .bmi-gauge-layout {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .bmi-gauge-card {
+        margin-top: 12px;
+        box-shadow: none;
+    }
+
+    @media (max-width: 760px) {
+        .bmi-gauge-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .bmi-gauge-card {
+            padding: 12px;
+        }
+
+        .bmi-gauge-summary strong {
+            font-size: 18px;
+        }
+
+        .bmi-gauge-details {
+            font-size: 12px;
+        }
+    }
+
     .applicant-condition-textarea {
         resize: vertical;
         min-height: 120px;
@@ -5522,6 +5739,28 @@
     }
 
     html[data-theme="dark"] .applicant-screening-panel-copy {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .bmi-gauge-card {
+        border-color: rgba(148, 163, 184, 0.26);
+        background: rgba(15, 23, 42, 0.82);
+        box-shadow: none;
+    }
+
+    html[data-theme="dark"] .bmi-gauge-arc::after {
+        background: #0f172a;
+        border-bottom-color: rgba(148, 163, 184, 0.28);
+    }
+
+    html[data-theme="dark"] .bmi-gauge-summary strong,
+    html[data-theme="dark"] .bmi-gauge-value,
+    html[data-theme="dark"] .bmi-gauge-label,
+    html[data-theme="dark"] .bmi-gauge-details {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .bmi-gauge-summary span {
         color: #cbd5e1;
     }
 
@@ -6651,6 +6890,31 @@
                                 <div class="applicant-condition-field is-full" id="applicantEncodeRemarksField">
                                     <label for="applicantEncodeRemarks">Assessment Remarks <span style="color:#94a3b8;">(Optional)</span></label>
                                     <textarea id="applicantEncodeRemarks" name="encode_remarks" placeholder="Optional assessment notes from the encoding station..." class="applicant-condition-textarea" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <div class="bmi-gauge-card" id="bmiGaugeCard" aria-live="polite">
+                                <div class="bmi-gauge-summary">
+                                    <strong id="bmiGaugeTitle">BMI pending</strong>
+                                    <span id="bmiGaugeCategory">Enter height and weight</span>
+                                </div>
+                                <div class="bmi-gauge-layout">
+                                    <div class="bmi-gauge-meter" aria-hidden="true">
+                                        <div class="bmi-gauge-arc"></div>
+                                        <span class="bmi-gauge-label bmi-gauge-label-under">Underweight</span>
+                                        <span class="bmi-gauge-label bmi-gauge-label-normal">Normal</span>
+                                        <span class="bmi-gauge-label bmi-gauge-label-over">Overweight</span>
+                                        <span class="bmi-gauge-label bmi-gauge-label-obese">Obese</span>
+                                        <div class="bmi-gauge-needle" id="bmiGaugeNeedle"></div>
+                                        <div class="bmi-gauge-pivot"></div>
+                                        <div class="bmi-gauge-value" id="bmiGaugeValue">BMI --</div>
+                                    </div>
+                                    <ul class="bmi-gauge-details">
+                                        <li id="bmiHealthyRange">Healthy BMI range: 18.5 kg/m2 - 25 kg/m2</li>
+                                        <li id="bmiHealthyWeight">Healthy weight for this height: --</li>
+                                        <li id="bmiWeightGoal">Enter height and weight to calculate BMI.</li>
+                                        <li id="bmiPrime">BMI Prime: --</li>
+                                        <li id="bmiPonderal">Ponderal Index: --</li>
+                                    </ul>
                                 </div>
                             </div>
                         </section>
@@ -8904,16 +9168,90 @@
             const rounded = Number(bmi.toFixed(1));
 
             if (rounded < 18.5) {
-                return { text: 'BMI ' + rounded + ' Underweight', tone: 'warning' };
+                return { text: 'BMI ' + rounded + ' Underweight', tone: 'warning', bmi: rounded, category: 'Underweight', categoryKey: 'underweight' };
             }
             if (rounded < 25) {
-                return { text: 'BMI ' + rounded + ' Normal', tone: 'normal' };
+                return { text: 'BMI ' + rounded + ' Normal', tone: 'normal', bmi: rounded, category: 'Normal', categoryKey: 'normal' };
             }
             if (rounded < 30) {
-                return { text: 'BMI ' + rounded + ' Overweight', tone: 'warning' };
+                return { text: 'BMI ' + rounded + ' Overweight', tone: 'warning', bmi: rounded, category: 'Overweight', categoryKey: 'overweight' };
             }
 
-            return { text: 'BMI ' + rounded + ' Obese', tone: 'danger' };
+            return { text: 'BMI ' + rounded + ' Obese', tone: 'danger', bmi: rounded, category: 'Obese', categoryKey: 'obese' };
+        }
+
+        function formatPounds(value) {
+            return Number(value.toFixed(1)) + ' lbs';
+        }
+
+        function setBmiGaugeClass(card, categoryKey) {
+            if (!card) return;
+            card.classList.remove('is-underweight', 'is-normal', 'is-overweight', 'is-obese');
+            if (categoryKey) {
+                card.classList.add('is-' + categoryKey);
+            }
+        }
+
+        function bmiNeedleDegrees(bmi) {
+            const minBmi = 12;
+            const maxBmi = 45;
+            const clamped = Math.min(maxBmi, Math.max(minBmi, bmi));
+            return -90 + ((clamped - minBmi) / (maxBmi - minBmi)) * 180;
+        }
+
+        function updateBmiGauge(heightFeet, weightPounds, bmiStatus) {
+            const card = document.getElementById('bmiGaugeCard');
+            const title = document.getElementById('bmiGaugeTitle');
+            const category = document.getElementById('bmiGaugeCategory');
+            const value = document.getElementById('bmiGaugeValue');
+            const needle = document.getElementById('bmiGaugeNeedle');
+            const healthyWeight = document.getElementById('bmiHealthyWeight');
+            const weightGoal = document.getElementById('bmiWeightGoal');
+            const bmiPrime = document.getElementById('bmiPrime');
+            const ponderal = document.getElementById('bmiPonderal');
+
+            if (!card || !title || !category || !value || !needle) return;
+
+            if (!bmiStatus || !heightFeet || !weightPounds || heightFeet <= 0 || weightPounds <= 0) {
+                setBmiGaugeClass(card, '');
+                title.textContent = 'BMI pending';
+                category.textContent = 'Enter height and weight';
+                value.textContent = 'BMI --';
+                needle.style.transform = 'translateX(-50%) rotate(-90deg)';
+                if (healthyWeight) healthyWeight.textContent = 'Healthy weight for this height: --';
+                if (weightGoal) weightGoal.textContent = 'Enter height and weight to calculate BMI.';
+                if (bmiPrime) bmiPrime.textContent = 'BMI Prime: --';
+                if (ponderal) ponderal.textContent = 'Ponderal Index: --';
+                return;
+            }
+
+            const heightInches = heightFeet * 12;
+            const healthyMin = (18.5 * heightInches * heightInches) / 703;
+            const healthyMax = (25 * heightInches * heightInches) / 703;
+            const heightMeters = heightFeet * 0.3048;
+            const weightKg = weightPounds * 0.45359237;
+            const ponderalIndex = weightKg / Math.pow(heightMeters, 3);
+            const bmi = bmiStatus.bmi;
+
+            setBmiGaugeClass(card, bmiStatus.categoryKey);
+            title.textContent = 'BMI = ' + bmi + ' kg/m2';
+            category.textContent = '(' + bmiStatus.category + ')';
+            value.textContent = 'BMI = ' + bmi;
+            needle.style.transform = 'translateX(-50%) rotate(' + bmiNeedleDegrees(bmi).toFixed(1) + 'deg)';
+            if (healthyWeight) {
+                healthyWeight.textContent = 'Healthy weight for this height: ' + formatPounds(healthyMin) + ' - ' + formatPounds(healthyMax);
+            }
+            if (weightGoal) {
+                if (bmi < 18.5) {
+                    weightGoal.textContent = 'Gain ' + formatPounds(healthyMin - weightPounds) + ' to reach a BMI of 18.5.';
+                } else if (bmi >= 25) {
+                    weightGoal.textContent = 'Lose ' + formatPounds(weightPounds - healthyMax) + ' to reach a BMI of 25.';
+                } else {
+                    weightGoal.textContent = 'Weight is within the healthy BMI range.';
+                }
+            }
+            if (bmiPrime) bmiPrime.textContent = 'BMI Prime: ' + Number((bmi / 25).toFixed(2));
+            if (ponderal) ponderal.textContent = 'Ponderal Index: ' + Number(ponderalIndex.toFixed(1)) + ' kg/m3';
         }
 
         function classifyBloodPressure(value) {
@@ -8950,6 +9288,7 @@
 
             const heightFeet = parseHeightFeet(heightInput?.value);
             const weightPounds = Number(weightInput?.value);
+            let bmiStatus = null;
 
             if (!heightInput?.value) {
                 setVitalStatus('heightStatus', 'Pending');
@@ -8964,13 +9303,15 @@
             } else if (!Number.isFinite(weightPounds) || weightPounds < 1 || weightPounds > 1100) {
                 setVitalStatus('weightStatus', 'Invalid', 'danger');
             } else {
-                const bmiStatus = classifyBmi(heightFeet, weightPounds);
+                bmiStatus = classifyBmi(heightFeet, weightPounds);
                 if (bmiStatus) {
                     setVitalStatus('weightStatus', bmiStatus.text, bmiStatus.tone);
                 } else {
                     setVitalStatus('weightStatus', 'BMI needs height', 'muted');
                 }
             }
+
+            updateBmiGauge(heightFeet, weightInput?.value ? weightPounds : null, bmiStatus);
 
             const bpStatus = bpInput?.value ? classifyBloodPressure(bpInput.value) : null;
             setVitalStatus('bpStatus', bpInput?.value ? (bpStatus?.text || 'Invalid') : 'Pending', bpStatus?.tone || (bpInput?.value ? 'danger' : 'muted'));
