@@ -823,6 +823,29 @@
         border-color: rgba(250, 204, 21, .14);
         color: #f8fafc;
     }
+    html[data-theme="dark"] .readonly-doc-preview-btn,
+    html[data-theme="dark"] .readonly-doc-preview-frame,
+    html[data-theme="dark"] .readonly-doc-preview-empty {
+        background: rgba(15, 23, 42, .86);
+        border-color: rgba(250, 204, 21, .14);
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .readonly-doc-preview-btn:hover,
+    html[data-theme="dark"] .readonly-doc-preview-btn.is-active {
+        background: rgba(250, 204, 21, .1);
+        border-color: rgba(250, 204, 21, .28);
+        color: #facc15;
+    }
+    html[data-theme="dark"] .resubmission-progress-card {
+        background: #111827;
+        border-color: rgba(250, 204, 21, .28);
+    }
+    html[data-theme="dark"] .resubmission-progress-card strong {
+        color: #facc15;
+    }
+    html[data-theme="dark"] .resubmission-progress-card span {
+        color: #cbd5e1;
+    }
     .health-summary-card {
         position: relative;
         overflow: hidden;
@@ -2454,6 +2477,168 @@
         color: #70131B;
     }
 
+    .readonly-doc-preview-field {
+        grid-column: 1 / -1;
+    }
+
+    .readonly-doc-preview-shell {
+        margin-top: 8px;
+        display: grid;
+        grid-template-columns: minmax(190px, 260px) minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .readonly-doc-preview-list {
+        display: grid;
+        gap: 8px;
+        align-content: start;
+    }
+
+    .readonly-doc-preview-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 10px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 900;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    }
+
+    .readonly-doc-preview-btn:hover,
+    .readonly-doc-preview-btn.is-active {
+        transform: translateY(-1px);
+        border-color: rgba(112, 19, 27, 0.36);
+        background: #fff7ed;
+        color: #70131B;
+    }
+
+    .readonly-doc-preview-frame {
+        min-height: 360px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #f8fafc;
+    }
+
+    .readonly-doc-preview-frame iframe {
+        width: 100%;
+        height: 100%;
+        min-height: 360px;
+        border: 0;
+        background: #ffffff;
+    }
+
+    .readonly-doc-preview-empty {
+        height: 100%;
+        min-height: 360px;
+        display: grid;
+        place-items: center;
+        padding: 16px;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .resubmission-progress-overlay {
+        position: fixed;
+        z-index: 1300;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, 0.58);
+        backdrop-filter: blur(5px);
+    }
+
+    .resubmission-progress-overlay.is-open {
+        display: flex;
+    }
+
+    .resubmission-progress-card {
+        width: min(360px, calc(100vw - 32px));
+        padding: 24px 20px;
+        border: 1px solid rgba(250, 204, 21, 0.38);
+        border-radius: 18px;
+        background: #ffffff;
+        text-align: center;
+        box-shadow: 0 24px 54px rgba(15, 23, 42, 0.3);
+        animation: resubmissionPop 0.34s cubic-bezier(.2, .9, .25, 1.2);
+    }
+
+    .resubmission-progress-mark {
+        width: 68px;
+        height: 68px;
+        margin: 0 auto 12px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background: #70131B;
+        color: #facc15;
+        position: relative;
+    }
+
+    .resubmission-progress-mark::before {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        border-radius: inherit;
+        border: 3px solid rgba(250, 204, 21, 0.28);
+        border-top-color: #facc15;
+        animation: resubmissionSpin 0.82s linear infinite;
+    }
+
+    .resubmission-progress-mark svg {
+        width: 28px;
+        height: 28px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .resubmission-progress-card strong {
+        display: block;
+        color: #70131B;
+        font-size: 18px;
+        font-weight: 900;
+    }
+
+    .resubmission-progress-card span {
+        display: block;
+        margin-top: 6px;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+    @keyframes resubmissionPop {
+        from { opacity: 0; transform: scale(.82) translateY(12px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes resubmissionSpin {
+        to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 760px) {
+        .readonly-doc-preview-shell {
+            grid-template-columns: 1fr;
+        }
+
+        .readonly-resubmission-options {
+            grid-template-columns: 1fr;
+        }
+    }
+
     .verify-approval-btn {
         border-radius: 999px;
         padding: 9px 16px;
@@ -3623,6 +3808,17 @@
                     @php
                         $readonlyHasCondition = $readonlyRecord->hasMedicalCondition();
                         $readonlyReference = $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-';
+                        $pendingComplianceDocs = [
+                            '2x2 Student Photo' => ['key' => 'student_photo', 'path' => $readonlyRecord->student_photo],
+                            'Health Declaration' => ['key' => 'health_declaration', 'path' => $readonlyRecord->health_declaration],
+                            'Medical Certificate' => ['key' => 'medical_certificate', 'path' => $readonlyRecord->medical_certificate],
+                            'Chest X-ray Result' => ['key' => 'chest_xray_result', 'path' => $readonlyRecord->chest_xray_result],
+                            'PWD ID Proof' => ['key' => 'pwd_id_proof', 'path' => $readonlyRecord->pwd_id_proof],
+                            'Medical Assessment Copy' => ['key' => 'medical_assessment_upload', 'path' => $readonlyRecord->medical_assessment_upload],
+                        ];
+                        $pendingComplianceUploadedDocs = collect($pendingComplianceDocs)
+                            ->filter(fn ($document) => filled($document['path']))
+                            ->all();
                     @endphp
                     <article class="readonly-record-card" data-search-text="{{ strtolower(trim((string) (optional($readonlyRecord->user)->name . ' ' . optional($readonlyRecord->user)->email . ' ' . $readonlyReference))) }}">
                         <div class="readonly-record-head">
@@ -3686,13 +3882,37 @@
                                     </form>
                                 </div>
                                 <div class="readonly-field"><span>Last Updated Nurse Tracking Remarks</span><strong>{{ $readonlyRecord->medical_condition_remarks ?: $readonlyRecord->pending_reason ?: '-' }}</strong></div>
+                                <div class="readonly-field readonly-doc-preview-field">
+                                    <span>Uploaded Documents</span>
+                                    <div class="readonly-doc-preview-shell" data-pending-doc-viewer>
+                                        <div class="readonly-doc-preview-list">
+                                            @forelse($pendingComplianceUploadedDocs as $docLabel => $document)
+                                                @php($documentUrl = route('walkin.document', ['healthProfile' => $readonlyRecord->id, 'document' => $document['key']]))
+                                                <button
+                                                    type="button"
+                                                    class="readonly-doc-preview-btn"
+                                                    data-doc-preview-url="{{ $documentUrl }}"
+                                                    data-doc-preview-title="{{ $docLabel }}"
+                                                >
+                                                    <span>{{ $docLabel }}</span>
+                                                    <small>View</small>
+                                                </button>
+                                            @empty
+                                                <div class="readonly-doc-preview-empty">No uploaded documents are available for preview.</div>
+                                            @endforelse
+                                        </div>
+                                        <div class="readonly-doc-preview-frame" data-doc-preview-frame>
+                                            <div class="readonly-doc-preview-empty">Select an uploaded document to preview it here.</div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="readonly-field readonly-resubmission-field">
                                     <span>Document Resubmission</span>
                                     <form
                                         method="POST"
                                         action="{{ route('admin.health_profile.request_resubmission', $readonlyRecord->id) }}"
                                         class="readonly-resubmission-form"
-                                        onsubmit="if (!this.querySelector('input[name=&quot;resubmission_required_documents[]&quot;]:checked')) { alert('Select at least one document for resubmission.'); return false; } return confirm('Request resubmission and remove the selected uploaded document references from this record?');"
+                                        data-readonly-resubmission-form
                                     >
                                         @csrf
                                         <input type="hidden" name="pending_reason" value="{{ $readonlyRecord->pending_reason ?: 'Document Resubmission' }}">
@@ -3753,6 +3973,16 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="resubmission-progress-overlay" id="readonlyResubmissionProgress" aria-hidden="true" aria-live="assertive">
+    <div class="resubmission-progress-card">
+        <div class="resubmission-progress-mark" aria-hidden="true">
+            <x-outline-icon name="clipboard-document-list" />
+        </div>
+        <strong>Preparing Resubmission</strong>
+        <span>Clearing selected document references and notifying the student to upload replacements.</span>
     </div>
 </div>
 
@@ -4148,6 +4378,60 @@
                 window.openHealthReviewFromButton(reviewButton);
             }
         }, true);
+
+        document.addEventListener('click', function (event) {
+            var previewButton = closestMatch(event.target, '[data-doc-preview-url]');
+            if (!previewButton) {
+                return;
+            }
+
+            event.preventDefault();
+            var viewer = closestMatch(previewButton, '[data-pending-doc-viewer]');
+            var frame = viewer ? viewer.querySelector('[data-doc-preview-frame]') : null;
+            var url = previewButton.getAttribute('data-doc-preview-url') || '';
+            var title = previewButton.getAttribute('data-doc-preview-title') || 'Uploaded document';
+
+            if (!frame || !url) {
+                return;
+            }
+
+            viewer.querySelectorAll('[data-doc-preview-url]').forEach(function (button) {
+                button.classList.toggle('is-active', button === previewButton);
+            });
+            frame.innerHTML = '<iframe src="' + escapeValue(url) + '" title="' + escapeValue(title) + '"></iframe>';
+        });
+
+        document.addEventListener('submit', function (event) {
+            var form = closestMatch(event.target, '[data-readonly-resubmission-form]');
+            if (!form || form.dataset.submitting === '1') {
+                return;
+            }
+
+            event.preventDefault();
+            if (!form.querySelector('input[name="resubmission_required_documents[]"]:checked')) {
+                alert('Select at least one document for resubmission.');
+                return;
+            }
+            if (!confirm('Request resubmission and remove the selected uploaded document references from this record?')) {
+                return;
+            }
+
+            var overlay = getNode('readonlyResubmissionProgress');
+            var submitButton = form.querySelector('button[type="submit"]');
+            form.dataset.submitting = '1';
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = 'Submitting...';
+            }
+            if (overlay) {
+                overlay.classList.add('is-open');
+                overlay.setAttribute('aria-hidden', 'false');
+            }
+
+            window.setTimeout(function () {
+                form.submit();
+            }, 700);
+        });
     })();
 
     // Simple search toggle function
