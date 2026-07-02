@@ -6704,7 +6704,7 @@
             <div class="clinic-success-check" aria-hidden="true">
                 <x-outline-icon name="check" />
             </div>
-            <strong>Approved!</strong>
+            <strong id="applicantApprovalOverlayTitle">Approved!</strong>
         </div>
     </div>
 
@@ -8345,6 +8345,7 @@
         };
         const previewOpen     = document.getElementById('applicantDocumentPreviewOpen');
         const approvalOverlay = document.getElementById('applicantApprovalOverlay');
+        const approvalOverlayTitle = document.getElementById('applicantApprovalOverlayTitle');
         const encodeOverlay   = document.getElementById('applicantEncodeOverlay');
         let currentLookupRef  = '';
         let currentDocuments  = [];
@@ -9661,6 +9662,9 @@
             .then(data => {
                 if (data.success) {
                     setStatus('success', data.message || 'Applicant decision saved successfully.');
+                    if (approvalOverlayTitle) {
+                        approvalOverlayTitle.textContent = isPendingDecision ? 'Marked Pending' : 'Approved!';
+                    }
                     approvalOverlay?.classList.add('is-open');
                     approvalOverlay?.setAttribute('aria-hidden', 'false');
                     setTimeout(() => {
@@ -9677,10 +9681,10 @@
                         if (refInput) refInput.value = '';
                     }, 1250);
                 } else {
-                    setStatus('error', data.message || 'Failed to approve applicant.');
+                    setStatus('error', data.message || 'Failed to save applicant decision.');
                 }
             })
-            .catch(() => setStatus('error', 'Unable to approve right now. Please try again.'));
+            .catch(() => setStatus('error', 'Unable to save the applicant decision right now. Please try again.'));
         }
 
         const findingsInputs = document.querySelectorAll('input[name="applicant_findings_status"]');
