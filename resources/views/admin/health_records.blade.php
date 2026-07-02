@@ -824,14 +824,12 @@
         color: #f8fafc;
     }
     html[data-theme="dark"] .readonly-doc-preview-btn,
-    html[data-theme="dark"] .readonly-doc-preview-frame,
     html[data-theme="dark"] .readonly-doc-preview-empty {
         background: rgba(15, 23, 42, .86);
         border-color: rgba(250, 204, 21, .14);
         color: #f8fafc;
     }
-    html[data-theme="dark"] .readonly-doc-preview-btn:hover,
-    html[data-theme="dark"] .readonly-doc-preview-btn.is-active {
+    html[data-theme="dark"] .readonly-doc-preview-btn:hover {
         background: rgba(250, 204, 21, .1);
         border-color: rgba(250, 204, 21, .28);
         color: #facc15;
@@ -2483,15 +2481,12 @@
 
     .readonly-doc-preview-shell {
         margin-top: 8px;
-        display: grid;
-        grid-template-columns: minmax(190px, 260px) minmax(0, 1fr);
-        gap: 12px;
     }
 
     .readonly-doc-preview-list {
         display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 8px;
-        align-content: start;
     }
 
     .readonly-doc-preview-btn {
@@ -2509,39 +2504,24 @@
         font-weight: 900;
         text-align: left;
         cursor: pointer;
+        text-decoration: none;
         transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
     }
 
-    .readonly-doc-preview-btn:hover,
-    .readonly-doc-preview-btn.is-active {
+    .readonly-doc-preview-btn:hover {
         transform: translateY(-1px);
         border-color: rgba(112, 19, 27, 0.36);
         background: #fff7ed;
         color: #70131B;
     }
 
-    .readonly-doc-preview-frame {
-        min-height: 360px;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        overflow: hidden;
-        background: #f8fafc;
-    }
-
-    .readonly-doc-preview-frame iframe {
-        width: 100%;
-        height: 100%;
-        min-height: 360px;
-        border: 0;
-        background: #ffffff;
-    }
-
     .readonly-doc-preview-empty {
-        height: 100%;
-        min-height: 360px;
+        min-height: 52px;
         display: grid;
         place-items: center;
         padding: 16px;
+        border: 1px dashed #cbd5e1;
+        border-radius: 10px;
         color: #64748b;
         font-size: 12px;
         font-weight: 800;
@@ -2630,7 +2610,7 @@
     }
 
     @media (max-width: 760px) {
-        .readonly-doc-preview-shell {
+        .readonly-doc-preview-list {
             grid-template-columns: 1fr;
         }
 
@@ -3884,25 +3864,22 @@
                                 <div class="readonly-field"><span>Last Updated Nurse Tracking Remarks</span><strong>{{ $readonlyRecord->medical_condition_remarks ?: $readonlyRecord->pending_reason ?: '-' }}</strong></div>
                                 <div class="readonly-field readonly-doc-preview-field">
                                     <span>Uploaded Documents</span>
-                                    <div class="readonly-doc-preview-shell" data-pending-doc-viewer>
+                                    <div class="readonly-doc-preview-shell">
                                         <div class="readonly-doc-preview-list">
                                             @forelse($pendingComplianceUploadedDocs as $docLabel => $document)
                                                 @php($documentUrl = route('walkin.document', ['healthProfile' => $readonlyRecord->id, 'document' => $document['key']]))
-                                                <button
-                                                    type="button"
+                                                <a
+                                                    href="{{ $documentUrl }}"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
                                                     class="readonly-doc-preview-btn"
-                                                    data-doc-preview-url="{{ $documentUrl }}"
-                                                    data-doc-preview-title="{{ $docLabel }}"
                                                 >
                                                     <span>{{ $docLabel }}</span>
-                                                    <small>View</small>
-                                                </button>
+                                                    <small>Open</small>
+                                                </a>
                                             @empty
-                                                <div class="readonly-doc-preview-empty">No uploaded documents are available for preview.</div>
+                                                <div class="readonly-doc-preview-empty">No uploaded documents are available.</div>
                                             @endforelse
-                                        </div>
-                                        <div class="readonly-doc-preview-frame" data-doc-preview-frame>
-                                            <div class="readonly-doc-preview-empty">Select an uploaded document to preview it here.</div>
                                         </div>
                                     </div>
                                 </div>
@@ -4378,28 +4355,6 @@
                 window.openHealthReviewFromButton(reviewButton);
             }
         }, true);
-
-        document.addEventListener('click', function (event) {
-            var previewButton = closestMatch(event.target, '[data-doc-preview-url]');
-            if (!previewButton) {
-                return;
-            }
-
-            event.preventDefault();
-            var viewer = closestMatch(previewButton, '[data-pending-doc-viewer]');
-            var frame = viewer ? viewer.querySelector('[data-doc-preview-frame]') : null;
-            var url = previewButton.getAttribute('data-doc-preview-url') || '';
-            var title = previewButton.getAttribute('data-doc-preview-title') || 'Uploaded document';
-
-            if (!frame || !url) {
-                return;
-            }
-
-            viewer.querySelectorAll('[data-doc-preview-url]').forEach(function (button) {
-                button.classList.toggle('is-active', button === previewButton);
-            });
-            frame.innerHTML = '<iframe src="' + escapeValue(url) + '" title="' + escapeValue(title) + '"></iframe>';
-        });
 
         document.addEventListener('submit', function (event) {
             var form = closestMatch(event.target, '[data-readonly-resubmission-form]');
