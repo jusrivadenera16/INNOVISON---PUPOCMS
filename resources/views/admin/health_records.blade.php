@@ -3013,6 +3013,7 @@
                         'physical_assessment_status' => $record->physical_assessment_status ?: 'Not Yet Conducted',
                         'documents_valid' => (bool) $record->documents_valid,
                         'approve_url' => route('admin.update_clearance', $record->id),
+                        'resubmission_url' => route('admin.health_profile.request_resubmission', $record->id),
                         'documents' => [
                             [
                                 'title' => '2x2 Photo',
@@ -3290,6 +3291,7 @@
                             'physical_assessment_status' => $readonlyRecord->physical_assessment_status ?: 'Not Yet Conducted',
                             'documents_valid' => (bool) $readonlyRecord->documents_valid,
                             'approve_url' => route('admin.update_clearance', $readonlyRecord->id),
+                            'resubmission_url' => route('admin.health_profile.request_resubmission', $readonlyRecord->id),
                             'documents' => [
                             [
                                 'title' => '2x2 Photo',
@@ -3384,6 +3386,7 @@
                                         data-review-course="{{ $readonlyCourseDisplay !== '' ? $readonlyCourseDisplay : '-' }}"
                                         data-review-student-id="{{ $readonlyRecord->student_id ?: optional($readonlyRecord->user)->student_id ?: optional($readonlyRecord->user)->student_number ?: '-' }}"
                                         data-review-approve-url="{{ route('admin.update_clearance', $readonlyRecord->id) }}"
+                                        data-review-resubmission-url="{{ route('admin.health_profile.request_resubmission', $readonlyRecord->id) }}"
                                     >
                                         <span>View Info</span>
                                     </button>
@@ -3649,45 +3652,28 @@
                 <div class="verify-condition-grid" id="verificationConditionGrid"></div>
             </div>
 
-            <form method="POST" class="verify-approval-review-form" id="verifyApprovalForm">
+            <form method="POST" class="verify-approval-review-form verify-resubmission-only-form" id="verifyDocumentResubmissionForm">
                 @csrf
-                @method('PUT')
-                <input type="hidden" name="clearance_status" id="verifyClearanceStatus" value="Fully Cleared">
-                <input type="hidden" name="pending_reason" id="verifyPendingReason" value="">
+                <input type="hidden" name="pending_reason" id="verifyDocumentResubmissionReason" value="Document Resubmission">
 
-                <div class="verify-review-grid">
-                    <label class="verify-check-row">
-                        <input type="checkbox" name="documents_valid" id="verifyDocumentsValid" value="1">
-                        <span>
-                            <strong>Documents Valid</strong>
-                            <small>Uploaded files are readable and acceptable.</small>
-                        </span>
-                    </label>
-
-                    <label class="verify-select-field">
-                        <span>Physical Assessment Status</span>
-                        <select name="physical_assessment_status" id="verifyAssessmentStatus" required>
-                            <option value="Not Yet Conducted">Not Yet Conducted</option>
-                            <option value="Completed / Passed">Completed / Passed</option>
-                        </select>
-                    </label>
-                </div>
-
-                <label class="verify-textarea-field">
-                    <span>Nurse Remarks</span>
-                    <textarea id="verifyMedicalRemarks" name="medical_condition_remarks" rows="3" placeholder="Optional clinical remarks or medical-condition notes."></textarea>
+                <label class="verify-check-row verify-resubmission-toggle-row">
+                    <input type="checkbox" id="verifyNeedsDocumentResubmission" value="1">
+                    <span>
+                        <strong>Needs Document Resubmission</strong>
+                        <small>Use this only when uploaded files are blurred, unreadable, unsigned, incorrect, or need replacement.</small>
+                    </span>
                 </label>
 
-                <div class="verify-resubmission-panel" id="verifyResubmissionPanel">
-                    <p class="verify-resubmission-title">Documents Requiring Replacement</p>
+                <div class="verify-resubmission-panel" id="verifyDocumentResubmissionPanel">
+                    <p class="verify-resubmission-title">Documents to Resubmit <span class="required">*</span></p>
                     <div class="verify-resubmission-options">
                         <label class="verify-resubmission-option">
                             <input type="checkbox" name="resubmission_required_documents[]" value="student_photo">
-                            <span>2x2 Student Photo</span>
+                            <span>2x2 Photo</span>
                         </label>
                         <label class="verify-resubmission-option">
                             <input type="checkbox" name="resubmission_required_documents[]" value="health_declaration">
-                            <span>Declaration Form</span>
+                            <span>Health Declaration</span>
                         </label>
                         <label class="verify-resubmission-option">
                             <input type="checkbox" name="resubmission_required_documents[]" value="medical_certificate">
@@ -3702,34 +3688,19 @@
                             <span>PWD ID Proof</span>
                         </label>
                     </div>
-                </div>
-
-                <div class="verify-pending-reason-row">
-                    <label class="verify-select-field">
-                        <span>Pending Reason</span>
-                        <select id="verifyPendingReasonSelect">
-                            <option value="">Select reason when pending or resubmission is needed</option>
-                            <option value="Document Resubmission">Document Resubmission</option>
-                            <option value="For Physician Evaluation">For Physician Evaluation</option>
-                            <option value="others">Others</option>
-                        </select>
-                    </label>
-                    <label class="verify-text-field" id="verifyOtherReasonField">
-                        <span>Other Pending Reason</span>
-                        <input type="text" id="verifyPendingReasonOther" maxlength="1000" placeholder="Type the reason">
+                    <label class="verify-textarea-field">
+                        <span>Remarks <small>(Optional)</small></span>
+                        <textarea id="verifyDocumentResubmissionRemarks" rows="3" placeholder="Optional note for the student or clinic tracking."></textarea>
                     </label>
                 </div>
 
-                <div class="verify-approval-actions">
-                    <button type="button" class="verify-approval-btn verify-approval-btn-cancel" id="verifyApprovalCancelBtn">Cancel</button>
-                    <button type="submit" class="verify-approval-btn verify-approval-btn-pending" id="verifyPendingBtn">Save Pending</button>
-                    <button type="submit" class="verify-approval-btn verify-approval-btn-resubmit" id="verifyResubmissionBtn">Request Resubmission</button>
-                    <button type="submit" class="verify-approval-btn verify-approval-btn-approve" id="verifyApprovalApproveBtn">
-                        <x-outline-icon name="check" />
-                        Approve / Issue
+                <div class="verify-approval-actions verify-resubmission-only-actions">
+                    <button type="submit" class="verify-approval-btn verify-approval-btn-resubmit" id="verifyDocumentResubmissionSubmit" disabled>
+                        Request Resubmission
                     </button>
                 </div>
             </form>
+
         </div>
     </div>
 </div>
@@ -3914,6 +3885,7 @@
             payload.course = filledValue(payload.course, button.getAttribute('data-review-course'));
             payload.student_id = filledValue(payload.student_id, button.getAttribute('data-review-student-id'));
             payload.approve_url = filledValue(payload.approve_url, button.getAttribute('data-review-approve-url'));
+            payload.resubmission_url = filledValue(payload.resubmission_url, button.getAttribute('data-review-resubmission-url'));
 
             setText('verifyApprovalStudentName', payload.name || '-');
             setText('verifyApprovalStudentNumber', payload.email || '-');
@@ -3923,6 +3895,35 @@
             if (form) {
                 form.setAttribute('action', payload.approve_url || '');
             }
+
+            var documentResubmissionForm = getNode('verifyDocumentResubmissionForm');
+            var documentResubmissionToggle = getNode('verifyNeedsDocumentResubmission');
+            var documentResubmissionPanel = getNode('verifyDocumentResubmissionPanel');
+            var documentResubmissionSubmit = getNode('verifyDocumentResubmissionSubmit');
+            var documentResubmissionRemarks = getNode('verifyDocumentResubmissionRemarks');
+            var documentResubmissionReason = getNode('verifyDocumentResubmissionReason');
+
+            if (documentResubmissionForm) {
+                documentResubmissionForm.setAttribute('action', payload.resubmission_url || '');
+            }
+            if (documentResubmissionToggle) {
+                documentResubmissionToggle.checked = false;
+            }
+            if (documentResubmissionPanel) {
+                documentResubmissionPanel.classList.remove('is-open');
+            }
+            if (documentResubmissionSubmit) {
+                documentResubmissionSubmit.disabled = true;
+            }
+            if (documentResubmissionRemarks) {
+                documentResubmissionRemarks.value = '';
+            }
+            if (documentResubmissionReason) {
+                documentResubmissionReason.value = 'Document Resubmission';
+            }
+            Array.prototype.forEach.call(document.querySelectorAll('#verifyDocumentResubmissionForm input[name="resubmission_required_documents[]"]'), function (input) {
+                input.checked = false;
+            });
 
             setValue('verifyMedicalRemarks', payload.medical_condition_remarks || '');
             setValue('verifyPendingReason', '');
@@ -4051,6 +4052,52 @@
     const verificationDocsToggle = document.getElementById('verificationDocsToggle');
     const verificationDocsGrid = document.getElementById('verificationDocsGrid');
     const verifyResubmissionInputs = Array.from(document.querySelectorAll('input[name="resubmission_required_documents[]"]'));
+    const verifyDocumentResubmissionForm = document.getElementById('verifyDocumentResubmissionForm');
+    const verifyNeedsDocumentResubmission = document.getElementById('verifyNeedsDocumentResubmission');
+    const verifyDocumentResubmissionPanel = document.getElementById('verifyDocumentResubmissionPanel');
+    const verifyDocumentResubmissionSubmit = document.getElementById('verifyDocumentResubmissionSubmit');
+    const verifyDocumentResubmissionRemarks = document.getElementById('verifyDocumentResubmissionRemarks');
+    const verifyDocumentResubmissionReason = document.getElementById('verifyDocumentResubmissionReason');
+    const verifyDocumentResubmissionInputs = Array.from(document.querySelectorAll('#verifyDocumentResubmissionForm input[name="resubmission_required_documents[]"]'));
+
+    function syncDocumentResubmissionReason() {
+        if (!verifyDocumentResubmissionReason) {
+            return;
+        }
+
+        const remarks = verifyDocumentResubmissionRemarks ? verifyDocumentResubmissionRemarks.value.trim() : '';
+        verifyDocumentResubmissionReason.value = remarks !== ''
+            ? 'Document Resubmission: ' + remarks
+            : 'Document Resubmission';
+    }
+
+    function resetDocumentResubmissionForm(actionUrl) {
+        if (verifyDocumentResubmissionForm) {
+            verifyDocumentResubmissionForm.setAttribute('action', actionUrl || '');
+        }
+
+        if (verifyNeedsDocumentResubmission) {
+            verifyNeedsDocumentResubmission.checked = false;
+        }
+
+        if (verifyDocumentResubmissionPanel) {
+            verifyDocumentResubmissionPanel.classList.remove('is-open');
+        }
+
+        if (verifyDocumentResubmissionSubmit) {
+            verifyDocumentResubmissionSubmit.disabled = true;
+        }
+
+        if (verifyDocumentResubmissionRemarks) {
+            verifyDocumentResubmissionRemarks.value = '';
+        }
+
+        verifyDocumentResubmissionInputs.forEach(function (input) {
+            input.checked = false;
+        });
+
+        syncDocumentResubmissionReason();
+    }
 
     function setHealthFilterOpenState(isOpen) {
         if (!healthFilterToggle || !healthFilterModal) {
@@ -4204,6 +4251,67 @@
             event.stopPropagation();
             if (event.target === verifyApprovalModal) {
                 setVerifyApprovalModalOpenState(false);
+            }
+        });
+    }
+
+    if (verifyNeedsDocumentResubmission) {
+        verifyNeedsDocumentResubmission.addEventListener('change', function () {
+            const isChecked = verifyNeedsDocumentResubmission.checked;
+
+            if (verifyDocumentResubmissionPanel) {
+                verifyDocumentResubmissionPanel.classList.toggle('is-open', isChecked);
+            }
+
+            if (verifyDocumentResubmissionSubmit) {
+                verifyDocumentResubmissionSubmit.disabled = !isChecked;
+            }
+
+            if (!isChecked) {
+                verifyDocumentResubmissionInputs.forEach(function (input) {
+                    input.checked = false;
+                });
+            }
+
+            syncDocumentResubmissionReason();
+        });
+    }
+
+    if (verifyDocumentResubmissionRemarks) {
+        verifyDocumentResubmissionRemarks.addEventListener('input', syncDocumentResubmissionReason);
+    }
+
+    if (verifyDocumentResubmissionForm) {
+        verifyDocumentResubmissionForm.addEventListener('submit', function (event) {
+            syncDocumentResubmissionReason();
+
+            if (!verifyNeedsDocumentResubmission || !verifyNeedsDocumentResubmission.checked) {
+                event.preventDefault();
+                if (verifyNeedsDocumentResubmission) {
+                    verifyNeedsDocumentResubmission.setCustomValidity('Check Needs Document Resubmission first.');
+                    verifyNeedsDocumentResubmission.reportValidity();
+                    verifyNeedsDocumentResubmission.setCustomValidity('');
+                }
+                return;
+            }
+
+            const hasSelectedDocument = verifyDocumentResubmissionInputs.some(function (input) {
+                return input.checked;
+            });
+
+            if (!hasSelectedDocument) {
+                event.preventDefault();
+                const firstInput = verifyDocumentResubmissionInputs[0];
+                if (firstInput) {
+                    firstInput.setCustomValidity('Select at least one document to resubmit.');
+                    firstInput.reportValidity();
+                    firstInput.setCustomValidity('');
+                }
+                return;
+            }
+
+            if (!verifyDocumentResubmissionForm.getAttribute('action')) {
+                event.preventDefault();
             }
         });
     }
@@ -4538,6 +4646,7 @@
             payload.course = reviewFallbackValue(payload.course, button.getAttribute('data-review-course'));
             payload.student_id = reviewFallbackValue(payload.student_id, button.getAttribute('data-review-student-id'));
             payload.approve_url = reviewFallbackValue(payload.approve_url, button.getAttribute('data-review-approve-url'));
+            payload.resubmission_url = reviewFallbackValue(payload.resubmission_url, button.getAttribute('data-review-resubmission-url'));
         }
 
         if (verifyApprovalStudentName) {
@@ -4555,6 +4664,7 @@
         if (verifyApprovalForm) {
             verifyApprovalForm.setAttribute('action', payload.approve_url || '');
         }
+        resetDocumentResubmissionForm(payload.resubmission_url || '');
         if (verifyMedicalRemarks) {
             verifyMedicalRemarks.value = payload.medical_condition_remarks || '';
         }
