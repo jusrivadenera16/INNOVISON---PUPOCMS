@@ -810,6 +810,19 @@
         background: rgba(15, 23, 42, .72);
         color: #94a3b8;
     }
+    html[data-theme="dark"] .readonly-resubmission-summary {
+        background: rgba(250, 204, 21, .1);
+        border-color: rgba(250, 204, 21, .24);
+        color: #facc15;
+    }
+    html[data-theme="dark"] .readonly-resubmission-help {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .readonly-resubmission-option {
+        background: rgba(15, 23, 42, .86);
+        border-color: rgba(250, 204, 21, .14);
+        color: #f8fafc;
+    }
     .health-summary-card {
         position: relative;
         overflow: hidden;
@@ -2352,6 +2365,95 @@
         border-color: #f59e0b;
     }
 
+    .readonly-resubmission-field {
+        grid-column: 1 / -1;
+    }
+
+    .readonly-resubmission-form {
+        margin: 0;
+    }
+
+    .readonly-resubmission-box {
+        display: block;
+    }
+
+    .readonly-resubmission-summary {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 12px;
+        border: 1px solid rgba(202, 138, 4, 0.34);
+        border-radius: 12px;
+        background: #fffbeb;
+        color: #92400e;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        list-style: none;
+    }
+
+    .readonly-resubmission-summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .readonly-resubmission-summary svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .readonly-resubmission-panel {
+        margin-top: 12px;
+        display: grid;
+        gap: 10px;
+    }
+
+    .readonly-resubmission-help {
+        margin: 0;
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.45;
+    }
+
+    .readonly-resubmission-options {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .readonly-resubmission-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .readonly-resubmission-submit {
+        justify-self: start;
+        border: 0;
+        border-radius: 999px;
+        background: #70131B;
+        color: #facc15;
+        padding: 10px 16px;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+    }
+
+    .readonly-resubmission-submit:hover {
+        transform: translateY(-1px);
+        background: #facc15;
+        color: #70131B;
+    }
+
     .verify-approval-btn {
         border-radius: 999px;
         padding: 9px 16px;
@@ -3584,6 +3686,52 @@
                                     </form>
                                 </div>
                                 <div class="readonly-field"><span>Last Updated Nurse Tracking Remarks</span><strong>{{ $readonlyRecord->medical_condition_remarks ?: $readonlyRecord->pending_reason ?: '-' }}</strong></div>
+                                <div class="readonly-field readonly-resubmission-field">
+                                    <span>Document Resubmission</span>
+                                    <form
+                                        method="POST"
+                                        action="{{ route('admin.health_profile.request_resubmission', $readonlyRecord->id) }}"
+                                        class="readonly-resubmission-form"
+                                        onsubmit="if (!this.querySelector('input[name=&quot;resubmission_required_documents[]&quot;]:checked')) { alert('Select at least one document for resubmission.'); return false; } return confirm('Request resubmission and remove the selected uploaded document references from this record?');"
+                                    >
+                                        @csrf
+                                        <input type="hidden" name="pending_reason" value="{{ $readonlyRecord->pending_reason ?: 'Document Resubmission' }}">
+                                        <input type="hidden" name="clear_uploaded_documents" value="1">
+                                        <input type="hidden" name="return_to" value="health_records">
+                                        <details class="readonly-resubmission-box">
+                                            <summary class="readonly-resubmission-summary">
+                                                <x-outline-icon name="clipboard-document-list" />
+                                                Resubmission
+                                            </summary>
+                                            <div class="readonly-resubmission-panel">
+                                                <p class="readonly-resubmission-help">Select the file/s that the student must upload again. Confirming will clear the selected document reference from the database and mark it for resubmission.</p>
+                                                <div class="readonly-resubmission-options">
+                                                    <label class="readonly-resubmission-option">
+                                                        <input type="checkbox" name="resubmission_required_documents[]" value="student_photo">
+                                                        <span>2x2 Photo</span>
+                                                    </label>
+                                                    <label class="readonly-resubmission-option">
+                                                        <input type="checkbox" name="resubmission_required_documents[]" value="health_declaration">
+                                                        <span>Health Declaration</span>
+                                                    </label>
+                                                    <label class="readonly-resubmission-option">
+                                                        <input type="checkbox" name="resubmission_required_documents[]" value="medical_certificate">
+                                                        <span>Medical Certificate</span>
+                                                    </label>
+                                                    <label class="readonly-resubmission-option">
+                                                        <input type="checkbox" name="resubmission_required_documents[]" value="chest_xray_result">
+                                                        <span>Chest X-ray Result</span>
+                                                    </label>
+                                                    <label class="readonly-resubmission-option">
+                                                        <input type="checkbox" name="resubmission_required_documents[]" value="pwd_id_proof">
+                                                        <span>PWD ID Proof</span>
+                                                    </label>
+                                                </div>
+                                                <button type="submit" class="readonly-resubmission-submit">Confirm Resubmission</button>
+                                            </div>
+                                        </details>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </article>

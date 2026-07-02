@@ -1670,10 +1670,19 @@ public function updateClearance(Request $request, $id)
                 'chest_xray_result',
                 'pwd_id_proof',
             ])],
+            'clear_uploaded_documents' => ['nullable', 'boolean'],
+            'return_to' => ['nullable', 'string', Rule::in(['health_records', 'show_health'])],
         ]);
 
         $record = HealthProfile::with('user')->findOrFail($id);
         $requestedDocuments = array_values(array_unique((array) $validated['resubmission_required_documents']));
+        $documentColumns = [
+            'student_photo' => 'student_photo',
+            'health_declaration' => 'health_declaration',
+            'medical_certificate' => 'medical_certificate',
+            'chest_xray_result' => 'chest_xray_result',
+            'pwd_id_proof' => 'pwd_id_proof',
+        ];
 
         $record->clearance_status = 'Pending Resubmission';
         $record->pending_reason = trim((string) $validated['pending_reason']);
@@ -1681,6 +1690,15 @@ public function updateClearance(Request $request, $id)
         $record->resubmission_required_documents = $requestedDocuments;
         $record->resubmission_requested_at = now();
         $record->resubmitted_at = null;
+
+        if ($request->boolean('clear_uploaded_documents')) {
+            foreach ($requestedDocuments as $documentKey) {
+                $column = $documentColumns[$documentKey] ?? null;
+                if ($column) {
+                    $record->{$column} = null;
+                }
+            }
+        }
 
         $record->save();
 
@@ -1704,9 +1722,15 @@ public function updateClearance(Request $request, $id)
             'ip_address' => request()->ip(),
         ]);
 
-        return redirect()
-            ->route('admin.show_health', $record->id)
-            ->with('success', 'Replacement file request sent. The student will see the reupload prompt in Health Records.');
+        $message = $request->boolean('clear_uploaded_documents')
+            ? 'Replacement file request sent. Selected uploaded document references were removed from the record.'
+            : 'Replacement file request sent. The student will see the reupload prompt in Health Records.';
+
+        $redirect = ($validated['return_to'] ?? 'show_health') === 'health_records'
+            ? redirect()->route('admin.health_records', ['tab' => 'pending_compliance'])
+            : redirect()->route('admin.show_health', $record->id);
+
+        return $redirect->with('success', $message);
     }
 
     public function markHealthProfileForFinalReview(Request $request, $id)
