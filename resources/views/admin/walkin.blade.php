@@ -4119,6 +4119,58 @@
         width: 100%;
     }
 
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-file-actions {
+        position: sticky;
+        top: 0;
+        z-index: 9;
+        align-self: stretch;
+        padding: 10px 0;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(10px);
+    }
+
+    .applicant-pending-history-wrap {
+        position: relative;
+    }
+
+    .applicant-pending-history-bubble {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 10px);
+        z-index: 20;
+        width: min(320px, 80vw);
+        padding: 14px;
+        border: 1px solid rgba(112, 19, 27, 0.18);
+        border-radius: 14px;
+        background: #fff7ed;
+        color: #1f2937;
+        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+    }
+
+    .applicant-pending-history-wrap.is-open .applicant-pending-history-bubble {
+        display: grid;
+        gap: 10px;
+    }
+
+    .applicant-pending-history-bubble span {
+        display: block;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: #7f1d2d;
+    }
+
+    .applicant-pending-history-bubble strong {
+        display: block;
+        margin-top: 3px;
+        color: #111827;
+        font-size: 13px;
+        line-height: 1.4;
+        word-break: break-word;
+    }
+
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-file-actions {
         display: flex;
         justify-content: flex-start;
@@ -6658,7 +6710,7 @@
                     <div class="applicant-file-actions" id="applicantFileActions">
                         <button type="button" id="btnViewApplicantInformation" class="applicant-documents-trigger applicant-file-action">
                             <x-outline-icon name="user-circle" />
-                            <span data-information-button-label>Personal Information</span>
+                            <span data-information-button-label>Health Form Information</span>
                         </button>
                         <button type="button" id="btnViewMedicalCondition" class="applicant-documents-trigger applicant-file-action">
                             <x-outline-icon name="clipboard-document-list" />
@@ -6669,6 +6721,22 @@
                             <span>Uploaded Documents</span>
                             <span class="applicant-documents-count" id="applicantDocumentsCount">0</span>
                         </button>
+                        <div class="applicant-pending-history-wrap" id="applicantPendingHistoryWrap">
+                            <button type="button" id="btnViewPendingHistory" class="applicant-documents-trigger applicant-file-action">
+                                <x-outline-icon name="clipboard-document-list" />
+                                <span>Pending History</span>
+                            </button>
+                            <div class="applicant-pending-history-bubble" id="applicantPendingHistoryBubble" role="status">
+                                <div>
+                                    <span>Pending Reason</span>
+                                    <strong id="applicantPendingHistoryReason">-</strong>
+                                </div>
+                                <div>
+                                    <span>Other Pending Reason</span>
+                                    <strong id="applicantPendingHistoryOther">-</strong>
+                                </div>
+                            </div>
+                        </div>
                         <button type="button" id="btnViewSavedAssessment" class="applicant-documents-trigger applicant-file-action">
                             <x-outline-icon name="clipboard-document-list" />
                             <span>View Saved Review</span>
@@ -8582,6 +8650,10 @@
         const viewConditionReasons = document.getElementById('applicantViewConditionReasons');
         const viewConditionRemarks = document.getElementById('applicantViewConditionRemarks');
         const documentsButton = document.getElementById('btnViewApplicantDocuments');
+        const pendingHistoryWrap = document.getElementById('applicantPendingHistoryWrap');
+        const pendingHistoryButton = document.getElementById('btnViewPendingHistory');
+        const pendingHistoryReason = document.getElementById('applicantPendingHistoryReason');
+        const pendingHistoryOther = document.getElementById('applicantPendingHistoryOther');
         const savedAssessmentButton = document.getElementById('btnViewSavedAssessment');
         const copyReferenceButton = document.getElementById('copyApplicantReference');
         const documentsCount  = document.getElementById('applicantDocumentsCount');
@@ -8875,7 +8947,7 @@
             if (informationButton) {
                 informationButton.classList.remove('is-visible');
                 const label = informationButton.querySelector('[data-information-button-label]');
-                if (label) label.textContent = 'Personal Information';
+                if (label) label.textContent = 'Health Form Information';
                 informationButton.setAttribute('aria-expanded', 'false');
             }
             if (medicalConditionButton) {
@@ -8889,6 +8961,13 @@
                 conditionBadge.textContent = 'Condition: No Medical Condition';
             }
             if (documentsButton) documentsButton.classList.remove('is-visible');
+            if (pendingHistoryWrap) pendingHistoryWrap.classList.remove('is-open');
+            if (pendingHistoryButton) {
+                pendingHistoryButton.classList.remove('is-visible');
+                pendingHistoryButton.setAttribute('aria-expanded', 'false');
+            }
+            if (pendingHistoryReason) pendingHistoryReason.textContent = '-';
+            if (pendingHistoryOther) pendingHistoryOther.textContent = '-';
             if (savedAssessmentButton) savedAssessmentButton.classList.remove('is-visible');
             if (savedAssessmentModal) {
                 savedAssessmentModal.classList.remove('show');
@@ -9084,6 +9163,32 @@
             }
             if (typeof validateVitals === 'function') {
                 validateVitals();
+            }
+        }
+
+        function renderPendingHistory(review) {
+            const savedReview = review && typeof review === 'object' ? review : {};
+            const pendingReasons = [];
+
+            if (savedReview.incomplete_requirements) pendingReasons.push('Document Resubmission');
+            if (savedReview.needs_physician_evaluation) pendingReasons.push('For Physician Evaluation');
+            if (savedReview.needs_further_evaluation) pendingReasons.push('For Further Evaluation');
+            if (savedReview.needs_health_form_correction) pendingReasons.push('Health Form Correction');
+            if (savedReview.other_pending_reason) pendingReasons.push('Others');
+
+            const remarks = String(savedReview.condition_remarks || savedReview.pending_remarks || '').trim();
+            const otherReason = String(savedReview.other_pending_reason || '').trim();
+            const hasHistory = pendingReasons.length > 0 || remarks !== '' || otherReason !== '';
+
+            if (pendingHistoryReason) pendingHistoryReason.textContent = pendingReasons.length ? pendingReasons.join(', ') : '-';
+            if (pendingHistoryOther) {
+                const otherText = [otherReason, remarks].filter(Boolean).join(otherReason && remarks ? ' - ' : '');
+                pendingHistoryOther.textContent = otherText || '-';
+            }
+            if (pendingHistoryWrap) pendingHistoryWrap.classList.remove('is-open');
+            if (pendingHistoryButton) {
+                pendingHistoryButton.classList.toggle('is-visible', hasHistory && isFinalReviewWorkflow());
+                pendingHistoryButton.setAttribute('aria-expanded', 'false');
             }
         }
 
@@ -9524,7 +9629,7 @@
                 informationButton.classList.add('is-visible');
                 informationButton.setAttribute('aria-expanded', 'false');
                 const label = informationButton.querySelector('[data-information-button-label]');
-                if (label) label.textContent = 'Personal Information';
+                if (label) label.textContent = 'Health Form Information';
             }
             if (medicalConditionButton) {
                 medicalConditionButton.classList.remove('is-visible');
@@ -9560,6 +9665,7 @@
             if (savedAssessmentButton) {
                 savedAssessmentButton.classList.toggle('is-visible', hasSavedReview);
             }
+            renderPendingHistory(currentAssessmentReview);
 
             const medicalConditionSection = document.querySelector('.applicant-medical-condition-section');
             if (medicalConditionSection) {
@@ -10184,6 +10290,40 @@
             }
         }
 
+        function mirrorAssessmentRemarks(sourceId) {
+            const source = document.getElementById(sourceId);
+            if (!source) return;
+
+            const value = String(source.value || '');
+            if (value.trim() === '') return;
+
+            ['applicantNormalRemarks', 'applicantFindingRemarks', 'applicantConditionRemarks'].forEach(function (id) {
+                const field = document.getElementById(id);
+                if (!field || field === source) return;
+                if (String(field.value || '').trim() === '') {
+                    field.value = value;
+                }
+            });
+        }
+
+        function carryAssessmentRemarksForCurrentChoice() {
+            const selectedFinding = document.querySelector('input[name="applicant_findings_status"]:checked')?.value || '';
+            const selectedDecision = document.querySelector('input[name="applicant_clearance_decision"]:checked')?.value || '';
+            const normalRemarks = document.getElementById('applicantNormalRemarks');
+            const findingRemarks = document.getElementById('applicantFindingRemarks');
+            const pendingRemarks = document.getElementById('applicantConditionRemarks');
+
+            if (selectedFinding === 'With Findings' && findingRemarks && String(findingRemarks.value || '').trim() === '') {
+                findingRemarks.value = normalRemarks?.value || pendingRemarks?.value || '';
+            }
+            if (selectedFinding === 'No Findings / Normal' && normalRemarks && String(normalRemarks.value || '').trim() === '') {
+                normalRemarks.value = findingRemarks?.value || pendingRemarks?.value || '';
+            }
+            if (selectedDecision === 'pending' && pendingRemarks && String(pendingRemarks.value || '').trim() === '') {
+                pendingRemarks.value = findingRemarks?.value || normalRemarks?.value || '';
+            }
+        }
+
         function syncFindingsReviewFields() {
             const selectedFinding = document.querySelector('input[name="applicant_findings_status"]:checked')?.value || '';
             let selectedDecision = document.querySelector('input[name="applicant_clearance_decision"]:checked')?.value || '';
@@ -10201,6 +10341,7 @@
             const hasMedicalCondition = Boolean(document.getElementById('applicantHasMedicalCondition')?.checked);
             const hasIncompleteRequirements = Boolean(document.getElementById('applicantIncompleteRequirements')?.checked);
             const hasOtherPendingReason = Boolean(document.getElementById('applicantOtherPendingReason')?.checked);
+            carryAssessmentRemarksForCurrentChoice();
 
             if (clearanceDecisionFields) {
                 clearanceDecisionFields.style.display = hasReviewResult ? 'block' : 'none';
@@ -10229,9 +10370,7 @@
 
             if (!hasFindings) {
                 const conditionInput = document.getElementById('applicantMedicalCondition');
-                const findingRemarks = document.getElementById('applicantFindingRemarks');
                 if (conditionInput) conditionInput.value = '';
-                if (findingRemarks) findingRemarks.value = '';
                 const conditionToggle = document.getElementById('applicantHasMedicalCondition');
                 if (conditionToggle) conditionToggle.checked = false;
             } else {
@@ -10246,15 +10385,11 @@
                     if (input) input.checked = false;
                 });
                 const otherPendingReason = document.getElementById('applicantOtherPendingReasonText');
-                const pendingRemarks = document.getElementById('applicantConditionRemarks');
                 if (otherPendingReason) otherPendingReason.value = '';
-                if (pendingRemarks) pendingRemarks.value = '';
                 document.querySelectorAll('input[name="resubmission_required_documents[]"]').forEach(function (input) {
                     input.checked = false;
                 });
             } else {
-                const findingRemarks = document.getElementById('applicantFindingRemarks');
-                if (findingRemarks) findingRemarks.value = '';
                 if (!hasOtherPendingReason) {
                     const otherPendingReason = document.getElementById('applicantOtherPendingReasonText');
                     if (otherPendingReason) otherPendingReason.value = '';
@@ -10264,10 +10399,6 @@
                         input.checked = false;
                     });
                 }
-            }
-            if (!hasNormalResult) {
-                const normalRemarks = document.getElementById('applicantNormalRemarks');
-                if (normalRemarks) normalRemarks.value = '';
             }
 
             if (findBtn && isApprovalMode) {
@@ -10283,6 +10414,14 @@
         });
         pendingReasonInputs.forEach(function (input) {
             input.addEventListener('change', syncFindingsReviewFields);
+        });
+        ['applicantNormalRemarks', 'applicantFindingRemarks', 'applicantConditionRemarks'].forEach(function (id) {
+            const field = document.getElementById(id);
+            if (field) {
+                field.addEventListener('input', function () {
+                    mirrorAssessmentRemarks(id);
+                });
+            }
         });
         covidPositiveInputs.forEach(function (input) {
             input.addEventListener('change', syncCovidPositiveFields);
@@ -10564,7 +10703,7 @@
             informationButton.setAttribute('aria-expanded', willShow ? 'true' : 'false');
 
             const label = informationButton.querySelector('[data-information-button-label]');
-            if (label) label.textContent = willShow ? 'Hide Personal Information' : 'Personal Information';
+            if (label) label.textContent = willShow ? 'Hide Health Form Information' : 'Health Form Information';
 
             if (willShow) {
                 informationDetails.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -10588,6 +10727,21 @@
         if (documentsButton) documentsButton.addEventListener('click', function () {
             if (documentsModal) documentsModal.classList.add('show');
         });
+        if (pendingHistoryButton && pendingHistoryWrap) {
+            pendingHistoryButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                const willShow = !pendingHistoryWrap.classList.contains('is-open');
+                pendingHistoryWrap.classList.toggle('is-open', willShow);
+                pendingHistoryButton.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+            });
+            document.addEventListener('click', function (event) {
+                if (!pendingHistoryWrap.classList.contains('is-open')) return;
+                if (pendingHistoryWrap.contains(event.target)) return;
+                pendingHistoryWrap.classList.remove('is-open');
+                pendingHistoryButton.setAttribute('aria-expanded', 'false');
+            });
+        }
         if (savedAssessmentButton) savedAssessmentButton.addEventListener('click', function () {
             if (!hasSavedAssessmentReview(currentAssessmentReview) || !savedAssessmentModal) return;
             savedAssessmentModal.classList.add('show');

@@ -3219,7 +3219,7 @@
                 <th>Medical Condition</th>
                 <th>Clearance Status</th>
                 <th>PUPTAS Status</th>
-                <th>Submitted At</th>
+                <th>Approved At</th>
                 <th style="text-align: center;">Actions</th>
             </tr>
         </thead>
@@ -3384,7 +3384,7 @@
                     </td>
 
                     <td style="color: #94a3b8; font-size: 12px;">
-                        {{ $record->created_at->format('M d, Y') }}
+                        {{ $record->verified_at ? \Carbon\Carbon::parse($record->verified_at)->format('M d, Y g:i A') : '-' }}
                     </td>
 
                     <td style="text-align: center;">
