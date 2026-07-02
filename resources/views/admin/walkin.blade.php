@@ -5192,55 +5192,62 @@
 
     .bmi-gauge-layout {
         display: grid;
-        grid-template-columns: minmax(260px, 420px) minmax(220px, 1fr);
+        grid-template-columns: minmax(240px, 360px) minmax(240px, 1fr);
         align-items: center;
         justify-content: center;
-        gap: 18px;
+        gap: 20px;
+        max-width: 820px;
+        margin: 0 auto;
     }
 
     .bmi-gauge-meter {
         position: relative;
-        width: min(420px, 100%);
-        aspect-ratio: 2 / 1.08;
+        width: min(360px, 100%);
+        aspect-ratio: 420 / 245;
         margin: 0 auto;
-        overflow: hidden;
+        overflow: visible;
     }
 
-    .bmi-gauge-arc {
+    .bmi-gauge-svg {
         position: absolute;
-        left: 4%;
-        right: 4%;
-        bottom: 0;
-        height: 184%;
-        border-radius: 999px 999px 0 0;
-        background: conic-gradient(
-            from 270deg at 50% 100%,
-            #dc2626 0deg 35deg,
-            #facc15 35deg 49deg,
-            #059669 49deg 76deg,
-            #fde047 76deg 116deg,
-            #d88487 116deg 148deg,
-            #b91c1c 148deg 180deg,
-            transparent 180deg 360deg
-        );
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
     }
 
-    .bmi-gauge-arc::after {
-        content: "";
-        position: absolute;
-        left: 17%;
-        right: 17%;
-        bottom: 0;
-        height: 66%;
-        border-radius: 999px 999px 0 0;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
+    .bmi-gauge-segment {
+        stroke: none;
+    }
+
+    .bmi-gauge-segment.is-low {
+        fill: #dc2626;
+    }
+
+    .bmi-gauge-segment.is-under {
+        fill: #facc15;
+    }
+
+    .bmi-gauge-segment.is-normal {
+        fill: #059669;
+    }
+
+    .bmi-gauge-segment.is-over {
+        fill: #fde047;
+    }
+
+    .bmi-gauge-segment.is-obese-start {
+        fill: #d88487;
+    }
+
+    .bmi-gauge-segment.is-obese {
+        fill: #b91c1c;
     }
 
     .bmi-gauge-needle {
         position: absolute;
         left: 50%;
-        bottom: 11px;
+        bottom: 16.3%;
         width: 4px;
         height: 43%;
         border-radius: 999px;
@@ -5248,7 +5255,7 @@
         transform: translateX(-50%) rotate(-90deg);
         transform-origin: 50% 100%;
         transition: transform 520ms cubic-bezier(.22, .9, .28, 1.12);
-        z-index: 4;
+        z-index: 3;
     }
 
     .bmi-gauge-needle::before {
@@ -5267,60 +5274,35 @@
     .bmi-gauge-pivot {
         position: absolute;
         left: 50%;
-        bottom: 5px;
+        bottom: calc(16.3% - 6.5px);
         width: 13px;
         height: 13px;
         border-radius: 999px;
         background: #737373;
         transform: translateX(-50%);
-        z-index: 5;
+        z-index: 6;
     }
 
     .bmi-gauge-value {
         position: absolute;
         left: 50%;
-        bottom: 17%;
+        bottom: 25%;
         transform: translateX(-50%);
         color: #020617;
         font-size: clamp(22px, 6vw, 38px);
         font-weight: 900;
         line-height: 1;
         white-space: nowrap;
-        z-index: 3;
+        z-index: 5;
     }
 
-    .bmi-gauge-label {
-        position: absolute;
-        z-index: 4;
+    .bmi-gauge-svg-label {
         color: #0f172a;
-        font-size: 12px;
+        fill: currentColor;
+        font-size: 14px;
         font-weight: 800;
-        white-space: nowrap;
         pointer-events: none;
-    }
-
-    .bmi-gauge-label-under {
-        left: 0;
-        bottom: 34%;
-        transform: rotate(-72deg);
-    }
-
-    .bmi-gauge-label-normal {
-        left: 16%;
-        top: 22%;
-        transform: rotate(-48deg);
-    }
-
-    .bmi-gauge-label-over {
-        left: 48%;
-        top: 4%;
-        transform: translateX(-50%) rotate(-10deg);
-    }
-
-    .bmi-gauge-label-obese {
-        right: 3%;
-        top: 28%;
-        transform: rotate(46deg);
+        text-anchor: middle;
     }
 
     .bmi-gauge-details {
@@ -5342,7 +5324,32 @@
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .bmi-gauge-card {
         margin-top: 12px;
+        padding: 14px;
         box-shadow: none;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .bmi-gauge-meter {
+        width: min(300px, 100%);
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .bmi-gauge-summary {
+        margin-bottom: 6px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .bmi-gauge-summary strong {
+        font-size: 19px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .bmi-gauge-summary span {
+        font-size: 13px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .bmi-gauge-svg-label {
+        font-size: 13px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .bmi-gauge-value {
+        font-size: clamp(22px, 5vw, 30px);
     }
 
     @media (max-width: 760px) {
@@ -5748,14 +5755,9 @@
         box-shadow: none;
     }
 
-    html[data-theme="dark"] .bmi-gauge-arc::after {
-        background: #0f172a;
-        border-bottom-color: rgba(148, 163, 184, 0.28);
-    }
-
     html[data-theme="dark"] .bmi-gauge-summary strong,
     html[data-theme="dark"] .bmi-gauge-value,
-    html[data-theme="dark"] .bmi-gauge-label,
+    html[data-theme="dark"] .bmi-gauge-svg-label,
     html[data-theme="dark"] .bmi-gauge-details {
         color: #f8fafc;
     }
@@ -6899,11 +6901,18 @@
                                 </div>
                                 <div class="bmi-gauge-layout">
                                     <div class="bmi-gauge-meter" aria-hidden="true">
-                                        <div class="bmi-gauge-arc"></div>
-                                        <span class="bmi-gauge-label bmi-gauge-label-under">Underweight</span>
-                                        <span class="bmi-gauge-label bmi-gauge-label-normal">Normal</span>
-                                        <span class="bmi-gauge-label bmi-gauge-label-over">Overweight</span>
-                                        <span class="bmi-gauge-label bmi-gauge-label-obese">Obese</span>
+                                        <svg class="bmi-gauge-svg" viewBox="0 0 420 245" role="img" aria-label="BMI category gauge">
+                                            <path class="bmi-gauge-segment is-low" d="M 60 205 A 150 150 0 0 1 70.7 149.3 L 121.8 169.7 A 95 95 0 0 0 115 205 Z" />
+                                            <path class="bmi-gauge-segment is-under" d="M 70.7 149.3 A 150 150 0 0 1 87.8 118 L 132.6 149.9 A 95 95 0 0 0 121.8 169.7 Z" />
+                                            <path class="bmi-gauge-segment is-normal" d="M 87.8 118 A 150 150 0 0 1 160.9 63.2 L 178.9 115.2 A 95 95 0 0 0 132.6 149.9 Z" />
+                                            <path class="bmi-gauge-segment is-over" d="M 160.9 63.2 A 150 150 0 0 1 231.3 56.5 L 223.5 111 A 95 95 0 0 0 178.9 115.2 Z" />
+                                            <path class="bmi-gauge-segment is-obese-start" d="M 231.3 56.5 A 150 150 0 0 1 297 82.8 L 265.1 127.6 A 95 95 0 0 0 223.5 111 Z" />
+                                            <path class="bmi-gauge-segment is-obese" d="M 297 82.8 A 150 150 0 0 1 360 205 L 305 205 A 95 95 0 0 0 265.1 127.6 Z" />
+                                            <text class="bmi-gauge-svg-label" x="82" y="166" transform="rotate(-70 82 166)">Underweight</text>
+                                            <text class="bmi-gauge-svg-label" x="129" y="118" transform="rotate(-48 129 118)">Normal</text>
+                                            <text class="bmi-gauge-svg-label" x="210" y="76" transform="rotate(-8 210 76)">Overweight</text>
+                                            <text class="bmi-gauge-svg-label" x="326" y="132" transform="rotate(48 326 132)">Obese</text>
+                                        </svg>
                                         <div class="bmi-gauge-needle" id="bmiGaugeNeedle"></div>
                                         <div class="bmi-gauge-pivot"></div>
                                         <div class="bmi-gauge-value" id="bmiGaugeValue">BMI --</div>
