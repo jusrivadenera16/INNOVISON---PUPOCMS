@@ -1159,11 +1159,15 @@
     }
 
     .applicant-final-review-total-badge span {
-        color: #ffffff;
+        color: #ffffff !important;
+    }
+
+    .applicant-final-review-total-badge * {
+        color: #ffffff !important;
     }
 
     .applicant-final-review-total-badge strong {
-        color: #ffffff;
+        color: #ffffff !important;
         font-size: 15px;
         line-height: 1;
     }
@@ -4126,16 +4130,25 @@
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-file-actions {
         position: sticky;
         top: 0;
-        z-index: 9;
+        z-index: 30;
         align-self: stretch;
-        margin: -10px -10px 12px;
-        padding: 10px 14px;
-        border: 1px solid rgba(127, 29, 45, 0.12);
-        border-top: 0;
-        border-radius: 0 0 14px 14px;
-        background: linear-gradient(180deg, #fff1f2 0%, #fff7f7 100%);
+        width: calc(100% - 32px);
+        margin: 0 auto 14px !important;
+        padding: 10px 14px !important;
+        border: 1px solid rgba(127, 29, 45, 0.16);
+        border-radius: 14px;
+        background: linear-gradient(180deg, #fff1f2 0%, #fff7f7 100%) !important;
         backdrop-filter: blur(10px);
-        box-shadow: 0 12px 26px rgba(127, 29, 45, 0.08);
+        box-shadow: 0 12px 28px rgba(127, 29, 45, 0.12);
+        transition: width .18s ease, margin .18s ease, border-radius .18s ease, padding .18s ease;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow.is-final-review-toolbar-stuck .applicant-file-actions {
+        width: auto;
+        margin: -18px -18px 14px !important;
+        padding: 10px 18px 12px !important;
+        border-top: 0;
+        border-radius: 0 0 16px 16px;
     }
 
     .applicant-pending-history-wrap {
@@ -4976,7 +4989,7 @@
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-vitals-grid .applicant-condition-field {
         display: grid;
-        grid-template-columns: minmax(120px, 1fr) minmax(70px, 0.6fr) auto;
+        grid-template-columns: minmax(105px, 1fr) minmax(54px, 0.45fr) auto;
         align-items: center;
         gap: 10px;
         padding: 9px 12px;
@@ -5051,7 +5064,7 @@
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-vitals-grid .vital-status {
         align-self: center;
         justify-self: end;
-        min-width: 88px;
+        min-width: 76px;
         font-size: 11px;
         text-align: center;
         white-space: nowrap;
@@ -8826,6 +8839,7 @@
     (function () {
         const backdrop        = document.getElementById('applicantRefModal');
         const modalShell      = backdrop?.querySelector('.applicant-modal-shell');
+        const applicantModalBody = backdrop?.querySelector('.applicant-modal-body');
         const openBtn         = document.getElementById('openApplicantRefModal');
         const openClinicBtn   = document.getElementById('openClinicRefModal');
         const closeBtn        = document.getElementById('closeApplicantRefModal');
@@ -9281,12 +9295,23 @@
             // Reset button text and events back to Find mode
             resetLookupButtonToFind();
 
-            const modalBody = document.querySelector('.applicant-modal-body');
-            if (modalBody) {
-                modalBody.style.alignItems = 'center';
-                modalBody.style.justifyContent = 'center';
-                modalBody.style.minHeight = '220px';
+            if (modalShell) {
+                modalShell.classList.remove('is-final-review-toolbar-stuck');
             }
+            if (applicantModalBody) {
+                applicantModalBody.style.alignItems = 'center';
+                applicantModalBody.style.justifyContent = 'center';
+                applicantModalBody.style.minHeight = '220px';
+                applicantModalBody.scrollTop = 0;
+            }
+        }
+
+        function syncFinalReviewToolbarState() {
+            if (!modalShell || !applicantModalBody) return;
+            const shouldStick = modalShell.classList.contains('has-lookup-result')
+                && modalShell.classList.contains('is-final-review-workflow')
+                && applicantModalBody.scrollTop > 24;
+            modalShell.classList.toggle('is-final-review-toolbar-stuck', shouldStick);
         }
 
         function openApplicantsModal() {
@@ -10442,14 +10467,14 @@
             if (documentsButton) documentsButton.classList.add('is-visible');
             if (foundCard) foundCard.style.display = 'flex';
 
-            const modalBody = document.querySelector('.applicant-modal-body');
-            if (modalBody) {
+            if (applicantModalBody) {
                 console.log('Updating modal body layout...');
-                modalBody.style.alignItems = 'stretch';
-                modalBody.style.justifyContent = 'flex-start';
-                modalBody.style.minHeight = 'auto';
-                modalBody.scrollTop = 0;
+                applicantModalBody.style.alignItems = 'stretch';
+                applicantModalBody.style.justifyContent = 'flex-start';
+                applicantModalBody.style.minHeight = 'auto';
+                applicantModalBody.scrollTop = 0;
             }
+            syncFinalReviewToolbarState();
 
             currentAssessmentReview = data.assessment_review && typeof data.assessment_review === 'object'
                 ? data.assessment_review
@@ -11254,6 +11279,9 @@
 
         syncCovidPositiveFields();
         restrictCovidDateInput();
+        if (applicantModalBody) {
+            applicantModalBody.addEventListener('scroll', syncFinalReviewToolbarState, { passive: true });
+        }
 
         function showApplicantReferenceEntry(workflow) {
             resetLookupState();
@@ -11267,6 +11295,8 @@
 
         function showFinalReviewList() {
             setApplicantWorkflow('final_review');
+            if (modalShell) modalShell.classList.remove('is-final-review-toolbar-stuck');
+            if (applicantModalBody) applicantModalBody.scrollTop = 0;
             if (defaultPane) defaultPane.style.display = 'flex';
             if (entryPane) entryPane.classList.remove('is-visible');
             if (workflowChoices) workflowChoices.style.display = 'none';
