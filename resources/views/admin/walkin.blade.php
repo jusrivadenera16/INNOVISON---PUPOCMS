@@ -1158,8 +1158,12 @@
         display: inline-flex;
     }
 
+    .applicant-final-review-total-badge span {
+        color: #ffffff;
+    }
+
     .applicant-final-review-total-badge strong {
-        color: #facc15;
+        color: #ffffff;
         font-size: 15px;
         line-height: 1;
     }
@@ -4124,9 +4128,14 @@
         top: 0;
         z-index: 9;
         align-self: stretch;
-        padding: 10px 0;
-        background: rgba(255, 255, 255, 0.96);
+        margin: -10px -10px 12px;
+        padding: 10px 14px;
+        border: 1px solid rgba(127, 29, 45, 0.12);
+        border-top: 0;
+        border-radius: 0 0 14px 14px;
+        background: linear-gradient(180deg, #fff1f2 0%, #fff7f7 100%);
         backdrop-filter: blur(10px);
+        box-shadow: 0 12px 26px rgba(127, 29, 45, 0.08);
     }
 
     .applicant-pending-history-wrap {
@@ -4565,12 +4574,12 @@
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-file-action {
         width: auto !important;
         min-height: 34px !important;
-        padding: 7px 12px !important;
-        border: 1px solid rgba(112, 19, 27, 0.22) !important;
+        padding: 8px 13px !important;
+        border: 1px solid rgba(112, 19, 27, 0.18) !important;
         border-radius: 8px !important;
-        background: #ffffff !important;
+        background: rgba(255, 255, 255, 0.78) !important;
         color: #70131b !important;
-        box-shadow: none !important;
+        box-shadow: 0 8px 18px rgba(127, 29, 45, 0.05) !important;
         font-size: 12px !important;
     }
 
@@ -4588,6 +4597,7 @@
         background: #fff7ed !important;
         border-color: #facc15 !important;
         color: #70131b !important;
+        box-shadow: 0 10px 20px rgba(127, 29, 45, 0.08) !important;
     }
 
     .applicant-upload-preview-area {
@@ -5045,6 +5055,14 @@
         font-size: 11px;
         text-align: center;
         white-space: nowrap;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-vitals-grid .voice-field-inline-mic {
+        display: none !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-screening-panel:not(.is-readonly-review) .applicant-vitals-grid .voice-field-inline-mic {
+        display: inline-flex !important;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-vitals-grid .applicant-findings-options {
@@ -9508,16 +9526,16 @@
             const rounded = Number(bmi.toFixed(1));
 
             if (rounded < 18.5) {
-                return { text: 'BMI ' + rounded + ' Underweight', tone: 'warning', bmi: rounded, category: 'Underweight', categoryKey: 'underweight' };
+                return { text: 'Underweight', tone: 'warning', bmi: rounded, category: 'Underweight', categoryKey: 'underweight' };
             }
             if (rounded < 25) {
-                return { text: 'BMI ' + rounded + ' Normal', tone: 'normal', bmi: rounded, category: 'Normal', categoryKey: 'normal' };
+                return { text: 'Normal', tone: 'normal', bmi: rounded, category: 'Normal', categoryKey: 'normal' };
             }
             if (rounded < 30) {
-                return { text: 'BMI ' + rounded + ' Overweight', tone: 'warning', bmi: rounded, category: 'Overweight', categoryKey: 'overweight' };
+                return { text: 'Overweight', tone: 'warning', bmi: rounded, category: 'Overweight', categoryKey: 'overweight' };
             }
 
-            return { text: 'BMI ' + rounded + ' Obese', tone: 'danger', bmi: rounded, category: 'Obese', categoryKey: 'obese' };
+            return { text: 'Obese', tone: 'danger', bmi: rounded, category: 'Obese', categoryKey: 'obese' };
         }
 
         function formatPounds(value) {
