@@ -2950,7 +2950,7 @@
         width: min(920px, 100%);
         display: none;
         flex-direction: column;
-        gap: 12px;
+        gap: 16px;
         margin-top: -8px;
     }
 
@@ -3064,10 +3064,11 @@
         grid-template-columns: minmax(220px, 1fr) minmax(210px, 0.8fr) auto;
         gap: 12px;
         align-items: center;
-        padding: 16px;
+        padding: 18px;
         border: 1px solid rgba(112, 19, 27, 0.15);
         border-radius: 18px;
         background: rgba(255, 250, 250, 0.92);
+        margin-bottom: 4px;
     }
 
     .applicant-final-review-reference-badge {
@@ -4144,11 +4145,14 @@
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow.is-final-review-toolbar-stuck .applicant-file-actions {
-        width: auto;
-        margin: -18px -18px 14px !important;
-        padding: 10px 18px 12px !important;
+        width: calc(100% + 36px);
+        margin: -34px -18px 16px !important;
+        padding: 14px 18px 12px !important;
         border-top: 0;
+        border-left: 0;
+        border-right: 0;
         border-radius: 0 0 16px 16px;
+        box-shadow: 0 16px 30px rgba(127, 29, 45, 0.16);
     }
 
     .applicant-pending-history-wrap {
