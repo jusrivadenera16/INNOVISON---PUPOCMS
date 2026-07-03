@@ -2295,6 +2295,10 @@
         border-top: 1px solid rgba(112, 19, 27, 0.10);
     }
 
+    .verify-approval-actions.is-hidden {
+        display: none;
+    }
+
     .verify-approval-review-form {
         margin-top: 18px;
         padding: 16px;
@@ -2725,6 +2729,14 @@
 
     .verify-resubmission-panel.is-open {
         display: grid;
+    }
+
+    .verify-resubmission-help-note {
+        margin: 0 0 8px;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.45;
     }
 
     .verify-resubmission-title {
@@ -3878,7 +3890,6 @@
                                 <div class="readonly-field"><span>Status Flag</span><strong>Conditional / Flagged</strong></div>
                                 <div class="readonly-field"><span>Previous Nurse Disapproval Notes</span><strong>{{ $readonlyRecord->pending_reason ?: '-' }}</strong></div>
                                 <div class="readonly-field"><span>Student Full Name</span><strong>{{ optional($readonlyRecord->user)->name ?: 'Unnamed Student' }}</strong></div>
-                                <div class="readonly-field"><span>Student ID Number</span><strong>{{ $readonlyRecord->student_id ?: optional($readonlyRecord->user)->student_id ?: optional($readonlyRecord->user)->student_number ?: '-' }}</strong></div>
                                 <div class="readonly-field"><span>Submission Reference Number</span><strong>{{ $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-' }}</strong></div>
                                 <div class="readonly-field">
                                     <span>Health Declaration</span>
@@ -3930,52 +3941,6 @@
                                             @endforelse
                                         </div>
                                     </div>
-                                </div>
-                                <div class="readonly-field readonly-resubmission-field">
-                                    <span>Document Resubmission</span>
-                                    <form
-                                        method="POST"
-                                        action="{{ route('admin.health_profile.request_resubmission', $readonlyRecord->id) }}"
-                                        class="readonly-resubmission-form"
-                                        data-readonly-resubmission-form
-                                    >
-                                        @csrf
-                                        <input type="hidden" name="pending_reason" value="{{ $readonlyRecord->pending_reason ?: 'Document Resubmission' }}">
-                                        <input type="hidden" name="clear_uploaded_documents" value="1">
-                                        <input type="hidden" name="return_to" value="health_records">
-                                        <details class="readonly-resubmission-box">
-                                            <summary class="readonly-resubmission-summary">
-                                                <x-outline-icon name="clipboard-document-list" />
-                                                Resubmission
-                                            </summary>
-                                            <div class="readonly-resubmission-panel">
-                                                <p class="readonly-resubmission-help">Select the file/s that the student must upload again. Confirming will clear the selected document reference from the database and mark it for resubmission.</p>
-                                                <div class="readonly-resubmission-options">
-                                                    <label class="readonly-resubmission-option">
-                                                        <input type="checkbox" name="resubmission_required_documents[]" value="student_photo">
-                                                        <span>2x2 Photo</span>
-                                                    </label>
-                                                    <label class="readonly-resubmission-option">
-                                                        <input type="checkbox" name="resubmission_required_documents[]" value="health_declaration">
-                                                        <span>Health Declaration</span>
-                                                    </label>
-                                                    <label class="readonly-resubmission-option">
-                                                        <input type="checkbox" name="resubmission_required_documents[]" value="medical_certificate">
-                                                        <span>Medical Certificate</span>
-                                                    </label>
-                                                    <label class="readonly-resubmission-option">
-                                                        <input type="checkbox" name="resubmission_required_documents[]" value="chest_xray_result">
-                                                        <span>Chest X-ray Result</span>
-                                                    </label>
-                                                    <label class="readonly-resubmission-option">
-                                                        <input type="checkbox" name="resubmission_required_documents[]" value="pwd_id_proof">
-                                                        <span>PWD ID Proof</span>
-                                                    </label>
-                                                </div>
-                                                <button type="submit" class="readonly-resubmission-submit">Confirm Resubmission</button>
-                                            </div>
-                                        </details>
-                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -4059,11 +4024,11 @@
                 @csrf
                 <input type="hidden" name="pending_reason" id="verifyDocumentResubmissionReason" value="Document Resubmission">
 
+                <p class="verify-resubmission-help-note">Use this only when uploaded files are blurred, unreadable, unsigned, incorrect, or need replacement.</p>
                 <label class="verify-check-row verify-resubmission-toggle-row">
                     <input type="checkbox" id="verifyNeedsDocumentResubmission" value="1">
                     <span>
-                        <strong>Needs Document Resubmission</strong>
-                        <small>Use this only when uploaded files are blurred, unreadable, unsigned, incorrect, or need replacement.</small>
+                        <strong>Document Resubmission</strong>
                     </span>
                 </label>
 
@@ -4097,7 +4062,7 @@
                     </label>
                 </div>
 
-                <div class="verify-approval-actions verify-resubmission-only-actions">
+                <div class="verify-approval-actions verify-resubmission-only-actions is-hidden">
                     <button type="submit" class="verify-approval-btn verify-approval-btn-resubmit" id="verifyDocumentResubmissionSubmit" disabled>
                         Request Resubmission
                     </button>
@@ -4491,6 +4456,7 @@
     const verifyNeedsDocumentResubmission = document.getElementById('verifyNeedsDocumentResubmission');
     const verifyDocumentResubmissionPanel = document.getElementById('verifyDocumentResubmissionPanel');
     const verifyDocumentResubmissionSubmit = document.getElementById('verifyDocumentResubmissionSubmit');
+    const verifyDocumentResubmissionActions = document.querySelector('.verify-resubmission-only-actions');
     const verifyDocumentResubmissionRemarks = document.getElementById('verifyDocumentResubmissionRemarks');
     const verifyDocumentResubmissionReason = document.getElementById('verifyDocumentResubmissionReason');
     const verifyDocumentResubmissionInputs = Array.from(document.querySelectorAll('#verifyDocumentResubmissionForm input[name="resubmission_required_documents[]"]'));
@@ -4521,6 +4487,10 @@
 
         if (verifyDocumentResubmissionSubmit) {
             verifyDocumentResubmissionSubmit.disabled = true;
+        }
+
+        if (verifyDocumentResubmissionActions) {
+            verifyDocumentResubmissionActions.classList.add('is-hidden');
         }
 
         if (verifyDocumentResubmissionRemarks) {
@@ -4700,6 +4670,10 @@
 
             if (verifyDocumentResubmissionSubmit) {
                 verifyDocumentResubmissionSubmit.disabled = !isChecked;
+            }
+
+            if (verifyDocumentResubmissionActions) {
+                verifyDocumentResubmissionActions.classList.toggle('is-hidden', !isChecked);
             }
 
             if (!isChecked) {
