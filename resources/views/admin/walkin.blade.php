@@ -4130,7 +4130,7 @@
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-file-actions {
         position: sticky;
-        top: -18px;
+        top: 0;
         z-index: 80;
         align-self: stretch;
         width: calc(100% - 32px);
@@ -4141,20 +4141,18 @@
         background: linear-gradient(180deg, #fff1f2 0%, #fff7f7 100%) !important;
         backdrop-filter: blur(10px);
         box-shadow: 0 12px 28px rgba(127, 29, 45, 0.12);
-        transform: translateY(0);
-        transition: width .18s ease, margin .18s ease, border-radius .18s ease, padding .18s ease, transform .18s ease;
+        transition: width .18s ease, margin .18s ease, border-radius .18s ease, padding .18s ease, box-shadow .18s ease;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow.is-final-review-toolbar-stuck .applicant-file-actions {
         width: calc(100% + 36px);
-        margin: -34px -18px -26px !important;
+        margin: 0 -18px 16px !important;
         padding: 14px 18px 12px !important;
         border-top: 0;
         border-left: 0;
         border-right: 0;
         border-radius: 0 0 16px 16px;
         box-shadow: 0 16px 30px rgba(127, 29, 45, 0.16);
-        transform: translateY(-46px);
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow.is-final-review-toolbar-stuck .applicant-file-actions::before {
@@ -4162,8 +4160,8 @@
         position: absolute;
         left: 0;
         right: 0;
-        top: -42px;
-        height: 42px;
+        top: -18px;
+        height: 18px;
         background: linear-gradient(180deg, #fff1f2 0%, #fff1f2 80%, rgba(255, 241, 242, 0));
         pointer-events: none;
     }
@@ -8857,6 +8855,7 @@
         const backdrop        = document.getElementById('applicantRefModal');
         const modalShell      = backdrop?.querySelector('.applicant-modal-shell');
         const applicantModalBody = backdrop?.querySelector('.applicant-modal-body');
+        const applicantFileActions = document.getElementById('applicantFileActions');
         const openBtn         = document.getElementById('openApplicantRefModal');
         const openClinicBtn   = document.getElementById('openClinicRefModal');
         const closeBtn        = document.getElementById('closeApplicantRefModal');
@@ -9315,6 +9314,9 @@
             if (modalShell) {
                 modalShell.classList.remove('is-final-review-toolbar-stuck');
             }
+            if (applicantFileActions) {
+                delete applicantFileActions.dataset.stickyOriginTop;
+            }
             if (applicantModalBody) {
                 applicantModalBody.style.alignItems = 'center';
                 applicantModalBody.style.justifyContent = 'center';
@@ -9324,10 +9326,22 @@
         }
 
         function syncFinalReviewToolbarState() {
-            if (!modalShell || !applicantModalBody) return;
-            const shouldStick = modalShell.classList.contains('has-lookup-result')
-                && modalShell.classList.contains('is-final-review-workflow')
-                && applicantModalBody.scrollTop > 24;
+            if (!modalShell || !applicantModalBody || !applicantFileActions) return;
+            const canStick = modalShell.classList.contains('has-lookup-result')
+                && modalShell.classList.contains('is-final-review-workflow');
+
+            if (!canStick) {
+                modalShell.classList.remove('is-final-review-toolbar-stuck');
+                delete applicantFileActions.dataset.stickyOriginTop;
+                return;
+            }
+
+            if (!applicantFileActions.dataset.stickyOriginTop || !modalShell.classList.contains('is-final-review-toolbar-stuck')) {
+                applicantFileActions.dataset.stickyOriginTop = String(Math.max(0, applicantFileActions.offsetTop));
+            }
+
+            const stickyOriginTop = parseFloat(applicantFileActions.dataset.stickyOriginTop || '0');
+            const shouldStick = applicantModalBody.scrollTop >= Math.max(1, stickyOriginTop - 2);
             modalShell.classList.toggle('is-final-review-toolbar-stuck', shouldStick);
         }
 
@@ -10491,6 +10505,9 @@
                 applicantModalBody.style.minHeight = 'auto';
                 applicantModalBody.scrollTop = 0;
             }
+            if (applicantFileActions) {
+                delete applicantFileActions.dataset.stickyOriginTop;
+            }
             syncFinalReviewToolbarState();
 
             currentAssessmentReview = data.assessment_review && typeof data.assessment_review === 'object'
@@ -11313,6 +11330,7 @@
         function showFinalReviewList() {
             setApplicantWorkflow('final_review');
             if (modalShell) modalShell.classList.remove('is-final-review-toolbar-stuck');
+            if (applicantFileActions) delete applicantFileActions.dataset.stickyOriginTop;
             if (applicantModalBody) applicantModalBody.scrollTop = 0;
             if (defaultPane) defaultPane.style.display = 'flex';
             if (entryPane) entryPane.classList.remove('is-visible');
