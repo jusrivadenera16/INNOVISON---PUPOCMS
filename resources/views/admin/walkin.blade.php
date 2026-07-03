@@ -4134,8 +4134,8 @@
         z-index: 80;
         align-self: stretch;
         width: calc(100% - 32px);
-        margin: 0 auto 14px !important;
-        padding: 10px 14px !important;
+        margin: 0 auto 10px !important;
+        padding: 7px 10px !important;
         border: 1px solid rgba(127, 29, 45, 0.16);
         border-radius: 14px;
         background: linear-gradient(180deg, #fff1f2 0%, #fff7f7 100%) !important;
@@ -4146,8 +4146,8 @@
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow.is-final-review-toolbar-stuck .applicant-file-actions {
         width: calc(100% + 36px);
-        margin: 0 -18px 16px !important;
-        padding: 14px 18px 12px !important;
+        margin: 0 -18px 10px !important;
+        padding: 7px 18px 8px !important;
         border-top: 0;
         border-left: 0;
         border-right: 0;
@@ -4160,9 +4160,9 @@
         position: absolute;
         left: 0;
         right: 0;
-        top: -18px;
-        height: 18px;
-        background: linear-gradient(180deg, #fff1f2 0%, #fff1f2 80%, rgba(255, 241, 242, 0));
+        top: -6px;
+        height: 6px;
+        background: #fff1f2;
         pointer-events: none;
     }
 
@@ -4601,14 +4601,14 @@
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-file-action,
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-file-action {
         width: auto !important;
-        min-height: 34px !important;
-        padding: 8px 13px !important;
+        min-height: 30px !important;
+        padding: 6px 11px !important;
         border: 1px solid rgba(112, 19, 27, 0.18) !important;
         border-radius: 8px !important;
         background: rgba(255, 255, 255, 0.78) !important;
         color: #70131b !important;
         box-shadow: 0 8px 18px rgba(127, 29, 45, 0.05) !important;
-        font-size: 12px !important;
+        font-size: 11.5px !important;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-file-action svg,
