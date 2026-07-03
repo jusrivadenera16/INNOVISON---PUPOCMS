@@ -3069,6 +3069,16 @@
         border-radius: 18px;
         background: rgba(255, 250, 250, 0.92);
         margin-bottom: 4px;
+        transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+        will-change: transform;
+    }
+
+    .applicant-final-review-card:hover,
+    .applicant-final-review-card:focus-within {
+        transform: translateY(-2px) scale(1.008);
+        border-color: rgba(112, 19, 27, 0.32);
+        background: linear-gradient(180deg, #fff7ed 0%, #fff1f2 100%);
+        box-shadow: 0 16px 28px rgba(112, 19, 27, 0.14);
     }
 
     .applicant-final-review-reference-badge {
