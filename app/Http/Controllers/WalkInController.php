@@ -788,6 +788,7 @@ class WalkInController extends Controller
                 'school_year' => (string) ($profile->school_year ?? ''),
             ],
             'contact_information' => [
+                'contact_no' => (string) ($user->contact_no ?? ''),
                 'cellphone' => (string) ($profile->cellphone ?? ''),
                 'landline' => (string) ($profile->landline ?? ''),
                 'guardian_name' => (string) ($profile->guardian_name ?? ''),
@@ -1943,6 +1944,7 @@ PROMPT;
             'course_college' => ['nullable', 'string', 'max:255'],
             'course_code' => ['nullable', 'string', 'max:30'],
             'school_year' => ['nullable', 'string', 'max:30'],
+            'contact_no' => ['nullable', 'string', 'max:30'],
             'cellphone' => ['nullable', 'string', 'max:30'],
             'landline' => ['nullable', 'string', 'max:30'],
             'guardian_name' => ['nullable', 'string', 'max:255'],
@@ -1960,6 +1962,9 @@ PROMPT;
             'is_smoker' => ['nullable', 'string', 'max:10'],
             'is_drinker' => ['nullable', 'string', 'max:10'],
             'covid_vaccinated' => ['nullable', 'string', 'max:10'],
+            'vaccine_history' => ['nullable', 'array'],
+            'vaccine_history.*.date' => ['nullable', 'date'],
+            'vaccine_history.*.brand' => ['nullable', 'string', 'max:100'],
             'med_cert_findings' => ['nullable', 'string', 'max:100'],
             'med_cert_findings_details' => ['nullable', 'string', 'max:1000'],
             'doctor_name' => ['nullable', 'string', 'max:255'],
@@ -1975,6 +1980,34 @@ PROMPT;
                 explode(',', (string) $value)
             )));
         };
+
+        $submittedVaccineHistory = [];
+        foreach (($validated['vaccine_history'] ?? []) as $doseKey => $dose) {
+            $date = trim((string) ($dose['date'] ?? ''));
+            $brand = trim((string) ($dose['brand'] ?? ''));
+
+            if ($date !== '' || $brand !== '') {
+                $submittedVaccineHistory[$doseKey] = [
+                    'date' => $date,
+                    'brand' => $brand,
+                ];
+            }
+        }
+
+        if (($validated['has_illness'] ?? null) !== 'Yes') {
+            $validated['medical_history'] = '';
+            $validated['other_illness'] = null;
+        }
+
+        if (($validated['has_disability'] ?? null) !== 'Yes') {
+            $validated['disability_type'] = null;
+        }
+
+        if ((bool) ($validated['no_allergies'] ?? false)) {
+            $validated['food_allergies'] = null;
+            $validated['medicine_allergies'] = '';
+            $validated['other_med_allergies'] = null;
+        }
 
         $healthProfile->fill([
             'birthday' => $validated['birthday'] ?? null,
@@ -2002,6 +2035,7 @@ PROMPT;
             'is_smoker' => $validated['is_smoker'] ?? null,
             'is_drinker' => $validated['is_drinker'] ?? null,
             'covid_vaccinated' => $validated['covid_vaccinated'] ?? null,
+            'vaccine_history' => ($validated['covid_vaccinated'] ?? null) === 'Yes' ? $submittedVaccineHistory : [],
             'med_cert_findings' => $validated['med_cert_findings'] ?? null,
             'med_cert_findings_details' => $validated['med_cert_findings_details'] ?? null,
             'doctor_name' => $validated['doctor_name'] ?? null,
@@ -2010,6 +2044,12 @@ PROMPT;
             'xray_findings_details' => $validated['xray_findings_details'] ?? null,
             'xray_date' => $validated['xray_date'] ?? null,
         ]);
+
+        if ($healthProfile->user && array_key_exists('contact_no', $validated)) {
+            $healthProfile->user->contact_no = $validated['contact_no'] ?? null;
+            $healthProfile->user->save();
+        }
+
         $healthProfile->save();
         $healthProfile->refresh()->loadMissing('user');
 

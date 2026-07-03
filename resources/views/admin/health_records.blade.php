@@ -3410,8 +3410,23 @@
         </tbody>
     </table>
     @if($healthProfileSummaryRecords->hasPages())
-        <div class="mt-3 d-flex justify-content-end">
-            {{ $healthProfileSummaryRecords->links() }}
+        <div class="readonly-modal-pagination is-visible" aria-label="Issued medical clearance pagination">
+            <span class="readonly-pagination-summary">
+                Showing {{ $healthProfileSummaryRecords->firstItem() }}-{{ $healthProfileSummaryRecords->lastItem() }} of {{ $healthProfileSummaryRecords->total() }}
+            </span>
+            <div class="readonly-pagination-actions">
+                @if($healthProfileSummaryRecords->onFirstPage())
+                    <button type="button" class="readonly-pagination-btn" disabled>Previous</button>
+                @else
+                    <a class="readonly-pagination-btn" href="{{ $healthProfileSummaryRecords->previousPageUrl() }}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">Previous</a>
+                @endif
+
+                @if($healthProfileSummaryRecords->hasMorePages())
+                    <a class="readonly-pagination-btn" href="{{ $healthProfileSummaryRecords->nextPageUrl() }}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">Next</a>
+                @else
+                    <button type="button" class="readonly-pagination-btn" disabled>Next</button>
+                @endif
+            </div>
         </div>
     @endif
 </div>

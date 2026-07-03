@@ -4322,6 +4322,7 @@
         font-weight: 800;
         line-height: 1.45;
         word-break: break-word;
+        white-space: pre-line;
     }
 
     .health-info-input {
@@ -4334,6 +4335,63 @@
         color: #111827;
         font-size: 13px;
         font-weight: 700;
+    }
+
+    .health-info-field.is-hidden {
+        display: none;
+    }
+
+    .health-info-checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .health-info-check-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 36px;
+        padding: 8px 10px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        border-radius: 9px;
+        background: #fff;
+        color: #111827;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.25;
+    }
+
+    .health-info-check-option input {
+        width: 16px;
+        height: 16px;
+        accent-color: #70131b;
+    }
+
+    .health-info-vaccine-grid {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px 14px;
+        padding: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 12px;
+        background: #f8fafc;
+    }
+
+    .health-info-vaccine-dose {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .health-info-vaccine-dose strong {
+        grid-column: 1 / -1;
+        color: #70131b;
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .04em;
     }
 
     textarea.health-info-input {
@@ -4352,6 +4410,12 @@
         }
 
         .health-info-fields {
+            grid-template-columns: 1fr;
+        }
+
+        .health-info-checkbox-grid,
+        .health-info-vaccine-grid,
+        .health-info-vaccine-dose {
             grid-template-columns: 1fr;
         }
     }
@@ -9719,6 +9783,45 @@
             });
         }
 
+        const healthInfoCourseOptions = [
+            { code: 'BSBA-HRM', name: 'Bachelor of Science in Business Administration major in Human Resource Management' },
+            { code: 'BSBA-MM', name: 'Bachelor of Science in Business Administration major in Marketing Management' },
+            { code: 'BSECE', name: 'Bachelor of Science in Electronics Engineering' },
+            { code: 'BSIT', name: 'Bachelor of Science in Information Technology' },
+            { code: 'BSME', name: 'Bachelor of Science in Mechanical Engineering' },
+            { code: 'BSOA', name: 'Bachelor of Science in Office Administration' },
+            { code: 'BSPSY', name: 'Bachelor of Science in Psychology' },
+            { code: 'BSED-ENGLISH', name: 'Bachelor of Secondary Education major in English' },
+            { code: 'BSED-MATH', name: 'Bachelor of Secondary Education major in Mathematics' },
+            { code: 'DIT', name: 'Diploma in Information Technology' },
+            { code: 'DOMT', name: 'Diploma in Office Management Technology' },
+        ];
+
+        const healthInfoYesNoOptions = ['Yes', 'No'];
+        const healthInfoIllnessOptions = [
+            'Asthma',
+            'Loss of Consciousness',
+            'Eye Disease / Defect',
+            'Accident Injuries',
+            'Diabetes',
+            'Heart Disease',
+            'Kidney Disease',
+            'Tuberculosis',
+            'Convulsion / Epilepsy',
+            'Migraine',
+            'Hyperventilation',
+            'High Blood Pressure',
+            'Hemophilia',
+            'Primary Complex',
+            'Others',
+        ];
+        const healthInfoVaccineDoses = [
+            ['first_dose', '1st Dose'],
+            ['second_dose', '2nd Dose'],
+            ['booster_1', 'Booster 1'],
+            ['booster_2', 'Booster 2'],
+        ];
+
         const healthInfoSections = [
             {
                 key: 'personal_information',
@@ -9728,11 +9831,11 @@
                     ['full_name', 'Full Name', 'readonly', 'root'],
                     ['birthday', 'Date of Birth', 'date'],
                     ['age', 'Age', 'number'],
-                    ['sex', 'Gender'],
-                    ['civil_status', 'Civil Status'],
-                    ['blood_type', 'Blood Type'],
-                    ['course_college', 'Course / Program'],
-                    ['course_code', 'Course Code'],
+                    ['sex', 'Gender', 'select', null, { options: ['Male', 'Female'] }],
+                    ['civil_status', 'Civil Status', 'select', null, { options: ['Single', 'Married', 'Widowed', 'Separated'] }],
+                    ['blood_type', 'Blood Type', 'select', null, { options: ['Unknown', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] }],
+                    ['course_college', 'Course / Program', 'course'],
+                    ['course_code', 'Course Code', 'readonly'],
                     ['school_year', 'School Year']
                 ]
             },
@@ -9741,9 +9844,10 @@
                 title: 'Contact Information',
                 icon: 'CN',
                 fields: [
-                    ['cellphone', 'Contact Number'],
-                    ['landline', 'Landline'],
-                    ['guardian_name', 'Parent / Guardian / Spouse']
+                    ['contact_no', 'Contact Number'],
+                    ['guardian_name', 'Emergency Contact Person'],
+                    ['cellphone', 'Emergency Contact Person Number'],
+                    ['landline', 'Landline']
                 ]
             },
             {
@@ -9760,15 +9864,17 @@
                 title: 'Medical History',
                 icon: 'MH',
                 fields: [
-                    ['has_illness', 'Known Medical Illness'],
-                    ['medical_history', 'Medical History / Conditions', 'textarea'],
-                    ['other_illness', 'Other Illness', 'textarea'],
-                    ['has_disability', 'Has Disability'],
-                    ['disability_type', 'Disability Type'],
-                    ['food_allergies', 'Food Allergies', 'textarea'],
+                    ['has_illness', 'Known Medical Illness', 'select', null, { options: healthInfoYesNoOptions }],
+                    ['medical_history', 'Medical History / Conditions', 'checkbox_group', null, { options: healthInfoIllnessOptions, dependsOn: ['has_illness', 'Yes'] }],
+                    ['other_illness', 'Other Illness', 'textarea', null, { dependsOnCheckedValue: ['medical_history', 'Others'] }],
+                    ['has_disability', 'Has Disability', 'select', null, { options: healthInfoYesNoOptions }],
+                    ['disability_type', 'Disability Type', null, null, { dependsOn: ['has_disability', 'Yes'] }],
                     ['no_allergies', 'No Known Allergies', 'checkbox'],
-                    ['medicine_allergies', 'Medicine Allergies', 'textarea'],
-                    ['other_med_allergies', 'Other Medicine Allergies', 'textarea']
+                    ['has_food_allergies', 'Has Food Allergy', 'virtual_select', null, { options: healthInfoYesNoOptions }],
+                    ['food_allergies', 'Food Allergies', 'textarea', null, { dependsOn: ['has_food_allergies', 'Yes'] }],
+                    ['has_medicine_allergies', 'Has Medicine Allergy', 'virtual_select', null, { options: healthInfoYesNoOptions }],
+                    ['medicine_allergies', 'Medicine Allergies', 'textarea', null, { dependsOn: ['has_medicine_allergies', 'Yes'] }],
+                    ['other_med_allergies', 'Other Medicine Allergies', 'textarea', null, { dependsOn: ['has_medicine_allergies', 'Yes'] }]
                 ]
             },
             {
@@ -9776,9 +9882,10 @@
                 title: 'Personal Social History',
                 icon: 'SH',
                 fields: [
-                    ['is_smoker', 'Cigarette Smoking'],
-                    ['is_drinker', 'Alcohol Drinking'],
-                    ['covid_vaccinated', 'COVID Vaccinated']
+                    ['is_smoker', 'Cigarette Smoking', 'select', null, { options: healthInfoYesNoOptions }],
+                    ['is_drinker', 'Alcohol Drinking', 'select', null, { options: healthInfoYesNoOptions }],
+                    ['covid_vaccinated', 'COVID Vaccinated', 'select', null, { options: healthInfoYesNoOptions }],
+                    ['vaccine_history', 'COVID Vaccination Details', 'vaccine_history', null, { dependsOn: ['covid_vaccinated', 'Yes'] }]
                 ]
             },
             {
@@ -9802,7 +9909,220 @@
                 return currentHealthInfoData?.[fieldKey] ?? '';
             }
 
+            if (sectionKey === 'medical_history' && fieldKey === 'has_food_allergies') {
+                return normalizeHealthInfoValue(currentHealthInfoData?.medical_history?.no_allergies) === 'Yes'
+                    ? 'No'
+                    : (normalizeHealthInfoValue(currentHealthInfoData?.medical_history?.food_allergies) !== '' ? 'Yes' : 'No');
+            }
+
+            if (sectionKey === 'medical_history' && fieldKey === 'has_medicine_allergies') {
+                return normalizeHealthInfoValue(currentHealthInfoData?.medical_history?.no_allergies) === 'Yes'
+                    ? 'No'
+                    : (
+                        normalizeHealthInfoValue(currentHealthInfoData?.medical_history?.medicine_allergies) !== '' ||
+                        normalizeHealthInfoValue(currentHealthInfoData?.medical_history?.other_med_allergies) !== ''
+                            ? 'Yes'
+                            : 'No'
+                    );
+            }
+
             return currentHealthInfoData?.[sectionKey]?.[fieldKey] ?? '';
+        }
+
+        function normalizeHealthInfoValue(value) {
+            if (value === true) return 'Yes';
+            if (value === false) return 'No';
+            return String(value ?? '').trim();
+        }
+
+        function healthInfoFieldId(fieldKey) {
+            return 'healthInfo_' + String(fieldKey).replace(/[^A-Za-z0-9_-]/g, '_');
+        }
+
+        function getHealthInfoCurrentValue(sectionKey, fieldKey, sourceType) {
+            const field = healthInfoFields?.querySelector(`[data-health-field="${fieldKey}"]`);
+            if (field) {
+                if (field.type === 'checkbox') {
+                    return field.checked ? 'Yes' : 'No';
+                }
+                return field.value;
+            }
+
+            if (fieldKey === 'medical_history') {
+                const checkedValues = Array.from(healthInfoFields?.querySelectorAll('[data-health-checkbox-group="medical_history"]:checked') || [])
+                    .map(item => item.value);
+                if (checkedValues.length) return checkedValues.join(', ');
+            }
+
+            return getHealthInfoFieldValue(sectionKey, fieldKey, sourceType);
+        }
+
+        function isHealthInfoFieldVisible(section, fieldConfig) {
+            const [fieldKey, , , sourceType, config = {}] = fieldConfig;
+
+            if (config.dependsOn) {
+                const [dependencyKey, expectedValue] = config.dependsOn;
+                const actual = normalizeHealthInfoValue(getHealthInfoCurrentValue(section.key, dependencyKey, sourceType));
+                if (actual !== expectedValue) return false;
+            }
+
+            if (config.dependsOnAnyChecked) {
+                const [groupKey] = config.dependsOnAnyChecked;
+                const checkedValues = Array.from(healthInfoFields?.querySelectorAll(`[data-health-checkbox-group="${groupKey}"]:checked`) || []);
+                if (!checkedValues.length) return false;
+            }
+
+            if (config.dependsOnCheckedValue) {
+                const [groupKey, expectedValue] = config.dependsOnCheckedValue;
+                const checkedValues = Array.from(healthInfoFields?.querySelectorAll(`[data-health-checkbox-group="${groupKey}"]:checked`) || [])
+                    .map(item => item.value);
+                if (!checkedValues.includes(expectedValue)) return false;
+            }
+
+            if (['has_food_allergies', 'food_allergies', 'has_medicine_allergies', 'medicine_allergies', 'other_med_allergies'].includes(fieldKey)) {
+                const noAllergies = healthInfoFields?.querySelector('[data-health-field="no_allergies"]');
+                if (noAllergies?.checked) return false;
+            }
+
+            return true;
+        }
+
+        function healthInfoOptionsMarkup(options, selectedValue, placeholder) {
+            const normalizedSelected = normalizeHealthInfoValue(selectedValue);
+            return [
+                `<option value="">${escapeApplicantHtml(placeholder || 'Select')}</option>`,
+                ...options.map(function (option) {
+                    const value = typeof option === 'string' ? option : option.value;
+                    const label = typeof option === 'string' ? option : option.label;
+                    return `<option value="${escapeApplicantHtml(value)}" ${normalizeHealthInfoValue(value) === normalizedSelected ? 'selected' : ''}>${escapeApplicantHtml(label)}</option>`;
+                })
+            ].join('');
+        }
+
+        function renderHealthInfoInput(section, fieldKey, label, type, sourceType, config = {}) {
+            const rawValue = getHealthInfoFieldValue(section.key, fieldKey, sourceType);
+            const value = rawValue === true ? 'Yes' : (rawValue === false ? 'No' : String(rawValue ?? ''));
+            const escapedValue = escapeApplicantHtml(value);
+            const fieldId = healthInfoFieldId(fieldKey);
+            const hiddenClass = isHealthInfoFieldVisible(section, [fieldKey, label, type, sourceType, config]) ? '' : ' is-hidden';
+            const wrapperStart = `<div class="health-info-field${hiddenClass}" data-health-field-wrap="${escapeApplicantHtml(fieldKey)}">`;
+
+            if (type === 'textarea') {
+                return `
+                    ${wrapperStart}
+                        <label for="${fieldId}">${escapeApplicantHtml(label)}</label>
+                        <textarea class="health-info-input" id="${fieldId}" data-health-field="${escapeApplicantHtml(fieldKey)}">${escapedValue}</textarea>
+                    </div>
+                `;
+            }
+
+            if (type === 'checkbox') {
+                return `
+                    ${wrapperStart}
+                        <label>${escapeApplicantHtml(label)}</label>
+                        <label class="health-info-check-option">
+                            <input class="health-info-input" type="checkbox" data-health-field="${escapeApplicantHtml(fieldKey)}" ${rawValue ? 'checked' : ''}>
+                            <span>${escapeApplicantHtml(label)}</span>
+                        </label>
+                    </div>
+                `;
+            }
+
+            if (type === 'select' || type === 'virtual_select') {
+                return `
+                    ${wrapperStart}
+                        <label for="${fieldId}">${escapeApplicantHtml(label)}</label>
+                        <select class="health-info-input" id="${fieldId}" data-health-field="${escapeApplicantHtml(fieldKey)}">
+                            ${healthInfoOptionsMarkup(config.options || [], value, 'Select ' + label.toLowerCase())}
+                        </select>
+                    </div>
+                `;
+            }
+
+            if (type === 'course') {
+                const selectedCode = normalizeHealthInfoValue(getHealthInfoFieldValue(section.key, 'course_code'));
+                const selectedCourse = healthInfoCourseOptions.find(course => course.code === selectedCode)
+                    || healthInfoCourseOptions.find(course => course.name === value);
+                return `
+                    ${wrapperStart}
+                        <label for="${fieldId}">${escapeApplicantHtml(label)}</label>
+                        <select class="health-info-input" id="${fieldId}" data-health-field="course_code" data-health-course-select>
+                            ${healthInfoOptionsMarkup(healthInfoCourseOptions.map(course => ({
+                                value: course.code,
+                                label: course.code + ' - ' + course.name
+                            })), selectedCourse?.code || selectedCode, 'Select course')}
+                        </select>
+                    </div>
+                `;
+            }
+
+            if (type === 'checkbox_group') {
+                const selectedItems = Array.isArray(rawValue)
+                    ? rawValue.map(item => String(item))
+                    : String(rawValue || '').split(',').map(item => item.trim()).filter(Boolean);
+                if (
+                    fieldKey === 'medical_history' &&
+                    normalizeHealthInfoValue(getHealthInfoFieldValue(section.key, 'other_illness')) !== '' &&
+                    !selectedItems.includes('Others')
+                ) {
+                    selectedItems.push('Others');
+                }
+                return `
+                    ${wrapperStart}
+                        <label>${escapeApplicantHtml(label)}</label>
+                        <div class="health-info-checkbox-grid">
+                            ${(config.options || []).map(function (option) {
+                                const checked = selectedItems.includes(option);
+                                return `
+                                    <label class="health-info-check-option">
+                                        <input type="checkbox" data-health-checkbox-group="${escapeApplicantHtml(fieldKey)}" value="${escapeApplicantHtml(option)}" ${checked ? 'checked' : ''}>
+                                        <span>${escapeApplicantHtml(option)}</span>
+                                    </label>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (type === 'vaccine_history') {
+                const history = rawValue && typeof rawValue === 'object' ? rawValue : {};
+                return `
+                    ${wrapperStart}
+                        <label>${escapeApplicantHtml(label)}</label>
+                        <div class="health-info-vaccine-grid">
+                            ${healthInfoVaccineDoses.map(function ([doseKey, doseLabel]) {
+                                const dose = history[doseKey] || {};
+                                return `
+                                    <div class="health-info-vaccine-dose">
+                                        <strong>${escapeApplicantHtml(doseLabel)}</strong>
+                                        <input class="health-info-input" type="date" data-health-vaccine-dose="${escapeApplicantHtml(doseKey)}" data-health-vaccine-field="date" value="${escapeApplicantHtml(dose.date || '')}">
+                                        <input class="health-info-input" type="text" data-health-vaccine-dose="${escapeApplicantHtml(doseKey)}" data-health-vaccine-field="brand" value="${escapeApplicantHtml(dose.brand || '')}" placeholder="Brand">
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                ${wrapperStart}
+                    <label for="${fieldId}">${escapeApplicantHtml(label)}</label>
+                    <input class="health-info-input" id="${fieldId}" type="${type === 'date' ? 'date' : (type === 'number' ? 'number' : 'text')}" data-health-field="${escapeApplicantHtml(fieldKey)}" value="${escapedValue}">
+                </div>
+            `;
+        }
+
+        function refreshHealthInfoConditionalVisibility() {
+            if (!healthInfoFields) return;
+            const section = healthInfoSections.find(item => item.key === currentHealthInfoSection) || healthInfoSections[0];
+            section.fields.forEach(function (fieldConfig) {
+                const [fieldKey] = fieldConfig;
+                const wrapper = healthInfoFields.querySelector(`[data-health-field-wrap="${fieldKey}"]`);
+                if (!wrapper) return;
+                wrapper.classList.toggle('is-hidden', !isHealthInfoFieldVisible(section, fieldConfig));
+            });
         }
 
         function renderHealthInfoTabs() {
@@ -9825,36 +10145,24 @@
             const section = healthInfoSections.find(item => item.key === currentHealthInfoSection) || healthInfoSections[0];
             if (healthInfoSectionTitle) healthInfoSectionTitle.textContent = section.title;
 
-            healthInfoFields.innerHTML = section.fields.map(function ([fieldKey, label, type, sourceType]) {
+            healthInfoFields.innerHTML = section.fields.map(function ([fieldKey, label, type, sourceType, config]) {
                 const rawValue = getHealthInfoFieldValue(section.key, fieldKey, sourceType);
-                const value = rawValue === true ? 'Yes' : (rawValue === false ? 'No' : String(rawValue ?? ''));
+                let value = rawValue === true ? 'Yes' : (rawValue === false ? 'No' : String(rawValue ?? ''));
+                if (type === 'vaccine_history' && rawValue && typeof rawValue === 'object') {
+                    value = healthInfoVaccineDoses
+                        .map(function ([doseKey, doseLabel]) {
+                            const dose = rawValue[doseKey] || {};
+                            const parts = [dose.date || '', dose.brand || ''].filter(Boolean);
+                            return parts.length ? `${doseLabel}: ${parts.join(' - ')}` : '';
+                        })
+                        .filter(Boolean)
+                        .join('\n');
+                }
                 const escapedValue = escapeApplicantHtml(value);
                 const isReadonly = type === 'readonly';
 
                 if (isHealthInfoEditing && !isReadonly) {
-                    if (type === 'textarea') {
-                        return `
-                            <div class="health-info-field">
-                                <label for="healthInfo_${escapeApplicantHtml(fieldKey)}">${escapeApplicantHtml(label)}</label>
-                                <textarea class="health-info-input" id="healthInfo_${escapeApplicantHtml(fieldKey)}" data-health-field="${escapeApplicantHtml(fieldKey)}">${escapedValue}</textarea>
-                            </div>
-                        `;
-                    }
-                    if (type === 'checkbox') {
-                        return `
-                            <div class="health-info-field">
-                                <label>${escapeApplicantHtml(label)}</label>
-                                <input class="health-info-input" type="checkbox" data-health-field="${escapeApplicantHtml(fieldKey)}" ${rawValue ? 'checked' : ''}>
-                            </div>
-                        `;
-                    }
-
-                    return `
-                        <div class="health-info-field">
-                            <label for="healthInfo_${escapeApplicantHtml(fieldKey)}">${escapeApplicantHtml(label)}</label>
-                            <input class="health-info-input" id="healthInfo_${escapeApplicantHtml(fieldKey)}" type="${type === 'date' ? 'date' : (type === 'number' ? 'number' : 'text')}" data-health-field="${escapeApplicantHtml(fieldKey)}" value="${escapedValue}">
-                        </div>
-                    `;
+                    return renderHealthInfoInput(section, fieldKey, label, type, sourceType, config || {});
                 }
 
                 return `
@@ -9864,6 +10172,23 @@
                     </div>
                 `;
             }).join('');
+
+            refreshHealthInfoConditionalVisibility();
+            syncHealthInfoCourseFields();
+        }
+
+        function syncHealthInfoCourseFields() {
+            if (!healthInfoFields) return;
+
+            const courseSelect = healthInfoFields.querySelector('[data-health-course-select]');
+            if (!courseSelect) return;
+
+            const selectedCourse = healthInfoCourseOptions.find(course => course.code === courseSelect.value);
+            const courseCodeValue = healthInfoFields.querySelector('[data-health-field-wrap="course_code"] .health-info-value');
+
+            if (courseCodeValue) {
+                courseCodeValue.textContent = selectedCourse?.code || 'N/A';
+            }
         }
 
         function renderHealthInfoEditor(data) {
@@ -9889,6 +10214,55 @@
             healthInfoSections.forEach(function (section) {
                 section.fields.forEach(function ([fieldKey, , type, sourceType]) {
                     if (type === 'readonly' || sourceType === 'root') return;
+
+                    if (type === 'virtual_select') {
+                        return;
+                    }
+
+                    if (type === 'course') {
+                        const field = healthInfoFields?.querySelector('[data-health-course-select]');
+                        if (!field) {
+                            payload.course_code = currentHealthInfoData?.personal_information?.course_code || '';
+                            payload.course_college = currentHealthInfoData?.personal_information?.course_college || '';
+                            return;
+                        }
+                        const selectedCode = field ? field.value : '';
+                        const selectedCourse = healthInfoCourseOptions.find(course => course.code === selectedCode);
+                        payload.course_code = selectedCode;
+                        payload.course_college = selectedCourse?.name || '';
+                        return;
+                    }
+
+                    if (type === 'checkbox_group') {
+                        const groupInputs = Array.from(healthInfoFields?.querySelectorAll(`[data-health-checkbox-group="${fieldKey}"]`) || []);
+                        if (!groupInputs.length) {
+                            payload[fieldKey] = currentHealthInfoData?.[section.key]?.[fieldKey] || '';
+                            return;
+                        }
+                        const checkedValues = Array.from(healthInfoFields?.querySelectorAll(`[data-health-checkbox-group="${fieldKey}"]:checked`) || [])
+                            .map(item => item.value);
+                        payload[fieldKey] = checkedValues.join(', ');
+                        return;
+                    }
+
+                    if (type === 'vaccine_history') {
+                        const doseInputs = Array.from(healthInfoFields?.querySelectorAll('[data-health-vaccine-dose]') || []);
+                        if (!doseInputs.length) {
+                            payload.vaccine_history = currentHealthInfoData?.personal_social_history?.vaccine_history || {};
+                            return;
+                        }
+                        const vaccineHistory = {};
+                        healthInfoVaccineDoses.forEach(function ([doseKey]) {
+                            const date = healthInfoFields?.querySelector(`[data-health-vaccine-dose="${doseKey}"][data-health-vaccine-field="date"]`)?.value || '';
+                            const brand = healthInfoFields?.querySelector(`[data-health-vaccine-dose="${doseKey}"][data-health-vaccine-field="brand"]`)?.value || '';
+                            if (date || brand) {
+                                vaccineHistory[doseKey] = { date, brand };
+                            }
+                        });
+                        payload.vaccine_history = vaccineHistory;
+                        return;
+                    }
+
                     const field = healthInfoFields?.querySelector(`[data-health-field="${fieldKey}"]`);
                     if (!field) {
                         const existing = currentHealthInfoData?.[section.key]?.[fieldKey];
@@ -9898,6 +10272,33 @@
                     payload[fieldKey] = field.type === 'checkbox' ? field.checked : field.value;
                 });
             });
+
+            if (payload.has_illness !== 'Yes') {
+                payload.medical_history = '';
+                payload.other_illness = '';
+            }
+            if (payload.has_disability !== 'Yes') {
+                payload.disability_type = '';
+            }
+            if (payload.no_allergies) {
+                payload.food_allergies = '';
+                payload.medicine_allergies = '';
+                payload.other_med_allergies = '';
+            } else {
+                const hasFoodAllergies = healthInfoFields?.querySelector('[data-health-field="has_food_allergies"]')?.value;
+                const hasMedicineAllergies = healthInfoFields?.querySelector('[data-health-field="has_medicine_allergies"]')?.value;
+
+                if (hasFoodAllergies === 'No') {
+                    payload.food_allergies = '';
+                }
+                if (hasMedicineAllergies === 'No') {
+                    payload.medicine_allergies = '';
+                    payload.other_med_allergies = '';
+                }
+            }
+            if (payload.covid_vaccinated !== 'Yes') {
+                payload.vaccine_history = {};
+            }
 
             return payload;
         }
@@ -11131,6 +11532,21 @@
         }
         if (healthInfoSaveBtn) {
             healthInfoSaveBtn.addEventListener('click', saveHealthInfoEditor);
+        }
+        if (healthInfoFields) {
+            healthInfoFields.addEventListener('change', function (event) {
+                if (event.target.matches('[data-health-course-select]')) {
+                    syncHealthInfoCourseFields();
+                }
+
+                if (
+                    event.target.matches('[data-health-field]') ||
+                    event.target.matches('[data-health-checkbox-group]') ||
+                    event.target.matches('[data-health-vaccine-dose]')
+                ) {
+                    refreshHealthInfoConditionalVisibility();
+                }
+            });
         }
         if (pendingHistoryButton && pendingHistoryWrap) {
             pendingHistoryButton.addEventListener('click', function (event) {
