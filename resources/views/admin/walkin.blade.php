@@ -4130,8 +4130,8 @@
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-file-actions {
         position: sticky;
-        top: 0;
-        z-index: 30;
+        top: -18px;
+        z-index: 80;
         align-self: stretch;
         width: calc(100% - 32px);
         margin: 0 auto 14px !important;
@@ -4141,18 +4141,31 @@
         background: linear-gradient(180deg, #fff1f2 0%, #fff7f7 100%) !important;
         backdrop-filter: blur(10px);
         box-shadow: 0 12px 28px rgba(127, 29, 45, 0.12);
-        transition: width .18s ease, margin .18s ease, border-radius .18s ease, padding .18s ease;
+        transform: translateY(0);
+        transition: width .18s ease, margin .18s ease, border-radius .18s ease, padding .18s ease, transform .18s ease;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow.is-final-review-toolbar-stuck .applicant-file-actions {
         width: calc(100% + 36px);
-        margin: -34px -18px 16px !important;
+        margin: -34px -18px -26px !important;
         padding: 14px 18px 12px !important;
         border-top: 0;
         border-left: 0;
         border-right: 0;
         border-radius: 0 0 16px 16px;
         box-shadow: 0 16px 30px rgba(127, 29, 45, 0.16);
+        transform: translateY(-46px);
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow.is-final-review-toolbar-stuck .applicant-file-actions::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: -42px;
+        height: 42px;
+        background: linear-gradient(180deg, #fff1f2 0%, #fff1f2 80%, rgba(255, 241, 242, 0));
+        pointer-events: none;
     }
 
     .applicant-pending-history-wrap {
