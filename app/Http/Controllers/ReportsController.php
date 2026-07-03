@@ -55,6 +55,31 @@ class ReportsController extends Controller
         return $fallback->copy();
     }
 
+    private function applyHealthApprovalDateRange($query, Carbon $dateFrom, Carbon $dateTo)
+    {
+        return $query->where(function ($builder) use ($dateFrom, $dateTo) {
+            $builder->whereBetween('verified_at', [$dateFrom, $dateTo])
+                ->orWhere(function ($fallback) use ($dateFrom, $dateTo) {
+                    $fallback->whereNull('verified_at')
+                        ->whereBetween('created_at', [$dateFrom, $dateTo]);
+                });
+        });
+    }
+
+    private function healthApprovalDate(?HealthProfile $profile): ?Carbon
+    {
+        if (!$profile) {
+            return null;
+        }
+
+        return $profile->verified_at ?? $profile->created_at;
+    }
+
+    private function healthApprovalDateSql(): string
+    {
+        return 'COALESCE(verified_at, created_at)';
+    }
+
     public function digitalLogbook(Request $request)
     {
         return view('admin.reports.digital-logbook');
@@ -807,14 +832,6 @@ class ReportsController extends Controller
             ->with('user')
             ->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
 
-        $issuedBaseQuery->where(function ($builder) use ($dateFrom, $dateTo) {
-                $builder->whereBetween('verified_at', [$dateFrom, $dateTo])
-                    ->orWhere(function ($fallback) use ($dateFrom, $dateTo) {
-                        $fallback->whereNull('verified_at')
-                            ->whereBetween('created_at', [$dateFrom, $dateTo]);
-                    });
-            });
-
         if ($search !== '') {
             $issuedBaseQuery->where(function ($builder) use ($search) {
                 $builder->where('course_college', 'like', "%{$search}%")
@@ -824,15 +841,39 @@ class ReportsController extends Controller
             });
         }
 
+        $this->applyHealthApprovalDateRange($issuedBaseQuery, $dateFrom, $dateTo);
+
+        $pendingBaseQuery = HealthProfile::query()
+            ->with('user')
+            ->whereNotIn('clearance_status', ['Issued', 'Fully Cleared', 'Rejected'])
+            ->whereBetween('created_at', [$dateFrom, $dateTo]);
+
+        if ($search !== '') {
+            $pendingBaseQuery->where(function ($builder) use ($search) {
+                $builder->where('course_college', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('course', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $pendingByCourse = (clone $pendingBaseQuery)
+            ->get()
+            ->groupBy(function (HealthProfile $form) {
+                $course = trim((string) ($form->course_college ?: optional($form->user)->course ?: 'Unspecified Course'));
+                return $course !== '' ? $course : 'Unspecified Course';
+            })
+            ->map(fn ($forms) => $forms->count());
+
         $issuedFormsCollection = (clone $issuedBaseQuery)
             ->get()
             ->groupBy(function (HealthProfile $form) {
                 $course = trim((string) ($form->course_college ?: optional($form->user)->course ?: 'Unspecified Course'));
                 return $course !== '' ? $course : 'Unspecified Course';
             })
-            ->map(function ($forms, $course) {
+            ->map(function ($forms, $course) use ($pendingByCourse) {
                 $sortedForms = $forms->sortByDesc(function (HealthProfile $form) {
-                    return $form->verified_at ?? $form->created_at;
+                    return $this->healthApprovalDate($form);
                 })->values();
 
                 $withConditionCount = $forms->filter(fn (HealthProfile $form) => $form->hasMedicalCondition())->count();
@@ -843,7 +884,8 @@ class ReportsController extends Controller
                     'issued_count' => $issuedCount,
                     'with_condition_count' => $withConditionCount,
                     'no_condition_count' => $issuedCount - $withConditionCount,
-                    'last_issued_at' => optional($sortedForms->first())->verified_at ?? optional($sortedForms->first())->created_at,
+                    'for_approval_count' => (int) ($pendingByCourse->get($course) ?? 0),
+                    'last_issued_at' => $this->healthApprovalDate($sortedForms->first()),
                 ];
             })
             ->sortByDesc('issued_count')
@@ -865,13 +907,7 @@ class ReportsController extends Controller
 
         $summaryQuery = HealthProfile::query()->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
 
-        $summaryQuery->where(function ($builder) use ($dateFrom, $dateTo) {
-                $builder->whereBetween('verified_at', [$dateFrom, $dateTo])
-                    ->orWhere(function ($fallback) use ($dateFrom, $dateTo) {
-                        $fallback->whereNull('verified_at')
-                            ->whereBetween('created_at', [$dateFrom, $dateTo]);
-                    });
-            });
+        $this->applyHealthApprovalDateRange($summaryQuery, $dateFrom, $dateTo);
 
         $totalIssued = (clone $summaryQuery)->count();
         $totalCourses = $issuedFormsCollection->count();
@@ -1060,15 +1096,12 @@ class ReportsController extends Controller
 
         $records = HealthProfile::query()
             ->with(['user', 'approvedBy', 'reviewStartedBy'])
-            ->whereIn('clearance_status', ['Issued', 'Fully Cleared'])
-            ->where(function ($query) use ($dateFrom, $dateTo) {
-                $query->whereBetween('verified_at', [$dateFrom, $dateTo])
-                    ->orWhere(function ($fallback) use ($dateFrom, $dateTo) {
-                        $fallback->whereNull('verified_at')
-                            ->whereBetween('created_at', [$dateFrom, $dateTo]);
-                    });
-            })
-            ->orderBy('verified_at')
+            ->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
+
+        $this->applyHealthApprovalDateRange($records, $dateFrom, $dateTo);
+
+        $records = $records
+            ->orderBy(DB::raw($this->healthApprovalDateSql()))
             ->orderBy('created_at')
             ->get();
 
@@ -1148,7 +1181,7 @@ class ReportsController extends Controller
                     optional($record->created_at)->format('M d, Y g:i A') ?: 'N/A',
                     $record->review_started_at ? Carbon::parse($record->review_started_at)->format('M d, Y g:i A') : 'N/A',
                     optional($reviewer)->name ?: 'N/A',
-                    $isApproved && $record->verified_at ? Carbon::parse($record->verified_at)->format('M d, Y g:i A') : 'N/A',
+                    $isApproved && $this->healthApprovalDate($record) ? $this->healthApprovalDate($record)->format('M d, Y g:i A') : 'N/A',
                     $isApproved ? (optional($approver)->name ?: 'N/A') : 'N/A',
                     $isApproved ? 'Approved' : 'Pending',
                     $hasCondition ? 'Yes' : 'No',

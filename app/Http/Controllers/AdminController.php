@@ -1607,7 +1607,8 @@ public function updateClearance(Request $request, $id)
     $record->medical_condition_remarks = $request->input('medical_condition_remarks');
     $record->physical_assessment_status = $request->input('physical_assessment_status');
     $record->documents_valid = $requestedStatus === 'Pending Resubmission' ? false : $documentsValid;
-    $record->verified_at      = $isApproval ? ($request->verified_at ?? now()) : null;
+    $approvalDate = $isApproval ? ($request->verified_at ?? now()) : null;
+    $record->verified_at = $approvalDate;
     $record->approved_by_user_id = $isApproval ? auth()->id() : null;
     $record->resubmission_required_documents = $requestedStatus === 'Pending Resubmission'
         ? array_values(array_unique((array) $request->input('resubmission_required_documents', [])))

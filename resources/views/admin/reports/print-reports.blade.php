@@ -1365,7 +1365,7 @@
                     <th>ISSUED FORMS</th>
                     <th>WITH CONDITION</th>
                     <th>NO CONDITION</th>
-                    <th>LAST ISSUED</th>
+                    <th>FOR APPROVAL</th>
                 </tr>
             </thead>
             <tbody>
@@ -1375,7 +1375,7 @@
                     <td>{{ $form->issued_count }}</td>
                     <td>{{ $form->with_condition_count }}</td>
                     <td>{{ $form->no_condition_count }}</td>
-                    <td>{{ optional($form->last_issued_at)->format('M d, Y') }}</td>
+                    <td>{{ $form->for_approval_count ?? 0 }}</td>
                 </tr>
                 @empty
                 <tr><td colspan="5">No issued health forms found.</td></tr>

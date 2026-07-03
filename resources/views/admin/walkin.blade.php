@@ -9340,9 +9340,9 @@
 
             const fieldValues = {
                 applicantMedicalCondition: savedReview.medical_condition || '',
-                applicantFindingRemarks: savedReview.med_assessment_remarks || '',
-                applicantConditionRemarks: savedReview.condition_remarks || '',
-                applicantNormalRemarks: savedReview.normal_remarks || '',
+                applicantFindingRemarks: savedReview.med_assessment_remarks || savedReview.approval_remarks || savedReview.condition_remarks || savedReview.pending_remarks || '',
+                applicantConditionRemarks: savedReview.condition_remarks || savedReview.pending_remarks || savedReview.med_assessment_remarks || savedReview.normal_remarks || '',
+                applicantNormalRemarks: savedReview.normal_remarks || savedReview.approval_remarks || savedReview.med_assessment_remarks || savedReview.condition_remarks || savedReview.pending_remarks || '',
                 applicantHeight: savedReview.height !== null && savedReview.height !== undefined && savedReview.height !== '' ? formatHeightFeet(savedReview.height) : '',
                 applicantWeight: savedReview.weight ?? '',
                 applicantBloodPressure: savedReview.blood_pressure || '',
@@ -9402,7 +9402,7 @@
             if (savedReview.needs_health_form_correction) pendingReasons.push('Health Form Correction');
             if (savedReview.other_pending_reason) pendingReasons.push('Others');
 
-            const remarks = String(savedReview.condition_remarks || savedReview.pending_remarks || '').trim();
+            const remarks = String(savedReview.condition_remarks || savedReview.pending_remarks || savedReview.med_assessment_remarks || savedReview.normal_remarks || '').trim();
             const otherReason = String(savedReview.other_pending_reason || '').trim();
             const hasHistory = pendingReasons.length > 0 || remarks !== '' || otherReason !== '';
 
@@ -10929,7 +10929,7 @@
 
         const findingsInputs = document.querySelectorAll('input[name="applicant_findings_status"]');
         const clearanceDecisionInputs = document.querySelectorAll('input[name="applicant_clearance_decision"]');
-        const pendingReasonInputs = document.querySelectorAll('#applicantHasMedicalCondition, #applicantIncompleteRequirements, #applicantNeedsPhysicianEvaluation, #applicantOtherPendingReason');
+        const pendingReasonInputs = document.querySelectorAll('#applicantHasMedicalCondition, #applicantIncompleteRequirements, #applicantNeedsPhysicianEvaluation, #applicantNeedsFurtherEvaluation, #applicantNeedsHealthFormCorrection, #applicantOtherPendingReason');
         const medicalConditionFields = document.getElementById('applicantConditionFields');
             const clearanceDecisionFields = document.getElementById('applicantClearanceDecisionFields');
             const pendingDecisionFields = document.getElementById('applicantPendingDecisionFields');
@@ -11164,7 +11164,7 @@
                 }
             }
             if (!isPendingDecision) {
-                ['applicantIncompleteRequirements', 'applicantNeedsPhysicianEvaluation', 'applicantOtherPendingReason'].forEach(function (id) {
+                ['applicantIncompleteRequirements', 'applicantNeedsPhysicianEvaluation', 'applicantNeedsFurtherEvaluation', 'applicantNeedsHealthFormCorrection', 'applicantOtherPendingReason'].forEach(function (id) {
                     const input = document.getElementById(id);
                     if (input) input.checked = false;
                 });

@@ -228,6 +228,10 @@
         background: #eff6ff;
         color: #1d4ed8;
     }
+    .health-condition-badge.pending {
+        background: #fff7ed;
+        color: #9a3412;
+    }
     .health-forms-empty {
         padding: 44px 24px;
         text-align: center;
@@ -315,7 +319,7 @@
                             <th>Issued Forms</th>
                             <th>With Condition</th>
                             <th>No Condition</th>
-                            <th>Last Issued</th>
+                            <th>For Approval</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -325,7 +329,7 @@
                                 <td><span class="health-status-badge">{{ $form->issued_count }}</span></td>
                                 <td><span class="health-condition-badge">{{ $form->with_condition_count }}</span></td>
                                 <td><span class="health-condition-badge none">{{ $form->no_condition_count }}</span></td>
-                                <td>{{ optional($form->last_issued_at)->format('M d, Y') }}</td>
+                                <td><span class="health-condition-badge pending">{{ $form->for_approval_count }}</span></td>
                             </tr>
                         @empty
                             <tr>

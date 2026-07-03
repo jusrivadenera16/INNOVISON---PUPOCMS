@@ -71,6 +71,7 @@ class HealthProfile extends Model
         'resubmission_requested_at' => 'datetime',
         'resubmitted_at' => 'datetime',
         'review_started_at' => 'datetime',
+        'verified_at' => 'datetime',
 
     ];
 

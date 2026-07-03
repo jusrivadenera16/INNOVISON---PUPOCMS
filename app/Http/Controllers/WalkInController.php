@@ -712,6 +712,11 @@ class WalkInController extends Controller
         }
 
         $clearanceDecision = $clearanceStatus === 'Pending/Conditional' ? 'pending' : 'approve';
+        $pendingRemarks = trim((string) $pendingRemarks);
+        $approvalRemarks = $medAssessmentRemarks !== '' ? $medAssessmentRemarks : $assessmentRemarks;
+        $conditionRemarksForUi = $clearanceDecision === 'pending'
+            ? ($pendingRemarks !== '' ? $pendingRemarks : $medicalConditionRemarks)
+            : '';
 
         return [
             'findings_status' => $findingsStatus,
@@ -724,13 +729,13 @@ class WalkInController extends Controller
             'needs_further_evaluation' => $needsFurtherEvaluation,
             'needs_health_form_correction' => $needsHealthFormCorrection,
             'other_pending_reason' => $otherPendingReason,
-            'condition_remarks' => $clearanceDecision === 'pending'
-                ? trim($pendingRemarks !== '' ? $pendingRemarks : '')
-                : '',
+            'condition_remarks' => $conditionRemarksForUi,
+            'pending_remarks' => $conditionRemarksForUi,
             'med_assessment_remarks' => $medAssessmentRemarks,
             'normal_remarks' => $clearanceDecision !== 'pending' && $findingsStatus === 'No Findings / Normal'
-                ? ($medAssessmentRemarks !== '' ? $medAssessmentRemarks : $assessmentRemarks)
+                ? $approvalRemarks
                 : '',
+            'approval_remarks' => $approvalRemarks,
             'height' => trim((string) $profile->height),
             'weight' => trim((string) $profile->weight),
             'blood_pressure' => trim((string) $profile->blood_pressure),
@@ -2453,7 +2458,8 @@ PROMPT;
                 $profile->resubmission_requested_at = $hasIncompleteRequirements
                     ? now()
                     : null;
-                $profile->verified_at = $hasPendingFinding ? null : now();
+                $approvalDate = $hasPendingFinding ? null : now();
+                $profile->verified_at = $approvalDate;
                 $profile->approved_by_user_id = $hasPendingFinding ? null : auth()->id();
                 $profile->puptas_sync_status = ($webhookResult['skipped'] ?? false)
                     ? null
