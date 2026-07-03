@@ -238,6 +238,9 @@ Route::middleware(['auth:admin', 'audit'])->group(function () {
     Route::post('/health-profile/{id}/for-final-review', [AdminController::class, 'markHealthProfileForFinalReview'])
         ->middleware('role:superadmin,admin')
         ->name('admin.health_profile.for_final_review');
+    Route::post('/health-profile/{id}/for-approval', [AdminController::class, 'markHealthProfileForApproval'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.health_profile.for_approval');
     Route::post('/health-profile/medical-assessment-upload', [AdminController::class, 'uploadMedicalAssessmentCopy'])
         ->middleware('role:superadmin,admin,nurse')
         ->name('admin.medical_assessment_upload');

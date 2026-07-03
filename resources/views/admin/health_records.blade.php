@@ -2362,6 +2362,13 @@
         flex: 0 0 auto;
     }
 
+    .readonly-review-routing-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 8px;
+    }
+
     .readonly-final-review-field form {
         margin: 0;
     }
@@ -2393,6 +2400,12 @@
         background: #facc15;
         color: #70131B;
         border-color: #f59e0b;
+    }
+
+    @media (max-width: 640px) {
+        .readonly-review-routing-actions {
+            grid-template-columns: 1fr;
+        }
     }
 
     .readonly-resubmission-field {
@@ -3878,14 +3891,23 @@
                                     </strong>
                                 </div>
                                 <div class="readonly-field readonly-final-review-field">
-                                    <span>Final Review</span>
-                                    <form method="POST" action="{{ route('admin.health_profile.for_final_review', $readonlyRecord->id) }}">
-                                        @csrf
-                                        <button type="submit" class="readonly-final-review-btn">
-                                            <x-outline-icon name="check" />
-                                            For Final Review
-                                        </button>
-                                    </form>
+                                    <span>Move Record</span>
+                                    <div class="readonly-review-routing-actions">
+                                        <form method="POST" action="{{ route('admin.health_profile.for_final_review', $readonlyRecord->id) }}">
+                                            @csrf
+                                            <button type="submit" class="readonly-final-review-btn">
+                                                <x-outline-icon name="check" />
+                                                For Final Review
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ route('admin.health_profile.for_approval', $readonlyRecord->id) }}">
+                                            @csrf
+                                            <button type="submit" class="readonly-final-review-btn">
+                                                <x-outline-icon name="clipboard-document-list" />
+                                                For Approval
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                                 <div class="readonly-field"><span>Last Updated Nurse Tracking Remarks</span><strong>{{ $readonlyRecord->medical_condition_remarks ?: $readonlyRecord->pending_reason ?: '-' }}</strong></div>
                                 <div class="readonly-field readonly-doc-preview-field">

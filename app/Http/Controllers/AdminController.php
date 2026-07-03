@@ -1779,6 +1779,56 @@ public function updateClearance(Request $request, $id)
             ->with('success', 'Record moved to Final Review. It will appear in the Final Review applicant list.');
     }
 
+    public function markHealthProfileForApproval(Request $request, $id)
+    {
+        $record = HealthProfile::with('user')->findOrFail($id);
+
+        $previousPendingReason = $record->pending_reason;
+        $previousTrackingRemarks = $record->medical_condition_remarks;
+        $previousDocuments = $record->resubmission_required_documents;
+
+        $record->clearance_status = 'For Verification';
+        $record->physical_assessment_status = 'Not Yet Conducted';
+        $record->pending_reason = null;
+        $record->medical_condition_remarks = null;
+        $record->resubmission_required_documents = null;
+        $record->resubmission_requested_at = null;
+        $record->resubmitted_at = null;
+        $record->verified_at = null;
+        $record->approved_by_user_id = null;
+        $record->save();
+
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_name' => auth()->user()?->name ?? auth()->user()?->email ?? 'System',
+            'user_role' => strtolower((string) (auth()->user()?->user_role ?? '')),
+            'action' => 'Health Profile Moved to Pending Approval',
+            'module' => 'Health Records',
+            'event_type' => 'health_profile_for_approval',
+            'description' => 'Pending compliance record was moved back to Pending Approval without triggering PUPTAS sync.',
+            'route_name' => optional($request->route())->getName(),
+            'http_method' => 'POST',
+            'request_path' => '/' . ltrim((string) $request->path(), '/'),
+            'status_code' => 200,
+            'subject_type' => HealthProfile::class,
+            'subject_id' => (string) $record->id,
+            'metadata' => [
+                'health_profile_id' => $record->id,
+                'reference_number' => $record->reference_number,
+                'student_id' => $record->student_id,
+                'previous_pending_reason' => $previousPendingReason,
+                'previous_tracking_remarks' => $previousTrackingRemarks,
+                'previous_resubmission_required_documents' => $previousDocuments,
+            ],
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 255),
+        ]);
+
+        return redirect()
+            ->route('admin.health_records', ['tab' => 'pending_approval'])
+            ->with('success', 'Record moved to Pending Approval.');
+    }
+
     public function uploadMedicalAssessmentCopy(Request $request)
     {
         $validated = $request->validate([
