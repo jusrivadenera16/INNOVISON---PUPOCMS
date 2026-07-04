@@ -146,7 +146,7 @@ Route::get('/student/faq', [AppointmentController::class, 'faq'])->name('student
 Route::get('/student/booking', [AppointmentController::class, 'create'])->name('student.booking');
 
 // --- PROTECTED ROUTES (Login required) ---
-Route::middleware(['auth:student', 'audit'])->group(function () {
+Route::middleware(['auth:student', 'idp.session', 'audit'])->group(function () {
     Route::middleware('role:student')->group(function () {
         Route::post('/student/skip-barcode', function () {
             session(['barcode_skipped' => true]);
@@ -211,7 +211,7 @@ Route::middleware(['auth:student', 'audit'])->group(function () {
     Route::get('/fetch-user/{student_id}', [AppointmentController::class, 'fetchUser']);
 });
 
-Route::middleware(['auth:admin', 'audit'])->group(function () {
+Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('/assistant/choose-portal', [LoginController::class, 'showStudentAssistantPortalChooser'])->name('assistant.choose-portal');
         Route::get('/assistant/enter-student', [LoginController::class, 'enterStudentPortal'])->name('assistant.enter-student');

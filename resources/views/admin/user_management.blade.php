@@ -90,10 +90,13 @@
     .um-entry-card::after {
         content: "";
         position: absolute;
-        inset: 0;
-        background: linear-gradient(120deg, rgba(255, 248, 196, 0) 0%, rgba(250, 204, 21, 0.42) 48%, rgba(255, 248, 196, 0) 100%);
-        transform: translateX(-130%);
-        transition: transform .95s ease;
+        top: -25%;
+        bottom: -25%;
+        left: -46%;
+        width: 34%;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, 0.52) 48%, rgba(255, 255, 255, 0) 100%);
+        transform: translateX(0) skewX(-18deg);
+        transition: transform .85s ease;
         pointer-events: none;
         z-index: 0;
     }
@@ -109,7 +112,7 @@
     }
 
     .um-entry-card:hover::after {
-        transform: translateX(130%);
+        transform: translateX(430%) skewX(-18deg);
     }
 
     .um-entry-icon {
@@ -254,11 +257,11 @@
     }
 
     html[data-theme="dark"] .um-entry-card::after {
-        background: linear-gradient(180deg, #8f2230 0%, #70131B 100%);
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, 0.52) 48%, rgba(255, 255, 255, 0) 100%);
     }
 
     html[data-theme="dark"] .um-entry-card:hover {
-        background: linear-gradient(135deg, #facc15, #fde68a);
+        background: #facc15;
         border-color: #facc15;
     }
 

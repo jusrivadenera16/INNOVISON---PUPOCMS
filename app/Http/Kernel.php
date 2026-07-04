@@ -66,5 +66,6 @@ class Kernel extends HttpKernel
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'audit' => \App\Http\Middleware\AuditTrailMiddleware::class,
         'external.api' => \App\Http\Middleware\AuthenticateExternalApiRequest::class,
+        'idp.session' => \App\Http\Middleware\EnsureIdpSessionIsActive::class,
     ];
 }
