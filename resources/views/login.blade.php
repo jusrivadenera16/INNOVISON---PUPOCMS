@@ -614,7 +614,7 @@
         <div class="login-hero">
             <div class="login-hero-top">
                 <div class="login-hero-badge"><span></span> Clinic Access</div>
-                <div class="login-chip">Local Sign In</div>
+                <div class="login-chip">{{ app()->environment('local') ? 'Local Sign In' : 'Centralized Sign In' }}</div>
             </div>
             <h2>Clinic Portal</h2>
             <p class="login-hero-copy">Login to your account to continue. The same system keeps student and clinic access in one place.</p>
@@ -648,31 +648,33 @@
                 </p>
             </div>
 
-            <section class="dev-login-grid" aria-label="Static developer login options">
-                <div class="dev-login-card">
-                    <div>
-                        <div class="dev-login-chip">Dev Login</div>
-                        <div class="dev-login-icon">S</div>
-                        <h3 class="dev-login-title">Student</h3>
-                        <p class="dev-login-copy">Static student login placeholder. This option is for local preview only and does not perform authentication yet.</p>
+            @env('local')
+                <section class="dev-login-grid" aria-label="Static developer login options">
+                    <div class="dev-login-card">
+                        <div>
+                            <div class="dev-login-chip">Dev Login</div>
+                            <div class="dev-login-icon">S</div>
+                            <h3 class="dev-login-title">Student</h3>
+                            <p class="dev-login-copy">Static student login placeholder. This option is for local preview only and does not perform authentication yet.</p>
+                        </div>
+                        <a href="#" class="dev-login-cta" onclick="event.preventDefault();">
+                            Student Login
+                        </a>
                     </div>
-                    <a href="#" class="dev-login-cta" onclick="event.preventDefault();">
-                        Student Login
-                    </a>
-                </div>
 
-                <div class="dev-login-card">
-                    <div>
-                        <div class="dev-login-chip">Dev Login</div>
-                        <div class="dev-login-icon">A</div>
-                        <h3 class="dev-login-title">Admin</h3>
-                        <p class="dev-login-copy">Static admin login placeholder. This option is for local preview only and does not perform authentication yet.</p>
+                    <div class="dev-login-card">
+                        <div>
+                            <div class="dev-login-chip">Dev Login</div>
+                            <div class="dev-login-icon">A</div>
+                            <h3 class="dev-login-title">Admin</h3>
+                            <p class="dev-login-copy">Static admin login placeholder. This option is for local preview only and does not perform authentication yet.</p>
+                        </div>
+                        <a href="#" class="dev-login-cta" onclick="event.preventDefault();">
+                            Admin Login
+                        </a>
                     </div>
-                    <a href="#" class="dev-login-cta" onclick="event.preventDefault();">
-                        Admin Login
-                    </a>
-                </div>
-            </section>
+                </section>
+            @endenv
         @else
             <form id="loginForm" action="{{ url('/login-action') }}" method="POST">
                 @csrf
