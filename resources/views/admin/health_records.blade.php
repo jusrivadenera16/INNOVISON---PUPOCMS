@@ -455,6 +455,14 @@
         border: 1px solid rgba(112, 19, 27, 0.12);
         border-radius: 16px;
         background: #fffaf7;
+        transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    .readonly-record-card:hover,
+    .readonly-record-card:focus-within {
+        transform: translateY(-2px);
+        border-color: rgba(112, 19, 27, 0.3);
+        background: linear-gradient(180deg, #fff7ed 0%, #fff1f2 100%);
+        box-shadow: 0 14px 26px rgba(112, 19, 27, 0.12);
     }
     .readonly-record-head {
         display: flex;
