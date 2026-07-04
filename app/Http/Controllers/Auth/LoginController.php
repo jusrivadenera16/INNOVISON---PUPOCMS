@@ -2085,6 +2085,31 @@ class LoginController extends Controller
         return $this->clearIdpCookies($response);
     }
 
+    public function handleIdpLogout(Request $request)
+    {
+        $user = $this->authenticatedUser();
+
+        if ($user instanceof User) {
+            $this->recordAuthEvent(
+                $request,
+                'Logout',
+                'User logged out through the identity provider logout callback.',
+                $user
+            );
+        }
+
+        Auth::guard($this->adminGuardName())->logout();
+        Auth::guard($this->studentGuardName())->logout();
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return $this->clearIdpCookies(
+            redirect()->route('landing')->with('status', 'Logged out successfully')
+        );
+    }
+
     public function showLoginForm(Request $request)
     {
         $authenticatedUser = $this->authenticatedUser();

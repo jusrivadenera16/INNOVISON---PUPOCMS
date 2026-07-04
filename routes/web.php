@@ -126,6 +126,7 @@ Route::post('/system-admin/emergency-login', [EmergencyAuthController::class, 'l
     ->name('system-admin.emergency-login.submit');
 Route::post('/register-action', [RegisterController::class, 'register']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('/idp/logout', [LoginController::class, 'handleIdpLogout'])->name('idp.logout');
 
 // --- WORKSPACE GATEWAY (Server-side session check) ---
 // Direct page request that bypasses JavaScript cookie restrictions
