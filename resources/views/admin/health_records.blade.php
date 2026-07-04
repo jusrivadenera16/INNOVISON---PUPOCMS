@@ -404,12 +404,13 @@
         display: none;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
+        gap: 16px;
         margin-top: 16px;
-        padding: 12px;
-        border: 1px solid rgba(112, 19, 27, 0.12);
-        border-radius: 16px;
-        background: #fffaf7;
+        padding: 14px 18px;
+        border: 1px solid #edf2f7;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
     }
     .readonly-modal-pagination.is-visible {
         display: flex;
@@ -417,36 +418,54 @@
     .readonly-pagination-summary {
         color: #64748b;
         font-size: 12px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
+        font-weight: 900;
     }
     .readonly-pagination-actions {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
     }
     .readonly-pagination-btn {
-        min-width: 92px;
-        min-height: 40px;
-        border: 1px solid rgba(112, 19, 27, 0.35);
-        border-radius: 999px;
+        min-width: 38px;
+        min-height: 38px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
         background: #fff;
-        color: #70131B;
+        color: #334155;
         font-size: 12px;
         font-weight: 900;
         cursor: pointer;
-        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        padding: 0 12px;
+        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow .2s ease;
     }
     .readonly-pagination-btn:hover:not(:disabled) {
-        background: #ffcc00;
-        border-color: #ffcc00;
-        color: #111827;
+        background: #fff7ed;
+        border-color: #f8cfd4;
+        color: #70131B;
         transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .10);
+    }
+    .readonly-pagination-btn.is-active,
+    .readonly-pagination-btn.is-active:hover:not(:disabled) {
+        background: #7f0010;
+        border-color: #7f0010;
+        color: #ffffff;
     }
     .readonly-pagination-btn:disabled {
         cursor: not-allowed;
         opacity: 0.45;
+    }
+    .readonly-pagination-per-page {
+        min-height: 38px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #334155;
+        padding: 0 12px;
+        font-size: 12px;
+        font-weight: 900;
     }
     .readonly-record-card {
         display: grid;
@@ -3811,23 +3830,43 @@
         </tbody>
     </table>
     @if($healthProfileSummaryRecords->hasPages())
+        @php
+            $issuedCurrentPage = $healthProfileSummaryRecords->currentPage();
+            $issuedLastPage = $healthProfileSummaryRecords->lastPage();
+            $issuedPages = collect([1, $issuedCurrentPage - 1, $issuedCurrentPage, $issuedCurrentPage + 1, $issuedLastPage])
+                ->filter(fn ($page) => $page >= 1 && $page <= $issuedLastPage)
+                ->unique()
+                ->values();
+        @endphp
         <div class="readonly-modal-pagination is-visible" aria-label="Issued medical clearance pagination">
             <span class="readonly-pagination-summary">
-                Showing {{ $healthProfileSummaryRecords->firstItem() }}-{{ $healthProfileSummaryRecords->lastItem() }} of {{ $healthProfileSummaryRecords->total() }}
+                Showing {{ $healthProfileSummaryRecords->firstItem() }} to {{ $healthProfileSummaryRecords->lastItem() }} of {{ $healthProfileSummaryRecords->total() }} records
             </span>
             <div class="readonly-pagination-actions">
                 @if($healthProfileSummaryRecords->onFirstPage())
-                    <button type="button" class="readonly-pagination-btn" disabled>Previous</button>
+                    <button type="button" class="readonly-pagination-btn" disabled aria-label="Previous page">&larr;</button>
                 @else
-                    <a class="readonly-pagination-btn" href="{{ $healthProfileSummaryRecords->previousPageUrl() }}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">Previous</a>
+                    <a class="readonly-pagination-btn" href="{{ $healthProfileSummaryRecords->previousPageUrl() }}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;" aria-label="Previous page">&larr;</a>
                 @endif
 
+                @foreach($issuedPages as $page)
+                    @if($loop->index > 0 && $page - $issuedPages[$loop->index - 1] > 1)
+                        <span class="readonly-pagination-btn" aria-hidden="true">...</span>
+                    @endif
+                    @if($page === $issuedCurrentPage)
+                        <button type="button" class="readonly-pagination-btn is-active" disabled>{{ $page }}</button>
+                    @else
+                        <a class="readonly-pagination-btn" href="{{ $healthProfileSummaryRecords->url($page) }}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">{{ $page }}</a>
+                    @endif
+                @endforeach
+
                 @if($healthProfileSummaryRecords->hasMorePages())
-                    <a class="readonly-pagination-btn" href="{{ $healthProfileSummaryRecords->nextPageUrl() }}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">Next</a>
+                    <a class="readonly-pagination-btn" href="{{ $healthProfileSummaryRecords->nextPageUrl() }}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;" aria-label="Next page">&rarr;</a>
                 @else
-                    <button type="button" class="readonly-pagination-btn" disabled>Next</button>
+                    <button type="button" class="readonly-pagination-btn" disabled aria-label="Next page">&rarr;</button>
                 @endif
             </div>
+            <span class="readonly-pagination-per-page">20 per page</span>
         </div>
     @endif
 </div>
@@ -4183,9 +4222,11 @@
             >
                 <span class="readonly-pagination-summary" data-pagination-summary>Showing 0-0 of 0</span>
                 <div class="readonly-pagination-actions">
-                    <button type="button" class="readonly-pagination-btn" data-pagination-prev>Previous</button>
-                    <button type="button" class="readonly-pagination-btn" data-pagination-next>Next</button>
+                    <button type="button" class="readonly-pagination-btn" data-pagination-prev aria-label="Previous page">&larr;</button>
+                    <button type="button" class="readonly-pagination-btn is-active" data-pagination-current>1</button>
+                    <button type="button" class="readonly-pagination-btn" data-pagination-next aria-label="Next page">&rarr;</button>
                 </div>
+                <span class="readonly-pagination-per-page">5 per page</span>
             </div>
         </div>
     </div>
@@ -4334,9 +4375,11 @@
             >
                 <span class="readonly-pagination-summary" data-pagination-summary>Showing 0-0 of 0</span>
                 <div class="readonly-pagination-actions">
-                    <button type="button" class="readonly-pagination-btn" data-pagination-prev>Previous</button>
-                    <button type="button" class="readonly-pagination-btn" data-pagination-next>Next</button>
+                    <button type="button" class="readonly-pagination-btn" data-pagination-prev aria-label="Previous page">&larr;</button>
+                    <button type="button" class="readonly-pagination-btn is-active" data-pagination-current>1</button>
+                    <button type="button" class="readonly-pagination-btn" data-pagination-next aria-label="Next page">&rarr;</button>
                 </div>
+                <span class="readonly-pagination-per-page">5 per page</span>
             </div>
         </div>
     </div>
@@ -5211,8 +5254,10 @@
 
             const previousBtn = pagination.querySelector('[data-pagination-prev]');
             const nextBtn = pagination.querySelector('[data-pagination-next]');
+            const currentBtn = pagination.querySelector('[data-pagination-current]');
             if (previousBtn) previousBtn.disabled = currentPage <= 1;
             if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+            if (currentBtn) currentBtn.textContent = String(totalPages === 0 ? 1 : currentPage);
         };
 
         const filterReadonlyCards = function (input) {

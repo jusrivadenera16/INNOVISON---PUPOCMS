@@ -411,11 +411,11 @@
     }
     .logbook-pagination {
         margin-top: 20px;
-        padding: 14px 16px;
-        border: 1px solid rgba(112, 19, 27, 0.1);
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.88);
-        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+        padding: 14px 18px;
+        border: 1px solid #edf2f7;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
     }
     .logbook-pagination .pagination {
         display: flex;
@@ -438,27 +438,27 @@
         min-width: 38px;
         height: 38px;
         padding: 0 14px;
-        border-radius: 999px;
-        border: 1px solid rgba(112, 19, 27, 0.14);
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
         background: #ffffff;
-        color: #70131B;
-        font-size: 13px;
+        color: #334155;
+        font-size: 12px;
         font-weight: 900;
         line-height: 1;
         text-decoration: none;
-        box-shadow: 0 10px 20px rgba(112, 19, 27, 0.07);
+        box-shadow: none;
         transition: transform .18s ease, border-color .18s ease, background-color .18s ease, color .18s ease, box-shadow .18s ease;
     }
     .logbook-pagination .pagination a:hover {
-        background: #facc15;
-        border-color: #facc15;
-        color: #111827;
+        background: #fff7ed;
+        border-color: #f8cfd4;
+        color: #70131B;
         transform: translateY(-1px);
-        box-shadow: 0 14px 26px rgba(250, 204, 21, 0.24);
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .10);
     }
     .logbook-pagination .pagination .active span {
-        background: #7f1d2d;
-        border-color: #7f1d2d;
+        background: #7f0010;
+        border-color: #7f0010;
         color: #ffffff;
         box-shadow: 0 12px 24px rgba(127, 29, 45, 0.22);
     }

@@ -3245,9 +3245,14 @@
     .applicant-final-review-pagination {
         display: none;
         align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding-top: 4px;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 12px;
+        padding: 14px 18px;
+        border: 1px solid #edf2f7;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
     }
 
     .applicant-final-review-pagination.is-visible {
@@ -3255,14 +3260,24 @@
     }
 
     .applicant-final-review-page-btn {
+        min-width: 38px;
         min-height: 38px;
-        border-radius: 999px;
-        border: 1px solid rgba(112, 19, 27, 0.22);
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
         background: #ffffff;
-        color: #70131B;
+        color: #334155;
         font-size: 12px;
         font-weight: 900;
-        padding: 0 15px;
+        padding: 0 12px;
+        transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .applicant-final-review-page-btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        background: #fff7ed;
+        border-color: #f8cfd4;
+        color: #70131B;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .10);
     }
 
     .applicant-final-review-page-btn:disabled {
@@ -3271,6 +3286,32 @@
     }
 
     .applicant-final-review-page-label {
+        min-width: 38px;
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 12px;
+        border-radius: 8px;
+        background: #7f0010;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    .applicant-final-review-pagination-summary,
+    .applicant-final-review-per-page {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .applicant-final-review-pagination-controls {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
         color: #64748b;
         font-size: 12px;
         font-weight: 900;
@@ -6824,9 +6865,13 @@
                         </div>
                         <div class="applicant-final-review-empty" id="applicantFinalReviewEmpty">No encoded applicant matches your search.</div>
                         <div class="applicant-final-review-pagination" id="applicantFinalReviewPagination">
-                            <button type="button" class="applicant-final-review-page-btn" id="applicantFinalReviewPrev">Previous</button>
-                            <span class="applicant-final-review-page-label" id="applicantFinalReviewPageLabel">Page 1 of 1</span>
-                            <button type="button" class="applicant-final-review-page-btn" id="applicantFinalReviewNext">Next</button>
+                            <span class="applicant-final-review-pagination-summary">Encoded applicants</span>
+                            <span class="applicant-final-review-pagination-controls">
+                                <button type="button" class="applicant-final-review-page-btn" id="applicantFinalReviewPrev" aria-label="Previous page">&larr;</button>
+                                <span class="applicant-final-review-page-label" id="applicantFinalReviewPageLabel">1</span>
+                                <button type="button" class="applicant-final-review-page-btn" id="applicantFinalReviewNext" aria-label="Next page">&rarr;</button>
+                            </span>
+                            <span class="applicant-final-review-per-page">5 per page</span>
                         </div>
                     </div>
                 </div>
@@ -11506,7 +11551,7 @@
             }
             if (finalReviewPrev) finalReviewPrev.disabled = finalReviewPage <= 1;
             if (finalReviewNext) finalReviewNext.disabled = finalReviewPage >= totalPages;
-            if (finalReviewPageLabel) finalReviewPageLabel.textContent = 'Page ' + finalReviewPage + ' of ' + totalPages;
+            if (finalReviewPageLabel) finalReviewPageLabel.textContent = String(finalReviewPage);
         }
 
         if (startEncodingBtn) {

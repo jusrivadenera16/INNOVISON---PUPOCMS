@@ -474,9 +474,66 @@
     }
 
     .audit-pagination {
-        margin-top: 12px;
+        margin-top: 18px;
+        padding: 14px 18px;
         display: flex;
         justify-content: center;
+        border: 1px solid #edf2f7;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+    }
+    .audit-pagination .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .audit-pagination .pagination li {
+        display: inline-flex;
+    }
+    .audit-pagination .pagination a,
+    .audit-pagination .pagination span {
+        min-width: 38px;
+        height: 38px;
+        padding: 0 14px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #334155;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 900;
+        text-decoration: none;
+        line-height: 1;
+        transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    .audit-pagination .pagination a:hover {
+        transform: translateY(-1px);
+        background: #fff7ed;
+        border-color: #f8cfd4;
+        color: #70131B;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .10);
+    }
+    .audit-pagination .pagination .active span {
+        background: #7f0010;
+        border-color: #7f0010;
+        color: #ffffff;
+    }
+    .audit-pagination .pagination .disabled span {
+        background: #f8fafc;
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
+    .audit-pagination .pagination svg {
+        width: 14px;
+        height: 14px;
     }
 
     html[data-theme="dark"] .audit-card {

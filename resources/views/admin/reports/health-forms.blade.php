@@ -240,9 +240,57 @@
     }
     .health-forms-pagination {
         margin-top: 18px;
+        padding: 14px 18px;
+        border: 1px solid #edf2f7;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
     }
     .health-forms-pagination .pagination {
         justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+        flex-wrap: wrap;
+    }
+    .health-forms-pagination .pagination li {
+        margin: 0;
+    }
+    .health-forms-pagination .pagination a,
+    .health-forms-pagination .pagination span {
+        min-width: 38px;
+        height: 38px;
+        padding: 0 12px;
+        border-radius: 8px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff !important;
+        color: #334155 !important;
+        font-size: 12px;
+        font-weight: 900;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        box-shadow: none !important;
+    }
+    .health-forms-pagination .pagination a:hover {
+        background: #fff7ed !important;
+        border-color: #f8cfd4 !important;
+        color: #70131B !important;
+        box-shadow: 0 8px 18px rgba(112, 19, 27, 0.12) !important;
+    }
+    .health-forms-pagination .pagination .active span {
+        background: #7f0010 !important;
+        border-color: #7f0010 !important;
+        color: #ffffff !important;
+    }
+    .health-forms-pagination .pagination .disabled span {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+    .health-forms-pagination .pagination svg {
+        width: 14px;
+        height: 14px;
     }
 </style>
 @endpush
