@@ -3311,6 +3311,34 @@
         white-space: nowrap;
     }
 
+    .applicant-final-review-per-page {
+        min-height: 38px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #334155;
+        padding: 0 34px 0 12px;
+        appearance: none;
+        cursor: pointer;
+        background-image:
+            linear-gradient(45deg, transparent 50%, #70131B 50%),
+            linear-gradient(135deg, #70131B 50%, transparent 50%);
+        background-position:
+            calc(100% - 17px) 50%,
+            calc(100% - 11px) 50%;
+        background-size: 6px 6px, 6px 6px;
+        background-repeat: no-repeat;
+        transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .applicant-final-review-per-page:hover,
+    .applicant-final-review-per-page:focus {
+        outline: none;
+        transform: translateY(-1px);
+        border-color: rgba(112, 19, 27, .32);
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .10);
+    }
+
     .applicant-final-review-pagination-controls {
         display: inline-flex;
         align-items: center;
@@ -6876,7 +6904,13 @@
                                 <span class="applicant-final-review-page-label" id="applicantFinalReviewPageLabel">1</span>
                                 <button type="button" class="applicant-final-review-page-btn" id="applicantFinalReviewNext" aria-label="Next page">&rarr;</button>
                             </span>
-                            <span class="applicant-final-review-per-page">5 per page</span>
+                            <select class="applicant-final-review-per-page" id="applicantFinalReviewPerPage" aria-label="Final review applicants per page">
+                                <option value="5">5 per page</option>
+                                <option value="10">10 per page</option>
+                                <option value="15">15 per page</option>
+                                <option value="20">20 per page</option>
+                                <option value="all">Show all</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -8933,6 +8967,7 @@
         const finalReviewPrev = document.getElementById('applicantFinalReviewPrev');
         const finalReviewNext = document.getElementById('applicantFinalReviewNext');
         const finalReviewPageLabel = document.getElementById('applicantFinalReviewPageLabel');
+        const finalReviewPerPage = document.getElementById('applicantFinalReviewPerPage');
         const finalReviewEmpty = document.getElementById('applicantFinalReviewEmpty');
         const finalReviewTotalCount = document.getElementById('applicantFinalReviewTotalCount');
         const backToFinalReviewList = document.getElementById('btnBackToFinalReviewList');
@@ -11535,7 +11570,10 @@
                 return !query || haystack.includes(query);
             });
             if (finalReviewTotalCount) finalReviewTotalCount.textContent = allRows.length.toString();
-            const pageSize = 5;
+            const rawPageSize = finalReviewPerPage ? finalReviewPerPage.value : '5';
+            const pageSize = rawPageSize === 'all'
+                ? Math.max(1, matchingRows.length)
+                : Math.max(1, parseInt(rawPageSize, 10) || 5);
             const totalPages = Math.max(1, Math.ceil(matchingRows.length / pageSize));
             finalReviewPage = Math.min(Math.max(targetPage || finalReviewPage || 1, 1), totalPages);
             const start = (finalReviewPage - 1) * pageSize;
@@ -11552,7 +11590,7 @@
                 finalReviewEmpty.classList.toggle('is-visible', allRows.length > 0 && matchingRows.length === 0);
             }
             if (finalReviewPagination) {
-                finalReviewPagination.classList.toggle('is-visible', matchingRows.length > pageSize);
+                finalReviewPagination.classList.toggle('is-visible', matchingRows.length > 0);
             }
             if (finalReviewPrev) finalReviewPrev.disabled = finalReviewPage <= 1;
             if (finalReviewNext) finalReviewNext.disabled = finalReviewPage >= totalPages;
@@ -11613,6 +11651,12 @@
         if (finalReviewNext) {
             finalReviewNext.addEventListener('click', function () {
                 updateFinalReviewPagination(finalReviewPage + 1);
+            });
+        }
+
+        if (finalReviewPerPage) {
+            finalReviewPerPage.addEventListener('change', function () {
+                updateFinalReviewPagination(1);
             });
         }
 

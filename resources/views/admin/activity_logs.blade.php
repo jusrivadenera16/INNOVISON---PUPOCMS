@@ -779,9 +779,9 @@
                     <div class="audit-filter-group">
                         <label class="audit-filter-label" for="audit_per_page">Rows</label>
                         <select id="audit_per_page" name="per_page" class="audit-select">
-                            @foreach([25, 50, 100] as $rowsOption)
-                                <option value="{{ $rowsOption }}" @selected((int) request('per_page', 25) === $rowsOption)>
-                                    {{ $rowsOption }}
+                            @foreach(['25' => '25 per page', '50' => '50 per page', '100' => '100 per page', 'all' => 'Show all'] as $rowsOption => $rowsLabel)
+                                <option value="{{ $rowsOption }}" @selected(($perPageInput ?? '25') === $rowsOption)>
+                                    {{ $rowsLabel }}
                                 </option>
                             @endforeach
                         </select>

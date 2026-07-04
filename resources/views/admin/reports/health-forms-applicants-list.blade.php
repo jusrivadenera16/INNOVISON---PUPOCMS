@@ -414,6 +414,10 @@
         font-weight: 700;
     }
     .logbook-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
         margin-top: 20px;
         padding: 14px 18px;
         border: 1px solid #edf2f7;
@@ -463,7 +467,7 @@
     .logbook-pagination .pagination .active span {
         background: #7f0010;
         border-color: #7f0010;
-        color: #ffffff;
+        color: #ffffff !important;
         box-shadow: 0 12px 24px rgba(127, 29, 45, 0.22);
     }
     .logbook-pagination .pagination .disabled span {
@@ -479,6 +483,59 @@
         height: 0 !important;
         max-width: 0 !important;
         max-height: 0 !important;
+    }
+    .logbook-pagination-meta {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+    .logbook-pagination-side {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    .logbook-per-page-form {
+        margin: 0;
+    }
+    .logbook-per-page-select {
+        min-height: 38px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #334155;
+        padding: 0 34px 0 12px;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        appearance: none;
+        background-image:
+            linear-gradient(45deg, transparent 50%, #70131B 50%),
+            linear-gradient(135deg, #70131B 50%, transparent 50%);
+        background-position:
+            calc(100% - 17px) 50%,
+            calc(100% - 11px) 50%;
+        background-size: 6px 6px, 6px 6px;
+        background-repeat: no-repeat;
+        transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    .logbook-per-page-select:hover,
+    .logbook-per-page-select:focus {
+        outline: none;
+        border-color: rgba(112, 19, 27, .34);
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .10);
+        transform: translateY(-2px);
+    }
+    @media (max-width: 720px) {
+        .logbook-pagination {
+            align-items: stretch;
+            flex-direction: column;
+        }
+        .logbook-pagination-side {
+            justify-content: flex-start;
+        }
     }
     @media (max-width: 720px) {
         .logbook-head,
@@ -713,9 +770,32 @@
         </table>
     </div>
 
-    <div class="logbook-pagination">
-        {{ $logbookRecords->withQueryString()->links() }}
-    </div>
+    @if($logbookRecords->total() > 0)
+        <div class="logbook-pagination">
+            <span class="logbook-pagination-meta">
+                Showing {{ $logbookRecords->firstItem() }} to {{ $logbookRecords->lastItem() }} of {{ $logbookRecords->total() }} records
+            </span>
+            <div class="logbook-pagination-side">
+                {{ $logbookRecords->withQueryString()->links() }}
+                <form method="GET" class="logbook-per-page-form">
+                    @foreach(request()->except(['page', 'per_page']) as $queryKey => $queryValue)
+                        @if(is_array($queryValue))
+                            @foreach($queryValue as $nestedValue)
+                                <input type="hidden" name="{{ $queryKey }}[]" value="{{ $nestedValue }}">
+                            @endforeach
+                        @else
+                            <input type="hidden" name="{{ $queryKey }}" value="{{ $queryValue }}">
+                        @endif
+                    @endforeach
+                    <select name="per_page" class="logbook-per-page-select" onchange="this.form.submit()" aria-label="Applicants list records per page">
+                        @foreach(['20' => '20 per page', '40' => '40 per page', '80' => '80 per page', '100' => '100 per page', 'all' => 'Show all'] as $optionValue => $optionLabel)
+                            <option value="{{ $optionValue }}" @selected(($perPage ?? '20') === $optionValue)>{{ $optionLabel }}</option>
+                        @endforeach
+                    </select>
+                </form>
+            </div>
+        </div>
+    @endif
 </div>
 
 <script>
@@ -748,6 +828,9 @@ function buildLogbookSearchUrl(searchValue) {
 
     const statusValue = filterForm.querySelector('[name="status"]').value;
     if (statusValue) params.append('status', statusValue);
+
+    const perPageValue = @json($perPage ?? '20');
+    if (perPageValue) params.append('per_page', perPageValue);
 
     const queryString = params.toString();
     return '{{ route($logbookRouteName) }}' + (queryString ? '?' + queryString : '');

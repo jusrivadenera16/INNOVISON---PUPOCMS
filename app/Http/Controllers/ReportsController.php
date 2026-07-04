@@ -1004,7 +1004,15 @@ class ReportsController extends Controller
     {
         [$query, $search, $courseFilter, $userTypeFilter, $genderFilter, $conditionFilter, $statusFilter] = $this->healthFormsApplicantsListQuery($request);
 
-        $logbookRecords = $query->orderByDesc('created_at')->paginate(25);
+        $perPage = (string) $request->query('per_page', '20');
+        if (!in_array($perPage, ['20', '40', '80', '100', 'all'], true)) {
+            $perPage = '20';
+        }
+
+        $logbookQuery = $query->orderByDesc('created_at');
+        $logbookRecords = $logbookQuery
+            ->paginate($perPage === 'all' ? max(1, (clone $logbookQuery)->count()) : (int) $perPage)
+            ->withQueryString();
 
         $courses = HealthProfile::distinct('course_college')
             ->pluck('course_college')
@@ -1020,7 +1028,8 @@ class ReportsController extends Controller
             'userTypeFilter',
             'genderFilter',
             'conditionFilter',
-            'statusFilter'
+            'statusFilter',
+            'perPage'
         ));
     }
 

@@ -1374,34 +1374,50 @@ class AdminController extends Controller
         $courseFilter = trim((string) $request->query('course', ''));
         $monthFilter = trim((string) $request->query('month', ''));
         $yearFilter = trim((string) $request->query('year', ''));
+        $perPageInput = trim((string) $request->query('per_page', '20'));
+        $allowedPerPage = ['20', '40', '80', '100', 'all'];
+        $issuedPerPage = in_array($perPageInput, $allowedPerPage, true) ? $perPageInput : '20';
 
         $query = HealthProfile::with('user')->latest();
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
-                $builder->whereHas('user', function ($userQuery) use ($search) {
-                    $userQuery->where('name', 'like', '%' . $search . '%')
-                        ->orWhere('student_number', 'like', '%' . $search . '%')
-                        ->orWhere('student_id', 'like', '%' . $search . '%')
-                        ->orWhere('course', 'like', '%' . $search . '%');
-                });
+                $like = '%' . $search . '%';
+
+                $builder->where('reference_number', 'like', $like)
+                    ->orWhere('student_number', 'like', $like)
+                    ->orWhere('student_id', 'like', $like)
+                    ->orWhere('course_college', 'like', $like)
+                    ->orWhere('course_code', 'like', $like)
+                    ->orWhere('sex', 'like', $like)
+                    ->orWhere('clearance_status', 'like', $like)
+                    ->orWhereHas('user', function ($userQuery) use ($like) {
+                        $userQuery->where('name', 'like', $like)
+                            ->orWhere('first_name', 'like', $like)
+                            ->orWhere('middle_name', 'like', $like)
+                            ->orWhere('last_name', 'like', $like)
+                            ->orWhere('email', 'like', $like)
+                            ->orWhere('student_number', 'like', $like)
+                            ->orWhere('student_id', 'like', $like)
+                            ->orWhere('course', 'like', $like);
+                    });
             });
         }
 
-          if ($courseFilter !== '') {
-              $query->where(function ($builder) use ($courseFilter) {
-                  $builder->where('course_college', $courseFilter)
-                      ->orWhere(function ($innerBuilder) use ($courseFilter) {
-                          $innerBuilder->where(function ($profileBuilder) {
-                                  $profileBuilder->whereNull('course_college')
-                                      ->orWhere('course_college', '');
-                              })
-                              ->whereHas('user', function ($userQuery) use ($courseFilter) {
-                                  $userQuery->where('course', $courseFilter);
-                              });
-                      });
-              });
-          }
+        if ($courseFilter !== '') {
+            $query->where(function ($builder) use ($courseFilter) {
+                $builder->where('course_college', $courseFilter)
+                    ->orWhere(function ($innerBuilder) use ($courseFilter) {
+                        $innerBuilder->where(function ($profileBuilder) {
+                            $profileBuilder->whereNull('course_college')
+                                ->orWhere('course_college', '');
+                        })
+                            ->whereHas('user', function ($userQuery) use ($courseFilter) {
+                                $userQuery->where('course', $courseFilter);
+                            });
+                    });
+            });
+        }
 
         if ($monthFilter !== '') {
             try {
@@ -1433,23 +1449,25 @@ class AdminController extends Controller
             });
         }
 
-        $healthProfileSummaryRecords = (clone $query)
-            ->whereIn('clearance_status', ['Issued', 'Fully Cleared'])
-            ->paginate(20, ['*'], 'issued_page')
+        $issuedQuery = (clone $query)
+            ->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
+
+        $healthProfileSummaryRecords = $issuedQuery
+            ->paginate($issuedPerPage === 'all' ? max(1, (clone $issuedQuery)->count()) : (int) $issuedPerPage, ['*'], 'issued_page')
             ->withQueryString();
 
         $records = $query->get();
 
-          $courseOptions = HealthProfile::query()
-              ->with('user:id,course')
-              ->get()
-              ->map(function (HealthProfile $profile) {
-                  return trim((string) ($profile->course_college ?: optional($profile->user)->course ?: ''));
-              })
-              ->filter(fn ($course) => $course !== '')
-              ->unique()
-              ->sort()
-              ->values();
+        $courseOptions = HealthProfile::query()
+            ->with('user:id,course')
+            ->get()
+            ->map(function (HealthProfile $profile) {
+                return trim((string) ($profile->course_college ?: optional($profile->user)->course ?: ''));
+            })
+            ->filter(fn ($course) => $course !== '')
+            ->unique()
+            ->sort()
+            ->values();
 
         $yearOptions = collect(['1st Year', '2nd Year', '3rd Year', '4th Year']);
 
@@ -1461,7 +1479,8 @@ class AdminController extends Controller
             'monthFilter',
             'yearFilter',
             'courseOptions',
-            'yearOptions'
+            'yearOptions',
+            'issuedPerPage'
         ));
     }
 
@@ -3417,10 +3436,13 @@ public function inventorySummary()
             $query->whereDate('created_at', '<=', $dateTo);
         }
 
-        $perPage = (int) $request->input('per_page', 25);
-        if (!in_array($perPage, [25, 50, 100], true)) {
-            $perPage = 25;
+        $perPageInput = (string) $request->input('per_page', '25');
+        if (!in_array($perPageInput, ['25', '50', '100', 'all'], true)) {
+            $perPageInput = '25';
         }
+        $perPage = $perPageInput === 'all'
+            ? max(1, (clone $query)->count())
+            : (int) $perPageInput;
 
         $logs = (clone $query)
             ->orderByDesc('created_at')
@@ -3486,7 +3508,8 @@ public function inventorySummary()
             'moduleBreakdown',
             'roleOptions',
             'eventTypeOptions',
-            'moduleOptions'
+            'moduleOptions',
+            'perPageInput'
         ));
     }
 

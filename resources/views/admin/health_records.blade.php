@@ -438,24 +438,33 @@
         font-weight: 900;
         cursor: pointer;
         padding: 0 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
         transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow .2s ease;
     }
     .readonly-pagination-btn:hover:not(:disabled) {
         background: #fff7ed;
         border-color: #f8cfd4;
         color: #70131B;
-        transform: translateY(-1px);
+        transform: translateY(-2px) scale(1.04);
         box-shadow: 0 10px 20px rgba(112, 19, 27, .10);
     }
     .readonly-pagination-btn.is-active,
     .readonly-pagination-btn.is-active:hover:not(:disabled) {
         background: #7f0010;
         border-color: #7f0010;
-        color: #ffffff;
+        color: #ffffff !important;
+        box-shadow: 0 12px 24px rgba(127, 0, 16, 0.18);
+        transform: translateY(-1px);
     }
     .readonly-pagination-btn:disabled {
         cursor: not-allowed;
         opacity: 0.45;
+    }
+    .readonly-pagination-btn.is-active:disabled {
+        opacity: 1;
     }
     .readonly-pagination-per-page {
         min-height: 38px;
@@ -466,6 +475,37 @@
         padding: 0 12px;
         font-size: 12px;
         font-weight: 900;
+    }
+    .readonly-pagination-per-page-form {
+        margin: 0;
+    }
+    .readonly-pagination-per-page-select {
+        min-height: 38px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #334155;
+        padding: 0 34px 0 12px;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        appearance: none;
+        background-image:
+            linear-gradient(45deg, transparent 50%, #70131B 50%),
+            linear-gradient(135deg, #70131B 50%, transparent 50%);
+        background-position:
+            calc(100% - 17px) 50%,
+            calc(100% - 11px) 50%;
+        background-size: 6px 6px, 6px 6px;
+        background-repeat: no-repeat;
+        transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+    .readonly-pagination-per-page-select:hover,
+    .readonly-pagination-per-page-select:focus {
+        outline: none;
+        border-color: rgba(112, 19, 27, .32);
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .10);
+        transform: translateY(-1px);
     }
     .readonly-record-card {
         display: grid;
@@ -1188,14 +1228,17 @@
         width: 42px;
         height: 42px;
         border-radius: 12px;
-        display: grid;
-        place-items: center;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         background: #fff1f2;
         color: #b91c1c;
+        line-height: 0;
     }
     .health-records-last-updated-icon svg {
         width: 22px;
         height: 22px;
+        display: block;
     }
     .health-records-last-updated span {
         display: block;
@@ -1291,15 +1334,15 @@
     }
     .health-summary-modern-card {
         position: relative;
-        min-height: 108px;
+        min-height: 102px;
         border-radius: 14px;
         border: 1px solid #e5e7eb;
         background: #ffffff;
-        padding: 16px 14px;
+        padding: 14px 14px;
         display: grid;
-        grid-template-columns: 48px minmax(0, 1fr) auto;
+        grid-template-columns: 44px minmax(0, 1fr) auto;
         align-items: center;
-        gap: 16px;
+        gap: 14px;
         overflow: hidden;
         text-align: left;
         text-decoration: none;
@@ -1311,16 +1354,17 @@
         content: "";
         position: absolute;
         right: -18px;
-        bottom: -18px;
-        width: 120px;
-        height: 58px;
-        opacity: .18;
-        background:
-            radial-gradient(80px 38px at 24px 20px, transparent 38%, currentColor 39% 41%, transparent 42%),
-            radial-gradient(82px 38px at 70px 34px, transparent 38%, currentColor 39% 41%, transparent 42%);
+        bottom: -2px;
+        width: 68%;
+        height: 56%;
+        opacity: .24;
+        background: #ffd700;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201440%20320'%3E%3Cpath%20fill='%23000'%20d='M0,224L24,229.3C48,235,96,245,144,261.3C192,277,240,299,288,309.3C336,320,384,320,432,282.7C480,245,528,171,576,154.7C624,139,672,181,720,186.7C768,192,816,160,864,149.3C912,139,960,149,1008,181.3C1056,213,1104,267,1152,272C1200,277,1248,235,1296,181.3C1344,128,1392,64,1416,32L1440,0L1440,320L1416,320C1392,320,1344,320,1296,320C1248,320,1200,320,1152,320C1104,320,1056,320,1008,320C960,320,912,320,864,320C816,320,768,320,720,320C672,320,624,320,576,320C528,320,480,320,432,320C384,320,336,320,288,320C240,320,192,320,144,320C96,320,48,320,24,320L0,320Z'/%3E%3C/svg%3E") center bottom / 100% 100% no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201440%20320'%3E%3Cpath%20fill='%23000'%20d='M0,224L24,229.3C48,235,96,245,144,261.3C192,277,240,299,288,309.3C336,320,384,320,432,282.7C480,245,528,171,576,154.7C624,139,672,181,720,186.7C768,192,816,160,864,149.3C912,139,960,149,1008,181.3C1056,213,1104,267,1152,272C1200,277,1248,235,1296,181.3C1344,128,1392,64,1416,32L1440,0L1440,320L1416,320C1392,320,1344,320,1296,320C1248,320,1200,320,1152,320C1104,320,1056,320,1008,320C960,320,912,320,864,320C816,320,768,320,720,320C672,320,624,320,576,320C528,320,480,320,432,320C384,320,336,320,288,320C240,320,192,320,144,320C96,320,48,320,24,320L0,320Z'/%3E%3C/svg%3E") center bottom / 100% 100% no-repeat;
         border: 0;
         border-radius: 0;
         transform: none;
+        pointer-events: none;
     }
     .health-summary-modern-card.is-approved {
         border-color: #bbf7d0;
@@ -1339,20 +1383,22 @@
         color: #dc2626;
     }
     .health-summary-modern-card.is-pending {
-        border-color: #fed7aa;
-        color: #d97706;
+        border-color: rgba(250, 204, 21, .62);
+        background: linear-gradient(135deg, #70131B, #8f1727);
+        color: #ffffff;
     }
     .health-summary-modern-card.is-pending .health-summary-modern-icon-wrap {
-        background: #ffedd5;
-        color: #d97706;
+        background: rgba(255, 255, 255, .14);
+        color: #ffffff;
     }
     .health-summary-modern-card.is-compliance {
-        border-color: #fecaca;
-        color: #dc2626;
+        border-color: rgba(250, 204, 21, .62);
+        background: linear-gradient(135deg, #70131B, #8f1727);
+        color: #ffffff;
     }
     .health-summary-modern-card.is-compliance .health-summary-modern-icon-wrap {
-        background: #fee2e2;
-        color: #dc2626;
+        background: rgba(255, 255, 255, .14);
+        color: #ffffff;
     }
     .health-summary-modern-card.is-clickable {
         cursor: pointer;
@@ -1361,6 +1407,10 @@
         transform: translateY(-3px);
         box-shadow: 0 18px 34px rgba(112, 19, 27, .14);
         background: #fffaf0;
+    }
+    .health-summary-modern-card.is-pending.is-clickable:hover,
+    .health-summary-modern-card.is-compliance.is-clickable:hover {
+        background: linear-gradient(135deg, #7f0010, #a11b2f);
     }
     .health-summary-modern-icon {
         width: 58px;
@@ -1379,8 +1429,8 @@
         stroke: currentColor;
     }
     .health-summary-modern-icon-wrap {
-        width: 48px;
-        height: 48px;
+        width: 44px;
+        height: 44px;
         border-radius: 999px;
         display: grid;
         place-items: center;
@@ -1407,18 +1457,28 @@
     }
     .health-summary-modern-count {
         display: block;
-        margin-top: 8px;
+        margin-top: 6px;
         color: #0f172a;
-        font-size: 26px;
+        font-size: 24px;
         font-weight: 900;
         line-height: 1;
     }
     .health-summary-modern-note {
         display: block;
-        margin-top: 9px;
+        margin-top: 7px;
         color: currentColor;
         font-size: 12px;
         font-weight: 900;
+    }
+    .health-summary-modern-card.is-pending .health-summary-modern-copy,
+    .health-summary-modern-card.is-pending .health-summary-modern-label,
+    .health-summary-modern-card.is-pending .health-summary-modern-count,
+    .health-summary-modern-card.is-pending .health-summary-modern-note,
+    .health-summary-modern-card.is-compliance .health-summary-modern-copy,
+    .health-summary-modern-card.is-compliance .health-summary-modern-label,
+    .health-summary-modern-card.is-compliance .health-summary-modern-count,
+    .health-summary-modern-card.is-compliance .health-summary-modern-note {
+        color: #ffffff;
     }
     .health-summary-modern-arrow {
         position: relative;
@@ -1433,6 +1493,12 @@
         color: #b91c1c;
         font-size: 26px;
         font-weight: 900;
+    }
+    .health-summary-modern-card.is-pending .health-summary-modern-arrow,
+    .health-summary-modern-card.is-compliance .health-summary-modern-arrow {
+        border-color: rgba(250, 204, 21, .52);
+        background: rgba(255, 255, 255, .10);
+        color: #ffffff;
     }
     @media (max-width: 1180px) {
         .health-summary-modern-container {
@@ -2205,6 +2271,170 @@
         50% {
             box-shadow: inset 4px 0 0 #7c3aed, 0 0 0 6px rgba(124, 58, 237, 0.12);
         }
+    }
+
+    html[data-theme="dark"] .health-records-overview {
+        background: rgba(15, 23, 42, 0.96);
+        border-color: rgba(250, 204, 21, 0.18);
+        box-shadow: 0 18px 38px rgba(0, 0, 0, .28);
+    }
+
+    html[data-theme="dark"] .health-records-overview-head {
+        border-bottom-color: rgba(250, 204, 21, 0.12);
+        background: linear-gradient(135deg, rgba(112, 19, 27, .34), rgba(15, 23, 42, .88));
+    }
+
+    html[data-theme="dark"] .health-records-title-icon,
+    html[data-theme="dark"] .health-records-last-updated-icon {
+        background: rgba(250, 204, 21, .12);
+        color: #facc15;
+    }
+
+    html[data-theme="dark"] .health-records-title-copy h2,
+    html[data-theme="dark"] .health-records-last-updated strong {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .health-records-title-copy p,
+    html[data-theme="dark"] .health-records-last-updated span {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .health-records-overview-search {
+        background: rgba(15, 23, 42, .92);
+    }
+
+    html[data-theme="dark"] .health-records-overview-search .health-records-search-wrap {
+        background: rgba(17, 24, 39, .94);
+        border-color: rgba(250, 204, 21, .20);
+    }
+
+    html[data-theme="dark"] .health-records-overview-search .health-records-search {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] .health-records-overview-search .health-records-search::placeholder {
+        color: #fecdd3 !important;
+    }
+
+    html[data-theme="dark"] .health-records-search-submit {
+        background: rgba(17, 24, 39, .96);
+        border-color: rgba(250, 204, 21, .22);
+        color: #facc15;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, .22);
+    }
+
+    html[data-theme="dark"] .health-records-search-submit:hover,
+    html[data-theme="dark"] .health-records-search-submit:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+    }
+
+    html[data-theme="dark"] .health-summary-modern-card {
+        background: rgba(17, 24, 39, .94);
+        border-color: rgba(148, 163, 184, .18);
+    }
+
+    html[data-theme="dark"] .health-summary-modern-card.is-approved {
+        background: rgba(20, 83, 45, .18);
+        border-color: rgba(74, 222, 128, .42);
+    }
+
+    html[data-theme="dark"] .health-summary-modern-card.is-condition {
+        background: rgba(127, 29, 29, .20);
+        border-color: rgba(248, 113, 113, .42);
+    }
+
+    html[data-theme="dark"] .health-summary-modern-card.is-pending,
+    html[data-theme="dark"] .health-summary-modern-card.is-compliance {
+        background: linear-gradient(135deg, #70131B, #8f1727);
+        border-color: rgba(250, 204, 21, .62);
+    }
+
+    html[data-theme="dark"] .health-summary-modern-card:not(.is-pending):not(.is-compliance) .health-summary-modern-copy,
+    html[data-theme="dark"] .health-summary-modern-card:not(.is-pending):not(.is-compliance) .health-summary-modern-label,
+    html[data-theme="dark"] .health-summary-modern-card:not(.is-pending):not(.is-compliance) .health-summary-modern-count {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .health-summary-modern-card:not(.is-pending):not(.is-compliance) .health-summary-modern-note {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .health-summary-card {
+        background: rgba(15, 23, 42, .96);
+        border-color: rgba(250, 204, 21, .16);
+        box-shadow: 0 18px 34px rgba(0, 0, 0, .24);
+    }
+
+    html[data-theme="dark"] .health-table-head {
+        border-bottom-color: rgba(250, 204, 21, .18);
+    }
+
+    html[data-theme="dark"] #healthTable {
+        background: rgba(15, 23, 42, .96);
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] #healthTable thead th {
+        background: rgba(112, 19, 27, .58);
+        color: #f8fafc !important;
+        border-bottom-color: rgba(250, 204, 21, .22);
+    }
+
+    html[data-theme="dark"] #healthTable tbody tr {
+        background: rgba(15, 23, 42, .92);
+        border-bottom-color: rgba(148, 163, 184, .14);
+    }
+
+    html[data-theme="dark"] #healthTable tbody tr:nth-child(even) {
+        background: rgba(17, 24, 39, .88);
+    }
+
+    html[data-theme="dark"] #healthTable tbody tr.health-row-clickable:hover td,
+    html[data-theme="dark"] #healthTable tbody tr:hover td {
+        background: rgba(250, 204, 21, .08) !important;
+    }
+
+    html[data-theme="dark"] #healthTable td {
+        color: #f8fafc !important;
+        border-bottom-color: rgba(148, 163, 184, .14);
+    }
+
+    html[data-theme="dark"] .readonly-modal-pagination {
+        background: rgba(15, 23, 42, .96);
+        border-color: rgba(148, 163, 184, .18);
+        box-shadow: 0 12px 26px rgba(0, 0, 0, .24);
+    }
+
+    html[data-theme="dark"] .readonly-pagination-summary {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .readonly-pagination-btn,
+    html[data-theme="dark"] .readonly-pagination-per-page-select {
+        background-color: rgba(17, 24, 39, .94);
+        border-color: rgba(148, 163, 184, .24);
+        color: #e2e8f0;
+    }
+
+    html[data-theme="dark"] .readonly-pagination-btn.is-active {
+        background: #7f0010;
+        border-color: #facc15;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .readonly-pagination-btn:hover:not(:disabled) {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+    }
+
+    html[data-theme="dark"] .readonly-pagination-per-page-select {
+        background-image:
+            linear-gradient(45deg, transparent 50%, #facc15 50%),
+            linear-gradient(135deg, #facc15 50%, transparent 50%);
     }
 
     html[data-theme="dark"] .health-records-title,
@@ -3574,7 +3804,16 @@
         </div>
 
         <div class="health-records-overview-search">
-            <div class="health-records-search-shell is-open" id="healthRecordsSearchShell">
+            <form method="GET" action="{{ url()->current() }}" class="health-records-search-shell is-open" id="healthRecordsSearchShell">
+                @foreach(request()->except(['q', 'issued_page']) as $queryKey => $queryValue)
+                    @if(is_array($queryValue))
+                        @foreach($queryValue as $nestedValue)
+                            <input type="hidden" name="{{ $queryKey }}[]" value="{{ $nestedValue }}">
+                        @endforeach
+                    @else
+                        <input type="hidden" name="{{ $queryKey }}" value="{{ $queryValue }}">
+                    @endif
+                @endforeach
                 <div class="health-records-search-wrap">
                     <input
                         type="text"
@@ -3585,7 +3824,7 @@
                         placeholder="Search by student name, student number, or reference number..."
                     >
                 </div>
-            </div>
+            </form>
             <button type="button" class="health-records-search-submit" id="healthRecordsOverviewFilterBtn">
                 <x-outline-icon name="funnel" />
                 Filter
@@ -3837,7 +4076,7 @@
             @endforelse
         </tbody>
     </table>
-    @if($healthProfileSummaryRecords->hasPages())
+    @if($healthProfileSummaryRecords->total() > 0)
         @php
             $issuedCurrentPage = $healthProfileSummaryRecords->currentPage();
             $issuedLastPage = $healthProfileSummaryRecords->lastPage();
@@ -3845,6 +4084,13 @@
                 ->filter(fn ($page) => $page >= 1 && $page <= $issuedLastPage)
                 ->unique()
                 ->values();
+            $issuedPerPageOptions = [
+                '20' => '20 per page',
+                '40' => '40 per page',
+                '80' => '80 per page',
+                '100' => '100 per page',
+                'all' => 'Show all',
+            ];
         @endphp
         <div class="readonly-modal-pagination is-visible" aria-label="Issued medical clearance pagination">
             <span class="readonly-pagination-summary">
@@ -3869,12 +4115,27 @@
                 @endforeach
 
                 @if($healthProfileSummaryRecords->hasMorePages())
-                    <a class="readonly-pagination-btn" href="{{ $healthProfileSummaryRecords->nextPageUrl() }}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;" aria-label="Next page">&rarr;</a>
+                    <a class="readonly-pagination-btn" href="{{ $healthProfileSummaryRecords->nextPageUrl() }}" aria-label="Next page">&rarr;</a>
                 @else
                     <button type="button" class="readonly-pagination-btn" disabled aria-label="Next page">&rarr;</button>
                 @endif
             </div>
-            <span class="readonly-pagination-per-page">20 per page</span>
+            <form method="GET" action="{{ url()->current() }}" class="readonly-pagination-per-page-form">
+                @foreach(request()->except(['issued_page', 'per_page']) as $queryKey => $queryValue)
+                    @if(is_array($queryValue))
+                        @foreach($queryValue as $nestedValue)
+                            <input type="hidden" name="{{ $queryKey }}[]" value="{{ $nestedValue }}">
+                        @endforeach
+                    @else
+                        <input type="hidden" name="{{ $queryKey }}" value="{{ $queryValue }}">
+                    @endif
+                @endforeach
+                <select name="per_page" class="readonly-pagination-per-page-select" onchange="this.form.submit()" aria-label="Issued medical clearance records per page">
+                    @foreach($issuedPerPageOptions as $optionValue => $optionLabel)
+                        <option value="{{ $optionValue }}" @selected(($issuedPerPage ?? '20') === $optionValue)>{{ $optionLabel }}</option>
+                    @endforeach
+                </select>
+            </form>
         </div>
     @endif
 </div>
@@ -4234,7 +4495,13 @@
                     <button type="button" class="readonly-pagination-btn is-active" data-pagination-current>1</button>
                     <button type="button" class="readonly-pagination-btn" data-pagination-next aria-label="Next page">&rarr;</button>
                 </div>
-                <span class="readonly-pagination-per-page">5 per page</span>
+                <select class="readonly-pagination-per-page-select" data-pagination-page-size aria-label="Pending approval records per page">
+                    <option value="5">5 per page</option>
+                    <option value="10">10 per page</option>
+                    <option value="15">15 per page</option>
+                    <option value="20">20 per page</option>
+                    <option value="all">Show all</option>
+                </select>
             </div>
         </div>
     </div>
@@ -4387,7 +4654,13 @@
                     <button type="button" class="readonly-pagination-btn is-active" data-pagination-current>1</button>
                     <button type="button" class="readonly-pagination-btn" data-pagination-next aria-label="Next page">&rarr;</button>
                 </div>
-                <span class="readonly-pagination-per-page">5 per page</span>
+                <select class="readonly-pagination-per-page-select" data-pagination-page-size aria-label="Pending compliance records per page">
+                    <option value="5">5 per page</option>
+                    <option value="10">10 per page</option>
+                    <option value="15">15 per page</option>
+                    <option value="20">20 per page</option>
+                    <option value="all">Show all</option>
+                </select>
             </div>
         </div>
     </div>
@@ -5012,6 +5285,9 @@
         });
     }
 
+    const initialHealthRecordsSearchValue = @json($search ?? '');
+    let healthRecordsSearchTimer = null;
+
     if (healthRecordsSearchInput) {
         healthRecordsSearchInput.addEventListener('input', function () {
             const searchTerm = this.value.trim().toLowerCase();
@@ -5020,6 +5296,14 @@
                 const rowText = row.innerText.toLowerCase();
                 row.style.display = rowText.includes(searchTerm) ? '' : 'none';
             });
+
+            window.clearTimeout(healthRecordsSearchTimer);
+            healthRecordsSearchTimer = window.setTimeout(function () {
+                const submittedValue = (healthRecordsSearchInput.value || '').trim();
+                if (submittedValue !== String(initialHealthRecordsSearchValue || '').trim()) {
+                    healthRecordsSearchInput.form?.submit();
+                }
+            }, 700);
         });
     }
 
@@ -5257,7 +5541,11 @@
             const visibleCards = cards.filter(function (card) {
                 return card.dataset.searchVisible !== '0';
             });
-            const pageSize = Math.max(1, parseInt(pagination?.getAttribute('data-page-size') || '5', 10));
+            const pageSizeControl = pagination?.querySelector('[data-pagination-page-size]');
+            const rawPageSize = pageSizeControl?.value || pagination?.getAttribute('data-page-size') || '5';
+            const pageSize = rawPageSize === 'all'
+                ? Math.max(1, visibleCards.length)
+                : Math.max(1, parseInt(rawPageSize, 10) || 5);
             const totalPages = Math.max(1, Math.ceil(visibleCards.length / pageSize));
             let currentPage = parseInt(list.dataset.currentPage || '1', 10);
             if (!Number.isFinite(currentPage) || currentPage < 1) currentPage = 1;
@@ -5276,7 +5564,7 @@
 
             if (!pagination) return;
 
-            const shouldShowPagination = visibleCards.length > pageSize;
+            const shouldShowPagination = visibleCards.length > 0;
             pagination.classList.toggle('is-visible', shouldShowPagination);
 
             const summary = pagination.querySelector('[data-pagination-summary]');
@@ -5339,6 +5627,12 @@
 
             pagination.querySelector('[data-pagination-next]')?.addEventListener('click', function () {
                 list.dataset.currentPage = String(parseInt(list.dataset.currentPage || '1', 10) + 1);
+                paginateReadonlyList(list);
+            });
+
+            pagination.querySelector('[data-pagination-page-size]')?.addEventListener('change', function () {
+                list.dataset.currentPage = '1';
+                pagination.setAttribute('data-page-size', this.value || '5');
                 paginateReadonlyList(list);
             });
 
