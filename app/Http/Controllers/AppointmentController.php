@@ -2080,7 +2080,11 @@ public function account(Request $request)
 
         $statusNormalized = strtolower(trim((string) $healthProfile->clearance_status));
         $allowsResubmission = $statusNormalized === 'pending resubmission'
-            || ($requiredDocuments->isNotEmpty() && (str_contains($statusNormalized, 'pending') || str_contains($statusNormalized, 'conditional')));
+            || ($requiredDocuments->isNotEmpty() && (
+                str_contains($statusNormalized, 'pending')
+                || str_contains($statusNormalized, 'conditional')
+                || in_array($statusNormalized, ['issued', 'fully cleared'], true)
+            ));
 
         if (!$allowsResubmission || $requiredDocuments->isEmpty()) {
             return redirect('/student/account?view=health-record')

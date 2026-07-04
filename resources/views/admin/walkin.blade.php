@@ -4180,11 +4180,11 @@
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-file-actions {
         position: sticky;
-        top: 0;
+        top: -1px;
         z-index: 80;
         align-self: stretch;
         width: calc(100% - 32px);
-        margin: 0 auto 10px !important;
+        margin: -1px auto 10px !important;
         padding: 7px 10px !important;
         border: 1px solid rgba(127, 29, 45, 0.16);
         border-radius: 14px;
@@ -4195,13 +4195,14 @@
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow.is-final-review-toolbar-stuck .applicant-file-actions {
-        width: calc(100% + 36px);
-        margin: 0 -18px 10px !important;
-        padding: 7px 18px 8px !important;
+        top: -1px;
+        width: calc(100% + 48px);
+        margin: -18px -24px 10px !important;
+        padding: 6px 24px 7px !important;
         border-top: 0;
         border-left: 0;
         border-right: 0;
-        border-radius: 0 0 16px 16px;
+        border-radius: 0 0 12px 12px;
         box-shadow: 0 16px 30px rgba(127, 29, 45, 0.16);
     }
 
@@ -4210,8 +4211,8 @@
         position: absolute;
         left: 0;
         right: 0;
-        top: -6px;
-        height: 6px;
+        top: -22px;
+        height: 22px;
         background: #fff1f2;
         pointer-events: none;
     }

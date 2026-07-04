@@ -1682,6 +1682,8 @@ public function updateClearance(Request $request, $id)
         ]);
 
         $record = HealthProfile::with('user')->findOrFail($id);
+        $wasAlreadyIssued = in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true)
+            || !empty($record->verified_at);
         $requestedDocuments = array_values(array_unique((array) $validated['resubmission_required_documents']));
         $documentColumns = [
             'student_photo' => 'student_photo',
@@ -1691,7 +1693,9 @@ public function updateClearance(Request $request, $id)
             'pwd_id_proof' => 'pwd_id_proof',
         ];
 
-        $record->clearance_status = 'Pending Resubmission';
+        if (!$wasAlreadyIssued) {
+            $record->clearance_status = 'Pending Resubmission';
+        }
         $record->pending_reason = trim((string) $validated['pending_reason']);
         $record->documents_valid = false;
         $record->resubmission_required_documents = $requestedDocuments;
@@ -1709,7 +1713,7 @@ public function updateClearance(Request $request, $id)
 
         $record->save();
 
-        if ($record->user) {
+        if ($record->user && !$wasAlreadyIssued) {
             $record->user->is_health_profile_completed = 0;
             $record->user->save();
         }
@@ -1734,7 +1738,7 @@ public function updateClearance(Request $request, $id)
             : 'Replacement file request sent. The student will see the reupload prompt in Health Records.';
 
         $redirect = ($validated['return_to'] ?? 'show_health') === 'health_records'
-            ? redirect()->route('admin.health_records', ['tab' => 'pending_compliance'])
+            ? redirect()->route('admin.health_records', ['tab' => $wasAlreadyIssued ? 'approved' : 'pending_compliance'])
             : redirect()->route('admin.show_health', $record->id);
 
         return $redirect->with('success', $message);

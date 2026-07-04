@@ -1215,7 +1215,7 @@
     .health-records-overview-search {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
-        gap: 0;
+        gap: 12px;
         padding: 18px 20px 8px;
     }
     .health-records-overview-search .health-records-search-shell,
@@ -1227,12 +1227,11 @@
     }
     .health-records-overview-search .health-records-search-wrap {
         border: 1px solid #e2e8f0;
-        border-right: 0;
-        border-radius: 12px 0 0 12px;
+        border-radius: 12px;
         background: #fff;
         display: flex;
         align-items: center;
-        min-height: 52px;
+        min-height: 48px;
     }
     .health-records-overview-search .health-records-search-wrap::before {
         content: "";
@@ -1245,8 +1244,8 @@
     }
     .health-records-overview-search .health-records-search {
         width: 100% !important;
-        min-height: 50px;
-        height: 50px;
+        min-height: 46px;
+        height: 46px;
         border-radius: 0 !important;
         border: 0 !important;
         background: transparent !important;
@@ -1258,12 +1257,12 @@
         font-weight: 800;
     }
     .health-records-search-submit {
-        min-width: 112px;
-        min-height: 52px;
-        border: 0;
-        border-radius: 0 12px 12px 0;
-        background: #7f121d;
-        color: #ffffff;
+        min-width: 116px;
+        min-height: 48px;
+        border: 1px solid rgba(112, 19, 27, 0.24);
+        border-radius: 12px;
+        background: #ffffff;
+        color: #70131B;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -1271,27 +1270,34 @@
         font-size: 13px;
         font-weight: 900;
         cursor: pointer;
-        box-shadow: 0 12px 24px rgba(112, 19, 27, .18);
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .08);
     }
     .health-records-search-submit svg {
         width: 18px;
         height: 18px;
     }
+    .health-records-search-submit:hover,
+    .health-records-search-submit:focus-visible {
+        background: #fff7ed;
+        border-color: rgba(112, 19, 27, 0.42);
+        color: #70131B;
+        transform: translateY(-1px);
+    }
     .health-summary-modern-container {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 14px;
-        padding: 18px 20px 20px;
+        gap: 12px;
+        padding: 14px 20px 18px;
     }
     .health-summary-modern-card {
         position: relative;
-        min-height: 132px;
+        min-height: 108px;
         border-radius: 14px;
         border: 1px solid #e5e7eb;
         background: #ffffff;
-        padding: 20px 18px;
+        padding: 16px 14px;
         display: grid;
-        grid-template-columns: 58px minmax(0, 1fr) auto;
+        grid-template-columns: 48px minmax(0, 1fr) auto;
         align-items: center;
         gap: 16px;
         overflow: hidden;
@@ -1304,15 +1310,17 @@
     .health-summary-modern-card::after {
         content: "";
         position: absolute;
-        right: 12px;
-        bottom: 0;
-        width: 86px;
-        height: 42px;
-        opacity: .35;
-        border: solid currentColor;
-        border-width: 0 0 2px 2px;
-        border-radius: 0 0 0 48px;
-        transform: skewX(-18deg);
+        right: -18px;
+        bottom: -18px;
+        width: 120px;
+        height: 58px;
+        opacity: .18;
+        background:
+            radial-gradient(80px 38px at 24px 20px, transparent 38%, currentColor 39% 41%, transparent 42%),
+            radial-gradient(82px 38px at 70px 34px, transparent 38%, currentColor 39% 41%, transparent 42%);
+        border: 0;
+        border-radius: 0;
+        transform: none;
     }
     .health-summary-modern-card.is-approved {
         border-color: #bbf7d0;
@@ -1371,8 +1379,8 @@
         stroke: currentColor;
     }
     .health-summary-modern-icon-wrap {
-        width: 58px;
-        height: 58px;
+        width: 48px;
+        height: 48px;
         border-radius: 999px;
         display: grid;
         place-items: center;
@@ -1380,8 +1388,8 @@
         z-index: 1;
     }
     .health-summary-modern-icon-wrap svg {
-        width: 30px;
-        height: 30px;
+        width: 25px;
+        height: 25px;
     }
     .health-summary-modern-copy {
         position: relative;
@@ -1392,7 +1400,7 @@
     .health-summary-modern-label {
         display: block;
         color: #111827;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 900;
         text-transform: uppercase;
         letter-spacing: .04em;
@@ -1401,22 +1409,22 @@
         display: block;
         margin-top: 8px;
         color: #0f172a;
-        font-size: 31px;
+        font-size: 26px;
         font-weight: 900;
         line-height: 1;
     }
     .health-summary-modern-note {
         display: block;
-        margin-top: 14px;
+        margin-top: 9px;
         color: currentColor;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 900;
     }
     .health-summary-modern-arrow {
         position: relative;
         z-index: 1;
-        width: 44px;
-        height: 44px;
+        width: 38px;
+        height: 38px;
         border-radius: 12px;
         display: grid;
         place-items: center;
@@ -3578,9 +3586,9 @@
                     >
                 </div>
             </div>
-            <button type="button" class="health-records-search-submit" onclick="document.getElementById('recordSearch').dispatchEvent(new Event('input', { bubbles: true }));">
-                <x-outline-icon name="magnifying-glass" />
-                Search
+            <button type="button" class="health-records-search-submit" id="healthRecordsOverviewFilterBtn">
+                <x-outline-icon name="funnel" />
+                Filter
             </button>
         </div>
 
@@ -4839,6 +4847,7 @@
     }
 
     const healthFilterToggle = document.getElementById('healthFilterToggle');
+    const healthRecordsOverviewFilterBtn = document.getElementById('healthRecordsOverviewFilterBtn');
     const healthFilterModal = document.getElementById('healthFilterModal');
     const healthFilterCloseBtn = document.getElementById('healthFilterCloseBtn');
     const healthFilterForm = document.getElementById('healthFilterForm');
@@ -4879,6 +4888,31 @@
     const verifyDocumentResubmissionRemarks = document.getElementById('verifyDocumentResubmissionRemarks');
     const verifyDocumentResubmissionReason = document.getElementById('verifyDocumentResubmissionReason');
     const verifyDocumentResubmissionInputs = Array.from(document.querySelectorAll('#verifyDocumentResubmissionForm input[name="resubmission_required_documents[]"]'));
+
+    function setHealthFilterModalOpen(isOpen) {
+        if (!healthFilterModal) return;
+        healthFilterModal.classList.toggle('is-open', isOpen);
+        healthFilterModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        healthFilterToggle?.classList.toggle('is-open', isOpen);
+    }
+
+    healthRecordsOverviewFilterBtn?.addEventListener('click', function () {
+        setHealthFilterModalOpen(true);
+    });
+
+    healthFilterToggle?.addEventListener('click', function () {
+        setHealthFilterModalOpen(true);
+    });
+
+    healthFilterCloseBtn?.addEventListener('click', function () {
+        setHealthFilterModalOpen(false);
+    });
+
+    healthFilterModal?.addEventListener('click', function (event) {
+        if (event.target === healthFilterModal) {
+            setHealthFilterModalOpen(false);
+        }
+    });
 
     function syncDocumentResubmissionReason() {
         if (!verifyDocumentResubmissionReason) {

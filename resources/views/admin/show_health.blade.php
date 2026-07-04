@@ -53,7 +53,7 @@
     .profile-avatar {
         width: 96px;
         height: 96px;
-        border-radius: 999px;
+        border-radius: 12px;
         display: grid;
         place-items: center;
         overflow: hidden;
@@ -127,18 +127,20 @@
         word-break: break-word;
     }
     .profile-status-card {
-        min-height: 136px;
-        border-radius: 16px;
-        padding: 18px;
+        min-height: 104px;
+        border-radius: 14px;
+        padding: 14px 16px;
         border: 1px solid #bbf7d0;
         background: linear-gradient(135deg, #f0fdf4, #ecfeff);
         display: flex;
-        gap: 14px;
+        gap: 12px;
         align-items: center;
+        max-width: 330px;
+        justify-self: end;
     }
     .profile-status-shield {
-        width: 58px;
-        height: 58px;
+        width: 46px;
+        height: 46px;
         border-radius: 999px;
         display: grid;
         place-items: center;
@@ -146,8 +148,8 @@
         color: #16a34a;
     }
     .profile-status-shield svg {
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
     }
     .profile-status-card-title {
         margin: 0 0 4px;
@@ -160,7 +162,7 @@
     .profile-status-card-value {
         margin: 0 0 8px;
         color: #16a34a;
-        font-size: 22px;
+        font-size: 18px;
         font-weight: 900;
     }
     .profile-correction-card {
@@ -428,7 +430,7 @@
     .profile-correction-button,
     .correction-submit {
         border: 1px solid #8f2230;
-        border-radius: 999px;
+        border-radius: 12px;
         background: #70131B;
         color: #facc15;
         min-height: 42px;
@@ -569,7 +571,7 @@
     }
     .correction-cancel {
         border: 1px solid #cbd5e1;
-        border-radius: 999px;
+        border-radius: 12px;
         background: #ffffff;
         color: #334155;
         min-height: 42px;
@@ -582,6 +584,10 @@
     .profile-panel.is-active { display: block; }
 
     .profile-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    #summaryPanel .profile-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
     .profile-meta {
         min-height: 72px;
         background: #ffffff;
@@ -589,6 +595,14 @@
         border-radius: 12px;
         padding: 12px;
         box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+    }
+    #summaryPanel .profile-meta {
+        min-height: 52px;
+        display: grid;
+        grid-template-columns: minmax(170px, 0.45fr) minmax(0, 1fr);
+        align-items: center;
+        gap: 14px;
+        padding: 10px 14px;
     }
     .profile-meta-icon {
         width: 38px;
@@ -599,6 +613,7 @@
         color: #9f1239;
     }
     .profile-meta-k { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 900; letter-spacing: .05em; margin-bottom: 4px; }
+    #summaryPanel .profile-meta-k { margin-bottom: 0; }
     .profile-meta-v { font-size: 14px; color: #0f172a; font-weight: 900; word-break: break-word; line-height: 1.25; }
     .profile-meta.is-wide { grid-column: span 2; }
     .profile-meta.is-full { grid-column: 1 / -1; }
@@ -670,14 +685,82 @@
         line-height: 1.35;
     }
 
-    .doc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-    .doc-file { border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; background: #fff; }
-    .doc-file h4 { margin: 0 0 10px; font-size: 15px; font-weight: 800; color: #1e293b; }
+    .doc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+    .doc-file { border: 1px solid #f3c7c7; border-radius: 12px; padding: 10px; background: #fffafa; }
+    .doc-file h4 { margin: 8px 0 3px; font-size: 12px; font-weight: 900; color: #1e293b; }
     .doc-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
-    .doc-link { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 10px; color: #1e293b; font-size: 13px; font-weight: 700; text-decoration: none; background: #fff; }
-    .doc-preview { width: 100%; height: 300px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #f8fafc; }
-    .doc-preview iframe, .doc-preview img { width: 100%; height: 100%; border: 0; object-fit: contain; background: #fff; }
+    .doc-link { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 0; padding: 0; color: #475569; font-size: 12px; font-weight: 900; text-decoration: none; background: transparent; }
+    .doc-preview { width: 100%; aspect-ratio: 1 / 1; height: auto; border: 1px solid #f3d0d0; border-radius: 9px; overflow: hidden; background: #ffffff; }
+    .doc-preview iframe, .doc-preview img { width: 100%; height: 100%; border: 0; object-fit: cover; background: #fff; }
+    .doc-preview:has(iframe) {
+        display: grid;
+        place-items: center;
+        background:
+            radial-gradient(circle at 50% 42%, rgba(128, 0, 0, 0.09), transparent 46%),
+            linear-gradient(180deg, #fff7f7, #ffffff);
+    }
+    .doc-preview:has(iframe)::before {
+        content: "PDF";
+        width: 54px;
+        height: 54px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: #fff1f2;
+        color: #7f1d2d;
+        font-size: 12px;
+        font-weight: 900;
+    }
+    .doc-preview:has(iframe) iframe {
+        display: none;
+    }
     .doc-missing { border: 1px dashed #cbd5e1; color: #64748b; border-radius: 8px; padding: 14px; font-size: 14px; font-weight: 600; background: #f8fafc; }
+    .profile-correction-history-wrap {
+        position: relative;
+        display: inline-flex;
+    }
+    .profile-correction-history-btn {
+        min-height: 24px;
+        border-radius: 999px;
+        border: 1px solid #fecaca;
+        background: #fff7f7;
+        color: #7f1d2d;
+        padding: 3px 10px;
+        font-size: 11px;
+        font-weight: 900;
+        cursor: default;
+    }
+    .profile-correction-history-bubble {
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 8px);
+        width: min(300px, 78vw);
+        display: none;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #fecaca;
+        background: #ffffff;
+        box-shadow: 0 16px 34px rgba(15, 23, 42, .16);
+        color: #334155;
+        z-index: 10;
+    }
+    .profile-correction-history-wrap:hover .profile-correction-history-bubble {
+        display: block;
+    }
+    .profile-correction-history-bubble strong {
+        display: block;
+        color: #7f1d2d;
+        font-size: 12px;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
+    .profile-correction-history-bubble span {
+        display: block;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.45;
+    }
 
     [data-theme="dark"] .profile-card,
     [data-theme="dark"] .doc-file { background: #0f172a; border-color: #334155; box-shadow: none; }
@@ -914,6 +997,17 @@
     $canResyncPuptas = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && !in_array($puptasSyncRaw, ['synced', 'not_applicable'], true);
     $canRequestFileCorrection = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true);
+    $hasCorrectionRequest = !empty($profile->resubmission_required_documents) || !empty($profile->resubmission_requested_at);
+    $correctionStatusLabel = !$hasCorrectionRequest
+        ? 'None'
+        : (!empty($profile->resubmitted_at) && (empty($profile->resubmission_requested_at) || $profile->resubmitted_at->greaterThanOrEqualTo($profile->resubmission_requested_at))
+            ? 'Submitted'
+            : 'Pending');
+    $correctionHistoryText = collect([
+        $profile->resubmission_requested_at ? 'Requested: ' . $profile->resubmission_requested_at->format('M d, Y h:i A') : null,
+        $profile->resubmitted_at ? 'Submitted: ' . $profile->resubmitted_at->format('M d, Y h:i A') : null,
+        $profile->pending_reason ? 'Reason: ' . $profile->pending_reason : null,
+    ])->filter()->implode("\n");
 @endphp
 <div class="health-profile-wrap">
     <div class="profile-card profile-hero-card">
@@ -1009,6 +1103,17 @@
                     <div class="profile-correction-meta">
                         <span>Last Request:</span>
                         <span class="profile-last-request">{{ $profile->resubmission_requested_at ? $profile->resubmission_requested_at->format('M d, Y h:i A') : 'None' }}</span>
+                        <span>Status:</span>
+                        <span class="profile-last-request">{{ $correctionStatusLabel }}</span>
+                        @if($hasCorrectionRequest)
+                            <span class="profile-correction-history-wrap">
+                                <button type="button" class="profile-correction-history-btn">History</button>
+                                <span class="profile-correction-history-bubble">
+                                    <strong>Correction History</strong>
+                                    <span>{!! nl2br(e($correctionHistoryText !== '' ? $correctionHistoryText : 'No history yet.')) !!}</span>
+                                </span>
+                            </span>
+                        @endif
                     </div>
                 </div>
                 <button type="button" class="profile-correction-button" id="openCorrectionModal">
@@ -1265,7 +1370,7 @@
             <form method="POST" action="{{ route('admin.health_profile.request_resubmission', $profile->id) }}" class="correction-body">
                 @csrf
                 <div class="correction-note">
-                    This will move the record to Pending Resubmission while keeping the original approval date, approver, and PUPTAS sync history.
+                    This request keeps the existing approval and PUPTAS sync history. The student will only replace the selected file/s.
                 </div>
                 <div class="correction-doc-grid">
                     <label class="correction-doc-option">
