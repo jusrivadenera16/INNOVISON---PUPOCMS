@@ -22,6 +22,187 @@
         z-index: 2147483000 !important;
     }
     .profile-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06); padding: 18px; }
+    .profile-hero-card {
+        padding: 20px;
+        border-color: rgba(112, 19, 27, 0.10);
+        box-shadow: 0 18px 38px rgba(15, 23, 42, 0.06);
+    }
+    .profile-hero-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(112, 19, 27, 0.08);
+    }
+    .profile-hero-main {
+        min-width: 0;
+    }
+    .profile-hero-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+        gap: 18px;
+        margin-top: 18px;
+    }
+    .profile-identity {
+        display: grid;
+        grid-template-columns: 96px minmax(0, 1fr);
+        gap: 18px;
+        align-items: center;
+    }
+    .profile-avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        background: linear-gradient(135deg, #fff7ed, #f1f5f9);
+        border: 4px solid #ffffff;
+        box-shadow: 0 12px 26px rgba(112, 19, 27, 0.14);
+        color: #70131B;
+        font-size: 24px;
+        font-weight: 900;
+    }
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .profile-name {
+        margin: 0;
+        color: #0f172a;
+        font-size: 24px;
+        font-weight: 900;
+        line-height: 1.12;
+    }
+    .profile-course-line {
+        margin: 5px 0 0;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 800;
+    }
+    .profile-quick-row {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 16px;
+    }
+    .profile-quick-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        color: #475569;
+        font-size: 11px;
+        font-weight: 800;
+    }
+    .profile-quick-icon,
+    .profile-meta-icon,
+    .timeline-node {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+    .profile-quick-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #70131B;
+    }
+    .profile-quick-icon svg,
+    .profile-meta-icon svg,
+    .timeline-node svg {
+        width: 15px;
+        height: 15px;
+    }
+    .profile-quick-item strong {
+        display: block;
+        color: #111827;
+        font-size: 11px;
+        font-weight: 900;
+        word-break: break-word;
+    }
+    .profile-status-card {
+        min-height: 136px;
+        border-radius: 16px;
+        padding: 18px;
+        border: 1px solid #bbf7d0;
+        background: linear-gradient(135deg, #f0fdf4, #ecfeff);
+        display: flex;
+        gap: 14px;
+        align-items: center;
+    }
+    .profile-status-shield {
+        width: 58px;
+        height: 58px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background: #dcfce7;
+        color: #16a34a;
+    }
+    .profile-status-shield svg {
+        width: 28px;
+        height: 28px;
+    }
+    .profile-status-card-title {
+        margin: 0 0 4px;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+    }
+    .profile-status-card-value {
+        margin: 0 0 8px;
+        color: #16a34a;
+        font-size: 22px;
+        font-weight: 900;
+    }
+    .profile-correction-card {
+        margin-top: 16px;
+        border: 1px solid #fecaca;
+        border-radius: 16px;
+        padding: 16px;
+        background: linear-gradient(135deg, #fff7f7, #fffefe);
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 14px;
+    }
+    .profile-correction-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+    .profile-correction-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 800;
+    }
+    .profile-last-request {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        border-radius: 999px;
+        padding: 3px 10px;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 11px;
+        font-weight: 900;
+    }
     .profile-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
     .profile-title { margin: 0; font-size: 21px; font-weight: 800; color: #0f172a; }
     .profile-sub { margin: 6px 0 0; font-size: 14px; color: #64748b; }
@@ -97,20 +278,32 @@
         flex-wrap: wrap;
     }
     .profile-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
         border: 1px solid #cbd5e1;
         background: #ffffff;
         color: #334155;
-        border-radius: 999px;
-        padding: 9px 14px;
+        border-radius: 10px;
+        padding: 11px 16px;
         font-size: 13px;
         font-weight: 800;
         cursor: pointer;
-        transition: all .18s ease;
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
+        transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
     }
     .profile-tab.is-active {
         background: #70131B;
         border-color: #8f2230;
         color: #ffffff;
+    }
+    .profile-tab:hover {
+        transform: translateY(-1px);
+        border-color: rgba(112, 19, 27, 0.32);
+    }
+    .profile-tab svg {
+        width: 15px;
+        height: 15px;
     }
     .profile-status-badge {
         display: inline-flex;
@@ -389,11 +582,93 @@
     .profile-panel.is-active { display: block; }
 
     .profile-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-    .profile-meta { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; }
-    .profile-meta-k { font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
-    .profile-meta-v { font-size: 15px; color: #0f172a; font-weight: 700; word-break: break-word; }
+    .profile-meta {
+        min-height: 72px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+    }
+    .profile-meta-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: #fff7f7;
+        border: 1px solid #fee2e2;
+        color: #9f1239;
+    }
+    .profile-meta-k { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 900; letter-spacing: .05em; margin-bottom: 4px; }
+    .profile-meta-v { font-size: 14px; color: #0f172a; font-weight: 900; word-break: break-word; line-height: 1.25; }
     .profile-meta.is-wide { grid-column: span 2; }
     .profile-meta.is-full { grid-column: 1 / -1; }
+
+    .profile-timeline-card {
+        padding: 18px;
+    }
+    .profile-timeline-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .profile-timeline-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 13px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+    .profile-timeline {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0;
+        position: relative;
+    }
+    .profile-timeline::before {
+        content: "";
+        position: absolute;
+        left: 9%;
+        right: 9%;
+        top: 18px;
+        height: 2px;
+        background: #86efac;
+    }
+    .profile-timeline-step {
+        position: relative;
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        text-align: center;
+        z-index: 1;
+    }
+    .timeline-node {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        background: #22c55e;
+        color: #ffffff;
+        border: 4px solid #dcfce7;
+    }
+    .profile-timeline-step strong,
+    .timeline-copy strong {
+        display: block;
+        color: #0f172a;
+        font-size: 12px;
+        font-weight: 900;
+    }
+    .profile-timeline-step span:not(.timeline-node),
+    .profile-timeline-step small,
+    .timeline-copy span {
+        display: block;
+        margin-top: 3px;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.35;
+    }
 
     .doc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
     .doc-file { border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; background: #fff; }
@@ -407,12 +682,22 @@
     [data-theme="dark"] .profile-card,
     [data-theme="dark"] .doc-file { background: #0f172a; border-color: #334155; box-shadow: none; }
     [data-theme="dark"] .profile-title,
+    [data-theme="dark"] .profile-name,
+    [data-theme="dark"] .profile-timeline-title,
     [data-theme="dark"] .profile-meta-v,
     [data-theme="dark"] .doc-file h4 { color: #f8fafc; }
     [data-theme="dark"] .profile-sub,
+    [data-theme="dark"] .profile-course-line,
+    [data-theme="dark"] .profile-quick-item,
     [data-theme="dark"] .profile-meta-k,
     [data-theme="dark"] .doc-missing { color: #cbd5e1; }
     [data-theme="dark"] .profile-meta { background: #111827; border-color: #334155; }
+    [data-theme="dark"] .profile-meta-icon,
+    [data-theme="dark"] .profile-quick-icon {
+        background: #111827;
+        border-color: #334155;
+        color: #facc15;
+    }
     [data-theme="dark"] .profile-top-btn {
         color: #ffffff !important;
         border-color: rgba(250, 204, 21, 0.30);
@@ -447,7 +732,12 @@
         background: #111827;
         border-color: #334155;
     }
+    [data-theme="dark"] .profile-status-card {
+        background: rgba(20, 83, 45, 0.28);
+        border-color: rgba(74, 222, 128, 0.35);
+    }
     [data-theme="dark"] .profile-correction-panel,
+    [data-theme="dark"] .profile-correction-card,
     [data-theme="dark"] .correction-card {
         background: #111827;
         border-color: rgba(248, 113, 113, 0.45);
@@ -472,12 +762,39 @@
     }
 
     @media (max-width: 1024px) {
+        .profile-hero-layout {
+            grid-template-columns: 1fr;
+        }
+        .profile-quick-row {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
         .profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 768px) {
         .health-profile-wrap {
             padding-right: 0;
             padding-bottom: 152px;
+        }
+        .profile-hero-head,
+        .profile-correction-card {
+            grid-template-columns: 1fr;
+        }
+        .profile-identity {
+            grid-template-columns: 76px minmax(0, 1fr);
+        }
+        .profile-avatar {
+            width: 76px;
+            height: 76px;
+        }
+        .profile-name {
+            font-size: 20px;
+        }
+        .profile-quick-row,
+        .profile-timeline {
+            grid-template-columns: 1fr;
+        }
+        .profile-timeline::before {
+            display: none;
         }
         .profile-grid,
         .doc-grid { grid-template-columns: 1fr; }
@@ -560,6 +877,17 @@
     if ($displayStudentNumber === '' || \Illuminate\Support\Str::startsWith(\Illuminate\Support\Str::upper($displayStudentNumber), 'CLN-')) {
         $displayStudentNumber = 'N/A';
     }
+    $profileName = trim((string) ($profile->user->name ?? 'N/A'));
+    $profileInitials = collect(explode(' ', $profileName))
+        ->filter()
+        ->take(2)
+        ->map(fn ($part) => \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($part, 0, 1)))
+        ->implode('');
+    $profileInitials = $profileInitials !== '' ? $profileInitials : 'HP';
+    $profileCourse = trim((string) ($profile->course_college ?: ($profile->user->course ?? 'N/A')));
+    $studentPhotoUrl = !empty($profile->student_photo)
+        ? route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'student_photo'])
+        : null;
     $puptasSyncRaw = strtolower(trim((string) ($profile->puptas_sync_status ?? '')));
     $puptasReference = strtoupper(trim((string) ($profile->reference_number ?: $profile->student_number ?: optional($profile->user)->student_number)));
     $isLocalPuptasReference = $puptasReference === ''
@@ -588,9 +916,9 @@
     $canRequestFileCorrection = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true);
 @endphp
 <div class="health-profile-wrap">
-    <div class="profile-card">
-        <div class="profile-head">
-            <div>
+    <div class="profile-card profile-hero-card">
+        <div class="profile-hero-head">
+            <div class="profile-hero-main">
                 <h1 class="profile-title">Student Health Profile</h1>
                 <p class="profile-sub">Issued health profile details and submitted documents.</p>
             </div>
@@ -601,13 +929,52 @@
                 </a>
             </div>
         </div>
-    </div>
 
-    <div class="profile-card">
-        <div class="profile-sync-panel">
-            <div class="profile-sync-main">
-                <p class="profile-sync-title">PUPTAS Sync Status</p>
-                <div class="profile-sync-row">
+        <div class="profile-hero-layout">
+            <div>
+                <div class="profile-identity">
+                    <div class="profile-avatar">
+                        @if($studentPhotoUrl)
+                            <img src="{{ $studentPhotoUrl }}" alt="{{ $profileName }}">
+                        @else
+                            {{ $profileInitials }}
+                        @endif
+                    </div>
+                    <div>
+                        <h2 class="profile-name">{{ $profileName }}</h2>
+                        <p class="profile-course-line">{{ $profileCourse }}</p>
+                    </div>
+                </div>
+
+                <div class="profile-quick-row">
+                    <div class="profile-quick-item">
+                        <span class="profile-quick-icon"><x-outline-icon name="academic-cap" /></span>
+                        <span>Student No.<strong>{{ $displayStudentNumber }}</strong></span>
+                    </div>
+                    <div class="profile-quick-item">
+                        <span class="profile-quick-icon"><x-outline-icon name="user-circle" /></span>
+                        <span>Gender<strong>{{ $profile->sex ?: 'N/A' }}</strong></span>
+                    </div>
+                    <div class="profile-quick-item">
+                        <span class="profile-quick-icon"><x-outline-icon name="calendar-days" /></span>
+                        <span>Age<strong>{{ $profile->age ?: ($calculatedAge ?: 'N/A') }}</strong></span>
+                    </div>
+                    <div class="profile-quick-item">
+                        <span class="profile-quick-icon"><x-outline-icon name="envelope" /></span>
+                        <span>Email<strong>{{ $profile->user->email ?? 'N/A' }}</strong></span>
+                    </div>
+                    <div class="profile-quick-item">
+                        <span class="profile-quick-icon"><x-outline-icon name="phone" /></span>
+                        <span>Contact<strong>{{ $profile->cellphone ?: ($profile->contact_no ?: 'N/A') }}</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-status-card">
+                <div class="profile-status-shield"><x-outline-icon name="check" /></div>
+                <div>
+                    <p class="profile-status-card-title">Health Record Status</p>
+                    <p class="profile-status-card-value">{{ $profileStatusLabel }}</p>
                     <span class="profile-status-badge {{ $puptasSyncClass }}">
                         @if($puptasSyncRaw === 'synced')
                             <x-outline-icon name="check" />
@@ -621,43 +988,51 @@
                         {{ $puptasSyncLabel }}
                     </span>
                     @if($profile->puptas_synced_at)
-                        <span class="profile-sync-message">Last synced: {{ $profile->puptas_synced_at->format('M d, Y h:i A') }}</span>
+                        <p class="profile-sync-message" style="margin-top:8px;">Last synced: {{ $profile->puptas_synced_at->format('M d, Y h:i A') }}</p>
+                    @endif
+                    @if($canResyncPuptas)
+                        <form method="POST" action="{{ route('admin.health_profile.resync_puptas', $profile->id) }}" style="margin-top:10px;">
+                            @csrf
+                            <button type="submit" class="profile-sync-button">Resync to PUPTAS</button>
+                        </form>
                     @endif
                 </div>
-                @if(filled($profile->puptas_sync_message))
-                    <p class="profile-sync-message">{{ $profile->puptas_sync_message }}</p>
-                @endif
             </div>
-
-            @if($canResyncPuptas)
-                <form method="POST" action="{{ route('admin.health_profile.resync_puptas', $profile->id) }}">
-                    @csrf
-                    <button type="submit" class="profile-sync-button">Resync to PUPTAS</button>
-                </form>
-            @endif
         </div>
-    </div>
 
-    @if($canRequestFileCorrection)
-        <div class="profile-card">
-            <div class="profile-correction-panel">
+        @if($canRequestFileCorrection)
+            <div class="profile-correction-card">
+                <div class="profile-correction-icon"><x-outline-icon name="document-text" /></div>
                 <div>
                     <p class="profile-correction-title">File Correction</p>
                     <p class="profile-correction-copy">Request replacement of a specific uploaded requirement without deleting approval history or PUPTAS sync records.</p>
+                    <div class="profile-correction-meta">
+                        <span>Last Request:</span>
+                        <span class="profile-last-request">{{ $profile->resubmission_requested_at ? $profile->resubmission_requested_at->format('M d, Y h:i A') : 'None' }}</span>
+                    </div>
                 </div>
                 <button type="button" class="profile-correction-button" id="openCorrectionModal">
                     Request File Correction
                 </button>
             </div>
-        </div>
-    @endif
+        @endif
+    </div>
 
     <div class="profile-card">
         <div class="profile-switch-head">
             <div class="profile-switch" role="tablist" aria-label="Health profile sections">
-                <button type="button" class="profile-tab is-active" data-profile-tab-target="summaryPanel">Personal Information</button>
-                <button type="button" class="profile-tab" data-profile-tab-target="healthPanel">Health Profile</button>
-                <button type="button" class="profile-tab" data-profile-tab-target="docsPanel">Uploaded Documents</button>
+                <button type="button" class="profile-tab is-active" data-profile-tab-target="summaryPanel">
+                    <x-outline-icon name="user-circle" />
+                    Personal Information
+                </button>
+                <button type="button" class="profile-tab" data-profile-tab-target="healthPanel">
+                    <x-outline-icon name="information-circle" />
+                    Health Profile
+                </button>
+                <button type="button" class="profile-tab" data-profile-tab-target="docsPanel">
+                    <x-outline-icon name="document-text" />
+                    Uploaded Documents
+                </button>
             </div>
             <span class="profile-status-badge {{ $profileStatusClass }}">
                 @if(in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true))
@@ -837,6 +1212,38 @@
                 @else
                     <div class="doc-missing">No 2x2 student photo uploaded.</div>
                 @endif
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-card profile-timeline-card">
+        <div class="profile-timeline-head">
+            <h3 class="profile-timeline-title">Health Record Timeline</h3>
+        </div>
+        <div class="profile-timeline">
+            <div class="profile-timeline-step">
+                <span class="timeline-node"><x-outline-icon name="check" /></span>
+                <strong>Profile Submitted</strong>
+                <span>{{ optional($profile->created_at)->format('M d, Y h:i A') ?: 'N/A' }}</span>
+                <small>Student submitted health requirements</small>
+            </div>
+            <div class="profile-timeline-step">
+                <span class="timeline-node"><x-outline-icon name="check" /></span>
+                <strong>Assessment Completed</strong>
+                <span>{{ $formatProfileDate($profile->assessment_date ?: $profile->verified_at) }}</span>
+                <small>Initial assessment and review completed</small>
+            </div>
+            <div class="profile-timeline-step">
+                <span class="timeline-node"><x-outline-icon name="check" /></span>
+                <strong>Synced to PUPTAS</strong>
+                <span>{{ $profile->puptas_synced_at ? $profile->puptas_synced_at->format('M d, Y h:i A') : $puptasSyncLabel }}</span>
+                <small>Health record sync status</small>
+            </div>
+            <div class="profile-timeline-step">
+                <span class="timeline-node"><x-outline-icon name="check" /></span>
+                <strong>{{ $profileStatusLabel }}</strong>
+                <span>{{ $formatProfileDate($profile->verified_at ?: $profile->updated_at) }}</span>
+                <small>Current clearance state</small>
             </div>
         </div>
     </div>

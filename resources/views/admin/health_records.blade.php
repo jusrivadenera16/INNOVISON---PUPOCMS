@@ -1109,6 +1109,333 @@
         box-shadow: 0 14px 28px rgba(112, 19, 27, .14);
         background: #fffaf0;
     }
+    .health-records-overview {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, .06);
+        overflow: hidden;
+    }
+    .health-records-overview-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 18px 20px;
+        border-bottom: 1px solid #edf2f7;
+    }
+    .health-records-title-block {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+    }
+    .health-records-title-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: #fff1f2;
+        color: #b91c1c;
+        flex: 0 0 auto;
+    }
+    .health-records-title-icon svg {
+        width: 28px;
+        height: 28px;
+    }
+    .health-records-title-copy h2 {
+        margin: 0;
+        color: #0f172a;
+        font-size: 26px;
+        font-weight: 900;
+        line-height: 1.08;
+    }
+    .health-records-title-copy p {
+        margin: 6px 0 0;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 700;
+    }
+    .health-records-last-updated {
+        display: grid;
+        grid-template-columns: 42px auto;
+        gap: 10px;
+        align-items: center;
+        color: #0f172a;
+        flex: 0 0 auto;
+    }
+    .health-records-last-updated-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: #fff1f2;
+        color: #b91c1c;
+    }
+    .health-records-last-updated-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+    .health-records-last-updated span {
+        display: block;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+    .health-records-last-updated strong {
+        display: block;
+        margin-top: 2px;
+        font-size: 13px;
+        font-weight: 900;
+        line-height: 1.25;
+    }
+    .health-records-overview-search {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 0;
+        padding: 18px 20px 8px;
+    }
+    .health-records-overview-search .health-records-search-shell,
+    .health-records-overview-search .health-records-search-wrap {
+        width: 100%;
+        flex: 1 1 auto;
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .health-records-overview-search .health-records-search-wrap {
+        border: 1px solid #e2e8f0;
+        border-right: 0;
+        border-radius: 12px 0 0 12px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        min-height: 52px;
+    }
+    .health-records-overview-search .health-records-search-wrap::before {
+        content: "";
+        width: 20px;
+        height: 20px;
+        margin-left: 18px;
+        background: currentColor;
+        color: #9f1239;
+        mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+    .health-records-overview-search .health-records-search {
+        width: 100% !important;
+        min-height: 50px;
+        height: 50px;
+        border-radius: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+        color: #0f172a;
+        font-weight: 800;
+    }
+    .health-records-overview-search .health-records-search::placeholder {
+        color: #94a3b8;
+        font-weight: 800;
+    }
+    .health-records-search-submit {
+        min-width: 112px;
+        min-height: 52px;
+        border: 0;
+        border-radius: 0 12px 12px 0;
+        background: #7f121d;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, .18);
+    }
+    .health-records-search-submit svg {
+        width: 18px;
+        height: 18px;
+    }
+    .health-summary-modern-container {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        padding: 18px 20px 20px;
+    }
+    .health-summary-modern-card {
+        position: relative;
+        min-height: 132px;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        background: #ffffff;
+        padding: 20px 18px;
+        display: grid;
+        grid-template-columns: 58px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 16px;
+        overflow: hidden;
+        text-align: left;
+        text-decoration: none;
+        font: inherit;
+        width: 100%;
+        transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .health-summary-modern-card::after {
+        content: "";
+        position: absolute;
+        right: 12px;
+        bottom: 0;
+        width: 86px;
+        height: 42px;
+        opacity: .35;
+        border: solid currentColor;
+        border-width: 0 0 2px 2px;
+        border-radius: 0 0 0 48px;
+        transform: skewX(-18deg);
+    }
+    .health-summary-modern-card.is-approved {
+        border-color: #bbf7d0;
+        color: #16a34a;
+    }
+    .health-summary-modern-card.is-approved .health-summary-modern-icon-wrap {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+    .health-summary-modern-card.is-condition {
+        border-color: #fecaca;
+        color: #dc2626;
+    }
+    .health-summary-modern-card.is-condition .health-summary-modern-icon-wrap {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    .health-summary-modern-card.is-pending {
+        border-color: #fed7aa;
+        color: #d97706;
+    }
+    .health-summary-modern-card.is-pending .health-summary-modern-icon-wrap {
+        background: #ffedd5;
+        color: #d97706;
+    }
+    .health-summary-modern-card.is-compliance {
+        border-color: #fecaca;
+        color: #dc2626;
+    }
+    .health-summary-modern-card.is-compliance .health-summary-modern-icon-wrap {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    .health-summary-modern-card.is-clickable {
+        cursor: pointer;
+    }
+    .health-summary-modern-card.is-clickable:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 18px 34px rgba(112, 19, 27, .14);
+        background: #fffaf0;
+    }
+    .health-summary-modern-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background: currentColor;
+        color: inherit;
+        opacity: .12;
+    }
+    .health-summary-modern-icon svg {
+        width: 30px;
+        height: 30px;
+        opacity: 7;
+        stroke: currentColor;
+    }
+    .health-summary-modern-icon-wrap {
+        width: 58px;
+        height: 58px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        color: inherit;
+        z-index: 1;
+    }
+    .health-summary-modern-icon-wrap svg {
+        width: 30px;
+        height: 30px;
+    }
+    .health-summary-modern-copy {
+        position: relative;
+        z-index: 1;
+        color: #0f172a;
+        min-width: 0;
+    }
+    .health-summary-modern-label {
+        display: block;
+        color: #111827;
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+    .health-summary-modern-count {
+        display: block;
+        margin-top: 8px;
+        color: #0f172a;
+        font-size: 31px;
+        font-weight: 900;
+        line-height: 1;
+    }
+    .health-summary-modern-note {
+        display: block;
+        margin-top: 14px;
+        color: currentColor;
+        font-size: 13px;
+        font-weight: 900;
+    }
+    .health-summary-modern-arrow {
+        position: relative;
+        z-index: 1;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        border: 1px solid #fecaca;
+        background: #fff;
+        color: #b91c1c;
+        font-size: 26px;
+        font-weight: 900;
+    }
+    @media (max-width: 1180px) {
+        .health-summary-modern-container {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    @media (max-width: 768px) {
+        .health-records-overview-head {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+        .health-records-overview-search {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        .health-records-overview-search .health-records-search-wrap {
+            border-right: 1px solid #e2e8f0;
+            border-radius: 12px;
+        }
+        .health-records-search-submit {
+            width: 100%;
+            border-radius: 12px;
+        }
+        .health-summary-modern-container {
+            grid-template-columns: 1fr;
+        }
+        .health-summary-modern-card {
+            min-height: 118px;
+        }
+    }
     .health-records-title {
         margin: 0;
         color: #111827;
@@ -3124,6 +3451,19 @@
     html[data-theme="dark"] .hr-ref-default h4, html[data-theme="dark"] .hr-ref-default p { color:#f1f5f9; }
     html[data-theme="dark"] .hr-ma-radio { background:rgba(17,24,39,0.86); color:#f8fafc; border-color:rgba(148,163,184,0.18); }
 
+    .health-records-overview .health-records-search-shell,
+    .health-records-overview .health-records-search-shell.is-open,
+    .health-records-overview .health-records-search-wrap,
+    .health-records-overview .health-records-search-shell.is-open .health-records-search-wrap {
+        width: 100% !important;
+        flex: 1 1 auto !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+    .health-records-overview .health-records-search {
+        width: 100% !important;
+    }
+
 </style>
 @endpush
 
@@ -3134,28 +3474,6 @@
         $canSignHealth = $role === \App\Models\User::ROLE_SUPERADMIN;
         $highlightHealthId = trim((string) request()->query('highlight_health', ''));
     @endphp
-
-    {{-- Header with Search / Filters --}}
-    <div class="health-records-toolbar">
-        <h2 class="health-records-title"><x-outline-icon name="document-text" />Health Records</h2>
-        <div class="health-records-toolbar-actions">
-            <div class="health-records-search-shell" id="healthRecordsSearchShell">
-                <div class="health-records-search-wrap">
-                    <input
-                        type="text"
-                        id="recordSearch"
-                        name="q"
-                        value="{{ $search ?? '' }}"
-                        class="health-records-search"
-                        placeholder="Search by student name or ID..."
-                    >
-                </div>
-                <button type="button" class="health-records-search-toggle" id="healthRecordsSearchToggle" aria-label="Open search" aria-expanded="false" aria-controls="recordSearch" onclick="document.getElementById('healthRecordsSearchShell').classList.toggle('is-open'); document.getElementById('recordSearch').focus();">
-                    <x-outline-icon name="magnifying-glass" />
-                </button>
-            </div>
-        </div>
-    </div>
 
     @php
         $healthSummaryStats = [
@@ -3195,55 +3513,105 @@
         }
 
         $healthSummaryStats['total_approved'] = $healthProfileSummaryRecords->total();
+        $latestApprovedAt = $records
+            ->filter(function ($summaryRecord) {
+                return in_array(trim((string) ($summaryRecord->clearance_status ?? '')), ['Issued', 'Fully Cleared'], true)
+                    && filled($summaryRecord->verified_at);
+            })
+            ->max('verified_at');
+        $latestApprovedAt = $latestApprovedAt ? \Carbon\Carbon::parse($latestApprovedAt) : null;
     @endphp
 
-    {{-- Summary Action Cards --}}
-    <div class="summary-container">
-        <div class="summary-item">
-            <div class="card p-3 health-summary-action-card health-summary-metric-card is-approved" style="padding: 15px 24px !important;">
-                <div class="health-summary-row">
-                    <small class="health-summary-metric-label"><span>Total Approved</span></small>
-                    <h3 class="health-summary-metric-count">{{ $healthSummaryStats['total_approved'] }}</h3>
+    <section class="health-records-overview">
+        <div class="health-records-overview-head">
+            <div class="health-records-title-block">
+                <span class="health-records-title-icon"><x-outline-icon name="document-text" /></span>
+                <div class="health-records-title-copy">
+                    <h2>Health Records</h2>
+                    <p>View approved medical clearances and student health profiles.</p>
+                </div>
+            </div>
+            <div class="health-records-last-updated">
+                <span class="health-records-last-updated-icon"><x-outline-icon name="clock" /></span>
+                <div>
+                    <span>Last Updated</span>
+                    <strong>
+                        @if($latestApprovedAt)
+                            {{ $latestApprovedAt->format('M d, Y') }}<br>{{ $latestApprovedAt->format('g:i A') }}
+                        @else
+                            N/A
+                        @endif
+                    </strong>
                 </div>
             </div>
         </div>
-        <div class="summary-item">
-            <div class="card p-3 health-summary-action-card health-summary-metric-card is-condition" style="padding: 15px 24px !important;">
-                <div class="health-summary-row">
-                    <small class="health-summary-metric-label"><span>With Medical Conditions</span></small>
-                    <h3 class="health-summary-metric-count">{{ $healthSummaryStats['with_conditions'] }}</h3>
+
+        <div class="health-records-overview-search">
+            <div class="health-records-search-shell is-open" id="healthRecordsSearchShell">
+                <div class="health-records-search-wrap">
+                    <input
+                        type="text"
+                        id="recordSearch"
+                        name="q"
+                        value="{{ $search ?? '' }}"
+                        class="health-records-search"
+                        placeholder="Search by student name, student number, or reference number..."
+                    >
                 </div>
             </div>
+            <button type="button" class="health-records-search-submit" onclick="document.getElementById('recordSearch').dispatchEvent(new Event('input', { bubbles: true }));">
+                <x-outline-icon name="magnifying-glass" />
+                Search
+            </button>
         </div>
-        <div class="summary-item">
-            <button type="button" class="card p-3 awaiting-links-btn health-summary-info-btn" id="pendingApprovalInfoBtn" style="padding: 8px 18px 8px 12px !important; border-left: 5px solid #70131B; width: 100%; display: flex; align-items: center; justify-content: flex-start; gap: 12px; min-height: 90px;" onclick="document.getElementById('pendingApprovalInfoModal').style.display='flex';">
-                <div class="workflow-card-icon">
+
+        <div class="health-summary-modern-container">
+            <div class="health-summary-modern-card is-approved">
+                <span class="health-summary-modern-icon-wrap"><x-outline-icon name="check" /></span>
+                <div class="health-summary-modern-copy">
+                    <span class="health-summary-modern-label">Total Approved</span>
+                    <span class="health-summary-modern-count">{{ $healthSummaryStats['total_approved'] }}</span>
+                    <span class="health-summary-modern-note">Issued clearances</span>
+                </div>
+            </div>
+            <div class="health-summary-modern-card is-condition">
+                <span class="health-summary-modern-icon-wrap">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M7 4h7l4 4v12H7V4z" stroke="currentColor" stroke-linejoin="round"/>
-                        <path d="M14 4v4h4" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M9.5 14l2 2 4-5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M20.8 5.8c-1.7-2-4.7-2.1-6.5-.3L12 7.8 9.7 5.5C7.9 3.7 4.9 3.8 3.2 5.8c-1.6 1.9-1.4 4.8.4 6.6L12 20.5l8.4-8.1c1.8-1.8 2-4.7.4-6.6Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                     </svg>
+                </span>
+                <div class="health-summary-modern-copy">
+                    <span class="health-summary-modern-label">With Medical Conditions</span>
+                    <span class="health-summary-modern-count">{{ $healthSummaryStats['with_conditions'] }}</span>
+                    <span class="health-summary-modern-note">Approved records only</span>
                 </div>
-                <span class="workflow-card-divider" aria-hidden="true"></span>
-                <div class="workflow-card-text">
-                    <small class="workflow-card-label">Pending Approval</small>
-                    <h3 class="workflow-card-count">{{ $healthSummaryStats['pending_approval'] }}</h3>
+            </div>
+            <button type="button" class="health-summary-modern-card health-summary-info-btn is-pending is-clickable" id="pendingApprovalInfoBtn" onclick="document.getElementById('pendingApprovalInfoModal').style.display='flex';">
+                <span class="health-summary-modern-icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M7 4h7l4 4v12H7V4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M14 4v4h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9.5 14l2 2 4-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <div class="health-summary-modern-copy">
+                    <span class="health-summary-modern-label">Pending Approval</span>
+                    <span class="health-summary-modern-count">{{ $healthSummaryStats['pending_approval'] }}</span>
+                    <span class="health-summary-modern-note">Click to view</span>
                 </div>
+                <span class="health-summary-modern-arrow">&rarr;</span>
+            </button>
+            <button type="button" class="health-summary-modern-card health-summary-info-btn is-compliance is-clickable" id="pendingConditionalInfoBtn" onclick="document.getElementById('pendingConditionalInfoModal').style.display='flex';">
+                <span class="health-summary-modern-icon-wrap"><x-outline-icon name="exclamation-triangle" /></span>
+                <div class="health-summary-modern-copy">
+                    <span class="health-summary-modern-label">Pending Compliance</span>
+                    <span class="health-summary-modern-count">{{ $healthSummaryStats['pending_conditional'] }}</span>
+                    <span class="health-summary-modern-note">Click to view</span>
+                </div>
+                <span class="health-summary-modern-arrow">&rarr;</span>
             </button>
         </div>
-        <div class="summary-item">
-            <button type="button" class="card p-3 awaiting-links-btn health-summary-info-btn" id="pendingConditionalInfoBtn" style="padding: 8px 18px 8px 12px !important; border-left: 5px solid #70131B; width: 100%; display: flex; align-items: center; justify-content: flex-start; gap: 12px; min-height: 90px;" onclick="document.getElementById('pendingConditionalInfoModal').style.display='flex';">
-                <div class="workflow-card-icon">
-                    <x-outline-icon name="exclamation-triangle" />
-                </div>
-                <span class="workflow-card-divider" aria-hidden="true"></span>
-                <div class="workflow-card-text">
-                    <small class="workflow-card-label">Pending Compliance</small>
-                    <h3 class="workflow-card-count">{{ $healthSummaryStats['pending_conditional'] }}</h3>
-                </div>
-            </button>
-        </div>
-    </div>
+    </section>
 
     {{-- Main Table Card --}}
 <div class="card health-summary-card">
