@@ -89,6 +89,10 @@
         padding-bottom: 0;
     }
 
+    .inventory-toolbar-actions > .btn-add:not(.inventory-search-toggle) {
+        border-radius: 12px;
+    }
+
     .inventory-search-shell {
         display: inline-flex;
         align-items: center;

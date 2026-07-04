@@ -108,7 +108,9 @@
         z-index: 60;
     }
     .appointment-action-menu-toggle {
-        min-width: 108px;
+        width: 122px;
+        min-width: 122px;
+        max-width: 122px;
         min-height: 38px;
         padding: 8px 14px;
         border-radius: 999px;
@@ -263,7 +265,9 @@
         cursor: not-allowed;
     }
     .appointment-inline-pill {
+        width: 122px;
         min-width: 122px;
+        max-width: 122px;
         min-height: 38px;
         padding: 8px 14px;
         border-radius: 999px;

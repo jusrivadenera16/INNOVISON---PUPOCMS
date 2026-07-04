@@ -2882,7 +2882,7 @@
         border: 1px solid #facc15;
         border-radius: 14px;
         background: #8b1722;
-        color: #facc15 !important;
+        color: #ffffff !important;
         text-align: center;
         padding: 0 20px;
         display: inline-flex;
@@ -3065,7 +3065,7 @@
 
     .applicant-final-review-card {
         display: grid;
-        grid-template-columns: minmax(220px, 1fr) minmax(210px, 0.8fr) auto;
+        grid-template-columns: minmax(250px, 1fr) minmax(210px, 0.8fr) auto;
         gap: 12px;
         align-items: center;
         padding: 18px;
@@ -3082,6 +3082,35 @@
         border-color: rgba(112, 19, 27, 0.32);
         background: linear-gradient(180deg, #fff7ed 0%, #fff1f2 100%);
         box-shadow: 0 16px 28px rgba(112, 19, 27, 0.14);
+    }
+
+    .applicant-final-review-person {
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+    }
+
+    .applicant-final-review-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        border: 2px solid rgba(250, 204, 21, .72);
+        background: linear-gradient(135deg, #fff1f2, #fee2e2);
+        color: #70131B;
+        font-size: 15px;
+        font-weight: 900;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .12);
+    }
+
+    .applicant-final-review-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
     }
 
     .applicant-final-review-reference-badge {
@@ -6222,44 +6251,153 @@
     }
 
     .clinic-success-card {
-        width: min(360px, calc(100vw - 30px));
-        padding: 28px 22px;
-        border: 1px solid rgba(250, 204, 21, .48);
-        border-radius: 18px;
+        position: relative;
+        width: min(520px, calc(100vw - 30px));
+        padding: 56px 40px 36px;
+        border: 1px solid rgba(112, 19, 27, .10);
+        border-radius: 16px;
         background: #ffffff;
         box-shadow: 0 24px 54px rgba(15, 23, 42, .3);
         text-align: center;
         animation: clinicSuccessPop .38s cubic-bezier(.2, .9, .25, 1.2);
+        overflow: hidden;
     }
 
     .clinic-success-check {
-        width: 76px;
-        height: 76px;
+        position: relative;
+        width: 112px;
+        height: 112px;
         display: grid;
         place-items: center;
-        margin: 0 auto 14px;
+        margin: 8px auto 28px;
         border-radius: 999px;
-        background: #70131b;
-        color: #facc15;
+        background: radial-gradient(circle at 35% 24%, #9f2435 0%, #70131b 62%, #4f1017 100%);
+        color: #ffffff;
         box-shadow: 0 12px 26px rgba(112, 19, 27, .24);
+        animation: clinicCheckPop .48s .12s cubic-bezier(.2, .9, .25, 1.25) both;
+    }
+
+    .clinic-success-check::before,
+    .clinic-success-check::after {
+        content: "";
+        position: absolute;
+        inset: -26px;
+        border-radius: inherit;
+        border: 1px solid rgba(112, 19, 27, .12);
+        animation: clinicSuccessPulse 1.9s ease-out infinite;
+    }
+
+    .clinic-success-check::after {
+        inset: -48px;
+        animation-delay: .42s;
+        border-color: rgba(112, 19, 27, .08);
     }
 
     .clinic-success-check svg {
-        width: 39px;
-        height: 39px;
-        stroke-width: 2.8;
+        width: 56px;
+        height: 56px;
+        stroke-width: 3.2;
+        position: relative;
+        z-index: 1;
+        animation: clinicCheckIconIn .42s .25s cubic-bezier(.2, .9, .25, 1.35) both;
     }
 
     .clinic-success-card strong {
         display: block;
         color: #70131b;
-        font-size: 20px;
+        font-size: clamp(28px, 4vw, 36px);
         font-weight: 900;
+        line-height: 1.15;
+        margin-bottom: 14px;
+    }
+
+    .clinic-success-card p {
+        margin: 0 auto 32px;
+        max-width: 360px;
+        color: #4b5563;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.6;
+    }
+
+    .clinic-success-card hr {
+        border: 0;
+        border-top: 1px solid #f1e3e5;
+        margin: 0 0 28px;
+    }
+
+    .clinic-success-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        border: 0;
+        background: #f2dfe3;
+        color: #70131B;
+        display: inline-grid;
+        place-items: center;
+        cursor: pointer;
+    }
+
+    .clinic-success-close svg {
+        width: 22px;
+        height: 22px;
+        stroke-width: 2.4;
+    }
+
+    .clinic-success-continue {
+        width: 100%;
+        min-height: 60px;
+        border: 0;
+        border-radius: 9px;
+        background: linear-gradient(135deg, #70131B, #9a1b2c);
+        color: #ffffff;
+        font-weight: 900;
+        font-size: 17px;
+        cursor: pointer;
+        box-shadow: 0 16px 34px rgba(112, 19, 27, .20);
+    }
+
+    .clinic-success-confetti {
+        position: absolute;
+        inset: 58px 70px auto;
+        height: 155px;
+        pointer-events: none;
+        background:
+            radial-gradient(circle, #70131B 0 2px, transparent 3px) 4% 42% / 42px 42px,
+            radial-gradient(circle, #e8bec1 0 2px, transparent 3px) 16% 68% / 38px 38px,
+            radial-gradient(circle, #70131B 0 2px, transparent 3px) 92% 48% / 40px 40px,
+            linear-gradient(45deg, transparent 44%, #70131B 45% 55%, transparent 56%) 82% 34% / 26px 26px,
+            linear-gradient(45deg, transparent 44%, #d9a7ad 45% 55%, transparent 56%) 18% 28% / 24px 24px;
+        opacity: .8;
+        animation: clinicConfettiDrift 2.4s ease-in-out infinite alternate;
     }
 
     @keyframes clinicSuccessPop {
         from { opacity: 0; transform: scale(.72) translateY(18px); }
         to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes clinicSuccessPulse {
+        0% { opacity: .85; transform: scale(.82); }
+        100% { opacity: 0; transform: scale(1.24); }
+    }
+
+    @keyframes clinicCheckPop {
+        from { opacity: 0; transform: scale(.72); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes clinicCheckIconIn {
+        from { opacity: 0; transform: scale(.5) rotate(-8deg); }
+        to { opacity: 1; transform: scale(1) rotate(0); }
+    }
+
+    @keyframes clinicConfettiDrift {
+        from { transform: translateY(0); opacity: .55; }
+        to { transform: translateY(-8px); opacity: .95; }
     }
 
     html[data-theme="dark"] .applicant-condition-toggle-text {
@@ -6879,12 +7017,29 @@
                                         ])))
                                         ?: 'Applicant';
                                     $reviewRef = $reviewApplicant->reference_number ?: 'N/A';
+                                    $reviewPhotoUrl = filled($reviewApplicant->student_photo)
+                                        ? route('walkin.document', ['healthProfile' => $reviewApplicant->id, 'document' => 'student_photo'])
+                                        : '';
+                                    $reviewNameParts = collect(preg_split('/\s+/', trim($reviewName)) ?: [])->filter()->values();
+                                    $reviewInitials = strtoupper(
+                                        ($reviewNameParts->first() ? mb_substr($reviewNameParts->first(), 0, 1) : 'A')
+                                        . ($reviewNameParts->count() > 1 ? mb_substr($reviewNameParts->last(), 0, 1) : 'P')
+                                    );
                                 @endphp
                                 <article class="applicant-final-review-card" data-final-review-row data-search="{{ strtolower($reviewName . ' ' . ($reviewUser?->email ?? '') . ' ' . $reviewRef) }}">
-                                    <div>
-                                        <small>Applicant</small>
-                                        <strong>{{ $reviewName }}</strong>
-                                        <span>{{ $reviewUser?->email ?? 'N/A' }}</span>
+                                    <div class="applicant-final-review-person">
+                                        <span class="applicant-final-review-avatar">
+                                            @if($reviewPhotoUrl)
+                                                <img src="{{ $reviewPhotoUrl }}" alt="{{ $reviewName }} 2x2 photo">
+                                            @else
+                                                {{ $reviewInitials }}
+                                            @endif
+                                        </span>
+                                        <div>
+                                            <small>Applicant</small>
+                                            <strong>{{ $reviewName }}</strong>
+                                            <span>{{ $reviewUser?->email ?? 'N/A' }}</span>
+                                        </div>
                                     </div>
                                     <div>
                                         <small>Reference Number</small>
@@ -7394,19 +7549,33 @@
 
     <div class="clinic-success-overlay" id="applicantApprovalOverlay" aria-live="assertive" aria-hidden="true">
         <div class="clinic-success-card">
+            <button type="button" class="clinic-success-close" data-success-close aria-label="Close success message">
+                <x-outline-icon name="x-mark" />
+            </button>
+            <span class="clinic-success-confetti" aria-hidden="true"></span>
             <div class="clinic-success-check" aria-hidden="true">
                 <x-outline-icon name="check" />
             </div>
             <strong id="applicantApprovalOverlayTitle">Approved!</strong>
+            <p id="applicantApprovalOverlayMessage">The applicant decision has been saved successfully.</p>
+            <hr>
+            <button type="button" class="clinic-success-continue" data-success-close>Continue</button>
         </div>
     </div>
 
     <div class="clinic-success-overlay" id="applicantEncodeOverlay" aria-live="assertive" aria-hidden="true">
         <div class="clinic-success-card">
+            <button type="button" class="clinic-success-close" data-success-close aria-label="Close success message">
+                <x-outline-icon name="x-mark" />
+            </button>
+            <span class="clinic-success-confetti" aria-hidden="true"></span>
             <div class="clinic-success-check" aria-hidden="true">
                 <x-outline-icon name="check" />
             </div>
             <strong>Done Encoding</strong>
+            <p>The data has been successfully encoded and saved in the system.</p>
+            <hr>
+            <button type="button" class="clinic-success-continue" data-success-close>OK, Continue</button>
         </div>
     </div>
 
@@ -9046,7 +9215,10 @@
         const previewOpen     = document.getElementById('applicantDocumentPreviewOpen');
         const approvalOverlay = document.getElementById('applicantApprovalOverlay');
         const approvalOverlayTitle = document.getElementById('applicantApprovalOverlayTitle');
+        const approvalOverlayMessage = document.getElementById('applicantApprovalOverlayMessage');
         const encodeOverlay   = document.getElementById('applicantEncodeOverlay');
+        let activeSuccessAction = null;
+        let activeSuccessTimer = null;
         let currentLookupRef  = '';
         let currentDocuments  = [];
         let currentLookupMode = 'applicant';
@@ -9080,6 +9252,42 @@
         function isFinalReviewWorkflow() {
             return currentApplicantWorkflow === 'final_review' && !isClinicLookupMode();
         }
+
+        function closeClinicSuccessOverlay(overlay, shouldRunAction = true) {
+            if (!overlay) return;
+            overlay.classList.remove('is-open');
+            overlay.setAttribute('aria-hidden', 'true');
+            if (activeSuccessTimer) {
+                clearTimeout(activeSuccessTimer);
+                activeSuccessTimer = null;
+            }
+            const nextAction = activeSuccessAction;
+            activeSuccessAction = null;
+            if (shouldRunAction && typeof nextAction === 'function') {
+                nextAction();
+            }
+        }
+
+        function showClinicSuccessOverlay(overlay, options = {}) {
+            if (!overlay) return;
+            if (approvalOverlayTitle && options.title && overlay === approvalOverlay) {
+                approvalOverlayTitle.textContent = options.title;
+            }
+            if (approvalOverlayMessage && options.message && overlay === approvalOverlay) {
+                approvalOverlayMessage.textContent = options.message;
+            }
+            activeSuccessAction = typeof options.onDone === 'function' ? options.onDone : null;
+            overlay.classList.add('is-open');
+            overlay.setAttribute('aria-hidden', 'false');
+            if (activeSuccessTimer) clearTimeout(activeSuccessTimer);
+            activeSuccessTimer = setTimeout(() => closeClinicSuccessOverlay(overlay, true), options.duration || 3000);
+        }
+
+        document.querySelectorAll('[data-success-close]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                closeClinicSuccessOverlay(button.closest('.clinic-success-overlay'), true);
+            });
+        });
 
         function applyLookupMode(mode) {
             currentLookupMode = mode === 'clinic' ? 'clinic' : 'applicant';
@@ -10921,14 +11129,13 @@
             .then(data => {
                 if (data.success) {
                     setStatus('success', data.message || 'Assessment saved for final review.');
-                    encodeOverlay?.classList.add('is-open');
-                    encodeOverlay?.setAttribute('aria-hidden', 'false');
-                    setTimeout(() => {
-                        encodeOverlay?.classList.remove('is-open');
-                        encodeOverlay?.setAttribute('aria-hidden', 'true');
+                    showClinicSuccessOverlay(encodeOverlay, {
+                        duration: 3000,
+                        onDone: () => {
                         closeApplicantsModal();
                         window.location.reload();
-                    }, 1250);
+                        }
+                    });
                 } else {
                     setStatus('error', data.message || 'Failed to save assessment.');
                 }
@@ -11073,24 +11280,24 @@
             .then(data => {
                 if (data.success) {
                     setStatus('success', data.message || 'Applicant decision saved successfully.');
-                    if (approvalOverlayTitle) {
-                        approvalOverlayTitle.textContent = isPendingDecision ? 'Marked Pending' : 'Approved!';
-                    }
-                    approvalOverlay?.classList.add('is-open');
-                    approvalOverlay?.setAttribute('aria-hidden', 'false');
-                    setTimeout(() => {
+                    showClinicSuccessOverlay(approvalOverlay, {
+                        title: isPendingDecision ? 'Marked Pending' : 'Medical Clearance Issued',
+                        message: isPendingDecision
+                            ? 'The applicant has been moved to pending compliance for follow-up.'
+                            : 'The applicant has been approved successfully.',
+                        duration: 3000,
+                        onDone: () => {
                         if (data.redirect_url) {
                             window.location.href = data.redirect_url;
                             return;
                         }
-                        approvalOverlay?.classList.remove('is-open');
-                        approvalOverlay?.setAttribute('aria-hidden', 'true');
                         closeApplicantsModal();
                         isApprovalMode = false;
                         resetLookupButtonToFind();
                         resetLookupState();
                         if (refInput) refInput.value = '';
-                    }, 1250);
+                        }
+                    });
                 } else {
                     setStatus('error', data.message || 'Failed to save applicant decision.');
                 }
@@ -11472,13 +11679,29 @@
             article.setAttribute('data-search', applicant.search || '');
 
             const applicantBlock = document.createElement('div');
+            applicantBlock.className = 'applicant-final-review-person';
+            const avatar = document.createElement('span');
+            avatar.className = 'applicant-final-review-avatar';
+            if (applicant.photo_url) {
+                const avatarImg = document.createElement('img');
+                avatarImg.src = applicant.photo_url;
+                avatarImg.alt = `${applicant.name || 'Applicant'} 2x2 photo`;
+                avatarImg.addEventListener('error', function () {
+                    avatar.textContent = getApplicantInitials(applicant.name || 'Applicant');
+                }, { once: true });
+                avatar.appendChild(avatarImg);
+            } else {
+                avatar.textContent = getApplicantInitials(applicant.name || 'Applicant');
+            }
+            const applicantText = document.createElement('div');
             const applicantLabel = document.createElement('small');
             applicantLabel.textContent = 'Applicant';
             const applicantName = document.createElement('strong');
             applicantName.textContent = applicant.name || 'Applicant';
             const applicantEmail = document.createElement('span');
             applicantEmail.textContent = applicant.email || 'N/A';
-            applicantBlock.append(applicantLabel, applicantName, applicantEmail);
+            applicantText.append(applicantLabel, applicantName, applicantEmail);
+            applicantBlock.append(avatar, applicantText);
 
             const referenceBlock = document.createElement('div');
             const referenceLabel = document.createElement('small');

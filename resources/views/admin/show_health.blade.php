@@ -127,20 +127,20 @@
         word-break: break-word;
     }
     .profile-status-card {
-        min-height: 104px;
+        min-height: 82px;
         border-radius: 14px;
-        padding: 14px 16px;
+        padding: 10px 12px;
         border: 1px solid #bbf7d0;
         background: linear-gradient(135deg, #f0fdf4, #ecfeff);
         display: flex;
-        gap: 12px;
+        gap: 10px;
         align-items: center;
-        max-width: 330px;
+        max-width: 285px;
         justify-self: end;
     }
     .profile-status-shield {
-        width: 46px;
-        height: 46px;
+        width: 38px;
+        height: 38px;
         border-radius: 999px;
         display: grid;
         place-items: center;
@@ -148,21 +148,21 @@
         color: #16a34a;
     }
     .profile-status-shield svg {
-        width: 24px;
-        height: 24px;
+        width: 20px;
+        height: 20px;
     }
     .profile-status-card-title {
-        margin: 0 0 4px;
+        margin: 0 0 2px;
         color: #64748b;
-        font-size: 11px;
+        font-size: 9px;
         font-weight: 900;
         text-transform: uppercase;
         letter-spacing: .06em;
     }
     .profile-status-card-value {
-        margin: 0 0 8px;
+        margin: 0 0 5px;
         color: #16a34a;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 900;
     }
     .profile-correction-card {
@@ -232,7 +232,10 @@
     .profile-top-btn::after {
         content: "";
         position: absolute;
-        inset: 0;
+        top: -35%;
+        left: -70%;
+        width: 46%;
+        height: 170%;
         background:
             linear-gradient(120deg,
                 rgba(255, 248, 196, 0) 0%,
@@ -240,9 +243,10 @@
                 rgba(255, 239, 181, 0.52) 48%,
                 rgba(255, 239, 181, 0.14) 72%,
                 rgba(255, 248, 196, 0) 100%);
-        transform: translateX(-135%);
-        transition: transform 1.5s ease;
+        transform: skewX(-18deg);
+        transition: left .48s ease;
         z-index: -1;
+        pointer-events: none;
     }
     .profile-top-btn:hover {
         color: #70131B !important;
@@ -268,7 +272,7 @@
         stroke: #70131B !important;
     }
     .profile-top-btn:hover::after {
-        transform: translateX(135%);
+        left: 128%;
     }
     .profile-head-actions { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .profile-switch { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -311,8 +315,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 36px;
-        padding: 8px 14px;
+        min-height: 30px;
+        padding: 6px 12px;
         border-radius: 999px;
         font-size: 12px;
         font-weight: 800;
@@ -429,6 +433,8 @@
     }
     .profile-correction-button,
     .correction-submit {
+        position: relative;
+        overflow: hidden;
         border: 1px solid #8f2230;
         border-radius: 12px;
         background: #70131B;
@@ -441,6 +447,19 @@
         box-shadow: 0 10px 22px rgba(112, 19, 27, 0.18);
         transition: transform .18s ease, background .18s ease, color .18s ease;
     }
+    .profile-correction-button::after,
+    .correction-submit::after {
+        content: "";
+        position: absolute;
+        top: -35%;
+        left: -70%;
+        width: 46%;
+        height: 170%;
+        background: linear-gradient(120deg, transparent 0%, rgba(255, 244, 180, .18) 34%, rgba(255, 244, 180, .58) 50%, rgba(255, 244, 180, .18) 66%, transparent 100%);
+        transform: skewX(-18deg);
+        transition: left .48s ease;
+        pointer-events: none;
+    }
     .profile-correction-button:hover,
     .profile-correction-button:focus,
     .correction-submit:hover,
@@ -448,6 +467,12 @@
         transform: translateY(-1px);
         background: #facc15;
         color: #70131B;
+    }
+    .profile-correction-button:hover::after,
+    .profile-correction-button:focus::after,
+    .correction-submit:hover::after,
+    .correction-submit:focus::after {
+        left: 128%;
     }
     .correction-modal {
         display: none;
@@ -584,7 +609,8 @@
     .profile-panel.is-active { display: block; }
 
     .profile-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-    #summaryPanel .profile-grid {
+    #summaryPanel .profile-grid,
+    #healthPanel .profile-grid {
         grid-template-columns: 1fr;
         gap: 8px;
     }
@@ -596,7 +622,8 @@
         padding: 12px;
         box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
     }
-    #summaryPanel .profile-meta {
+    #summaryPanel .profile-meta,
+    #healthPanel .profile-meta {
         min-height: 52px;
         display: grid;
         grid-template-columns: minmax(170px, 0.45fr) minmax(0, 1fr);
@@ -613,10 +640,13 @@
         color: #9f1239;
     }
     .profile-meta-k { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 900; letter-spacing: .05em; margin-bottom: 4px; }
-    #summaryPanel .profile-meta-k { margin-bottom: 0; }
+    #summaryPanel .profile-meta-k,
+    #healthPanel .profile-meta-k { margin-bottom: 0; }
     .profile-meta-v { font-size: 14px; color: #0f172a; font-weight: 900; word-break: break-word; line-height: 1.25; }
     .profile-meta.is-wide { grid-column: span 2; }
     .profile-meta.is-full { grid-column: 1 / -1; }
+    #healthPanel .profile-meta.is-wide,
+    #healthPanel .profile-meta.is-full { grid-column: auto; }
 
     .profile-timeline-card {
         padding: 18px;
@@ -685,12 +715,12 @@
         line-height: 1.35;
     }
 
-    .doc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
-    .doc-file { border: 1px solid #f3c7c7; border-radius: 12px; padding: 10px; background: #fffafa; }
+    .doc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    .doc-file { border: 1px solid #f3c7c7; border-radius: 12px; padding: 12px; background: #fffafa; min-height: 270px; display: flex; flex-direction: column; gap: 8px; }
     .doc-file h4 { margin: 8px 0 3px; font-size: 12px; font-weight: 900; color: #1e293b; }
-    .doc-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .doc-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 0; }
     .doc-link { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 0; padding: 0; color: #475569; font-size: 12px; font-weight: 900; text-decoration: none; background: transparent; }
-    .doc-preview { width: 100%; aspect-ratio: 1 / 1; height: auto; border: 1px solid #f3d0d0; border-radius: 9px; overflow: hidden; background: #ffffff; }
+    .doc-preview { width: 100%; aspect-ratio: 4 / 3; min-height: 210px; height: auto; border: 1px solid #f3d0d0; border-radius: 9px; overflow: hidden; background: #ffffff; }
     .doc-preview iframe, .doc-preview img { width: 100%; height: 100%; border: 0; object-fit: cover; background: #fff; }
     .doc-preview:has(iframe) {
         display: grid;
@@ -713,6 +743,39 @@
     }
     .doc-preview:has(iframe) iframe {
         display: none;
+    }
+    .doc-preview-health-form {
+        display: grid;
+        place-items: center;
+        background:
+            radial-gradient(circle at 50% 45%, rgba(128, 0, 0, 0.10), transparent 48%),
+            linear-gradient(180deg, #fffafa, #ffffff);
+    }
+    .health-form-thumb {
+        position: relative;
+        display: grid;
+        place-items: center;
+        gap: 2px;
+        min-height: 152px;
+        width: 100%;
+        color: #475569;
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1.05;
+        text-transform: uppercase;
+        text-align: center;
+        isolation: isolate;
+    }
+    .health-form-thumb::before {
+        content: "";
+        position: absolute;
+        width: min(160px, 82%);
+        aspect-ratio: 1;
+        border-radius: 999px;
+        background: url('{{ asset('images/pup_logo.png') }}') center / contain no-repeat;
+        opacity: .09;
+        filter: blur(.2px);
+        z-index: -1;
     }
     .doc-missing { border: 1px dashed #cbd5e1; color: #64748b; border-radius: 8px; padding: 14px; font-size: 14px; font-weight: 600; background: #f8fafc; }
     .profile-correction-history-wrap {
@@ -1228,6 +1291,23 @@
     <div class="profile-card profile-panel" id="docsPanel">
         <div class="doc-grid">
             <div class="doc-file">
+                <h4>Health Information Form</h4>
+                @php($healthInformationFormUrl = route('walkin.healthForm', ['healthProfile' => $profile->id]))
+                <div class="doc-actions">
+                    <a class="doc-link" href="{{ $healthInformationFormUrl }}" target="_blank" rel="noopener">
+                        <x-outline-icon name="document-text" /> Open
+                    </a>
+                </div>
+                <div class="doc-preview doc-preview-health-form">
+                    <div class="health-form-thumb">
+                        <span>Health</span>
+                        <span>Information</span>
+                        <span>Form</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="doc-file">
                 <h4>Medical Certificate (PDF)</h4>
                 @if(!empty($profile->medical_certificate))
                     @php($medicalCertificateUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'medical_certificate']))
@@ -1287,22 +1367,22 @@
                 @endif
             </div>
 
-            <div class="doc-file">
-                <h4>PWD ID Proof (PDF)</h4>
-                @if(($profile->has_disability ?? 'No') !== 'Yes')
-                    <div class="doc-missing">Not required (PWD is set to No).</div>
-                @elseif(!empty($profile->pwd_id_proof))
-                    @php($pwdIdProofUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'pwd_id_proof']))
-                    <div class="doc-actions">
-                        <a class="doc-link" href="{{ $pwdIdProofUrl }}" target="_blank" rel="noopener">
-                            <x-outline-icon name="document-text" /> Open
-                        </a>
-                    </div>
-                    <div class="doc-preview"><iframe src="{{ $pwdIdProofUrl }}"></iframe></div>
-                @else
-                    <div class="doc-missing">PWD is Yes but no proof uploaded.</div>
-                @endif
-            </div>
+            @if(($profile->has_disability ?? 'No') === 'Yes' || !empty($profile->pwd_id_proof))
+                <div class="doc-file">
+                    <h4>PWD ID Proof (PDF)</h4>
+                    @if(!empty($profile->pwd_id_proof))
+                        @php($pwdIdProofUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'pwd_id_proof']))
+                        <div class="doc-actions">
+                            <a class="doc-link" href="{{ $pwdIdProofUrl }}" target="_blank" rel="noopener">
+                                <x-outline-icon name="document-text" /> Open
+                            </a>
+                        </div>
+                        <div class="doc-preview"><iframe src="{{ $pwdIdProofUrl }}"></iframe></div>
+                    @else
+                        <div class="doc-missing">PWD is Yes but no proof uploaded.</div>
+                    @endif
+                </div>
+            @endif
 
             <div class="doc-file">
                 <h4>2x2 Student Photo</h4>

@@ -1931,7 +1931,22 @@ public function updateClearance(Request $request, $id)
     {
         Appointment::expireOverduePending();
 
-        $appointments = Appointment::with('user')->latest()->get();
+        $appointments = Appointment::with('user')
+            ->orderByRaw("CASE LOWER(status)
+                WHEN 'pending' THEN 0
+                WHEN 'approved' THEN 1
+                WHEN 'scheduled' THEN 2
+                WHEN 'completed' THEN 3
+                WHEN 'missed' THEN 4
+                WHEN 'expired' THEN 5
+                WHEN 'cancelled' THEN 6
+                WHEN 'rejected' THEN 7
+                ELSE 8
+            END")
+            ->orderBy('date')
+            ->orderBy('time')
+            ->latest()
+            ->get();
         $consultationComments = Consultation::query()
             ->whereIn('user_id', $appointments->pluck('user_id')->filter()->unique())
             ->whereIn('consultation_date', $appointments->pluck('date')->filter()->unique())

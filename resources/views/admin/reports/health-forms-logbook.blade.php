@@ -417,7 +417,13 @@
         background: #ffffff;
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
     }
-    .logbook-pagination .pagination {
+    .logbook-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+    }
+    .logbook-pagination-pages {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -427,11 +433,8 @@
         padding: 0;
         list-style: none;
     }
-    .logbook-pagination .pagination li {
-        display: inline-flex;
-    }
-    .logbook-pagination .pagination a,
-    .logbook-pagination .pagination span {
+    .logbook-page-link,
+    .logbook-page-ellipsis {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -449,32 +452,35 @@
         box-shadow: none;
         transition: transform .18s ease, border-color .18s ease, background-color .18s ease, color .18s ease, box-shadow .18s ease;
     }
-    .logbook-pagination .pagination a:hover {
+    .logbook-page-link:hover {
         background: #fff7ed;
         border-color: #f8cfd4;
         color: #70131B;
         transform: translateY(-1px);
         box-shadow: 0 10px 20px rgba(112, 19, 27, .10);
     }
-    .logbook-pagination .pagination .active span {
+    .logbook-page-link.is-active {
         background: #7f0010;
         border-color: #7f0010;
-        color: #ffffff;
+        color: #ffffff !important;
         box-shadow: 0 12px 24px rgba(127, 29, 45, 0.22);
     }
-    .logbook-pagination .pagination .disabled span {
+    .logbook-page-link.is-disabled,
+    .logbook-page-ellipsis {
         background: #f8fafc;
         color: #94a3b8;
         border-color: #e2e8f0;
         box-shadow: none;
         cursor: not-allowed;
     }
-    .logbook-pagination .pagination svg {
-        display: none !important;
-        width: 0 !important;
-        height: 0 !important;
-        max-width: 0 !important;
-        max-height: 0 !important;
+    .logbook-page-link.is-disabled {
+        pointer-events: none;
+    }
+    .logbook-pagination-meta {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 900;
+        white-space: nowrap;
     }
     @media (max-width: 720px) {
         .logbook-head,
@@ -642,7 +648,7 @@
                             }
                         }
                     @endphp
-                    <tr>
+                    <tr data-logbook-row data-search="{{ strtolower(($user->name ?? 'N/A') . ' ' . ($user->email ?? '') . ' ' . ($record->sex ?: ($user->gender ?? 'N/A')) . ' ' . ($record->course_college ?? $user->course ?? 'N/A') . ' ' . ($user->user_type ?? 'N/A') . ' ' . $statusLabel . ' ' . ($hasCondition ? 'yes with condition medical condition' : 'no condition')) }}">
                         <td>
                             <strong>{{ $user->name ?? 'N/A' }}</strong>
                         </td>
@@ -692,17 +698,61 @@
                         </td>
                     </tr>
                 @empty
-                    <tr>
+                    <tr data-logbook-empty-row>
                         <td colspan="9" class="logbook-empty">No health form records found matching your filters.</td>
                     </tr>
                 @endforelse
+                @if($logbookRecords->count() > 0)
+                    <tr data-logbook-empty-row style="display:none;">
+                        <td colspan="9" class="logbook-empty">No health form records found matching your search.</td>
+                    </tr>
+                @endif
             </tbody>
         </table>
     </div>
 
-    <div class="logbook-pagination">
-        {{ $logbookRecords->withQueryString()->links() }}
-    </div>
+    @if($logbookRecords->total() > 0)
+        @php
+            $currentPage = $logbookRecords->currentPage();
+            $lastPage = $logbookRecords->lastPage();
+            $visiblePages = collect(range(1, $lastPage))
+                ->filter(fn ($page) => $page === 1 || $page === $lastPage || abs($page - $currentPage) <= 1)
+                ->values();
+            $previousVisiblePage = null;
+        @endphp
+        <div class="logbook-pagination">
+            <span class="logbook-pagination-meta">
+                Showing {{ $logbookRecords->firstItem() }} to {{ $logbookRecords->lastItem() }} of {{ $logbookRecords->total() }} records
+            </span>
+            <nav class="logbook-pagination-pages" aria-label="Health form logbook pagination">
+                @if($logbookRecords->onFirstPage())
+                    <span class="logbook-page-link is-disabled" aria-disabled="true">&larr;</span>
+                @else
+                    <a class="logbook-page-link" href="{{ $logbookRecords->previousPageUrl() }}" rel="prev">&larr;</a>
+                @endif
+
+                @foreach($visiblePages as $page)
+                    @if($previousVisiblePage !== null && $page > $previousVisiblePage + 1)
+                        <span class="logbook-page-ellipsis">...</span>
+                    @endif
+
+                    @if($page === $currentPage)
+                        <span class="logbook-page-link is-active" aria-current="page">{{ $page }}</span>
+                    @else
+                        <a class="logbook-page-link" href="{{ $logbookRecords->url($page) }}">{{ $page }}</a>
+                    @endif
+
+                    @php($previousVisiblePage = $page)
+                @endforeach
+
+                @if($logbookRecords->hasMorePages())
+                    <a class="logbook-page-link" href="{{ $logbookRecords->nextPageUrl() }}" rel="next">&rarr;</a>
+                @else
+                    <span class="logbook-page-link is-disabled" aria-disabled="true">&rarr;</span>
+                @endif
+            </nav>
+        </div>
+    @endif
 </div>
 
 <script>
@@ -715,49 +765,37 @@ function closeFilterModal(event) {
     document.getElementById('filterModal').classList.remove('active');
 }
 
-function buildLogbookSearchUrl(searchValue) {
-    const filterForm = document.getElementById('filterForm');
-
-    let params = new URLSearchParams();
-    if (searchValue) params.append('q', searchValue);
-
-    const courseValue = filterForm.querySelector('[name="course"]').value;
-    if (courseValue) params.append('course', courseValue);
-
-    const typeValue = filterForm.querySelector('[name="type"]').value;
-    if (typeValue) params.append('type', typeValue);
-
-    const genderValue = filterForm.querySelector('[name="gender"]').value;
-    if (genderValue) params.append('gender', genderValue);
-
-    const conditionValue = filterForm.querySelector('[name="condition"]').value;
-    if (conditionValue) params.append('condition', conditionValue);
-
-    const statusValue = filterForm.querySelector('[name="status"]').value;
-    if (statusValue) params.append('status', statusValue);
-
-    const queryString = params.toString();
-    return '{{ route($logbookRouteName) }}' + (queryString ? '?' + queryString : '');
-}
-
-function handleSearch() {
-    const searchValue = document.getElementById('searchInput').value.trim();
-    window.location.href = buildLogbookSearchUrl(searchValue);
-}
-
-let logbookSearchTimer = null;
 const logbookSearchInput = document.getElementById('searchInput');
+const logbookRows = Array.from(document.querySelectorAll('[data-logbook-row]'));
+const logbookEmptyRow = document.querySelector('[data-logbook-empty-row]');
+const logbookTotalCardValue = document.querySelector('.logbook-total-card span');
 
-logbookSearchInput?.addEventListener('input', function () {
-    clearTimeout(logbookSearchTimer);
-    logbookSearchTimer = setTimeout(handleSearch, 600);
-});
+function filterVisibleLogbookRows() {
+    const query = (logbookSearchInput?.value || '').trim().toLowerCase();
+    let visibleCount = 0;
+
+    logbookRows.forEach(function (row) {
+        const haystack = row.getAttribute('data-search') || row.textContent.toLowerCase();
+        const isVisible = !query || haystack.includes(query);
+        row.style.display = isVisible ? '' : 'none';
+        if (isVisible) visibleCount += 1;
+    });
+
+    if (logbookEmptyRow) {
+        logbookEmptyRow.style.display = visibleCount === 0 ? '' : 'none';
+    }
+
+    if (logbookTotalCardValue) {
+        logbookTotalCardValue.textContent = visibleCount.toString();
+    }
+}
+
+logbookSearchInput?.addEventListener('input', filterVisibleLogbookRows);
 
 logbookSearchInput?.addEventListener('keydown', function (event) {
     if (event.key === 'Enter') {
         event.preventDefault();
-        clearTimeout(logbookSearchTimer);
-        handleSearch();
+        filterVisibleLogbookRows();
     }
 });
 

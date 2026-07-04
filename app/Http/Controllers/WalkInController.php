@@ -1064,12 +1064,16 @@ class WalkInController extends Controller
             ?: $profile->student_id
             ?: $profile->id
         ));
+        $photoUrl = filled($profile->student_photo)
+            ? route('walkin.document', ['healthProfile' => $profile->id, 'document' => 'student_photo'])
+            : '';
 
         return [
             'id' => $profile->id,
             'name' => $name,
             'email' => $email,
             'reference_number' => $referenceNumber,
+            'photo_url' => $photoUrl,
             'search' => Str::lower(trim($name . ' ' . $email . ' ' . $referenceNumber)),
         ];
     }
