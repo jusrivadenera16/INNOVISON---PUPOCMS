@@ -380,17 +380,8 @@
     $reportsHomeUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
     $summaryUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/inventory-summary') : url('/admin/reports/inventory-summary');
     $reportMonthLabel = \Carbon\Carbon::parse($monthFilter . '-01')->format('F Y');
-    $canManageInventory = $role === \App\Models\User::ROLE_SUPERADMIN;
-    $manageMedicineTypesUrl = route('admin.reports.manage-medicine-types', ['month' => $monthFilter]);
 @endphp
 <div class="summary-container">
-    @if($canManageInventory)
-    <div class="summary-top-actions">
-        <a href="{{ $manageMedicineTypesUrl }}" class="mar-manage-btn">
-            <span class="mar-manage-btn-label">Manage Medicine Type</span>
-        </a>
-    </div>
-    @endif
     <div class="summary-header">
         <div>
             <h2 class="summary-title">Inventory Summary Report</h2>

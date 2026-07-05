@@ -408,7 +408,6 @@
 @section('content')
 @php
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
-    $isAdminLike = $role === \App\Models\User::ROLE_SUPERADMIN;
     $reportsHomeUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
 @endphp
 
@@ -428,13 +427,6 @@
 <div class="card">
     <div class="mar-header-bar">
         <h2>Medical Accomplishment Report</h2>
-        @if($isAdminLike)
-        <div class="mar-top-actions">
-            <a href="{{ route('admin.reports.manage-mar', ['month' => $month]) }}" class="mar-manage-btn">
-                <span class="mar-manage-btn-label">Manage Medical Categories</span>
-            </a>
-        </div>
-        @endif
     </div>
 
     <form method="GET" class="mar-filter-bar">
