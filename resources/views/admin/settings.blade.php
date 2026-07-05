@@ -105,6 +105,154 @@
         background: #f6c36a;
     }
 
+    .settings-hub-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 22px;
+    }
+    .settings-hub-card {
+        min-height: 342px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 34px 28px 24px;
+        border-radius: 18px;
+        border: 1px solid rgba(127, 0, 0, 0.13);
+        background: #ffffff;
+        box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+        text-decoration: none;
+        color: var(--stg-text);
+        transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .settings-hub-card:hover,
+    .settings-hub-card:focus-visible {
+        color: var(--stg-text);
+        transform: translateY(-4px);
+        border-color: rgba(250, 204, 21, 0.72);
+        box-shadow: 0 24px 54px rgba(127, 0, 0, 0.13);
+        outline: none;
+    }
+    .settings-hub-icon {
+        position: relative;
+        width: 96px;
+        height: 96px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 20%, #fff7cc, #fee2e2 58%, #f8fafc 100%);
+        color: var(--stg-maroon);
+        margin-bottom: 22px;
+    }
+    .settings-hub-icon svg {
+        width: 48px;
+        height: 48px;
+        stroke-width: 1.8;
+    }
+    .settings-hub-badge {
+        position: absolute;
+        right: -2px;
+        bottom: 8px;
+        width: 30px;
+        height: 30px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--stg-maroon);
+        color: #facc15;
+        border: 3px solid #ffffff;
+        box-shadow: 0 10px 20px rgba(127, 0, 0, 0.2);
+    }
+    .settings-hub-badge svg {
+        width: 15px;
+        height: 15px;
+        stroke-width: 2.2;
+    }
+    .settings-hub-card h3 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 900;
+        text-align: center;
+    }
+    .settings-hub-card p {
+        min-height: 46px;
+        margin: 12px 0 20px;
+        color: var(--stg-muted);
+        font-size: 13px;
+        line-height: 1.55;
+        text-align: center;
+    }
+    .settings-hub-list {
+        width: 100%;
+        display: grid;
+        gap: 11px;
+        padding: 18px 0 0;
+        margin: 0 0 24px;
+        border-top: 1px solid rgba(127, 0, 0, 0.12);
+        list-style: none;
+    }
+    .settings-hub-list li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 750;
+    }
+    .settings-hub-list svg {
+        width: 16px;
+        height: 16px;
+        color: var(--stg-maroon);
+        flex: 0 0 auto;
+    }
+    .settings-hub-action {
+        margin-top: auto;
+        min-width: 132px;
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        border-radius: 9px;
+        border: 1px solid var(--stg-maroon);
+        color: var(--stg-maroon);
+        font-size: 12px;
+        font-weight: 900;
+        background: #ffffff;
+    }
+    .settings-hub-action svg {
+        width: 15px;
+        height: 15px;
+    }
+    .settings-hub-card:hover .settings-hub-action,
+    .settings-hub-card:focus-visible .settings-hub-action {
+        background: #facc15;
+        border-color: #facc15;
+        color: #111827;
+    }
+
+    @media (min-width: 900px) {
+        .settings-hub-card:nth-child(4) {
+            grid-column: 1 / span 1;
+        }
+        .settings-hub-card:nth-child(5) {
+            grid-column: 2 / span 1;
+        }
+    }
+    @media (max-width: 1080px) {
+        .settings-hub-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    @media (max-width: 720px) {
+        .settings-hub-grid {
+            grid-template-columns: 1fr;
+        }
+        .settings-hub-card {
+            min-height: 0;
+        }
+    }
+
     .grid {
         display: grid;
         grid-template-columns: 1.05fr 1.25fr;
@@ -1290,146 +1438,94 @@
         <div class="hero-top">
             <div>
                 <h1><x-outline-icon name="cog-6-tooth" />Settings</h1>
-                <p>Manage the clinic identity, operating hours, and system preferences from one modern control panel.</p>
+                <p>Manage your account, clinic details, medical setup, users, and system preferences.</p>
                 <div class="badges">
-                    <div class="badge"><span></span> CMS Admin Profile</div>
-                    <div class="badge"><span></span> Clinic Operations</div>
+                    <div class="badge"><span></span> Personal Information</div>
+                    <div class="badge"><span></span> Clinic Information</div>
                     <div class="badge"><span></span> System Preferences</div>
+                    <div class="badge"><span></span> Medical Configuration</div>
+                    <div class="badge"><span></span> Users Management</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <div class="grid">
-        <div class="profile-stack">
-        <section class="panel">
-            <div class="panel-head">
-                <div class="panel-head-top">
-                    <div>
-                        <h3>CMS Admin Profile</h3>
-                        <p>Read-only hub profile for the current clinic administrator.</p>
-                    </div>
-                    <button type="button" class="btn-edit-profile" onclick="openProfileModal()">Edit Profile</button>
-                </div>
+    <div class="settings-hub-grid">
+        <a href="{{ route('admin.settings.personal') }}" class="settings-hub-card">
+            <div class="settings-hub-icon">
+                <x-outline-icon name="user-circle" />
+                <span class="settings-hub-badge"><x-outline-icon name="cog-6-tooth" /></span>
             </div>
-            <div class="panel-body">
-                <div class="profile-top">
-                    @php
-                        $profileName = trim(($cmsProfile['first_name'] ?? '') . ' ' . ($cmsProfile['last_name'] ?? ''));
-                        $profileInitials = '';
-                        foreach (preg_split('/\s+/', trim($profileName ?: 'NA')) as $part) {
-                            if ($part === '') continue;
-                            $profileInitials .= strtoupper(mb_substr($part, 0, 1));
-                            if (strlen($profileInitials) >= 2) break;
-                        }
-                        $profileStatus = strtolower($cmsProfile['status'] ?? 'active');
-                        $statusIcon = $profileStatus === 'inactive'
-                            ? '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M8 8L16 16M16 8L8 16" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>'
-                            : '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M8 12.5L10.9 15.4L16.5 9.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-                    @endphp
-                    <div class="profile-id">
-                        <div class="profile-avatar">{{ $profileInitials ?: 'NA' }}</div>
-                        <div>
-                            <p class="profile-name">{{ $cmsProfile['first_name'] ?? 'N/A' }} {{ $cmsProfile['last_name'] ?? '' }}</p>
-                            <div class="section-subtitle" style="margin-top:4px; color:var(--stg-muted);">{{ $cmsProfile['email'] ?? ($admin->email ?? 'N/A') }}</div>
-                        </div>
-                    </div>
-                    <div class="profile-role {{ $profileStatus === 'inactive' ? 'inactive' : 'active' }}">{!! $statusIcon !!} {{ ucfirst($profileStatus) }}</div>
-                </div>
-                <div class="profile-list">
-                    <div class="profile-row"><div class="key">Admin ID</div><div class="val">{{ !empty($cmsProfile['admin_id']) ? str_pad((string) $cmsProfile['admin_id'], 3, '0', STR_PAD_LEFT) : 'N/A' }}</div></div>
-                    <div class="profile-row"><div class="key">Middle Name</div><div class="val">{{ $cmsProfile['middle_name'] ?? 'N/A' }}</div></div>
-                    <div class="profile-row"><div class="key">Suffix</div><div class="val">{{ $cmsProfile['suffix_name'] ?? 'N/A' }}</div></div>
-                    <div class="profile-row"><div class="key">Birthday</div><div class="val">{{ $cmsProfile['birthday'] ?? 'N/A' }}</div></div>
-                    <div class="profile-row"><div class="key">Age</div><div class="val">{{ $cmsProfile['age'] ?? 'N/A' }}</div></div>
-                    <div class="profile-row"><div class="key">Gender</div><div class="val">{{ $cmsProfile['gender'] ?? 'N/A' }}</div></div>
-                    <div class="profile-row"><div class="key">Civil Status</div><div class="val">{{ $cmsProfile['civil_status'] ?? 'N/A' }}</div></div>
-                    <div class="profile-row"><div class="key">Office</div><div class="val">{{ $cmsProfile['office'] ?? 'Admission Office' }}</div></div>
-                    <div class="profile-row"><div class="key">Emergency Contact</div><div class="val">{{ $cmsProfile['emergency_contact_person'] ?? 'N/A' }}</div></div>
-                    <div class="profile-row"><div class="key">Contact No.</div><div class="val">{{ $cmsProfile['emergency_contact_no'] ?? ($cmsProfile['contact_number'] ?? 'N/A') }}</div></div>
-                    <div class="profile-row"><div class="key">Address</div><div class="val">{{ $cmsProfile['address'] ?? 'N/A' }}</div></div>
-                </div>
+            <h3>Personal Information</h3>
+            <p>Update your personal details, profile information, and account settings.</p>
+            <ul class="settings-hub-list">
+                <li><x-outline-icon name="user-circle" /> Change profile picture</li>
+                <li><x-outline-icon name="pencil-square" /> Update personal details</li>
+                <li><x-outline-icon name="cog-6-tooth" /> Change password</li>
+            </ul>
+            <span class="settings-hub-action">Manage <x-outline-icon name="chevron-right" /></span>
+        </a>
+
+        <a href="{{ route('admin.settings.clinic') }}" class="settings-hub-card">
+            <div class="settings-hub-icon">
+                <x-outline-icon name="home" />
+                <span class="settings-hub-badge"><x-outline-icon name="cog-6-tooth" /></span>
             </div>
-        </section>
+            <h3>Clinic Information</h3>
+            <p>Manage clinic details, contact information, hours, and business settings.</p>
+            <ul class="settings-hub-list">
+                <li><x-outline-icon name="home" /> Clinic profile</li>
+                <li><x-outline-icon name="phone" /> Contact information</li>
+                <li><x-outline-icon name="clock" /> Clinic hours</li>
+                <li><x-outline-icon name="clipboard-document-list" /> Services offered</li>
+            </ul>
+            <span class="settings-hub-action">Manage <x-outline-icon name="chevron-right" /></span>
+        </a>
 
-        </div>
+        <a href="{{ route('admin.settings.preferences') }}" class="settings-hub-card">
+            <div class="settings-hub-icon">
+                <x-outline-icon name="code-bracket-square" />
+                <span class="settings-hub-badge"><x-outline-icon name="cog-6-tooth" /></span>
+            </div>
+            <h3>System Preferences</h3>
+            <p>Configure system settings and customize application preferences.</p>
+            <ul class="settings-hub-list">
+                <li><x-outline-icon name="cog-6-tooth" /> General settings</li>
+                <li><x-outline-icon name="bell" /> Notification settings</li>
+                <li><x-outline-icon name="calendar-days" /> Appointment settings</li>
+                <li><x-outline-icon name="exclamation-triangle" /> Security settings</li>
+            </ul>
+            <span class="settings-hub-action">Manage <x-outline-icon name="chevron-right" /></span>
+        </a>
 
-        <div style="display:grid; gap:22px;">
-            <section class="panel">
-                <div class="panel-head">
-                    <div class="panel-head-top">
-                        <div>
-                            <div class="section-spot">Clinic Data</div>
-                            <h3>Clinic Information</h3>
-                            <p>Read-only clinic identity details for this workspace.</p>
-                        </div>
-                        <button type="button" class="mini-edit-btn" onclick="openSettingsModal('clinicInfoModal')">Edit</button>
-                    </div>
-                </div>
-                <div class="panel-body">
-                    <div class="profile-list">
-                        <div class="profile-row"><div class="key">Clinic Name</div><div class="val">{{ $settings->clinic_name ?: 'N/A' }}</div></div>
-                        <div class="profile-row"><div class="key">Location</div><div class="val">{{ $settings->clinic_location ?: 'N/A' }}</div></div>
-                    </div>
-                </div>
-            </section>
+        <a href="{{ route('admin.settings.medical') }}" class="settings-hub-card">
+            <div class="settings-hub-icon">
+                <x-outline-icon name="clipboard-document-list" />
+                <span class="settings-hub-badge"><x-outline-icon name="plus-circle" /></span>
+            </div>
+            <h3>Medical Configuration</h3>
+            <p>Review medical setup options used by consultations and reports.</p>
+            <ul class="settings-hub-list">
+                <li><x-outline-icon name="accessibility-person" /> Medical Conditions</li>
+                <li><x-outline-icon name="cube" /> Medicine Types</li>
+            </ul>
+            <span class="settings-hub-action">Manage <x-outline-icon name="chevron-right" /></span>
+        </a>
 
-            <section class="panel">
-                <div class="panel-head">
-                    <div class="panel-head-top">
-                        <div>
-                            <div class="section-spot">Clinic Schedule</div>
-                            <h3>Clinic Hours</h3>
-                            <p>Read-only daily operating schedule for the clinic.</p>
-                        </div>
-                        <button type="button" class="mini-edit-btn" onclick="openSettingsModal('clinicHoursModal')">Edit</button>
-                    </div>
-                </div>
-                <div class="panel-body">
-                    <div class="profile-list">
-                        <div class="profile-row"><div class="key">Opening Time</div><div class="val">{{ $settings->open_time ?: 'N/A' }}</div></div>
-                        <div class="profile-row"><div class="key">Closing Time</div><div class="val">{{ $settings->close_time ?: 'N/A' }}</div></div>
-                    </div>
-                </div>
-            </section>
-
-            @php
-                $closureIsCurrentlyActive = app(\App\Services\ClinicWorkflowService::class)->activeClosure() !== null;
-                $reminderLabels = [0 => 'Disabled', 1 => '1 hour before', 3 => '3 hours before', 24 => '1 day before', 48 => '2 days before'];
-            @endphp
-            <section class="panel">
-                <div class="panel-head">
-                    <div class="panel-head-top">
-                        <div>
-                            <div class="section-spot">Workflow</div>
-                            <h3>System Preferences</h3>
-                            <p>Control clinic notifications, appointment decisions, workspace access, reminders, and temporary availability.</p>
-                        </div>
-                        <button type="button" class="mini-edit-btn" onclick="openSettingsModal('workflowSettingsModal')">Configure</button>
-                    </div>
-                </div>
-                <div class="panel-body">
-                    <div class="workflow-summary-list">
-                        <div class="workflow-summary-row">
-                            <span>Admin Live Notifications</span>
-                            <strong>{{ $settings->admin_live_notifications !== false ? 'Enabled' : 'Disabled' }}</strong>
-                        </div>
-                        <div class="workflow-summary-row">
-                            <span>Student Assistant Admin Hours</span>
-                            <strong>{{ app(\App\Services\ClinicWorkflowService::class)->studentAssistantHoursLabel() }}</strong>
-                        </div>
-                        <div class="workflow-summary-row">
-                            <span>Appointment Reminder Timing</span>
-                            <strong>{{ $reminderLabels[(int) ($settings->appointment_reminder_hours ?? 24)] ?? '1 day before' }}</strong>
-                        </div>
-                        <div class="workflow-summary-row">
-                            <span>Appointment Booking</span>
-                            <strong>{{ $closureIsCurrentlyActive ? 'Temporarily Closed' : 'Available' }}</strong>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
+        <a href="{{ route('admin.user-management') }}" class="settings-hub-card">
+            <div class="settings-hub-icon">
+                <x-outline-icon name="users" />
+                <span class="settings-hub-badge"><x-outline-icon name="cog-6-tooth" /></span>
+            </div>
+            <h3>Users Management</h3>
+            <p>Open the existing user management workspace for account access and roles.</p>
+            <ul class="settings-hub-list">
+                <li><x-outline-icon name="users" /> Account access</li>
+                <li><x-outline-icon name="user-plus" /> Admin hub</li>
+                <li><x-outline-icon name="exclamation-triangle" /> Roles and permissions</li>
+            </ul>
+            <span class="settings-hub-action">Manage <x-outline-icon name="chevron-right" /></span>
+        </a>
     </div>
 
     <div id="workflowSettingsModal" class="modal-overlay">

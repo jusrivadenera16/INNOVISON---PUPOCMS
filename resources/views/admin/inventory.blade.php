@@ -68,6 +68,19 @@
         font-weight: 900;
         letter-spacing: -0.03em;
     }
+    .inventory-title-block {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 220px;
+    }
+    .inventory-page-description {
+        margin: 0;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.45;
+    }
     .inventory-page-title svg {
         width: 42px;
         height: 42px;
@@ -108,6 +121,9 @@
         width: 0;
         max-width: 100%;
         flex: 0 0 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
         opacity: 0;
         overflow: hidden;
         pointer-events: none;
@@ -124,6 +140,15 @@
         padding: 0 !important;
         border-radius: 0 !important;
     }
+    .inventory-search-wrap::before {
+        content: "";
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        background: #8f2230;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor' stroke-width='2.4'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center / contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor' stroke-width='2.4'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
     .inventory-search-shell.is-open .inventory-search-wrap {
         width: 320px;
         flex: 0 0 320px;
@@ -135,8 +160,8 @@
         width: 100%;
         min-height: 48px;
         height: 48px;
-        padding: 12px 18px;
-        border-radius: 0 0 14px 14px;
+        padding: 10px 0;
+        border-radius: 0;
         border: 0 !important;
         border-bottom: 3px solid #8f2230 !important;
         color: #111827;
@@ -1715,6 +1740,10 @@
         box-shadow: none;
     }
 
+    html[data-theme="dark"] .inventory-page-description {
+        color: #cbd5e1;
+    }
+
     html[data-theme="dark"] .controls {
         border-bottom-color: rgba(143, 34, 48, 0.70);
         background: linear-gradient(135deg, rgba(112, 19, 27, 0.68) 0%, rgba(86, 16, 26, 0.64) 48%, rgba(44, 14, 18, 0.72) 100%);
@@ -3061,7 +3090,10 @@
     @endphp
 
     <div class="controls">
-        <h2 class="inventory-page-title"><x-outline-icon name="cube" />Clinic Inventory</h2>
+        <div class="inventory-title-block">
+            <h2 class="inventory-page-title"><x-outline-icon name="cube" />Clinic Inventory</h2>
+            <p class="inventory-page-description">Track medicines, supplies, stock levels, and clinic inventory movement.</p>
+        </div>
         <div class="inventory-toolbar-actions">
             <div class="inventory-search-shell" id="inventorySearchShell">
                 <div class="inventory-search-wrap">

@@ -29,20 +29,20 @@
 
     .reports-header-title {
         margin: 0 0 12px;
-        font-size: 32px;
-        font-weight: 950;
-        letter-spacing: -0.02em;
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: 0;
         color: #111827;
-        line-height: 1.1;
+        line-height: 1.25;
     }
 
     .reports-header-description {
         margin: 0;
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 600;
         color: #64748b;
         max-width: 720px;
-        line-height: 1.5;
+        line-height: 1.45;
     }
 
     html[data-theme="dark"] .reports-header-kicker {

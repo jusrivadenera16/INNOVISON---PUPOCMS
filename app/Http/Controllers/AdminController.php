@@ -2167,6 +2167,46 @@ public function updateClearance(Request $request, $id)
         return view('admin.settings', compact('admin', 'settings', 'cmsProfile'));
     }
 
+    public function settingsPersonal()
+    {
+        $admin = Auth::user();
+        $settings = Setting::first();
+        if(!$settings) { $settings = new Setting(); }
+        $cmsProfile = $admin ? $this->buildCmsAdminProfile($admin) : [];
+
+        return view('admin.settings-personal', compact('admin', 'settings', 'cmsProfile'));
+    }
+
+    public function settingsClinic()
+    {
+        $admin = Auth::user();
+        $settings = Setting::first();
+        if(!$settings) { $settings = new Setting(); }
+        $cmsProfile = $admin ? $this->buildCmsAdminProfile($admin) : [];
+
+        return view('admin.settings-clinic', compact('admin', 'settings', 'cmsProfile'));
+    }
+
+    public function settingsPreferences()
+    {
+        $admin = Auth::user();
+        $settings = Setting::first();
+        if(!$settings) { $settings = new Setting(); }
+        $cmsProfile = $admin ? $this->buildCmsAdminProfile($admin) : [];
+
+        return view('admin.settings-preferences', compact('admin', 'settings', 'cmsProfile'));
+    }
+
+    public function settingsMedicalConfiguration()
+    {
+        $admin = Auth::user();
+        $settings = Setting::first();
+        if(!$settings) { $settings = new Setting(); }
+        $cmsProfile = $admin ? $this->buildCmsAdminProfile($admin) : [];
+
+        return view('admin.settings-medical-configuration', compact('admin', 'settings', 'cmsProfile'));
+    }
+
     public function notificationsFeed(Request $request)
     {
         /** @var \App\Models\User|null $user */

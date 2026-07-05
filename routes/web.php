@@ -320,6 +320,10 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
     // Super Admin-only routes
     Route::middleware('role:superadmin')->group(function () {
         Route::get('/admin/settings', [AdminController::class, 'settings'])->name('admin.settings');
+        Route::get('/admin/settings/personal-information', [AdminController::class, 'settingsPersonal'])->name('admin.settings.personal');
+        Route::get('/admin/settings/clinic-information', [AdminController::class, 'settingsClinic'])->name('admin.settings.clinic');
+        Route::get('/admin/settings/system-preferences', [AdminController::class, 'settingsPreferences'])->name('admin.settings.preferences');
+        Route::get('/admin/settings/medical-configuration', [AdminController::class, 'settingsMedicalConfiguration'])->name('admin.settings.medical');
         Route::put('/admin/settings/update', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
         Route::put('/admin/profile/update', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
         Route::put('/admin/api-testing/database/{table}/{id}', [AdminController::class, 'updateApiTestingDatabaseRecord'])->name('admin.api-testing.database.update');

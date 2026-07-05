@@ -1317,6 +1317,7 @@
         height: 20px;
         display: block;
         margin: 0;
+        transform: translateY(3px);
     }
     .health-records-last-updated span {
         display: block;
@@ -1338,6 +1339,60 @@
         grid-template-columns: minmax(0, 1fr) auto;
         gap: 12px;
         padding: 18px 20px 8px;
+    }
+    .health-table-tools {
+        width: min(100%, 620px);
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) auto;
+        align-items: end;
+        gap: 12px;
+        margin-left: auto;
+    }
+    .health-table-tools .health-records-search-shell,
+    .health-table-tools .health-records-search-wrap {
+        width: 100%;
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .health-table-tools .health-records-search-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+        min-height: 42px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        border-bottom: 3px solid #8f2230;
+        box-shadow: none;
+    }
+    .health-table-tools .health-records-search-wrap::before {
+        content: "";
+        width: 18px;
+        height: 18px;
+        margin: 0 12px 0 2px;
+        background: currentColor;
+        color: #9f1239;
+        flex: 0 0 auto;
+        mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+    .health-table-tools .health-records-search {
+        width: 100% !important;
+        min-height: 40px;
+        height: 40px;
+        padding: 8px 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        color: #0f172a;
+        font-weight: 800;
+    }
+    .health-table-tools .health-records-search:focus {
+        outline: none;
+    }
+    .health-table-tools .health-records-search::placeholder {
+        color: #94a3b8;
+        font-weight: 800;
     }
     .health-records-overview-search .health-records-search-shell,
     .health-records-overview-search .health-records-search-wrap {
@@ -1403,6 +1458,11 @@
         border-color: rgba(112, 19, 27, 0.42);
         color: #70131B;
         transform: translateY(-1px);
+    }
+    .health-table-tools .health-records-search-submit {
+        min-height: 42px;
+        min-width: 106px;
+        box-shadow: none;
     }
     .health-summary-modern-container {
         display: grid;
@@ -2178,10 +2238,11 @@
 
     .health-table-head {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         gap: 16px;
         margin-bottom: 12px;
+        flex-wrap: wrap;
     }
 
     .health-table-title {
@@ -3986,34 +4047,6 @@
             </div>
         </div>
 
-        <div class="health-records-overview-search">
-            <form method="GET" action="{{ url()->current() }}" class="health-records-search-shell is-open" id="healthRecordsSearchShell">
-                @foreach(request()->except(['q', 'issued_page']) as $queryKey => $queryValue)
-                    @if(is_array($queryValue))
-                        @foreach($queryValue as $nestedValue)
-                            <input type="hidden" name="{{ $queryKey }}[]" value="{{ $nestedValue }}">
-                        @endforeach
-                    @else
-                        <input type="hidden" name="{{ $queryKey }}" value="{{ $queryValue }}">
-                    @endif
-                @endforeach
-                <div class="health-records-search-wrap">
-                    <input
-                        type="text"
-                        id="recordSearch"
-                        name="q"
-                        value="{{ $search ?? '' }}"
-                        class="health-records-search"
-                        placeholder="Search by student name, student number, or reference number..."
-                    >
-                </div>
-            </form>
-            <button type="button" class="health-records-search-submit" id="healthRecordsOverviewFilterBtn">
-                <x-outline-icon name="funnel" />
-                Filter
-            </button>
-        </div>
-
         <div class="health-summary-modern-container">
             <div class="health-summary-modern-card is-approved">
                 <span class="health-summary-modern-icon-wrap"><x-outline-icon name="check" /></span>
@@ -4066,6 +4099,24 @@
 <div class="card health-summary-card">
     <div class="health-table-head">
         <div class="health-table-title">Issued Medical Clearance</div>
+        <div class="health-table-tools">
+            <form method="GET" action="{{ url()->current() }}" class="health-records-search-shell is-open" id="healthRecordsSearchShell">
+                <div class="health-records-search-wrap">
+                    <input
+                        type="text"
+                        id="recordSearch"
+                        value=""
+                        class="health-records-search"
+                        placeholder="Search by student name, student number, or reference number..."
+                        autocomplete="off"
+                    >
+                </div>
+            </form>
+            <button type="button" class="health-records-search-submit" id="healthRecordsOverviewFilterBtn">
+                <x-outline-icon name="funnel" />
+                Filter
+            </button>
+        </div>
     </div>
     <table id="healthTable">
         <thead>
@@ -5346,6 +5397,10 @@
     const verifyDocumentResubmissionRemarks = document.getElementById('verifyDocumentResubmissionRemarks');
     const verifyDocumentResubmissionReason = document.getElementById('verifyDocumentResubmissionReason');
     const verifyDocumentResubmissionInputs = Array.from(document.querySelectorAll('#verifyDocumentResubmissionForm input[name="resubmission_required_documents[]"]'));
+
+    healthRecordsSearchShell?.addEventListener('submit', function (event) {
+        event.preventDefault();
+    });
 
     function setHealthFilterModalOpen(isOpen) {
         if (!healthFilterModal) return;

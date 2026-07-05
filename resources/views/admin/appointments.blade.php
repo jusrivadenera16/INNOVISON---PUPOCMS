@@ -36,6 +36,15 @@
     .appointments-summary-title {
         font-weight: 800;
     }
+
+    .appointments-summary-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
     
     table { width: 100%; border-collapse: collapse; margin-top: 15px; }
     
@@ -1676,6 +1685,9 @@
         width: 0;
         max-width: 100%;
         flex: 0 0 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
         opacity: 0;
         overflow: hidden;
         pointer-events: none;
@@ -1691,6 +1703,16 @@
         box-shadow: none !important;
         padding: 0 !important;
         border-radius: 0 !important;
+    }
+
+    .appointments-search-wrap::before {
+        content: "";
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        background: #8f2230;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor' stroke-width='2.4'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center / contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor' stroke-width='2.4'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center / contain no-repeat;
     }
 
     .appointments-search-shell.is-open .appointments-search-wrap {
@@ -1713,11 +1735,11 @@
     .main .appointments-search-shell .appointments-search-input {
         width: 100%;
         min-height: 48px;
-        padding: 12px 20px;
+        padding: 10px 0;
         height: 48px;
-        border-radius: 0 0 14px 14px !important;
-        -webkit-border-radius: 0 0 14px 14px !important;
-        -moz-border-radius: 0 0 14px 14px !important;
+        border-radius: 0 !important;
+        -webkit-border-radius: 0 !important;
+        -moz-border-radius: 0 !important;
         border: 0 !important;
         border-bottom: 3px solid #8f2230 !important;
         color: #111827;
@@ -2644,57 +2666,59 @@
 
     <div class="appointments-toolbar">
         <h2 class="appointments-page-title"><x-outline-icon name="calendar-days" />Appointments</h2>
-        <div class="appointments-toolbar-actions">
-            <div class="appointments-search-shell" id="appointmentsSearchShell">
-                <div class="appointments-search-wrap">
-                    <input type="text" id="searchInput" class="appointments-search-input" placeholder="Search by name...">
+    </div>
+    <div class="card appointments-summary-card">
+        <div class="appointments-summary-head">
+            <div class="appointments-summary-title">Appointments Summary</div>
+            <div class="appointments-toolbar-actions">
+                <div class="appointments-search-shell" id="appointmentsSearchShell">
+                    <div class="appointments-search-wrap">
+                        <input type="text" id="searchInput" class="appointments-search-input" placeholder="Search by student name, appointment ID, or service...">
+                    </div>
+                    <button type="button" class="btn-add-walkin appointments-search-toggle" id="appointmentsSearchToggle" aria-label="Open search" aria-expanded="false" aria-controls="searchInput">
+                        <x-outline-icon name="magnifying-glass" />
+                    </button>
                 </div>
-                <button type="button" class="btn-add-walkin appointments-search-toggle" id="appointmentsSearchToggle" aria-label="Open search" aria-expanded="false" aria-controls="searchInput">
-                    <x-outline-icon name="magnifying-glass" />
-                </button>
-            </div>
-            <div class="appointments-filter-shell" id="appointmentsFilterShell">
-                <button type="button" class="btn-add-walkin appointments-filter-toggle" id="appointmentsFilterToggle" aria-label="Open status filter" aria-expanded="false" aria-controls="appointmentsFilterPanel">
-                    <x-outline-icon name="funnel" />
-                    <span class="btn-text">Filter</span>
-                </button>
-                <div class="appointments-filter-panel" id="appointmentsFilterPanel" aria-hidden="true">
-                    <div class="appointments-filter-panel-title">Status Filter</div>
-                    <div class="appointments-status-wrap" id="appointmentsStatusWrap">
-                        <select id="appointmentStatusFilter" class="appointments-status-select" aria-hidden="true" tabindex="-1">
-                            <option value="">All Statuses</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Completed">Completed</option>
-                            <option value="Cancelled">Cancelled</option>
-                            <option value="Expired">Expired</option>
-                            <option value="Missed">Missed</option>
-                        </select>
-                        <button type="button" class="appointments-status-display" id="appointmentsStatusDisplay" aria-haspopup="listbox" aria-expanded="false">
-                            All Statuses
-                        </button>
-                        <div class="appointments-status-menu" id="appointmentsStatusMenu" role="listbox" aria-label="Appointment status options">
-                            <div class="appointments-status-options">
-                                <button type="button" class="appointments-status-option is-selected" data-status-value="">All Statuses</button>
-                                <button type="button" class="appointments-status-option" data-status-value="Pending">Pending</button>
-                                <button type="button" class="appointments-status-option" data-status-value="Approved">Approved</button>
-                                <button type="button" class="appointments-status-option" data-status-value="Completed">Completed</button>
-                                <button type="button" class="appointments-status-option" data-status-value="Cancelled">Cancelled</button>
-                                <button type="button" class="appointments-status-option" data-status-value="Expired">Expired</button>
-                                <button type="button" class="appointments-status-option" data-status-value="Missed">Missed</button>
+                <div class="appointments-filter-shell" id="appointmentsFilterShell">
+                    <button type="button" class="btn-add-walkin appointments-filter-toggle" id="appointmentsFilterToggle" aria-label="Open status filter" aria-expanded="false" aria-controls="appointmentsFilterPanel">
+                        <x-outline-icon name="funnel" />
+                        <span class="btn-text">Filter</span>
+                    </button>
+                    <div class="appointments-filter-panel" id="appointmentsFilterPanel" aria-hidden="true">
+                        <div class="appointments-filter-panel-title">Status Filter</div>
+                        <div class="appointments-status-wrap" id="appointmentsStatusWrap">
+                            <select id="appointmentStatusFilter" class="appointments-status-select" aria-hidden="true" tabindex="-1">
+                                <option value="">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                                <option value="Expired">Expired</option>
+                                <option value="Missed">Missed</option>
+                            </select>
+                            <button type="button" class="appointments-status-display" id="appointmentsStatusDisplay" aria-haspopup="listbox" aria-expanded="false">
+                                All Statuses
+                            </button>
+                            <div class="appointments-status-menu" id="appointmentsStatusMenu" role="listbox" aria-label="Appointment status options">
+                                <div class="appointments-status-options">
+                                    <button type="button" class="appointments-status-option is-selected" data-status-value="">All Statuses</button>
+                                    <button type="button" class="appointments-status-option" data-status-value="Pending">Pending</button>
+                                    <button type="button" class="appointments-status-option" data-status-value="Approved">Approved</button>
+                                    <button type="button" class="appointments-status-option" data-status-value="Completed">Completed</button>
+                                    <button type="button" class="appointments-status-option" data-status-value="Cancelled">Cancelled</button>
+                                    <button type="button" class="appointments-status-option" data-status-value="Expired">Expired</button>
+                                    <button type="button" class="appointments-status-option" data-status-value="Missed">Missed</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="appointments-filter-actions">
-                        <button type="button" class="appointments-filter-reset" id="appointmentsFilterReset">Reset</button>
-                        <button type="button" class="appointments-filter-close" id="appointmentsFilterClose">Close</button>
+                        <div class="appointments-filter-actions">
+                            <button type="button" class="appointments-filter-reset" id="appointmentsFilterReset">Reset</button>
+                            <button type="button" class="appointments-filter-close" id="appointmentsFilterClose">Close</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-<div class="card appointments-summary-card">
-        <div class="appointments-summary-title">Appointments Summary</div>
         <table id="apptTable">
             <thead>
                 <tr>
