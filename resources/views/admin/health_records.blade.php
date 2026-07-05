@@ -1433,13 +1433,13 @@
         position: absolute;
         left: 0;
         right: auto;
-        bottom: -1px;
+        bottom: 0;
         width: 100%;
-        height: 72%;
+        height: 74%;
         opacity: .24;
         background: #ffd700;
-        -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201440%20320'%3E%3Cpath%20fill='%23000'%20d='M0,224L24,229.3C48,235,96,245,144,261.3C192,277,240,299,288,309.3C336,320,384,320,432,282.7C480,245,528,171,576,154.7C624,139,672,181,720,186.7C768,192,816,160,864,149.3C912,139,960,149,1008,181.3C1056,213,1104,267,1152,272C1200,277,1248,235,1296,181.3C1344,128,1392,64,1416,32L1440,0L1440,320L1416,320C1392,320,1344,320,1296,320C1248,320,1200,320,1152,320C1104,320,1056,320,1008,320C960,320,912,320,864,320C816,320,768,320,720,320C672,320,624,320,576,320C528,320,480,320,432,320C384,320,336,320,288,320C240,320,192,320,144,320C96,320,48,320,24,320L0,320Z'/%3E%3C/svg%3E") center bottom / 115% 100% no-repeat;
-        mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201440%20320'%3E%3Cpath%20fill='%23000'%20d='M0,224L24,229.3C48,235,96,245,144,261.3C192,277,240,299,288,309.3C336,320,384,320,432,282.7C480,245,528,171,576,154.7C624,139,672,181,720,186.7C768,192,816,160,864,149.3C912,139,960,149,1008,181.3C1056,213,1104,267,1152,272C1200,277,1248,235,1296,181.3C1344,128,1392,64,1416,32L1440,0L1440,320L1416,320C1392,320,1344,320,1296,320C1248,320,1200,320,1152,320C1104,320,1056,320,1008,320C960,320,912,320,864,320C816,320,768,320,720,320C672,320,624,320,576,320C528,320,480,320,432,320C384,320,336,320,288,320C240,320,192,320,144,320C96,320,48,320,24,320L0,320Z'/%3E%3C/svg%3E") center bottom / 115% 100% no-repeat;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201440%20320'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M0,224L24,229.3C48,235,96,245,144,261.3C192,277,240,299,288,309.3C336,320,384,320,432,282.7C480,245,528,171,576,154.7C624,139,672,181,720,186.7C768,192,816,160,864,149.3C912,139,960,149,1008,181.3C1056,213,1104,267,1152,272C1200,277,1248,235,1296,181.3C1344,128,1392,64,1416,32L1440,0L1440,320L1416,320C1392,320,1344,320,1296,320C1248,320,1200,320,1152,320C1104,320,1056,320,1008,320C960,320,912,320,864,320C816,320,768,320,720,320C672,320,624,320,576,320C528,320,480,320,432,320C384,320,336,320,288,320C240,320,192,320,144,320C96,320,48,320,24,320L0,320Z'/%3E%3C/svg%3E") center bottom / 100% 100% no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201440%20320'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M0,224L24,229.3C48,235,96,245,144,261.3C192,277,240,299,288,309.3C336,320,384,320,432,282.7C480,245,528,171,576,154.7C624,139,672,181,720,186.7C768,192,816,160,864,149.3C912,139,960,149,1008,181.3C1056,213,1104,267,1152,272C1200,277,1248,235,1296,181.3C1344,128,1392,64,1416,32L1440,0L1440,320L1416,320C1392,320,1344,320,1296,320C1248,320,1200,320,1152,320C1104,320,1056,320,1008,320C960,320,912,320,864,320C816,320,768,320,720,320C672,320,624,320,576,320C528,320,480,320,432,320C384,320,336,320,288,320C240,320,192,320,144,320C96,320,48,320,24,320L0,320Z'/%3E%3C/svg%3E") center bottom / 100% 100% no-repeat;
         border: 0;
         border-radius: 0;
         transform: none;
@@ -1546,6 +1546,15 @@
         font-size: 24px;
         font-weight: 900;
         line-height: 1;
+        transition: color .22s ease, transform .22s ease;
+    }
+    .health-summary-modern-count.is-live-updated {
+        animation: healthStatPulse .62s ease;
+    }
+    @keyframes healthStatPulse {
+        0% { transform: scale(1); }
+        45% { transform: scale(1.13); color: #9f1239; }
+        100% { transform: scale(1); }
     }
     .health-summary-modern-note {
         display: block;
@@ -3920,7 +3929,7 @@
                 <span class="health-summary-modern-icon-wrap"><x-outline-icon name="check" /></span>
                 <div class="health-summary-modern-copy">
                     <span class="health-summary-modern-label">Total Approved</span>
-                    <span class="health-summary-modern-count">{{ $healthSummaryStats['total_approved'] }}</span>
+                    <span class="health-summary-modern-count" data-health-record-stat="total_approved">{{ $healthSummaryStats['total_approved'] }}</span>
                     <span class="health-summary-modern-note">Issued clearances</span>
                 </div>
             </div>
@@ -3932,7 +3941,7 @@
                 </span>
                 <div class="health-summary-modern-copy">
                     <span class="health-summary-modern-label">With Medical Conditions</span>
-                    <span class="health-summary-modern-count">{{ $healthSummaryStats['with_conditions'] }}</span>
+                    <span class="health-summary-modern-count" data-health-record-stat="with_conditions">{{ $healthSummaryStats['with_conditions'] }}</span>
                     <span class="health-summary-modern-note">Approved records only</span>
                 </div>
             </div>
@@ -3946,7 +3955,7 @@
                 </span>
                 <div class="health-summary-modern-copy">
                     <span class="health-summary-modern-label">Pending Approval</span>
-                    <span class="health-summary-modern-count">{{ $healthSummaryStats['pending_approval'] }}</span>
+                    <span class="health-summary-modern-count" data-health-record-stat="pending_approval">{{ $healthSummaryStats['pending_approval'] }}</span>
                     <span class="health-summary-modern-note">Click to view</span>
                 </div>
                 <span class="health-summary-modern-arrow">&rarr;</span>
@@ -3955,7 +3964,7 @@
                 <span class="health-summary-modern-icon-wrap"><x-outline-icon name="exclamation-triangle" /></span>
                 <div class="health-summary-modern-copy">
                     <span class="health-summary-modern-label">Pending Compliance</span>
-                    <span class="health-summary-modern-count">{{ $healthSummaryStats['pending_conditional'] }}</span>
+                    <span class="health-summary-modern-count" data-health-record-stat="pending_conditional">{{ $healthSummaryStats['pending_conditional'] }}</span>
                     <span class="health-summary-modern-note">Click to view</span>
                 </div>
                 <span class="health-summary-modern-arrow">&rarr;</span>
@@ -6039,6 +6048,81 @@
             }
         });
     }
+
+    (function initHealthRecordStatsLiveSync() {
+        const statEndpoint = @json(route('admin.health_records.stats'));
+        const statNodes = document.querySelectorAll('[data-health-record-stat]');
+
+        if (!statEndpoint || statNodes.length === 0) {
+            return;
+        }
+
+        const formatter = new Intl.NumberFormat();
+        let healthRecordStatsTimer = null;
+
+        function currentQueryString() {
+            const params = new URLSearchParams(window.location.search);
+            params.delete('issued_page');
+            return params.toString();
+        }
+
+        function renderStat(key, rawValue) {
+            const numericValue = Number(rawValue || 0);
+            const nextValue = formatter.format(Number.isFinite(numericValue) ? numericValue : 0);
+
+            document.querySelectorAll(`[data-health-record-stat="${key}"]`).forEach(function (node) {
+                if ((node.textContent || '').trim() === nextValue) {
+                    return;
+                }
+
+                node.textContent = nextValue;
+                node.classList.remove('is-live-updated');
+                void node.offsetWidth;
+                node.classList.add('is-live-updated');
+            });
+        }
+
+        function pullStats() {
+            if (document.hidden) {
+                return;
+            }
+
+            const query = currentQueryString();
+            const url = query ? `${statEndpoint}?${query}` : statEndpoint;
+
+            fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Unable to load health record stats.');
+                    }
+                    return response.json();
+                })
+                .then(function (payload) {
+                    const stats = payload && payload.stats ? payload.stats : {};
+                    Object.keys(stats).forEach(function (key) {
+                        renderStat(key, stats[key]);
+                    });
+                })
+                .catch(function () {
+                    // Stats are convenience-only. Keep the current page usable if polling fails.
+                });
+        }
+
+        pullStats();
+        healthRecordStatsTimer = window.setInterval(pullStats, 12000);
+
+        window.addEventListener('beforeunload', function () {
+            if (healthRecordStatsTimer) {
+                window.clearInterval(healthRecordStatsTimer);
+            }
+        });
+    })();
 
     (function initHealthSummaryLiveSync() {
         const liveFeedNode = document.getElementById('adminLiveAlertFeedUrl');

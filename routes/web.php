@@ -221,6 +221,9 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
     Route::get('/health-records', [AdminController::class, 'viewHealth'])
         ->middleware('role:superadmin,admin')
         ->name('admin.health_records');
+    Route::get('/health-records/stats', [AdminController::class, 'healthRecordStats'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.health_records.stats');
     Route::get('/health-profile/{id}', [AdminController::class, 'showHealth'])
         ->middleware('role:superadmin,admin')
         ->name('admin.show_health');

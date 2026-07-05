@@ -1484,6 +1484,123 @@ class AdminController extends Controller
         ));
     }
 
+    public function healthRecordStats(Request $request)
+    {
+        $search = trim((string) $request->query('q', ''));
+        $courseFilter = trim((string) $request->query('course', ''));
+        $monthFilter = trim((string) $request->query('month', ''));
+        $yearFilter = trim((string) $request->query('year', ''));
+
+        $query = HealthProfile::with('user')->latest();
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                $like = '%' . $search . '%';
+
+                $builder->where('reference_number', 'like', $like)
+                    ->orWhere('student_number', 'like', $like)
+                    ->orWhere('student_id', 'like', $like)
+                    ->orWhere('course_college', 'like', $like)
+                    ->orWhere('course_code', 'like', $like)
+                    ->orWhere('sex', 'like', $like)
+                    ->orWhere('clearance_status', 'like', $like)
+                    ->orWhereHas('user', function ($userQuery) use ($like) {
+                        $userQuery->where('name', 'like', $like)
+                            ->orWhere('first_name', 'like', $like)
+                            ->orWhere('middle_name', 'like', $like)
+                            ->orWhere('last_name', 'like', $like)
+                            ->orWhere('email', 'like', $like)
+                            ->orWhere('student_number', 'like', $like)
+                            ->orWhere('student_id', 'like', $like)
+                            ->orWhere('course', 'like', $like);
+                    });
+            });
+        }
+
+        if ($courseFilter !== '') {
+            $query->where(function ($builder) use ($courseFilter) {
+                $builder->where('course_college', $courseFilter)
+                    ->orWhere(function ($innerBuilder) use ($courseFilter) {
+                        $innerBuilder->where(function ($profileBuilder) {
+                            $profileBuilder->whereNull('course_college')
+                                ->orWhere('course_college', '');
+                        })
+                            ->whereHas('user', function ($userQuery) use ($courseFilter) {
+                                $userQuery->where('course', $courseFilter);
+                            });
+                    });
+            });
+        }
+
+        if ($monthFilter !== '') {
+            try {
+                $monthDate = Carbon::parse($monthFilter . '-01');
+                $query->whereYear('created_at', $monthDate->year)
+                    ->whereMonth('created_at', $monthDate->month);
+            } catch (\Throwable $e) {
+                // Ignore invalid month input and keep the stats endpoint usable.
+            }
+        }
+
+        if ($yearFilter !== '') {
+            $yearAliases = [
+                '1st Year' => ['1st year', '1st', '1', 'first year'],
+                '2nd Year' => ['2nd year', '2nd', '2', 'second year'],
+                '3rd Year' => ['3rd year', '3rd', '3', 'third year'],
+                '4th Year' => ['4th year', '4th', '4', 'fourth year'],
+            ];
+
+            $acceptedYearValues = $yearAliases[$yearFilter] ?? [Str::lower($yearFilter)];
+
+            $query->whereHas('user', function ($userQuery) use ($acceptedYearValues) {
+                $userQuery->where(function ($builder) use ($acceptedYearValues) {
+                    foreach ($acceptedYearValues as $index => $acceptedYearValue) {
+                        $method = $index === 0 ? 'whereRaw' : 'orWhereRaw';
+                        $builder->{$method}('LOWER(year) = ?', [$acceptedYearValue]);
+                    }
+                });
+            });
+        }
+
+        $issuedQuery = (clone $query)
+            ->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
+
+        $records = $query->get();
+        $stats = [
+            'total_approved' => (clone $issuedQuery)->count(),
+            'with_conditions' => 0,
+            'pending_approval' => 0,
+            'pending_conditional' => 0,
+        ];
+
+        foreach ($records as $summaryRecord) {
+            $summaryHasRequirements = filled($summaryRecord->medical_certificate)
+                && filled($summaryRecord->chest_xray_result)
+                && filled($summaryRecord->student_photo);
+            $summaryStatus = trim((string) ($summaryRecord->clearance_status ?? ''));
+            $summaryIsApproved = in_array($summaryStatus, ['Issued', 'Fully Cleared'], true);
+            $summaryIsConditional = !$summaryIsApproved && (
+                in_array($summaryStatus, ['Pending/Conditional', 'Pending Resubmission', 'Rejected'], true)
+                || trim((string) ($summaryRecord->pending_reason ?? '')) !== ''
+                || trim((string) ($summaryRecord->medical_condition_remarks ?? '')) !== ''
+            );
+
+            if ($summaryIsApproved && $summaryRecord->hasMedicalCondition()) {
+                $stats['with_conditions']++;
+            }
+
+            if ($summaryHasRequirements && !$summaryIsConditional && in_array($summaryStatus, ['Pending', 'For Verification', ''], true)) {
+                $stats['pending_approval']++;
+            }
+
+            if ($summaryIsConditional) {
+                $stats['pending_conditional']++;
+            }
+        }
+
+        return response()->json(['stats' => $stats]);
+    }
+
     public function showHealth($id)
     {
 

@@ -6353,20 +6353,28 @@
         animation: clinicCheckPop .48s .12s cubic-bezier(.2, .9, .25, 1.25) both;
     }
 
+    .clinic-success-ring,
     .clinic-success-check::before,
     .clinic-success-check::after {
         content: "";
         position: absolute;
-        inset: -26px;
+        inset: -28px;
         border-radius: inherit;
-        border: 1px solid rgba(112, 19, 27, .12);
-        animation: clinicSuccessPulse 1.9s ease-out infinite;
+        border: 1px solid rgba(148, 163, 184, .34);
+        pointer-events: none;
+        animation: clinicSuccessPulse 2.15s ease-out infinite;
+    }
+
+    .clinic-success-ring {
+        inset: -48px;
+        animation-delay: .34s;
+        border-color: rgba(148, 163, 184, .24);
     }
 
     .clinic-success-check::after {
-        inset: -48px;
-        animation-delay: .42s;
-        border-color: rgba(112, 19, 27, .08);
+        inset: -68px;
+        animation-delay: .68s;
+        border-color: rgba(148, 163, 184, .16);
     }
 
     .clinic-success-check svg {
@@ -6437,18 +6445,7 @@
     }
 
     .clinic-success-confetti {
-        position: absolute;
-        inset: 58px 70px auto;
-        height: 155px;
-        pointer-events: none;
-        background:
-            radial-gradient(circle, #70131B 0 2px, transparent 3px) 4% 42% / 42px 42px,
-            radial-gradient(circle, #e8bec1 0 2px, transparent 3px) 16% 68% / 38px 38px,
-            radial-gradient(circle, #70131B 0 2px, transparent 3px) 92% 48% / 40px 40px,
-            linear-gradient(45deg, transparent 44%, #70131B 45% 55%, transparent 56%) 82% 34% / 26px 26px,
-            linear-gradient(45deg, transparent 44%, #d9a7ad 45% 55%, transparent 56%) 18% 28% / 24px 24px;
-        opacity: .8;
-        animation: clinicConfettiDrift 2.4s ease-in-out infinite alternate;
+        display: none;
     }
 
     @keyframes clinicSuccessPop {
@@ -6457,8 +6454,9 @@
     }
 
     @keyframes clinicSuccessPulse {
-        0% { opacity: .85; transform: scale(.82); }
-        100% { opacity: 0; transform: scale(1.24); }
+        0% { opacity: .86; transform: scale(.78); }
+        72% { opacity: .22; }
+        100% { opacity: 0; transform: scale(1.18); }
     }
 
     @keyframes clinicCheckPop {
@@ -7630,6 +7628,7 @@
             </button>
             <span class="clinic-success-confetti" aria-hidden="true"></span>
             <div class="clinic-success-check" aria-hidden="true">
+                <span class="clinic-success-ring"></span>
                 <x-outline-icon name="check" />
             </div>
             <strong id="applicantApprovalOverlayTitle">Approved!</strong>
@@ -7646,6 +7645,7 @@
             </button>
             <span class="clinic-success-confetti" aria-hidden="true"></span>
             <div class="clinic-success-check" aria-hidden="true">
+                <span class="clinic-success-ring"></span>
                 <x-outline-icon name="check" />
             </div>
             <strong>Done Encoding</strong>
