@@ -6333,8 +6333,8 @@
 
     .clinic-success-card {
         position: relative;
-        width: min(520px, calc(100vw - 30px));
-        padding: 56px 40px 36px;
+        width: min(420px, calc(100vw - 28px));
+        padding: 38px 32px 28px;
         border: 1px solid rgba(112, 19, 27, .10);
         border-radius: 16px;
         background: #ffffff;
@@ -6346,11 +6346,11 @@
 
     .clinic-success-check {
         position: relative;
-        width: 112px;
-        height: 112px;
+        width: 88px;
+        height: 88px;
         display: grid;
         place-items: center;
-        margin: 8px auto 28px;
+        margin: 6px auto 22px;
         border-radius: 999px;
         background: radial-gradient(circle at 35% 24%, #9f2435 0%, #70131b 62%, #4f1017 100%);
         color: #ffffff;
@@ -6363,28 +6363,28 @@
     .clinic-success-check::after {
         content: "";
         position: absolute;
-        inset: -28px;
+        inset: -22px;
         border-radius: inherit;
-        border: 1px solid rgba(148, 163, 184, .34);
+        border: 2px solid rgba(148, 163, 184, .42);
         pointer-events: none;
         animation: clinicSuccessPulse 2.15s ease-out infinite;
     }
 
     .clinic-success-ring {
-        inset: -48px;
+        inset: -38px;
         animation-delay: .34s;
-        border-color: rgba(148, 163, 184, .24);
+        border-color: rgba(148, 163, 184, .32);
     }
 
     .clinic-success-check::after {
-        inset: -68px;
+        inset: -54px;
         animation-delay: .68s;
-        border-color: rgba(148, 163, 184, .16);
+        border-color: rgba(148, 163, 184, .22);
     }
 
     .clinic-success-check svg {
-        width: 56px;
-        height: 56px;
+        width: 44px;
+        height: 44px;
         stroke-width: 3.2;
         position: relative;
         z-index: 1;
@@ -6394,17 +6394,17 @@
     .clinic-success-card strong {
         display: block;
         color: #70131b;
-        font-size: clamp(28px, 4vw, 36px);
+        font-size: clamp(22px, 3vw, 30px);
         font-weight: 900;
         line-height: 1.15;
-        margin-bottom: 14px;
+        margin-bottom: 10px;
     }
 
     .clinic-success-card p {
-        margin: 0 auto 32px;
-        max-width: 360px;
+        margin: 0 auto 24px;
+        max-width: 310px;
         color: #4b5563;
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 700;
         line-height: 1.6;
     }
@@ -6412,15 +6412,15 @@
     .clinic-success-card hr {
         border: 0;
         border-top: 1px solid #f1e3e5;
-        margin: 0 0 28px;
+        margin: 0 0 22px;
     }
 
     .clinic-success-close {
         position: absolute;
-        top: 20px;
-        right: 20px;
-        width: 44px;
-        height: 44px;
+        top: 16px;
+        right: 16px;
+        width: 38px;
+        height: 38px;
         border-radius: 999px;
         border: 0;
         background: #f2dfe3;
@@ -6431,20 +6431,20 @@
     }
 
     .clinic-success-close svg {
-        width: 22px;
-        height: 22px;
+        width: 19px;
+        height: 19px;
         stroke-width: 2.4;
     }
 
     .clinic-success-continue {
         width: 100%;
-        min-height: 60px;
+        min-height: 50px;
         border: 0;
         border-radius: 9px;
         background: linear-gradient(135deg, #70131B, #9a1b2c);
         color: #ffffff;
         font-weight: 900;
-        font-size: 17px;
+        font-size: 15px;
         cursor: pointer;
         box-shadow: 0 16px 34px rgba(112, 19, 27, .20);
     }
@@ -11213,8 +11213,8 @@
                     showClinicSuccessOverlay(encodeOverlay, {
                         duration: 3000,
                         onDone: () => {
-                        closeApplicantsModal();
-                        window.location.reload();
+                            refreshFinalReviewApplicants()
+                                .finally(showFinalReviewList);
                         }
                     });
                 } else {
@@ -11368,6 +11368,11 @@
                             : 'The applicant has been approved successfully.',
                         duration: 3000,
                         onDone: () => {
+                        if (isFinalReviewWorkflow()) {
+                            refreshFinalReviewApplicants()
+                                .finally(showFinalReviewList);
+                            return;
+                        }
                         if (data.redirect_url) {
                             window.location.href = data.redirect_url;
                             return;
@@ -11829,7 +11834,7 @@
         }
 
         function refreshFinalReviewApplicants() {
-            if (!finalReviewRefresh) return;
+            if (!finalReviewRefresh) return Promise.resolve();
 
             const label = finalReviewRefresh.querySelector('span');
             const originalLabel = label ? label.textContent : '';
@@ -11837,7 +11842,7 @@
             finalReviewRefresh.style.opacity = '0.72';
             if (label) label.textContent = 'Refreshing';
 
-            fetch(finalReviewApplicantsUrl, {
+            return fetch(finalReviewApplicantsUrl, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',

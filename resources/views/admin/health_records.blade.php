@@ -3102,6 +3102,11 @@
         margin-top: 8px;
     }
 
+    .readonly-final-review-field {
+        grid-column: 1 / -1;
+        order: 50;
+    }
+
     .readonly-final-review-field form {
         margin: 0;
     }
@@ -3240,20 +3245,20 @@
 
     .readonly-doc-preview-list {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 8px;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
     }
 
     .readonly-doc-preview-btn {
         width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        padding: 10px 12px;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        background: #ffffff;
+        min-height: 174px;
+        display: grid;
+        grid-template-rows: 108px auto auto;
+        gap: 7px;
+        padding: 10px;
+        border: 1px solid rgba(112, 19, 27, 0.14);
+        border-radius: 12px;
+        background: #fffafa;
         color: #334155;
         font-size: 12px;
         font-weight: 900;
@@ -3268,6 +3273,47 @@
         border-color: rgba(112, 19, 27, 0.36);
         background: #fff7ed;
         color: #70131B;
+    }
+
+    .readonly-doc-preview-thumb {
+        width: 100%;
+        height: 108px;
+        display: grid;
+        place-items: center;
+        border-radius: 9px;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 50% 42%, rgba(112, 19, 27, .08), transparent 44%),
+            #fff1f2;
+    }
+
+    .readonly-doc-preview-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .readonly-doc-preview-thumb svg {
+        width: 34px;
+        height: 34px;
+        color: #8A1020;
+    }
+
+    .readonly-doc-preview-btn span,
+    .readonly-doc-preview-btn small {
+        display: block;
+    }
+
+    .readonly-doc-preview-btn span {
+        color: #70131B;
+        line-height: 1.25;
+    }
+
+    .readonly-doc-preview-btn small {
+        color: #475569;
+        font-size: 11px;
+        font-weight: 800;
     }
 
     .readonly-doc-preview-empty {
@@ -4679,6 +4725,7 @@
                         $pendingComplianceUploadedDocs = collect($pendingComplianceDocs)
                             ->filter(fn ($document) => filled($document['path']))
                             ->all();
+                        $imagePreviewExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
                     @endphp
                     <article class="readonly-record-card" data-search-text="{{ strtolower(trim((string) (optional($readonlyRecord->user)->name . ' ' . optional($readonlyRecord->user)->email . ' ' . $readonlyReference))) }}">
                         <div class="readonly-record-head">
@@ -4720,15 +4767,38 @@
                                 <div class="readonly-field"><span>Previous Nurse Disapproval Notes</span><strong>{{ $readonlyRecord->pending_reason ?: '-' }}</strong></div>
                                 <div class="readonly-field"><span>Student Full Name</span><strong>{{ optional($readonlyRecord->user)->name ?: 'Unnamed Student' }}</strong></div>
                                 <div class="readonly-field"><span>Submission Reference Number</span><strong>{{ $readonlyRecord->reference_number ?: $readonlyRecord->student_number ?: optional($readonlyRecord->user)->student_number ?: '-' }}</strong></div>
-                                <div class="readonly-field">
-                                    <span>Health Declaration</span>
-                                    <strong>
-                                        @if($readonlyRecord->health_declaration)
-                                            <a href="{{ route('walkin.document', ['healthProfile' => $readonlyRecord->id, 'document' => 'health_declaration']) }}" target="_blank" rel="noopener noreferrer">Open uploaded file</a>
-                                        @else
-                                            Missing / Not yet uploaded
-                                        @endif
-                                    </strong>
+                                <div class="readonly-field"><span>Last Updated Nurse Tracking Remarks</span><strong>{{ $readonlyRecord->medical_condition_remarks ?: $readonlyRecord->pending_reason ?: '-' }}</strong></div>
+                                <div class="readonly-field readonly-doc-preview-field">
+                                    <span>Uploaded Documents</span>
+                                    <div class="readonly-doc-preview-shell">
+                                        <div class="readonly-doc-preview-list">
+                                            @forelse($pendingComplianceUploadedDocs as $docLabel => $document)
+                                                @php
+                                                    $documentUrl = route('walkin.document', ['healthProfile' => $readonlyRecord->id, 'document' => $document['key']]);
+                                                    $documentExtension = strtolower(pathinfo((string) $document['path'], PATHINFO_EXTENSION));
+                                                    $isImagePreview = in_array($documentExtension, $imagePreviewExtensions, true);
+                                                @endphp
+                                                <a
+                                                    href="{{ $documentUrl }}"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    class="readonly-doc-preview-btn"
+                                                >
+                                                    <span class="readonly-doc-preview-thumb">
+                                                        @if($isImagePreview)
+                                                            <img src="{{ $documentUrl }}" alt="{{ $docLabel }} preview">
+                                                        @else
+                                                            <x-outline-icon name="document-text" />
+                                                        @endif
+                                                    </span>
+                                                    <span>{{ $docLabel }}</span>
+                                                    <small>Open in new tab</small>
+                                                </a>
+                                            @empty
+                                                <div class="readonly-doc-preview-empty">No uploaded documents are available.</div>
+                                            @endforelse
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="readonly-field readonly-final-review-field">
                                     <span>Move Record</span>
@@ -4747,28 +4817,6 @@
                                                 For Approval
                                             </button>
                                         </form>
-                                    </div>
-                                </div>
-                                <div class="readonly-field"><span>Last Updated Nurse Tracking Remarks</span><strong>{{ $readonlyRecord->medical_condition_remarks ?: $readonlyRecord->pending_reason ?: '-' }}</strong></div>
-                                <div class="readonly-field readonly-doc-preview-field">
-                                    <span>Uploaded Documents</span>
-                                    <div class="readonly-doc-preview-shell">
-                                        <div class="readonly-doc-preview-list">
-                                            @forelse($pendingComplianceUploadedDocs as $docLabel => $document)
-                                                @php($documentUrl = route('walkin.document', ['healthProfile' => $readonlyRecord->id, 'document' => $document['key']]))
-                                                <a
-                                                    href="{{ $documentUrl }}"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    class="readonly-doc-preview-btn"
-                                                >
-                                                    <span>{{ $docLabel }}</span>
-                                                    <small>Open</small>
-                                                </a>
-                                            @empty
-                                                <div class="readonly-doc-preview-empty">No uploaded documents are available.</div>
-                                            @endforelse
-                                        </div>
                                     </div>
                                 </div>
                             </div>
