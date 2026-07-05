@@ -1420,6 +1420,11 @@
 
 @section('content')
 <div class="settings-page">
+    @php
+        $reminderLabels = [0 => 'Disabled', 1 => '1 hour before', 3 => '3 hours before', 24 => '1 day before', 48 => '2 days before'];
+        $closureIsCurrentlyActive = app(\App\Services\ClinicWorkflowService::class)->activeClosure() !== null;
+    @endphp
+
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
