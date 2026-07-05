@@ -331,19 +331,20 @@
         position: absolute;
         top: -38%;
         bottom: -38%;
-        left: -95%;
-        width: 42%;
+        left: -115%;
+        width: 34%;
         opacity: 0;
         background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, 0.34) 42%, rgba(255, 248, 196, 0.72) 50%, rgba(255, 248, 196, 0.34) 58%, rgba(255, 255, 255, 0) 100%);
         transform: translateX(0) skewX(-18deg);
-        transition: transform .32s ease, opacity .08s ease;
+        transition: transform .38s ease, opacity .12s ease .28s;
         pointer-events: none;
         z-index: 0;
     }
 
     .intake-option-card:hover::after {
         opacity: 1;
-        transform: translateX(520%) skewX(-18deg);
+        transform: translateX(650%) skewX(-18deg);
+        transition: transform .38s ease, opacity .06s ease;
     }
 
     .intake-option-card:hover .intake-option-title,
@@ -4322,25 +4323,27 @@
         align-self: stretch;
         width: calc(100% - 32px);
         margin: -1px auto 10px !important;
-        padding: 7px 10px !important;
+        padding: 6px 10px !important;
         border: 1px solid rgba(127, 29, 45, 0.16);
         border-radius: 14px;
-        background: linear-gradient(180deg, #fff1f2 0%, #fff7f7 100%) !important;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 12px 28px rgba(127, 29, 45, 0.12);
+        background: rgba(255, 241, 242, .86) !important;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: 0 10px 22px rgba(127, 29, 45, 0.10);
         transition: width .18s ease, margin .18s ease, border-radius .18s ease, padding .18s ease, box-shadow .18s ease;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow.is-final-review-toolbar-stuck .applicant-file-actions {
-        top: -1px;
+        top: -10px;
         width: calc(100% + 48px);
-        margin: -18px -24px 10px !important;
-        padding: 6px 24px 7px !important;
+        margin: -30px -24px 8px !important;
+        padding: 5px 24px 6px !important;
         border-top: 0;
         border-left: 0;
         border-right: 0;
         border-radius: 0 0 12px 12px;
-        box-shadow: 0 16px 30px rgba(127, 29, 45, 0.16);
+        background: rgba(255, 241, 242, .76) !important;
+        box-shadow: 0 14px 26px rgba(127, 29, 45, 0.14);
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow.is-final-review-toolbar-stuck .applicant-file-actions::before {
@@ -4348,9 +4351,11 @@
         position: absolute;
         left: 0;
         right: 0;
-        top: -22px;
-        height: 22px;
-        background: #fff1f2;
+        top: -34px;
+        height: 34px;
+        background: rgba(255, 241, 242, .72);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
         pointer-events: none;
     }
 

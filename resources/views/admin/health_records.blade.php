@@ -1306,17 +1306,17 @@
         width: 42px;
         height: 42px;
         border-radius: 12px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+        display: grid;
+        place-items: center;
         background: #fff1f2;
         color: #b91c1c;
         line-height: 0;
     }
     .health-records-last-updated-icon svg {
-        width: 22px;
-        height: 22px;
+        width: 20px;
+        height: 20px;
         display: block;
+        margin: 0;
     }
     .health-records-last-updated span {
         display: block;
@@ -1428,6 +1428,24 @@
         width: 100%;
         transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
     }
+    .health-summary-modern-card::before {
+        content: "";
+        position: absolute;
+        top: -40%;
+        bottom: -40%;
+        left: -70%;
+        width: 34%;
+        opacity: 0;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, .25) 42%, rgba(255, 248, 196, .7) 50%, rgba(255, 248, 196, .25) 58%, rgba(255, 255, 255, 0) 100%);
+        transform: translateX(0) skewX(-18deg);
+        transition: transform .42s ease, opacity .08s ease;
+        pointer-events: none;
+        z-index: 1;
+    }
+    .health-summary-modern-card.is-clickable:hover::before {
+        opacity: 1;
+        transform: translateX(510%) skewX(-18deg);
+    }
     .health-summary-modern-card::after {
         content: "";
         position: absolute;
@@ -1487,6 +1505,10 @@
     .health-summary-modern-card.is-clickable {
         cursor: pointer;
     }
+    .health-summary-modern-card > * {
+        position: relative;
+        z-index: 2;
+    }
     .health-summary-modern-card.is-clickable:hover {
         transform: translateY(-3px);
         box-shadow: 0 18px 34px rgba(112, 19, 27, .14);
@@ -1494,7 +1516,26 @@
     }
     .health-summary-modern-card.is-pending.is-clickable:hover,
     .health-summary-modern-card.is-compliance.is-clickable:hover {
-        background: linear-gradient(135deg, #7f0010, #a11b2f);
+        background: #facc15;
+        color: #70131B;
+        border-color: #facc15;
+    }
+    .health-summary-modern-card.is-pending.is-clickable:hover .health-summary-modern-copy,
+    .health-summary-modern-card.is-pending.is-clickable:hover .health-summary-modern-label,
+    .health-summary-modern-card.is-pending.is-clickable:hover .health-summary-modern-count,
+    .health-summary-modern-card.is-pending.is-clickable:hover .health-summary-modern-note,
+    .health-summary-modern-card.is-pending.is-clickable:hover .health-summary-modern-arrow,
+    .health-summary-modern-card.is-compliance.is-clickable:hover .health-summary-modern-copy,
+    .health-summary-modern-card.is-compliance.is-clickable:hover .health-summary-modern-label,
+    .health-summary-modern-card.is-compliance.is-clickable:hover .health-summary-modern-count,
+    .health-summary-modern-card.is-compliance.is-clickable:hover .health-summary-modern-note,
+    .health-summary-modern-card.is-compliance.is-clickable:hover .health-summary-modern-arrow {
+        color: #70131B;
+    }
+    .health-summary-modern-card.is-pending.is-clickable:hover .health-summary-modern-icon-wrap,
+    .health-summary-modern-card.is-compliance.is-clickable:hover .health-summary-modern-icon-wrap {
+        background: rgba(112, 19, 27, .14);
+        color: #70131B;
     }
     .health-summary-modern-icon {
         width: 58px;
@@ -1879,34 +1920,35 @@
     }
 
     .health-filter-form {
-        display: flex;
-        align-items: flex-end;
-        justify-content: flex-start;
-        gap: 12px;
-        flex-wrap: wrap;
-        margin-top: 16px;
+        display: grid;
+        grid-template-columns: minmax(180px, 1fr) minmax(150px, .72fr) minmax(180px, .72fr);
+        align-items: end;
+        gap: 22px;
+        margin-top: 18px;
     }
 
     .health-filter-field {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 9px;
+        min-width: 0;
     }
 
     .health-filter-actions {
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-left: auto;
+        justify-content: flex-end;
+        grid-column: 1 / -1;
         flex-wrap: nowrap;
     }
 
     .health-filter-field label {
         font-size: 11px;
-        font-weight: 800;
+        font-weight: 900;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #64748b;
+        color: #111827;
     }
 
     .health-records-search,
@@ -1914,13 +1956,13 @@
         min-height: 48px;
         height: 48px;
         padding: 12px 18px;
-        border-radius: 0 0 14px 14px;
+        border-radius: 0 0 10px 10px;
         border: 0 !important;
-        border-bottom: 3px solid #8f2230 !important;
+        border-bottom: 3px solid #d8dee8 !important;
         min-width: 180px;
         color: #111827;
-        background: transparent !important;
-        box-shadow: none !important;
+        background: #ffffff !important;
+        box-shadow: 0 10px 18px rgba(15, 23, 42, .04) !important;
         transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
         appearance: none;
         -webkit-appearance: none;
@@ -1941,8 +1983,8 @@
     .health-records-search:focus,
     .health-filter-select:focus {
         outline: none;
-        border-bottom-color: #70131B;
-        box-shadow: none !important;
+        border-bottom-color: #70131B !important;
+        box-shadow: 0 10px 22px rgba(112, 19, 27, .10) !important;
         transform: translateY(-1px);
     }
     .health-records-search-toggle {
@@ -1993,11 +2035,11 @@
         position: relative;
         overflow: hidden;
         min-height: 44px;
-        padding: 0 18px;
+        padding: 0 22px;
         border-radius: 999px;
         border: 1px solid #8f2230;
         background: linear-gradient(135deg, #70131B, #8f2230);
-        color: #ffffff;
+        color: #ffffff !important;
         font-size: 13px;
         font-weight: 800;
         text-decoration: none;
@@ -2005,7 +2047,7 @@
         box-shadow:
             0 0 0 3px rgba(112, 19, 27, 0.12),
             0 10px 22px rgba(112, 19, 27, 0.20);
-        transition: color .08s linear, transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        transition: color .08s linear, transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
         z-index: 0;
     }
 
@@ -2021,13 +2063,15 @@
                 rgba(255, 239, 181, 0.14) 72%,
                 rgba(255, 248, 196, 0) 100%);
         transform: translateX(-135%);
-        transition: transform 1.5s ease;
+        transition: transform .42s ease;
         z-index: -1;
     }
 
     .health-filter-btn:hover {
         transform: translateY(-1px);
+        background: #facc15;
         border-color: #facc15;
+        color: #70131B !important;
         box-shadow:
             0 0 0 3px rgba(250, 204, 21, 0.18),
             0 14px 24px rgba(112, 19, 27, 0.16);
@@ -2063,11 +2107,11 @@
 
     .health-filter-modal-card {
         width: min(760px, 100%);
-        border-radius: 22px;
+        border-radius: 18px;
         background: #ffffff;
         border: 1px solid rgba(127, 29, 45, 0.12);
         box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
-        padding: 22px;
+        padding: 24px 22px 22px;
     }
 
     .health-filter-modal-head {
@@ -2082,12 +2126,12 @@
         margin: 0;
         font-size: 20px;
         font-weight: 900;
-        color: #70131B;
+        color: #111827;
     }
 
     .health-filter-modal-copy {
         margin: 6px 0 0;
-        color: #64748b;
+        color: #374151;
         font-size: 13px;
         line-height: 1.6;
     }
@@ -2101,7 +2145,7 @@
         border: 1px solid rgba(127, 29, 45, 0.12);
         border-radius: 999px;
         background: #ffffff;
-        color: #111827;
+        color: #70131B;
         cursor: pointer;
     }
 
@@ -5378,9 +5422,6 @@
         });
     }
 
-    const initialHealthRecordsSearchValue = @json($search ?? '');
-    let healthRecordsSearchTimer = null;
-
     if (healthRecordsSearchInput) {
         healthRecordsSearchInput.addEventListener('input', function () {
             const searchTerm = this.value.trim().toLowerCase();
@@ -5389,14 +5430,6 @@
                 const rowText = row.innerText.toLowerCase();
                 row.style.display = rowText.includes(searchTerm) ? '' : 'none';
             });
-
-            window.clearTimeout(healthRecordsSearchTimer);
-            healthRecordsSearchTimer = window.setTimeout(function () {
-                const submittedValue = (healthRecordsSearchInput.value || '').trim();
-                if (submittedValue !== String(initialHealthRecordsSearchValue || '').trim()) {
-                    healthRecordsSearchInput.form?.submit();
-                }
-            }, 700);
         });
     }
 

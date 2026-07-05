@@ -90,13 +90,14 @@
     .um-entry-card::after {
         content: "";
         position: absolute;
-        top: -25%;
-        bottom: -25%;
-        left: -46%;
+        top: -38%;
+        bottom: -38%;
+        left: -115%;
         width: 34%;
-        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, 0.52) 48%, rgba(255, 255, 255, 0) 100%);
+        opacity: 0;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, 0.34) 42%, rgba(255, 248, 196, 0.72) 50%, rgba(255, 248, 196, 0.34) 58%, rgba(255, 255, 255, 0) 100%);
         transform: translateX(0) skewX(-18deg);
-        transition: transform .85s ease;
+        transition: transform .38s ease, opacity .12s ease .28s;
         pointer-events: none;
         z-index: 0;
     }
@@ -112,7 +113,9 @@
     }
 
     .um-entry-card:hover::after {
-        transform: translateX(430%) skewX(-18deg);
+        opacity: 1;
+        transform: translateX(650%) skewX(-18deg);
+        transition: transform .38s ease, opacity .06s ease;
     }
 
     .um-entry-icon {
