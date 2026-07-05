@@ -9,18 +9,18 @@
         margin: 28px auto;
         display: flex;
         flex-direction: column;
-        gap: 22px;
+        gap: 18px;
     }
 
     .digital-logbook-head {
-        border-radius: 22px;
-        border: 1px solid rgba(250, 204, 21, 0.34);
-        border-bottom: 3px solid #facc15;
+        border-radius: 20px;
+        border: 1px solid rgba(127, 29, 45, 0.16);
+        border-bottom: 3px solid #8B0000;
         background:
-            radial-gradient(circle at 95% 0%, rgba(250, 204, 21, .16), transparent 30%),
-            linear-gradient(135deg, #111827 0%, #70131B 58%, #8f1727 100%);
+            radial-gradient(circle at 96% 4%, rgba(250, 204, 21, .18), transparent 30%),
+            linear-gradient(180deg, #ffffff 0%, #fffaf2 100%);
         padding: 24px;
-        box-shadow: 0 18px 42px rgba(112, 19, 27, 0.18);
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
         display: flex;
         justify-content: space-between;
         gap: 18px;
@@ -29,7 +29,7 @@
 
     .digital-logbook-kicker {
         margin: 0 0 8px;
-        color: #facc15;
+        color: #8B0000;
         font-size: 12px;
         font-weight: 900;
         letter-spacing: 0.08em;
@@ -38,14 +38,14 @@
 
     .digital-logbook-title {
         margin: 0;
-        color: #ffffff;
+        color: #0f172a;
         font-size: clamp(1.85rem, 4vw, 2.6rem);
         font-weight: 900;
     }
 
     .digital-logbook-copy {
         margin: 8px 0 0;
-        color: rgba(255, 255, 255, 0.84);
+        color: #334155;
         font-size: 14px;
         line-height: 1.6;
         max-width: 680px;
@@ -53,10 +53,10 @@
 
     .digital-logbook-back {
         min-height: 44px;
-        border-radius: 999px;
-        border: 1px solid rgba(250, 204, 21, 0.55);
-        background: rgba(255, 255, 255, 0.08);
-        color: #facc15;
+        border-radius: 12px;
+        border: 1px solid rgba(139, 0, 0, 0.26);
+        background: #ffffff;
+        color: #8B0000;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -79,15 +79,15 @@
         overflow: hidden;
         min-height: 220px;
         border-radius: 18px;
-        border: 1px solid rgba(250, 204, 21, 0.55);
-        border-top: 5px solid #facc15;
+        border: 1px solid rgba(127, 29, 45, 0.18);
+        border-top: 5px solid #8B0000;
         background:
-            linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 44%),
-            linear-gradient(135deg, #70131B, #8a1524);
+            radial-gradient(circle at 92% 86%, rgba(250, 204, 21, .18), transparent 26%),
+            linear-gradient(180deg, #ffffff 0%, #fffafa 100%);
         padding: 24px;
         text-decoration: none;
-        color: #ffffff;
-        box-shadow: 0 18px 36px rgba(112, 19, 27, 0.16);
+        color: #0f172a;
+        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -98,19 +98,19 @@
     .digital-logbook-card::after {
         content: "";
         position: absolute;
-        top: -38%;
-        left: -72%;
+        top: -45%;
+        left: -82%;
         width: 42%;
         height: 176%;
-        background: linear-gradient(120deg, transparent 0%, rgba(255, 244, 180, .18) 34%, rgba(255, 244, 180, .58) 50%, rgba(255, 244, 180, .18) 66%, transparent 100%);
+        background: linear-gradient(120deg, transparent 0%, rgba(255, 244, 180, .16) 34%, rgba(255, 244, 180, .44) 50%, rgba(255, 244, 180, .16) 66%, transparent 100%);
         transform: skewX(-18deg);
-        transition: left .48s ease;
+        transition: left .28s ease;
         pointer-events: none;
     }
 
     .digital-logbook-card:hover {
         transform: translateY(-2px);
-        border-color: rgba(250, 204, 21, 0.95);
+        border-color: rgba(139, 0, 0, 0.30);
         box-shadow: 0 24px 44px rgba(127, 29, 45, 0.16);
     }
 
@@ -119,7 +119,7 @@
     }
 
     .digital-logbook-card-label {
-        color: #facc15;
+        color: #8B0000;
         font-size: 12px;
         font-weight: 900;
         text-transform: uppercase;
@@ -130,12 +130,12 @@
     .digital-logbook-card-title {
         font-size: 1.45rem;
         font-weight: 900;
-        color: #ffffff;
+        color: #0f172a;
         margin-bottom: 8px;
     }
 
     .digital-logbook-card-copy {
-        color: rgba(255, 255, 255, 0.84);
+        color: #334155;
         font-size: 14px;
         line-height: 1.65;
         max-width: 480px;
@@ -153,9 +153,9 @@
         align-items: center;
         justify-content: center;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.10);
-        border: 1px solid rgba(250, 204, 21, 0.55);
-        color: #facc15;
+        background: #fff7ed;
+        border: 1px solid rgba(139, 0, 0, 0.20);
+        color: #8B0000;
         padding: 8px 12px;
         font-size: 12px;
         font-weight: 900;
@@ -167,8 +167,8 @@
         width: 46px;
         height: 46px;
         border-radius: 14px;
-        background: #facc15;
-        color: #70131B;
+        background: #8B0000;
+        color: #ffffff;
         display: inline-flex;
         align-items: center;
         justify-content: center;

@@ -48,30 +48,35 @@
         align-items: center;
         gap: 16px;
         margin-bottom: 20px;
-        padding: 16px 18px;
-        border-radius: 0 0 20px 20px;
-        border: 0;
-        border-bottom: 2px solid rgba(234, 215, 160, 0.9);
-        background: linear-gradient(135deg, rgba(255, 253, 246, 0.76) 0%, rgba(255, 249, 231, 0.58) 42%, rgba(255, 255, 255, 0.82) 100%);
-        box-shadow: 0 14px 26px rgba(112, 19, 27, 0.05);
+        padding: 18px 20px;
+        border-radius: 20px;
+        border: 1px solid rgba(112, 19, 27, 0.12);
+        background: #ffffff;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
     }
     .inventory-page-title {
         margin: 0;
         color: #000000;
         display: inline-flex;
         align-items: center;
-        padding: 10px 18px;
-        border-radius: 0 0 14px 14px;
+        padding: 0;
+        border-radius: 0;
         border: 0;
-        border-bottom: 2px solid rgba(112, 19, 27, 0.72);
         background: transparent;
         box-shadow: none;
+        font-size: clamp(24px, 2.3vw, 30px);
+        font-weight: 900;
+        letter-spacing: -0.03em;
     }
     .inventory-page-title svg {
-        width: 18px;
-        height: 18px;
+        width: 42px;
+        height: 42px;
+        padding: 11px;
         margin-right: 10px;
         flex: 0 0 auto;
+        border-radius: 12px;
+        background: #fff1f2;
+        color: #b91c1c;
     }
     .inventory-toolbar-actions {
         display: flex;
@@ -5281,9 +5286,15 @@
 
         inventorySearchInput.addEventListener('input', applyInventoryFilters);
 
+        const inventoryFilterBar    = document.getElementById('inventoryFilterBar');
+        const inventoryFilterAllBtn = document.getElementById('inventoryFilterAllBtn');
+
         function updateMedicineTypeFilterBarVisibility() {
             if (!inventoryMedicineTypeBar) return;
-            inventoryMedicineTypeBar.classList.toggle('is-visible', activeInventoryFilter === 'medicine');
+            const shouldShow = activeInventoryFilter === 'medicine'
+                && activeMedicineTypeFilter === 'all'
+                && inventoryFilterBar?.classList.contains('is-expanded');
+            inventoryMedicineTypeBar.classList.toggle('is-visible', shouldShow);
         }
 
         function setMedicineTypeFilter(filter) {
@@ -5291,6 +5302,13 @@
             inventoryMedicineTypeItems.forEach(function(item) {
                 item.classList.toggle('is-active', item.dataset.medicineFilter === activeMedicineTypeFilter);
             });
+            const medicineLabel = document.getElementById('inventoryFilterAllLabel');
+            if (medicineLabel && activeInventoryFilter === 'medicine') {
+                const activeMedicine = inventoryMedicineTypeItems.find(function(item) {
+                    return item.dataset.medicineFilter === activeMedicineTypeFilter;
+                });
+                medicineLabel.textContent = activeMedicine ? activeMedicine.textContent.trim() : 'Medicines';
+            }
             updateMedicineTypeFilterBarVisibility();
             applyInventoryFilters();
         }
@@ -5325,11 +5343,10 @@
         inventoryMedicineTypeItems.forEach(function(item) {
             item.addEventListener('click', function() {
                 setMedicineTypeFilter(item.dataset.medicineFilter || 'all');
+                collapseFilterBar();
+                updateMedicineTypeFilterBarVisibility();
             });
         });
-
-        const inventoryFilterBar    = document.getElementById('inventoryFilterBar');
-        const inventoryFilterAllBtn = document.getElementById('inventoryFilterAllBtn');
 
         function collapseFilterBar() {
             if (inventoryFilterBar) inventoryFilterBar.classList.remove('is-expanded');

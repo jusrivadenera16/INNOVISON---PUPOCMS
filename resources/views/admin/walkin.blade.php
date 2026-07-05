@@ -329,19 +329,21 @@
     .intake-option-card::after {
         content: "";
         position: absolute;
-        top: -25%;
-        bottom: -25%;
-        left: -46%;
-        width: 34%;
-        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, 0.52) 48%, rgba(255, 255, 255, 0) 100%);
+        top: -38%;
+        bottom: -38%;
+        left: -95%;
+        width: 42%;
+        opacity: 0;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, 0.34) 42%, rgba(255, 248, 196, 0.72) 50%, rgba(255, 248, 196, 0.34) 58%, rgba(255, 255, 255, 0) 100%);
         transform: translateX(0) skewX(-18deg);
-        transition: transform .85s ease;
+        transition: transform .32s ease, opacity .08s ease;
         pointer-events: none;
         z-index: 0;
     }
 
     .intake-option-card:hover::after {
-        transform: translateX(430%) skewX(-18deg);
+        opacity: 1;
+        transform: translateX(520%) skewX(-18deg);
     }
 
     .intake-option-card:hover .intake-option-title,
@@ -3366,6 +3368,80 @@
         transform: translateY(-1px);
         border-color: rgba(112, 19, 27, .32);
         box-shadow: 0 10px 20px rgba(112, 19, 27, .10);
+    }
+    .premium-select-native {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+    .premium-select-shell {
+        position: relative;
+        display: inline-flex;
+        min-width: 126px;
+        z-index: 30;
+    }
+    .premium-select-button {
+        width: 100%;
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 0 12px;
+        border-radius: 9px;
+        border: 1px solid rgba(112, 19, 27, .24);
+        background: #ffffff;
+        color: #111827;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 10px 20px rgba(15, 23, 42, .06);
+    }
+    .premium-select-button::after {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-right: 2px solid #70131B;
+        border-bottom: 2px solid #70131B;
+        transform: rotate(45deg) translateY(-2px);
+    }
+    .premium-select-shell.is-open .premium-select-button::after {
+        transform: rotate(225deg) translateY(-2px);
+    }
+    .premium-select-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        display: none;
+        flex-direction: column;
+        gap: 6px;
+        padding: 8px;
+        border-radius: 14px;
+        border: 1px solid rgba(112, 19, 27, .16);
+        background: #ffffff;
+        box-shadow: 0 18px 36px rgba(15, 23, 42, .16);
+    }
+    .premium-select-shell.is-open .premium-select-menu { display: flex; }
+    .premium-select-option {
+        min-height: 34px;
+        border: 1px solid rgba(226, 232, 240, .9);
+        border-radius: 999px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 12px;
+        font-weight: 900;
+        text-align: left;
+        padding: 0 12px;
+        cursor: pointer;
+    }
+    .premium-select-option:hover,
+    .premium-select-option.is-selected {
+        background: #7f0010;
+        color: #facc15;
+        border-color: #7f0010;
     }
 
     .applicant-final-review-pagination-controls {
@@ -12025,6 +12101,58 @@
             });
         }
 
+    })();
+
+    (function initApplicantPremiumSelects() {
+        function enhance(select) {
+            if (!select || select.dataset.premiumEnhanced === 'true') return;
+            select.dataset.premiumEnhanced = 'true';
+            select.classList.add('premium-select-native');
+            const shell = document.createElement('div');
+            shell.className = 'premium-select-shell';
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'premium-select-button';
+            const menu = document.createElement('div');
+            menu.className = 'premium-select-menu';
+            function rebuild() {
+                const selected = select.options[select.selectedIndex];
+                button.textContent = selected ? selected.textContent.trim() : 'Select';
+                menu.innerHTML = '';
+                Array.from(select.options).forEach(function(option) {
+                    const item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'premium-select-option';
+                    item.textContent = option.textContent.trim();
+                    item.classList.toggle('is-selected', option.selected);
+                    item.addEventListener('click', function() {
+                        select.value = option.value;
+                        shell.classList.remove('is-open');
+                        rebuild();
+                        select.dispatchEvent(new Event('change', { bubbles: true }));
+                    });
+                    menu.appendChild(item);
+                });
+            }
+            select.parentNode.insertBefore(shell, select.nextSibling);
+            shell.appendChild(select);
+            shell.appendChild(button);
+            shell.appendChild(menu);
+            button.addEventListener('click', function(event) {
+                event.stopPropagation();
+                document.querySelectorAll('.premium-select-shell.is-open').forEach(function(openShell) {
+                    if (openShell !== shell) openShell.classList.remove('is-open');
+                });
+                shell.classList.toggle('is-open');
+            });
+            rebuild();
+        }
+        document.querySelectorAll('.applicant-final-review-per-page').forEach(enhance);
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.premium-select-shell.is-open').forEach(function(shell) {
+                shell.classList.remove('is-open');
+            });
+        });
     })();
 
 </script>

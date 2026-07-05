@@ -522,6 +522,15 @@
         box-shadow: 0 10px 20px rgba(112, 19, 27, .10);
         transform: translateY(-2px);
     }
+    .premium-select-native { position: absolute !important; width: 1px !important; height: 1px !important; opacity: 0 !important; pointer-events: none !important; }
+    .premium-select-shell { position: relative; display: inline-flex; min-width: 132px; z-index: 30; }
+    .premium-select-button { width: 100%; min-height: 38px; display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; border-radius: 9px; border: 1px solid rgba(112, 19, 27, .24); background: #fff; color: #111827; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 10px 20px rgba(15, 23, 42, .06); }
+    .premium-select-button::after { content: ""; width: 8px; height: 8px; border-right: 2px solid #70131B; border-bottom: 2px solid #70131B; transform: rotate(45deg) translateY(-2px); }
+    .premium-select-shell.is-open .premium-select-button::after { transform: rotate(225deg) translateY(-2px); }
+    .premium-select-menu { position: absolute; top: calc(100% + 8px); left: 0; right: 0; display: none; flex-direction: column; gap: 6px; padding: 8px; border-radius: 14px; border: 1px solid rgba(112, 19, 27, .16); background: #fff; box-shadow: 0 18px 36px rgba(15, 23, 42, .16); }
+    .premium-select-shell.is-open .premium-select-menu { display: flex; }
+    .premium-select-option { min-height: 34px; border: 1px solid rgba(226, 232, 240, .9); border-radius: 999px; background: #fff; color: #111827; font-size: 12px; font-weight: 900; text-align: left; padding: 0 12px; cursor: pointer; }
+    .premium-select-option:hover, .premium-select-option.is-selected { background: #7f0010; color: #facc15; border-color: #7f0010; }
     @media (max-width: 720px) {
         .logbook-pagination {
             align-items: stretch;
@@ -562,14 +571,14 @@
             <p class="logbook-copy">List of applicants, students, and staff who submitted health forms, including approval status and condition details.</p>
         </div>
         <div style="display: flex; gap: 10px;">
-            <button class="filter-btn-open" onclick="openFilterModal()">🔍 Filter</button>
+            <button type="button" class="filter-btn-open" onclick="openFilterModal()">🔍 Filter</button>
             <a href="{{ $reportsUrl }}" class="logbook-back">&larr; Back</a>
         </div>
     </div>
 
     <div class="logbook-toolbar">
         <div class="logbook-search-wrap">
-            <input type="text" id="searchInput" class="logbook-search-input" placeholder="Search by applicant or student name..." value="{{ $search }}">
+            <input type="search" id="searchInput" class="logbook-search-input" placeholder="Search by applicant or student name..." value="{{ $search }}" autocomplete="off" enterkeyhint="search">
         </div>
         <div class="logbook-toolbar-actions">
             <div class="logbook-total-card">Total:<span>{{ number_format($logbookRecords->total()) }}</span></div>
@@ -866,9 +875,13 @@ function filterVisibleLogbookRows() {
     }
 }
 
-logbookSearchInput?.addEventListener('input', filterVisibleLogbookRows);
+logbookSearchInput?.addEventListener('input', function(event) {
+    event.stopPropagation();
+    filterVisibleLogbookRows();
+});
 
 logbookSearchInput?.addEventListener('keydown', function (event) {
+    event.stopPropagation();
     if (event.key === 'Enter') {
         event.preventDefault();
         filterVisibleLogbookRows();
@@ -895,6 +908,59 @@ document.addEventListener('keydown', function(e) {
         closeFilterModal();
     }
 });
+
+(function initPremiumSelects() {
+    function enhance(select) {
+        if (!select || select.dataset.premiumEnhanced === 'true') return;
+        select.dataset.premiumEnhanced = 'true';
+        select.classList.add('premium-select-native');
+        const shell = document.createElement('div');
+        shell.className = 'premium-select-shell';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'premium-select-button';
+        const menu = document.createElement('div');
+        menu.className = 'premium-select-menu';
+        function rebuild() {
+            const selected = select.options[select.selectedIndex];
+            button.textContent = selected ? selected.textContent.trim() : 'Select';
+            menu.innerHTML = '';
+            Array.from(select.options).forEach(function(option) {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'premium-select-option';
+                item.textContent = option.textContent.trim();
+                item.classList.toggle('is-selected', option.selected);
+                item.addEventListener('click', function() {
+                    select.value = option.value;
+                    shell.classList.remove('is-open');
+                    rebuild();
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+                menu.appendChild(item);
+            });
+        }
+        select.parentNode.insertBefore(shell, select.nextSibling);
+        shell.appendChild(select);
+        shell.appendChild(button);
+        shell.appendChild(menu);
+        button.addEventListener('click', function(event) {
+            event.stopPropagation();
+            document.querySelectorAll('.premium-select-shell.is-open').forEach(function(openShell) {
+                if (openShell !== shell) openShell.classList.remove('is-open');
+            });
+            shell.classList.toggle('is-open');
+        });
+        rebuild();
+    }
+    document.querySelectorAll('.logbook-per-page-select').forEach(enhance);
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.premium-select-shell.is-open').forEach(function(shell) {
+            shell.classList.remove('is-open');
+        });
+    });
+})();
 </script>
 
 @endsection
+

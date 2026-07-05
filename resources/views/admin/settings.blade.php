@@ -35,14 +35,13 @@
     }
 
     .hero {
-        background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,247,249,0.96));
+        background: #ffffff;
         color: var(--stg-text);
-        border: 0;
-        border-bottom: 2px solid rgba(234, 215, 160, 0.9);
-        border-radius: 0 0 20px 20px;
-        padding: 28px;
+        border: 1px solid rgba(127, 0, 0, 0.12);
+        border-radius: 20px;
+        padding: 20px;
         margin-bottom: 22px;
-        box-shadow: 0 16px 32px rgba(15,23,42,0.08);
+        box-shadow: 0 14px 34px rgba(15,23,42,0.08);
     }
     .hero-top {
         display: flex;
@@ -53,21 +52,25 @@
     }
     .hero h1 {
         margin: 0;
-        font-size: clamp(28px, 3vw, 36px);
+        font-size: clamp(24px, 2.3vw, 30px);
         line-height: 1.05;
         font-weight: 900;
         letter-spacing: -0.03em;
         display: inline-flex;
         align-items: center;
-        gap: 12px;
-        padding: 10px 18px;
-        border-radius: 0 0 14px 14px;
-        border-bottom: 2px solid rgba(127, 0, 0, 0.72);
+        gap: 10px;
+        padding: 0;
+        border-radius: 0;
+        border-bottom: 0;
         background: transparent;
     }
     .hero h1 svg {
-        width: 28px;
-        height: 28px;
+        width: 42px;
+        height: 42px;
+        padding: 11px;
+        border-radius: 12px;
+        background: #fff1f2;
+        color: #b91c1c;
         flex: 0 0 auto;
     }
     .hero p {

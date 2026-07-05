@@ -203,6 +203,104 @@
         transform: translateY(-1px);
     }
 
+    .premium-select-native {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    .premium-select-shell {
+        position: relative;
+        width: 100%;
+        min-width: 132px;
+        z-index: 20;
+    }
+
+    .premium-select-button {
+        position: relative;
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid rgba(112, 19, 27, 0.22);
+        border-radius: 14px;
+        background: #fff;
+        color: #111827;
+        padding: 0 42px 0 14px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        font-size: 13px;
+        font-weight: 800;
+        text-align: left;
+        cursor: pointer;
+        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.06);
+        transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .premium-select-button::after {
+        content: "";
+        position: absolute;
+        right: 15px;
+        width: 10px;
+        height: 10px;
+        border-right: 2px solid #8B0000;
+        border-bottom: 2px solid #8B0000;
+        transform: rotate(45deg);
+        transition: transform .18s ease;
+    }
+
+    .premium-select-shell.is-open .premium-select-button {
+        border-color: #8B0000;
+        box-shadow: 0 0 0 4px rgba(139, 0, 0, .08);
+    }
+
+    .premium-select-shell.is-open .premium-select-button::after {
+        transform: rotate(225deg);
+    }
+
+    .premium-select-menu {
+        position: absolute;
+        z-index: 50;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        max-height: 230px;
+        overflow-y: auto;
+        padding: 8px;
+        border: 1px solid rgba(112, 19, 27, .16);
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 22px 46px rgba(15, 23, 42, .18);
+        display: none;
+    }
+
+    .premium-select-shell.is-open .premium-select-menu {
+        display: grid;
+        gap: 7px;
+    }
+
+    .premium-select-option {
+        border: 1px solid rgba(148, 163, 184, .20);
+        border-radius: 999px;
+        background: #f8fafc;
+        color: #111827;
+        padding: 10px 14px;
+        font-size: 12px;
+        font-weight: 900;
+        text-align: left;
+        cursor: pointer;
+        transition: background .18s ease, color .18s ease, transform .18s ease, border-color .18s ease;
+    }
+
+    .premium-select-option:hover,
+    .premium-select-option.is-selected {
+        background: #8B0000;
+        color: #ffd700;
+        border-color: #8B0000;
+        transform: translateY(-1px);
+    }
+
     .audit-filter-actions {
         display: flex;
         justify-content: flex-end;
@@ -582,6 +680,26 @@
         opacity: 0.78;
     }
 
+    html[data-theme="dark"] .premium-select-button,
+    html[data-theme="dark"] .premium-select-menu {
+        background: rgba(17,24,39,0.96);
+        border-color: rgba(148,163,184,0.24);
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .premium-select-option {
+        background: rgba(15,23,42,0.92);
+        border-color: rgba(148,163,184,0.2);
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .premium-select-option:hover,
+    html[data-theme="dark"] .premium-select-option.is-selected {
+        background: #8B0000;
+        color: #ffd700;
+        border-color: #ffd700;
+    }
+
     html[data-theme="dark"] .audit-mini-count {
         color: #fde68a !important;
     }
@@ -926,4 +1044,65 @@
         @endif
     </section>
 </div>
+<script>
+(function initAuditPremiumSelects() {
+    const shells = [];
+
+    function enhance(select) {
+        if (!select || select.dataset.premiumSelectReady === '1') return;
+
+        select.dataset.premiumSelectReady = '1';
+        select.classList.add('premium-select-native');
+
+        const shell = document.createElement('div');
+        shell.className = 'premium-select-shell';
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'premium-select-button';
+        button.textContent = select.options[select.selectedIndex]?.textContent?.trim() || 'Select option';
+
+        const menu = document.createElement('div');
+        menu.className = 'premium-select-menu';
+
+        Array.from(select.options).forEach((option) => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'premium-select-option';
+            item.textContent = option.textContent.trim();
+            item.dataset.value = option.value;
+            item.classList.toggle('is-selected', option.selected);
+
+            item.addEventListener('click', () => {
+                select.value = option.value;
+                button.textContent = option.textContent.trim();
+                menu.querySelectorAll('.premium-select-option').forEach((node) => {
+                    node.classList.toggle('is-selected', node === item);
+                });
+                shell.classList.remove('is-open');
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+
+            menu.appendChild(item);
+        });
+
+        select.parentNode.insertBefore(shell, select);
+        shell.appendChild(button);
+        shell.appendChild(menu);
+        shell.appendChild(select);
+        shells.push(shell);
+
+        button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            shells.forEach((otherShell) => {
+                if (otherShell !== shell) otherShell.classList.remove('is-open');
+            });
+            shell.classList.toggle('is-open');
+        });
+    }
+
+    document.querySelectorAll('.audit-select').forEach(enhance);
+    document.addEventListener('click', () => shells.forEach((shell) => shell.classList.remove('is-open')));
+})();
+</script>
 @endsection
