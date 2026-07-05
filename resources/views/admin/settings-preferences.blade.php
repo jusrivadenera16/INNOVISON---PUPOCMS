@@ -94,7 +94,11 @@
                     </div>
                     <div class="settings-field full">
                         <label for="clinic_closure_reason">Closure Reason</label>
-                        <input id="clinic_closure_reason" name="clinic_closure_reason" maxlength="100" value="{{ old('clinic_closure_reason', $settings->clinic_closure_reason) }}">
+                        <select id="clinic_closure_reason" name="clinic_closure_reason">
+                            @foreach(['Staff Meeting', 'Official Clinic Activity', 'Emergency', 'Early Closure', 'Other'] as $reason)
+                                <option value="{{ $reason }}" {{ old('clinic_closure_reason', $settings->clinic_closure_reason) === $reason ? 'selected' : '' }}>{{ $reason }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="settings-field full">
                         <label for="clinic_closure_message">Closure Message</label>
