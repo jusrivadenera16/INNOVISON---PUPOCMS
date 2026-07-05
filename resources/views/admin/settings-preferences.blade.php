@@ -41,7 +41,7 @@
             </div>
         </div>
         <div class="settings-panel-body">
-            <form action="{{ route('admin.settings.update') }}" method="POST">
+            <form action="{{ route('admin.settings.update') }}" method="POST" class="settings-editable-form">
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="preferences_form" value="1">
@@ -49,29 +49,29 @@
                 <div class="settings-form-grid">
                     <div class="settings-field">
                         <label for="admin_live_notifications">Admin Notifications</label>
-                        <select id="admin_live_notifications" name="admin_live_notifications">
+                        <select id="admin_live_notifications" name="admin_live_notifications" disabled data-edit-field>
                             <option value="1" {{ old('admin_live_notifications', $settings->admin_live_notifications !== false ? '1' : '0') == '1' ? 'selected' : '' }}>Enabled</option>
                             <option value="0" {{ old('admin_live_notifications', $settings->admin_live_notifications !== false ? '1' : '0') == '0' ? 'selected' : '' }}>Disabled</option>
                         </select>
                     </div>
                     <div class="settings-field">
                         <label for="auto_approve">Auto Approve Appointments</label>
-                        <select id="auto_approve" name="auto_approve">
+                        <select id="auto_approve" name="auto_approve" disabled data-edit-field>
                             <option value="0" {{ old('auto_approve', $settings->auto_approve ? '1' : '0') == '0' ? 'selected' : '' }}>Disabled</option>
                             <option value="1" {{ old('auto_approve', $settings->auto_approve ? '1' : '0') == '1' ? 'selected' : '' }}>Enabled</option>
                         </select>
                     </div>
                     <div class="settings-field">
                         <label for="student_assistant_open_time">Assistant Open Time</label>
-                        <input id="student_assistant_open_time" name="student_assistant_open_time" type="time" value="{{ old('student_assistant_open_time', substr((string) ($settings->student_assistant_open_time ?: '08:00'), 0, 5)) }}" required>
+                        <input id="student_assistant_open_time" name="student_assistant_open_time" type="time" value="{{ old('student_assistant_open_time', substr((string) ($settings->student_assistant_open_time ?: '08:00'), 0, 5)) }}" required disabled data-edit-field>
                     </div>
                     <div class="settings-field">
                         <label for="student_assistant_close_time">Assistant Close Time</label>
-                        <input id="student_assistant_close_time" name="student_assistant_close_time" type="time" value="{{ old('student_assistant_close_time', substr((string) ($settings->student_assistant_close_time ?: '20:00'), 0, 5)) }}" required>
+                        <input id="student_assistant_close_time" name="student_assistant_close_time" type="time" value="{{ old('student_assistant_close_time', substr((string) ($settings->student_assistant_close_time ?: '20:00'), 0, 5)) }}" required disabled data-edit-field>
                     </div>
                     <div class="settings-field">
                         <label for="appointment_reminder_hours">Appointment Reminder</label>
-                        <select id="appointment_reminder_hours" name="appointment_reminder_hours" required>
+                        <select id="appointment_reminder_hours" name="appointment_reminder_hours" required disabled data-edit-field>
                             @foreach($reminderOptions as $hours => $label)
                                 <option value="{{ $hours }}" {{ (int) old('appointment_reminder_hours', $settings->appointment_reminder_hours ?? 24) === $hours ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
@@ -79,22 +79,22 @@
                     </div>
                     <div class="settings-field">
                         <label for="clinic_closure_enabled">Clinic Closure</label>
-                        <select id="clinic_closure_enabled" name="clinic_closure_enabled">
+                        <select id="clinic_closure_enabled" name="clinic_closure_enabled" disabled data-edit-field>
                             <option value="0" {{ old('clinic_closure_enabled', $settings->clinic_closure_enabled ? '1' : '0') == '0' ? 'selected' : '' }}>Available</option>
                             <option value="1" {{ old('clinic_closure_enabled', $settings->clinic_closure_enabled ? '1' : '0') == '1' ? 'selected' : '' }}>Temporarily Closed</option>
                         </select>
                     </div>
                     <div class="settings-field">
                         <label for="clinic_closure_starts_at">Closure Starts</label>
-                        <input id="clinic_closure_starts_at" name="clinic_closure_starts_at" type="datetime-local" value="{{ old('clinic_closure_starts_at', optional($settings->clinic_closure_starts_at)->format('Y-m-d\\TH:i')) }}">
+                        <input id="clinic_closure_starts_at" name="clinic_closure_starts_at" type="datetime-local" value="{{ old('clinic_closure_starts_at', optional($settings->clinic_closure_starts_at)->format('Y-m-d\\TH:i')) }}" disabled data-edit-field>
                     </div>
                     <div class="settings-field">
                         <label for="clinic_closure_ends_at">Closure Ends</label>
-                        <input id="clinic_closure_ends_at" name="clinic_closure_ends_at" type="datetime-local" value="{{ old('clinic_closure_ends_at', optional($settings->clinic_closure_ends_at)->format('Y-m-d\\TH:i')) }}">
+                        <input id="clinic_closure_ends_at" name="clinic_closure_ends_at" type="datetime-local" value="{{ old('clinic_closure_ends_at', optional($settings->clinic_closure_ends_at)->format('Y-m-d\\TH:i')) }}" disabled data-edit-field>
                     </div>
                     <div class="settings-field full">
                         <label for="clinic_closure_reason">Closure Reason</label>
-                        <select id="clinic_closure_reason" name="clinic_closure_reason">
+                        <select id="clinic_closure_reason" name="clinic_closure_reason" disabled data-edit-field>
                             @foreach(['Staff Meeting', 'Official Clinic Activity', 'Emergency', 'Early Closure', 'Other'] as $reason)
                                 <option value="{{ $reason }}" {{ old('clinic_closure_reason', $settings->clinic_closure_reason) === $reason ? 'selected' : '' }}>{{ $reason }}</option>
                             @endforeach
@@ -102,14 +102,19 @@
                     </div>
                     <div class="settings-field full">
                         <label for="clinic_closure_message">Closure Message</label>
-                        <textarea id="clinic_closure_message" name="clinic_closure_message" maxlength="500">{{ old('clinic_closure_message', $settings->clinic_closure_message) }}</textarea>
+                        <textarea id="clinic_closure_message" name="clinic_closure_message" maxlength="500" disabled data-edit-field>{{ old('clinic_closure_message', $settings->clinic_closure_message) }}</textarea>
                     </div>
                 </div>
                 <div class="settings-action-row">
-                    <button type="submit" class="settings-save-btn"><x-outline-icon name="check" /> Save System Preferences</button>
+                    <button type="button" class="settings-edit-btn" data-edit-trigger><span>Edit System Preferences</span></button>
+                    <span class="settings-edit-actions">
+                        <button type="button" class="settings-cancel-btn" data-edit-cancel><span>Cancel</span></button>
+                        <button type="submit" class="settings-save-btn"><x-outline-icon name="check" /> <span>Save System Preferences</span></button>
+                    </span>
                 </div>
             </form>
         </div>
     </section>
 </div>
+@include('admin.partials.settings-edit-script')
 @endsection

@@ -159,6 +159,15 @@
         font: inherit;
         font-weight: 700;
     }
+    .settings-field input:disabled,
+    .settings-field select:disabled,
+    .settings-field textarea:disabled {
+        color: #334155;
+        background: #f8fafc;
+        border-color: rgba(127, 0, 0, 0.08);
+        cursor: default;
+        opacity: 1;
+    }
     .settings-field textarea {
         min-height: 96px;
         resize: vertical;
@@ -196,7 +205,9 @@
         gap: 10px;
         margin-top: 18px;
     }
-    .settings-save-btn {
+    .settings-edit-btn,
+    .settings-save-btn,
+    .settings-cancel-btn {
         min-height: 42px;
         display: inline-flex;
         align-items: center;
@@ -205,17 +216,66 @@
         padding: 0 16px;
         border: 0;
         border-radius: 12px;
-        background: var(--stg-maroon);
-        color: var(--stg-yellow);
         font-size: 13px;
         font-weight: 900;
         cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 12px 22px rgba(127, 0, 0, 0.14);
     }
-    .settings-save-btn:hover,
-    .settings-save-btn:focus-visible {
+    .settings-edit-btn,
+    .settings-save-btn {
+        background: var(--stg-maroon);
+        color: #ffffff;
+    }
+    .settings-cancel-btn {
+        background: #e5e7eb;
+        color: #374151;
+        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+    }
+    .settings-edit-btn::before,
+    .settings-save-btn::before,
+    .settings-cancel-btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
         background: var(--stg-yellow);
-        color: #111827;
+        transform: translateX(-102%);
+        transition: transform .46s ease;
+        z-index: 0;
+    }
+    .settings-edit-btn > *,
+    .settings-save-btn > *,
+    .settings-cancel-btn > * {
+        position: relative;
+        z-index: 1;
+    }
+    .settings-edit-btn:hover,
+    .settings-save-btn:hover,
+    .settings-cancel-btn:hover,
+    .settings-edit-btn:focus-visible,
+    .settings-save-btn:focus-visible,
+    .settings-cancel-btn:focus-visible {
+        color: var(--stg-maroon);
         outline: none;
+    }
+    .settings-edit-btn:hover::before,
+    .settings-save-btn:hover::before,
+    .settings-cancel-btn:hover::before,
+    .settings-edit-btn:focus-visible::before,
+    .settings-save-btn:focus-visible::before,
+    .settings-cancel-btn:focus-visible::before {
+        transform: translateX(0);
+    }
+    .settings-edit-actions {
+        display: none;
+        gap: 10px;
+    }
+    .settings-editable-form.is-editing .settings-edit-actions {
+        display: inline-flex;
+    }
+    .settings-editable-form.is-editing .settings-edit-btn {
+        display: none;
     }
     .settings-option-card {
         display: flex;

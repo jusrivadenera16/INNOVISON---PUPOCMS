@@ -39,21 +39,25 @@
                 </div>
             </div>
             <div class="settings-panel-body">
-                <form action="{{ route('admin.settings.update') }}" method="POST">
+                <form action="{{ route('admin.settings.update') }}" method="POST" class="settings-editable-form">
                     @csrf
                     @method('PUT')
                     <div class="settings-form-grid">
                         <div class="settings-field full">
                             <label for="clinic_name">Clinic Name</label>
-                            <input id="clinic_name" name="clinic_name" value="{{ old('clinic_name', $settings->clinic_name) }}" placeholder="PUP Taguig Clinic">
+                            <input id="clinic_name" name="clinic_name" value="{{ old('clinic_name', $settings->clinic_name) }}" placeholder="PUP Taguig Clinic" disabled data-edit-field>
                         </div>
                         <div class="settings-field full">
                             <label for="clinic_location">Location</label>
-                            <input id="clinic_location" name="clinic_location" value="{{ old('clinic_location', $settings->clinic_location) }}" placeholder="Santos Ave, Lower Bicutan, Taguig">
+                            <input id="clinic_location" name="clinic_location" value="{{ old('clinic_location', $settings->clinic_location) }}" placeholder="Santos Ave, Lower Bicutan, Taguig" disabled data-edit-field>
                         </div>
                     </div>
                     <div class="settings-action-row">
-                        <button type="submit" class="settings-save-btn"><x-outline-icon name="check" /> Save Clinic Profile</button>
+                        <button type="button" class="settings-edit-btn" data-edit-trigger><span>Edit Clinic Profile</span></button>
+                        <span class="settings-edit-actions">
+                            <button type="button" class="settings-cancel-btn" data-edit-cancel><span>Cancel</span></button>
+                            <button type="submit" class="settings-save-btn"><x-outline-icon name="check" /> <span>Save Clinic Profile</span></button>
+                        </span>
                     </div>
                 </form>
             </div>
@@ -67,25 +71,30 @@
                 </div>
             </div>
             <div class="settings-panel-body">
-                <form action="{{ route('admin.settings.update') }}" method="POST">
+                <form action="{{ route('admin.settings.update') }}" method="POST" class="settings-editable-form">
                     @csrf
                     @method('PUT')
                     <div class="settings-form-grid">
                         <div class="settings-field">
                             <label for="open_time">Opening Time</label>
-                            <input id="open_time" name="open_time" type="time" value="{{ old('open_time', substr((string) ($settings->open_time ?: '08:00'), 0, 5)) }}">
+                            <input id="open_time" name="open_time" type="time" value="{{ old('open_time', substr((string) ($settings->open_time ?: '08:00'), 0, 5)) }}" disabled data-edit-field>
                         </div>
                         <div class="settings-field">
                             <label for="close_time">Closing Time</label>
-                            <input id="close_time" name="close_time" type="time" value="{{ old('close_time', substr((string) ($settings->close_time ?: '17:00'), 0, 5)) }}">
+                            <input id="close_time" name="close_time" type="time" value="{{ old('close_time', substr((string) ($settings->close_time ?: '17:00'), 0, 5)) }}" disabled data-edit-field>
                         </div>
                     </div>
                     <div class="settings-action-row">
-                        <button type="submit" class="settings-save-btn"><x-outline-icon name="check" /> Save Clinic Hours</button>
+                        <button type="button" class="settings-edit-btn" data-edit-trigger><span>Edit Clinic Hours</span></button>
+                        <span class="settings-edit-actions">
+                            <button type="button" class="settings-cancel-btn" data-edit-cancel><span>Cancel</span></button>
+                            <button type="submit" class="settings-save-btn"><x-outline-icon name="check" /> <span>Save Clinic Hours</span></button>
+                        </span>
                     </div>
                 </form>
             </div>
         </section>
     </div>
 </div>
+@include('admin.partials.settings-edit-script')
 @endsection

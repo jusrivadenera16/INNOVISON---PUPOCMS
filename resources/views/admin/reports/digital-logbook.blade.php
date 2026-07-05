@@ -7,171 +7,205 @@
     .digital-logbook-shell {
         width: min(1120px, calc(100% - 32px));
         margin: 28px auto;
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
+        color: #0f172a;
     }
 
-    .digital-logbook-head {
-        border-radius: 20px;
-        border: 1px solid rgba(127, 29, 45, 0.16);
-        border-bottom: 3px solid #8B0000;
-        background:
-            radial-gradient(circle at 96% 4%, rgba(250, 204, 21, .18), transparent 30%),
-            linear-gradient(180deg, #ffffff 0%, #fffaf2 100%);
+    .digital-logbook-frame {
+        position: relative;
+        overflow: hidden;
+        border-radius: 18px;
+        border: 1px solid rgba(127, 29, 45, 0.18);
+        background: #ffffff;
         padding: 24px;
         box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
-        display: flex;
-        justify-content: space-between;
-        gap: 18px;
-        align-items: center;
     }
 
-    .digital-logbook-kicker {
-        margin: 0 0 8px;
-        color: #8B0000;
-        font-size: 12px;
-        font-weight: 900;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
+    .digital-logbook-frame::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 18px;
+        right: 18px;
+        height: 5px;
+        border-radius: 0 0 999px 999px;
+        background: #70131B;
+        pointer-events: none;
+    }
+
+    .digital-logbook-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        padding-bottom: 22px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+        margin-bottom: 24px;
     }
 
     .digital-logbook-title {
-        margin: 0;
+        margin: 0 0 10px;
         color: #0f172a;
-        font-size: clamp(1.85rem, 4vw, 2.6rem);
-        font-weight: 900;
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.25;
     }
 
     .digital-logbook-copy {
-        margin: 8px 0 0;
+        margin: 0;
         color: #334155;
-        font-size: 14px;
-        line-height: 1.6;
-        max-width: 680px;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.45;
+        max-width: 760px;
     }
 
     .digital-logbook-back {
-        min-height: 44px;
+        min-height: 42px;
         border-radius: 12px;
-        border: 1px solid rgba(139, 0, 0, 0.26);
+        border: 1px solid rgba(112, 19, 27, 0.24);
         background: #ffffff;
-        color: #8B0000;
+        color: #70131B;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 0 18px;
+        padding: 0 16px;
         font-size: 13px;
         font-weight: 900;
         text-decoration: none;
         white-space: nowrap;
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+        box-shadow: 0 10px 24px rgba(112, 19, 27, 0.10);
+        transition: transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
+    }
+
+    .digital-logbook-back:hover {
+        transform: translateY(-1px);
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
     }
 
     .digital-logbook-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 18px;
+        gap: 20px;
     }
 
     .digital-logbook-card {
         position: relative;
         overflow: hidden;
-        min-height: 220px;
-        border-radius: 18px;
-        border: 1px solid rgba(127, 29, 45, 0.18);
-        border-top: 5px solid #8B0000;
-        background:
-            radial-gradient(circle at 92% 86%, rgba(250, 204, 21, .18), transparent 26%),
-            linear-gradient(180deg, #ffffff 0%, #fffafa 100%);
-        padding: 24px;
+        min-height: 160px;
+        border-radius: 16px;
+        border: 1px solid rgba(112, 19, 27, 0.22);
+        background: #70131B;
+        color: #ffffff;
+        padding: 24px 20px;
         text-decoration: none;
-        color: #0f172a;
-        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        gap: 28px;
-        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+        gap: 18px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.10);
+        transition: transform .24s ease, box-shadow .24s ease, background .24s ease, border-color .24s ease;
+    }
+
+    .digital-logbook-card > * {
+        position: relative;
+        z-index: 2;
     }
 
     .digital-logbook-card::after {
         content: "";
         position: absolute;
         top: -45%;
-        left: -82%;
-        width: 42%;
-        height: 176%;
-        background: linear-gradient(120deg, transparent 0%, rgba(255, 244, 180, .16) 34%, rgba(255, 244, 180, .44) 50%, rgba(255, 244, 180, .16) 66%, transparent 100%);
-        transform: skewX(-18deg);
-        transition: left .28s ease;
+        bottom: -45%;
+        left: -95%;
+        width: 55%;
+        opacity: 0;
+        background: linear-gradient(120deg, transparent 0%, rgba(255, 246, 184, 0.18) 45%, rgba(255, 246, 184, 0.48) 50%, transparent 100%);
+        transform: translateX(0) skewX(-18deg);
         pointer-events: none;
+        z-index: 1;
     }
 
     .digital-logbook-card:hover {
-        transform: translateY(-2px);
-        border-color: rgba(139, 0, 0, 0.30);
-        box-shadow: 0 24px 44px rgba(127, 29, 45, 0.16);
+        background: #facc15;
+        color: #70131B;
+        transform: translateY(-8px);
+        border-color: #facc15;
+        box-shadow:
+            0 0 0 3px rgba(250, 204, 21, 0.12),
+            0 20px 30px rgba(139, 0, 0, 0.22);
     }
 
     .digital-logbook-card:hover::after {
-        left: 130%;
+        animation: digitalLogbookSweep .92s ease both;
+    }
+
+    @keyframes digitalLogbookSweep {
+        0% { opacity: 0; transform: translateX(0) skewX(-18deg); }
+        18%, 72% { opacity: .7; }
+        100% { opacity: 0; transform: translateX(520%) skewX(-18deg); }
     }
 
     .digital-logbook-card-label {
-        color: #8B0000;
-        font-size: 12px;
-        font-weight: 900;
+        margin: 0 0 8px;
+        color: #cbd5e1;
+        font-size: 14px;
+        font-weight: 500;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
-        margin-bottom: 10px;
+        letter-spacing: .5px;
+        transition: color .2s ease;
     }
 
     .digital-logbook-card-title {
-        font-size: 1.45rem;
-        font-weight: 900;
-        color: #0f172a;
-        margin-bottom: 8px;
+        margin: 0;
+        color: #ffffff;
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.2;
+        transition: color .2s ease;
     }
 
     .digital-logbook-card-copy {
-        color: #334155;
+        margin: 10px 0 0;
+        color: rgba(255, 255, 255, .92);
         font-size: 14px;
-        line-height: 1.65;
-        max-width: 480px;
+        line-height: 1.55;
+        max-width: 520px;
+        transition: color .2s ease;
     }
 
-    .digital-logbook-card-foot {
+    .digital-logbook-card-footer {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 14px;
+        gap: 12px;
     }
 
     .digital-logbook-chip {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 999px;
-        background: #fff7ed;
-        border: 1px solid rgba(139, 0, 0, 0.20);
-        color: #8B0000;
-        padding: 8px 12px;
-        font-size: 12px;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+        padding: 6px 12px;
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 1;
     }
 
     .digital-logbook-icon {
-        width: 46px;
-        height: 46px;
+        width: 42px;
+        height: 42px;
         border-radius: 14px;
-        background: #8B0000;
-        color: #ffffff;
+        color: #facc15;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.18);
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        transition: background .2s ease, color .2s ease, transform .2s ease;
     }
 
     .digital-logbook-icon svg {
@@ -179,9 +213,62 @@
         height: 22px;
     }
 
+    .digital-logbook-card:hover .digital-logbook-card-label,
+    .digital-logbook-card:hover .digital-logbook-card-title,
+    .digital-logbook-card:hover .digital-logbook-card-copy,
+    .digital-logbook-card:hover .digital-logbook-chip {
+        color: #70131B;
+    }
+
+    .digital-logbook-card:hover .digital-logbook-chip,
+    .digital-logbook-card:hover .digital-logbook-icon {
+        background: rgba(112, 19, 27, 0.10);
+        border-color: rgba(112, 19, 27, 0.14);
+    }
+
+    .digital-logbook-card:hover .digital-logbook-icon {
+        color: #70131B;
+        transform: translateX(3px) scale(1.04);
+    }
+
+    html[data-theme="dark"] .digital-logbook-frame {
+        background: linear-gradient(135deg, rgba(112, 19, 27, 0.68) 0%, rgba(86, 16, 26, 0.64) 48%, rgba(44, 14, 18, 0.72) 100%);
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 20px 44px rgba(0, 0, 0, 0.34);
+    }
+
+    html[data-theme="dark"] .digital-logbook-title,
+    html[data-theme="dark"] .digital-logbook-copy {
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .digital-logbook-header {
+        border-bottom-color: rgba(255, 255, 255, 0.12);
+    }
+
+    html[data-theme="dark"] .digital-logbook-back {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.22);
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .digital-logbook-back:hover {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+    }
+
+    html[data-theme="dark"] .digital-logbook-card {
+        background: linear-gradient(135deg, #70131B, #8f2230);
+        border-color: rgba(250, 204, 21, 0.44);
+    }
+
+    html[data-theme="dark"] .digital-logbook-card:hover {
+        background: #facc15;
+    }
+
     @media (max-width: 820px) {
-        .digital-logbook-head {
-            align-items: flex-start;
+        .digital-logbook-header {
             flex-direction: column;
         }
 
@@ -205,39 +292,40 @@
 @endphp
 
 <div class="digital-logbook-shell">
-    <header class="digital-logbook-head">
-        <div>
-            <p class="digital-logbook-kicker">Clinic Monitoring</p>
-            <h1 class="digital-logbook-title">Digital Logbook</h1>
-            <p class="digital-logbook-copy">Open the clinic logbooks used to monitor consultations, treatment records, and health form review visits.</p>
+    <section class="digital-logbook-frame">
+        <header class="digital-logbook-header">
+            <div>
+                <h1 class="digital-logbook-title">Digital Logbook</h1>
+                <p class="digital-logbook-copy">Open the clinic logbooks used to monitor consultations, treatment records, and health form review visits.</p>
+            </div>
+            <a href="{{ $reportsHomeUrl }}" class="digital-logbook-back">&larr; Back to Reports</a>
+        </header>
+
+        <div class="digital-logbook-grid">
+            <a href="{{ $dailyTreatmentRecordUrl }}" class="digital-logbook-card">
+                <div>
+                    <div class="digital-logbook-card-label">Form B</div>
+                    <h2 class="digital-logbook-card-title">Daily Treatment Record</h2>
+                    <p class="digital-logbook-card-copy">Official treatment logbook for consultations, medicines dispensed, vitals, complaints, and attending staff.</p>
+                </div>
+                <div class="digital-logbook-card-footer">
+                    <span class="digital-logbook-chip">DTR</span>
+                    <span class="digital-logbook-icon"><x-outline-icon name="clipboard-document-list" /></span>
+                </div>
+            </a>
+
+            <a href="{{ $healthFormsLogbookUrl }}" class="digital-logbook-card">
+                <div>
+                    <div class="digital-logbook-card-label">Applicant Review</div>
+                    <h2 class="digital-logbook-card-title">Health Form Logbook</h2>
+                    <p class="digital-logbook-card-copy">Monitor approved health forms, final review visits, approver, condition, and sync status.</p>
+                </div>
+                <div class="digital-logbook-card-footer">
+                    <span class="digital-logbook-chip">HRL</span>
+                    <span class="digital-logbook-icon"><x-outline-icon name="document-text" /></span>
+                </div>
+            </a>
         </div>
-        <a href="{{ $reportsHomeUrl }}" class="digital-logbook-back">&larr; Back to Reports</a>
-    </header>
-
-    <section class="digital-logbook-grid">
-        <a href="{{ $dailyTreatmentRecordUrl }}" class="digital-logbook-card">
-            <div>
-                <div class="digital-logbook-card-label">Form B</div>
-                <div class="digital-logbook-card-title">Daily Treatment Record</div>
-                <p class="digital-logbook-card-copy">Official treatment logbook for consultations, medicines dispensed, vitals, complaints, and attending staff.</p>
-            </div>
-            <div class="digital-logbook-card-foot">
-                <span class="digital-logbook-chip">Treatment Log</span>
-                <span class="digital-logbook-icon"><x-outline-icon name="clipboard-document-list" /></span>
-            </div>
-        </a>
-
-        <a href="{{ $healthFormsLogbookUrl }}" class="digital-logbook-card">
-            <div>
-                <div class="digital-logbook-card-label">Applicant Review</div>
-                <div class="digital-logbook-card-title">Health Form Logbook</div>
-                <p class="digital-logbook-card-copy">Monitor submitted health forms, Final Review time-in, approval time-out, reviewer, approver, condition, and status.</p>
-            </div>
-            <div class="digital-logbook-card-foot">
-                <span class="digital-logbook-chip">Clinic Visit Log</span>
-                <span class="digital-logbook-icon"><x-outline-icon name="document-text" /></span>
-            </div>
-        </a>
     </section>
 </div>
 @endsection

@@ -331,20 +331,34 @@
         position: absolute;
         top: -38%;
         bottom: -38%;
-        left: -115%;
+        left: -135%;
         width: 34%;
         opacity: 0;
-        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, 0.34) 42%, rgba(255, 248, 196, 0.72) 50%, rgba(255, 248, 196, 0.34) 58%, rgba(255, 255, 255, 0) 100%);
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 246, 184, 0.18) 42%, rgba(255, 246, 184, 0.54) 50%, rgba(255, 246, 184, 0.18) 58%, rgba(255, 255, 255, 0) 100%);
         transform: translateX(0) skewX(-18deg);
-        transition: transform .38s ease, opacity .12s ease .28s;
         pointer-events: none;
         z-index: 0;
     }
 
     .intake-option-card:hover::after {
-        opacity: 1;
-        transform: translateX(650%) skewX(-18deg);
-        transition: transform .38s ease, opacity .06s ease;
+        animation: intakeSweep .92s ease both;
+    }
+
+    @keyframes intakeSweep {
+        0% {
+            opacity: 0;
+            transform: translateX(0) skewX(-18deg);
+        }
+        18% {
+            opacity: .72;
+        }
+        72% {
+            opacity: .72;
+        }
+        100% {
+            opacity: 0;
+            transform: translateX(820%) skewX(-18deg);
+        }
     }
 
     .intake-option-card:hover .intake-option-title,
