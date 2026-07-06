@@ -37,9 +37,13 @@
                     <h3>Profile Details</h3>
                     <p>Changes here update the current admin account profile.</p>
                 </div>
+                <button type="button" class="settings-edit-btn" data-edit-target="personalSettingsForm">
+                    <x-outline-icon name="pencil-square" />
+                    <span>Edit</span>
+                </button>
             </div>
             <div class="settings-panel-body">
-                <form action="{{ route('admin.profile.update') }}" method="POST" class="settings-editable-form">
+                <form id="personalSettingsForm" action="{{ route('admin.profile.update') }}" method="POST" class="settings-editable-form">
                     @csrf
                     @method('PUT')
                     <div class="settings-form-grid">
@@ -107,7 +111,6 @@
                     <input type="hidden" name="role" value="{{ old('role', $cmsProfile['role'] ?? $admin->user_role ?? 'superadmin') }}">
                     <input type="hidden" name="status" value="{{ old('status', $cmsProfile['status'] ?? $admin->status ?? 'active') }}">
                     <div class="settings-action-row">
-                        <button type="button" class="settings-edit-btn" data-edit-trigger><span>Edit Personal Information</span></button>
                         <span class="settings-edit-actions">
                             <button type="button" class="settings-cancel-btn" data-edit-cancel><span>Cancel</span></button>
                             <button type="submit" class="settings-save-btn"><x-outline-icon name="check" /> <span>Save Personal Information</span></button>

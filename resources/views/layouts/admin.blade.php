@@ -6,6 +6,8 @@
         $tabAccent = '#70131B';
         $tabTitlePrefix = '';
 
+        $medicalSettingsRoute = request()->routeIs('admin.reports.manage-mar') || request()->routeIs('admin.reports.manage-medicine-types');
+
         if (request()->routeIs('admin.dashboard') || request()->routeIs('assistant.dashboard')) {
             $tabIcon = 'DB';
             $tabAccent = '#7C3AED';
@@ -18,7 +20,11 @@
             $tabIcon = 'IN';
             $tabAccent = '#059669';
             $tabTitlePrefix = '[Inventory] ';
-        } elseif (request()->routeIs('admin.reports*') || request()->routeIs('assistant.reports*') || request()->is('admin/reports*') || request()->is('assistant/reports*')) {
+        } elseif ((request()->routeIs('admin.settings*') || request()->is('admin/settings*') || $medicalSettingsRoute)) {
+            $tabIcon = 'ST';
+            $tabAccent = '#475569';
+            $tabTitlePrefix = '[Settings] ';
+        } elseif ((request()->routeIs('admin.reports*') || request()->routeIs('assistant.reports*') || request()->is('admin/reports*') || request()->is('assistant/reports*')) && !$medicalSettingsRoute) {
             $tabIcon = 'RP';
             $tabAccent = '#DC2626';
             $tabTitlePrefix = '[Reports] ';
@@ -38,10 +44,6 @@
             $tabIcon = 'AT';
             $tabAccent = '#B45309';
             $tabTitlePrefix = '[Audit Trail] ';
-        } elseif (request()->routeIs('admin.settings*') || request()->is('admin/settings*')) {
-            $tabIcon = 'ST';
-            $tabAccent = '#475569';
-            $tabTitlePrefix = '[Settings] ';
         }
 
         $tabIconSvg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>"
@@ -1624,11 +1626,6 @@
             transform-origin: 58% 42%;
         }
 
-        .sidebar-nav a.nav-users.active .sidebar-short svg {
-            animation: navUsersGather 1s cubic-bezier(0.22, 1, 0.36, 1) 1;
-            transform-origin: 50% 50%;
-        }
-
         .sidebar-nav a.nav-reports.active .sidebar-short svg {
             animation: navReportsRise 1s ease-in-out 1;
             transform-origin: 50% 100%;
@@ -1659,29 +1656,6 @@
             border-radius: 999px;
             background: rgba(17, 17, 17, 0.82);
             animation: navHealthInk 1s cubic-bezier(0.37, 0, 0.63, 1) 1;
-        }
-
-        .sidebar-nav a.nav-users.active .sidebar-short::before,
-        .sidebar-nav a.nav-users.active .sidebar-short::after {
-            content: "";
-            position: absolute;
-            bottom: 7px;
-            width: 6px;
-            height: 8px;
-            border-radius: 999px 999px 6px 6px;
-            border: 1.4px solid rgba(17, 17, 17, 0.7);
-            border-top-width: 2px;
-            opacity: 0;
-        }
-
-        .sidebar-nav a.nav-users.active .sidebar-short::before {
-            left: 7px;
-            animation: navUsersSideLeft 1s ease-out 1;
-        }
-
-        .sidebar-nav a.nav-users.active .sidebar-short::after {
-            right: 7px;
-            animation: navUsersSideRight 1s ease-out 1;
         }
 
         .sidebar-nav a.nav-settings.active .sidebar-short::before {
@@ -1820,25 +1794,6 @@
             }
         }
 
-        @keyframes navUsersGather {
-            0% {
-                transform: translateY(1px) scale(0.84);
-                opacity: 0.68;
-            }
-            34% {
-                transform: translateY(0) scale(0.94);
-                opacity: 0.88;
-            }
-            62% {
-                transform: translateY(-0.5px) scale(1.06);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(0) scale(1);
-                opacity: 1;
-            }
-        }
-
         @keyframes navReportsRise {
             0%, 100% {
                 transform: translateY(0) scale(1);
@@ -1909,36 +1864,6 @@
             100% {
                 width: 12px;
                 opacity: 0;
-            }
-        }
-
-        @keyframes navUsersSideLeft {
-            0%, 18% {
-                transform: translateX(-4px) scale(0.7);
-                opacity: 0;
-            }
-            42% {
-                transform: translateX(-1px) scale(0.88);
-                opacity: 0.8;
-            }
-            100% {
-                transform: translateX(0) scale(1);
-                opacity: 1;
-            }
-        }
-
-        @keyframes navUsersSideRight {
-            0%, 30% {
-                transform: translateX(4px) scale(0.7);
-                opacity: 0;
-            }
-            58% {
-                transform: translateX(1px) scale(0.88);
-                opacity: 0.8;
-            }
-            100% {
-                transform: translateX(0) scale(1);
-                opacity: 1;
             }
         }
 
@@ -4196,7 +4121,6 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     $developerToolsUrl = $isStudentAssistant ? url('/assistant/developer-tools') : url('/admin/developer-tools');
     $canSeeDeveloperTools = strtolower(trim((string) optional($authUser)->email)) === 'pupocms2027@gmail.com';
     $settingsUrl = url('/admin/settings');
-    $userManagementUrl = url('/admin/user-management?entry=menu');
     $walkinUrl = $isStudentAssistant ? url('/assistant/walkin') : url('/admin/walkin');
     $assistantEndpoint = $isStudentAssistant ? route('assistant.intent') : route('admin.assistant.intent');
     $displayName = optional($authUser)->name ?? 'Clinic User';
@@ -4529,7 +4453,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
       <a href="{{ $inventoryUrl }}" class="nav-inventory {{ (request()->routeIs('admin.inventory*') || request()->routeIs('assistant.inventory*')) ? 'active' : '' }}">
         <span class="sidebar-short"><x-outline-icon name="cube" /></span><span class="sidebar-label">Inventory</span>
       </a>
-      <a href="{{ $reportsUrl }}" class="nav-reports {{ (request()->routeIs('admin.reports*') || request()->routeIs('assistant.reports*') || Request::is('admin/reports*') || Request::is('assistant/reports*')) ? 'active' : '' }}">
+      <a href="{{ $reportsUrl }}" class="nav-reports {{ ((request()->routeIs('admin.reports*') || request()->routeIs('assistant.reports*') || Request::is('admin/reports*') || Request::is('assistant/reports*')) && !(request()->routeIs('admin.reports.manage-mar') || request()->routeIs('admin.reports.manage-medicine-types'))) ? 'active' : '' }}">
         <span class="sidebar-short"><x-outline-icon name="chart-bar" /></span><span class="sidebar-label">Reports</span>
       </a>
      
@@ -4541,13 +4465,10 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     <span class="sidebar-label">Health Records</span>
     </a>
       @if($isAdminLike)
-          <a href="{{ $userManagementUrl }}" class="nav-users {{ (request()->routeIs('admin.user-management*') || Request::is('admin/user-management*')) ? 'active' : '' }}">
-            <span class="sidebar-short"><x-outline-icon name="users" /></span><span class="sidebar-label">Users Management</span>
-          </a>
           <a href="{{ route('admin.logs') }}" class="nav-audit {{ (request()->routeIs('admin.logs') || Request::is('admin/activity-logs*')) ? 'active' : '' }}">
             <span class="sidebar-short"><x-outline-icon name="clipboard-document-list" /></span><span class="sidebar-label">Audit Trail</span>
           </a>
-          <a href="{{ $settingsUrl }}" class="nav-settings {{ (request()->routeIs('admin.settings*') || Request::is('admin/settings*')) ? 'active' : '' }}">
+          <a href="{{ $settingsUrl }}" class="nav-settings {{ (request()->routeIs('admin.settings*') || Request::is('admin/settings*') || request()->routeIs('admin.reports.manage-mar') || request()->routeIs('admin.reports.manage-medicine-types')) ? 'active' : '' }}">
             <span class="sidebar-short"><x-outline-icon name="cog-6-tooth" /></span><span class="sidebar-label">Settings</span>
           </a>
       @endif

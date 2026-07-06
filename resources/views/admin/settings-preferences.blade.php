@@ -39,9 +39,13 @@
                 <h3>Workflow Settings</h3>
                 <p>These controls use the existing system settings update workflow.</p>
             </div>
+            <button type="button" class="settings-edit-btn" data-edit-target="systemPreferencesForm">
+                <x-outline-icon name="pencil-square" />
+                <span>Edit</span>
+            </button>
         </div>
         <div class="settings-panel-body">
-            <form action="{{ route('admin.settings.update') }}" method="POST" class="settings-editable-form">
+            <form id="systemPreferencesForm" action="{{ route('admin.settings.update') }}" method="POST" class="settings-editable-form">
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="preferences_form" value="1">
@@ -106,7 +110,6 @@
                     </div>
                 </div>
                 <div class="settings-action-row">
-                    <button type="button" class="settings-edit-btn" data-edit-trigger><span>Edit System Preferences</span></button>
                     <span class="settings-edit-actions">
                         <button type="button" class="settings-cancel-btn" data-edit-cancel><span>Cancel</span></button>
                         <button type="submit" class="settings-save-btn"><x-outline-icon name="check" /> <span>Save System Preferences</span></button>

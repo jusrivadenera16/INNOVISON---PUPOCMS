@@ -29,19 +29,6 @@
 @endpush
 
 @section('content')
-@php
-    $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
-    $backUrl = $role === \App\Models\User::ROLE_ADMIN
-        ? url('/assistant/reports/inventory-summary?month=' . $month)
-        : url('/admin/reports/inventory-summary?month=' . $month);
-@endphp
-
-<div style="margin-bottom: 20px;">
-    <a href="{{ $backUrl }}" style="text-decoration: none; color: #64748b; font-size: 14px;">
-        &larr; Back to Inventory Summary
-    </a>
-</div>
-
 <div class="card manage-section">
     <h3>Manage Medicine Types</h3>
 

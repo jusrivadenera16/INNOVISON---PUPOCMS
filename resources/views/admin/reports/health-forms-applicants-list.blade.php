@@ -36,18 +36,43 @@
         justify-content: center;
         gap: 7px;
         padding: 10px 16px;
-        border: 1px solid rgba(112, 19, 27, 0.3);
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.96);
-        color: #70131B;
+        border: 1px solid #7f1d2d;
+        border-radius: 14px;
+        background: #7f1d2d;
+        color: #ffffff;
         font-size: 13px;
         font-weight: 800;
         text-decoration: none;
-        transition: all .18s ease;
+        position: relative;
+        overflow: hidden;
+        transition: color .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
     }
-    .logbook-back:hover {
-        background: #ffffff;
-        border-color: rgba(112, 19, 27, 0.48);
+    .logbook-back::after,
+    .filter-btn-open::after,
+    .filter-btn::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(250, 204, 21, 0) 0%, rgba(255, 247, 181, .58) 45%, rgba(250, 204, 21, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.5s ease;
+        pointer-events: none;
+    }
+    .logbook-back:hover::after,
+    .filter-btn-open:hover::after,
+    .filter-btn:hover::after {
+        left: 125%;
+    }
+    .logbook-back:hover,
+    .logbook-back:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        outline: none;
     }
     .logbook-toolbar {
         display: flex;
@@ -141,7 +166,7 @@
         justify-content: center;
         gap: 8px;
         padding: 12px 20px;
-        border: none;
+        border: 1px solid #7f1d2d;
         border-radius: 12px;
         background: #7f1d2d;
         color: #ffffff;
@@ -150,11 +175,18 @@
         text-transform: uppercase;
         letter-spacing: 0.04em;
         cursor: pointer;
-        transition: all .18s ease;
+        position: relative;
+        overflow: hidden;
+        transition: color .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
         white-space: nowrap;
     }
-    .filter-btn-open:hover {
-        background: #5f1520;
+    .filter-btn-open:hover,
+    .filter-btn-open:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        outline: none;
     }
     .modal-overlay {
         display: none;
@@ -259,26 +291,29 @@
         border-radius: 12px;
         font-weight: 800;
         cursor: pointer;
-        border: none;
+        border: 1px solid #7f1d2d;
         font-size: 13px;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        transition: all .18s ease;
+        transition: color .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
         flex: 1;
+        position: relative;
+        overflow: hidden;
+        text-decoration: none;
     }
-    .filter-btn.primary {
+    .filter-btn,
+    .filter-btn.primary,
+    .filter-btn.secondary {
         background: #7f1d2d;
         color: #ffffff;
     }
-    .filter-btn.primary:hover {
-        background: #5f1520;
-    }
-    .filter-btn.secondary {
-        background: #eef2f7;
-        color: #334155;
-    }
-    .filter-btn.secondary:hover {
-        background: #e2e8f0;
+    .filter-btn:hover,
+    .filter-btn:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        outline: none;
     }
     .logbook-table-wrap {
         background: #ffffff;
@@ -531,6 +566,69 @@
     .premium-select-shell.is-open .premium-select-menu { display: flex; }
     .premium-select-option { min-height: 34px; border: 1px solid rgba(226, 232, 240, .9); border-radius: 999px; background: #fff; color: #111827; font-size: 12px; font-weight: 900; text-align: left; padding: 0 12px; cursor: pointer; }
     .premium-select-option:hover, .premium-select-option.is-selected { background: #7f0010; color: #facc15; border-color: #7f0010; }
+    html[data-theme="dark"] .logbook-shell {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .logbook-title,
+    html[data-theme="dark"] .logbook-copy {
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .logbook-search-input,
+    html[data-theme="dark"] .logbook-total-card,
+    html[data-theme="dark"] .modal-content,
+    html[data-theme="dark"] .logbook-table-wrap,
+    html[data-theme="dark"] .logbook-pagination,
+    html[data-theme="dark"] .logbook-per-page-select,
+    html[data-theme="dark"] .premium-select-button,
+    html[data-theme="dark"] .premium-select-menu,
+    html[data-theme="dark"] .premium-select-option,
+    html[data-theme="dark"] .filter-group input,
+    html[data-theme="dark"] .filter-group select {
+        background: rgba(15, 23, 42, .96) !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] .logbook-table th {
+        background: rgba(17, 24, 39, .92);
+        color: #e5e7eb;
+    }
+    html[data-theme="dark"] .logbook-table td,
+    html[data-theme="dark"] .modal-header h2,
+    html[data-theme="dark"] .condition-tooltip-list strong {
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .logbook-table th,
+    html[data-theme="dark"] .logbook-table td {
+        border-bottom-color: rgba(250, 204, 21, .12);
+    }
+    html[data-theme="dark"] .filter-group label,
+    html[data-theme="dark"] .logbook-pagination-meta,
+    html[data-theme="dark"] .logbook-empty,
+    html[data-theme="dark"] .condition-tooltip-list li {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .condition-tooltip-bubble {
+        background: #111827;
+        border-color: rgba(250, 204, 21, .18);
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .condition-tooltip-bubble::after {
+        background: #111827;
+        border-color: rgba(250, 204, 21, .18);
+    }
+    html[data-theme="dark"] .logbook-page-link,
+    html[data-theme="dark"] .logbook-page-ellipsis {
+        background: rgba(17, 24, 39, .94);
+        border-color: rgba(250, 204, 21, .18);
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .logbook-page-link.is-active,
+    html[data-theme="dark"] .premium-select-option:hover,
+    html[data-theme="dark"] .premium-select-option.is-selected {
+        background: #7f0010 !important;
+        border-color: #facc15 !important;
+        color: #ffffff !important;
+    }
     @media (max-width: 720px) {
         .logbook-pagination {
             align-items: stretch;

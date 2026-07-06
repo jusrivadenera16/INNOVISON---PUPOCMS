@@ -30,7 +30,7 @@
         line-height: 1.6;
         max-width: 720px;
     }
-    .health-forms-back {
+    .health-forms-action {
         min-width: 132px;
         width: auto !important;
         flex: 0 0 auto;
@@ -42,10 +42,10 @@
         overflow: hidden;
         gap: 7px;
         padding: 10px 16px;
-        border: 1px solid rgba(112, 19, 27, 0.3);
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.96);
-        color: #70131B;
+        border: 1px solid #7f1d2d;
+        border-radius: 14px;
+        background: #7f1d2d;
+        color: #ffffff;
         font-size: 13px;
         font-weight: 800;
         text-decoration: none;
@@ -54,7 +54,7 @@
         transition: color .08s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
     }
 
-    .health-forms-back::after {
+    .health-forms-action::after {
         content: "";
         position: absolute;
         top: -40%;
@@ -68,15 +68,15 @@
         z-index: 0;
     }
 
-    .health-forms-back:hover::after {
+    .health-forms-action:hover::after {
         left: 125%;
     }
 
-    .health-forms-back:hover,
-    .health-forms-back:focus {
+    .health-forms-action:hover,
+    .health-forms-action:focus {
         color: #70131B;
-        border-color: rgba(112, 19, 27, 0.48);
-        background: #ffffff;
+        border-color: #facc15;
+        background: #facc15;
         box-shadow: 0 0 0 2px rgba(112, 19, 27, 0.12), 0 12px 28px rgba(15, 23, 42, 0.12);
         outline: none;
     }
@@ -292,26 +292,46 @@
         align-items: center;
         justify-content: center;
         min-height: 44px;
-        border-radius: 12px;
+        border-radius: 14px;
         padding: 0 16px;
         text-decoration: none;
         font-weight: 800;
         cursor: pointer;
-        border: none;
-    }
-    .health-forms-btn.primary {
+        border: 1px solid #7f1d2d;
+        position: relative;
+        overflow: hidden;
         background: #7f1d2d;
         color: #ffffff;
         box-shadow: 0 12px 24px rgba(127, 29, 45, .18);
     }
-    .health-forms-btn.secondary {
-        background: #eef2f7;
-        color: #334155;
+    .health-forms-btn::after,
+    .health-forms-filter-trigger::after {
+        content: "";
+        position: absolute;
+        inset: -40% auto -40% -130%;
+        width: 120%;
+        background: linear-gradient(115deg, rgba(250, 204, 21, 0) 0%, rgba(255, 247, 181, .58) 45%, rgba(250, 204, 21, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.5s ease;
+        pointer-events: none;
+    }
+    .health-forms-btn:hover::after,
+    .health-forms-filter-trigger:hover::after,
+    .health-forms-btn:focus-visible::after,
+    .health-forms-filter-trigger:focus-visible::after {
+        left: 125%;
+    }
+    .health-forms-btn:hover,
+    .health-forms-btn:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        outline: none;
     }
     .health-forms-filter-trigger {
-        background: #ffffff;
-        color: #70131B;
-        border: 1px solid rgba(112, 19, 27, 0.24);
+        background: #7f1d2d;
+        color: #ffffff;
+        border: 1px solid #7f1d2d;
         border-radius: 14px;
         min-height: 46px;
         padding: 0 24px;
@@ -319,6 +339,15 @@
         font-weight: 900;
         cursor: pointer;
         box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+        position: relative;
+        overflow: hidden;
+    }
+    .health-forms-filter-trigger:hover,
+    .health-forms-filter-trigger:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        outline: none;
     }
     .health-forms-table-wrap {
         background: #ffffff;
@@ -437,6 +466,58 @@
         width: 14px;
         height: 14px;
     }
+    html[data-theme="dark"] .health-forms-shell {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .health-forms-title,
+    html[data-theme="dark"] .health-forms-copy {
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .health-forms-stat-card,
+    html[data-theme="dark"] .health-forms-table-wrap,
+    html[data-theme="dark"] .health-forms-pagination,
+    html[data-theme="dark"] .health-forms-panel {
+        background: rgba(15, 23, 42, .96);
+        border-color: rgba(250, 204, 21, .16);
+        box-shadow: 0 18px 34px rgba(0, 0, 0, .26);
+    }
+    html[data-theme="dark"] .health-forms-stat-card span,
+    html[data-theme="dark"] .health-forms-panel-copy,
+    html[data-theme="dark"] .health-forms-field label,
+    html[data-theme="dark"] .health-forms-empty {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .health-forms-stat-card strong,
+    html[data-theme="dark"] .health-forms-panel h3,
+    html[data-theme="dark"] .health-forms-table td {
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .health-forms-table th {
+        color: #e5e7eb;
+        background: rgba(17, 24, 39, .92);
+    }
+    html[data-theme="dark"] .health-forms-table th,
+    html[data-theme="dark"] .health-forms-table td {
+        border-bottom-color: rgba(250, 204, 21, .12);
+    }
+    html[data-theme="dark"] .health-forms-field input,
+    html[data-theme="dark"] .health-forms-field select,
+    html[data-theme="dark"] .premium-select-button,
+    html[data-theme="dark"] .premium-select-menu,
+    html[data-theme="dark"] .premium-select-option,
+    html[data-theme="dark"] .health-forms-pagination .pagination a,
+    html[data-theme="dark"] .health-forms-pagination .pagination span {
+        background: rgba(17, 24, 39, .94) !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] .premium-select-option:hover,
+    html[data-theme="dark"] .premium-select-option.is-selected,
+    html[data-theme="dark"] .health-forms-pagination .pagination .active span {
+        background: #7f0010 !important;
+        border-color: #facc15 !important;
+        color: #ffffff !important;
+    }
     @media (max-width: 760px) {
         .health-forms-head {
             flex-direction: column;
@@ -465,8 +546,8 @@
         </div>
         <div style="display: flex; gap: 10px;">
             <button type="button" class="health-forms-filter-trigger" onclick="openHealthFormsFilter()">Filter</button>
-            <a href="{{ $applicantsListUrl }}" class="health-forms-back" style="background: #7f1d2d; color: #ffffff; border-color: #7f1d2d;">Applicants List</a>
-            <a href="{{ $reportsUrl }}" class="health-forms-back">&larr; Back to Reports</a>
+            <a href="{{ $applicantsListUrl }}" class="health-forms-action">Applicants List</a>
+            <a href="{{ $reportsUrl }}" class="health-forms-action">&larr; Back to Reports</a>
         </div>
     </div>
 

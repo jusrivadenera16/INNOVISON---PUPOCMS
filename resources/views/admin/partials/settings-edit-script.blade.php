@@ -2,11 +2,15 @@
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.settings-editable-form').forEach(function (form) {
         const fields = Array.from(form.querySelectorAll('[data-edit-field]'));
-        const editButton = form.querySelector('[data-edit-trigger]');
+        const editButton = form.querySelector('[data-edit-trigger]')
+            || (form.id ? document.querySelector('[data-edit-target="' + form.id + '"]') : null);
         const cancelButton = form.querySelector('[data-edit-cancel]');
 
         function setEditing(isEditing) {
             form.classList.toggle('is-editing', isEditing);
+            if (editButton) {
+                editButton.hidden = isEditing;
+            }
             fields.forEach(function (field) {
                 field.disabled = !isEditing;
             });

@@ -483,12 +483,6 @@
 
 @section('content')
 
-<div style="margin-bottom: 20px;">
-    <a href="{{ route('reports.mar') }}" style="text-decoration: none; color: #64748b; font-size: 14px;">
-        &larr; Back to MAR Report
-    </a>
-</div>
-
 <div class="card manage-section">
     <h3>Manage Medical Conditions (Sub-categories)</h3>
 

@@ -29,6 +29,15 @@
         pointer-events: none;
         z-index: 1;
     }
+    .inventory-summary-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding-top: 18px;
+        margin-bottom: 10px;
+    }
     .card,
     .card *:not(.status):not(.btn-add):not(.btn-icon) {
         color: #111827;
@@ -107,7 +116,7 @@
         padding-bottom: 0;
     }
 
-    .inventory-toolbar-actions > .btn-add:not(.inventory-search-toggle) {
+    .inventory-toolbar-actions > .btn-add {
         border-radius: 12px;
     }
 
@@ -118,16 +127,16 @@
         justify-content: flex-end;
     }
     .inventory-search-wrap {
-        width: 0;
+        width: 320px;
         max-width: 100%;
-        flex: 0 0 0;
+        flex: 0 0 320px;
         display: flex;
         align-items: center;
         gap: 10px;
-        opacity: 0;
+        opacity: 1;
         overflow: hidden;
-        pointer-events: none;
-        transform: translateX(12px) scaleX(0.96);
+        pointer-events: auto;
+        transform: translateX(0) scaleX(1);
         transform-origin: right center;
         transition:
             width .32s cubic-bezier(.22, 1, .36, 1),
@@ -141,13 +150,7 @@
         border-radius: 0 !important;
     }
     .inventory-search-wrap::before {
-        content: "";
-        width: 18px;
-        height: 18px;
-        flex: 0 0 18px;
-        background: #8f2230;
-        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor' stroke-width='2.4'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center / contain no-repeat;
-        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor' stroke-width='2.4'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center / contain no-repeat;
+        content: none;
     }
     .inventory-search-shell.is-open .inventory-search-wrap {
         width: 320px;
@@ -180,45 +183,6 @@
         border-bottom-color: #70131B;
         box-shadow: none !important;
         transform: translateY(-1px);
-    }
-    .inventory-search-toggle {
-        width: 50px !important;
-        height: 50px !important;
-        min-width: 50px !important;
-        min-height: 50px !important;
-        flex: 0 0 50px !important;
-        padding: 0 !important;
-        gap: 0 !important;
-        border-radius: 999px !important;
-        appearance: none !important;
-        -webkit-appearance: none !important;
-        background: linear-gradient(135deg, #70131B, #8f2230) !important;
-        border: 1px solid #8f2230 !important;
-        box-shadow:
-            0 0 0 3px rgba(112, 19, 27, 0.12),
-            0 10px 22px rgba(112, 19, 27, 0.20) !important;
-        outline: none !important;
-    }
-    .inventory-search-toggle svg {
-        width: 28px !important;
-        height: 28px !important;
-        stroke-width: 2 !important;
-        display: block;
-    }
-    .inventory-search-toggle:hover,
-    .inventory-search-toggle:focus {
-        background: #facc15 !important;
-        color: #111827 !important;
-        border-color: #facc15 !important;
-        box-shadow:
-            0 0 0 3px rgba(250, 204, 21, 0.18),
-            0 14px 24px rgba(112, 19, 27, 0.16) !important;
-        outline: none !important;
-    }
-    .inventory-search-toggle:hover svg,
-    .inventory-search-toggle:focus svg {
-        color: #111827 !important;
-        stroke: currentColor !important;
     }
     .btn-add,
     .inventory-manage-btn,
@@ -676,25 +640,13 @@
         line-height: 1.15;
     }
 
-    body.admin-inventory-page .inventory-toolbar-actions > .btn-add,
-    body.admin-inventory-page .inventory-search-toggle {
+    body.admin-inventory-page .inventory-toolbar-actions > .btn-add {
         min-height: 46px !important;
         height: 46px !important;
     }
 
     body.admin-inventory-page .inventory-toolbar-actions > .btn-add {
         padding-inline: 18px;
-    }
-
-    body.admin-inventory-page .inventory-search-toggle {
-        width: 46px !important;
-        min-width: 46px !important;
-        flex-basis: 46px !important;
-    }
-
-    body.admin-inventory-page .inventory-search-toggle svg {
-        width: 25px !important;
-        height: 25px !important;
     }
 
     body.admin-inventory-page .card {
@@ -1765,13 +1717,6 @@
         background: #facc15;
     }
 
-    html[data-theme="dark"] .inventory-search-toggle {
-        background: linear-gradient(135deg, #70131B, #8f2230) !important;
-        border-color: rgba(250, 204, 21, 0.28) !important;
-        box-shadow:
-            0 0 0 3px rgba(112, 19, 27, 0.16),
-            0 12px 22px rgba(0, 0, 0, 0.24) !important;
-    }
     html[data-theme="dark"] .inventory-filter-btn {
         background: rgba(15, 23, 42, 0.92);
         color: #f8fafc;
@@ -1797,6 +1742,10 @@
             margin-left: 0;
         }
 
+        .inventory-summary-head {
+            align-items: stretch;
+        }
+
         .inventory-search-shell {
             width: 100%;
         }
@@ -1805,11 +1754,6 @@
         .inventory-search-shell.is-open .inventory-search-wrap {
             width: 100%;
             flex: 1 1 100%;
-        }
-
-        .inventory-search-shell:not(.is-open) .inventory-search-wrap {
-            width: 0;
-            flex-basis: 0;
         }
 
         .btn-add {
@@ -3095,34 +3039,33 @@
             <p class="inventory-page-description">Track medicines, supplies, stock levels, and clinic inventory movement.</p>
         </div>
         <div class="inventory-toolbar-actions">
-            <div class="inventory-search-shell" id="inventorySearchShell">
-                <div class="inventory-search-wrap">
-                    <input type="text" id="inventorySearchInput" class="inventory-search-input" placeholder="Search by item, category, or unit...">
-                </div>
-                <button type="button" class="btn-add inventory-search-toggle" id="inventorySearchToggle" aria-label="Open search" aria-expanded="false" aria-controls="inventorySearchInput">
-                    <x-outline-icon name="magnifying-glass" />
-                </button>
-            </div>
             @if($canManageInventory)
-                <button type="button" class="btn-add" onclick="openInventoryImportModal()">Import Inventory</button>
+                <button type="button" class="btn-add" onclick="openInventoryImportModal()">Import</button>
                 <button type="button" class="btn-add" onclick="openModal()">+ Add New Item</button>
             @endif
         </div>
     </div>
 
     <div class="card inventory-summary-card">
-        <div class="inventory-filter-bar" id="inventoryFilterBar" aria-label="Inventory filters">
-            <button type="button" class="inventory-filter-pill is-active" data-inventory-filter="all" id="inventoryFilterAllBtn">
-                <span id="inventoryFilterAllLabel">All</span>
-                <svg class="inventory-filter-all-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="9 18 15 12 9 6"/>
-                </svg>
-            </button>
-            <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="medicine">Medicines</button>
-            <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="supplies">Supplies</button>
-            <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="equipment">Equipment</button>
-            <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="low">Low Stock</button>
-            <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="out">Out of Stock</button>
+        <div class="inventory-summary-head">
+            <div class="inventory-filter-bar" id="inventoryFilterBar" aria-label="Inventory filters">
+                <button type="button" class="inventory-filter-pill is-active" data-inventory-filter="all" id="inventoryFilterAllBtn">
+                    <span id="inventoryFilterAllLabel">All</span>
+                    <svg class="inventory-filter-all-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </button>
+                <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="medicine">Medicines</button>
+                <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="supplies">Supplies</button>
+                <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="equipment">Equipment</button>
+                <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="low">Low Stock</button>
+                <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="out">Out of Stock</button>
+            </div>
+            <div class="inventory-search-shell" id="inventorySearchShell">
+                <div class="inventory-search-wrap">
+                    <input type="text" id="inventorySearchInput" class="inventory-search-input" placeholder="Search inventory...">
+                </div>
+            </div>
         </div>
         <div class="inventory-subfilter-bar" id="inventoryMedicineTypeBar" aria-label="Medicine type filters">
             <span class="inventory-subfilter-label">Medicine Types</span>
@@ -4010,7 +3953,6 @@
     const highlightedExpiredRow = document.querySelector('.inventory-row-highlight-expired');
     const inventorySearchInput = document.getElementById('inventorySearchInput');
     const inventorySearchShell = document.getElementById('inventorySearchShell');
-    const inventorySearchToggle = document.getElementById('inventorySearchToggle');
     const inventoryRows = Array.from(document.querySelectorAll('#inventoryTable tbody tr[data-inventory-row]'));
     const inventoryFilterToggle = document.getElementById('inventoryFilterToggle');
     const inventoryFilterMenu = document.getElementById('inventoryFilterMenu');
@@ -5411,24 +5353,8 @@
         });
     }
 
-    if (inventorySearchShell && inventorySearchInput && inventorySearchToggle) {
-        const setInventorySearchOpenState = function (isOpen) {
-            inventorySearchShell.classList.toggle('is-open', isOpen);
-            inventorySearchToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        };
-
-        setInventorySearchOpenState(inventorySearchInput.value.trim() !== '');
-
-        inventorySearchToggle.addEventListener('click', function () {
-            const shouldOpen = !inventorySearchShell.classList.contains('is-open');
-            setInventorySearchOpenState(shouldOpen);
-
-            if (shouldOpen) {
-                window.requestAnimationFrame(function () {
-                    inventorySearchInput.focus();
-                });
-            }
-        });
+    if (inventorySearchShell && inventorySearchInput) {
+        inventorySearchShell.classList.add('is-open');
     }
 
     const unitInput = document.getElementById('iUnit');

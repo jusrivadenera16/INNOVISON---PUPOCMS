@@ -37,9 +37,13 @@
                     <h3>Clinic Profile</h3>
                     <p>Core clinic identity details.</p>
                 </div>
+                <button type="button" class="settings-edit-btn" data-edit-target="clinicProfileForm">
+                    <x-outline-icon name="pencil-square" />
+                    <span>Edit</span>
+                </button>
             </div>
             <div class="settings-panel-body">
-                <form action="{{ route('admin.settings.update') }}" method="POST" class="settings-editable-form">
+                <form id="clinicProfileForm" action="{{ route('admin.settings.update') }}" method="POST" class="settings-editable-form">
                     @csrf
                     @method('PUT')
                     <div class="settings-form-grid">
@@ -53,7 +57,6 @@
                         </div>
                     </div>
                     <div class="settings-action-row">
-                        <button type="button" class="settings-edit-btn" data-edit-trigger><span>Edit Clinic Profile</span></button>
                         <span class="settings-edit-actions">
                             <button type="button" class="settings-cancel-btn" data-edit-cancel><span>Cancel</span></button>
                             <button type="submit" class="settings-save-btn"><x-outline-icon name="check" /> <span>Save Clinic Profile</span></button>
@@ -69,9 +72,13 @@
                     <h3>Clinic Hours</h3>
                     <p>Daily clinic operating schedule.</p>
                 </div>
+                <button type="button" class="settings-edit-btn" data-edit-target="clinicHoursForm">
+                    <x-outline-icon name="pencil-square" />
+                    <span>Edit</span>
+                </button>
             </div>
             <div class="settings-panel-body">
-                <form action="{{ route('admin.settings.update') }}" method="POST" class="settings-editable-form">
+                <form id="clinicHoursForm" action="{{ route('admin.settings.update') }}" method="POST" class="settings-editable-form">
                     @csrf
                     @method('PUT')
                     <div class="settings-form-grid">
@@ -85,7 +92,6 @@
                         </div>
                     </div>
                     <div class="settings-action-row">
-                        <button type="button" class="settings-edit-btn" data-edit-trigger><span>Edit Clinic Hours</span></button>
                         <span class="settings-edit-actions">
                             <button type="button" class="settings-cancel-btn" data-edit-cancel><span>Cancel</span></button>
                             <button type="submit" class="settings-save-btn"><x-outline-icon name="check" /> <span>Save Clinic Hours</span></button>

@@ -917,6 +917,48 @@
         background: rgba(17, 24, 39, .92);
         border-color: rgba(250, 204, 21, .18);
     }
+    html[data-theme="dark"] .awaiting-links-modal-shell {
+        background: rgba(15, 23, 42, .98);
+        border-color: rgba(250, 204, 21, .18);
+        box-shadow: 0 28px 72px rgba(0, 0, 0, .42);
+    }
+    html[data-theme="dark"] .awaiting-links-modal-body {
+        background: rgba(15, 23, 42, .98);
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .awaiting-links-modal-body th {
+        color: #e5e7eb;
+        border-color: rgba(250, 204, 21, .14);
+    }
+    html[data-theme="dark"] .awaiting-links-modal-body td,
+    html[data-theme="dark"] .awaiting-links-modal-body td * {
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .awaiting-links-modal-body tbody tr {
+        border-color: rgba(250, 204, 21, .10);
+    }
+    html[data-theme="dark"] .awaiting-links-modal-body tbody tr:hover {
+        background: rgba(250, 204, 21, .06);
+    }
+    html[data-theme="dark"] .readonly-modal-search {
+        background: rgba(17, 24, 39, .96);
+        border-color: rgba(250, 204, 21, .18);
+        box-shadow: 0 14px 28px rgba(0, 0, 0, .28);
+    }
+    html[data-theme="dark"] .readonly-modal-search svg {
+        color: #facc15;
+    }
+    html[data-theme="dark"] .readonly-modal-search input {
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .readonly-modal-search input::placeholder {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .readonly-search-empty {
+        background: rgba(17, 24, 39, .92);
+        border-color: rgba(250, 204, 21, .18);
+        color: #ffffff;
+    }
     html[data-theme="dark"] .awaiting-info-row span {
         color: #cbd5e1;
     }
@@ -928,6 +970,10 @@
     html[data-theme="dark"] .readonly-record-card {
         background: rgba(17, 24, 39, .92);
         border-color: rgba(250, 204, 21, .18);
+    }
+    html[data-theme="dark"] .pending-approval-card:hover {
+        background: rgba(250, 204, 21, .08);
+        border-color: rgba(250, 204, 21, .32);
     }
     html[data-theme="dark"] .pending-approval-name,
     html[data-theme="dark"] .readonly-record-name,
@@ -988,6 +1034,25 @@
     }
     html[data-theme="dark"] .resubmission-progress-card span {
         color: #cbd5e1;
+    }
+    html[data-theme="dark"] .readonly-modal-pagination {
+        background: rgba(17, 24, 39, .96);
+        border-color: rgba(250, 204, 21, .18);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, .26);
+    }
+    html[data-theme="dark"] .readonly-pagination-summary {
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .readonly-pagination-btn,
+    html[data-theme="dark"] .readonly-pagination-per-page-select {
+        background: rgba(15, 23, 42, .96);
+        border-color: rgba(250, 204, 21, .18);
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .readonly-pagination-btn.is-active {
+        background: #7f0010;
+        border-color: #facc15;
+        color: #ffffff;
     }
     .health-summary-card {
         position: relative;

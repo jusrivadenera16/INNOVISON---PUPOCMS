@@ -5,9 +5,9 @@
 @push('styles')
 <style>
     .user-management-shell {
-        max-width: 1180px;
+        max-width: 1024px;
         margin: 0 auto;
-        padding: 22px 24px 44px;
+        padding: 18px 26px 34px;
         color: #0f172a;
     }
 
@@ -16,7 +16,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        margin-bottom: 34px;
+        margin-bottom: 22px;
         padding: 0;
         background: transparent;
         box-shadow: none;
@@ -24,56 +24,56 @@
 
     .um-hero h1 {
         margin: 0;
-        font-size: clamp(2rem, 3vw, 2.6rem);
+        font-size: 1.72rem;
         font-weight: 900;
         color: #111827;
         display: flex;
         align-items: center;
-        gap: 18px;
+        gap: 9px;
         padding: 0;
         border-bottom: 0;
         letter-spacing: 0;
     }
 
     .um-hero h1 svg {
-        width: 54px;
-        height: 54px;
-        padding: 13px;
-        border-radius: 14px;
+        width: 20px;
+        height: 20px;
+        padding: 0;
+        border-radius: 0;
         color: #9f1239;
-        background: linear-gradient(135deg, rgba(112, 19, 27, .08), rgba(250, 204, 21, .16));
-        border: 1px solid rgba(112, 19, 27, .15);
-        box-shadow: 0 12px 24px rgba(112, 19, 27, .08);
+        background: transparent;
+        border: 0;
+        box-shadow: none;
         flex: 0 0 auto;
     }
 
     .um-hero-title {
         display: grid;
-        gap: 8px;
+        gap: 7px;
     }
 
     .um-hero-title::after {
         content: "";
-        width: 58px;
-        height: 3px;
-        margin-left: 72px;
+        width: 278px;
+        height: 2px;
+        margin-left: 0;
         border-radius: 999px;
         background: #9f1239;
-        box-shadow: 48px 0 0 rgba(250, 204, 21, .85);
+        box-shadow: none;
     }
 
     .um-hero p {
-        margin: 6px 0 0 72px;
+        margin: 5px 0 0;
         color: #475569;
-        font-size: 1rem;
+        font-size: .95rem;
         font-weight: 600;
     }
 
     .um-entry-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(360px, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 380px));
         justify-content: center;
-        gap: 42px;
+        gap: 18px;
     }
 
     .um-entry-card {
@@ -83,15 +83,15 @@
         position: relative;
         overflow: hidden;
         width: 100%;
-        min-height: 430px;
-        padding: 32px 30px 28px;
-        border-radius: 18px;
+        min-height: 250px;
+        padding: 20px 20px 18px;
+        border-radius: 16px;
         border: 1px solid rgba(112, 19, 27, 0.35);
         background:
             linear-gradient(135deg, rgba(255, 255, 255, .95), rgba(255, 252, 244, .86)),
             url('/images/PUPBG.jpg') center / cover no-repeat;
         box-shadow:
-            0 18px 40px rgba(112, 19, 27, 0.08),
+            0 12px 26px rgba(112, 19, 27, 0.08),
             inset 0 1px 0 rgba(255, 255, 255, .95);
         color: #1f2937;
         transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease, background .2s ease;
@@ -134,7 +134,7 @@
         border-color: rgba(250, 204, 21, .82);
         box-shadow:
             0 0 0 3px rgba(250, 204, 21, 0.12),
-            0 24px 46px rgba(112, 19, 27, 0.16);
+            0 18px 34px rgba(112, 19, 27, 0.14);
     }
 
     .um-entry-card:hover::after {
@@ -159,13 +159,13 @@
     }
 
     .um-entry-icon {
-        width: 78px;
-        height: 78px;
+        width: 58px;
+        height: 58px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        margin-bottom: 28px;
+        margin-bottom: 18px;
         color: #9f1239;
         background: linear-gradient(135deg, rgba(112, 19, 27, .1), rgba(250, 204, 21, .16));
         border: 1px solid rgba(112, 19, 27, .1);
@@ -191,18 +191,18 @@
     }
 
     .um-entry-icon svg {
-        width: 40px;
-        height: 40px;
+        width: 28px;
+        height: 28px;
         display: block;
         stroke: currentColor;
     }
 
     .um-entry-chip {
         position: absolute;
-        top: 32px;
-        right: 30px;
-        width: 46px;
-        height: 46px;
+        top: 20px;
+        right: 18px;
+        width: 30px;
+        height: 30px;
         border-radius: 999px;
         display: inline-flex;
         align-items: center;
@@ -211,21 +211,21 @@
         background: #70131B;
         color: #ffffff;
         border: 1px solid rgba(112, 19, 27, 0.2);
-        box-shadow: 0 14px 26px rgba(112, 19, 27, 0.22);
+        box-shadow: 0 10px 18px rgba(112, 19, 27, 0.2);
         transition: background .2s ease, color .2s ease, border-color .2s ease;
     }
 
     .um-entry-chip svg {
-        width: 20px;
-        height: 20px;
+        width: 15px;
+        height: 15px;
         stroke: currentColor;
         stroke-width: 2.2;
         fill: none;
     }
 
     .um-entry-card h2 {
-        margin: 0 0 18px;
-        font-size: 1.62rem;
+        margin: 0 0 12px;
+        font-size: 1.24rem;
         font-weight: 900;
         color: #9f1239 !important;
         position: relative;
@@ -236,19 +236,19 @@
     .um-entry-card h2::after {
         content: "";
         display: block;
-        width: 42px;
-        height: 3px;
-        margin-top: 16px;
+        width: 38px;
+        height: 2px;
+        margin-top: 10px;
         border-radius: 999px;
         background: #9f1239;
     }
 
     .um-entry-card p {
         margin: 0;
-        max-width: 390px;
+        max-width: 310px;
         color: #334155 !important;
-        line-height: 1.65;
-        font-size: 1rem;
+        line-height: 1.45;
+        font-size: .86rem;
         font-weight: 600;
         position: relative;
         z-index: 1;
@@ -257,7 +257,7 @@
 
     .um-entry-card hr {
         width: 100%;
-        margin: auto 0 24px;
+        margin: auto 0 12px;
         border: 0;
         border-top: 1px solid rgba(112, 19, 27, .12);
         position: relative;
@@ -267,8 +267,8 @@
     .um-entry-features {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
-        margin: 28px 0 0;
+        gap: 8px;
+        margin: 15px 0 0;
         padding: 0;
         list-style: none;
         position: relative;
@@ -278,17 +278,17 @@
     .um-entry-features li {
         display: flex;
         align-items: center;
-        gap: 9px;
+        gap: 7px;
         min-width: 0;
         color: #334155;
-        font-size: .78rem;
+        font-size: .66rem;
         font-weight: 700;
         line-height: 1.25;
     }
 
     .um-entry-features span {
-        width: 34px;
-        height: 34px;
+        width: 28px;
+        height: 28px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -299,22 +299,22 @@
     }
 
     .um-entry-features svg {
-        width: 18px;
-        height: 18px;
+        width: 15px;
+        height: 15px;
     }
 
     .um-entry-meta {
-        min-height: 52px;
+        min-height: 38px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 12px;
-        margin-top: 24px;
-        padding: 0 18px;
+        gap: 9px;
+        margin-top: 12px;
+        padding: 0 14px;
         border-radius: 10px;
         background: #70131B;
         color: #ffffff !important;
-        font-size: 0.9rem;
+        font-size: .78rem;
         font-weight: 900;
         position: relative;
         z-index: 1;
@@ -334,8 +334,8 @@
     }
 
     .um-entry-meta svg {
-        width: 18px;
-        height: 18px;
+        width: 15px;
+        height: 15px;
         flex: 0 0 auto;
     }
 
@@ -452,7 +452,7 @@
             padding: 14px 12px 32px;
         }
         .um-entry-card {
-            padding: 24px 20px;
+            padding: 20px 18px;
         }
         .um-entry-features {
             grid-template-columns: 1fr;

@@ -35,12 +35,12 @@
 
     .appointments-summary-title {
         font-weight: 800;
-        transform: translateY(-8px);
+        transform: translateY(2px);
     }
 
     .appointments-summary-head {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         gap: 16px;
         flex-wrap: wrap;
@@ -1707,6 +1707,15 @@
         border-radius: 0 !important;
     }
 
+    .appointments-search-icon {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+        color: #8f2230;
+        stroke: currentColor;
+        transform: translateY(2px);
+    }
+
     .appointments-search-wrap::before {
         content: none;
     }
@@ -1828,6 +1837,8 @@
 
     .appointments-filter-toggle:hover,
     .appointments-filter-toggle:focus-visible {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
         color: #70131B !important;
     }
 
@@ -2693,7 +2704,8 @@
             <div class="appointments-toolbar-actions">
                 <div class="appointments-search-shell" id="appointmentsSearchShell">
                     <div class="appointments-search-wrap">
-                        <input type="text" id="searchInput" class="appointments-search-input" placeholder="Search by student name, appointment ID, or service...">
+                        <x-outline-icon name="magnifying-glass" class="appointments-search-icon" />
+                        <input type="text" id="searchInput" class="appointments-search-input" placeholder="Search appointments...">
                     </div>
                     <button type="button" class="btn-add-walkin appointments-search-toggle" id="appointmentsSearchToggle" aria-label="Open search" aria-expanded="false" aria-controls="searchInput">
                         <x-outline-icon name="magnifying-glass" />

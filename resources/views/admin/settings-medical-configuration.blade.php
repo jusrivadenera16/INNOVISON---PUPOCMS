@@ -9,6 +9,14 @@
         display: grid;
         gap: 16px;
     }
+    .medical-config-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .medical-config-edit {
+        text-decoration: none;
+    }
     .medical-config-row {
         min-height: 92px;
         display: flex;
@@ -83,6 +91,11 @@
         .medical-config-row {
             align-items: flex-start;
         }
+        .medical-config-actions {
+            width: 100%;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
     }
 </style>
 @endpush
@@ -97,7 +110,13 @@
             <h1 class="settings-section-title"><x-outline-icon name="clipboard-document-list" />Medical Configuration</h1>
             <p>Manage clinical reference records used by reports, consultations, inventory, and MAR workflows.</p>
         </div>
-        <a href="{{ route('admin.settings') }}" class="settings-back-link"><x-outline-icon name="chevron-right" /> Settings Hub</a>
+        <div class="medical-config-actions">
+            <a href="{{ route('admin.reports.manage-mar', ['month' => $currentMonth]) }}" class="settings-edit-btn medical-config-edit">
+                <x-outline-icon name="pencil-square" />
+                <span>Edit</span>
+            </a>
+            <a href="{{ route('admin.settings') }}" class="settings-back-link"><x-outline-icon name="chevron-right" /> Settings Hub</a>
+        </div>
     </section>
 
     <div class="medical-config-list">
