@@ -1500,10 +1500,10 @@
     .health-records-search-submit {
         min-width: 116px;
         min-height: 48px;
-        border: 1px solid rgba(112, 19, 27, 0.24);
+        border: 1px solid #7f1d2d;
         border-radius: 12px;
-        background: #ffffff;
-        color: #70131B;
+        background: #7f1d2d;
+        color: #ffffff;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -1512,6 +1512,25 @@
         font-weight: 900;
         cursor: pointer;
         box-shadow: 0 10px 20px rgba(112, 19, 27, .08);
+        overflow: hidden;
+        position: relative;
+        transition: color .18s ease, background .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .health-records-search-submit::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(250, 204, 21, 0) 0%, rgba(255, 247, 181, .58) 45%, rgba(250, 204, 21, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.5s ease;
+        pointer-events: none;
+    }
+    .health-records-search-submit > * {
+        position: relative;
+        z-index: 1;
     }
     .health-records-search-submit svg {
         width: 18px;
@@ -1519,10 +1538,15 @@
     }
     .health-records-search-submit:hover,
     .health-records-search-submit:focus-visible {
-        background: #fff7ed;
-        border-color: rgba(112, 19, 27, 0.42);
+        background: #facc15;
+        border-color: #facc15;
         color: #70131B;
         transform: translateY(-1px);
+        outline: none;
+    }
+    .health-records-search-submit:hover::after,
+    .health-records-search-submit:focus-visible::after {
+        left: 125%;
     }
     .health-table-tools .health-records-search-submit {
         min-height: 42px;
@@ -1597,6 +1621,11 @@
         background: #70131B;
         opacity: .16;
     }
+    .health-summary-modern-card.is-pending::after,
+    .health-summary-modern-card.is-compliance::after {
+        background: #ffd700;
+        opacity: .28;
+    }
     .health-summary-modern-card.is-approved .health-summary-modern-icon-wrap {
         background: #dcfce7;
         color: #16a34a;
@@ -1644,6 +1673,11 @@
         background: #facc15;
         color: #70131B;
         border-color: #facc15;
+    }
+    .health-summary-modern-card.is-pending.is-clickable:hover::after,
+    .health-summary-modern-card.is-compliance.is-clickable:hover::after {
+        background: #7f1d2d;
+        opacity: .22;
     }
     .health-summary-modern-card.is-pending.is-clickable:hover .health-summary-modern-copy,
     .health-summary-modern-card.is-pending.is-clickable:hover .health-summary-modern-label,
@@ -4017,6 +4051,80 @@
     html[data-theme="dark"] .hr-ref-default h4, html[data-theme="dark"] .hr-ref-default p { color:#f1f5f9; }
     html[data-theme="dark"] .hr-ma-radio { background:rgba(17,24,39,0.86); color:#f8fafc; border-color:rgba(148,163,184,0.18); }
 
+    .health-table-tools .health-records-search-wrap,
+    .health-records-overview .health-records-search-wrap {
+        border: 0 !important;
+        border-bottom: 3px solid #8f2230 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .health-table-tools .health-records-search-wrap::before,
+    .health-records-overview .health-records-search-wrap::before {
+        content: "";
+        width: 18px;
+        height: 18px;
+        margin: 0 12px 0 2px;
+        flex: 0 0 auto;
+        background: #9f1239;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+
+    .health-table-tools .health-records-search,
+    .health-records-overview .health-records-search {
+        min-height: 42px !important;
+        height: 42px !important;
+        padding: 8px 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        color: #0f172a !important;
+    }
+
+    .health-table-tools .health-records-search::placeholder,
+    .health-records-overview .health-records-search::placeholder {
+        color: #94a3b8 !important;
+        font-weight: 800;
+    }
+
+    html[data-theme="dark"] .health-table-tools .health-records-search-wrap,
+    html[data-theme="dark"] .health-records-overview .health-records-search-wrap {
+        border-bottom-color: #facc15 !important;
+        background: transparent !important;
+    }
+
+    html[data-theme="dark"] .health-table-tools .health-records-search-wrap::before,
+    html[data-theme="dark"] .health-records-overview .health-records-search-wrap::before {
+        background: #facc15;
+    }
+
+    html[data-theme="dark"] .health-table-tools .health-records-search,
+    html[data-theme="dark"] .health-records-overview .health-records-search {
+        color: #ffffff !important;
+        background: transparent !important;
+    }
+
+    html[data-theme="dark"] .health-table-tools .health-records-search::placeholder,
+    html[data-theme="dark"] .health-records-overview .health-records-search::placeholder {
+        color: #cbd5e1 !important;
+    }
+
+    html[data-theme="dark"] .health-records-search-submit {
+        background: #7f1d2d !important;
+        border-color: #7f1d2d !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .health-records-search-submit:hover,
+    html[data-theme="dark"] .health-records-search-submit:focus-visible {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+    }
+
     .health-records-overview .health-records-search-shell,
     .health-records-overview .health-records-search-shell.is-open,
     .health-records-overview .health-records-search-wrap,
@@ -4172,7 +4280,7 @@
                         id="recordSearch"
                         value=""
                         class="health-records-search"
-                        placeholder="Search by student name, student number, or reference number..."
+                        placeholder="Search records..."
                         autocomplete="off"
                     >
                 </div>
