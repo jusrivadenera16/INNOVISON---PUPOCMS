@@ -2204,6 +2204,8 @@
         border: 1px solid #8f2230;
         background: linear-gradient(135deg, #70131B, #8f2230);
         color: #ffffff !important;
+        fill: #ffffff !important;
+        stroke: #ffffff !important;
         font-size: 13px;
         font-weight: 800;
         text-decoration: none;
@@ -2213,6 +2215,9 @@
             0 10px 22px rgba(112, 19, 27, 0.20);
         transition: color .08s linear, transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
         z-index: 0;
+    }
+    .health-filter-btn * {
+        color: #ffffff !important;
     }
 
     .health-filter-btn::after {
