@@ -491,8 +491,8 @@
         cursor: pointer;
         appearance: none;
         background-image:
-            linear-gradient(225deg, transparent 50%, #70131B 50%),
-            linear-gradient(315deg, #70131B 50%, transparent 50%);
+            linear-gradient(135deg, transparent 50%, #70131B 50%),
+            linear-gradient(45deg, #70131B 50%, transparent 50%);
         background-position:
             calc(100% - 17px) 50%,
             calc(100% - 11px) 50%;
@@ -553,7 +553,8 @@
         position: absolute;
         left: 0;
         right: 0;
-        top: calc(100% + 8px);
+        bottom: calc(100% + 8px);
+        top: auto;
         display: none;
         gap: 6px;
         flex-direction: column;
@@ -2730,8 +2731,8 @@
 
     html[data-theme="dark"] .readonly-pagination-per-page-select {
         background-image:
-            linear-gradient(45deg, transparent 50%, #facc15 50%),
-            linear-gradient(135deg, #facc15 50%, transparent 50%);
+            linear-gradient(135deg, transparent 50%, #facc15 50%),
+            linear-gradient(45deg, #facc15 50%, transparent 50%);
     }
 
     html[data-theme="dark"] .health-records-title,
