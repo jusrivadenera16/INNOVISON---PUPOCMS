@@ -580,10 +580,14 @@
         padding: 0 12px;
         cursor: pointer;
     }
-    .premium-select-option:hover,
-    .premium-select-option.is-selected {
+    .premium-select-option:hover {
         background: #7f0010;
         color: #facc15;
+        border-color: #7f0010;
+    }
+    .premium-select-option.is-selected {
+        background: #7f0010;
+        color: #ffffff;
         border-color: #7f0010;
     }
     .readonly-record-card {
