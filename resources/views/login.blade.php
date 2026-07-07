@@ -614,7 +614,7 @@
         <div class="login-hero">
             <div class="login-hero-top">
                 <div class="login-hero-badge"><span></span> Clinic Access</div>
-                <div class="login-chip">{{ app()->environment('local') ? 'Local Sign In' : 'Centralized Sign In' }}</div>
+                <div class="login-chip">{{ config('services.idp.enabled') ? 'Centralized Sign In' : 'Local Sign In' }}</div>
             </div>
             <h2>Clinic Portal</h2>
             <p class="login-hero-copy">Login to your account to continue. The same system keeps student and clinic access in one place.</p>
@@ -708,7 +708,6 @@
     </div>
   </main>
 
-  @env('local')
   @unless(config('services.idp.enabled'))
       <div id="registerModal" class="modal-overlay">
           <div class="modal-content">
@@ -790,7 +789,6 @@
           </div>
       </div>
   @endunless
-  @endenv
 
   <div id="loginLoadingOverlay" class="login-loading-overlay" aria-hidden="true">
       <div class="login-loading-card">

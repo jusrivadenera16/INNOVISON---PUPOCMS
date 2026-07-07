@@ -14,8 +14,6 @@ use Illuminate\Support\Str;
 class RegisterController extends Controller
 {
     public function register(Request $request) {
-    abort_unless(app()->environment('local'), 404);
-
     if ((bool) config('services.idp.enabled', false)) {
         abort(403, 'Local registration is disabled while centralized login is enabled.');
     }
