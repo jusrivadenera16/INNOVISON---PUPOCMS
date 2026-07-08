@@ -1127,6 +1127,13 @@ class WalkInController extends Controller
     public function showWalkinForm(Request $request, $student_id)
     {
         $student = $this->findUserByIdentifier((string) $student_id);
+        if (!$student) {
+            $profile = $this->findHealthProfileByReference((string) $student_id);
+            if ($profile) {
+                $student = $this->ensureLocalUserFromHealthProfile($profile, (string) $student_id);
+            }
+        }
+
         abort_if(!$student, 404);
         $user_source = $this->normalizeConsultationSource($request->query('source', 'walkin'));
         $consultationSessionKey = $this->consultationStartSessionKey(

@@ -69,6 +69,7 @@ return [
         'refresh_cookie_name' => env('IDP_REFRESH_COOKIE_NAME', 'refresh_token'),
         'access_cookie_minutes' => (int) env('IDP_ACCESS_COOKIE_MINUTES', 60),
         'refresh_cookie_minutes' => (int) env('IDP_REFRESH_COOKIE_MINUTES', 10080),
+        'session_validation_cache_seconds' => (int) env('IDP_SESSION_VALIDATION_CACHE_SECONDS', 300),
         'cookie_secure' => filter_var(env('IDP_COOKIE_SECURE', true), FILTER_VALIDATE_BOOL),
         'cookie_same_site' => env('IDP_COOKIE_SAME_SITE', 'Lax'),
         'logout_path' => env('IDP_LOGOUT_PATH', '/logout'),

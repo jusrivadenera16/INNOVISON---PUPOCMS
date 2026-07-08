@@ -2026,6 +2026,7 @@ class LoginController extends Controller
         Auth::guard($guard)->login($user);
         Auth::shouldUse($guard);
         $request->session()->regenerate();
+        $request->session()->put('idp_last_validated_at', now()->timestamp);
         $request->session()->flash('show_terms_modal', true);
         // CRITICAL: Explicitly save the session BEFORE redirect to ensure the
         // laravel_session cookie is included in the response headers. Without this,

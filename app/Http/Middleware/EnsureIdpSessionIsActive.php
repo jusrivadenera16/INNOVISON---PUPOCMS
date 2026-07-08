@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Log;
 
 class EnsureIdpSessionIsActive
 {
+    private const VALIDATED_AT_SESSION_KEY = 'idp_last_validated_at';
+
     public function handle(Request $request, Closure $next)
     {
         if (!(bool) config('services.idp.enabled', false)) {
@@ -22,10 +24,15 @@ class EnsureIdpSessionIsActive
             return $next($request);
         }
 
+        if ($this->recentlyValidated($request)) {
+            return $next($request);
+        }
+
         $cookieName = trim((string) config('services.idp.access_cookie_name', 'access_token'));
         $accessToken = $cookieName !== '' ? trim((string) $request->cookie($cookieName, '')) : '';
 
         if ($accessToken !== '' && $this->idpTokenStillValid($accessToken)) {
+            $this->markValidated($request);
             return $next($request);
         }
 
@@ -67,6 +74,28 @@ class EnsureIdpSessionIsActive
         }
 
         return $response;
+    }
+
+    private function recentlyValidated(Request $request): bool
+    {
+        $ttl = max(0, (int) config('services.idp.session_validation_cache_seconds', 300));
+        if ($ttl === 0 || !$request->hasSession()) {
+            return false;
+        }
+
+        $validatedAt = (int) $request->session()->get(self::VALIDATED_AT_SESSION_KEY, 0);
+        if ($validatedAt <= 0) {
+            return false;
+        }
+
+        return now()->timestamp - $validatedAt <= $ttl;
+    }
+
+    private function markValidated(Request $request): void
+    {
+        if ($request->hasSession()) {
+            $request->session()->put(self::VALIDATED_AT_SESSION_KEY, now()->timestamp);
+        }
     }
 
     private function authenticatedUser(): ?User
