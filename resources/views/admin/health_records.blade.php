@@ -491,8 +491,8 @@
         cursor: pointer;
         appearance: none;
         background-image:
-            linear-gradient(45deg, transparent 50%, #70131B 50%),
-            linear-gradient(135deg, #70131B 50%, transparent 50%);
+            linear-gradient(135deg, transparent 50%, #70131B 50%),
+            linear-gradient(45deg, #70131B 50%, transparent 50%);
         background-position:
             calc(100% - 17px) 50%,
             calc(100% - 11px) 50%;
@@ -553,7 +553,8 @@
         position: absolute;
         left: 0;
         right: 0;
-        top: calc(100% + 8px);
+        bottom: calc(100% + 8px);
+        top: auto;
         display: none;
         gap: 6px;
         flex-direction: column;
@@ -579,10 +580,14 @@
         padding: 0 12px;
         cursor: pointer;
     }
-    .premium-select-option:hover,
-    .premium-select-option.is-selected {
+    .premium-select-option:hover {
         background: #7f0010;
         color: #facc15;
+        border-color: #7f0010;
+    }
+    .premium-select-option.is-selected {
+        background: #7f0010;
+        color: #ffffff;
         border-color: #7f0010;
     }
     .readonly-record-card {
@@ -2199,6 +2204,8 @@
         border: 1px solid #8f2230;
         background: linear-gradient(135deg, #70131B, #8f2230);
         color: #ffffff !important;
+        fill: #ffffff !important;
+        stroke: #ffffff !important;
         font-size: 13px;
         font-weight: 800;
         text-decoration: none;
@@ -2208,6 +2215,9 @@
             0 10px 22px rgba(112, 19, 27, 0.20);
         transition: color .08s linear, transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
         z-index: 0;
+    }
+    .health-filter-btn * {
+        color: #ffffff !important;
     }
 
     .health-filter-btn::after {
@@ -2730,8 +2740,8 @@
 
     html[data-theme="dark"] .readonly-pagination-per-page-select {
         background-image:
-            linear-gradient(45deg, transparent 50%, #facc15 50%),
-            linear-gradient(135deg, #facc15 50%, transparent 50%);
+            linear-gradient(135deg, transparent 50%, #facc15 50%),
+            linear-gradient(45deg, #facc15 50%, transparent 50%);
     }
 
     html[data-theme="dark"] .health-records-title,
