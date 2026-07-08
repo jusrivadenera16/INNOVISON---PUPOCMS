@@ -2152,6 +2152,52 @@ class LoginController extends Controller
         return view('login');
     }
 
+    public function redirectToIdpPortal(Request $request): RedirectResponse
+    {
+        try {
+            $authenticatedUser = $this->authenticatedUser();
+            if ($authenticatedUser) {
+                return redirect($this->resolveRedirectPathForUser($authenticatedUser));
+            }
+        } catch (\Throwable $exception) {
+            Log::warning('Portal login route could not inspect the existing clinic session; continuing to IDP redirect.', [
+                'message' => $exception->getMessage(),
+            ]);
+        }
+
+        $clientId = trim((string) config('services.idp.client_id', ''));
+        $redirectUri = trim((string) config('services.idp.redirect_uri', ''));
+        $responseType = trim((string) config('services.idp.authorize_response_type', 'code')) ?: 'code';
+        $authorizePath = trim((string) config('services.idp.authorize_path', '/api/v1/auth/authorize'));
+        $baseUrl = trim((string) config('services.idp.base_url', ''));
+
+        if ($clientId === '' || $redirectUri === '' || $baseUrl === '') {
+            Log::warning('Portal login route blocked because IDP configuration is incomplete.', [
+                'has_client_id' => $clientId !== '',
+                'has_redirect_uri' => $redirectUri !== '',
+                'has_base_url' => $baseUrl !== '',
+            ]);
+
+            return redirect()->route('landing')->withErrors([
+                'idp' => 'Identity provider login is not configured.',
+            ]);
+        }
+
+        $authorizeUrl = rtrim($baseUrl, '/') . '/' . ltrim($authorizePath, '/');
+        $query = [
+            'client_id' => $clientId,
+            'redirect_uri' => $redirectUri,
+            'response_type' => $responseType,
+        ];
+
+        $scope = trim((string) config('services.idp.authorize_scope', ''));
+        if ($scope !== '') {
+            $query['scope'] = $scope;
+        }
+
+        return redirect()->away($authorizeUrl . '?' . http_build_query($query));
+    }
+
     public function handleWorkspaceGateway(Request $request)
     {
         Log::info('[WORKSPACE GATEWAY] Handling workspace gateway request');
