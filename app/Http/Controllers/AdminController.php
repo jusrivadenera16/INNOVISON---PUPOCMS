@@ -3784,4 +3784,61 @@ public function inventorySummary()
         return response()->json($systems);
     }
 
+    public function integrationTokens()
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+
+        $integrationClients = IntegrationClient::with('tokens')->get();
+
+        return view('admin.integration-tokens', compact('integrationClients'));
+    }
+
+    public function generateIntegrationToken(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+
+        $request->validate(['client_id' => 'required|exists:integration_clients,id']);
+
+        try {
+            $client = IntegrationClient::findOrFail($request->client_id);
+            $token = $client->createToken('API Token')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Token generated successfully',
+                'token' => $token
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate token: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function revokeIntegrationToken(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+
+        $request->validate(['client_id' => 'required|exists:integration_clients,id']);
+
+        try {
+            $client = IntegrationClient::findOrFail($request->client_id);
+            $client->tokens()->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tokens revoked successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to revoke tokens: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
 }

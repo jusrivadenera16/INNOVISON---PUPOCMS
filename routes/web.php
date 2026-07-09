@@ -312,6 +312,9 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::get('/admin/api/health-monitor', [AdminController::class, 'apiHealthMonitor'])->name('admin.api.health-monitor');
         Route::get('/admin/api/error-logs', [AdminController::class, 'apiErrorLogs'])->name('admin.api.error-logs');
         Route::get('/admin/api/system-status', [AdminController::class, 'apiSystemStatus'])->name('admin.api.system-status');
+        Route::get('/admin/integration-tokens', [AdminController::class, 'integrationTokens'])->name('admin.integration-tokens');
+        Route::post('/admin/integration-tokens/generate', [AdminController::class, 'generateIntegrationToken'])->name('admin.integration-tokens.generate');
+        Route::post('/admin/integration-tokens/revoke', [AdminController::class, 'revokeIntegrationToken'])->name('admin.integration-tokens.revoke');
         Route::get('/admin/activity-logs', [AdminController::class, 'indexLogs'])
             ->middleware('role:superadmin')
             ->name('admin.logs');
