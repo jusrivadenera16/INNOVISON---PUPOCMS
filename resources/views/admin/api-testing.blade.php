@@ -817,6 +817,9 @@
             <button class="api-tab-button" data-tab="systems">
                 🔗 System Status
             </button>
+            <a href="{{ route('admin.integration-tokens') }}" class="api-tab-button" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                🔐 Integration Tokens
+            </a>
         </div>
 
         <!-- TAB 1: API TESTS (Original Content) -->
