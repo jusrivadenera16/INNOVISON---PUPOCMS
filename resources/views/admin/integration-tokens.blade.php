@@ -4,283 +4,573 @@
 @section('disable_voice_inputs', 'true')
 
 @section('content')
+@php
+    $clients = $integrationClients->sortBy('system_name')->values();
+    $activeCount = $clients->where('is_active', true)->count();
+    $totalTokens = $clients->sum(fn ($client) => $client->tokens->count());
+    $revokedCount = 0;
+    $latestToken = $clients
+        ->flatMap(fn ($client) => $client->tokens->map(fn ($token) => ['token' => $token, 'client' => $client]))
+        ->sortByDesc(fn ($item) => optional($item['token']->created_at)->timestamp ?? 0)
+        ->first();
+    $recentTokens = $clients
+        ->flatMap(fn ($client) => $client->tokens->map(fn ($token) => ['token' => $token, 'client' => $client]))
+        ->sortByDesc(fn ($item) => optional($item['token']->created_at)->timestamp ?? 0)
+        ->take(4)
+        ->values();
+@endphp
+
 <style>
-    .token-shell {
+    .integration-page {
         display: grid;
-        gap: 20px;
-    }
-
-    .token-card {
-        position: relative;
-        overflow: hidden;
-        background: rgba(255, 255, 255, 0.96);
-        border-radius: 22px;
-        padding: 26px;
-        box-shadow: 0 22px 50px rgba(15, 23, 42, 0.14);
-        border: 1px solid rgba(128, 0, 0, 0.08);
-    }
-
-    html[data-theme="dark"] .token-card {
-        background: rgba(35, 17, 25, 0.94);
-        border-color: rgba(255, 255, 255, 0.08);
-        box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
-    }
-
-    .token-head h2 {
-        margin: 0 0 8px;
-        font-size: 1.45rem;
-        font-weight: 900;
-        color: #7f1d2d;
-    }
-
-    html[data-theme="dark"] .token-head h2 {
-        color: #f3d6da;
-    }
-
-    .token-head p {
-        margin: 0;
-        color: #6b7280;
-    }
-
-    html[data-theme="dark"] .token-head p {
-        color: #cbd5e1;
-    }
-
-    .token-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
         gap: 18px;
-        margin-top: 24px;
+        color: #111827;
     }
 
-    .system-card {
-        border-radius: 18px;
-        padding: 20px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 244, 246, 0.98));
+    .integration-shell {
         border: 1px solid rgba(127, 29, 45, 0.12);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.10);
+        padding: 22px;
     }
 
-    .system-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 16px 32px rgba(127, 29, 45, 0.12);
+    html[data-theme="dark"] .integration-shell {
+        background: rgba(20, 12, 18, 0.94);
+        border-color: rgba(255, 255, 255, 0.10);
+        color: #f8fafc;
     }
 
-    html[data-theme="dark"] .system-card {
-        background: linear-gradient(180deg, rgba(59, 24, 33, 0.96), rgba(35, 17, 25, 0.98));
-        border-color: rgba(255, 255, 255, 0.08);
-    }
-
-    .system-header {
+    .integration-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 14px;
-        padding-bottom: 14px;
-        border-bottom: 1px solid rgba(127, 29, 45, 0.1);
+        gap: 16px;
+        margin-bottom: 18px;
     }
 
-    .system-name {
-        margin: 0;
-        color: #7f1d2d;
-        font-size: 16px;
-        font-weight: 800;
+    .integration-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 14px;
     }
 
-    html[data-theme="dark"] .system-name {
-        color: #f3d6da;
-    }
-
-    .system-status {
+    .integration-title-icon,
+    .stat-icon,
+    .system-avatar,
+    .detail-avatar,
+    .security-icon {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        border-radius: 10px;
-        font-size: 12px;
-        font-weight: 700;
+        justify-content: center;
+        flex-shrink: 0;
     }
 
-    .status-active {
-        background: rgba(34, 197, 94, 0.1);
-        color: #166534;
+    .integration-title-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 15px;
+        background: #fff1f2;
+        color: #9f1239;
+        border: 1px solid rgba(159, 18, 57, 0.12);
     }
 
-    .status-inactive {
-        background: rgba(239, 68, 68, 0.1);
-        color: #991b1b;
+    .integration-title h1 {
+        margin: 0;
+        font-size: 1.45rem;
+        font-weight: 900;
+        color: #111827;
     }
 
-    .token-section {
-        margin-top: 14px;
+    .integration-title p {
+        margin: 4px 0 0;
+        color: #64748b;
+        font-size: 0.9rem;
     }
 
-    .token-label {
-        display: block;
-        font-size: 12px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #6b7280;
-        margin-bottom: 6px;
+    html[data-theme="dark"] .integration-title h1 {
+        color: #ffffff;
     }
 
-    html[data-theme="dark"] .token-label {
+    html[data-theme="dark"] .integration-title p {
         color: #cbd5e1;
     }
 
-    .token-display {
+    .integration-controls {
         display: flex;
-        gap: 8px;
         align-items: center;
-        margin-bottom: 10px;
-    }
-
-    .token-box {
-        flex: 1;
-        border-radius: 12px;
-        padding: 10px 12px;
-        background: rgba(127, 29, 45, 0.06);
-        border: 1px solid rgba(127, 29, 45, 0.1);
-        font-family: 'Courier New', monospace;
-        font-size: 12px;
-        color: #111827;
-        word-break: break-all;
-        max-height: 60px;
-        overflow: hidden;
-    }
-
-    html[data-theme="dark"] .token-box {
-        background: rgba(255, 255, 255, 0.05);
-        color: #f8fafc;
-        border-color: rgba(255, 255, 255, 0.08);
-    }
-
-    .token-actions {
-        display: flex;
-        gap: 8px;
+        gap: 10px;
         flex-wrap: wrap;
-        margin-bottom: 10px;
+        justify-content: flex-end;
     }
 
-    .token-btn {
-        flex: 1;
-        min-width: 100px;
-        border: 1px solid rgba(127, 29, 45, 0.16);
+    .integration-search,
+    .integration-filter {
+        height: 44px;
         border-radius: 12px;
-        padding: 8px 12px;
+        border: 1px solid rgba(148, 163, 184, 0.28);
         background: #fff;
-        color: #7f1d2d;
+        color: #0f172a;
         font-weight: 700;
-        cursor: pointer;
-        font-size: 12px;
-        transition: all 0.2s ease;
     }
 
-    .token-btn:hover {
-        background: rgba(127, 29, 45, 0.08);
-        border-color: rgba(127, 29, 45, 0.24);
+    .integration-search {
+        min-width: 250px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 14px;
     }
 
-    .token-btn.generate {
-        background: linear-gradient(135deg, #7f1d2d, #5b0c0e);
-        color: #fff;
-        border-color: #7f1d2d;
+    .integration-search input {
+        border: 0;
+        outline: 0;
+        width: 100%;
+        background: transparent;
+        color: inherit;
+        font-weight: 700;
     }
 
-    .token-btn.generate:hover {
-        background: linear-gradient(135deg, #5b0c0e, #7f1d2d);
+    .integration-search input::placeholder {
+        color: #94a3b8;
     }
 
-    .token-btn.copy {
-        background: #facc15;
-        color: #111827;
-        border-color: #facc15;
+    .integration-filter {
+        padding: 0 14px;
+        min-width: 130px;
+        outline: none;
     }
 
-    .token-btn.copy:hover {
-        background: #eab308;
-        border-color: #eab308;
-    }
-
-    .token-btn.revoke {
-        background: #fee2e2;
-        color: #991b1b;
-        border-color: rgba(185, 28, 28, 0.18);
-    }
-
-    .token-btn.revoke:hover {
-        background: #fecaca;
-        border-color: rgba(185, 28, 28, 0.24);
-    }
-
-    html[data-theme="dark"] .token-btn {
-        background: rgba(255, 255, 255, 0.08);
+    html[data-theme="dark"] .integration-search,
+    html[data-theme="dark"] .integration-filter {
+        background: rgba(255, 255, 255, 0.06);
         color: #f8fafc;
         border-color: rgba(255, 255, 255, 0.12);
     }
 
-    html[data-theme="dark"] .token-btn:hover {
-        background: rgba(255, 255, 255, 0.12);
-        border-color: rgba(255, 255, 255, 0.16);
+    .integration-primary {
+        height: 44px;
+        border: 0;
+        border-radius: 12px;
+        background: #8a1220;
+        color: #fff;
+        padding: 0 18px;
+        font-weight: 900;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        box-shadow: 0 14px 28px rgba(138, 18, 32, 0.18);
     }
 
-    .token-meta {
-        font-size: 12px;
-        color: #6b7280;
-        line-height: 1.5;
+    .integration-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 18px;
     }
 
-    html[data-theme="dark"] .token-meta {
+    .stat-card {
+        min-height: 100px;
+        border-radius: 18px;
+        border: 1px solid rgba(127, 29, 45, 0.10);
+        background: linear-gradient(180deg, #ffffff, #fffafa);
+        padding: 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    html[data-theme="dark"] .stat-card {
+        background: linear-gradient(180deg, rgba(42, 20, 28, 0.95), rgba(31, 15, 22, 0.98));
+        border-color: rgba(255, 255, 255, 0.10);
+    }
+
+    .stat-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+    }
+
+    .stat-icon.green {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .stat-icon.purple {
+        background: #f3e8ff;
+        color: #7e22ce;
+    }
+
+    .stat-icon.red {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .stat-icon.blue {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .stat-label {
+        display: block;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .stat-value {
+        display: block;
+        margin-top: 5px;
+        color: #111827;
+        font-size: 1.55rem;
+        font-weight: 950;
+    }
+
+    .stat-sub {
+        display: block;
+        margin-top: 2px;
+        color: #64748b;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    html[data-theme="dark"] .stat-value {
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .stat-label,
+    html[data-theme="dark"] .stat-sub {
         color: #cbd5e1;
     }
 
-    .token-meta strong {
-        color: #7f1d2d;
+    .integration-workspace {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
     }
 
-    html[data-theme="dark"] .token-meta strong {
-        color: #f3d6da;
+    .integration-panel {
+        border: 1px solid rgba(127, 29, 45, 0.10);
+        border-radius: 18px;
+        background: #fff;
+        padding: 14px;
     }
 
-    .no-token-message {
+    html[data-theme="dark"] .integration-panel {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.10);
+    }
+
+    .panel-title {
+        margin: 4px 4px 12px;
+        color: #111827;
+        font-size: 0.88rem;
+        font-weight: 950;
+    }
+
+    html[data-theme="dark"] .panel-title {
+        color: #ffffff;
+    }
+
+    .system-list {
+        display: grid;
+        gap: 8px;
+    }
+
+    .system-item {
+        width: 100%;
+        border: 1px solid rgba(127, 29, 45, 0.10);
+        background: #fff;
+        border-radius: 14px;
         padding: 12px;
-        background: rgba(234, 179, 8, 0.1);
-        border: 1px solid rgba(234, 179, 8, 0.2);
-        border-radius: 10px;
-        font-size: 13px;
-        color: #7c2d12;
+        display: grid;
+        grid-template-columns: 42px 1fr auto;
+        gap: 10px;
+        align-items: center;
+        text-align: left;
+        cursor: pointer;
+        transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
     }
 
-    html[data-theme="dark"] .no-token-message {
-        background: rgba(84, 45, 12, 0.2);
-        border-color: rgba(255, 214, 102, 0.2);
-        color: #fde68a;
+    .system-item:hover,
+    .system-item.active {
+        transform: translateY(-1px);
+        background: #fff7f7;
+        border-color: rgba(138, 18, 32, 0.55);
     }
 
-    .token-alert {
-        padding: 14px 16px;
-        border-radius: 16px;
-        background: rgba(34, 197, 94, 0.1);
-        border: 1px solid rgba(34, 197, 94, 0.2);
-        color: #166534;
-        margin-bottom: 20px;
+    html[data-theme="dark"] .system-item {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.10);
+    }
+
+    html[data-theme="dark"] .system-item:hover,
+    html[data-theme="dark"] .system-item.active {
+        background: rgba(138, 18, 32, 0.28);
+    }
+
+    .system-avatar,
+    .detail-avatar {
+        background: #9f1239;
+        color: #fff;
+        font-weight: 950;
+        border-radius: 50%;
+    }
+
+    .system-avatar {
+        width: 38px;
+        height: 38px;
+    }
+
+    .detail-avatar {
+        width: 58px;
+        height: 58px;
+        font-size: 1.25rem;
+    }
+
+    .system-item strong {
+        display: block;
+        color: #111827;
+        font-size: 0.86rem;
+        font-weight: 950;
+    }
+
+    .system-item small {
+        display: block;
+        margin-top: 3px;
+        color: #64748b;
+        font-weight: 800;
+    }
+
+    html[data-theme="dark"] .system-item strong {
+        color: #fff;
+    }
+
+    html[data-theme="dark"] .system-item small {
+        color: #cbd5e1;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+        background: #22c55e;
+    }
+
+    .status-dot.warn {
+        background: #f59e0b;
+    }
+
+    .item-last-used {
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-align: right;
+    }
+
+    .detail-card {
         display: none;
     }
 
-    html[data-theme="dark"] .token-alert {
-        background: rgba(34, 197, 94, 0.15);
-        border-color: rgba(34, 197, 94, 0.3);
-    }
-
-    .token-alert.show {
+    .detail-card.active {
         display: block;
     }
 
-    .token-alert.error {
-        background: rgba(239, 68, 68, 0.1);
-        border-color: rgba(239, 68, 68, 0.2);
-        color: #991b1b;
+    .detail-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .detail-title {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+    }
+
+    .detail-title h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 950;
+        color: #111827;
+    }
+
+    html[data-theme="dark"] .detail-title h2 {
+        color: #fff;
+    }
+
+    .system-key-line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 5px;
+        color: #64748b;
+        font-size: 0.86rem;
+        font-weight: 800;
+    }
+
+    .connected-pill,
+    .permission-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-size: 0.74rem;
+        font-weight: 950;
+    }
+
+    .connected-pill {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .connected-pill.muted {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .detail-menu {
+        width: 42px;
+        height: 42px;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 12px;
+        background: #fff;
+        color: #64748b;
+        cursor: pointer;
+    }
+
+    html[data-theme="dark"] .detail-menu {
+        background: rgba(255, 255, 255, 0.06);
+        color: #f8fafc;
+    }
+
+    .token-row {
+        margin: 12px 0;
+    }
+
+    .masked-token {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .masked-token-value {
+        border-radius: 12px;
+        padding: 13px 14px;
+        background: #fff7f7;
+        border: 1px solid rgba(127, 29, 45, 0.10);
+        color: #64748b;
+        font-family: Consolas, 'Courier New', monospace;
+        font-weight: 800;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    html[data-theme="dark"] .masked-token-value {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.10);
+        color: #e2e8f0;
+    }
+
+    .outline-btn,
+    .danger-btn,
+    .solid-btn {
+        border-radius: 12px;
+        min-height: 42px;
+        padding: 0 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 950;
+        cursor: pointer;
+        border: 1px solid rgba(127, 29, 45, 0.20);
+        background: #fff;
+        color: #8a1220;
+    }
+
+    .solid-btn {
+        background: #8a1220;
+        color: #fff;
+        border-color: #8a1220;
+    }
+
+    .danger-btn {
+        background: #fff1f2;
+        color: #be123c;
+        border-color: rgba(225, 29, 72, 0.24);
+    }
+
+    html[data-theme="dark"] .outline-btn {
+        background: rgba(255, 255, 255, 0.06);
+        color: #f8fafc;
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .token-facts {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin: 14px 0;
+    }
+
+    .fact-card {
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 14px;
+        padding: 12px;
+        background: #fff;
+        min-height: 82px;
+    }
+
+    html[data-theme="dark"] .fact-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.10);
+    }
+
+    .fact-card span {
+        display: block;
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .fact-card strong {
+        display: block;
+        margin-top: 8px;
+        color: #111827;
+        font-size: 0.9rem;
+        font-weight: 950;
+    }
+
+    .fact-card small {
+        display: block;
+        margin-top: 2px;
+        color: #64748b;
+        font-weight: 750;
+    }
+
+    html[data-theme="dark"] .fact-card strong {
+        color: #fff;
+    }
+
+    .detail-actions {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 14px;
     }
 
     .generated-token-panel {
@@ -296,115 +586,509 @@
         display: block;
     }
 
-    @media (max-width: 900px) {
-        .token-grid {
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    .lower-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+        gap: 18px;
+        margin-top: 18px;
+    }
+
+    .activity-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .activity-item {
+        display: grid;
+        grid-template-columns: 34px 1fr auto;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .activity-dot {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #dcfce7;
+        color: #15803d;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .activity-item strong {
+        display: block;
+        font-size: 0.86rem;
+        color: #111827;
+    }
+
+    .activity-item span,
+    .activity-item small {
+        color: #64748b;
+        font-size: 0.76rem;
+        font-weight: 750;
+    }
+
+    html[data-theme="dark"] .activity-item strong {
+        color: #fff;
+    }
+
+    .usage-card {
+        min-height: 180px;
+        display: grid;
+        align-content: center;
+        gap: 8px;
+    }
+
+    .usage-svg {
+        width: 100%;
+        height: 120px;
+    }
+
+    .security-row {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .security-card {
+        border: 1px solid rgba(127, 29, 45, 0.10);
+        border-radius: 16px;
+        padding: 14px;
+        background: #fff;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    html[data-theme="dark"] .security-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.10);
+    }
+
+    .security-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: #f8fafc;
+        color: #64748b;
+    }
+
+    .security-card strong {
+        display: block;
+        color: #111827;
+        font-size: 0.86rem;
+    }
+
+    .security-card span {
+        display: block;
+        margin-top: 2px;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 750;
+    }
+
+    html[data-theme="dark"] .security-card strong {
+        color: #fff;
+    }
+
+    .sr-hidden {
+        display: none !important;
+    }
+
+    @media (max-width: 1180px) {
+        .integration-stats,
+        .token-facts,
+        .detail-actions,
+        .security-row {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .integration-workspace,
+        .lower-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 720px) {
+        .integration-header,
+        .detail-head,
+        .masked-token {
+            flex-direction: column;
+            display: flex;
+            align-items: stretch;
+        }
+
+        .integration-controls,
+        .integration-search,
+        .integration-filter,
+        .integration-primary {
+            width: 100%;
+        }
+
+        .integration-stats,
+        .token-facts,
+        .detail-actions,
+        .security-row {
+            grid-template-columns: 1fr;
         }
     }
 </style>
 
-<div class="token-shell">
-    <section class="token-card">
-        <div class="token-head">
-            <h2>Integration Tokens Manager</h2>
-            <p>Manage API tokens for external system integrations (RIS, IMS, PUPT Website, etc.)</p>
+<div class="integration-page">
+    <section class="integration-shell">
+        <div class="integration-header">
+            <div class="integration-title-wrap">
+                <span class="integration-title-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+                        <path d="m9 12 2 2 4-4"/>
+                    </svg>
+                </span>
+                <div class="integration-title">
+                    <h1>Integration Tokens Manager</h1>
+                    <p>Manage API tokens for external system integrations.</p>
+                </div>
+            </div>
+            <div class="integration-controls">
+                <label class="integration-search">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                    </svg>
+                    <input id="integrationSearch" type="search" placeholder="Search integrations...">
+                </label>
+                <select id="integrationStatusFilter" class="integration-filter" aria-label="Filter integrations">
+                    <option value="all">All Status</option>
+                    <option value="connected">Connected</option>
+                    <option value="no-token">No Token</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                <button type="button" class="integration-primary" onclick="generateSelectedToken()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Generate Token
+                </button>
+            </div>
         </div>
 
         <div id="tokenAlert" class="token-alert"></div>
 
-        <div class="token-grid">
-            @forelse($integrationClients as $client)
-                <div class="system-card">
-                    <div class="system-header">
-                        <h3 class="system-name">{{ $client->system_name }}</h3>
-                        <span class="system-status {{ $client->is_active ? 'status-active' : 'status-inactive' }}">
-                            {{ $client->is_active ? '✓ Active' : '○ Inactive' }}
-                        </span>
-                    </div>
+        <div class="integration-stats">
+            <div class="stat-card">
+                <span class="stat-icon green">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m9 12 2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+                    </svg>
+                </span>
+                <div>
+                    <span class="stat-label">Active Systems</span>
+                    <span class="stat-value">{{ $activeCount }}</span>
+                    <span class="stat-sub">of {{ $clients->count() }} total</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon purple">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 7h.01"/><path d="M10 13a5 5 0 1 0 4-8 5 5 0 0 0-4 8L2 21l3-3h3v-3h3l-1-2Z"/>
+                    </svg>
+                </span>
+                <div>
+                    <span class="stat-label">Generated Tokens</span>
+                    <span class="stat-value">{{ $totalTokens }}</span>
+                    <span class="stat-sub">stored securely</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon red">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect width="18" height="12" x="3" y="6" rx="2"/><path d="M8 12h8"/>
+                    </svg>
+                </span>
+                <div>
+                    <span class="stat-label">Revoked Tokens</span>
+                    <span class="stat-value">{{ $revokedCount }}</span>
+                    <span class="stat-sub">not retained by Sanctum</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon blue">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                    </svg>
+                </span>
+                <div>
+                    <span class="stat-label">Last Generated</span>
+                    <span class="stat-value" style="font-size:1rem;">
+                        {{ $latestToken ? optional($latestToken['token']->created_at)->format('M d, h:i A') : 'N/A' }}
+                    </span>
+                    <span class="stat-sub">{{ $latestToken['client']->system_name ?? 'No tokens yet' }}</span>
+                </div>
+            </div>
+        </div>
 
-                    <div class="token-section">
-                        <div class="token-label">API Token</div>
-                        @if($client->tokens->count() > 0)
-                            @php
-                                $latestToken = $client->tokens->sortByDesc('created_at')->first();
-                            @endphp
-                            <div class="token-display">
-                                <div class="token-box" id="token-{{ $client->id }}">
-                                    {{ substr($latestToken->plainTextToken ?? '•••••••••••••••••••••••••••••', 0, 40) }}...
+        <div class="integration-workspace">
+            <aside class="integration-panel">
+                <h2 class="panel-title">Integrations</h2>
+                <div class="system-list" id="systemList">
+                    @forelse($clients as $client)
+                        @php
+                            $latest = $client->tokens->sortByDesc('created_at')->first();
+                            $hasToken = (bool) $latest;
+                            $status = !$client->is_active ? 'inactive' : ($hasToken ? 'connected' : 'no-token');
+                            $initial = strtoupper(substr($client->system_name, 0, 1));
+                        @endphp
+                        <button
+                            type="button"
+                            class="system-item {{ $loop->first ? 'active' : '' }}"
+                            data-client-id="{{ $client->id }}"
+                            data-name="{{ strtolower($client->system_name . ' ' . $client->system_key) }}"
+                            data-status="{{ $status }}"
+                            onclick="selectIntegration('{{ $client->id }}')"
+                        >
+                            <span class="system-avatar">{{ $initial }}</span>
+                            <span>
+                                <strong>{{ $client->system_name }}</strong>
+                                <small><span class="status-dot {{ $hasToken && $client->is_active ? '' : 'warn' }}"></span>{{ $client->is_active ? ($hasToken ? 'Connected' : 'No token') : 'Inactive' }}</small>
+                            </span>
+                            <span class="item-last-used">
+                                {{ $latest && $latest->last_used_at ? $latest->last_used_at->diffForHumans() : ($latest ? 'Never used' : 'No token') }}
+                            </span>
+                        </button>
+                    @empty
+                        <div class="no-token-message">No integration clients found.</div>
+                    @endforelse
+                </div>
+            </aside>
+
+            <section class="integration-panel">
+                @forelse($clients as $client)
+                    @php
+                        $latest = $client->tokens->sortByDesc('created_at')->first();
+                        $hasToken = (bool) $latest;
+                        $initial = strtoupper(substr($client->system_name, 0, 1));
+                        $abilities = $latest ? implode(', ', $latest->abilities ?? []) : 'None';
+                    @endphp
+                    <article
+                        class="detail-card {{ $loop->first ? 'active' : '' }}"
+                        id="integrationDetail-{{ $client->id }}"
+                        data-client-id="{{ $client->id }}"
+                        data-system-name="{{ $client->system_name }}"
+                    >
+                        <div class="detail-head">
+                            <div class="detail-title">
+                                <span class="detail-avatar">{{ $initial }}</span>
+                                <div>
+                                    <h2>{{ $client->system_name }}</h2>
+                                    <div class="system-key-line">
+                                        System Key: <strong>{{ $client->system_key }}</strong>
+                                        <button type="button" class="detail-menu" style="width:30px;height:30px;" onclick="copyText('{{ $client->system_key }}')" title="Copy system key">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
-                                <button type="button" class="token-btn copy" onclick="copyToken('{{ $client->id }}', '{{ $latestToken->plainTextToken ?? '' }}')">
-                                    📋 Copy
+                                <span class="connected-pill {{ $hasToken && $client->is_active ? '' : 'muted' }}">
+                                    {{ $client->is_active ? ($hasToken ? 'Connected' : 'No Token') : 'Inactive' }}
+                                </span>
+                            </div>
+                            <button type="button" class="detail-menu" title="More options">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="token-row">
+                            <span class="token-label">API Token</span>
+                            <div class="masked-token">
+                                <div class="masked-token-value">
+                                    {{ $hasToken ? 'Token ID ' . $latest->id . '  |  plaintext hidden after creation  |  ' . str_repeat('*', 32) : 'No token generated yet' }}
+                                </div>
+                                <button type="button" class="outline-btn" onclick="copyText('{{ $client->system_key }}')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                                    </svg>
+                                    Copy Key
                                 </button>
                             </div>
-                            <div class="token-meta">
-                                <strong>Created:</strong> {{ $latestToken->created_at->format('M d, Y H:i') }}<br>
-                                @if($latestToken->last_used_at)
-                                    <strong>Last Used:</strong> {{ $latestToken->last_used_at->format('M d, Y H:i') }}
-                                @else
-                                    <strong>Last Used:</strong> Never
-                                @endif
-                            </div>
-                        @else
-                            <div class="no-token-message">
-                                No token generated yet
-                            </div>
-                        @endif
-                    </div>
-
-                    <div class="token-actions">
-                        <button type="button" class="token-btn generate" onclick="generateToken('{{ $client->id }}', '{{ $client->system_name }}')">
-                            🔄 Generate New
-                        </button>
-                        @if($client->tokens->count() > 0)
-                            <button type="button" class="token-btn revoke" onclick="revokeToken('{{ $client->id }}', '{{ $client->system_name }}', '{{ $latestToken->id }}')">
-                                ❌ Revoke
-                            </button>
-                        @endif
-                    </div>
-
-                    <div class="token-section">
-                        <div class="token-label">System Key</div>
-                        <div class="token-box" style="cursor: pointer;" onclick="copyText('{{ $client->system_key }}')">
-                            {{ $client->system_key }}
                         </div>
-                    </div>
-                </div>
-            @empty
-                <div class="system-card">
-                    <p style="color: #6b7280; text-align: center;">No integration clients found</p>
-                </div>
-            @endforelse
+
+                        <div class="token-facts">
+                            <div class="fact-card">
+                                <span>Created</span>
+                                <strong>{{ $hasToken ? $latest->created_at->format('M d, Y') : 'N/A' }}</strong>
+                                <small>{{ $hasToken ? $latest->created_at->format('h:i A') : 'No token' }}</small>
+                            </div>
+                            <div class="fact-card">
+                                <span>Last Used</span>
+                                <strong>{{ $hasToken && $latest->last_used_at ? $latest->last_used_at->diffForHumans() : 'Never' }}</strong>
+                                <small>{{ $hasToken && $latest->last_used_at ? $latest->last_used_at->format('M d, h:i A') : 'No API call yet' }}</small>
+                            </div>
+                            <div class="fact-card">
+                                <span>Expires</span>
+                                <strong>Never</strong>
+                                <small>No expiration</small>
+                            </div>
+                            <div class="fact-card">
+                                <span>Permissions</span>
+                                <strong>{{ $hasToken ? count($latest->abilities ?? []) . ' abilities' : 'None' }}</strong>
+                                <small>{{ $abilities }}</small>
+                            </div>
+                        </div>
+
+                        <div class="detail-actions">
+                            <button type="button" class="solid-btn" onclick="generateToken('{{ $client->id }}', '{{ $client->system_name }}')">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 5v14M5 12h14"/>
+                                </svg>
+                                Generate New Token
+                            </button>
+                            <button type="button" class="outline-btn" onclick="generateToken('{{ $client->id }}', '{{ $client->system_name }}')">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>
+                                </svg>
+                                Rotate Token
+                            </button>
+                            <button type="button" class="danger-btn" onclick="revokeToken('{{ $client->id }}', '{{ $client->system_name }}', '{{ $latest->id ?? '' }}')" {{ $hasToken ? '' : 'disabled' }}>
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/>
+                                </svg>
+                                Revoke Token
+                            </button>
+                            <button type="button" class="outline-btn" onclick="showAlert('Token logs are tracked through last used timestamps for now.')">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4v15.5A2.5 2.5 0 0 0 6.5 22H20V6a2 2 0 0 0-2-2H4Z"/>
+                                </svg>
+                                View Logs
+                            </button>
+                        </div>
+                    </article>
+                @empty
+                    <div class="no-token-message">No integration client selected.</div>
+                @endforelse
+            </section>
         </div>
 
         <div id="generatedTokenPanel" class="generated-token-panel">
             <div class="token-label">New Token - copy now, this is shown once only</div>
             <div class="token-display">
                 <div id="generatedTokenValue" class="token-box"></div>
-                <button type="button" class="token-btn copy" onclick="copyGeneratedToken()">Copy Token</button>
+                <button type="button" class="outline-btn" onclick="copyGeneratedToken()">Copy Token</button>
             </div>
             <div id="generatedTokenMeta" class="token-meta"></div>
         </div>
+    </section>
 
-        <div style="margin-top: 30px; padding: 20px; border-radius: 16px; background: rgba(127, 29, 45, 0.04); border: 1px solid rgba(127, 29, 45, 0.1);">
-            <h3 style="margin: 0 0 14px; color: #7f1d2d; font-size: 15px; font-weight: 800;">📖 How to Use These Tokens</h3>
-            <div style="color: #6b7280; line-height: 1.6; font-size: 13px;">
-                <p><strong style="color: #7f1d2d;">1. Generate Token:</strong> Click "Generate New" for a system to create a new API token</p>
-                <p><strong style="color: #7f1d2d;">2. Copy Token:</strong> Use "Copy" to copy the full token to clipboard</p>
-                <p><strong style="color: #7f1d2d;">3. Share with External System:</strong> Share the token with the external system (RIS, IMS, etc.)</p>
-                <p><strong style="color: #7f1d2d;">4. Use in API Requests:</strong></p>
-                <div style="background: #111827; color: #f8fafc; padding: 12px; border-radius: 10px; margin-top: 8px; font-family: 'Courier New', monospace; font-size: 11px; overflow-x: auto;">
-curl -H "X-External-Api-Key: YOUR_TOKEN_HERE" \<br>
-&nbsp;&nbsp;&nbsp;&nbsp;-H "X-External-System: {{ $integrationClients->first()->system_key ?? 'system-key' }}" \<br>
-&nbsp;&nbsp;&nbsp;&nbsp;https://clinic-system.com/api/external/...
-                </div>
-                <p style="margin-top: 14px;"><strong style="color: #7f1d2d;">5. Revoke Old Token:</strong> Click "Revoke" to invalidate an old token when you generate a new one</p>
+    <div class="lower-grid">
+        <section class="integration-panel">
+            <div class="detail-head" style="margin-bottom:12px;">
+                <h2 class="panel-title" style="margin:0;">Recent Activity</h2>
+                <button type="button" class="outline-btn" style="min-height:34px;" onclick="showAlert('Showing latest token activity available in this page.')">View All</button>
             </div>
+            <div class="activity-list">
+                @forelse($recentTokens as $item)
+                    <div class="activity-item">
+                        <span class="activity-dot">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/>
+                            </svg>
+                        </span>
+                        <span>
+                            <strong>Token generated by {{ $item['client']->system_name }}</strong>
+                            <span>{{ $item['token']->name }}</span>
+                        </span>
+                        <small>{{ $item['token']->created_at->diffForHumans() }}</small>
+                    </div>
+                @empty
+                    <div class="no-token-message">No token activity yet.</div>
+                @endforelse
+            </div>
+        </section>
+
+        <section class="integration-panel usage-card">
+            <div class="detail-head" style="margin:0;">
+                <div>
+                    <h2 class="panel-title" style="margin:0;">API Usage</h2>
+                    <p class="stat-sub">Last used timestamps are stored per token.</p>
+                </div>
+                <strong style="color:#8a1220;">{{ $totalTokens }} tokens</strong>
+            </div>
+            <svg class="usage-svg" viewBox="0 0 520 140" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="usageFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#9f1239" stop-opacity="0.28"/>
+                        <stop offset="100%" stop-color="#9f1239" stop-opacity="0"/>
+                    </linearGradient>
+                </defs>
+                <path d="M0 115 C70 20 130 92 190 58 C260 18 310 112 370 58 C430 6 466 76 520 48" fill="none" stroke="#9f1239" stroke-width="5" stroke-linecap="round"/>
+                <path d="M0 115 C70 20 130 92 190 58 C260 18 310 112 370 58 C430 6 466 76 520 48 L520 140 L0 140 Z" fill="url(#usageFill)"/>
+            </svg>
+        </section>
+    </div>
+
+    <section class="security-row">
+        <div class="security-card">
+            <span class="security-icon">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+            </span>
+            <span><strong>Hashed Tokens</strong><span>Plaintext never stored</span></span>
+        </div>
+        <div class="security-card">
+            <span class="security-icon">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+                </svg>
+            </span>
+            <span><strong>Scoped Abilities</strong><span>Read, write, medical status</span></span>
+        </div>
+        <div class="security-card">
+            <span class="security-icon">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                </svg>
+            </span>
+            <span><strong>Rotation Ready</strong><span>Generate, test, revoke</span></span>
+        </div>
+        <div class="security-card">
+            <span class="security-icon">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4v15.5A2.5 2.5 0 0 0 6.5 22H20V6a2 2 0 0 0-2-2H4Z"/>
+                </svg>
+            </span>
+            <span><strong>Developer Docs</strong><span>Use Bearer token headers</span></span>
         </div>
     </section>
 </div>
 
 <script>
     let latestGeneratedToken = '';
+    let selectedClientId = document.querySelector('.system-item')?.dataset.clientId || null;
+
+    function selectIntegration(clientId) {
+        selectedClientId = clientId;
+
+        document.querySelectorAll('.system-item').forEach((item) => {
+            item.classList.toggle('active', item.dataset.clientId === clientId);
+        });
+
+        document.querySelectorAll('.detail-card').forEach((card) => {
+            card.classList.toggle('active', card.dataset.clientId === clientId);
+        });
+    }
+
+    function generateSelectedToken() {
+        const detail = document.querySelector(`.detail-card[data-client-id="${selectedClientId}"]`);
+        if (!detail) {
+            showAlert('Select an integration first.', true);
+            return;
+        }
+
+        generateToken(selectedClientId, detail.dataset.systemName || 'selected system');
+    }
 
     function copyToken(clientId, tokenValue) {
         if (!tokenValue) {
@@ -412,17 +1096,17 @@ curl -H "X-External-Api-Key: YOUR_TOKEN_HERE" \<br>
             return;
         }
         navigator.clipboard.writeText(tokenValue).then(() => {
-            showAlert('Token copied to clipboard!');
-        }).catch(err => {
-            showAlert('Failed to copy token', true);
+            showAlert('Token copied to clipboard.');
+        }).catch(() => {
+            showAlert('Failed to copy token.', true);
         });
     }
 
     function copyText(text) {
         navigator.clipboard.writeText(text).then(() => {
-            showAlert('Copied to clipboard!');
-        }).catch(err => {
-            showAlert('Failed to copy', true);
+            showAlert('Copied to clipboard.');
+        }).catch(() => {
+            showAlert('Failed to copy.', true);
         });
     }
 
@@ -450,15 +1134,20 @@ curl -H "X-External-Api-Key: YOUR_TOKEN_HERE" \<br>
                     navigator.clipboard.writeText(latestGeneratedToken).catch(() => {});
                 }
             } else {
-                showAlert(data.message || 'Failed to generate token', true);
+                showAlert(data.message || 'Failed to generate token.', true);
             }
         })
-        .catch(err => {
-            showAlert('Error generating token', true);
+        .catch(() => {
+            showAlert('Error generating token.', true);
         });
     }
 
     function revokeToken(clientId, systemName, tokenId = null) {
+        if (!tokenId) {
+            showAlert('No token to revoke for this integration.', true);
+            return;
+        }
+
         if (!confirm(`Revoke token for ${systemName}? This cannot be undone.`)) return;
 
         fetch('{{ route('admin.integration-tokens.revoke') }}', {
@@ -472,27 +1161,27 @@ curl -H "X-External-Api-Key: YOUR_TOKEN_HERE" \<br>
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                showAlert(`Token revoked for ${systemName}`);
-                setTimeout(() => location.reload(), 1500);
+                showAlert(`Token revoked for ${systemName}.`);
+                setTimeout(() => location.reload(), 1200);
             } else {
-                showAlert(data.message || 'Failed to revoke tokens', true);
+                showAlert(data.message || 'Failed to revoke token.', true);
             }
         })
-        .catch(err => {
-            showAlert('Error revoking tokens', true);
+        .catch(() => {
+            showAlert('Error revoking token.', true);
         });
     }
 
     function copyGeneratedToken() {
         if (!latestGeneratedToken) {
-            showAlert('No newly generated token to copy', true);
+            showAlert('No newly generated token to copy.', true);
             return;
         }
 
         navigator.clipboard.writeText(latestGeneratedToken).then(() => {
-            showAlert('New token copied to clipboard!');
+            showAlert('New token copied to clipboard.');
         }).catch(() => {
-            showAlert('Failed to copy token', true);
+            showAlert('Failed to copy token.', true);
         });
     }
 
@@ -500,10 +1189,34 @@ curl -H "X-External-Api-Key: YOUR_TOKEN_HERE" \<br>
         const alert = document.getElementById('tokenAlert');
         alert.textContent = message;
         alert.classList.add('show');
-        if (isError) alert.classList.add('error');
+        alert.classList.toggle('error', isError);
         setTimeout(() => {
             alert.classList.remove('show', 'error');
         }, 3000);
     }
+
+    function filterIntegrations() {
+        const query = (document.getElementById('integrationSearch')?.value || '').toLowerCase().trim();
+        const status = document.getElementById('integrationStatusFilter')?.value || 'all';
+        let firstVisible = null;
+
+        document.querySelectorAll('.system-item').forEach((item) => {
+            const matchesSearch = !query || item.dataset.name.includes(query);
+            const matchesStatus = status === 'all' || item.dataset.status === status;
+            const isVisible = matchesSearch && matchesStatus;
+            item.classList.toggle('sr-hidden', !isVisible);
+
+            if (isVisible && !firstVisible) {
+                firstVisible = item;
+            }
+        });
+
+        if (firstVisible && document.querySelector('.system-item.active.sr-hidden')) {
+            selectIntegration(firstVisible.dataset.clientId);
+        }
+    }
+
+    document.getElementById('integrationSearch')?.addEventListener('input', filterIntegrations);
+    document.getElementById('integrationStatusFilter')?.addEventListener('change', filterIntegrations);
 </script>
 @endsection
