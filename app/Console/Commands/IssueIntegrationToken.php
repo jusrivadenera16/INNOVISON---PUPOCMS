@@ -9,7 +9,8 @@ class IssueIntegrationToken extends Command
 {
     protected $signature = 'integration-token:issue
                             {system : System key, halimbawa accre}
-                            {--name= : Pangalan ng token}';
+                            {--name= : Pangalan ng token}
+                            {--abilities= : Comma-separated abilities, halimbawa external-admin:read,medical-status:read}';
 
     protected $description = 'Gumawa ng bagong Sanctum token para sa integration system.';
 
@@ -37,11 +38,37 @@ class IssueIntegrationToken extends Command
             $tokenName = 'rotation-' . now()->format('Ymd-His');
         }
 
-        $abilities = [
+        $allowedAbilities = [
             'external-admin:read',
             'external-admin:update',
             'medical-status:read',
         ];
+
+        $requestedAbilities = trim((string) $this->option('abilities'));
+
+        $abilities = $requestedAbilities === ''
+            ? $allowedAbilities
+            : collect(explode(',', $requestedAbilities))
+                ->map(fn ($ability) => trim((string) $ability))
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+        $invalidAbilities = array_values(array_diff($abilities, $allowedAbilities));
+
+        if (!empty($invalidAbilities)) {
+            $this->error('May invalid abilities: ' . implode(', ', $invalidAbilities));
+            $this->line('Allowed abilities: ' . implode(', ', $allowedAbilities));
+
+            return self::FAILURE;
+        }
+
+        if (empty($abilities)) {
+            $this->error('Kailangan ng kahit isang ability.');
+
+            return self::FAILURE;
+        }
 
         $newToken = $client->createToken($tokenName, $abilities);
 

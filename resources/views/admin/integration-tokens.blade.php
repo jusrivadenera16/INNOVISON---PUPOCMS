@@ -283,6 +283,19 @@
         color: #991b1b;
     }
 
+    .generated-token-panel {
+        display: none;
+        margin-top: 18px;
+        padding: 18px;
+        border-radius: 16px;
+        border: 1px solid rgba(250, 204, 21, 0.35);
+        background: rgba(250, 204, 21, 0.12);
+    }
+
+    .generated-token-panel.show {
+        display: block;
+    }
+
     @media (max-width: 900px) {
         .token-grid {
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -343,7 +356,7 @@
                             🔄 Generate New
                         </button>
                         @if($client->tokens->count() > 0)
-                            <button type="button" class="token-btn revoke" onclick="revokeToken('{{ $client->id }}', '{{ $client->system_name }}')">
+                            <button type="button" class="token-btn revoke" onclick="revokeToken('{{ $client->id }}', '{{ $client->system_name }}', '{{ $latestToken->id }}')">
                                 ❌ Revoke
                             </button>
                         @endif
@@ -361,6 +374,15 @@
                     <p style="color: #6b7280; text-align: center;">No integration clients found</p>
                 </div>
             @endforelse
+        </div>
+
+        <div id="generatedTokenPanel" class="generated-token-panel">
+            <div class="token-label">New Token - copy now, this is shown once only</div>
+            <div class="token-display">
+                <div id="generatedTokenValue" class="token-box"></div>
+                <button type="button" class="token-btn copy" onclick="copyGeneratedToken()">Copy Token</button>
+            </div>
+            <div id="generatedTokenMeta" class="token-meta"></div>
         </div>
 
         <div style="margin-top: 30px; padding: 20px; border-radius: 16px; background: rgba(127, 29, 45, 0.04); border: 1px solid rgba(127, 29, 45, 0.1);">
@@ -382,9 +404,11 @@ curl -H "X-External-Api-Key: YOUR_TOKEN_HERE" \<br>
 </div>
 
 <script>
+    let latestGeneratedToken = '';
+
     function copyToken(clientId, tokenValue) {
         if (!tokenValue) {
-            showAlert('No token to copy', true);
+            showAlert('Plaintext token is only available immediately after generation. Generate a new token if needed.', true);
             return;
         }
         navigator.clipboard.writeText(tokenValue).then(() => {
@@ -416,8 +440,15 @@ curl -H "X-External-Api-Key: YOUR_TOKEN_HERE" \<br>
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                showAlert(`Token generated for ${systemName}!`);
-                setTimeout(() => location.reload(), 1500);
+                latestGeneratedToken = data.token || '';
+                document.getElementById('generatedTokenValue').textContent = latestGeneratedToken;
+                document.getElementById('generatedTokenMeta').textContent = `System: ${systemName} | Token ID: ${data.token_id || 'N/A'} | Abilities: ${(data.abilities || []).join(', ')}`;
+                document.getElementById('generatedTokenPanel').classList.add('show');
+                showAlert(`Token generated for ${systemName}. Copy it now.`);
+
+                if (latestGeneratedToken && navigator.clipboard) {
+                    navigator.clipboard.writeText(latestGeneratedToken).catch(() => {});
+                }
             } else {
                 showAlert(data.message || 'Failed to generate token', true);
             }
@@ -427,8 +458,8 @@ curl -H "X-External-Api-Key: YOUR_TOKEN_HERE" \<br>
         });
     }
 
-    function revokeToken(clientId, systemName) {
-        if (!confirm(`Revoke all tokens for ${systemName}? This cannot be undone.`)) return;
+    function revokeToken(clientId, systemName, tokenId = null) {
+        if (!confirm(`Revoke token for ${systemName}? This cannot be undone.`)) return;
 
         fetch('{{ route('admin.integration-tokens.revoke') }}', {
             method: 'POST',
@@ -436,12 +467,12 @@ curl -H "X-External-Api-Key: YOUR_TOKEN_HERE" \<br>
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
-            body: JSON.stringify({ client_id: clientId })
+            body: JSON.stringify({ client_id: clientId, token_id: tokenId })
         })
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                showAlert(`Tokens revoked for ${systemName}`);
+                showAlert(`Token revoked for ${systemName}`);
                 setTimeout(() => location.reload(), 1500);
             } else {
                 showAlert(data.message || 'Failed to revoke tokens', true);
@@ -449,6 +480,19 @@ curl -H "X-External-Api-Key: YOUR_TOKEN_HERE" \<br>
         })
         .catch(err => {
             showAlert('Error revoking tokens', true);
+        });
+    }
+
+    function copyGeneratedToken() {
+        if (!latestGeneratedToken) {
+            showAlert('No newly generated token to copy', true);
+            return;
+        }
+
+        navigator.clipboard.writeText(latestGeneratedToken).then(() => {
+            showAlert('New token copied to clipboard!');
+        }).catch(() => {
+            showAlert('Failed to copy token', true);
         });
     }
 

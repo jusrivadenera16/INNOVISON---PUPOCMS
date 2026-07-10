@@ -3799,16 +3799,44 @@ public function inventorySummary()
         $user = Auth::user();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
 
-        $request->validate(['client_id' => 'required|exists:integration_clients,id']);
+        $allowedAbilities = [
+            'external-admin:read',
+            'external-admin:update',
+            'medical-status:read',
+        ];
+
+        $validated = $request->validate([
+            'client_id' => 'required|exists:integration_clients,id',
+            'token_name' => 'nullable|string|max:100',
+            'abilities' => 'nullable|array',
+            'abilities.*' => 'string|in:' . implode(',', $allowedAbilities),
+        ]);
 
         try {
-            $client = IntegrationClient::findOrFail($request->client_id);
-            $token = $client->createToken('API Token')->plainTextToken;
+            $client = IntegrationClient::findOrFail($validated['client_id']);
+
+            if (!$client->is_active) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This integration client is inactive.',
+                ], 422);
+            }
+
+            $abilities = $validated['abilities'] ?? $allowedAbilities;
+            $tokenName = trim((string) ($validated['token_name'] ?? ''));
+
+            if ($tokenName === '') {
+                $tokenName = 'web-rotation-' . now()->format('Ymd-His');
+            }
+
+            $newToken = $client->createToken($tokenName, $abilities);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Token generated successfully',
-                'token' => $token
+                'token' => $newToken->plainTextToken,
+                'token_id' => $newToken->accessToken->id,
+                'abilities' => $abilities,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -3823,15 +3851,32 @@ public function inventorySummary()
         $user = Auth::user();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
 
-        $request->validate(['client_id' => 'required|exists:integration_clients,id']);
+        $validated = $request->validate([
+            'client_id' => 'required|exists:integration_clients,id',
+            'token_id' => 'nullable|integer',
+        ]);
 
         try {
-            $client = IntegrationClient::findOrFail($request->client_id);
-            $client->tokens()->delete();
+            $client = IntegrationClient::findOrFail($validated['client_id']);
+
+            if (!empty($validated['token_id'])) {
+                $deleted = $client->tokens()
+                    ->whereKey((int) $validated['token_id'])
+                    ->delete();
+
+                if ($deleted === 0) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Token not found for this integration client.',
+                    ], 404);
+                }
+            } else {
+                $client->tokens()->delete();
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Tokens revoked successfully'
+                'message' => 'Token revoked successfully'
             ]);
         } catch (\Exception $e) {
             return response()->json([
