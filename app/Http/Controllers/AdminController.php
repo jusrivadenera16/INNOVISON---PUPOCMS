@@ -3886,4 +3886,61 @@ public function inventorySummary()
         }
     }
 
+    public function createIntegrationClient(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+
+        $validated = $request->validate([
+            'system_key' => 'required|string|unique:integration_clients,system_key|regex:/^[a-z0-9_]+$/',
+            'system_name' => 'required|string|max:255'
+        ]);
+
+        try {
+            $client = IntegrationClient::create([
+                'system_key' => strtolower($validated['system_key']),
+                'system_name' => $validated['system_name'],
+                'is_active' => true
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Integration client created successfully',
+                'client' => $client
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create client: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function integrationTokensDocs()
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+
+        return view('admin.integration-tokens-docs');
+    }
+
+    public function integrationTokensActivity()
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+
+        $allTokens = \DB::table('personal_access_tokens')
+            ->where('tokenable_type', IntegrationClient::class)
+            ->join('integration_clients', 'personal_access_tokens.tokenable_id', '=', 'integration_clients.id')
+            ->select(
+                'personal_access_tokens.*',
+                'integration_clients.system_name',
+                'integration_clients.system_key'
+            )
+            ->orderBy('personal_access_tokens.created_at', 'desc')
+            ->paginate(50);
+
+        return view('admin.integration-tokens-activity', compact('allTokens'));
+    }
+
 }

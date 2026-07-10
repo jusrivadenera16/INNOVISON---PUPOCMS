@@ -763,11 +763,11 @@
                     <option value="no-token">No Token</option>
                     <option value="inactive">Inactive</option>
                 </select>
-                <button type="button" class="integration-primary" onclick="generateSelectedToken()">
+                <button type="button" class="integration-primary" onclick="openCreateClientModal()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 5v14M5 12h14"/>
                     </svg>
-                    Generate Token
+                    Add Client
                 </button>
             </div>
         </div>
@@ -848,7 +848,7 @@
                         >
                             <span class="system-avatar">{{ $initial }}</span>
                             <span>
-                                <strong>{{ $client->system_name }}</strong>
+                                <span style="font-weight: 600;">{{ $client->system_name }}</span>
                                 <small><span class="status-dot {{ $hasToken && $client->is_active ? '' : 'warn' }}"></span>{{ $client->is_active ? ($hasToken ? 'Connected' : 'No token') : 'Inactive' }}</small>
                             </span>
                             <span class="item-last-used">
@@ -904,13 +904,13 @@
                             <span class="token-label">API Token</span>
                             <div class="masked-token">
                                 <div class="masked-token-value">
-                                    {{ $hasToken ? 'Token ID ' . $latest->id . '  |  plaintext hidden after creation  |  ' . str_repeat('*', 32) : 'No token generated yet' }}
+                                    {{ $hasToken ? 'Token ID ' . $latest->id . '  |  ' . str_repeat('*', 80) : 'No token generated yet' }}
                                 </div>
-                                <button type="button" class="outline-btn" onclick="copyText('{{ $client->system_key }}')">
+                                <button type="button" class="outline-btn" onclick="copyGeneratedTokenFromDetail('{{ $client->id }}')" {{ $hasToken ? '' : 'disabled' }}>
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
                                     </svg>
-                                    Copy Key
+                                    Copy Token
                                 </button>
                             </div>
                         </div>
@@ -918,22 +918,22 @@
                         <div class="token-facts">
                             <div class="fact-card">
                                 <span>Created</span>
-                                <strong>{{ $hasToken ? $latest->created_at->format('M d, Y') : 'N/A' }}</strong>
+                                <span style="font-weight: 600; display: block; margin: 4px 0;">{{ $hasToken ? $latest->created_at->format('M d, Y') : 'N/A' }}</span>
                                 <small>{{ $hasToken ? $latest->created_at->format('h:i A') : 'No token' }}</small>
                             </div>
                             <div class="fact-card">
                                 <span>Last Used</span>
-                                <strong>{{ $hasToken && $latest->last_used_at ? $latest->last_used_at->diffForHumans() : 'Never' }}</strong>
+                                <span style="font-weight: 600; display: block; margin: 4px 0;">{{ $hasToken && $latest->last_used_at ? $latest->last_used_at->diffForHumans() : 'Never' }}</span>
                                 <small>{{ $hasToken && $latest->last_used_at ? $latest->last_used_at->format('M d, h:i A') : 'No API call yet' }}</small>
                             </div>
                             <div class="fact-card">
                                 <span>Expires</span>
-                                <strong>Never</strong>
+                                <span style="font-weight: 600; display: block; margin: 4px 0;">Never</span>
                                 <small>No expiration</small>
                             </div>
                             <div class="fact-card">
                                 <span>Permissions</span>
-                                <strong>{{ $hasToken ? count($latest->abilities ?? []) . ' abilities' : 'None' }}</strong>
+                                <span style="font-weight: 600; display: block; margin: 4px 0;">{{ $hasToken ? count($latest->abilities ?? []) . ' abilities' : 'None' }}</span>
                                 <small>{{ $abilities }}</small>
                             </div>
                         </div>
@@ -971,21 +971,13 @@
             </section>
         </div>
 
-        <div id="generatedTokenPanel" class="generated-token-panel">
-            <div class="token-label">New Token - copy now, this is shown once only</div>
-            <div class="token-display">
-                <div id="generatedTokenValue" class="token-box"></div>
-                <button type="button" class="outline-btn" onclick="copyGeneratedToken()">Copy Token</button>
-            </div>
-            <div id="generatedTokenMeta" class="token-meta"></div>
-        </div>
     </section>
 
     <div class="lower-grid">
         <section class="integration-panel">
             <div class="detail-head" style="margin-bottom:12px;">
                 <h2 class="panel-title" style="margin:0;">Recent Activity</h2>
-                <button type="button" class="outline-btn" style="min-height:34px;" onclick="showAlert('Showing latest token activity available in this page.')">View All</button>
+                <a href="{{ route('admin.integration-tokens.activity') }}" class="outline-btn" style="min-height:34px; display: inline-flex; align-items: center;">View All</a>
             </div>
             <div class="activity-list">
                 @forelse($recentTokens as $item)
@@ -1053,14 +1045,14 @@
             </span>
             <span><strong>Rotation Ready</strong><span>Generate, test, revoke</span></span>
         </div>
-        <div class="security-card">
+        <button type="button" class="security-card" onclick="window.location.href='{{ route('admin.integration-tokens.docs') }}';" style="cursor: pointer; transition: all 0.2s ease;">
             <span class="security-icon">
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4v15.5A2.5 2.5 0 0 0 6.5 22H20V6a2 2 0 0 0-2-2H4Z"/>
                 </svg>
             </span>
             <span><strong>Developer Docs</strong><span>Use Bearer token headers</span></span>
-        </div>
+        </button>
     </section>
 </div>
 
@@ -1110,6 +1102,60 @@
         });
     }
 
+    function copyGeneratedTokenFromDetail(clientId) {
+        if (!latestGeneratedToken) {
+            showAlert('No token available to copy.', true);
+            return;
+        }
+        navigator.clipboard.writeText(latestGeneratedToken).then(() => {
+            showAlert('Token copied to clipboard.');
+        }).catch(() => {
+            showAlert('Failed to copy token.', true);
+        });
+    }
+
+    let tokenIsVisible = false;
+
+    function toggleTokenVisibility() {
+        const tokenBox = document.getElementById('generatedTokenValue');
+        const eyeIcon = document.getElementById('tokenEyeIcon');
+
+        if (!tokenIsVisible) {
+            // Show token
+            tokenBox.textContent = latestGeneratedToken;
+            tokenBox.style.fontFamily = "'Courier New', monospace";
+            eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="1" y1="1" x2="23" y2="23"/>';
+            tokenIsVisible = true;
+        } else {
+            // Hide token
+            tokenBox.textContent = '*'.repeat(80);
+            tokenBox.style.fontFamily = 'inherit';
+            eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+            tokenIsVisible = false;
+        }
+    }
+
+    function closeGeneratedTokenModal() {
+        const modal = document.getElementById('generatedTokenModal');
+        if (modal) {
+            modal.classList.remove('show');
+        }
+        tokenIsVisible = false;
+        latestGeneratedToken = '';
+    }
+
+    function copyGeneratedToken() {
+        if (!latestGeneratedToken) {
+            showAlert('No token available to copy.', true);
+            return;
+        }
+        navigator.clipboard.writeText(latestGeneratedToken).then(() => {
+            showAlert('Token copied to clipboard!');
+        }).catch(() => {
+            showAlert('Failed to copy token.', true);
+        });
+    }
+
     function generateToken(clientId, systemName) {
         if (!confirm(`Generate a new API token for ${systemName}?`)) return;
 
@@ -1126,9 +1172,11 @@
             if (data.success) {
                 latestGeneratedToken = data.token || '';
                 document.getElementById('generatedTokenValue').textContent = latestGeneratedToken;
-                document.getElementById('generatedTokenMeta').textContent = `System: ${systemName} | Token ID: ${data.token_id || 'N/A'} | Abilities: ${(data.abilities || []).join(', ')}`;
-                document.getElementById('generatedTokenPanel').classList.add('show');
-                showAlert(`Token generated for ${systemName}. Copy it now.`);
+                document.getElementById('generatedTokenMeta').innerHTML = `<strong>System:</strong> ${systemName} | <strong>Token ID:</strong> ${data.token_id || 'N/A'} | <strong>Abilities:</strong> ${(data.abilities || []).join(', ')}`;
+                document.getElementById('generatedTokenModal').classList.add('show');
+                tokenIsVisible = false;
+                document.getElementById('generatedTokenValue').style.fontFamily = 'inherit';
+                document.getElementById('generatedTokenValue').textContent = '*'.repeat(80);
 
                 if (latestGeneratedToken && navigator.clipboard) {
                     navigator.clipboard.writeText(latestGeneratedToken).catch(() => {});
@@ -1178,8 +1226,19 @@
             return;
         }
 
+        const copyBtn = document.getElementById('copyButton');
+        const originalContent = copyBtn.innerHTML;
+
         navigator.clipboard.writeText(latestGeneratedToken).then(() => {
-            showAlert('New token copied to clipboard.');
+            copyBtn.classList.add('copied');
+            copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Copied</span>';
+
+            setTimeout(() => {
+                copyBtn.classList.remove('copied');
+                copyBtn.innerHTML = originalContent;
+            }, 2000);
+
+            showAlert('Token copied to clipboard.');
         }).catch(() => {
             showAlert('Failed to copy token.', true);
         });
@@ -1218,5 +1277,313 @@
 
     document.getElementById('integrationSearch')?.addEventListener('input', filterIntegrations);
     document.getElementById('integrationStatusFilter')?.addEventListener('change', filterIntegrations);
+
+    // Create Client Modal Functions
+    function openCreateClientModal() {
+        const modal = document.getElementById('createClientModal');
+        if (modal) modal.classList.add('show');
+    }
+
+    function closeCreateClientModal() {
+        const modal = document.getElementById('createClientModal');
+        if (modal) modal.classList.remove('show');
+        document.getElementById('createClientForm').reset();
+    }
+
+    function createClient() {
+        const systemKey = document.getElementById('systemKeyInput').value.trim();
+        const systemName = document.getElementById('systemNameInput').value.trim();
+
+        if (!systemKey || !systemName) {
+            showAlert('Please fill in all fields', true);
+            return;
+        }
+
+        fetch('{{ route('admin.integration-clients.store') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ system_key: systemKey, system_name: systemName })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Client created successfully!');
+                closeCreateClientModal();
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showAlert(data.message || 'Failed to create client', true);
+            }
+        })
+        .catch(err => {
+            showAlert('Error creating client', true);
+        });
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('createClientModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'createClientModal') {
+            closeCreateClientModal();
+        }
+    });
 </script>
+
+<!-- Create Client Modal -->
+<div id="createClientModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="background: white; border-radius: 16px; overflow: hidden; max-width: 500px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);">
+        <!-- Header with Icon and Maroon Background -->
+        <div style="background: linear-gradient(135deg, #8a1220, #6a0e18); padding: 24px; display: flex; align-items: center; gap: 16px;">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
+            <div>
+                <h2 style="margin: 0; color: white; font-size: 1.3rem; font-weight: 900;">Create Integration Client</h2>
+                <p style="margin: 4px 0 0; color: rgba(255, 255, 255, 0.85); font-size: 0.9rem;">Add a new external system to manage API tokens</p>
+            </div>
+        </div>
+
+        <!-- Form Content -->
+        <div style="padding: 28px;">
+            <form id="createClientForm" onsubmit="event.preventDefault(); createClient();">
+                <!-- System Key Field -->
+                <div style="margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7f1d2d" stroke-width="2" style="flex-shrink: 0;">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/><path d="M9 17l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8"/>
+                        </svg>
+                        <label for="systemKeyInput" style="color: #111827; font-size: 0.9rem; font-weight: 700;">System Key</label>
+                    </div>
+                    <input
+                        type="text"
+                        id="systemKeyInput"
+                        placeholder="e.g., ris, ims, pupt_website"
+                        style="width: 100%; border-radius: 8px; border: 1px solid #e5e7eb; padding: 12px 14px; font-size: 0.95rem; color: #111827; background: #f9fafb; transition: all 0.2s ease;"
+                        onfocus="this.style.borderColor='#7f1d2d'; this.style.background='#fff';"
+                        onblur="this.style.borderColor='#e5e7eb'; this.style.background='#f9fafb';"
+                        required
+                    >
+                    <small style="display: block; margin-top: 6px; color: #9ca3af; font-size: 0.85rem;">Unique identifier for the system (lowercase, no spaces)</small>
+                </div>
+
+                <!-- System Name Field -->
+                <div style="margin-bottom: 28px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7f1d2d" stroke-width="2" style="flex-shrink: 0;">
+                            <circle cx="12" cy="12" r="1"/><path d="M12 1v6m0 6v6"/><path d="M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24"/><path d="M1 12h6m6 0h6"/><path d="M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"/>
+                        </svg>
+                        <label for="systemNameInput" style="color: #111827; font-size: 0.9rem; font-weight: 700;">System Name</label>
+                    </div>
+                    <input
+                        type="text"
+                        id="systemNameInput"
+                        placeholder="e.g., RIS, IMS, PUPT Website"
+                        style="width: 100%; border-radius: 8px; border: 1px solid #e5e7eb; padding: 12px 14px; font-size: 0.95rem; color: #111827; background: #f9fafb; transition: all 0.2s ease;"
+                        onfocus="this.style.borderColor='#7f1d2d'; this.style.background='#fff';"
+                        onblur="this.style.borderColor='#e5e7eb'; this.style.background='#f9fafb';"
+                        required
+                    >
+                    <small style="display: block; margin-top: 6px; color: #9ca3af; font-size: 0.85rem;">Display name for the system</small>
+                </div>
+
+                <!-- Buttons -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <button type="button" onclick="closeCreateClientModal()" style="border: 1.5px solid #d1d5db; border-radius: 8px; padding: 12px 18px; background: white; color: #7f1d2d; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-size: 0.95rem;">
+                        Cancel
+                    </button>
+                    <button type="submit" style="border: none; border-radius: 8px; padding: 12px 18px; background: linear-gradient(135deg, #8a1220, #6a0e18); color: white; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(138, 18, 32, 0.24);">
+                        Create Client
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Generated Token Modal -->
+<div id="generatedTokenModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="background: white; border-radius: 16px; overflow: hidden; max-width: 550px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);">
+        <!-- Header - Maroon -->
+        <div style="background: linear-gradient(135deg, #8a1220, #6a0e18); padding: 24px; display: flex; align-items: center; gap: 16px;">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>
+                </svg>
+            </div>
+            <div>
+                <h2 style="margin: 0; color: white; font-size: 1.3rem; font-weight: 900;">Token Generated!</h2>
+                <p style="margin: 4px 0 0; color: rgba(255, 255, 255, 0.85); font-size: 0.9rem;">Copy now, this is shown once only</p>
+            </div>
+        </div>
+
+        <!-- Token Display -->
+        <div style="padding: 28px;">
+            <!-- Token Value -->
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <!-- Key Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 18px; height: 18px; color: #7f1d2d; flex-shrink: 0;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
+                    </svg>
+                    <label style="color: #111827; font-size: 0.9rem; font-weight: 700;">API Token</label>
+                    <button type="button" onclick="toggleTokenVisibility()" style="border: none; background: none; cursor: pointer; color: #7f1d2d; padding: 4px; display: flex; align-items: center; margin-left: auto;">
+                        <svg id="tokenEyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <div id="generatedTokenValue" style="flex: 1; border-radius: 8px; border: 1px solid #e5e7eb; padding: 12px 14px; font-family: 'Courier New', monospace; font-size: 0.9rem; color: #111827; background: #f9fafb; word-break: break-all; max-height: 100px; overflow-y: auto;"></div>
+                    <button id="copyButton" type="button" onclick="copyGeneratedToken()" class="token-copy-btn" title="Copy token">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                        </svg>
+                        <span>Copy</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Token Meta -->
+            <div id="generatedTokenMeta" style="padding: 12px; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #8a1220; color: #7f1d2d; font-size: 0.85rem; line-height: 1.5;"></div>
+
+            <!-- Continue Button with Sweep Animation -->
+            <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+                <button type="button" onclick="closeGeneratedTokenModal()" class="token-continue-btn">
+                    <span style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                        Continue
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.48);
+        backdrop-filter: blur(8px);
+        display: none !important;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 5000;
+    }
+
+    .modal-overlay.show {
+        display: flex !important;
+    }
+
+    html[data-theme="dark"] .modal-content {
+        background: rgba(20, 12, 18, 0.94) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+
+    html[data-theme="dark"] .modal-content h2 {
+        color: #f3d6da !important;
+    }
+
+    html[data-theme="dark"] .modal-content p {
+        color: #cbd5e1 !important;
+    }
+
+    html[data-theme="dark"] input {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #f8fafc !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    html[data-theme="dark"] input::placeholder {
+        color: #94a3b8 !important;
+    }
+
+    /* Copy Button Styling */
+    .token-copy-btn {
+        border: none;
+        border-radius: 8px;
+        padding: 8px 12px;
+        background: #7f1d2d;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 700;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+    }
+
+    .token-copy-btn:hover {
+        background: #6a1220;
+        box-shadow: 0 4px 12px rgba(127, 29, 45, 0.3);
+    }
+
+    .token-copy-btn.copied {
+        animation: checkmark-pulse 0.6s ease-out;
+    }
+
+    @keyframes checkmark-pulse {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+            background: #16a34a;
+        }
+        100% {
+            transform: scale(1);
+            background: #16a34a;
+        }
+    }
+
+    /* Continue Button Styling with Sweep Animation */
+    .token-continue-btn {
+        width: 100%;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 18px;
+        background: linear-gradient(135deg, #8a1220, #6a0e18);
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 0.95rem;
+        box-shadow: 0 4px 12px rgba(138, 18, 32, 0.24);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .token-continue-btn:hover {
+        background: linear-gradient(135deg, #8a1220, #6a0e18);
+        color: #8a1220;
+        animation: sweep 0.6s ease-out forwards;
+    }
+
+    @keyframes sweep {
+        0% {
+            background: linear-gradient(135deg, #8a1220, #6a0e18);
+            color: white;
+        }
+        50% {
+            background: linear-gradient(90deg, #fbbf24, #fbbf24);
+        }
+        100% {
+            background: #fbbf24;
+            color: #8a1220;
+        }
+    }
+
+    .token-continue-btn:active {
+        transform: scale(0.98);
+    }
+</style>
+
 @endsection
