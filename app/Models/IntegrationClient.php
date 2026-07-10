@@ -19,4 +19,10 @@ class IntegrationClient extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public function tokens()
+    {
+        return $this->hasMany(\Laravel\Sanctum\PersonalAccessToken::class, 'tokenable_id')
+            ->where('tokenable_type', self::class);
+    }
 }
