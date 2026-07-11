@@ -3744,6 +3744,14 @@ public function inventorySummary()
         $user = Auth::user();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
 
+        $externalAdminSystemKeys = config('services.external_admin_profile.system_keys', []);
+        if (is_string($externalAdminSystemKeys)) {
+            $externalAdminSystemKeys = json_decode($externalAdminSystemKeys, true) ?: [];
+        }
+        if (!is_array($externalAdminSystemKeys)) {
+            $externalAdminSystemKeys = [];
+        }
+
         $systems = [
             'pupt' => [
                 'name' => 'PUPT (Faculty)',
@@ -3775,7 +3783,7 @@ public function inventorySummary()
             'external_admin' => [
                 'name' => 'External Admin APIs',
                 'configured' => !!config('services.external_admin_profile.system_keys'),
-                'systems' => array_keys(json_decode(config('services.external_admin_profile.system_keys', '{}'), true)),
+                'systems' => array_keys($externalAdminSystemKeys),
                 'header' => config('services.external_admin_profile.header'),
                 'system_header' => config('services.external_admin_profile.system_header'),
             ],
@@ -3906,7 +3914,12 @@ public function inventorySummary()
             return response()->json([
                 'success' => true,
                 'message' => 'Integration client created successfully',
-                'client' => $client
+                'client' => [
+                    'id' => $client->id,
+                    'system_key' => $client->system_key,
+                    'system_name' => $client->system_name,
+                    'is_active' => (bool) $client->is_active,
+                ],
             ]);
         } catch (\Exception $e) {
             return response()->json([

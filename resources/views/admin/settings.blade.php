@@ -1432,6 +1432,633 @@
         .modal-actions { padding: 14px 18px 18px; flex-wrap: wrap; }
         .modal-actions button { width: 100%; }
     }
+
+    /* Reports-style Settings hub */
+    .settings-page {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 20px;
+        border-radius: 22px;
+        border: 1px solid rgba(112, 19, 27, 0.10);
+        background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(250,244,246,0.96));
+        box-shadow: 0 18px 34px rgba(112, 19, 27, 0.08);
+        overflow: hidden;
+    }
+    .settings-page::before {
+        inset: 0 14px auto;
+        height: 5px;
+        border-radius: 999px;
+        background: #70131B;
+        z-index: 2;
+    }
+    .settings-page > * {
+        position: relative;
+        z-index: 3;
+    }
+    .settings-page .hero {
+        margin: 0 0 24px;
+        padding: 0 0 24px;
+        border: 0;
+        border-bottom: 1px solid #e2e8f0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+    .settings-page .hero h1 {
+        display: block;
+        margin: 0 0 12px;
+        color: #111827;
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.25;
+        letter-spacing: 0;
+    }
+    .settings-page .hero h1 svg {
+        display: none;
+    }
+    .settings-page .hero p {
+        max-width: 760px;
+        margin: 0;
+        color: #111827;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.45;
+    }
+    .settings-page .badges {
+        display: none;
+    }
+    .settings-hub-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+    }
+    .settings-hub-card {
+        min-height: 160px;
+        align-items: stretch;
+        justify-content: space-between;
+        padding: 24px 20px;
+        border-radius: 16px;
+        border: 1px solid rgba(112, 19, 27, 0.22);
+        background: #70131B;
+        color: #ffffff;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.10);
+        overflow: hidden;
+        position: relative;
+        transition: all .3s ease;
+    }
+    .settings-hub-card:nth-child(2) {
+        background: #facc15;
+        color: #111111;
+        border-color: rgba(250, 204, 21, .72);
+    }
+    .settings-hub-card > * {
+        position: relative;
+        z-index: 2;
+    }
+    .settings-hub-card::after {
+        content: "";
+        position: absolute;
+        top: -45%;
+        bottom: -45%;
+        left: -85%;
+        width: 55%;
+        background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.16) 45%, rgba(255,255,255,.34) 50%, transparent 100%);
+        transform: translateX(0) skewX(-18deg);
+        transition: transform .65s ease;
+        pointer-events: none;
+        z-index: 1;
+    }
+    .settings-hub-card:hover,
+    .settings-hub-card:focus-visible {
+        background: #facc15 !important;
+        color: #111111 !important;
+        border-color: #facc15 !important;
+        transform: translateY(-8px);
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.12), 0 20px 30px rgba(139, 0, 0, 0.22);
+        outline: none;
+    }
+    .settings-hub-card:hover::after,
+    .settings-hub-card:focus-visible::after {
+        transform: translateX(360%) skewX(-18deg);
+    }
+    .settings-hub-label {
+        margin-bottom: 5px;
+        color: #cbd5e1;
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+    }
+    .settings-hub-card:nth-child(2) .settings-hub-label {
+        color: rgba(17, 17, 17, .74);
+    }
+    .settings-hub-card h3 {
+        margin: 0;
+        color: inherit;
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.2;
+        text-align: left;
+    }
+    .settings-hub-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 18px;
+    }
+    .settings-hub-action {
+        min-width: 0;
+        min-height: 0;
+        margin: 0;
+        padding: 6px 12px;
+        border: 0;
+        border-radius: 8px;
+        background: rgba(255,255,255,.10);
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    .settings-hub-card:nth-child(2) .settings-hub-action,
+    .settings-hub-card:hover .settings-hub-action,
+    .settings-hub-card:focus-visible .settings-hub-action {
+        animation: none;
+        background: rgba(17,17,17,.10) !important;
+        color: #111111 !important;
+        border: 0;
+    }
+    .settings-hub-action svg {
+        display: none;
+    }
+    .settings-hub-card-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        color: #facc15;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.18);
+        transition: transform .3s ease, background .3s ease, color .3s ease;
+    }
+    .settings-hub-card:nth-child(2) .settings-hub-card-icon,
+    .settings-hub-card:hover .settings-hub-card-icon,
+    .settings-hub-card:focus-visible .settings-hub-card-icon {
+        background: rgba(17,17,17,.10);
+        border-color: rgba(17,17,17,.14);
+        color: #111111;
+        transform: translateX(3px) scale(1.04);
+    }
+    .settings-hub-card-icon svg {
+        width: 22px;
+        height: 22px;
+        stroke-width: 1.8;
+    }
+    html[data-theme="dark"] .settings-page {
+        background: linear-gradient(180deg, rgba(70, 19, 27, 0.92), rgba(46, 13, 19, 0.96));
+        border-color: rgba(255,255,255,.08);
+        box-shadow: 0 20px 38px rgba(0,0,0,.24);
+    }
+    html[data-theme="dark"] .settings-page::before {
+        background: #facc15;
+    }
+    html[data-theme="dark"] .settings-page .hero {
+        border-bottom-color: rgba(255,255,255,.12);
+    }
+    html[data-theme="dark"] .settings-page .hero h1,
+    html[data-theme="dark"] .settings-page .hero p {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .settings-hub-card {
+        background: rgba(112, 19, 27, .96);
+        border-color: rgba(250, 204, 21, .12);
+    }
+    html[data-theme="dark"] .settings-hub-card:hover,
+    html[data-theme="dark"] .settings-hub-card:focus-visible {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+    }
+    @media (max-width: 1024px) {
+        .settings-hub-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+    }
+    @media (max-width: 768px) {
+        .settings-page {
+            padding: 20px 18px;
+        }
+        .settings-hub-grid {
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+        .settings-hub-card {
+            min-height: 140px;
+            padding: 20px 18px;
+            border-radius: 14px;
+        }
+        .settings-hub-label {
+            font-size: 11px;
+        }
+        .settings-hub-card h3 {
+            font-size: 18px;
+        }
+    }
+
+    /* Walk-in-style Settings hub */
+    .settings-page {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px 28px 28px;
+        border-radius: 22px;
+        border: 1px solid rgba(112, 19, 27, 0.10);
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 18px 34px rgba(112, 19, 27, 0.08);
+        overflow: hidden;
+    }
+    .settings-page::before {
+        inset: 0 14px auto;
+        height: 5px;
+        border-radius: 999px;
+        background: #70131B;
+        z-index: 2;
+    }
+    .settings-page > * {
+        position: relative;
+        z-index: 3;
+    }
+    .settings-page .hero {
+        margin: 0 0 24px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+    .settings-page .hero h1 {
+        display: block;
+        margin: 0 0 10px;
+        color: #8b0000;
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        line-height: 1.2;
+        text-transform: uppercase;
+    }
+    .settings-page .hero h1 svg {
+        display: none;
+    }
+    .settings-page .hero p {
+        max-width: 760px;
+        margin: 0;
+        color: #0f172a;
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.25;
+    }
+    .settings-page .badges {
+        display: none;
+    }
+    .settings-hub-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 24px;
+    }
+    .settings-hub-card,
+    .settings-hub-card:nth-child(2) {
+        position: relative;
+        min-height: 238px;
+        height: 100%;
+        display: block;
+        padding: 18px;
+        border-radius: 16px;
+        border: 1px solid rgba(112, 19, 27, 0.46);
+        background: linear-gradient(135deg, #70131B, #8f2230);
+        color: #ffffff;
+        box-shadow: inset 0 -3px 0 rgba(250, 204, 21, 0.72), 0 10px 24px rgba(112, 19, 27, 0.18);
+        overflow: hidden;
+        text-decoration: none;
+        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease;
+    }
+    .settings-hub-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 38%);
+        z-index: 0;
+    }
+    .settings-hub-card::after {
+        content: "";
+        position: absolute;
+        top: -38%;
+        bottom: -38%;
+        left: -135%;
+        width: 34%;
+        opacity: 0;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 246, 184, 0.18) 42%, rgba(255, 246, 184, 0.54) 50%, rgba(255, 246, 184, 0.18) 58%, rgba(255, 255, 255, 0) 100%);
+        transform: translateX(0) skewX(-18deg);
+        pointer-events: none;
+        z-index: 0;
+    }
+    .settings-hub-card:hover,
+    .settings-hub-card:focus-visible {
+        background: #facc15 !important;
+        background-image: none !important;
+        color: #111111 !important;
+        transform: translateY(-8px);
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.12), 0 20px 30px rgba(139, 0, 0, 0.22);
+        border-color: #facc15 !important;
+        outline: none;
+    }
+    .settings-hub-card:hover::after,
+    .settings-hub-card:focus-visible::after {
+        animation: settingsIntakeSweep .92s ease both;
+    }
+    @keyframes settingsIntakeSweep {
+        0% { opacity: 0; transform: translateX(0) skewX(-18deg); }
+        18% { opacity: .72; }
+        72% { opacity: .72; }
+        100% { opacity: 0; transform: translateX(820%) skewX(-18deg); }
+    }
+    .settings-hub-card > * {
+        position: relative;
+        z-index: 1;
+    }
+    .settings-hub-chip {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        border: 1px solid rgba(255, 248, 196, 0.72);
+        background: rgba(255, 248, 196, 0.12);
+        color: #ffffff;
+        box-shadow: 0 8px 14px rgba(15, 23, 42, 0.14);
+        transition: background .2s ease, color .2s ease, border-color .2s ease;
+    }
+    .settings-hub-chip svg {
+        width: 14px;
+        height: 14px;
+        stroke-width: 2.2;
+    }
+    .settings-hub-card-icon {
+        position: relative;
+        z-index: 1;
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        background: rgba(255, 248, 196, 0.12);
+        color: #ffffff;
+        border: 1px solid rgba(255, 248, 196, 0.16);
+        animation: settingsIntakeFloat 3.8s ease-in-out infinite;
+        transition: background .2s ease, color .2s ease, border-color .2s ease;
+    }
+    .settings-hub-card-icon::after {
+        content: "";
+        position: absolute;
+        left: 10%;
+        right: 10%;
+        bottom: -10px;
+        height: 14px;
+        border-radius: 999px;
+        filter: blur(8px);
+        opacity: .6;
+        z-index: -1;
+        background: radial-gradient(circle, rgba(0, 0, 0, 0.44) 0%, rgba(0, 0, 0, 0.22) 48%, transparent 86%);
+    }
+    .settings-hub-card-icon svg {
+        width: 24px;
+        height: 24px;
+        stroke-width: 2.1;
+    }
+    @keyframes settingsIntakeFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+    .settings-hub-label {
+        margin: 0 0 6px;
+        color: rgba(255,255,255,.82) !important;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+    .settings-hub-card h3 {
+        margin: 0 0 10px;
+        color: #ffffff !important;
+        font-size: 18px;
+        font-weight: 800;
+        line-height: 1.25;
+        text-align: left;
+        transition: color .2s ease;
+    }
+    .settings-hub-copy {
+        margin: 0;
+        color: #ffffff !important;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.42;
+        text-align: left !important;
+        transition: color .2s ease;
+    }
+    .settings-hub-footer {
+        display: block;
+        margin: 0;
+    }
+    .settings-hub-action {
+        display: none;
+    }
+    .settings-hub-card:nth-child(2),
+    .settings-hub-card:nth-child(2) .settings-hub-label,
+    .settings-hub-card:nth-child(2) h3,
+    .settings-hub-card:nth-child(2) .settings-hub-copy {
+        color: #ffffff !important;
+    }
+    .settings-hub-card:hover .settings-hub-label,
+    .settings-hub-card:focus-visible .settings-hub-label,
+    .settings-hub-card:hover h3,
+    .settings-hub-card:focus-visible h3,
+    .settings-hub-card:hover .settings-hub-copy,
+    .settings-hub-card:focus-visible .settings-hub-copy {
+        color: #70131B !important;
+    }
+    .settings-hub-card:hover .settings-hub-chip,
+    .settings-hub-card:focus-visible .settings-hub-chip,
+    .settings-hub-card:hover .settings-hub-card-icon,
+    .settings-hub-card:focus-visible .settings-hub-card-icon {
+        background: #70131B;
+        color: #ffffff;
+        border-color: rgba(112, 19, 27, 0.62);
+    }
+    html[data-theme="dark"] .settings-page {
+        background: linear-gradient(180deg, rgba(70, 19, 27, 0.92), rgba(46, 13, 19, 0.96));
+        border-color: rgba(255,255,255,.08);
+        box-shadow: 0 20px 38px rgba(0,0,0,.24);
+    }
+    html[data-theme="dark"] .settings-page::before {
+        background: #facc15;
+    }
+    html[data-theme="dark"] .settings-page .hero h1,
+    html[data-theme="dark"] .settings-page .hero p {
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .settings-hub-card,
+    html[data-theme="dark"] .settings-hub-card:nth-child(2) {
+        background: #70131B;
+        border-color: rgba(250, 204, 21, 0.62);
+        box-shadow: inset 0 -3px 0 rgba(250, 204, 21, 0.92), 0 14px 26px rgba(0,0,0,.22);
+    }
+    html[data-theme="dark"] .settings-hub-card::before {
+        background: none;
+    }
+    html[data-theme="dark"] .settings-hub-card::after {
+        background: linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,248,196,.52) 48%, rgba(255,255,255,0) 100%);
+    }
+    html[data-theme="dark"] .settings-hub-card:hover,
+    html[data-theme="dark"] .settings-hub-card:focus-visible {
+        background: #facc15 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+    }
+    /* Final Settings hub layout guard: override older 3-column/manual placement rules. */
+    .settings-page .settings-hub-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+    .settings-page .settings-hub-card,
+    .settings-page .settings-hub-card:nth-child(2),
+    .settings-page .settings-hub-card:nth-child(4),
+    .settings-page .settings-hub-card:nth-child(5) {
+        min-width: 0;
+        grid-column: auto !important;
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+        color: #ffffff !important;
+    }
+    .settings-page .settings-hub-card .settings-hub-card-icon,
+    .settings-page .settings-hub-card:nth-child(2) .settings-hub-card-icon {
+        background: rgba(255, 248, 196, 0.12) !important;
+        border-color: rgba(255, 248, 196, 0.16) !important;
+        color: #ffffff !important;
+        transform: none;
+    }
+    .settings-page .settings-hub-chip svg {
+        display: block;
+        width: 13px;
+        height: 13px;
+        stroke-width: 2.6;
+    }
+    .settings-page .settings-hub-card:hover,
+    .settings-page .settings-hub-card:focus-visible {
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+    .settings-page .settings-hub-card:hover .settings-hub-card-icon,
+    .settings-page .settings-hub-card:focus-visible .settings-hub-card-icon,
+    .settings-page .settings-hub-card:hover .settings-hub-chip,
+    .settings-page .settings-hub-card:focus-visible .settings-hub-chip {
+        background: #70131B !important;
+        border-color: rgba(112, 19, 27, 0.62) !important;
+        color: #ffffff !important;
+    }
+    @media (max-width: 980px) {
+        .settings-hub-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
+    @media (max-width: 720px) {
+        .settings-page {
+            max-width: 100%;
+            padding: 20px 18px;
+        }
+        .settings-hub-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+    /* Patient Intake-style compact container behavior */
+    .settings-page {
+        width: min(100%, 980px) !important;
+        max-width: 980px !important;
+        margin: 0 auto !important;
+        padding: 16px 16px 18px !important;
+        border-radius: 12px !important;
+    }
+    .settings-page::before {
+        left: 12px !important;
+        right: 12px !important;
+    }
+    .settings-page .hero {
+        margin: 0 0 18px !important;
+        padding: 0 !important;
+    }
+    .settings-page .hero h1 {
+        font-size: 13px !important;
+        margin-bottom: 8px !important;
+    }
+    .settings-page .hero p {
+        max-width: 760px !important;
+        font-size: 20px !important;
+        line-height: 1.2 !important;
+    }
+    .settings-page .settings-hub-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+        margin-top: 20px !important;
+    }
+    .settings-page .settings-hub-card,
+    .settings-page .settings-hub-card:nth-child(2),
+    .settings-page .settings-hub-card:nth-child(4),
+    .settings-page .settings-hub-card:nth-child(5) {
+        min-height: 246px !important;
+        padding: 16px !important;
+        border-radius: 12px !important;
+    }
+    .settings-page .settings-hub-card-icon {
+        width: 48px !important;
+        height: 48px !important;
+        border-radius: 13px !important;
+        margin-bottom: 14px !important;
+    }
+    .settings-page .settings-hub-card-icon svg {
+        width: 21px !important;
+        height: 21px !important;
+    }
+    .settings-page .settings-hub-card h3 {
+        font-size: 16px !important;
+        margin-bottom: 8px !important;
+    }
+    .settings-page .settings-hub-copy {
+        font-size: 14px !important;
+        line-height: 1.42 !important;
+    }
+    @media (max-width: 920px) {
+        .settings-page {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        .settings-page .settings-hub-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
+    @media (max-width: 560px) {
+        .settings-page {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 18px !important;
+        }
+        .settings-page .settings-hub-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
 </style>
 @endpush
 
@@ -1474,79 +2101,48 @@
 
     <div class="settings-hub-grid">
         <a href="{{ route('admin.settings.personal') }}" class="settings-hub-card">
-            <div class="settings-hub-icon">
-                <x-outline-icon name="user-circle" />
-                <span class="settings-hub-badge"><x-outline-icon name="cog-6-tooth" /></span>
+            <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="settings-hub-card-icon" aria-hidden="true"><x-outline-icon name="user-circle" /></span>
+            <div>
+                <h3>Personal Information</h3>
+                <p class="settings-hub-copy">Update your profile details, email address, password, and account identity.</p>
             </div>
-            <h3>Personal Information</h3>
-            <p>Update your personal details, profile information, and account settings.</p>
-            <ul class="settings-hub-list">
-                <li><x-outline-icon name="user-circle" /> Change profile picture</li>
-                <li><x-outline-icon name="pencil-square" /> Update personal details</li>
-                <li><x-outline-icon name="cog-6-tooth" /> Change password</li>
-            </ul>
-            <span class="settings-hub-action">Manage <x-outline-icon name="chevron-right" /></span>
         </a>
 
         <a href="{{ route('admin.settings.clinic') }}" class="settings-hub-card">
-            <div class="settings-hub-icon">
-                <x-outline-icon name="home" />
-                <span class="settings-hub-badge"><x-outline-icon name="cog-6-tooth" /></span>
+            <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="settings-hub-card-icon" aria-hidden="true"><x-outline-icon name="home" /></span>
+            <div>
+                <h3>Clinic Information</h3>
+                <p class="settings-hub-copy">Manage clinic profile, contact information, service details, and office hours.</p>
             </div>
-            <h3>Clinic Information</h3>
-            <p>Manage clinic details, contact information, hours, and business settings.</p>
-            <ul class="settings-hub-list">
-                <li><x-outline-icon name="home" /> Clinic profile</li>
-                <li><x-outline-icon name="phone" /> Contact information</li>
-                <li><x-outline-icon name="clock" /> Clinic hours</li>
-                <li><x-outline-icon name="clipboard-document-list" /> Services offered</li>
-            </ul>
-            <span class="settings-hub-action">Manage <x-outline-icon name="chevron-right" /></span>
         </a>
 
         <a href="{{ route('admin.settings.preferences') }}" class="settings-hub-card">
-            <div class="settings-hub-icon">
-                <x-outline-icon name="code-bracket-square" />
-                <span class="settings-hub-badge"><x-outline-icon name="cog-6-tooth" /></span>
+            <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="settings-hub-card-icon" aria-hidden="true"><x-outline-icon name="code-bracket-square" /></span>
+            <div>
+                <h3>System Preferences</h3>
+                <p class="settings-hub-copy">Configure workflow behavior, notifications, reminders, and availability rules.</p>
             </div>
-            <h3>System Preferences</h3>
-            <p>Configure system settings and customize application preferences.</p>
-            <ul class="settings-hub-list">
-                <li><x-outline-icon name="cog-6-tooth" /> General settings</li>
-                <li><x-outline-icon name="bell" /> Notification settings</li>
-                <li><x-outline-icon name="calendar-days" /> Appointment settings</li>
-                <li><x-outline-icon name="exclamation-triangle" /> Security settings</li>
-            </ul>
-            <span class="settings-hub-action">Manage <x-outline-icon name="chevron-right" /></span>
         </a>
 
         <a href="{{ route('admin.settings.medical') }}" class="settings-hub-card">
-            <div class="settings-hub-icon">
-                <x-outline-icon name="clipboard-document-list" />
-                <span class="settings-hub-badge"><x-outline-icon name="plus-circle" /></span>
+            <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="settings-hub-card-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span>
+            <div>
+                <h3>Medical Configuration</h3>
+                <p class="settings-hub-copy">Open medical conditions and medicine type setup used by clinic workflows.</p>
             </div>
-            <h3>Medical Configuration</h3>
-            <p>Review medical setup options used by consultations and reports.</p>
-            <ul class="settings-hub-list">
-                <li><x-outline-icon name="accessibility-person" /> Medical Conditions</li>
-                <li><x-outline-icon name="cube" /> Medicine Types</li>
-            </ul>
-            <span class="settings-hub-action">Manage <x-outline-icon name="chevron-right" /></span>
         </a>
 
         <a href="{{ route('admin.user-management') }}" class="settings-hub-card">
-            <div class="settings-hub-icon">
-                <x-outline-icon name="users" />
-                <span class="settings-hub-badge"><x-outline-icon name="cog-6-tooth" /></span>
+            <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="settings-hub-card-icon" aria-hidden="true"><x-outline-icon name="users" /></span>
+            <div>
+                <h3>Users Management</h3>
+                <p class="settings-hub-copy">Open account access, admin hub profiles, roles, and user permissions.</p>
             </div>
-            <h3>Users Management</h3>
-            <p>Open the existing user management workspace for account access and roles.</p>
-            <ul class="settings-hub-list">
-                <li><x-outline-icon name="users" /> Account access</li>
-                <li><x-outline-icon name="user-plus" /> Admin hub</li>
-                <li><x-outline-icon name="exclamation-triangle" /> Roles and permissions</li>
-            </ul>
-            <span class="settings-hub-action">Manage <x-outline-icon name="chevron-right" /></span>
         </a>
     </div>
 

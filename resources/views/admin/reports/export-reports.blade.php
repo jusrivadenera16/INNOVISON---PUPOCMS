@@ -476,6 +476,146 @@
         cursor: pointer;
     }
 
+    .health-filter-modal-content {
+        width: min(980px, calc(100vw - 28px));
+        max-width: 980px;
+        padding: 0;
+        overflow: hidden;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(112, 19, 27, 0.18);
+        box-shadow: 0 28px 70px rgba(15, 23, 42, 0.24);
+    }
+
+    .health-filter-modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 24px;
+        background: #b91c1c;
+        color: #ffffff;
+    }
+
+    .health-filter-modal-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+    }
+
+    .health-filter-modal-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        flex: 0 0 auto;
+    }
+
+    .health-filter-modal-icon svg {
+        width: 26px;
+        height: 26px;
+    }
+
+    .health-filter-modal-head h3 {
+        margin: 0;
+        color: #ffffff;
+        font-size: 22px;
+        font-weight: 950;
+        line-height: 1.12;
+    }
+
+    .health-filter-modal-head p {
+        margin: 4px 0 0;
+        color: rgba(255,255,255,.82);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+    .health-filter-modal-close {
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.28);
+        background: rgba(255,255,255,.14);
+        color: #ffffff;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        transition: background .18s ease, transform .18s ease;
+    }
+
+    .health-filter-modal-close:hover {
+        background: rgba(255,255,255,.26);
+        transform: translateY(-1px);
+    }
+
+    .health-filter-modal-close svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .health-filter-modal-body {
+        padding: 22px 24px;
+        background: #ffffff;
+    }
+
+    .health-filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .health-filter-field.is-full {
+        grid-column: 1 / -1;
+    }
+
+    .health-filter-chip-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .health-filter-chip {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-height: 44px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(112, 19, 27, 0.16);
+        background: #ffffff;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 850;
+        cursor: pointer;
+        transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .health-filter-chip input {
+        width: 16px;
+        height: 16px;
+        accent-color: #8f1727;
+    }
+
+    .health-filter-chip:has(input:checked) {
+        background: #70131B;
+        border-color: #70131B;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    .health-filter-modal-actions {
+        display: flex;
+        gap: 12px;
+        padding: 16px 24px 22px;
+        border-top: 1px solid #fee2e2;
+        background: #ffffff;
+    }
+
     .border-health-forms { border-top: 5px solid #800000; }
 
     .btn-select-month {
@@ -768,6 +908,24 @@
         border-color: rgba(250, 204, 21, 0.16);
     }
 
+    html[data-theme="dark"] .health-filter-modal-content,
+    html[data-theme="dark"] .health-filter-modal-body,
+    html[data-theme="dark"] .health-filter-modal-actions {
+        background: rgba(15, 23, 42, 0.98);
+        border-color: rgba(250, 204, 21, 0.18);
+    }
+
+    html[data-theme="dark"] .health-filter-chip {
+        background: rgba(17, 24, 39, 0.96);
+        color: #f8fafc;
+        border-color: rgba(250, 204, 21, 0.18);
+    }
+
+    html[data-theme="dark"] .health-filter-chip:has(input:checked) {
+        background: #70131B;
+        border-color: rgba(250, 204, 21, 0.62);
+    }
+
     html[data-theme="dark"] .export-hub-container .hub-header {
         border-bottom-color: rgba(250, 204, 21, 0.14);
     }
@@ -809,8 +967,267 @@
         .export-hub-container .hub-grid {
             grid-template-columns: 1fr;
         }
+
+        .health-filter-grid,
+        .health-filter-chip-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .health-filter-modal-actions {
+            flex-direction: column;
+        }
     }
 
+    /* Compact Health Forms export modal */
+    #healthFormsFilterModal.date-range-modal {
+        align-items: flex-start;
+        justify-content: center;
+        padding: clamp(10px, 2vh, 18px) 16px;
+        overflow-y: auto;
+    }
+    #healthFormsFilterModal .health-filter-modal-content {
+        width: min(920px, calc(100vw - 32px));
+        max-width: 920px;
+        max-height: calc(100vh - 24px);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-radius: 16px;
+    }
+    #healthFormsFilterModal .health-filter-modal-head {
+        flex: 0 0 auto;
+        padding: 16px 22px;
+        background: #b91c1c;
+    }
+    #healthFormsFilterModal .health-filter-modal-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+    #healthFormsFilterModal .health-filter-modal-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+    #healthFormsFilterModal .health-filter-modal-head h3 {
+        font-size: 20px;
+    }
+    #healthFormsFilterModal .health-filter-modal-head p {
+        font-size: 12px;
+        line-height: 1.35;
+    }
+    #healthFormsExportForm {
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    #healthFormsFilterModal .health-filter-modal-body {
+        min-height: 0;
+        max-height: none;
+        overflow-y: auto;
+        padding: 18px 22px;
+        margin-bottom: 0;
+        gap: 14px;
+    }
+    #healthFormsFilterModal .health-filter-field input,
+    #healthFormsFilterModal .health-filter-field select {
+        min-height: 44px;
+        border-width: 1px;
+    }
+    #healthFormsFilterModal .health-filter-chip-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+    #healthFormsFilterModal .health-filter-chip {
+        min-height: 48px;
+        padding: 10px 12px;
+        border: 1px solid rgba(112, 19, 27, .18);
+        background: #ffffff;
+        color: #111827;
+        box-shadow: none;
+    }
+    #healthFormsFilterModal .health-filter-chip:hover,
+    #healthFormsFilterModal .health-filter-chip:focus-within {
+        background: #fffaf0;
+        border-color: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .08);
+    }
+    #healthFormsFilterModal .health-filter-chip input {
+        flex: 0 0 16px;
+        margin: 0;
+        accent-color: #70131B;
+    }
+    #healthFormsFilterModal .health-filter-chip:has(input:checked) {
+        background: #fff1f2;
+        border-color: #70131B;
+        color: #70131B;
+        transform: none;
+        box-shadow: inset 0 0 0 1px rgba(112, 19, 27, .16);
+    }
+    #healthFormsFilterModal .health-filter-chip:has(input:checked):hover,
+    #healthFormsFilterModal .health-filter-chip:has(input:checked):focus-within {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+    }
+    #healthFormsFilterModal .health-filter-modal-actions {
+        flex: 0 0 auto;
+        margin: 0;
+        padding: 14px 22px 16px;
+        background: #ffffff;
+    }
+    html[data-theme="dark"] #healthFormsFilterModal .health-filter-modal-content,
+    html[data-theme="dark"] #healthFormsFilterModal .health-filter-modal-body,
+    html[data-theme="dark"] #healthFormsFilterModal .health-filter-modal-actions {
+        background: #111827;
+    }
+    html[data-theme="dark"] #healthFormsFilterModal .health-filter-chip {
+        background: rgba(15, 23, 42, .96);
+        border-color: rgba(250, 204, 21, .18);
+        color: #ffffff;
+    }
+    html[data-theme="dark"] #healthFormsFilterModal .health-filter-chip:hover,
+    html[data-theme="dark"] #healthFormsFilterModal .health-filter-chip:focus-within,
+    html[data-theme="dark"] #healthFormsFilterModal .health-filter-chip:has(input:checked) {
+        background: rgba(250, 204, 21, .14);
+        border-color: #facc15;
+        color: #ffffff;
+    }
+    #healthFormsFilterModal .health-bmi-dropdown-wrap {
+        position: relative;
+    }
+    #healthFormsFilterModal .health-bmi-display {
+        width: 100%;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 12px 48px 12px 16px;
+        border-radius: 16px;
+        border: 1px solid #8f2230;
+        background: #ffffff;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 850;
+        text-align: left;
+        cursor: pointer;
+        box-shadow: 0 10px 22px rgba(112, 19, 27, .08);
+        position: relative;
+        transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+    #healthFormsFilterModal .health-bmi-display::after {
+        content: "";
+        position: absolute;
+        right: 18px;
+        top: 50%;
+        width: 11px;
+        height: 11px;
+        border-right: 2px solid #8f2230;
+        border-bottom: 2px solid #8f2230;
+        transform: translateY(-70%) rotate(45deg);
+        transition: transform .18s ease;
+    }
+    #healthFormsFilterModal .health-bmi-dropdown-wrap.is-open .health-bmi-display::after {
+        transform: translateY(-25%) rotate(225deg);
+    }
+    #healthFormsFilterModal .health-bmi-display:hover,
+    #healthFormsFilterModal .health-bmi-display:focus-visible,
+    #healthFormsFilterModal .health-bmi-dropdown-wrap.is-open .health-bmi-display {
+        border-color: #70131B;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, .08), 0 12px 24px rgba(112, 19, 27, .12);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    #healthFormsFilterModal .health-bmi-menu {
+        position: absolute;
+        top: calc(100% + 10px);
+        left: 0;
+        right: 0;
+        z-index: 25;
+        display: none;
+        padding: 14px;
+        border-radius: 18px;
+        border: 1px solid rgba(112, 19, 27, .14);
+        background: rgba(255, 255, 255, .98);
+        box-shadow: 0 18px 34px rgba(15, 23, 42, .16);
+    }
+    #healthFormsFilterModal .health-bmi-dropdown-wrap.is-open .health-bmi-menu {
+        display: grid;
+        gap: 10px;
+    }
+    #healthFormsFilterModal .health-bmi-option {
+        width: 100%;
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, .22);
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        color: #111827;
+        font-size: 13px;
+        font-weight: 850;
+        cursor: pointer;
+        transition: transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
+    }
+    #healthFormsFilterModal .health-bmi-option input {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: #70131B;
+    }
+    #healthFormsFilterModal .health-bmi-option:hover,
+    #healthFormsFilterModal .health-bmi-option:focus-within {
+        background: linear-gradient(135deg, #8B0000, #70131B);
+        border-color: #8B0000;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+    #healthFormsFilterModal .health-bmi-option:has(input:checked) {
+        background: linear-gradient(135deg, #8B0000, #70131B);
+        border-color: #8B0000;
+        color: #facc15;
+        box-shadow: 0 12px 20px rgba(139, 0, 0, .16);
+    }
+    html[data-theme="dark"] #healthFormsFilterModal .health-bmi-display {
+        background: rgba(15, 23, 42, .96);
+        border-color: rgba(250, 204, 21, .26);
+        color: #ffffff;
+    }
+    html[data-theme="dark"] #healthFormsFilterModal .health-bmi-display::after {
+        border-color: #facc15;
+    }
+    html[data-theme="dark"] #healthFormsFilterModal .health-bmi-menu {
+        background: rgba(15, 23, 42, .98);
+        border-color: rgba(250, 204, 21, .18);
+    }
+    html[data-theme="dark"] #healthFormsFilterModal .health-bmi-option {
+        background: rgba(30, 41, 59, .94);
+        border-color: rgba(148, 163, 184, .18);
+        color: #ffffff;
+    }
+    html[data-theme="dark"] #healthFormsFilterModal .health-bmi-option:hover,
+    html[data-theme="dark"] #healthFormsFilterModal .health-bmi-option:focus-within {
+        background: linear-gradient(135deg, #8B0000, #70131B);
+        color: #ffffff;
+    }
+    html[data-theme="dark"] #healthFormsFilterModal .health-bmi-option:has(input:checked) {
+        background: linear-gradient(135deg, #8B0000, #70131B);
+        border-color: #facc15;
+        color: #facc15;
+    }
+    @media (max-width: 760px) {
+        #healthFormsFilterModal .health-filter-chip-grid {
+            grid-template-columns: 1fr;
+        }
+        #healthFormsFilterModal .health-filter-modal-head {
+            align-items: flex-start;
+        }
+    }
 </style>
 
 <div class="export-hub-container">
@@ -1048,6 +1465,32 @@ function openHealthFormsFilterModal() {
 
 function closeHealthFormsFilterModal() {
     document.getElementById('healthFormsFilterModal')?.classList.remove('is-open');
+    setHealthBmiDropdownOpen(false);
+}
+
+function setHealthBmiDropdownOpen(isOpen) {
+    const wrap = document.getElementById('healthBmiDropdownWrap');
+    const display = document.getElementById('healthBmiDisplay');
+    if (!wrap || !display) return;
+    wrap.classList.toggle('is-open', isOpen);
+    display.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+function syncHealthBmiDisplay() {
+    const display = document.getElementById('healthBmiDisplay');
+    const form = document.getElementById('healthFormsExportForm');
+    if (!display || !form) return;
+
+    const checked = Array.from(form.querySelectorAll('[name="bmi_categories[]"]:checked'));
+    if (checked.length === 0) {
+        display.textContent = 'All BMI Categories';
+        return;
+    }
+    if (checked.length === 1) {
+        display.textContent = checked[0].closest('label')?.textContent?.trim() || '1 BMI Category';
+        return;
+    }
+    display.textContent = checked.length + ' BMI Categories';
 }
 
 function updateHealthFormsFilterSummary() {
@@ -1068,6 +1511,32 @@ function updateHealthFormsFilterSummary() {
         ? (dateFrom === dateTo ? formatDate(dateFrom) : formatDate(dateFrom) + ' to ' + formatDate(dateTo))
         : 'Date range';
     summary.textContent = dateText + ' • ' + status;
+}
+
+function updateHealthFormsFilterSummary() {
+    const form = document.getElementById('healthFormsExportForm');
+    const summary = document.getElementById('healthFormsFilterSummary');
+    if (!form || !summary) return;
+
+    const dateFrom = form.querySelector('[name="date_from"]')?.value || '';
+    const dateTo = form.querySelector('[name="date_to"]')?.value || '';
+    const status = form.querySelector('[name="status"]')?.selectedOptions?.[0]?.textContent?.trim() || 'All Status';
+    const bmiCount = form.querySelectorAll('[name="bmi_categories[]"]:checked').length;
+    const keyword = form.querySelector('[name="condition_keyword"]')?.value?.trim() || '';
+
+    const formatDate = function(value) {
+        if (!value) return '';
+        return new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    };
+
+    const dateText = dateFrom && dateTo
+        ? (dateFrom === dateTo ? formatDate(dateFrom) : formatDate(dateFrom) + ' to ' + formatDate(dateTo))
+        : 'Date range';
+    const extras = [];
+    if (bmiCount > 0) extras.push(bmiCount + ' BMI');
+    if (keyword !== '') extras.push('Condition');
+    summary.textContent = [dateText, status].concat(extras).join(' - ');
+    syncHealthBmiDisplay();
 }
 
 function applyDateRange() {
@@ -1130,6 +1599,11 @@ document.addEventListener('click', function(event) {
     if (healthModal && healthModal.classList.contains('is-open') && healthModalContent && !healthModalContent.contains(event.target) && !event.target.closest('[onclick="openHealthFormsFilterModal()"]')) {
         closeHealthFormsFilterModal();
     }
+
+    const bmiWrap = document.getElementById('healthBmiDropdownWrap');
+    if (bmiWrap && !bmiWrap.contains(event.target)) {
+        setHealthBmiDropdownOpen(false);
+    }
 });
 
 // Close modal on Escape key
@@ -1144,7 +1618,24 @@ document.addEventListener('DOMContentLoaded', function() {
     updateHealthFormsFilterSummary();
     document.querySelectorAll('#healthFormsExportForm input, #healthFormsExportForm select').forEach(function(field) {
         field.addEventListener('change', updateHealthFormsFilterSummary);
+        field.addEventListener('input', updateHealthFormsFilterSummary);
     });
+
+    const bmiDisplay = document.getElementById('healthBmiDisplay');
+    const bmiWrap = document.getElementById('healthBmiDropdownWrap');
+    if (bmiDisplay && bmiWrap) {
+        bmiDisplay.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            setHealthBmiDropdownOpen(!bmiWrap.classList.contains('is-open'));
+        });
+        bmiWrap.querySelectorAll('input[name="bmi_categories[]"]').forEach(function(input) {
+            input.addEventListener('change', function() {
+                syncHealthBmiDisplay();
+                updateHealthFormsFilterSummary();
+            });
+        });
+    }
 });
 </script>
 
@@ -1177,12 +1668,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Health Forms Filter Modal -->
 <div class="date-range-modal" id="healthFormsFilterModal">
-    <div class="date-range-modal-content" id="healthFormsFilterModalContent">
-        <div class="date-range-modal-header">
-            <h3>Filter Health Forms</h3>
+    <div class="date-range-modal-content health-filter-modal-content" id="healthFormsFilterModalContent">
+        <div class="health-filter-modal-head">
+            <div class="health-filter-modal-title-wrap">
+                <span class="health-filter-modal-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span>
+                <div>
+                    <h3>Filter Health Forms</h3>
+                    <p>Export health form records by date, status, BMI, and condition details.</p>
+                </div>
+            </div>
+            <button type="button" class="health-filter-modal-close" onclick="closeHealthFormsFilterModal()" aria-label="Close health forms filter">
+                <x-outline-icon name="x-mark" />
+            </button>
         </div>
         <form action="{{ route($healthFormsExportRouteName) }}" method="GET" id="healthFormsExportForm">
-            <div class="date-range-modal-body health-filter-grid">
+            <div class="date-range-modal-body health-filter-modal-body health-filter-grid">
                 <div class="health-filter-field">
                     <label for="healthFormsDateFrom">From Date</label>
                     <input type="date" id="healthFormsDateFrom" name="date_from" value="{{ now()->startOfMonth()->toDateString() }}">
@@ -1209,8 +1709,59 @@ document.addEventListener('DOMContentLoaded', function() {
                         <option value="rejected">Rejected</option>
                     </select>
                 </div>
+                <div class="health-filter-field is-full">
+                    <label>BMI Category</label>
+                    <div class="health-bmi-dropdown-wrap" id="healthBmiDropdownWrap">
+                        <button type="button" class="health-bmi-display" id="healthBmiDisplay" aria-haspopup="listbox" aria-expanded="false">
+                            All BMI Categories
+                        </button>
+                        <div class="health-bmi-menu" id="healthBmiMenu" role="listbox" aria-label="BMI category options">
+                            <label class="health-bmi-option">
+                                <input type="checkbox" name="bmi_categories[]" value="underweight">
+                                Underweight
+                            </label>
+                            <label class="health-bmi-option">
+                                <input type="checkbox" name="bmi_categories[]" value="normal">
+                                Normal
+                            </label>
+                            <label class="health-bmi-option">
+                                <input type="checkbox" name="bmi_categories[]" value="overweight">
+                                Overweight
+                            </label>
+                            <label class="health-bmi-option">
+                                <input type="checkbox" name="bmi_categories[]" value="obese">
+                                Obese
+                            </label>
+                            <label class="health-bmi-option">
+                                <input type="checkbox" name="bmi_categories[]" value="no_bmi">
+                                No BMI recorded
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="health-filter-field is-full">
+                    <label for="healthFormsConditionKeyword">Condition Keyword</label>
+                    <input type="search" id="healthFormsConditionKeyword" name="condition_keyword" placeholder="Example: asthma, allergy, hypertension, remarks">
+                </div>
+                <div class="health-filter-field">
+                    <label for="healthFormsConditionSource">Search Source</label>
+                    <select id="healthFormsConditionSource" name="condition_source">
+                        <option value="all">All condition fields</option>
+                        <option value="health_form">Health form answers</option>
+                        <option value="final_review">Final review condition</option>
+                        <option value="remarks">Remarks only</option>
+                    </select>
+                </div>
+                <div class="health-filter-field">
+                    <label for="healthFormsConditionMatch">Keyword Match</label>
+                    <select id="healthFormsConditionMatch" name="condition_match">
+                        <option value="any">Any keyword</option>
+                        <option value="all">All keywords</option>
+                        <option value="exact">Exact phrase</option>
+                    </select>
+                </div>
             </div>
-            <div class="date-range-modal-actions">
+            <div class="date-range-modal-actions health-filter-modal-actions">
                 <button type="button" class="date-range-modal-btn date-range-modal-btn-cancel" onclick="closeHealthFormsFilterModal()">
                     Cancel
                 </button>

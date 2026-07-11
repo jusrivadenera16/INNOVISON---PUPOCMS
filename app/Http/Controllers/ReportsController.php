@@ -80,6 +80,113 @@ class ReportsController extends Controller
         return 'COALESCE(verified_at, created_at)';
     }
 
+    private function normalizeHealthProfileNumber($value): ?float
+    {
+        $normalized = preg_replace('/[^0-9.]/', '', (string) $value);
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        return (float) $normalized;
+    }
+
+    private function healthProfileBmi(HealthProfile $profile): ?float
+    {
+        $height = $this->normalizeHealthProfileNumber($profile->height ?: optional($profile->user)->height);
+        $weight = $this->normalizeHealthProfileNumber($profile->weight ?: optional($profile->user)->weight);
+
+        if (!$height || !$weight) {
+            return null;
+        }
+
+        $heightMeters = $height > 3 ? $height / 100 : $height;
+
+        if ($heightMeters <= 0) {
+            return null;
+        }
+
+        return round($weight / ($heightMeters * $heightMeters), 1);
+    }
+
+    private function healthProfileBmiCategory(?float $bmi): string
+    {
+        if ($bmi === null) {
+            return 'no_bmi';
+        }
+
+        return match (true) {
+            $bmi < 18.5 => 'underweight',
+            $bmi < 25 => 'normal',
+            $bmi < 30 => 'overweight',
+            default => 'obese',
+        };
+    }
+
+    private function healthProfileBmiCategoryLabel(?float $bmi): string
+    {
+        return match ($this->healthProfileBmiCategory($bmi)) {
+            'underweight' => 'Underweight',
+            'normal' => 'Normal',
+            'overweight' => 'Overweight',
+            'obese' => 'Obese',
+            default => 'No BMI recorded',
+        };
+    }
+
+    private function healthProfileTextValue($value): string
+    {
+        if (is_array($value)) {
+            return collect($value)
+                ->filter(fn ($item) => trim((string) $item) !== '')
+                ->implode(', ');
+        }
+
+        return trim((string) $value);
+    }
+
+    private function healthProfileConditionText(HealthProfile $profile, string $source = 'all'): string
+    {
+        $source = in_array($source, ['all', 'health_form', 'final_review', 'remarks'], true) ? $source : 'all';
+
+        $healthFormParts = [
+            $profile->has_disability === 'Yes' ? 'Disability: ' . ($this->healthProfileTextValue($profile->disability_type) ?: 'Yes') : '',
+            $profile->has_illness === 'Yes' ? 'Illness: Yes' : '',
+            $this->healthProfileTextValue($profile->medical_history),
+            $this->healthProfileTextValue($profile->other_illness),
+            $this->healthProfileTextValue($profile->food_allergies),
+            $this->healthProfileTextValue($profile->medicine_allergies),
+            $this->healthProfileTextValue($profile->other_med_allergies),
+        ];
+
+        $finalReviewParts = [
+            $this->healthProfileTextValue($profile->physical_assessment_status),
+            $this->healthProfileTextValue($profile->medical_condition_remarks),
+            $this->healthProfileTextValue($profile->med_assessment_remarks),
+        ];
+
+        $remarksParts = [
+            $this->healthProfileTextValue($profile->assessment_remarks),
+            $this->healthProfileTextValue($profile->med_assessment_remarks),
+            $this->healthProfileTextValue($profile->medical_condition_remarks),
+            $this->healthProfileTextValue($profile->pending_reason),
+            $this->healthProfileTextValue($profile->encode_remarks),
+        ];
+
+        $parts = match ($source) {
+            'health_form' => $healthFormParts,
+            'final_review' => $finalReviewParts,
+            'remarks' => $remarksParts,
+            default => array_merge($healthFormParts, $finalReviewParts, $remarksParts),
+        };
+
+        return collect($parts)
+            ->map(fn ($part) => trim((string) $part))
+            ->filter(fn ($part) => $part !== '' && $part !== '[]')
+            ->unique()
+            ->implode(' | ');
+    }
+
     public function digitalLogbook(Request $request)
     {
         return view('admin.reports.digital-logbook');
@@ -1446,6 +1553,23 @@ public function exportHealthForms(Request $request)
     $dateToInput = trim((string) $request->query('date_to', now()->toDateString()));
     $courseFilter = trim((string) $request->query('course', ''));
     $statusFilter = strtolower(trim((string) $request->query('status', '')));
+    $conditionKeyword = trim((string) $request->query('condition_keyword', ''));
+    $conditionSource = trim((string) $request->query('condition_source', 'all'));
+    $conditionMatch = trim((string) $request->query('condition_match', 'any'));
+    $bmiCategories = collect((array) $request->query('bmi_categories', []))
+        ->flatMap(fn ($value) => explode(',', (string) $value))
+        ->map(fn ($value) => strtolower(trim($value)))
+        ->filter(fn ($value) => in_array($value, ['underweight', 'normal', 'overweight', 'obese', 'no_bmi'], true))
+        ->unique()
+        ->values();
+
+    if (!in_array($conditionSource, ['all', 'health_form', 'final_review', 'remarks'], true)) {
+        $conditionSource = 'all';
+    }
+
+    if (!in_array($conditionMatch, ['any', 'all', 'exact'], true)) {
+        $conditionMatch = 'any';
+    }
 
     $dateFrom = $dateFromInput !== ''
         ? Carbon::parse($dateFromInput)->startOfDay()
@@ -1487,6 +1611,40 @@ public function exportHealthForms(Request $request)
     }
 
     $records = $query->orderByDesc(DB::raw('COALESCE(verified_at, created_at)'))->get();
+
+    if ($bmiCategories->isNotEmpty()) {
+        $records = $records->filter(function (HealthProfile $record) use ($bmiCategories) {
+            $bmi = $this->healthProfileBmi($record);
+            return $bmiCategories->contains($this->healthProfileBmiCategory($bmi));
+        })->values();
+    }
+
+    if ($conditionKeyword !== '') {
+        $terms = collect(preg_split('/[\s,]+/', mb_strtolower($conditionKeyword), -1, PREG_SPLIT_NO_EMPTY))
+            ->map(fn ($term) => trim($term))
+            ->filter()
+            ->values();
+        $exactNeedle = mb_strtolower($conditionKeyword);
+
+        $records = $records->filter(function (HealthProfile $record) use ($conditionSource, $conditionMatch, $terms, $exactNeedle) {
+            $haystack = mb_strtolower($this->healthProfileConditionText($record, $conditionSource));
+
+            if ($conditionMatch === 'exact') {
+                return $haystack === $exactNeedle || str_contains($haystack, $exactNeedle);
+            }
+
+            if ($terms->isEmpty()) {
+                return true;
+            }
+
+            if ($conditionMatch === 'all') {
+                return $terms->every(fn ($term) => str_contains($haystack, $term));
+            }
+
+            return $terms->contains(fn ($term) => str_contains($haystack, $term));
+        })->values();
+    }
+
     $filename = 'health-forms-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '-' . now()->format('His') . '.csv';
 
     return response()->streamDownload(function () use ($records) {
@@ -1500,6 +1658,9 @@ public function exportHealthForms(Request $request)
             'Gender',
             'Status',
             'Medical Condition',
+            'BMI',
+            'BMI Category',
+            'Condition Details',
             'Approval Date and Time',
         ]);
 
@@ -1517,6 +1678,9 @@ public function exportHealthForms(Request $request)
                 $record->sex ?: optional($record->user)->gender ?: 'N/A',
                 $status,
                 $record->hasMedicalCondition() ? 'Yes' : 'No',
+                ($bmi = $this->healthProfileBmi($record)) !== null ? number_format($bmi, 1) : 'N/A',
+                $this->healthProfileBmiCategoryLabel($bmi ?? null),
+                $this->healthProfileConditionText($record, 'all') ?: 'N/A',
                 $record->verified_at ? Carbon::parse($record->verified_at)->format('M d, Y g:i A') : 'N/A',
             ]);
         }

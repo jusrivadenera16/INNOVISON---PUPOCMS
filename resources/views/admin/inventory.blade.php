@@ -3020,6 +3020,589 @@
     html[data-theme="dark"] label {
         color: #f8fafc !important;
     }
+
+    /* Health Records-inspired inventory refresh */
+    body.admin-inventory-page .controls {
+        align-items: stretch;
+        padding: 18px 20px;
+        border-radius: 16px;
+        border: 1px solid #e5e7eb;
+        background: #ffffff;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, .06);
+    }
+    body.admin-inventory-page .inventory-title-block {
+        justify-content: center;
+    }
+    body.admin-inventory-page .inventory-page-title {
+        color: #0f172a;
+        font-size: 26px;
+        line-height: 1.08;
+        letter-spacing: 0;
+    }
+    body.admin-inventory-page .inventory-page-title svg {
+        width: 54px;
+        height: 54px;
+        padding: 13px;
+        border-radius: 14px;
+        background: #fff1f2;
+        color: #b91c1c;
+    }
+    body.admin-inventory-page .inventory-page-description {
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 700;
+    }
+    body.admin-inventory-page .inventory-toolbar-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(190px, 1fr));
+        align-items: stretch;
+        width: min(100%, 460px);
+        gap: 12px;
+    }
+    body.admin-inventory-page .inventory-toolbar-actions > .btn-add.inventory-action-card {
+        width: 100%;
+        min-height: 102px;
+        height: auto;
+        padding: 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(250, 204, 21, .62);
+        background: linear-gradient(135deg, #70131B, #8f1727);
+        color: #ffffff;
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr) 34px;
+        align-items: center;
+        gap: 12px;
+        text-align: left;
+        box-shadow: inset 0 -3px 0 rgba(250, 204, 21, .76), 0 12px 24px rgba(112, 19, 27, .15);
+        white-space: normal;
+    }
+    body.admin-inventory-page .inventory-action-card::before {
+        content: "";
+        position: absolute;
+        top: -40%;
+        bottom: -40%;
+        left: -72%;
+        width: 34%;
+        opacity: 0;
+        background: linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,248,196,.22) 42%, rgba(255,248,196,.68) 50%, rgba(255,248,196,.22) 58%, rgba(255,255,255,0) 100%);
+        transform: translateX(0) skewX(-18deg);
+        transition: transform .42s ease, opacity .08s ease;
+        pointer-events: none;
+        z-index: 1;
+    }
+    body.admin-inventory-page .inventory-action-card:hover::before,
+    body.admin-inventory-page .inventory-action-card:focus-visible::before {
+        opacity: 1;
+        transform: translateX(520%) skewX(-18deg);
+    }
+    body.admin-inventory-page .inventory-action-card:hover,
+    body.admin-inventory-page .inventory-action-card:focus-visible {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-3px);
+        box-shadow: 0 18px 34px rgba(112, 19, 27, .14);
+        outline: none;
+    }
+    body.admin-inventory-page .inventory-action-card > * {
+        position: relative;
+        z-index: 2;
+    }
+    body.admin-inventory-page .inventory-action-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background: rgba(255,255,255,.14);
+        color: currentColor;
+    }
+    body.admin-inventory-page .inventory-action-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+    body.admin-inventory-page .inventory-action-copy {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+    }
+    body.admin-inventory-page .inventory-action-copy,
+    body.admin-inventory-page .inventory-action-copy * {
+        color: currentColor !important;
+    }
+    body.admin-inventory-page .inventory-action-label {
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+    body.admin-inventory-page .inventory-action-copy strong {
+        font-size: 18px;
+        font-weight: 900;
+        line-height: 1.1;
+    }
+    body.admin-inventory-page .inventory-action-copy span:last-child {
+        font-size: 12px;
+        font-weight: 900;
+    }
+    body.admin-inventory-page .inventory-action-arrow {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(250, 204, 21, .52);
+        background: rgba(255,255,255,.10);
+        color: currentColor;
+        font-size: 22px;
+        font-weight: 900;
+    }
+    body.admin-inventory-page .inventory-summary-card {
+        border-radius: 16px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, .06);
+    }
+    body.admin-inventory-page .inventory-summary-head {
+        align-items: end;
+        padding: 18px 20px 8px;
+    }
+    body.admin-inventory-page .inventory-search-wrap,
+    body.admin-inventory-page .inventory-search-shell.is-open .inventory-search-wrap {
+        position: relative;
+        width: 360px;
+        flex: 0 0 360px;
+        min-height: 42px;
+        align-items: center;
+        border-bottom: 3px solid #8f2230 !important;
+    }
+    body.admin-inventory-page .inventory-search-wrap::before {
+        content: "";
+        width: 18px;
+        height: 18px;
+        margin: 0 12px 0 2px;
+        background: currentColor;
+        color: #9f1239;
+        flex: 0 0 auto;
+        mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+    body.admin-inventory-page .inventory-search-input {
+        min-height: 40px;
+        height: 40px;
+        padding: 8px 0;
+        border-bottom: 0 !important;
+        color: #0f172a;
+        font-weight: 800;
+    }
+    body.admin-inventory-page .inventory-search-input::placeholder {
+        color: #94a3b8;
+        font-weight: 800;
+    }
+    #inventoryImportModal .modal-box,
+    #inventoryImportReviewModal .modal-box,
+    #itemModal .modal-box {
+        background: #ffffff !important;
+        border-top: 0 !important;
+        border-bottom: 0 !important;
+        border-radius: 16px !important;
+        box-shadow: 0 24px 60px rgba(0,0,0,.18);
+    }
+    #inventoryImportModal .inventory-modal-head,
+    #inventoryImportReviewModal .inventory-modal-head,
+    #itemModal .inventory-modal-head {
+        background: #b91c1c !important;
+        padding: 24px;
+    }
+    #inventoryImportModal .inventory-modal-body,
+    #inventoryImportReviewModal .inventory-modal-body,
+    #itemModal .inventory-modal-body {
+        background: #ffffff;
+        padding: 22px 24px;
+    }
+    #inventoryImportModal .modal-actions-row,
+    #inventoryImportReviewModal .modal-actions-row,
+    #itemModal .modal-actions-row {
+        background: #ffffff;
+        border-top: 1px solid #fee2e2;
+        padding: 16px 24px 22px;
+    }
+    html[data-theme="dark"] body.admin-inventory-page .controls,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-summary-card,
+    html[data-theme="dark"] #inventoryImportModal .modal-box,
+    html[data-theme="dark"] #inventoryImportReviewModal .modal-box,
+    html[data-theme="dark"] #itemModal .modal-box,
+    html[data-theme="dark"] #inventoryImportModal .inventory-modal-body,
+    html[data-theme="dark"] #inventoryImportReviewModal .inventory-modal-body,
+    html[data-theme="dark"] #itemModal .inventory-modal-body {
+        background: rgba(15,23,42,.98) !important;
+        border-color: rgba(250,204,21,.18) !important;
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-title,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-search-input {
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-description,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-search-input::placeholder {
+        color: #cbd5e1 !important;
+    }
+
+    /* Final Health Records parity for Inventory overview */
+    body.admin-inventory-page .controls {
+        display: block !important;
+        padding: 0 !important;
+        border-radius: 16px !important;
+        border: 1px solid #e5e7eb !important;
+        background: #ffffff !important;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, .06) !important;
+        overflow: hidden;
+    }
+    body.admin-inventory-page .inventory-overview-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 18px 20px;
+        border-bottom: 1px solid #edf2f7;
+    }
+    body.admin-inventory-page .inventory-last-updated {
+        display: grid;
+        grid-template-columns: 42px auto;
+        gap: 10px;
+        align-items: center;
+        color: #0f172a;
+        flex: 0 0 auto;
+    }
+    body.admin-inventory-page .inventory-last-updated-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: #fff1f2;
+        color: #b91c1c;
+        line-height: 0;
+    }
+    body.admin-inventory-page .inventory-last-updated-icon svg {
+        width: 20px;
+        height: 20px;
+        display: block;
+        margin: 0;
+        transform: translateY(3px);
+    }
+    body.admin-inventory-page .inventory-last-updated span {
+        display: block;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+    body.admin-inventory-page .inventory-last-updated strong {
+        display: block;
+        margin-top: 2px;
+        color: #0f172a;
+        font-size: 13px;
+        font-weight: 900;
+        line-height: 1.25;
+    }
+    body.admin-inventory-page .inventory-title-block {
+        min-width: 0;
+    }
+    body.admin-inventory-page .inventory-modern-summary-container {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+        padding: 14px 20px 18px !important;
+        margin: 0 !important;
+    }
+    body.admin-inventory-page .inventory-modern-card {
+        position: relative;
+        width: 100%;
+        min-height: 102px;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        background: #ffffff;
+        padding: 14px;
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 14px;
+        overflow: hidden;
+        text-align: left;
+        text-decoration: none;
+        font: inherit;
+        color: #0f172a;
+        box-shadow: none;
+        cursor: default;
+        transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
+    }
+    body.admin-inventory-page .inventory-modern-card::before {
+        content: "";
+        position: absolute;
+        top: -40%;
+        bottom: -40%;
+        left: -70%;
+        width: 34%;
+        opacity: 0;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, .25) 42%, rgba(255, 248, 196, .7) 50%, rgba(255, 248, 196, .25) 58%, rgba(255, 255, 255, 0) 100%);
+        transform: translateX(0) skewX(-18deg);
+        transition: transform .42s ease, opacity .08s ease;
+        pointer-events: none;
+        z-index: 1;
+    }
+    body.admin-inventory-page .inventory-modern-card > * {
+        position: relative;
+        z-index: 2;
+    }
+    body.admin-inventory-page .inventory-modern-card.is-clickable {
+        cursor: pointer;
+        border-color: rgba(250, 204, 21, .62);
+        background: linear-gradient(135deg, #70131B, #8f1727);
+        color: #ffffff;
+    }
+    body.admin-inventory-page .inventory-modern-card.is-clickable:hover::before,
+    body.admin-inventory-page .inventory-modern-card.is-clickable:focus-visible::before {
+        opacity: 1;
+        transform: translateX(510%) skewX(-18deg);
+    }
+    body.admin-inventory-page .inventory-modern-card.is-clickable:hover,
+    body.admin-inventory-page .inventory-modern-card.is-clickable:focus-visible {
+        background: #facc15 !important;
+        color: #70131B !important;
+        border-color: #facc15 !important;
+        transform: translateY(-3px);
+        box-shadow: 0 18px 34px rgba(112, 19, 27, .14);
+        outline: none;
+    }
+    body.admin-inventory-page .inventory-modern-card.is-total {
+        border-color: #bbf7d0;
+    }
+    body.admin-inventory-page .inventory-modern-card.is-low,
+    body.admin-inventory-page .inventory-modern-card.is-expired {
+        border-color: #fecaca;
+    }
+    body.admin-inventory-page .inventory-modern-card.is-out {
+        border-color: rgba(250, 204, 21, .62);
+    }
+    body.admin-inventory-page .inventory-modern-card.is-total .inventory-action-icon {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+    body.admin-inventory-page .inventory-modern-card.is-low .inventory-action-icon,
+    body.admin-inventory-page .inventory-modern-card.is-expired .inventory-action-icon {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    body.admin-inventory-page .inventory-modern-card.is-out .inventory-action-icon {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    body.admin-inventory-page .inventory-modern-card.is-clickable .inventory-action-icon {
+        background: rgba(255, 255, 255, .14);
+        color: currentColor;
+    }
+    body.admin-inventory-page .inventory-action-copy,
+    body.admin-inventory-page .inventory-action-copy * {
+        color: currentColor !important;
+    }
+    body.admin-inventory-page .inventory-modern-card:not(.is-clickable) .inventory-action-copy,
+    body.admin-inventory-page .inventory-modern-card:not(.is-clickable) .inventory-action-copy * {
+        color: #0f172a !important;
+    }
+    body.admin-inventory-page .inventory-action-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+    body.admin-inventory-page .inventory-action-copy strong {
+        display: block;
+        margin-top: 6px;
+        font-size: 24px;
+        font-weight: 900;
+        line-height: 1;
+    }
+    body.admin-inventory-page .inventory-action-copy span:last-child {
+        display: block;
+        margin-top: 7px;
+        font-size: 12px;
+        font-weight: 900;
+    }
+    body.admin-inventory-page .inventory-action-arrow {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(250, 204, 21, .52);
+        background: rgba(255, 255, 255, .10);
+        color: currentColor;
+        font-size: 26px;
+        font-weight: 900;
+    }
+    body.admin-inventory-page .inventory-modern-card.is-clickable:hover .inventory-action-icon,
+    body.admin-inventory-page .inventory-modern-card.is-clickable:focus-visible .inventory-action-icon {
+        background: rgba(112, 19, 27, .14);
+        color: #70131B;
+    }
+    body.admin-inventory-page .inventory-summary-card {
+        margin-top: 16px;
+    }
+    @media (max-width: 1180px) {
+        body.admin-inventory-page .inventory-modern-summary-container {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
+    @media (max-width: 768px) {
+        body.admin-inventory-page .inventory-overview-head {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+        body.admin-inventory-page .inventory-modern-summary-container {
+            grid-template-columns: 1fr !important;
+        }
+        body.admin-inventory-page .inventory-modern-card {
+            min-height: 118px;
+        }
+    }
+    html[data-theme="dark"] body.admin-inventory-page .controls {
+        background: rgba(15, 23, 42, .98) !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-overview-head {
+        border-bottom-color: rgba(255, 255, 255, .10);
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-last-updated strong {
+        color: #ffffff;
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-last-updated span {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-last-updated-icon {
+        background: rgba(250, 204, 21, .12);
+        color: #facc15;
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card:not(.is-clickable) {
+        background: rgba(17, 24, 39, .96);
+        border-color: rgba(250, 204, 21, .18);
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card:not(.is-clickable) .inventory-action-copy,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card:not(.is-clickable) .inventory-action-copy * {
+        color: #ffffff !important;
+    }
+    body.admin-inventory-page .inventory-search-wrap,
+    body.admin-inventory-page .inventory-search-shell.is-open .inventory-search-wrap {
+        position: relative;
+        width: min(420px, 100%);
+        flex: 0 1 420px;
+        min-height: 48px !important;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid rgba(143, 34, 48, .22) !important;
+        border-radius: 16px !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+        padding: 0 10px 0 14px !important;
+        overflow: hidden;
+    }
+    body.admin-inventory-page .inventory-search-wrap::before {
+        content: "";
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        margin: 0 !important;
+        color: #9f1239;
+        background: currentColor;
+        mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+    body.admin-inventory-page .inventory-search-wrap::after {
+        content: "";
+        width: 26px;
+        height: 26px;
+        flex: 0 0 26px;
+        border-radius: 999px;
+        background-color: rgba(143, 34, 48, .20);
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 14.5a3 3 0 0 0 3-3v-5a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Z' stroke='%238f2230' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M5.5 10.5a6.5 6.5 0 0 0 13 0M12 17v3M9 20h6' stroke='%238f2230' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 13px 13px;
+    }
+    body.admin-inventory-page .inventory-search-input {
+        min-height: 46px !important;
+        height: 46px !important;
+        padding: 8px 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    body.admin-inventory-page .inventory-search-input:focus {
+        transform: none;
+        box-shadow: none !important;
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-search-wrap,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-search-shell.is-open .inventory-search-wrap {
+        background: rgba(15, 23, 42, .96) !important;
+        border-color: rgba(250, 204, 21, .28) !important;
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-search-wrap::after {
+        background-color: rgba(250, 204, 21, .18);
+    }
+
+    body.admin-inventory-page .inventory-title-block .inventory-page-description {
+        margin-left: 66px !important;
+    }
+    body.admin-inventory-page .inventory-modern-summary-container {
+        gap: 10px !important;
+        padding: 12px 20px 14px !important;
+    }
+    body.admin-inventory-page .inventory-modern-card,
+    body.admin-inventory-page .inventory-modern-card.is-clickable,
+    body.admin-inventory-page .inventory-toolbar-actions > .btn-add.inventory-action-card {
+        min-height: 86px !important;
+        padding: 12px !important;
+        grid-template-columns: 38px minmax(0, 1fr) auto !important;
+        gap: 10px !important;
+    }
+    body.admin-inventory-page .inventory-action-icon {
+        width: 38px !important;
+        height: 38px !important;
+    }
+    body.admin-inventory-page .inventory-action-icon svg {
+        width: 20px !important;
+        height: 20px !important;
+    }
+    body.admin-inventory-page .inventory-action-label {
+        font-size: 10px !important;
+    }
+    body.admin-inventory-page .inventory-action-copy strong {
+        margin-top: 4px !important;
+        font-size: 20px !important;
+        line-height: 1.05 !important;
+    }
+    body.admin-inventory-page .inventory-modern-card.is-clickable .inventory-action-copy strong {
+        font-size: 18px !important;
+    }
+    body.admin-inventory-page .inventory-action-copy span:last-child {
+        margin-top: 4px !important;
+        font-size: 11px !important;
+        line-height: 1.25 !important;
+    }
+    body.admin-inventory-page .inventory-action-arrow {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 10px !important;
+        font-size: 20px !important;
+    }
+    @media (max-width: 560px) {
+        body.admin-inventory-page .inventory-title-block .inventory-page-description {
+            margin-left: 0 !important;
+        }
+    }
+
 </style>
 @endpush
 
@@ -3031,17 +3614,105 @@
         $inventoryImportPreview = session('inventory_import_preview');
         $inventoryImportFeedback = session('inventory_import_feedback');
         $inventoryImportValidationError = $errors->first('inventory_import_file');
+        $inventoryCollection = $items instanceof \Illuminate\Contracts\Pagination\Paginator
+            ? collect($items->items())
+            : collect($items);
+        $inventoryTotalItems = $inventoryCollection->count();
+        $inventoryLowStockItems = $inventoryCollection->filter(function ($item) {
+            $quantity = $item->hasDispensingConversion() ? $item->availableDispensingQuantity() : (float) $item->quantity;
+            $minimum = (float) ($item->minimum_stock ?: 10);
+            return $quantity > 0 && $quantity <= $minimum;
+        })->count();
+        $inventoryOutItems = $inventoryCollection->filter(function ($item) {
+            $quantity = $item->hasDispensingConversion() ? $item->availableDispensingQuantity() : (float) $item->quantity;
+            return $quantity <= 0;
+        })->count();
+        $inventoryExpiredItems = $inventoryCollection->filter(function ($item) {
+            return $item->category == 'Medicine'
+                && $item->expiration_date
+                && \Carbon\Carbon::parse($item->expiration_date)->isPast();
+        })->count();
+        $inventoryLatestUpdatedAt = $inventoryCollection
+            ->map(fn ($item) => $item->updated_at ?? $item->date_added ?? $item->created_at ?? null)
+            ->filter()
+            ->map(fn ($date) => \Carbon\Carbon::parse($date))
+            ->sortDesc()
+            ->first();
     @endphp
 
     <div class="controls">
-        <div class="inventory-title-block">
-            <h2 class="inventory-page-title"><x-outline-icon name="cube" />Clinic Inventory</h2>
-            <p class="inventory-page-description">Track medicines, supplies, stock levels, and clinic inventory movement.</p>
+        <div class="inventory-overview-head">
+            <div class="inventory-title-block">
+                <h2 class="inventory-page-title"><x-outline-icon name="cube" />Clinic Inventory</h2>
+                <p class="inventory-page-description">Track medicines, supplies, stock levels, and clinic inventory movement.</p>
+            </div>
+            <div class="inventory-last-updated">
+                <span class="inventory-last-updated-icon"><x-outline-icon name="clock" /></span>
+                <div>
+                    <span>Last Updated</span>
+                    <strong>
+                        @if($inventoryLatestUpdatedAt)
+                            {{ $inventoryLatestUpdatedAt->format('M d, Y') }}<br>{{ $inventoryLatestUpdatedAt->format('g:i A') }}
+                        @else
+                            N/A
+                        @endif
+                    </strong>
+                </div>
+            </div>
         </div>
-        <div class="inventory-toolbar-actions">
+        <div class="inventory-toolbar-actions inventory-modern-summary-container">
+            <div class="inventory-modern-card is-total">
+                <span class="inventory-action-icon"><x-outline-icon name="cube" /></span>
+                <span class="inventory-action-copy">
+                    <span class="inventory-action-label">Total Items</span>
+                    <strong>{{ $inventoryTotalItems }}</strong>
+                    <span>Inventory records</span>
+                </span>
+            </div>
+            <div class="inventory-modern-card is-low">
+                <span class="inventory-action-icon"><x-outline-icon name="exclamation-triangle" /></span>
+                <span class="inventory-action-copy">
+                    <span class="inventory-action-label">Low Stock</span>
+                    <strong>{{ $inventoryLowStockItems }}</strong>
+                    <span>Needs attention</span>
+                </span>
+            </div>
             @if($canManageInventory)
-                <button type="button" class="btn-add" onclick="openInventoryImportModal()">Import</button>
-                <button type="button" class="btn-add" onclick="openModal()">+ Add New Item</button>
+                <button type="button" class="inventory-modern-card inventory-action-card is-clickable" onclick="openInventoryImportModal()">
+                    <span class="inventory-action-icon"><x-outline-icon name="clipboard-document-list" /></span>
+                    <span class="inventory-action-copy">
+                        <span class="inventory-action-label">Inventory File</span>
+                        <strong>Import</strong>
+                        <span>Upload to review</span>
+                    </span>
+                    <span class="inventory-action-arrow">&rarr;</span>
+                </button>
+                <button type="button" class="inventory-modern-card inventory-action-card is-clickable" onclick="openModal()">
+                    <span class="inventory-action-icon"><x-outline-icon name="plus-circle" /></span>
+                    <span class="inventory-action-copy">
+                        <span class="inventory-action-label">Stock Record</span>
+                        <strong>Add New Item</strong>
+                        <span>Create manually</span>
+                    </span>
+                    <span class="inventory-action-arrow">&rarr;</span>
+                </button>
+            @else
+                <div class="inventory-modern-card is-out">
+                    <span class="inventory-action-icon"><x-outline-icon name="x-mark" /></span>
+                    <span class="inventory-action-copy">
+                        <span class="inventory-action-label">Out of Stock</span>
+                        <strong>{{ $inventoryOutItems }}</strong>
+                        <span>Unavailable items</span>
+                    </span>
+                </div>
+                <div class="inventory-modern-card is-expired">
+                    <span class="inventory-action-icon"><x-outline-icon name="clock" /></span>
+                    <span class="inventory-action-copy">
+                        <span class="inventory-action-label">Expired</span>
+                        <strong>{{ $inventoryExpiredItems }}</strong>
+                        <span>Medicine records</span>
+                    </span>
+                </div>
             @endif
         </div>
     </div>

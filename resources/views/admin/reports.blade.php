@@ -272,29 +272,29 @@
         background: rgba(17, 17, 17, 0.10) !important;
     }
 
-    /* Audit Trail Premium Styling */
+    /* Audit Trail Styling */
     .report-card-audit {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
-        border: 2px solid rgba(124, 58, 237, 0.3) !important;
+        background: #70131B !important;
+        border: 2px solid rgba(250, 204, 21, 0.62) !important;
         position: relative;
     }
 
     .report-card-audit::before {
-        background: linear-gradient(135deg, #6366f1, #a855f7) !important;
+        background: none !important;
     }
 
     .report-card-audit:hover {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
-        border-color: #a855f7 !important;
+        background: #facc15 !important;
+        border-color: #facc15 !important;
         box-shadow:
-            0 0 0 3px rgba(168, 85, 247, 0.15),
-            0 20px 40px rgba(124, 58, 237, 0.3) !important;
+            0 0 0 3px rgba(250, 204, 21, 0.12),
+            0 20px 30px rgba(139, 0, 0, 0.22) !important;
     }
 
     .report-card-audit .report-card-icon {
-        color: #c7d2fe;
-        background: rgba(79, 70, 229, 0.25);
-        border-color: rgba(168, 85, 247, 0.3);
+        color: #facc15;
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 248, 196, 0.16);
     }
 
     .report-card-audit:hover .report-card-icon {
@@ -304,13 +304,13 @@
     }
 
     html[data-theme="dark"] .report-card-audit {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
-        border-color: rgba(168, 85, 247, 0.3) !important;
+        background: #70131B !important;
+        border-color: rgba(250, 204, 21, 0.62) !important;
     }
 
     html[data-theme="dark"] .report-card-audit:hover {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
-        border-color: #a855f7 !important;
+        background: #facc15 !important;
+        border-color: #facc15 !important;
     }
 
     .back-nav {
@@ -676,6 +676,309 @@
             border-color: #facc15 !important;
         }
     }
+
+    /* Settings-style Reports hub */
+    .reports-frame {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 24px 28px 28px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.94);
+        overflow: hidden;
+    }
+    .reports-header {
+        margin: 0 0 24px;
+        padding: 0;
+        border: 0;
+    }
+    .reports-header-title {
+        margin: 0 0 10px;
+        color: #8b0000;
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        line-height: 1.2;
+        text-transform: uppercase;
+    }
+    .reports-header-description {
+        max-width: 760px;
+        margin: 0;
+        color: #0f172a;
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.25;
+    }
+    .report-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 16px;
+        margin-top: 24px;
+    }
+    .report-card,
+    .report-card.report-card-audit {
+        position: relative;
+        min-height: 238px;
+        height: 100%;
+        display: block;
+        padding: 18px;
+        border-radius: 16px;
+        border: 1px solid rgba(112, 19, 27, 0.46) !important;
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+        color: #ffffff !important;
+        box-shadow: inset 0 -3px 0 rgba(250, 204, 21, 0.72), 0 10px 24px rgba(112, 19, 27, 0.18);
+        overflow: hidden;
+        text-decoration: none;
+        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease;
+    }
+    .report-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 38%);
+        z-index: 0;
+    }
+    .report-card::after {
+        content: "";
+        position: absolute;
+        top: -38%;
+        bottom: -38%;
+        left: -135%;
+        width: 34%;
+        opacity: 0;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 246, 184, 0.18) 42%, rgba(255, 246, 184, 0.54) 50%, rgba(255, 246, 184, 0.18) 58%, rgba(255, 255, 255, 0) 100%);
+        transform: translateX(0) skewX(-18deg);
+        pointer-events: none;
+        z-index: 0;
+    }
+    .report-card:hover,
+    .report-card:focus-visible,
+    .report-card.report-card-audit:hover,
+    .report-card.report-card-audit:focus-visible {
+        background: #facc15 !important;
+        background-image: none !important;
+        color: #70131B !important;
+        transform: translateY(-8px);
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.12), 0 20px 30px rgba(139, 0, 0, 0.22) !important;
+        border-color: #facc15 !important;
+        outline: none;
+    }
+    .report-card:hover::after,
+    .report-card:focus-visible::after {
+        animation: reportsSettingsSweep .92s ease both;
+    }
+    @keyframes reportsSettingsSweep {
+        0% { opacity: 0; transform: translateX(0) skewX(-18deg); }
+        18% { opacity: .72; }
+        72% { opacity: .72; }
+        100% { opacity: 0; transform: translateX(820%) skewX(-18deg); }
+    }
+    .report-card > * {
+        position: relative;
+        z-index: 1;
+    }
+    .report-card-chip {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        border: 1px solid rgba(255, 248, 196, 0.72);
+        background: rgba(255, 248, 196, 0.12);
+        color: #ffffff;
+        box-shadow: 0 8px 14px rgba(15, 23, 42, 0.14);
+        transition: background .2s ease, color .2s ease, border-color .2s ease;
+    }
+    .report-card-chip svg {
+        width: 13px;
+        height: 13px;
+        stroke-width: 2.6;
+    }
+    .report-card-icon,
+    .report-card.report-card-audit .report-card-icon {
+        position: relative;
+        z-index: 1;
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        background: rgba(255, 248, 196, 0.12) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 248, 196, 0.16) !important;
+        animation: reportsSettingsFloat 3.8s ease-in-out infinite;
+        transition: background .2s ease, color .2s ease, border-color .2s ease;
+    }
+    .report-card-icon svg {
+        width: 24px !important;
+        height: 24px !important;
+        stroke-width: 2.1;
+    }
+    @keyframes reportsSettingsFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+    .report-main-title {
+        margin: 0 0 10px;
+        color: #ffffff !important;
+        font-size: 18px;
+        font-weight: 800;
+        line-height: 1.25;
+        text-align: left;
+        transition: color .2s ease;
+    }
+    .report-card-copy {
+        margin: 0;
+        color: #ffffff !important;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.42;
+        text-align: left;
+        transition: color .2s ease;
+    }
+    .report-label,
+    .report-card-footer,
+    .report-badge {
+        display: none !important;
+    }
+    .report-card:hover .report-main-title,
+    .report-card:focus-visible .report-main-title,
+    .report-card:hover .report-card-copy,
+    .report-card:focus-visible .report-card-copy {
+        color: #70131B !important;
+    }
+    .report-card:hover .report-card-icon,
+    .report-card:focus-visible .report-card-icon,
+    .report-card:hover .report-card-chip,
+    .report-card:focus-visible .report-card-chip {
+        background: #70131B !important;
+        color: #ffffff !important;
+        border-color: rgba(112, 19, 27, 0.62) !important;
+        transform: none;
+    }
+    html[data-theme="dark"] .reports-frame {
+        background: linear-gradient(180deg, rgba(70, 19, 27, 0.92), rgba(46, 13, 19, 0.96));
+        border-color: rgba(255,255,255,.08);
+    }
+    html[data-theme="dark"] .reports-header-title,
+    html[data-theme="dark"] .reports-header-description {
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .report-card,
+    html[data-theme="dark"] .report-card.report-card-audit {
+        background: #70131B !important;
+        border-color: rgba(250, 204, 21, 0.62) !important;
+        box-shadow: inset 0 -3px 0 rgba(250, 204, 21, 0.92), 0 14px 26px rgba(0,0,0,.22);
+    }
+    html[data-theme="dark"] .report-card::before {
+        background: none;
+    }
+    html[data-theme="dark"] .report-card:hover,
+    html[data-theme="dark"] .report-card:focus-visible {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+    }
+    @media (max-width: 980px) {
+        .report-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
+    @media (max-width: 720px) {
+        .dashboard-container {
+            padding: 12px;
+        }
+        .reports-frame {
+            max-width: 100%;
+            padding: 20px 18px;
+        }
+        .report-grid {
+            grid-template-columns: 1fr !important;
+        }
+        .report-card {
+            min-height: 210px;
+        }
+    }
+    /* Patient Intake-style compact container behavior */
+    .reports-frame {
+        width: min(100%, 980px) !important;
+        max-width: 980px !important;
+        margin: 0 auto !important;
+        padding: 16px 16px 18px !important;
+        border-radius: 12px !important;
+    }
+    .reports-frame::before {
+        left: 12px !important;
+        right: 12px !important;
+    }
+    .reports-header {
+        margin: 0 0 18px !important;
+        padding: 0 !important;
+    }
+    .reports-header-title {
+        font-size: 13px !important;
+        margin-bottom: 8px !important;
+    }
+    .reports-header-description {
+        max-width: 760px !important;
+        font-size: 20px !important;
+        line-height: 1.2 !important;
+    }
+    .report-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+        margin-top: 20px !important;
+    }
+    .report-card,
+    .report-card.report-card-audit {
+        min-height: 258px !important;
+        padding: 20px !important;
+        border-radius: 12px !important;
+    }
+    .report-card-icon,
+    .report-card.report-card-audit .report-card-icon {
+        width: 48px !important;
+        height: 48px !important;
+        border-radius: 13px !important;
+        margin-bottom: 18px !important;
+    }
+    .report-card-icon svg {
+        width: 21px !important;
+        height: 21px !important;
+    }
+    .report-main-title {
+        font-size: 18px !important;
+        margin-bottom: 10px !important;
+    }
+    .report-card-copy {
+        font-size: 15px !important;
+        line-height: 1.42 !important;
+    }
+    @media (max-width: 920px) {
+        .reports-frame {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        .report-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
+    @media (max-width: 560px) {
+        .reports-frame {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 18px !important;
+        }
+        .report-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
 </style>
 @endpush
 
@@ -702,90 +1005,74 @@
         <div class="report-grid">
         
         <a href="{{ $marUrl }}" class="report-card report-card-primary">
+            <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="report-card-icon"><x-outline-icon name="clipboard-document-list" /></span>
             <div>
-                <div class="report-label">Personnel Records</div>
-                <div class="report-main-title">Medical Accomplishment (MAR)</div>
-            </div>
-            <div class="report-card-footer">
-                <div class="report-badge">Action Needed</div>
-                <span class="report-card-icon"><x-outline-icon name="clipboard-document-list" /></span>
+                <div class="report-main-title">MAR Reports</div>
+                <p class="report-card-copy">Review personnel medical accomplishment records.</p>
             </div>
         </a>
 
         <a href="{{ $inventorySummaryUrl }}" class="report-card report-card-primary">
+            <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="report-card-icon"><x-outline-icon name="cube" /></span>
             <div>
-                <div class="report-label">Stocks & Supplies</div>
                 <div class="report-main-title">Inventory Summary</div>
-            </div>
-            <div class="report-card-footer">
-                <div class="report-badge">All Records</div>
-                <span class="report-card-icon"><x-outline-icon name="cube" /></span>
+                <p class="report-card-copy">Track stock movement, supplies, medicine records, and inventory levels.</p>
             </div>
         </a>
 
         <a href="{{ $digitalLogbookUrl }}" class="report-card report-card-primary">
+            <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="report-card-icon"><x-outline-icon name="clipboard-document-list" /></span>
             <div>
-                <div class="report-label">Clinic Monitoring</div>
                 <div class="report-main-title">Digital Logbook</div>
-            </div>
-            <div class="report-card-footer">
-                <div class="report-badge">Treatment & Forms</div>
-                <span class="report-card-icon"><x-outline-icon name="clipboard-document-list" /></span>
+                <p class="report-card-copy">Monitor clinic treatments, visit logs, and submitted form activity.</p>
             </div>
         </a>
 
         <a href="{{ $appointmentStatisticsUrl }}" class="report-card report-card-primary">
+            <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="report-card-icon"><x-outline-icon name="calendar-days" /></span>
             <div>
-                <div class="report-label">Clinic Analytics</div>
                 <div class="report-main-title">Appointment Statistics</div>
-            </div>
-            <div class="report-card-footer">
-                <div class="report-badge">Trends</div>
-                <span class="report-card-icon"><x-outline-icon name="calendar-days" /></span>
+                <p class="report-card-copy">Analyze appointment trends, service demand, schedules, and clinic flow.</p>
             </div>
         </a>
 
         <a href="{{ $exportHubUrl }}" class="report-card">
+            <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="report-card-icon"><x-outline-icon name="arrow-long-right" /></span>
             <div>
-                <div class="report-label">Summary Report</div>
                 <div class="report-main-title">Export Reports</div>
-            </div>
-            <div class="report-card-footer">
-                <div class="report-badge">All Reports</div>
-                <span class="report-card-icon"><x-outline-icon name="arrow-long-right" /></span>
+                <p class="report-card-copy">Open the export hub for printable and downloadable clinic reports.</p>
             </div>
         </a>
 
         <a href="{{ $feedbacksUrl }}" class="report-card">
+            <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="report-card-icon"><x-outline-icon name="megaphone" /></span>
             <div>
-                <div class="report-label">Patient Experience</div>
                 <div class="report-main-title">Feedbacks</div>
-            </div>
-            <div class="report-card-footer">
-                <div class="report-badge">Rate of Clinic</div>
-                <span class="report-card-icon"><x-outline-icon name="megaphone" /></span>
+                <p class="report-card-copy">Review patient feedback, ratings, comments, and clinic experience notes to improve care.</p>
             </div>
         </a>
 
         <a href="{{ $healthFormsUrl }}" class="report-card">
+            <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="report-card-icon"><x-outline-icon name="document-text" /></span>
             <div>
-                <div class="report-label">Issued Documents</div>
                 <div class="report-main-title">Health Forms</div>
-            </div>
-            <div class="report-card-footer">
-                <div class="report-badge">Issued Only</div>
-                <span class="report-card-icon"><x-outline-icon name="document-text" /></span>
+                <p class="report-card-copy">View issued health forms summarized by course and selected date range.</p>
             </div>
         </a>
 
         <a href="{{ route('admin.logs') }}" class="report-card report-card-audit">
+            <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="report-card-icon"><x-outline-icon name="clock" /></span>
             <div>
-                <div class="report-label">System Monitoring</div>
                 <div class="report-main-title">Audit Trail</div>
-            </div>
-            <div class="report-card-footer">
-                <div class="report-badge">Activity Log</div>
-                <span class="report-card-icon"><x-outline-icon name="clock" /></span>
+                <p class="report-card-copy">Inspect user activity logs, system actions, and administrative changes.</p>
             </div>
         </a>
 

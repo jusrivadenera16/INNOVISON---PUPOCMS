@@ -4176,6 +4176,41 @@
         width: 100% !important;
     }
 
+    .health-summary-modern-card.is-approved:hover,
+    .health-summary-modern-card.is-condition:hover {
+        transform: translateY(-4px) scale(1.015);
+        box-shadow: 0 20px 36px rgba(112, 19, 27, .16);
+        border-color: rgba(112, 19, 27, .24);
+        background: #fffaf0;
+    }
+    .health-summary-modern-card.is-approved:hover::before,
+    .health-summary-modern-card.is-condition:hover::before {
+        opacity: 1;
+        transform: translateX(510%) skewX(-18deg);
+    }
+    html[data-theme="dark"] .health-summary-modern-card.is-approved:hover,
+    html[data-theme="dark"] .health-summary-modern-card.is-condition:hover {
+        background: rgba(112, 19, 27, .92);
+        border-color: rgba(250, 204, 21, .52);
+        box-shadow: 0 20px 36px rgba(0, 0, 0, .32);
+    }
+
+    .health-table-tools .health-records-search-submit,
+    .health-table-tools .health-records-search-submit *,
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        fill: #ffffff !important;
+        stroke: #ffffff !important;
+    }
+    .health-table-tools .health-records-search-submit:hover,
+    .health-table-tools .health-records-search-submit:focus-visible,
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:hover,
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:focus-visible {
+        color: #7f1d2d !important;
+        -webkit-text-fill-color: #7f1d2d !important;
+    }
+
 </style>
 @endpush
 
