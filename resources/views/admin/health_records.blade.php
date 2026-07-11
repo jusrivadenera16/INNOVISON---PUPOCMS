@@ -4195,6 +4195,38 @@
         box-shadow: 0 20px 36px rgba(0, 0, 0, .32);
     }
 
+    .premium-select-option:hover,
+    .premium-select-option:focus-visible {
+        background: #7f0010 !important;
+        color: #ffffff !important;
+        border-color: #7f0010 !important;
+        outline: none;
+    }
+    .premium-select-option.is-selected {
+        background: #7f0010 !important;
+        color: #facc15 !important;
+        border-color: #7f0010 !important;
+    }
+    .premium-select-option.is-selected:hover,
+    .premium-select-option.is-selected:focus-visible {
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] .premium-select-option:hover,
+    html[data-theme="dark"] .premium-select-option:focus-visible {
+        background: #7f0010 !important;
+        color: #ffffff !important;
+        border-color: #7f0010 !important;
+    }
+    html[data-theme="dark"] .premium-select-option.is-selected {
+        background: #7f0010 !important;
+        color: #facc15 !important;
+        border-color: #facc15 !important;
+    }
+    html[data-theme="dark"] .premium-select-option.is-selected:hover,
+    html[data-theme="dark"] .premium-select-option.is-selected:focus-visible {
+        color: #ffffff !important;
+    }
+
     .health-table-tools .health-records-search-submit,
     .health-table-tools .health-records-search-submit *,
     button#healthRecordsOverviewFilterBtn.health-records-search-submit {
