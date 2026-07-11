@@ -35,7 +35,7 @@
 
     .appointments-summary-title {
         font-weight: 800;
-        transform: translateY(2px);
+        transform: none;
     }
 
     .appointments-summary-head {
@@ -2853,7 +2853,7 @@
         overflow: visible;
     }
     .appointments-summary-head {
-        align-items: end;
+        align-items: center;
         padding: 18px 20px 8px;
         margin-bottom: 8px;
     }
@@ -2867,7 +2867,7 @@
         width: min(100%, 620px);
         display: grid;
         grid-template-columns: minmax(220px, 1fr) auto;
-        align-items: end;
+        align-items: center;
     }
     .appointments-search-shell,
     .appointments-search-wrap,
@@ -3090,29 +3090,56 @@
         margin-bottom: 14px !important;
     }
     .appointments-modern-card {
-        min-height: 86px !important;
-        padding: 12px !important;
-        grid-template-columns: 38px minmax(0, 1fr) !important;
-        gap: 11px !important;
+        min-height: 118px !important;
+        padding: 14px !important;
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+        gap: 14px !important;
     }
     .appointments-modern-icon {
-        width: 38px !important;
-        height: 38px !important;
+        width: 44px !important;
+        height: 44px !important;
     }
     .appointments-modern-icon svg {
-        width: 20px !important;
-        height: 20px !important;
+        width: 24px !important;
+        height: 24px !important;
     }
     .appointments-modern-copy strong {
-        margin-top: 4px !important;
-        font-size: 20px !important;
+        margin-top: 6px !important;
+        font-size: 24px !important;
     }
     .appointments-modern-copy span:last-child {
-        margin-top: 4px !important;
-        font-size: 11px !important;
+        margin-top: 7px !important;
+        font-size: 12px !important;
     }
     html[data-theme="dark"] .appointments-title-block .appointments-page-title span {
         color: #ffffff !important;
+    }
+    .appointments-overview {
+        margin-bottom: 16px !important;
+        border-radius: 16px !important;
+        border: 1px solid #e5e7eb !important;
+        background: #ffffff !important;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, .06) !important;
+        overflow: hidden !important;
+    }
+    .appointments-overview .appointments-toolbar {
+        margin-bottom: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        border-bottom: 1px solid #e5e7eb !important;
+    }
+    .appointments-overview .appointments-modern-summary {
+        padding: 12px 20px 18px !important;
+        margin-bottom: 0 !important;
+    }
+    html[data-theme="dark"] .appointments-overview {
+        background: rgba(15, 23, 42, .98) !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+        box-shadow: 0 18px 36px rgba(0, 0, 0, .22) !important;
+    }
+    html[data-theme="dark"] .appointments-overview .appointments-toolbar {
+        border-bottom-color: rgba(255, 255, 255, .10) !important;
     }
     @media (max-width: 560px) {
         .appointments-title-block {
@@ -3186,56 +3213,58 @@
             ->first();
     @endphp
 
-    <div class="appointments-toolbar">
-        <div class="appointments-title-block">
-            <h2 class="appointments-page-title"><x-outline-icon name="calendar-days" /><span>Appointments</span></h2>
-            <p class="appointments-page-description">Monitor appointment requests, clinic schedules, service types, and patient flow.</p>
-        </div>
-        <div class="appointments-last-updated">
-            <span class="appointments-last-updated-icon"><x-outline-icon name="clock" /></span>
-            <div>
-                <span>Last Updated</span>
-                <strong>
-                    @if($appointmentsLatestUpdatedAt)
-                        {{ $appointmentsLatestUpdatedAt->format('M d, Y') }}<br>{{ $appointmentsLatestUpdatedAt->format('g:i A') }}
-                    @else
-                        N/A
-                    @endif
-                </strong>
+    <section class="appointments-overview">
+        <div class="appointments-toolbar">
+            <div class="appointments-title-block">
+                <h2 class="appointments-page-title"><x-outline-icon name="calendar-days" /><span>Appointments</span></h2>
+                <p class="appointments-page-description">Monitor appointment requests, clinic schedules, service types, and patient flow.</p>
+            </div>
+            <div class="appointments-last-updated">
+                <span class="appointments-last-updated-icon"><x-outline-icon name="clock" /></span>
+                <div>
+                    <span>Last Updated</span>
+                    <strong>
+                        @if($appointmentsLatestUpdatedAt)
+                            {{ $appointmentsLatestUpdatedAt->format('M d, Y') }}<br>{{ $appointmentsLatestUpdatedAt->format('g:i A') }}
+                        @else
+                            N/A
+                        @endif
+                    </strong>
+                </div>
             </div>
         </div>
-    </div>
-    <section class="appointments-modern-summary">
-        <div class="appointments-modern-card is-total">
-            <span class="appointments-modern-icon"><x-outline-icon name="calendar-days" /></span>
-            <div class="appointments-modern-copy">
-                <span class="appointments-modern-label">Total Appointments</span>
-                <strong>{{ $appointmentTotal }}</strong>
-                <span>Current list</span>
+        <div class="appointments-modern-summary">
+            <div class="appointments-modern-card is-total">
+                <span class="appointments-modern-icon"><x-outline-icon name="calendar-days" /></span>
+                <div class="appointments-modern-copy">
+                    <span class="appointments-modern-label">Total Appointments</span>
+                    <strong>{{ $appointmentTotal }}</strong>
+                    <span>Current list</span>
+                </div>
             </div>
-        </div>
-        <div class="appointments-modern-card is-service">
-            <span class="appointments-modern-icon"><x-outline-icon name="clipboard-document-list" /></span>
-            <div class="appointments-modern-copy">
-                <span class="appointments-modern-label">Common Service</span>
-                <strong>{{ $commonService }}</strong>
-                <span>Most requested</span>
+            <div class="appointments-modern-card is-service">
+                <span class="appointments-modern-icon"><x-outline-icon name="clipboard-document-list" /></span>
+                <div class="appointments-modern-copy">
+                    <span class="appointments-modern-label">Common Service</span>
+                    <strong>{{ $commonService }}</strong>
+                    <span>Most requested</span>
+                </div>
             </div>
-        </div>
-        <div class="appointments-modern-card is-gender">
-            <span class="appointments-modern-icon"><x-outline-icon name="users" /></span>
-            <div class="appointments-modern-copy">
-                <span class="appointments-modern-label">Most Gender</span>
-                <strong>{{ $mostGender }}</strong>
-                <span>From profiles</span>
+            <div class="appointments-modern-card is-gender">
+                <span class="appointments-modern-icon"><x-outline-icon name="users" /></span>
+                <div class="appointments-modern-copy">
+                    <span class="appointments-modern-label">Most Gender</span>
+                    <strong>{{ $mostGender }}</strong>
+                    <span>From profiles</span>
+                </div>
             </div>
-        </div>
-        <div class="appointments-modern-card is-peak">
-            <span class="appointments-modern-icon"><x-outline-icon name="clock" /></span>
-            <div class="appointments-modern-copy">
-                <span class="appointments-modern-label">Peak Hours</span>
-                <strong>{{ $peakHour }}</strong>
-                <span>Most scheduled</span>
+            <div class="appointments-modern-card is-peak">
+                <span class="appointments-modern-icon"><x-outline-icon name="clock" /></span>
+                <div class="appointments-modern-copy">
+                    <span class="appointments-modern-label">Peak Hours</span>
+                    <strong>{{ $peakHour }}</strong>
+                    <span>Most scheduled</span>
+                </div>
             </div>
         </div>
     </section>

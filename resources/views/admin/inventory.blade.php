@@ -3520,16 +3520,7 @@
         -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
     }
     body.admin-inventory-page .inventory-search-wrap::after {
-        content: "";
-        width: 26px;
-        height: 26px;
-        flex: 0 0 26px;
-        border-radius: 999px;
-        background-color: rgba(143, 34, 48, .20);
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 14.5a3 3 0 0 0 3-3v-5a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Z' stroke='%238f2230' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M5.5 10.5a6.5 6.5 0 0 0 13 0M12 17v3M9 20h6' stroke='%238f2230' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: 13px 13px;
+        content: none !important;
     }
     body.admin-inventory-page .inventory-search-input {
         min-height: 46px !important;
@@ -3562,40 +3553,40 @@
     body.admin-inventory-page .inventory-modern-card,
     body.admin-inventory-page .inventory-modern-card.is-clickable,
     body.admin-inventory-page .inventory-toolbar-actions > .btn-add.inventory-action-card {
-        min-height: 86px !important;
+        min-height: 108px !important;
         padding: 12px !important;
-        grid-template-columns: 38px minmax(0, 1fr) auto !important;
-        gap: 10px !important;
+        grid-template-columns: 40px minmax(0, 1fr) auto !important;
+        gap: 12px !important;
     }
     body.admin-inventory-page .inventory-action-icon {
-        width: 38px !important;
-        height: 38px !important;
+        width: 40px !important;
+        height: 40px !important;
     }
     body.admin-inventory-page .inventory-action-icon svg {
-        width: 20px !important;
-        height: 20px !important;
+        width: 21px !important;
+        height: 21px !important;
     }
     body.admin-inventory-page .inventory-action-label {
-        font-size: 10px !important;
+        font-size: 11px !important;
     }
     body.admin-inventory-page .inventory-action-copy strong {
         margin-top: 4px !important;
-        font-size: 20px !important;
-        line-height: 1.05 !important;
+        font-size: 22px !important;
+        line-height: 1 !important;
     }
     body.admin-inventory-page .inventory-modern-card.is-clickable .inventory-action-copy strong {
-        font-size: 18px !important;
+        font-size: 20px !important;
     }
     body.admin-inventory-page .inventory-action-copy span:last-child {
-        margin-top: 4px !important;
-        font-size: 11px !important;
-        line-height: 1.25 !important;
+        margin-top: 5px !important;
+        font-size: 12px !important;
+        line-height: 1.18 !important;
     }
     body.admin-inventory-page .inventory-action-arrow {
-        width: 32px !important;
-        height: 32px !important;
-        border-radius: 10px !important;
-        font-size: 20px !important;
+        width: 34px !important;
+        height: 34px !important;
+        border-radius: 11px !important;
+        font-size: 21px !important;
     }
     @media (max-width: 560px) {
         body.admin-inventory-page .inventory-title-block .inventory-page-description {

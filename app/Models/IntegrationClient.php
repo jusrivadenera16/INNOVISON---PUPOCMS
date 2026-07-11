@@ -22,7 +22,6 @@ class IntegrationClient extends Model
 
     public function tokens()
     {
-        return $this->hasMany(\Laravel\Sanctum\PersonalAccessToken::class, 'tokenable_id')
-            ->where('tokenable_type', self::class);
+        return $this->morphMany(\Laravel\Sanctum\PersonalAccessToken::class, 'tokenable');
     }
 }

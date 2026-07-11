@@ -979,6 +979,20 @@
             grid-template-columns: 1fr !important;
         }
     }
+    .report-card .report-card-icon,
+    .report-card.report-card-audit .report-card-icon,
+    .report-card:hover .report-card-icon,
+    .report-card:focus-visible .report-card-icon,
+    .report-card.report-card-audit:hover .report-card-icon,
+    .report-card.report-card-audit:focus-visible .report-card-icon {
+        color: #facc15 !important;
+    }
+    .report-card .report-card-icon svg,
+    .report-card:hover .report-card-icon svg,
+    .report-card:focus-visible .report-card-icon svg {
+        stroke: currentColor !important;
+    }
+
 </style>
 @endpush
 

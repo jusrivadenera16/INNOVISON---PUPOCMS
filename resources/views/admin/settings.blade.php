@@ -2059,6 +2059,18 @@
             grid-template-columns: 1fr !important;
         }
     }
+    .settings-page .settings-hub-card .settings-hub-card-icon,
+    .settings-page .settings-hub-card:nth-child(2) .settings-hub-card-icon,
+    .settings-page .settings-hub-card:hover .settings-hub-card-icon,
+    .settings-page .settings-hub-card:focus-visible .settings-hub-card-icon {
+        color: #facc15 !important;
+    }
+    .settings-page .settings-hub-card .settings-hub-card-icon svg,
+    .settings-page .settings-hub-card:hover .settings-hub-card-icon svg,
+    .settings-page .settings-hub-card:focus-visible .settings-hub-card-icon svg {
+        stroke: currentColor !important;
+    }
+
 </style>
 @endpush
 

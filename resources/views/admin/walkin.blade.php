@@ -6931,6 +6931,18 @@
             color: #e2e8f0;
         }
     }
+    .intake-option-card .intake-option-icon-wrap,
+    .intake-option-card:hover .intake-option-icon-wrap,
+    .intake-option-card:focus-within .intake-option-icon-wrap {
+        color: #facc15 !important;
+    }
+    .intake-option-card .intake-option-icon-wrap svg,
+    .intake-option-card:hover .intake-option-icon-wrap svg,
+    .intake-option-card:focus-within .intake-option-icon-wrap svg {
+        color: #facc15 !important;
+        stroke: currentColor !important;
+    }
+
 </style>
 @endpush
 

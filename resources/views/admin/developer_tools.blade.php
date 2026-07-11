@@ -784,6 +784,224 @@
             grid-template-columns: 1fr;
         }
     }
+    /* Settings-style Developer Tools hub */
+    .dev-shell {
+        width: min(100%, 980px);
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 16px 16px 18px;
+        border-radius: 12px;
+        border: 1px solid rgba(112, 19, 27, 0.10);
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 18px 34px rgba(112, 19, 27, 0.08);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .dev-shell::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 12px;
+        right: 12px;
+        height: 5px;
+        border-radius: 999px;
+        background: #70131B;
+        z-index: 2;
+    }
+
+    .dev-shell > * {
+        position: relative;
+        z-index: 3;
+    }
+
+    .dev-hero {
+        margin: 0 0 20px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .dev-hero::after {
+        content: none;
+    }
+
+    .dev-hero h1 {
+        display: block;
+        margin: 0 0 8px;
+        padding: 0;
+        border: 0;
+        color: #8b0000;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        line-height: 1.2;
+        text-transform: uppercase;
+    }
+
+    .dev-hero h1 svg {
+        display: none;
+    }
+
+    .dev-hero p {
+        max-width: 760px;
+        margin: 0;
+        color: #0f172a;
+        font-size: 20px;
+        font-weight: 900;
+        line-height: 1.2;
+    }
+
+    .dev-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        justify-content: stretch;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .dev-card,
+    button.dev-card {
+        position: relative;
+        width: 100%;
+        min-height: 246px;
+        display: block;
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(112, 19, 27, 0.46);
+        background: linear-gradient(135deg, #70131B, #8f2230);
+        color: #ffffff;
+        box-shadow: inset 0 -3px 0 rgba(250, 204, 21, 0.72), 0 10px 24px rgba(112, 19, 27, 0.18);
+        overflow: hidden;
+        text-decoration: none;
+        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease, background .2s ease;
+    }
+
+    .dev-card::before {
+        background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 38%);
+        z-index: 0;
+    }
+
+    .dev-card::after {
+        top: -38%;
+        bottom: -38%;
+        left: -135%;
+        width: 34%;
+        height: auto;
+        opacity: 0;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 246, 184, 0.18) 42%, rgba(255, 246, 184, 0.54) 50%, rgba(255, 246, 184, 0.18) 58%, rgba(255, 255, 255, 0) 100%);
+        transform: translateX(0) skewX(-18deg);
+        transition: none;
+    }
+
+    .dev-card:hover,
+    .dev-card:focus-visible {
+        background: #facc15 !important;
+        background-image: none !important;
+        color: #70131B !important;
+        transform: translateY(-8px);
+        border-color: #facc15;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.12), 0 20px 30px rgba(139, 0, 0, 0.22);
+        outline: none;
+    }
+
+    .dev-card:hover::after,
+    .dev-card:focus-visible::after {
+        opacity: 1;
+        animation: devSettingsSweep .92s ease both;
+    }
+
+    @keyframes devSettingsSweep {
+        0% { opacity: 0; transform: translateX(0) skewX(-18deg); }
+        18% { opacity: .72; }
+        72% { opacity: .72; }
+        100% { opacity: 0; transform: translateX(820%) skewX(-18deg); }
+    }
+
+    .dev-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 14px;
+        border-radius: 13px;
+        background: rgba(255, 248, 196, 0.12);
+        color: #facc15;
+        border: 1px solid rgba(255, 248, 196, 0.16);
+        box-shadow: none;
+    }
+
+    .dev-card:hover .dev-icon,
+    .dev-card:focus-visible .dev-icon {
+        background: #70131B;
+        color: #facc15;
+        border-color: rgba(112, 19, 27, 0.62);
+    }
+
+    .dev-icon svg {
+        width: 21px;
+        height: 21px;
+        stroke: currentColor;
+    }
+
+    .dev-card h2 {
+        margin: 0 0 8px;
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 900;
+        line-height: 1.25;
+    }
+
+    .dev-card p,
+    .dev-action {
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.42;
+    }
+
+    .dev-note {
+        display: none;
+    }
+
+    .dev-action {
+        margin-top: 16px;
+    }
+
+    .dev-card:hover h2,
+    .dev-card:focus-visible h2,
+    .dev-card:hover p,
+    .dev-card:focus-visible p,
+    .dev-card:hover .dev-action,
+    .dev-card:focus-visible .dev-action {
+        color: #70131B;
+    }
+
+    html[data-theme="dark"] .dev-shell {
+        background: linear-gradient(180deg, rgba(70, 19, 27, 0.92), rgba(46, 13, 19, 0.96));
+        border-color: rgba(255,255,255,.08);
+        box-shadow: 0 20px 38px rgba(0,0,0,.24);
+    }
+
+    html[data-theme="dark"] .dev-shell::before {
+        background: #facc15;
+    }
+
+    html[data-theme="dark"] .dev-hero h1,
+    html[data-theme="dark"] .dev-hero p {
+        color: #ffffff;
+    }
+
+    @media (max-width: 720px) {
+        .dev-shell {
+            width: 100%;
+            max-width: 100%;
+            padding: 18px;
+        }
+
+        .dev-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 @endpush
 

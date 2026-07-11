@@ -13,7 +13,7 @@
     /* --- 1. STATS ROW (The "MedTrackr" Style) --- */
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(5, 1fr); /* 5 Columns side-by-side */
+        grid-template-columns: repeat(4, 1fr);
         gap: 20px;
         margin-bottom: 30px;
     }
@@ -31,6 +31,19 @@
         min-height: 140px;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+        z-index: 0;
+    }
+
+    .stat-card::before {
+        content: "";
+        position: absolute;
+        right: -28px;
+        bottom: -34px;
+        width: 170px;
+        height: 110px;
+        background: url("data:image/svg+xml,%3Csvg viewBox='0 0 170 110' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 62C24 28 50 88 76 54C103 20 126 72 158 34L170 110H0Z' fill='%23facc15'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+        opacity: .72;
+        transition: background .22s ease, opacity .22s ease, transform .22s ease;
         z-index: 0;
     }
 
@@ -55,8 +68,39 @@
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
     }
 
+    .stat-card:hover::before {
+        background: url("data:image/svg+xml,%3Csvg viewBox='0 0 170 110' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 62C24 28 50 88 76 54C103 20 126 72 158 34L170 110H0Z' fill='%237f1d2d'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+        opacity: .86;
+        transform: translateY(-4px);
+    }
+
     .stat-card:hover::after {
         transform: translateX(135%);
+    }
+
+    .stat-card > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .stat-percent {
+        flex: 0 0 auto;
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: rgba(250, 204, 21, .16);
+        border: 1px solid rgba(250, 204, 21, .32);
+        color: #facc15;
+        font-size: 11px;
+        font-weight: 900;
+        line-height: 1;
+        white-space: nowrap;
     }
 
     /* Distinct Colors for active states if needed, 
@@ -299,7 +343,7 @@
 
     /* Responsive */
     @media (max-width: 1200px) {
-        .stats-grid { grid-template-columns: repeat(3, 1fr); }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
         .dashboard-chart-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 768px) {
@@ -314,48 +358,62 @@
 @php
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
     $appointmentsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/appointments') : url('/admin/appointments');
+    $dashboardPercent = function ($value, $base) {
+        $base = max(0, (int) $base);
+        return $base > 0 ? (int) round(((int) $value / $base) * 100) : 0;
+    };
+    $inventoryInStockRow = collect($inventoryChartStats)->firstWhere('label', 'In Stock');
+    $inventoryInStock = (int) ($inventoryInStockRow['value'] ?? 0);
+    $completionRate = $dashboardPercent($completed, $total);
+    $pendingRate = $dashboardPercent($pending, $total);
+    $todayRate = $dashboardPercent($upcoming, $total);
+    $stockHealthRate = $dashboardPercent($inventoryInStock, $inventoryTotal);
 @endphp
 <div class="dashboard-container">
     <div class="stats-grid">
         
         <div class="stat-card">
+            <div class="stat-card-top">
+                <div class="stat-label">Total Appointments</div>
+                <span class="stat-percent">{{ $completionRate }}%</span>
+            </div>
             <div>
-                <div class="stat-label">Total Patients</div>
                 <div class="stat-value">{{ $total }}</div>
             </div>
-            <div class="stat-badge badge-neutral">All Records</div>
+            <div class="stat-badge badge-neutral">Completion Rate</div>
         </div>
 
         <div class="stat-card">
-            <div>
+            <div class="stat-card-top">
                 <div class="stat-label">Pending Requests</div>
+                <span class="stat-percent">{{ $pendingRate }}%</span>
+            </div>
+            <div>
                 <div class="stat-value">{{ $pending }}</div>
             </div>
             <div class="stat-badge badge-warning">Action Needed</div>
         </div>
 
         <div class="stat-card">
-            <div>
+            <div class="stat-card-top">
                 <div class="stat-label">Scheduled Today</div>
+                <span class="stat-percent">{{ $todayRate }}%</span>
+            </div>
+            <div>
                 <div class="stat-value">{{ $upcoming }}</div>
             </div>
             <div class="stat-badge badge-success">Scheduled</div>
         </div>
 
         <div class="stat-card">
-            <div>
-                <div class="stat-label">Completed</div>
-                <div class="stat-value">{{ $completed }}</div>
+            <div class="stat-card-top">
+                <div class="stat-label">Inventory Items</div>
+                <span class="stat-percent">{{ $stockHealthRate }}%</span>
             </div>
-            <div class="stat-badge badge-info">Consultations</div>
-        </div>
-
-        <div class="stat-card">
             <div>
-                <div class="stat-label">Cancelled</div>
-                <div class="stat-value">{{ $cancelled }}</div>
+                <div class="stat-value">{{ $inventoryTotal }}</div>
             </div>
-            <div class="stat-badge badge-danger">Inactive</div>
+            <div class="stat-badge badge-info">Stock Health</div>
         </div>
 
     </div>

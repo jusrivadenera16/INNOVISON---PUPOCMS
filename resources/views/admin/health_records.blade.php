@@ -4242,6 +4242,9 @@
         color: #7f1d2d !important;
         -webkit-text-fill-color: #7f1d2d !important;
     }
+    .health-summary-card {
+        margin-top: 16px !important;
+    }
 
 </style>
 @endpush
