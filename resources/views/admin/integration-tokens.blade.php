@@ -906,11 +906,11 @@
                                 <div class="masked-token-value">
                                     {{ $hasToken ? 'Token ID ' . $latest->id . '  |  ' . str_repeat('*', 80) : 'No token generated yet' }}
                                 </div>
-                                <button type="button" class="outline-btn" onclick="copyGeneratedTokenFromDetail('{{ $client->id }}')" {{ $hasToken ? '' : 'disabled' }}>
+                                <button type="button" class="outline-btn copy-detail-token-btn" id="copyDetailToken_{{ $client->id }}" onclick="copyGeneratedTokenFromDetail('{{ $client->id }}')" {{ $hasToken ? '' : 'disabled' }}>
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
                                     </svg>
-                                    Copy Token
+                                    <span>Copy Token</span>
                                 </button>
                             </div>
                         </div>
@@ -1107,7 +1107,19 @@
             showAlert('No token available to copy.', true);
             return;
         }
+
+        const copyBtn = document.getElementById(`copyDetailToken_${clientId}`);
+        const originalContent = copyBtn.innerHTML;
+
         navigator.clipboard.writeText(latestGeneratedToken).then(() => {
+            copyBtn.classList.add('copied');
+            copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Copied</span>';
+
+            setTimeout(() => {
+                copyBtn.classList.remove('copied');
+                copyBtn.innerHTML = originalContent;
+            }, 2000);
+
             showAlert('Token copied to clipboard.');
         }).catch(() => {
             showAlert('Failed to copy token.', true);

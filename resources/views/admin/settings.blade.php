@@ -219,6 +219,9 @@
         font-size: 12px;
         font-weight: 900;
         background: #ffffff;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
     }
     .settings-hub-action svg {
         width: 15px;
@@ -226,9 +229,23 @@
     }
     .settings-hub-card:hover .settings-hub-action,
     .settings-hub-card:focus-visible .settings-hub-action {
-        background: #facc15;
-        border-color: #facc15;
-        color: #111827;
+        animation: sweep-settings 0.6s ease-out forwards;
+    }
+
+    @keyframes sweep-settings {
+        0% {
+            background: #ffffff;
+            color: var(--stg-maroon);
+            border-color: var(--stg-maroon);
+        }
+        50% {
+            background: linear-gradient(90deg, #facc15, #facc15);
+        }
+        100% {
+            background: #facc15;
+            color: #111827;
+            border-color: #facc15;
+        }
     }
 
     @media (min-width: 900px) {

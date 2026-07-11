@@ -70,11 +70,11 @@
     .docs-sidebar {
         position: fixed;
         width: 250px;
-        top: 180px;
+        top: 120px;
         left: 24px;
-        max-height: calc(100vh - 220px);
+        max-height: calc(100vh - 160px);
         overflow-y: auto;
-        z-index: 100;
+        z-index: 50;
     }
 
     .docs-nav {
@@ -293,30 +293,45 @@
         gap: 8px;
         padding: 10px 16px;
         border-radius: 8px;
-        border: 1px solid rgba(127, 29, 45, 0.2);
-        background: white;
-        color: #7f1d2d;
+        border: none;
+        background: linear-gradient(135deg, #8a1220, #6a0e18);
+        color: white;
         font-weight: 700;
         cursor: pointer;
         text-decoration: none;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
         margin-bottom: 24px;
+        box-shadow: 0 4px 12px rgba(138, 18, 32, 0.24);
+        position: relative;
+        overflow: hidden;
     }
 
     .back-button:hover {
-        background: rgba(127, 29, 45, 0.05);
-        border-color: rgba(127, 29, 45, 0.3);
+        animation: sweep 0.6s ease-out forwards;
+    }
+
+    @keyframes sweep {
+        0% {
+            background: linear-gradient(135deg, #8a1220, #6a0e18);
+            color: white;
+        }
+        50% {
+            background: linear-gradient(90deg, #fbbf24, #fbbf24);
+        }
+        100% {
+            background: #fbbf24;
+            color: #8a1220;
+        }
     }
 
     html[data-theme="dark"] .back-button {
-        background: rgba(255, 255, 255, 0.05);
-        color: #f3d6da;
-        border-color: rgba(255, 255, 255, 0.1);
+        background: linear-gradient(135deg, #8a1220, #6a0e18);
+        color: white;
+        box-shadow: 0 4px 12px rgba(138, 18, 32, 0.3);
     }
 
     html[data-theme="dark"] .back-button:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.2);
+        animation: sweep 0.6s ease-out forwards;
     }
 </style>
 

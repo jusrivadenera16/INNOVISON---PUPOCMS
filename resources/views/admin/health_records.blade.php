@@ -1545,7 +1545,7 @@
     .health-records-search-submit:focus-visible {
         background: #facc15;
         border-color: #facc15;
-        color: #70131B;
+        color: #7f1d2d;
         transform: translateY(-1px);
         outline: none;
     }
@@ -1610,8 +1610,7 @@
         height: 74%;
         opacity: .24;
         background: #ffd700;
-        -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201440%20320'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M0,224L24,229.3C48,235,96,245,144,261.3C192,277,240,299,288,309.3C336,320,384,320,432,282.7C480,245,528,171,576,154.7C624,139,672,181,720,186.7C768,192,816,160,864,149.3C912,139,960,149,1008,181.3C1056,213,1104,267,1152,272C1200,277,1248,235,1296,181.3C1344,128,1392,64,1416,32L1440,0L1440,320L1416,320C1392,320,1344,320,1296,320C1248,320,1200,320,1152,320C1104,320,1056,320,1008,320C960,320,912,320,864,320C816,320,768,320,720,320C672,320,624,320,576,320C528,320,480,320,432,320C384,320,336,320,288,320C240,320,192,320,144,320C96,320,48,320,24,320L0,320Z'/%3E%3C/svg%3E") center bottom / 100% 100% no-repeat;
-        mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201440%20320'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M0,224L24,229.3C48,235,96,245,144,261.3C192,277,240,299,288,309.3C336,320,384,320,432,282.7C480,245,528,171,576,154.7C624,139,672,181,720,186.7C768,192,816,160,864,149.3C912,139,960,149,1008,181.3C1056,213,1104,267,1152,272C1200,277,1248,235,1296,181.3C1344,128,1392,64,1416,32L1440,0L1440,320L1416,320C1392,320,1344,320,1296,320C1248,320,1200,320,1152,320C1104,320,1056,320,1008,320C960,320,912,320,864,320C816,320,768,320,720,320C672,320,624,320,576,320C528,320,480,320,432,320C384,320,336,320,288,320C240,320,192,320,144,320C96,320,48,320,24,320L0,320Z'/%3E%3C/svg%3E") center bottom / 100% 100% no-repeat;
+        display: none;
         border: 0;
         border-radius: 0;
         transform: none;
@@ -2201,8 +2200,8 @@
         min-height: 44px;
         padding: 0 22px;
         border-radius: 999px;
-        border: 1px solid #8f2230;
-        background: linear-gradient(135deg, #70131B, #8f2230);
+        border: 1px solid #7f1d2d !important;
+        background: #7f1d2d !important;
         color: #ffffff !important;
         fill: #ffffff !important;
         stroke: #ffffff !important;
@@ -2211,13 +2210,38 @@
         text-decoration: none;
         cursor: pointer;
         box-shadow:
-            0 0 0 3px rgba(112, 19, 27, 0.12),
-            0 10px 22px rgba(112, 19, 27, 0.20);
+            0 0 0 3px rgba(127, 29, 45, 0.12),
+            0 10px 22px rgba(127, 29, 45, 0.08) !important;
         transition: color .08s linear, transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
         z-index: 0;
     }
+    .health-filter-btn,
     .health-filter-btn * {
         color: #ffffff !important;
+        fill: #ffffff !important;
+    }
+
+    .health-filter-actions .health-filter-btn {
+        background: #7f1d2d !important;
+        border-color: #7f1d2d !important;
+        color: #ffffff !important;
+    }
+
+    .health-filter-actions .health-filter-btn,
+    .health-filter-actions .health-filter-btn *,
+    button.health-filter-btn,
+    .health-filter-form .health-filter-actions button.health-filter-btn,
+    div.health-filter-actions button[type="submit"].health-filter-btn {
+        color: white !important;
+        -webkit-text-fill-color: white !important;
+        fill: white !important;
+        stroke: white !important;
+    }
+
+    button.health-filter-btn,
+    button.health-filter-btn * {
+        color: white !important;
+        -webkit-text-fill-color: white !important;
     }
 
     .health-filter-btn::after {
@@ -2240,10 +2264,14 @@
         transform: translateY(-1px);
         background: #facc15;
         border-color: #facc15;
-        color: #70131B !important;
+        color: #7f1d2d !important;
         box-shadow:
             0 0 0 3px rgba(250, 204, 21, 0.18),
-            0 14px 24px rgba(112, 19, 27, 0.16);
+            0 14px 24px rgba(127, 29, 45, 0.16);
+    }
+
+    .health-filter-btn:hover * {
+        color: #7f1d2d !important;
     }
 
     .health-filter-btn:hover::after {
@@ -2625,9 +2653,9 @@
     }
 
     html[data-theme="dark"] .health-records-search-submit {
-        background: rgba(17, 24, 39, .96);
+        background: rgba(127, 29, 45, .96);
         border-color: rgba(250, 204, 21, .22);
-        color: #facc15;
+        color: #ffffff;
         box-shadow: 0 12px 24px rgba(0, 0, 0, .22);
     }
 
@@ -2635,7 +2663,7 @@
     html[data-theme="dark"] .health-records-search-submit:focus-visible {
         background: #facc15;
         border-color: #facc15;
-        color: #70131B;
+        color: #7f1d2d;
     }
 
     html[data-theme="dark"] .health-summary-modern-card {
@@ -4132,7 +4160,7 @@
     html[data-theme="dark"] .health-records-search-submit:focus-visible {
         background: #facc15 !important;
         border-color: #facc15 !important;
-        color: #70131B !important;
+        color: #7f1d2d !important;
     }
 
     .health-records-overview .health-records-search-shell,
@@ -5234,7 +5262,7 @@
                 </select>
             </div>
             <div class="health-filter-actions">
-                <button type="submit" class="health-filter-btn">Apply</button>
+                <button type="submit" class="health-filter-btn" style="color: #ffffff !important;">Apply</button>
                 <a href="{{ route('admin.health_records') }}" class="health-filter-btn health-filter-btn-reset">Reset</a>
             </div>
         </form>
