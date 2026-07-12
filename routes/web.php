@@ -257,6 +257,11 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::get('/admin/reports/health-forms-logbook/export', [ReportsController::class, 'exportHealthFormsLogbook'])->name('reports.health-forms-logbook.export');
         Route::get('/admin/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->name('reports.feedbacks');
         Route::get('/admin/reports/export-hub', [ReportsController::class, 'exportHub'])->name('reports.exportHub');
+        Route::get('/admin/reports/export-hub/mar', [ReportsController::class, 'exportReportsMar'])->name('reports.exportHub.mar');
+        Route::get('/admin/reports/export-hub/inventory', [ReportsController::class, 'exportReportsInventory'])->name('reports.exportHub.inventory');
+        Route::get('/admin/reports/export-hub/appointments', [ReportsController::class, 'exportReportsAppointments'])->name('reports.exportHub.appointments');
+        Route::get('/admin/reports/export-hub/audit-trail', [ReportsController::class, 'exportReportsAuditTrail'])->name('reports.exportHub.audit-trail');
+        Route::get('/admin/reports/export-hub/health-forms', [ReportsController::class, 'exportReportsHealthForms'])->name('reports.exportHub.health-forms');
         Route::get('/admin/reports/print-reports', [ReportsController::class, 'printReport'])->name('reports.print');
         Route::get('/admin/notifications/feed', [AdminController::class, 'notificationsFeed'])->name('admin.notifications.feed');
         Route::post('/admin/notifications/mark-all-read', [AdminController::class, 'markAllAdminNotificationsRead'])->name('admin.notifications.read_all');
@@ -356,6 +361,11 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::get('/reports/health-forms-logbook/export', [ReportsController::class, 'exportHealthFormsLogbook'])->name('reports.health-forms-logbook.export');
         Route::get('/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->name('reports.feedbacks');
         Route::get('/reports/export-hub', [ReportsController::class, 'exportHub'])->name('reports.exportHub');
+        Route::get('/reports/export-hub/mar', [ReportsController::class, 'exportReportsMar'])->name('reports.exportHub.mar');
+        Route::get('/reports/export-hub/inventory', [ReportsController::class, 'exportReportsInventory'])->name('reports.exportHub.inventory');
+        Route::get('/reports/export-hub/appointments', [ReportsController::class, 'exportReportsAppointments'])->name('reports.exportHub.appointments');
+        Route::get('/reports/export-hub/audit-trail', [ReportsController::class, 'exportReportsAuditTrail'])->name('reports.exportHub.audit-trail');
+        Route::get('/reports/export-hub/health-forms', [ReportsController::class, 'exportReportsHealthForms'])->name('reports.exportHub.health-forms');
         Route::get('/reports/print-reports', [ReportsController::class, 'printReport'])->name('reports.print');
         Route::get('/notifications/feed', [AdminController::class, 'notificationsFeed'])->name('notifications.feed');
         Route::post('/notifications/mark-all-read', [AdminController::class, 'markAllAdminNotificationsRead'])->name('notifications.read_all');

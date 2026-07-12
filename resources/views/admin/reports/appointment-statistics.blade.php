@@ -41,7 +41,19 @@
         align-items: center;
         justify-content: flex-end;
         gap: 12px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+    }
+
+    .appointment-stats-header-actions > a[style*="background"] {
+        display: none !important;
+    }
+
+    .appointment-stats-header-actions .appointment-stats-filter-shell {
+        order: 1;
+    }
+
+    .appointment-stats-header-actions > .appointment-stats-back {
+        order: 2;
     }
 
     .appointment-stats-back,
@@ -53,7 +65,10 @@
         align-items: center;
     }
 
-    .appointment-stats-back::after {
+    .appointment-stats-back::after,
+    .appointment-stats-filter-toggle::after,
+    .appointment-stats-filter-button::after,
+    .appointment-stat-action::after {
         content: "";
         position: absolute;
         top: -40%;
@@ -67,7 +82,10 @@
         z-index: 0;
     }
 
-    .appointment-stats-back:hover::after {
+    .appointment-stats-back:hover::after,
+    .appointment-stats-filter-toggle:hover::after,
+    .appointment-stats-filter-button:hover::after,
+    .appointment-stat-action:hover::after {
         left: 125%;
     }
 
@@ -75,12 +93,13 @@
         z-index: 1;
         justify-content: center;
         gap: 8px;
-        min-height: 42px;
-        padding: 0 16px;
-        border-radius: 999px;
-        border: 1px solid rgba(112, 19, 27, 0.22);
-        background: #ffffff;
-        color: #70131B;
+        min-height: 50px;
+        min-width: 132px;
+        padding: 0 18px;
+        border-radius: 10px;
+        border: 1px solid #70131B;
+        background: #70131B;
+        color: #ffffff;
         font-family: inherit;
         font-size: 13px;
         font-weight: 900;
@@ -90,13 +109,21 @@
         transition: all .18s ease;
     }
 
+    .appointment-stats-back:hover,
+    .appointment-stats-back:focus-visible {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+        outline: none;
+    }
+
     .appointment-stats-filter-toggle,
     .appointment-stats-filter-button {
         justify-content: center;
         gap: 8px;
         min-height: 42px;
         padding: 0 16px;
-        border-radius: 999px;
+        border-radius: 10px;
         border: 1px solid rgba(112, 19, 27, 0.22);
         background: #ffffff;
         color: #70131B;
@@ -119,12 +146,15 @@
         position: relative;
         display: inline-flex;
         align-items: center;
+        flex: 0 0 auto;
     }
 
     .appointment-stats-filter-toggle {
         min-height: 50px;
         min-width: 132px;
-        border-radius: 14px;
+        position: relative;
+        overflow: hidden;
+        border-radius: 10px;
         background: linear-gradient(135deg, #70131B, #8f2230);
         border-color: #8f2230;
         color: #ffffff;
@@ -137,7 +167,7 @@
     .appointment-stats-filter-toggle:focus {
         background: #facc15;
         border-color: #facc15;
-        color: #111827;
+        color: #70131B;
         outline: none;
     }
 
@@ -253,11 +283,10 @@
     .appointment-stats-summary {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 14px;
+        gap: 12px;
         margin-bottom: 18px;
     }
 
-    .appointment-stat-card,
     .appointment-chart-card {
         border-radius: 14px;
         border: 1px solid rgba(112, 19, 27, 0.10);
@@ -266,30 +295,264 @@
     }
 
     .appointment-stat-card {
-        padding: 18px;
-        border-left: 5px solid #70131B;
+        position: relative;
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        grid-template-rows: auto auto auto;
+        column-gap: 14px;
+        min-height: 112px;
+        padding: 14px 16px;
+        overflow: hidden;
+        border-radius: 14px;
+        border: 1px solid rgba(112, 19, 27, 0.10);
+        background: #ffffff;
+        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.07);
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .appointment-stat-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(112, 19, 27, 0.20);
+        box-shadow: 0 18px 38px rgba(15, 23, 42, 0.11);
+    }
+
+    .appointment-stat-card::before {
+        content: "";
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        grid-column: 1;
+        grid-row: 1 / span 3;
+        align-self: center;
+        background: #fff1f2;
+        border: 1px solid rgba(127, 29, 45, .08);
+    }
+
+    .appointment-stat-card::after {
+        content: "";
+        position: absolute;
+        left: 31px;
+        top: 50%;
+        width: 18px;
+        height: 18px;
+        transform: translateY(-50%);
+        background: #7f1d2d;
+        -webkit-mask: var(--appointment-stat-icon) center / contain no-repeat;
+        mask: var(--appointment-stat-icon) center / contain no-repeat;
+    }
+
+    .appointment-stat-card:nth-child(1) {
+        border-color: rgba(34, 197, 94, .32);
+    }
+
+    .appointment-stat-card:nth-child(1)::before {
+        background: #dcfce7;
+    }
+
+    .appointment-stat-card:nth-child(1)::after {
+        background: #22c55e;
+        --appointment-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 7h8M8 12h8M8 17h5M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+
+    .appointment-stat-card:nth-child(2) {
+        border-color: rgba(59, 130, 246, .30);
+    }
+
+    .appointment-stat-card:nth-child(2)::before {
+        background: #dbeafe;
+    }
+
+    .appointment-stat-card:nth-child(2)::after {
+        background: #2563eb;
+        --appointment-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 6h8M8 18h8M12 4v16M4 12h16' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+
+    .appointment-stat-card:nth-child(3)::after {
+        background: #f59e0b;
+        --appointment-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 6v6l4 2M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+
+    .appointment-stat-card:nth-child(4)::after {
+        background: #7f1d2d;
+        --appointment-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 2v4M16 2v4M3 10h18M6 5h12a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3Z' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
     }
 
     .appointment-stat-label {
+        grid-column: 2;
         margin: 0;
-        color: #64748b;
+        color: #0f172a;
         font-size: 12px;
         font-weight: 900;
         text-transform: uppercase;
+        letter-spacing: .04em;
     }
 
     .appointment-stat-value {
-        margin: 8px 0 2px;
-        color: #111827;
-        font-size: 28px;
+        grid-column: 2;
+        margin: 4px 0 0;
+        color: #0f172a;
+        font-size: 22px;
         font-weight: 950;
+        line-height: 1.05;
     }
 
     .appointment-stat-hint {
+        grid-column: 2;
         margin: 0;
         color: #64748b;
-        font-size: 13px;
+        font-size: 12px;
+        line-height: 1.35;
         font-weight: 650;
+    }
+
+    .appointment-stat-split {
+        grid-column: 2;
+        display: grid;
+        grid-template-columns: 1fr 1px 1fr;
+        gap: 12px;
+        align-items: stretch;
+        margin-top: 6px;
+    }
+
+    .appointment-stat-split-line {
+        width: 1px;
+        min-height: 44px;
+        background: rgba(112, 19, 27, .18);
+    }
+
+    .appointment-stat-mini-label {
+        display: block;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .appointment-stat-mini-value {
+        display: block;
+        margin-top: 4px;
+        color: #0f172a;
+        font-size: 22px;
+        line-height: 1;
+        font-weight: 950;
+    }
+
+    .appointment-stat-mini-hint {
+        display: block;
+        margin-top: 5px;
+        color: #64748b;
+        font-size: 11px;
+        line-height: 1.25;
+        font-weight: 700;
+    }
+
+    .appointment-stat-action {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        grid-column: 2;
+        min-height: 34px;
+        width: fit-content;
+        margin-top: 8px;
+        padding: 0 13px;
+        overflow: hidden;
+        border-radius: 10px;
+        border: 1px solid #70131B;
+        background: #70131B;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 900;
+        text-decoration: none;
+        transition: all .18s ease;
+    }
+
+    .appointment-stat-action:hover,
+    .appointment-stat-action:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        outline: none;
+    }
+
+    .appointment-stat-card.is-action-card {
+        grid-template-columns: 44px minmax(0, 1fr) 44px;
+        align-items: center;
+        background: #8f1827;
+        border-color: rgba(250, 204, 21, .75);
+        color: #ffffff;
+        box-shadow: 0 16px 30px rgba(112, 19, 27, .16);
+    }
+
+    .appointment-stat-card.is-action-card::before {
+        background: rgba(255, 255, 255, .14);
+        border-color: rgba(255, 255, 255, .14);
+    }
+
+    .appointment-stat-card.is-action-card::after {
+        background: #ffffff;
+    }
+
+    .appointment-stat-card.is-action-card .appointment-stat-label,
+    .appointment-stat-card.is-action-card .appointment-stat-value,
+    .appointment-stat-card.is-action-card .appointment-stat-hint {
+        color: #ffffff;
+    }
+
+    .appointment-stat-card.is-action-card .appointment-stat-value {
+        font-size: 20px;
+    }
+
+    .appointment-stat-card.is-action-card .appointment-stat-action {
+        grid-column: 3;
+        grid-row: 1 / span 3;
+        width: 38px;
+        height: 38px;
+        min-height: 38px;
+        padding: 0;
+        margin: 0;
+        border-radius: 10px;
+        border-color: #facc15;
+        background: rgba(255, 255, 255, .08);
+        color: #ffffff;
+        font-size: 0;
+    }
+
+    .appointment-stat-card.is-action-card .appointment-stat-action::before {
+        content: "→";
+        font-size: 18px;
+        line-height: 1;
+        position: relative;
+        z-index: 1;
+    }
+
+    .appointment-stat-card.is-action-card:hover {
+        background: #facc15;
+        border-color: #facc15;
+    }
+
+    .appointment-stat-card.is-action-card:hover .appointment-stat-label,
+    .appointment-stat-card.is-action-card:hover .appointment-stat-value,
+    .appointment-stat-card.is-action-card:hover .appointment-stat-hint {
+        color: #70131B;
+    }
+
+    .appointment-stat-card.is-action-card:hover::before {
+        background: rgba(112, 19, 27, .14);
+        border-color: rgba(112, 19, 27, .20);
+    }
+
+    .appointment-stat-card.is-action-card:hover::after {
+        background: #70131B;
+    }
+
+    .appointment-stat-card.is-action-card:hover .appointment-stat-action,
+    .appointment-stat-card.is-action-card .appointment-stat-action:focus-visible {
+        background: rgba(112, 19, 27, .10);
+        border-color: #70131B;
+        color: #70131B;
     }
 
     .appointment-stats-grid {
@@ -415,6 +678,8 @@
 
     html[data-theme="dark"] .appointment-stats-title,
     html[data-theme="dark"] .appointment-stat-value,
+    html[data-theme="dark"] .appointment-stat-label,
+    html[data-theme="dark"] .appointment-stat-mini-value,
     html[data-theme="dark"] .appointment-chart-title,
     html[data-theme="dark"] .appointment-chart-label,
     html[data-theme="dark"] .appointment-chart-value {
@@ -422,8 +687,9 @@
     }
 
     html[data-theme="dark"] .appointment-stats-subtitle,
-    html[data-theme="dark"] .appointment-stat-label,
     html[data-theme="dark"] .appointment-stat-hint,
+    html[data-theme="dark"] .appointment-stat-mini-label,
+    html[data-theme="dark"] .appointment-stat-mini-hint,
     html[data-theme="dark"] .appointment-chart-copy,
     html[data-theme="dark"] .appointment-chart-total span {
         color: #cbd5e1;
@@ -434,6 +700,10 @@
     html[data-theme="dark"] .appointment-stats-filter-panel {
         border-color: rgba(250, 204, 21, 0.16);
         background: rgba(15, 23, 42, 0.92);
+    }
+
+    html[data-theme="dark"] .appointment-stat-split-line {
+        background: rgba(250, 204, 21, .20);
     }
 
     html[data-theme="dark"] .appointment-stats-filter-title {
@@ -504,10 +774,23 @@
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
     $reportsHomeUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
     $filterAction = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/appointment-statistics') : url('/admin/reports/appointment-statistics');
+    $historyUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/appointment-history') : url('/admin/reports/appointment-history');
     $rangeLabel = $monthStart->format('F Y') === $monthEnd->format('F Y')
         ? $monthStart->format('F Y')
         : $monthStart->format('F Y') . ' to ' . $monthEnd->format('F Y');
     $barClasses = ['gold', 'green', 'blue', 'red', ''];
+    $totalCard = $summaryCards[0] ?? ['label' => 'Total Records', 'value' => 0, 'hint' => 'Filtered activity'];
+    $onlineCard = $summaryCards[1] ?? ['label' => 'Online', 'value' => 0, 'hint' => 'Online appointment requests'];
+    $walkInCard = $summaryCards[2] ?? ['label' => 'Walk-in', 'value' => 0, 'hint' => 'Same-day clinic visits'];
+    $averageCard = $summaryCards[3] ?? ['label' => 'Average Appointments / Day', 'value' => 0, 'hint' => 'Across selected range'];
+    $formatSummaryValue = function ($value) {
+        if (!is_numeric($value)) {
+            return $value;
+        }
+
+        $numeric = (float) $value;
+        return number_format($numeric, floor($numeric) === $numeric ? 0 : 1);
+    };
 @endphp
 
 <div class="appointment-stats-shell">
@@ -517,13 +800,9 @@
             <p class="appointment-stats-subtitle">Clinic activity analytics for online appointments and walk-in consultations, filtered by date range, patient type, status, service, and source.</p>
         </div>
         <div class="appointment-stats-header-actions">
-            <a href="{{ route('reports.appointment-history') }}" class="appointment-stats-back" style="background: #7f1d2d; color: #ffffff; border-color: #7f1d2d;">
+            {{-- <a href="{{ route('reports.appointment-history') }}" class="appointment-stats-back" style="background: #7f1d2d; color: #ffffff; border-color: #7f1d2d;">
                 📋 Appointment History
-            </a>
-            <a href="{{ $reportsHomeUrl }}" class="appointment-stats-back">
-                <x-outline-icon name="arrow-long-right" />
-                Back to Reports
-            </a>
+            </a> --}}
             <div class="appointment-stats-filter-shell" id="appointmentStatsFilterShell">
                 <button type="button" class="appointment-stats-filter-toggle" id="appointmentStatsFilterToggle" aria-label="Open appointment statistics filters" aria-expanded="false" aria-controls="appointmentStatsFilterPanel">
                     <x-outline-icon name="funnel" />
@@ -586,17 +865,45 @@
                     </form>
                 </div>
             </div>
+            <a href="{{ $reportsHomeUrl }}" class="appointment-stats-back">
+                &larr; Back to Reports
+            </a>
         </div>
     </header>
 
     <section class="appointment-stats-summary" aria-label="Appointment summary cards">
-        @foreach($summaryCards as $card)
-            <article class="appointment-stat-card">
-                <p class="appointment-stat-label">{{ $card['label'] }}</p>
-                <div class="appointment-stat-value">{{ is_numeric($card['value']) ? number_format((float) $card['value'], is_float($card['value']) ? 1 : 0) : $card['value'] }}</div>
-                <p class="appointment-stat-hint">{{ $card['hint'] }}</p>
-            </article>
-        @endforeach
+        <article class="appointment-stat-card">
+            <p class="appointment-stat-label">{{ $totalCard['label'] }}</p>
+            <div class="appointment-stat-value">{{ $formatSummaryValue($totalCard['value']) }}</div>
+            <p class="appointment-stat-hint">{{ $totalCard['hint'] }}</p>
+        </article>
+        <article class="appointment-stat-card">
+            <p class="appointment-stat-label">Online / Walk-in</p>
+            <div class="appointment-stat-split">
+                <div>
+                    <span class="appointment-stat-mini-label">{{ $onlineCard['label'] }}</span>
+                    <span class="appointment-stat-mini-value">{{ $formatSummaryValue($onlineCard['value']) }}</span>
+                    <span class="appointment-stat-mini-hint">Requests</span>
+                </div>
+                <span class="appointment-stat-split-line" aria-hidden="true"></span>
+                <div>
+                    <span class="appointment-stat-mini-label">{{ $walkInCard['label'] }}</span>
+                    <span class="appointment-stat-mini-value">{{ $formatSummaryValue($walkInCard['value']) }}</span>
+                    <span class="appointment-stat-mini-hint">Clinic visits</span>
+                </div>
+            </div>
+        </article>
+        <article class="appointment-stat-card">
+            <p class="appointment-stat-label">{{ $averageCard['label'] }}</p>
+            <div class="appointment-stat-value">{{ $formatSummaryValue($averageCard['value']) }}</div>
+            <p class="appointment-stat-hint">{{ $averageCard['hint'] }}</p>
+        </article>
+        <article class="appointment-stat-card is-action-card">
+            <p class="appointment-stat-label">Appointment History</p>
+            <div class="appointment-stat-value">Open</div>
+            <p class="appointment-stat-hint">Review patient visits and clinic records.</p>
+            <a href="{{ $historyUrl }}" class="appointment-stat-action" aria-label="Open appointment history">Open History &rarr;</a>
+        </article>
     </section>
 
     <div class="appointment-stats-grid">

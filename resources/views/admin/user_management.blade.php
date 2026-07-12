@@ -425,6 +425,134 @@
         color: #facc15 !important;
     }
 
+    .um-entry-grid {
+        grid-template-columns: repeat(2, minmax(0, 380px)) !important;
+        gap: 16px !important;
+    }
+
+    .um-entry-card,
+    .um-entry-card.is-admin {
+        min-height: 250px !important;
+        padding: 20px !important;
+        border-radius: 16px !important;
+        border: 1px solid rgba(112, 19, 27, 0.38) !important;
+        background: #70131B !important;
+        color: #ffffff !important;
+        box-shadow: 0 14px 26px rgba(112, 19, 27, 0.18) !important;
+        justify-content: flex-start !important;
+        gap: 18px !important;
+        transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease, background .22s ease, color .22s ease !important;
+    }
+
+    .um-entry-card::before {
+        display: none !important;
+    }
+
+    .um-entry-card::after {
+        background: linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,248,196,.42) 48%, rgba(255,255,255,0) 100%) !important;
+        width: 42% !important;
+        left: -125% !important;
+        top: -42% !important;
+        bottom: -42% !important;
+    }
+
+    .um-entry-card:hover,
+    .um-entry-card.is-admin:hover {
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-6px) !important;
+        border-color: #facc15 !important;
+        box-shadow: 0 20px 34px rgba(112, 19, 27, 0.20) !important;
+    }
+
+    .um-entry-icon,
+    .um-entry-card.is-admin .um-entry-icon {
+        width: 58px !important;
+        height: 58px !important;
+        margin-bottom: 0 !important;
+        border-radius: 14px !important;
+        color: #facc15 !important;
+        background: rgba(255, 255, 255, .12) !important;
+        border: 1px solid rgba(255, 255, 255, .18) !important;
+        animation: none !important;
+    }
+
+    .um-entry-icon::after {
+        display: none !important;
+    }
+
+    .um-entry-icon svg {
+        width: 30px !important;
+        height: 30px !important;
+    }
+
+    .um-entry-card:hover .um-entry-icon,
+    .um-entry-card:hover .um-entry-chip,
+    .um-entry-card.is-admin:hover .um-entry-icon {
+        color: #facc15 !important;
+        background: rgba(112, 19, 27, .16) !important;
+        border-color: rgba(112, 19, 27, .24) !important;
+    }
+
+    .um-entry-chip {
+        top: 20px !important;
+        right: 18px !important;
+        background: rgba(255,255,255,.10) !important;
+        color: #ffffff !important;
+        border-color: rgba(255,255,255,.28) !important;
+        box-shadow: none !important;
+    }
+
+    .um-entry-card:hover .um-entry-chip {
+        color: #70131B !important;
+        background: rgba(112, 19, 27, .10) !important;
+        border-color: rgba(112, 19, 27, .22) !important;
+    }
+
+    .um-entry-card h2 {
+        margin: 0 0 8px !important;
+        color: #ffffff !important;
+        font-size: 1.18rem !important;
+        line-height: 1.15 !important;
+        font-weight: 900 !important;
+    }
+
+    .um-entry-card h2::after {
+        display: none !important;
+    }
+
+    .um-entry-card p {
+        max-width: 420px !important;
+        color: rgba(255,255,255,.92) !important;
+        font-size: .9rem !important;
+        line-height: 1.48 !important;
+        font-weight: 700 !important;
+    }
+
+    .um-entry-card:hover h2,
+    .um-entry-card:hover p,
+    html[data-theme="dark"] .um-entry-card:hover h2,
+    html[data-theme="dark"] .um-entry-card:hover p {
+        color: #70131B !important;
+    }
+
+    .um-entry-features,
+    .um-entry-card hr,
+    .um-entry-meta {
+        display: none !important;
+    }
+
+    html[data-theme="dark"] .um-entry-card,
+    html[data-theme="dark"] .um-entry-card.is-admin {
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+        border-color: rgba(250, 204, 21, .36) !important;
+    }
+
+    html[data-theme="dark"] .um-entry-card:hover,
+    html[data-theme="dark"] .um-entry-card.is-admin:hover {
+        background: #facc15 !important;
+    }
+
     @keyframes umEntryFloat {
         0%, 100% {
             transform: translateY(0);
@@ -457,6 +585,156 @@
         .um-entry-features {
             grid-template-columns: 1fr;
         }
+    }
+
+    .user-management-shell {
+        max-width: 1180px !important;
+        padding: 24px 16px 34px !important;
+    }
+
+    .um-entry-grid {
+        grid-template-columns: 1fr !important;
+        justify-content: stretch !important;
+        gap: 16px !important;
+    }
+
+    .um-entry-card,
+    .um-entry-card.is-admin,
+    html[data-theme="dark"] .um-entry-card,
+    html[data-theme="dark"] .um-entry-card.is-admin {
+        min-height: 100px !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 18px !important;
+        overflow: hidden !important;
+        padding: 20px 64px 20px 22px !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(112, 19, 27, .16) !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, .06) !important;
+        transform: none !important;
+    }
+
+    .um-entry-card:hover,
+    .um-entry-card.is-admin:hover {
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-2px) !important;
+        border-color: #facc15 !important;
+        box-shadow: 0 18px 34px rgba(112, 19, 27, .14) !important;
+    }
+
+    .um-entry-card::after {
+        width: 42% !important;
+        left: -125% !important;
+        top: -42% !important;
+        bottom: -42% !important;
+        background: linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(250,204,21,.18) 48%, rgba(255,255,255,0) 100%) !important;
+    }
+
+    .um-entry-icon,
+    .um-entry-card.is-admin .um-entry-icon {
+        width: 58px !important;
+        height: 58px !important;
+        flex: 0 0 58px !important;
+        display: grid !important;
+        place-items: center !important;
+        margin: 0 !important;
+        border-radius: 999px !important;
+        color: #70131B !important;
+        background: linear-gradient(135deg, rgba(127, 29, 45, .08), rgba(250, 204, 21, .22)) !important;
+        border: 1px solid rgba(112, 19, 27, .08) !important;
+    }
+
+    .um-entry-card:hover .um-entry-icon,
+    .um-entry-card.is-admin:hover .um-entry-icon {
+        color: #70131B !important;
+        background: rgba(112, 19, 27, .16) !important;
+        border-color: rgba(112, 19, 27, .24) !important;
+    }
+
+    .um-entry-chip {
+        top: 50% !important;
+        right: 18px !important;
+        width: 30px !important;
+        height: 30px !important;
+        color: #70131B !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        transform: translateY(-50%) !important;
+    }
+
+    .um-entry-card:hover .um-entry-chip {
+        color: #70131B !important;
+        background: transparent !important;
+        border-color: transparent !important;
+        transform: translateY(-50%) translateX(4px) !important;
+    }
+
+    .um-entry-card h2 {
+        margin: 0 0 6px !important;
+        color: #0f172a !important;
+        font-size: 17px !important;
+        line-height: 1.15 !important;
+        font-weight: 950 !important;
+    }
+
+    .um-entry-card h2::after {
+        display: none !important;
+    }
+
+    .um-entry-card p {
+        margin: 0 !important;
+        max-width: 760px !important;
+        color: #0f172a !important;
+        font-size: 13px !important;
+        line-height: 1.45 !important;
+        font-weight: 700 !important;
+    }
+
+    .um-entry-card:hover h2,
+    .um-entry-card:hover p,
+    html[data-theme="dark"] .um-entry-card:hover h2,
+    html[data-theme="dark"] .um-entry-card:hover p {
+        color: #70131B !important;
+    }
+
+    html[data-theme="dark"] .um-entry-card,
+    html[data-theme="dark"] .um-entry-card.is-admin {
+        background: rgba(15, 23, 42, .92) !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+    }
+
+    html[data-theme="dark"] .um-entry-card h2,
+    html[data-theme="dark"] .um-entry-card p {
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .um-entry-icon,
+    html[data-theme="dark"] .um-entry-card.is-admin .um-entry-icon,
+    html[data-theme="dark"] .um-entry-chip {
+        color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] .um-entry-icon,
+    html[data-theme="dark"] .um-entry-card.is-admin .um-entry-icon {
+        background: rgba(250, 204, 21, .10) !important;
+        border-color: rgba(250, 204, 21, .22) !important;
+    }
+
+    html[data-theme="dark"] .um-entry-card:hover,
+    html[data-theme="dark"] .um-entry-card.is-admin:hover {
+        background: #facc15 !important;
+    }
+
+    html[data-theme="dark"] .um-entry-card:hover .um-entry-icon,
+    html[data-theme="dark"] .um-entry-card.is-admin:hover .um-entry-icon,
+    html[data-theme="dark"] .um-entry-card:hover .um-entry-chip {
+        color: #70131B !important;
     }
 </style>
 @endpush

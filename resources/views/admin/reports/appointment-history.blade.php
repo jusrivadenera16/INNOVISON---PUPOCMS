@@ -39,24 +39,51 @@
     .appt-view-btn,
     .appt-search-btn {
         display: inline-flex;
+        position: relative;
+        overflow: hidden;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        border-radius: 999px;
+        border-radius: 10px;
         font-weight: 900;
         text-decoration: none;
         transition: all .18s ease;
         cursor: pointer;
     }
+    .appt-history-back::after,
+    .appt-search-btn::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.42) 45%, rgba(255,255,255,0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.5s ease;
+        pointer-events: none;
+    }
+    .appt-history-back:hover::after,
+    .appt-search-btn:hover::after {
+        left: 125%;
+    }
     .appt-history-back {
         min-width: 150px;
-        padding: 10px 16px;
-        border: 1px solid rgba(112, 19, 27, 0.3);
-        background: rgba(255, 255, 255, 0.96);
-        color: #70131B;
+        min-height: 42px;
+        padding: 0 16px;
+        border: 1px solid #70131B;
+        background: #70131B;
+        color: #ffffff;
         font-size: 13px;
+        box-shadow: 0 10px 22px rgba(112, 19, 27, 0.14);
     }
     .appt-history-back:hover,
+    .appt-history-back:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        outline: none;
+    }
     .appt-print-btn:hover {
         transform: translateY(-1px);
         box-shadow: 0 12px 24px rgba(112, 19, 27, 0.14);

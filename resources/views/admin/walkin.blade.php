@@ -288,6 +288,7 @@
     .intake-option-card {
         position: relative;
         height: 100%;
+        min-height: 314px;
         padding: 20px;
         border-radius: 16px;
         border: 1px solid rgba(112, 19, 27, 0.46);

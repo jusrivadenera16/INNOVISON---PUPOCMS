@@ -93,17 +93,18 @@
     .digital-logbook-card {
         position: relative;
         overflow: hidden;
-        min-height: 160px;
+        min-height: 250px;
         border-radius: 16px;
         border: 1px solid rgba(112, 19, 27, 0.22);
         background: #70131B;
         color: #ffffff;
-        padding: 24px 20px;
+        padding: 20px;
         text-decoration: none;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        gap: 18px;
+        align-items: flex-start;
+        gap: 20px;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.10);
         transition: transform .24s ease, box-shadow .24s ease, background .24s ease, border-color .24s ease;
     }
@@ -121,7 +122,7 @@
         left: -95%;
         width: 55%;
         opacity: 0;
-        background: linear-gradient(120deg, transparent 0%, rgba(255, 246, 184, 0.18) 45%, rgba(255, 246, 184, 0.48) 50%, transparent 100%);
+        background: linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,248,196,.42) 48%, rgba(255,255,255,0) 100%);
         transform: translateX(0) skewX(-18deg);
         pointer-events: none;
         z-index: 1;
@@ -130,7 +131,7 @@
     .digital-logbook-card:hover {
         background: #facc15;
         color: #70131B;
-        transform: translateY(-8px);
+        transform: translateY(-6px);
         border-color: #facc15;
         box-shadow:
             0 0 0 3px rgba(250, 204, 21, 0.12),
@@ -149,20 +150,20 @@
 
     .digital-logbook-card-label {
         margin: 0 0 8px;
-        color: #cbd5e1;
-        font-size: 14px;
-        font-weight: 500;
+        color: rgba(255, 255, 255, .80);
+        font-size: 12px;
+        font-weight: 900;
         text-transform: uppercase;
-        letter-spacing: .5px;
+        letter-spacing: .04em;
         transition: color .2s ease;
     }
 
     .digital-logbook-card-title {
         margin: 0;
         color: #ffffff;
-        font-size: 22px;
-        font-weight: 700;
-        line-height: 1.2;
+        font-size: 19px;
+        font-weight: 900;
+        line-height: 1.15;
         transition: color .2s ease;
     }
 
@@ -170,8 +171,9 @@
         margin: 10px 0 0;
         color: rgba(255, 255, 255, .92);
         font-size: 14px;
-        line-height: 1.55;
-        max-width: 520px;
+        line-height: 1.48;
+        max-width: 420px;
+        font-weight: 700;
         transition: color .2s ease;
     }
 
@@ -183,7 +185,7 @@
     }
 
     .digital-logbook-chip {
-        display: inline-flex;
+        display: none;
         align-items: center;
         justify-content: center;
         border-radius: 8px;
@@ -196,12 +198,13 @@
     }
 
     .digital-logbook-icon {
-        width: 42px;
-        height: 42px;
+        width: 58px;
+        height: 58px;
         border-radius: 14px;
         color: #facc15;
         background: rgba(255, 255, 255, 0.12);
         border: 1px solid rgba(255, 255, 255, 0.18);
+        margin-bottom: 18px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -209,26 +212,51 @@
     }
 
     .digital-logbook-icon svg {
-        width: 22px;
-        height: 22px;
+        width: 30px;
+        height: 30px;
+    }
+
+    .digital-logbook-arrow {
+        position: absolute;
+        top: 20px;
+        right: 18px;
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        background: rgba(255, 255, 255, .10);
+        border: 1px solid rgba(255, 255, 255, .28);
+        transition: background .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+    }
+
+    .digital-logbook-arrow svg {
+        width: 18px;
+        height: 18px;
     }
 
     .digital-logbook-card:hover .digital-logbook-card-label,
     .digital-logbook-card:hover .digital-logbook-card-title,
-    .digital-logbook-card:hover .digital-logbook-card-copy,
-    .digital-logbook-card:hover .digital-logbook-chip {
+    .digital-logbook-card:hover .digital-logbook-card-copy {
         color: #70131B;
     }
 
-    .digital-logbook-card:hover .digital-logbook-chip,
     .digital-logbook-card:hover .digital-logbook-icon {
         background: rgba(112, 19, 27, 0.10);
         border-color: rgba(112, 19, 27, 0.14);
     }
 
     .digital-logbook-card:hover .digital-logbook-icon {
+        color: #facc15;
+    }
+
+    .digital-logbook-card:hover .digital-logbook-arrow {
         color: #70131B;
-        transform: translateX(3px) scale(1.04);
+        background: rgba(112, 19, 27, .10);
+        border-color: rgba(112, 19, 27, .22);
+        transform: translateX(4px);
     }
 
     html[data-theme="dark"] .digital-logbook-frame {
@@ -304,25 +332,27 @@
         <div class="digital-logbook-grid">
             <a href="{{ $dailyTreatmentRecordUrl }}" class="digital-logbook-card">
                 <div>
+                    <span class="digital-logbook-icon"><x-outline-icon name="clipboard-document-list" /></span>
                     <div class="digital-logbook-card-label">Form B</div>
                     <h2 class="digital-logbook-card-title">Daily Treatment Record</h2>
                     <p class="digital-logbook-card-copy">Official treatment logbook for consultations, medicines dispensed, vitals, complaints, and attending staff.</p>
                 </div>
                 <div class="digital-logbook-card-footer">
                     <span class="digital-logbook-chip">DTR</span>
-                    <span class="digital-logbook-icon"><x-outline-icon name="clipboard-document-list" /></span>
+                    <span class="digital-logbook-arrow"><x-outline-icon name="chevron-right" /></span>
                 </div>
             </a>
 
             <a href="{{ $healthFormsLogbookUrl }}" class="digital-logbook-card">
                 <div>
+                    <span class="digital-logbook-icon"><x-outline-icon name="document-text" /></span>
                     <div class="digital-logbook-card-label">Applicant Review</div>
                     <h2 class="digital-logbook-card-title">Health Form Logbook</h2>
                     <p class="digital-logbook-card-copy">Monitor approved health forms, final review visits, approver, condition, and sync status.</p>
                 </div>
                 <div class="digital-logbook-card-footer">
                     <span class="digital-logbook-chip">HRL</span>
-                    <span class="digital-logbook-icon"><x-outline-icon name="document-text" /></span>
+                    <span class="digital-logbook-arrow"><x-outline-icon name="chevron-right" /></span>
                 </div>
             </a>
         </div>

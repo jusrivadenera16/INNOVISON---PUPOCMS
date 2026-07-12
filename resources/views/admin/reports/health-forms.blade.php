@@ -31,7 +31,8 @@
         max-width: 720px;
     }
     .health-forms-action {
-        min-width: 132px;
+        min-width: 154px;
+        min-height: 50px;
         width: auto !important;
         flex: 0 0 auto;
         display: inline-flex;
@@ -41,13 +42,13 @@
         position: relative;
         overflow: hidden;
         gap: 7px;
-        padding: 10px 16px;
+        padding: 0 22px;
         border: 1px solid #7f1d2d;
-        border-radius: 14px;
+        border-radius: 10px;
         background: #7f1d2d;
         color: #ffffff;
-        font-size: 13px;
-        font-weight: 800;
+        font-size: 14px;
+        font-weight: 900;
         text-decoration: none;
         white-space: nowrap;
         box-shadow: 0 0 0 2px rgba(112, 19, 27, 0.09), 0 10px 20px rgba(15, 23, 42, 0.08);
@@ -536,6 +537,12 @@
     html[data-theme="dark"] .health-forms-head .health-forms-action,
     html[data-theme="dark"] .health-forms-head .health-forms-action:visited {
         color: #ffffff !important;
+        min-width: 154px !important;
+        min-height: 50px !important;
+        padding: 0 22px !important;
+        border-radius: 10px !important;
+        font-size: 14px !important;
+        font-weight: 900 !important;
     }
 
     .health-forms-head .health-forms-action:hover,

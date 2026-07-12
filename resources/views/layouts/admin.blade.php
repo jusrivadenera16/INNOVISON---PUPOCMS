@@ -1288,16 +1288,39 @@
             border: 1px solid rgba(255, 255, 255, 0.24);
             background: rgba(255, 255, 255, 0.1);
             border-radius: 14px;
-            padding: 8px 10px;
+            width: 60px;
+            min-width: 60px;
+            min-height: 58px;
+            padding: 9px 10px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            gap: 0;
+            overflow: hidden;
             cursor: pointer;
             user-select: none;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+            transition: width 0.24s ease, min-width 0.24s ease, padding 0.24s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
         }
 
-        .admin-user:hover {
+        .profile-wrap:hover .admin-user,
+        .profile-wrap.is-expanded .admin-user {
+            width: 258px;
+            min-width: 258px;
+            padding: 8px 10px;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .profile-wrap.is-click-collapsed:hover .admin-user {
+            width: 60px;
+            min-width: 60px;
+            padding: 9px 10px;
+            justify-content: center;
+            gap: 0;
+        }
+
+        .admin-user:hover,
+        .profile-wrap.is-expanded .admin-user {
             border-color: rgba(255, 255, 255, 0.4);
             box-shadow: var(--shadow-soft);
             transform: translateY(-1px);
@@ -1306,6 +1329,7 @@
         .user-avatar {
             width: 38px;
             height: 38px;
+            flex: 0 0 38px;
             border-radius: 12px;
             background: linear-gradient(145deg, var(--pup-maroon), var(--pup-maroon-dark));
             color: #fff;
@@ -1319,6 +1343,28 @@
 
         .admin-user-meta {
             text-align: right;
+            width: 0;
+            max-width: 0;
+            opacity: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            transform: translateX(8px);
+            transition: opacity 0.18s ease, max-width 0.24s ease, width 0.24s ease, transform 0.24s ease;
+        }
+
+        .profile-wrap:hover .admin-user-meta,
+        .profile-wrap.is-expanded .admin-user-meta {
+            width: 168px;
+            max-width: 168px;
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .profile-wrap.is-click-collapsed:hover .admin-user-meta {
+            width: 0;
+            max-width: 0;
+            opacity: 0;
+            transform: translateX(8px);
         }
 
         .admin-user-name {
@@ -1341,8 +1387,26 @@
             width: 18px;
             height: 18px;
             flex: 0 0 auto;
-            opacity: 0.72;
+            opacity: 0;
+            max-width: 0;
+            overflow: hidden;
             stroke-width: 1.8;
+            transition: opacity 0.18s ease, max-width 0.24s ease, transform 0.2s ease;
+        }
+
+        .profile-wrap:hover .admin-user-chevron,
+        .profile-wrap.is-expanded .admin-user-chevron {
+            opacity: 0.72;
+            max-width: 18px;
+        }
+
+        .profile-wrap.is-click-collapsed:hover .admin-user-chevron {
+            opacity: 0;
+            max-width: 0;
+        }
+
+        .profile-wrap.is-expanded .admin-user-chevron {
+            transform: rotate(180deg);
         }
 
         .profile-dropdown {
@@ -2189,7 +2253,9 @@
             }
 
             .admin-user-meta {
-                display: none;
+                width: 0;
+                max-width: 0;
+                opacity: 0;
             }
 
             .sidebar-logo {
@@ -4397,8 +4463,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             </div>
         </div>
 
-        <div class="profile-wrap">
-            <button type="button" class="admin-user" onclick="toggleProfileMenu()">
+        <div class="profile-wrap" id="profileWrap">
+            <button type="button" class="admin-user" onclick="toggleProfileMenu()" aria-expanded="false" aria-controls="profileDropdown" aria-label="Account menu">
                 <div class="admin-user-meta">
                     <div class="admin-user-name">{{ $displayName }}</div>
                     <div class="admin-user-role">{{ $displayRole }}</div>
@@ -5515,8 +5581,22 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
     function toggleProfileMenu() {
         const menu = document.getElementById('profileDropdown');
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        const wrap = document.getElementById('profileWrap');
+        const button = wrap ? wrap.querySelector('.admin-user') : null;
+        if (!menu || !wrap) {
+            return;
+        }
+
+        const shouldOpen = !wrap.classList.contains('is-expanded');
+        wrap.classList.toggle('is-click-collapsed', !shouldOpen);
+        wrap.classList.toggle('is-expanded', shouldOpen);
+        menu.style.display = shouldOpen ? 'block' : 'none';
+        button?.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
     }
+
+    document.getElementById('profileWrap')?.addEventListener('mouseleave', function () {
+        this.classList.remove('is-click-collapsed');
+    });
 
     function toggleHeaderQuickActions(forceOpen) {
         const wrap = document.getElementById('headerQuickActions');
@@ -5790,6 +5870,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     document.addEventListener('click', function (event) {
         const menu = document.getElementById('profileDropdown');
         const trigger = document.querySelector('.admin-user');
+        const profileWrap = document.getElementById('profileWrap');
         const sidebar = document.getElementById('adminSidebar');
         const sidebarToggle = document.querySelector('.sidebar-toggle');
         const panel = document.getElementById('assistantPanel');
@@ -5799,6 +5880,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
         if (menu.style.display === 'block' && trigger && !menu.contains(event.target) && !trigger.contains(event.target)) {
             menu.style.display = 'none';
+            profileWrap?.classList.remove('is-expanded');
+            trigger?.setAttribute('aria-expanded', 'false');
         }
 
         if (

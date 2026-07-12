@@ -21,6 +21,15 @@ use Illuminate\Support\Str;
 
 class ReportsController extends Controller
 {
+    private function formatInventoryQuantity(float $value): string
+    {
+        if (abs($value - round($value)) < 0.00001) {
+            return (string) (int) round($value);
+        }
+
+        return rtrim(rtrim(number_format($value, 2, '.', ''), '0'), '.');
+    }
+
     private function inventoryReportCategoryLabel(Item $item): string
     {
         if ($item->category === 'Medicine') {
@@ -1547,11 +1556,273 @@ public function exportHub()
     return view('admin.reports.export-reports', compact('healthFormCourses'));
 }
 
+public function exportReportsMar(Request $request)
+{
+    return $this->exportReportsPreview($request, 'mar');
+}
+
+public function exportReportsInventory(Request $request)
+{
+    return $this->exportReportsPreview($request, 'inventory');
+}
+
+public function exportReportsAppointments(Request $request)
+{
+    return $this->exportReportsPreview($request, 'appointments');
+}
+
+public function exportReportsAuditTrail(Request $request)
+{
+    return $this->exportReportsPreview($request, 'audit-trail');
+}
+
+public function exportReportsHealthForms(Request $request)
+{
+    return $this->exportReportsPreview($request, 'health-forms');
+}
+
+private function exportReportsPreview(Request $request, string $reportType)
+{
+    $role = User::normalizeRole(optional(auth()->user())->user_role ?? '');
+    $isAssistant = $role === User::ROLE_ADMIN;
+    $reportsHomeUrl = $isAssistant ? url('/assistant/reports') : url('/admin/reports');
+    $hubUrl = $isAssistant ? url('/assistant/reports/export-hub') : url('/admin/reports/export-hub');
+    $printReportUrl = $isAssistant ? url('/assistant/reports/print-reports') : url('/admin/reports/print-reports');
+    $healthFormsExportUrl = $isAssistant ? url('/assistant/reports/health-forms/export') : url('/admin/reports/health-forms/export');
+
+    $dateFrom = $this->exportPreviewDate($request->query('date_from'), now()->startOfMonth());
+    $dateTo = $this->exportPreviewDate($request->query('date_to'), now());
+
+    if ($dateFrom->gt($dateTo)) {
+        [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
+    }
+
+    $monthFilter = $dateFrom->format('Y-m');
+    $baseExportQuery = [
+        'date_from' => $dateFrom->toDateString(),
+        'date_to' => $dateTo->toDateString(),
+    ];
+    $healthFormsExtraQuery = collect([
+        'course' => trim((string) $request->query('course', '')),
+        'user_type' => trim((string) $request->query('user_type', '')),
+        'gender' => trim((string) $request->query('gender', '')),
+        'condition' => trim((string) $request->query('condition', '')),
+        'status' => trim((string) $request->query('status', '')),
+        'condition_keyword' => trim((string) $request->query('condition_keyword', '')),
+        'condition_source' => trim((string) $request->query('condition_source', 'all')),
+        'condition_match' => trim((string) $request->query('condition_match', 'any')),
+    ])->filter(fn ($value) => $value !== '')->all();
+    $healthFormsBmiCategories = collect((array) $request->query('bmi_categories', []))
+        ->flatMap(fn ($value) => explode(',', (string) $value))
+        ->map(fn ($value) => strtolower(trim($value)))
+        ->filter(fn ($value) => in_array($value, ['underweight', 'normal', 'overweight', 'obese', 'no_bmi'], true))
+        ->unique()
+        ->values()
+        ->all();
+    if (!empty($healthFormsBmiCategories)) {
+        $healthFormsExtraQuery['bmi_categories'] = $healthFormsBmiCategories;
+    }
+
+    $config = [
+        'mar' => [
+            'view' => 'admin.reports.export-reports-mar',
+            'title' => 'MAR Report Export',
+            'kicker' => 'Monthly Report',
+            'subtitle' => 'Preview medical accomplishment categories before exporting the MAR report.',
+            'export_label' => 'Export MAR Report',
+            'export_url' => $printReportUrl . '?' . http_build_query($baseExportQuery + ['type' => 'mar', 'output' => 'pdf', 'month' => $monthFilter]),
+        ],
+        'inventory' => [
+            'view' => 'admin.reports.export-reports-inventory',
+            'title' => 'Inventory Stock Export',
+            'kicker' => 'Stocks & Supplies',
+            'subtitle' => 'Preview inventory balances, consumed quantities, and stock categories before exporting.',
+            'export_label' => 'Export Inventory',
+            'export_url' => $printReportUrl . '?' . http_build_query($baseExportQuery + ['type' => 'inventory', 'output' => 'pdf', 'month' => $monthFilter, 'inventory_scope' => 'all']),
+            'export_links' => [
+                [
+                    'label' => 'Inventory of Medicines',
+                    'url' => $printReportUrl . '?' . http_build_query($baseExportQuery + ['type' => 'inventory', 'output' => 'pdf', 'month' => $monthFilter, 'inventory_scope' => 'medicines']),
+                ],
+                [
+                    'label' => 'Inventory of Supplies',
+                    'url' => $printReportUrl . '?' . http_build_query($baseExportQuery + ['type' => 'inventory', 'output' => 'pdf', 'month' => $monthFilter, 'inventory_scope' => 'supplies']),
+                ],
+            ],
+        ],
+        'appointments' => [
+            'view' => 'admin.reports.export-reports-appointments',
+            'title' => 'Appointments Export',
+            'kicker' => 'Clinic Activity',
+            'subtitle' => 'Preview appointment requests and clinic consultation activity for the selected period.',
+            'export_label' => 'Export Appointments',
+            'export_url' => $printReportUrl . '?' . http_build_query($baseExportQuery + ['type' => 'appointment', 'output' => 'pdf', 'month' => $monthFilter]),
+        ],
+        'audit-trail' => [
+            'view' => 'admin.reports.export-reports-audit-trail',
+            'title' => 'Audit Trail Export',
+            'kicker' => 'System Monitoring',
+            'subtitle' => 'Preview system activity logs before exporting the audit trail report.',
+            'export_label' => 'Export Audit Trail',
+            'export_url' => $printReportUrl . '?' . http_build_query($baseExportQuery + ['type' => 'audit', 'output' => 'pdf', 'month' => $monthFilter]),
+        ],
+        'health-forms' => [
+            'view' => 'admin.reports.export-reports-health-forms',
+            'title' => 'Health Forms Export',
+            'kicker' => 'Medical Clearance',
+            'subtitle' => 'Preview issued health form records before exporting the CSV file.',
+            'export_label' => 'Export Health Forms',
+            'export_url' => $healthFormsExportUrl . '?' . http_build_query($baseExportQuery + $healthFormsExtraQuery),
+        ],
+    ][$reportType] ?? null;
+
+    abort_unless($config, 404);
+
+    [$previewHeaders, $previewRows, $previewCount] = $this->exportPreviewTable($reportType, $dateFrom, $dateTo);
+    $filterActionUrl = $isAssistant
+        ? url('/assistant/reports/export-hub/' . $reportType)
+        : url('/admin/reports/export-hub/' . $reportType);
+
+    return view($config['view'], [
+        'reportType' => $reportType,
+        'title' => $config['title'],
+        'kicker' => $config['kicker'],
+        'subtitle' => $config['subtitle'],
+        'exportLabel' => $config['export_label'],
+        'exportUrl' => $config['export_url'],
+        'exportLinks' => $config['export_links'] ?? [],
+        'filterActionUrl' => $filterActionUrl,
+        'reportsHomeUrl' => $reportsHomeUrl,
+        'hubUrl' => $hubUrl,
+        'dateFrom' => $dateFrom,
+        'dateTo' => $dateTo,
+        'previewHeaders' => $previewHeaders,
+        'previewRows' => $previewRows,
+        'previewCount' => $previewCount,
+        'healthFormCourses' => HealthProfile::query()
+            ->with('user:id,course')
+            ->get()
+            ->map(fn (HealthProfile $profile) => trim((string) ($profile->course_college ?: optional($profile->user)->course)))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values(),
+    ]);
+}
+
+private function exportPreviewDate($value, Carbon $fallback): Carbon
+{
+    try {
+        $value = trim((string) $value);
+        return $value !== '' ? Carbon::parse($value)->startOfDay() : (clone $fallback)->startOfDay();
+    } catch (\Throwable $exception) {
+        return (clone $fallback)->startOfDay();
+    }
+}
+
+private function exportPreviewTable(string $reportType, Carbon $dateFrom, Carbon $dateTo): array
+{
+    if ($reportType === 'mar') {
+        $categories = Category::with(['medicalConditions.consultations' => function ($query) use ($dateFrom, $dateTo) {
+            $query->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()]);
+        }])->get();
+
+        $rows = $categories->map(function (Category $category) {
+            $consultationCount = $category->medicalConditions->sum(fn ($condition) => $condition->consultations->count());
+            return [$category->name, $category->medicalConditions->count(), $consultationCount, 'MAR category'];
+        });
+
+        return [['Category', 'Conditions', 'Consultations', 'Preview Type'], $rows->take(10)->values(), $rows->count()];
+    }
+
+    if ($reportType === 'inventory') {
+        $items = $this->buildInventoryReportData($dateFrom->format('Y-m'), 'all');
+        $rows = $items->map(fn ($item) => [
+            $item->name,
+            $item->report_category,
+            $item->unit,
+            $this->formatInventoryQuantity((float) $item->starting_stock),
+            $this->formatInventoryQuantity((float) $item->consumed),
+            $this->formatInventoryQuantity((float) $item->current_balance),
+        ]);
+
+        return [['Item', 'Category', 'Unit', 'Starting', 'Consumed', 'Current'], $rows->take(10)->values(), $rows->count()];
+    }
+
+    if ($reportType === 'appointments') {
+        $appointments = Appointment::query()
+            ->whereBetween('date', [$dateFrom->toDateString(), $dateTo->toDateString()])
+            ->orderByDesc('date')
+            ->orderByDesc('time')
+            ->get();
+        $rows = $appointments->map(fn (Appointment $appointment) => [
+            $appointment->apt_id ?: $appointment->id,
+            $appointment->name ?: optional($appointment->user)->name ?: 'N/A',
+            $appointment->service ?: 'N/A',
+            $appointment->date ? Carbon::parse($appointment->date)->format('M d, Y') : 'N/A',
+            $appointment->time ? Carbon::parse($appointment->time)->format('g:i A') : 'N/A',
+            ucfirst((string) $appointment->status),
+        ]);
+
+        return [['Appointment ID', 'Patient', 'Service', 'Date', 'Time', 'Status'], $rows->take(10)->values(), $rows->count()];
+    }
+
+    if ($reportType === 'audit-trail') {
+        $logs = ActivityLog::query()
+            ->whereBetween('created_at', [$dateFrom->copy()->startOfDay(), $dateTo->copy()->endOfDay()])
+            ->latest()
+            ->get();
+        $rows = $logs->map(fn (ActivityLog $log) => [
+            optional($log->created_at)->format('M d, Y g:i A') ?: 'N/A',
+            $log->user_name ?: 'System',
+            $log->action ?: 'N/A',
+            Str::limit((string) $log->description, 70),
+        ]);
+
+        return [['Date & Time', 'User', 'Action', 'Description'], $rows->take(10)->values(), $rows->count()];
+    }
+
+    $records = HealthProfile::query()
+        ->with('user')
+        ->whereNotNull('clearance_status')
+        ->where(function ($builder) use ($dateFrom, $dateTo) {
+            $builder->whereBetween('verified_at', [$dateFrom->copy()->startOfDay(), $dateTo->copy()->endOfDay()])
+                ->orWhere(function ($fallback) use ($dateFrom, $dateTo) {
+                    $fallback->whereNull('verified_at')
+                        ->whereBetween('created_at', [$dateFrom->copy()->startOfDay(), $dateTo->copy()->endOfDay()]);
+                });
+        })
+        ->latest('updated_at')
+        ->get();
+
+    $rows = $records->map(function (HealthProfile $record) {
+        $status = match (true) {
+            in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true) => 'Approved',
+            $record->clearance_status === 'Rejected' => 'Rejected',
+            default => 'Pending',
+        };
+
+        return [
+            $record->reference_number ?: $record->student_number ?: optional($record->user)->student_number ?: 'N/A',
+            optional($record->user)->name ?: 'N/A',
+            $record->course_college ?: optional($record->user)->course ?: 'N/A',
+            $status,
+            $record->hasMedicalCondition() ? 'Yes' : 'No',
+            $record->verified_at ? Carbon::parse($record->verified_at)->format('M d, Y g:i A') : 'N/A',
+        ];
+    });
+
+    return [['Reference', 'Name', 'Course', 'Status', 'With Condition', 'Approved At'], $rows->take(10)->values(), $rows->count()];
+}
+
 public function exportHealthForms(Request $request)
 {
     $dateFromInput = trim((string) $request->query('date_from', now()->startOfMonth()->toDateString()));
     $dateToInput = trim((string) $request->query('date_to', now()->toDateString()));
     $courseFilter = trim((string) $request->query('course', ''));
+    $userTypeFilter = strtolower(trim((string) $request->query('user_type', '')));
+    $genderFilter = strtolower(trim((string) $request->query('gender', '')));
+    $conditionFilter = strtolower(trim((string) $request->query('condition', '')));
     $statusFilter = strtolower(trim((string) $request->query('status', '')));
     $conditionKeyword = trim((string) $request->query('condition_keyword', ''));
     $conditionSource = trim((string) $request->query('condition_source', 'all'));
@@ -1611,6 +1882,27 @@ public function exportHealthForms(Request $request)
     }
 
     $records = $query->orderByDesc(DB::raw('COALESCE(verified_at, created_at)'))->get();
+
+    if ($userTypeFilter !== '') {
+        $records = $records->filter(function (HealthProfile $record) use ($userTypeFilter) {
+            $user = $record->user;
+            $role = strtolower(trim((string) (optional($user)->user_type ?: optional($user)->user_role)));
+            return $role === $userTypeFilter || str_contains($role, $userTypeFilter);
+        })->values();
+    }
+
+    if ($genderFilter !== '') {
+        $records = $records->filter(function (HealthProfile $record) use ($genderFilter) {
+            $gender = strtolower(trim((string) ($record->sex ?: optional($record->user)->gender)));
+            return $gender === $genderFilter || str_contains($gender, $genderFilter);
+        })->values();
+    }
+
+    if ($conditionFilter === 'yes') {
+        $records = $records->filter(fn (HealthProfile $record) => $record->hasMedicalCondition())->values();
+    } elseif ($conditionFilter === 'no') {
+        $records = $records->filter(fn (HealthProfile $record) => ! $record->hasMedicalCondition())->values();
+    }
 
     if ($bmiCategories->isNotEmpty()) {
         $records = $records->filter(function (HealthProfile $record) use ($bmiCategories) {
