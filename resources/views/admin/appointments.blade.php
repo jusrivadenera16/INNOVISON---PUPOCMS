@@ -2742,7 +2742,7 @@
         height: 20px;
         display: block;
         margin: 0;
-        transform: translateY(3px);
+        transform: translateY(7px);
     }
     .appointments-last-updated span {
         display: block;
@@ -2854,8 +2854,8 @@
     }
     .appointments-summary-head {
         align-items: center;
-        padding: 18px 20px 8px;
-        margin-bottom: 8px;
+        padding: 12px 20px 8px;
+        margin-bottom: 6px;
     }
     .appointments-summary-title {
         color: #0f172a;
@@ -2864,10 +2864,11 @@
         line-height: 1.1;
     }
     .appointments-toolbar-actions {
-        width: min(100%, 620px);
+        width: min(100%, 440px);
         display: grid;
         grid-template-columns: minmax(220px, 1fr) auto;
         align-items: center;
+        gap: 10px;
     }
     .appointments-search-shell,
     .appointments-search-wrap,
@@ -2992,16 +2993,7 @@
         content: none !important;
     }
     .appointments-search-wrap::after {
-        content: "";
-        width: 26px;
-        height: 26px;
-        flex: 0 0 26px;
-        border-radius: 999px;
-        background-color: rgba(143, 34, 48, .20);
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 14.5a3 3 0 0 0 3-3v-5a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Z' stroke='%238f2230' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M5.5 10.5a6.5 6.5 0 0 0 13 0M12 17v3M9 20h6' stroke='%238f2230' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: 13px 13px;
+        content: none !important;
     }
     .appointments-search-icon {
         margin: 0 !important;
@@ -3153,6 +3145,303 @@
         }
     }
 
+    #infoModal.modal-overlay,
+    #statusActionModal.modal-overlay,
+    #rescheduleModal.modal-overlay {
+        background: rgba(15, 23, 42, .68) !important;
+        backdrop-filter: blur(8px);
+        padding: 22px 18px !important;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #infoModal .modal-box,
+    #statusActionModal .modal-box,
+    #rescheduleModal .modal-box {
+        border: 1px solid rgba(255, 255, 255, .62) !important;
+        border-top: 0 !important;
+        border-bottom: 4px solid #70131B !important;
+        border-radius: 24px !important;
+        background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.98)) !important;
+        box-shadow: 0 26px 60px rgba(15, 23, 42, .24) !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        max-height: calc(100vh - 44px) !important;
+    }
+
+    #infoModal .modal-header,
+    #statusActionModal .modal-header,
+    #rescheduleModal .modal-header {
+        position: relative;
+        align-items: flex-start !important;
+        gap: 16px !important;
+        padding: 18px 20px 14px !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: linear-gradient(135deg, #7f1d1d, #991b1b 55%, #b91c1c) !important;
+        color: #ffffff !important;
+        box-shadow: none !important;
+    }
+
+    #infoModal .modal-header::after,
+    #statusActionModal .modal-header::after,
+    #rescheduleModal .modal-header::after {
+        content: none !important;
+    }
+
+    #infoModal .modal-header-main,
+    #statusActionModal .modal-header-main,
+    #rescheduleModal .modal-header-main {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 14px !important;
+        min-width: 0;
+        width: auto !important;
+    }
+
+    #infoModal .modal-header-main {
+        flex-wrap: nowrap !important;
+    }
+
+    #infoModal .modal-header-main h3,
+    #infoModal .modal-header-main .appointment-detail-id-line {
+        flex-basis: auto !important;
+    }
+
+    #infoModal .modal-header-main h3 {
+        display: block !important;
+    }
+
+    #infoModal .modal-header-main {
+        display: grid !important;
+        grid-template-columns: 46px minmax(0, 1fr) !important;
+        column-gap: 14px !important;
+        row-gap: 4px !important;
+    }
+
+    #infoModal .modal-header-main::before,
+    #statusActionModal .modal-header-main::before,
+    #rescheduleModal .modal-header-main::before {
+        content: "AP";
+        width: 46px;
+        height: 46px;
+        flex: 0 0 46px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, .16);
+        border: 1px solid rgba(255, 255, 255, .24);
+        color: #facc15;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .08em;
+        box-shadow: 0 12px 24px rgba(15, 23, 42, .16);
+    }
+
+    #statusActionModal .modal-header-main::before {
+        content: "OK";
+    }
+
+    #rescheduleModal .modal-header-main::before {
+        content: "RS";
+    }
+
+    #infoModal .modal-header-main::before {
+        grid-column: 1 !important;
+        grid-row: 1 / span 2 !important;
+    }
+
+    #infoModal .modal-title {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+    }
+
+    #infoModal .appointment-detail-id-line {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 4px 6px !important;
+    }
+
+    #infoModal .modal-title,
+    #statusActionModal .modal-title,
+    #rescheduleModal .modal-title {
+        margin: 0 !important;
+        color: #ffffff !important;
+        font-size: 1rem !important;
+        line-height: 1.2 !important;
+        font-weight: 800 !important;
+        letter-spacing: .08em !important;
+        text-transform: uppercase !important;
+    }
+
+    #infoModal .appointment-detail-id-line,
+    #statusActionModal .appointment-detail-id-line,
+    #rescheduleModal .appointment-detail-id-line {
+        margin: 6px 0 0 !important;
+        color: rgba(255, 255, 255, .92) !important;
+        font-size: 12px !important;
+        line-height: 1.55 !important;
+    }
+
+    #infoModal .appointment-detail-id-line span,
+    #statusActionModal .appointment-detail-id-line span,
+    #rescheduleModal .appointment-detail-id-line span,
+    #infoModal .appointment-detail-id-line strong,
+    #statusActionModal .appointment-detail-id-line strong,
+    #rescheduleModal .appointment-detail-id-line strong {
+        color: #ffffff !important;
+    }
+
+    #infoModal .appointment-detail-header > .modal-status-badge,
+    #statusActionModal .appointment-detail-header > .modal-status-badge,
+    #rescheduleModal .appointment-detail-header > .modal-status-badge,
+    #mStatus,
+    #statusActionBadge {
+        display: none !important;
+    }
+
+    #infoModal .modal-header-close,
+    #statusActionModal .modal-header-close,
+    #rescheduleModal .modal-header-close {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+        margin-left: auto !important;
+        flex: 0 0 40px !important;
+        border-radius: 999px !important;
+        border: 1px solid #8f2230 !important;
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, .12), 0 10px 22px rgba(112, 19, 27, .20) !important;
+        transform: none !important;
+    }
+
+    #infoModal .modal-header-close::after,
+    #statusActionModal .modal-header-close::after,
+    #rescheduleModal .modal-header-close::after {
+        background: linear-gradient(120deg, rgba(255,248,196,0) 0%, rgba(255,239,181,.14) 22%, rgba(255,239,181,.52) 48%, rgba(255,239,181,.14) 72%, rgba(255,248,196,0) 100%) !important;
+    }
+
+    #infoModal .modal-header-close:hover,
+    #infoModal .modal-header-close:focus-visible,
+    #statusActionModal .modal-header-close:hover,
+    #statusActionModal .modal-header-close:focus-visible,
+    #rescheduleModal .modal-header-close:hover,
+    #rescheduleModal .modal-header-close:focus-visible {
+        transform: translateY(-1px) !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+        background: #facc15 !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .18), 0 14px 24px rgba(112, 19, 27, .16) !important;
+    }
+
+    #infoModal .appointment-detail-copy,
+    #statusActionModal .appointment-detail-copy,
+    #rescheduleModal .appointment-detail-copy {
+        color: inherit;
+    }
+
+    #infoModal .appointment-detail-body,
+    #statusActionModal .appointment-detail-body,
+    #rescheduleModal .appointment-detail-body {
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(112, 19, 27, .42) transparent;
+    }
+
+    #infoModal .appointment-detail-body::-webkit-scrollbar,
+    #statusActionModal .appointment-detail-body::-webkit-scrollbar,
+    #rescheduleModal .appointment-detail-body::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #infoModal .appointment-detail-body::-webkit-scrollbar-thumb,
+    #statusActionModal .appointment-detail-body::-webkit-scrollbar-thumb,
+    #rescheduleModal .appointment-detail-body::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(112, 19, 27, .42);
+    }
+
+    html[data-theme="dark"] #infoModal .modal-box,
+    html[data-theme="dark"] #statusActionModal .modal-box,
+    html[data-theme="dark"] #rescheduleModal .modal-box {
+        background: linear-gradient(180deg, rgba(15, 23, 42, .98), rgba(17, 24, 39, .98)) !important;
+        border-color: rgba(250, 204, 21, .24) !important;
+        border-top: 0 !important;
+        border-bottom-color: #70131B !important;
+        box-shadow: 0 26px 70px rgba(0, 0, 0, .48) !important;
+    }
+
+    .appointment-inline-pill.is-view,
+    .appointment-action-menu-item.is-view {
+        background: linear-gradient(135deg, #ffffff, #fff3f5) !important;
+        color: #70131B !important;
+        border: 1px solid #f0d7dc !important;
+        box-shadow: 0 10px 20px rgba(15, 23, 42, .08) !important;
+    }
+
+    .appointment-inline-pill.is-view {
+        width: auto !important;
+        min-width: 94px !important;
+        max-width: none !important;
+        min-height: 36px !important;
+        padding: 8px 18px !important;
+        gap: 6px !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+    }
+
+    .appointment-inline-pill.is-view:hover,
+    .appointment-inline-pill.is-view:focus-visible,
+    .appointment-action-menu-item.is-view:hover,
+    .appointment-action-menu-item.is-view:focus-visible {
+        transform: translateY(-1px);
+        background: linear-gradient(135deg, #fff7f8, #ffe7ed) !important;
+        border-color: #d9a9b4 !important;
+        color: #70131B !important;
+        box-shadow: 0 14px 24px rgba(112, 19, 27, .12) !important;
+    }
+
+    .appointment-inline-pill.is-view svg,
+    .appointment-action-menu-item.is-view svg,
+    .appointment-inline-pill.is-view svg *,
+    .appointment-action-menu-item.is-view svg * {
+        width: 14px !important;
+        height: 14px !important;
+        color: #70131B !important;
+        stroke: #70131B !important;
+    }
+
+    html[data-theme="dark"] .appointment-inline-pill.is-view,
+    html[data-theme="dark"] .appointment-action-menu-item.is-view {
+        background: linear-gradient(135deg, rgba(127, 29, 45, .22), rgba(148, 28, 57, .18)) !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .appointment-inline-pill.is-view:hover,
+    html[data-theme="dark"] .appointment-inline-pill.is-view:focus-visible,
+    html[data-theme="dark"] .appointment-action-menu-item.is-view:hover,
+    html[data-theme="dark"] .appointment-action-menu-item.is-view:focus-visible {
+        border-color: rgba(250, 204, 21, .4) !important;
+        box-shadow: 0 14px 24px rgba(0, 0, 0, .22) !important;
+    }
+
+    html[data-theme="dark"] .appointment-inline-pill.is-view svg,
+    html[data-theme="dark"] .appointment-action-menu-item.is-view svg,
+    html[data-theme="dark"] .appointment-inline-pill.is-view svg *,
+    html[data-theme="dark"] .appointment-action-menu-item.is-view svg * {
+        color: #ffffff !important;
+        stroke: #ffffff !important;
+    }
+
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 @endpush
@@ -3166,8 +3455,8 @@
             ? collect($appointments->items())
             : collect($appointments);
         $appointmentTotal = $appointmentCollection->count();
-        $commonService = $appointmentCollection
-            ->map(fn ($appt) => trim((string) ($appt->service ?? '')))
+        $commonIllness = $appointmentCollection
+            ->map(fn ($appt) => trim((string) ($appt->clinical_findings_comment ?? '')))
             ->filter()
             ->countBy()
             ->sortDesc()
@@ -3245,9 +3534,9 @@
             <div class="appointments-modern-card is-service">
                 <span class="appointments-modern-icon"><x-outline-icon name="clipboard-document-list" /></span>
                 <div class="appointments-modern-copy">
-                    <span class="appointments-modern-label">Common Service</span>
-                    <strong>{{ $commonService }}</strong>
-                    <span>Most requested</span>
+                    <span class="appointments-modern-label">Common Illness</span>
+                    <strong>{{ $commonIllness }}</strong>
+                    <span>Most recorded</span>
                 </div>
             </div>
             <div class="appointments-modern-card is-gender">
@@ -3450,7 +3739,7 @@
                                             data-status="{{ $appt->status }}"
                                             data-appointment-id="{{ $appt->id }}"
                                             onclick="openInfoModal(this)">
-                                            <x-outline-icon name="document-text" />
+                                            <x-outline-icon name="eye" />
                                             View
                                         </button>
 

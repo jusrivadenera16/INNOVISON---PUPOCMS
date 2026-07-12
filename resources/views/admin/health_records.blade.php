@@ -1387,7 +1387,7 @@
         height: 20px;
         display: block;
         margin: 0;
-        transform: translateY(3px);
+        transform: translateY(7px);
     }
     .health-records-last-updated span {
         display: block;
@@ -1566,7 +1566,7 @@
     }
     .health-summary-modern-card {
         position: relative;
-        min-height: 102px;
+        min-height: 100px;
         border-radius: 14px;
         border: 1px solid #e5e7eb;
         background: #ffffff;
@@ -4244,6 +4244,11 @@
     }
     .health-summary-card {
         margin-top: 16px !important;
+    }
+    .health-summary-modern-container .health-summary-modern-card {
+        min-height: 98px !important;
+        padding-top: 13px !important;
+        padding-bottom: 13px !important;
     }
 
 </style>

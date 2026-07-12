@@ -371,6 +371,276 @@
     html[data-theme="dark"] .summary-grid {
         gap: 16px !important;
     }
+
+    .summary-filter {
+        position: relative;
+        align-items: center !important;
+    }
+
+    .summary-filter-toggle {
+        min-height: 50px;
+        min-width: 120px;
+        padding: 0 18px;
+        border: 1px solid #7f1d2d;
+        border-radius: 14px;
+        background: #7f1d2d;
+        color: #ffffff;
+        font-weight: 900;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .16);
+    }
+
+    .summary-filter-toggle::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(250,204,21,0) 0%, rgba(255,247,181,.58) 45%, rgba(250,204,21,0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.5s ease;
+        pointer-events: none;
+    }
+
+    .summary-filter-toggle:hover,
+    .summary-filter-toggle:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        outline: none;
+    }
+
+    .summary-filter-toggle:hover::after,
+    .summary-filter-toggle:focus-visible::after {
+        left: 125%;
+    }
+
+    .summary-filter-panel {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 10px);
+        z-index: 80;
+        width: min(290px, 92vw);
+        padding: 14px;
+        border-radius: 18px;
+        border: 1px solid rgba(112, 19, 27, .12);
+        background: rgba(255, 255, 255, .98);
+        box-shadow: 0 24px 38px rgba(15, 23, 42, .12);
+        display: none;
+    }
+
+    .summary-filter.is-open .summary-filter-panel {
+        display: block;
+    }
+
+    .summary-filter-panel-title {
+        margin: 0 0 10px;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: #70131B;
+    }
+
+    .summary-month-wrap {
+        position: relative;
+    }
+
+    .summary-month-wrap input[type="month"] {
+        width: 100%;
+        min-height: 46px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(127, 29, 29, .22);
+        background: linear-gradient(180deg, #ffffff 0%, #fff8f6 100%);
+        color: #111827;
+        font-weight: 800;
+        box-shadow: 0 12px 22px rgba(15, 23, 42, .08), inset 0 1px 0 rgba(255,255,255,.86);
+    }
+
+    .summary-filter-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .summary-filter-actions button,
+    .summary-filter-actions a {
+        flex: 1 1 0;
+        min-height: 42px;
+        border-radius: 12px;
+        border: 1px solid rgba(112, 19, 27, .12);
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 900;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .summary-filter-actions button:hover,
+    .summary-filter-actions a:hover {
+        background: #fff3f5;
+        color: #70131B;
+    }
+
+    .summary-grid {
+        gap: 10px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .summary-card {
+        position: relative;
+        min-height: 118px !important;
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        align-items: center;
+        gap: 14px;
+        padding: 14px !important;
+        border-radius: 12px !important;
+        border: 1px solid #e5e7eb !important;
+        border-left: 0 !important;
+        background: #ffffff !important;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, .06) !important;
+        overflow: hidden;
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .summary-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(127, 29, 45, .36) !important;
+        box-shadow: 0 16px 30px rgba(112, 19, 27, .12) !important;
+    }
+
+    .summary-card::before {
+        content: "";
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        grid-column: 1;
+        grid-row: 1 / span 3;
+        background: #fff1f2;
+        border: 1px solid rgba(127, 29, 45, .08);
+    }
+
+    .summary-card::after {
+        content: "";
+        position: absolute;
+        left: 27px;
+        top: 50%;
+        width: 18px;
+        height: 18px;
+        transform: translateY(-50%);
+        background: #7f1d2d;
+        -webkit-mask: var(--summary-card-icon) center / contain no-repeat;
+        mask: var(--summary-card-icon) center / contain no-repeat;
+    }
+
+    .summary-card:nth-child(1) { border-color: rgba(34, 197, 94, .32) !important; }
+    .summary-card:nth-child(1)::before { background: #dcfce7; }
+    .summary-card:nth-child(1)::after {
+        background: #22c55e;
+        --summary-card-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m20 7-8-4-8 4 8 4 8-4Z M4 7v10l8 4 8-4V7' stroke='black' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+    .summary-card:nth-child(2) { border-color: rgba(248, 113, 113, .36) !important; }
+    .summary-card:nth-child(2)::before { background: #fee2e2; }
+    .summary-card:nth-child(2)::after {
+        background: #ef4444;
+        --summary-card-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 3v18M7 8h8.5a3.5 3.5 0 1 1 0 7H7' stroke='black' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+    .summary-card:nth-child(3)::after {
+        --summary-card-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 12h14M12 5l7 7-7 7' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+    .summary-card:nth-child(4)::after {
+        background: #f59e0b;
+        --summary-card-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 9v4m0 4h.01M10.3 4.3 2.7 18a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+
+    .summary-label,
+    .summary-value,
+    .summary-meta {
+        grid-column: 2;
+    }
+
+    .summary-label {
+        color: #0f172a !important;
+        font-size: 12px !important;
+        line-height: 1.15;
+        font-weight: 900 !important;
+        letter-spacing: .04em !important;
+    }
+
+    .summary-value {
+        margin-top: 6px !important;
+        color: #0f172a !important;
+        font-size: 24px !important;
+    }
+
+    .summary-meta {
+        margin-top: 7px !important;
+        color: #64748b !important;
+        font-size: 12px !important;
+        line-height: 1.35;
+    }
+
+    html[data-theme="dark"] .summary-filter-panel,
+    html[data-theme="dark"] .summary-month-wrap input[type="month"] {
+        background: rgba(15, 23, 42, .96) !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .summary-card {
+        background: rgba(15, 23, 42, .98) !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+    }
+
+    html[data-theme="dark"] .summary-label,
+    html[data-theme="dark"] .summary-value {
+        color: #ffffff !important;
+    }
+
+    .summary-header .summary-filter {
+        gap: 10px !important;
+    }
+
+    .summary-header .summary-filter-toggle,
+    .summary-header .summary-back {
+        min-height: 50px !important;
+        min-width: 120px !important;
+        padding: 0 18px !important;
+        border: 1px solid #7f1d2d !important;
+        border-radius: 10px !important;
+        background: #7f1d2d !important;
+        color: #ffffff !important;
+        font-size: 13px !important;
+        font-weight: 900 !important;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .16) !important;
+    }
+
+    .summary-header .summary-back {
+        display: inline-flex !important;
+    }
+
+    .summary-header .summary-filter-toggle:hover,
+    .summary-header .summary-filter-toggle:focus-visible,
+    .summary-header .summary-back:hover,
+    .summary-header .summary-back:focus-visible {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+        outline: none;
+    }
+
+    .summary-header .summary-back:hover::after,
+    .summary-header .summary-back:focus-visible::after {
+        left: 125%;
+    }
 </style>
 @endpush
 
@@ -388,12 +658,20 @@
             <p class="summary-subtitle">Monitor current stock, monthly consumption, and starting balances for {{ $reportMonthLabel }}.</p>
         </div>
 
-        <form action="{{ $summaryUrl }}" method="GET" class="summary-filter">
-            <div>
-                <label for="summaryMonth">Report Month</label>
-                <input id="summaryMonth" type="month" name="month" value="{{ $monthFilter }}">
+        <form action="{{ $summaryUrl }}" method="GET" class="summary-filter" id="summaryFilterShell">
+            <button type="button" class="summary-filter-toggle" id="summaryFilterToggle" aria-expanded="false" aria-controls="summaryFilterPanel">Filter</button>
+            <a href="{{ $reportsHomeUrl }}" class="summary-back">&larr; Back to Reports</a>
+            <div class="summary-filter-panel" id="summaryFilterPanel" aria-hidden="true">
+                <div class="summary-filter-panel-title">Month Filter</div>
+                <div class="summary-month-wrap">
+                    <input id="summaryMonth" type="month" name="month" value="{{ $monthFilter }}" aria-label="Report month">
+                </div>
+                <div class="summary-filter-actions">
+                    <a href="{{ $summaryUrl }}">Reset</a>
+                    <button type="button" id="summaryFilterClose">Close</button>
+                    <button type="submit">Apply</button>
+                </div>
             </div>
-            <button type="submit">Apply Filter</button>
         </form>
     </div>
 
@@ -529,6 +807,39 @@
         </table>
     </div>
 
-    <a href="{{ $reportsHomeUrl }}" class="summary-back">&larr; Back to Reports</a>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const shell = document.getElementById('summaryFilterShell');
+    const toggle = document.getElementById('summaryFilterToggle');
+    const panel = document.getElementById('summaryFilterPanel');
+    const closeBtn = document.getElementById('summaryFilterClose');
+
+    function setOpen(isOpen) {
+        if (!shell || !toggle || !panel) return;
+        shell.classList.toggle('is-open', isOpen);
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        panel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+    }
+
+    toggle?.addEventListener('click', function (event) {
+        event.preventDefault();
+        setOpen(!shell.classList.contains('is-open'));
+    });
+
+    closeBtn?.addEventListener('click', function () {
+        setOpen(false);
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!shell || shell.contains(event.target)) return;
+        setOpen(false);
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') setOpen(false);
+    });
+});
+</script>
 @endsection

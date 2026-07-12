@@ -6968,9 +6968,6 @@
                 <p class="intake-heading-kicker">Patient Intake</p>
                 <h2 class="intake-heading-title">Choose how you want to begin the clinic intake flow</h2>
             </div>
-            <a href="{{ url($basePrefix . '/appointments') }}" class="btn" style="background:#f8fafc; border:1px solid #cbd5e1; color:#334155; font-weight:700; border-radius:12px; white-space:nowrap;">
-                BACK TO APPOINTMENTS
-            </a>
         </div>
 
         <div class="intake-options-grid">

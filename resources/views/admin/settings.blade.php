@@ -2070,6 +2070,62 @@
     .settings-page .settings-hub-card:focus-visible .settings-hub-card-icon svg {
         stroke: currentColor !important;
     }
+    @media (min-width: 921px) {
+        .settings-page .settings-hub-grid {
+            grid-template-columns: repeat(4, minmax(0, calc((100% - 52px) / 4))) !important;
+            justify-content: start !important;
+        }
+    }
+
+    /* Patient Intake sizing parity */
+    .settings-page .settings-hub-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+        gap: 16px !important;
+        margin-top: 24px !important;
+    }
+    .settings-page .settings-hub-card,
+    .settings-page .settings-hub-card:nth-child(2),
+    .settings-page .settings-hub-card:nth-child(4),
+    .settings-page .settings-hub-card:nth-child(5) {
+        min-height: 314px !important;
+        height: 100% !important;
+        padding: 20px !important;
+        border-radius: 16px !important;
+    }
+    .settings-page .settings-hub-chip {
+        top: 12px !important;
+        right: 12px !important;
+        width: 28px !important;
+        height: 28px !important;
+    }
+    .settings-page .settings-hub-card-icon {
+        width: 58px !important;
+        height: 58px !important;
+        border-radius: 16px !important;
+        margin-bottom: 14px !important;
+    }
+    .settings-page .settings-hub-card-icon svg {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    .settings-page .settings-hub-card h3 {
+        margin: 0 0 8px !important;
+        font-size: 18px !important;
+        line-height: 1.25 !important;
+    }
+    .settings-page .settings-hub-copy {
+        font-size: 16px !important;
+        line-height: 1.55 !important;
+    }
+    @media (min-width: 1000px) {
+        .settings-page .settings-hub-grid {
+            grid-template-columns: repeat(4, minmax(220px, 1fr)) !important;
+        }
+    }
+    .settings-page .hero p {
+        max-width: none !important;
+        width: 100% !important;
+    }
 
 </style>
 @endpush

@@ -529,6 +529,159 @@
             padding: 24px 18px;
         }
     }
+
+    .health-forms-head .health-forms-action,
+    .health-forms-head .health-forms-action:visited,
+    .health-forms-head .health-forms-action span,
+    html[data-theme="dark"] .health-forms-head .health-forms-action,
+    html[data-theme="dark"] .health-forms-head .health-forms-action:visited {
+        color: #ffffff !important;
+    }
+
+    .health-forms-head .health-forms-action:hover,
+    .health-forms-head .health-forms-action:focus-visible,
+    html[data-theme="dark"] .health-forms-head .health-forms-action:hover,
+    html[data-theme="dark"] .health-forms-head .health-forms-action:focus-visible {
+        color: #70131B !important;
+    }
+
+    .health-forms-head .health-forms-action > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .health-forms-stat-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        margin: 0 0 16px !important;
+    }
+
+    .health-forms-stat-card {
+        position: relative;
+        min-height: 118px !important;
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        align-items: center;
+        gap: 14px;
+        padding: 14px !important;
+        border-radius: 12px !important;
+        border: 1px solid #e5e7eb !important;
+        border-top: 0 !important;
+        background: #ffffff !important;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, .06) !important;
+        overflow: hidden;
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .health-forms-stat-card::before {
+        content: "";
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        grid-column: 1;
+        grid-row: 1 / span 2;
+        background: #fff1f2;
+        border: 1px solid rgba(127, 29, 45, .08);
+        box-shadow: inset 0 0 0 8px rgba(127, 29, 45, .03);
+    }
+
+    .health-forms-stat-card::after {
+        content: "";
+        position: absolute;
+        left: 28px;
+        top: 50%;
+        width: 18px;
+        height: 18px;
+        transform: translateY(-50%);
+        background: #ef4444;
+        -webkit-mask: var(--health-forms-stat-icon) center / contain no-repeat;
+        mask: var(--health-forms-stat-icon) center / contain no-repeat;
+    }
+
+    .health-forms-stat-card:nth-child(1) {
+        border-color: rgba(34, 197, 94, .32) !important;
+    }
+
+    .health-forms-stat-card:nth-child(1)::before {
+        background: #dcfce7;
+    }
+
+    .health-forms-stat-card:nth-child(1)::after {
+        background: #22c55e;
+        --health-forms-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m5 13 4 4L19 7' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+
+    .health-forms-stat-card:nth-child(2) {
+        border-color: rgba(248, 113, 113, .36) !important;
+    }
+
+    .health-forms-stat-card:nth-child(2)::before {
+        background: #fee2e2;
+    }
+
+    .health-forms-stat-card:nth-child(2)::after {
+        background: #ef4444;
+        --health-forms-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M17 20a5 5 0 0 0-10 0M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7 8a3 3 0 0 0-3-3' stroke='black' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+
+    .health-forms-stat-card:nth-child(3) {
+        border-color: rgba(127, 29, 45, .26) !important;
+    }
+
+    .health-forms-stat-card:nth-child(3)::after {
+        background: #7f1d2d;
+        --health-forms-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 21s-7-4.4-7-11a4 4 0 0 1 7-2.65A4 4 0 0 1 19 10c0 6.6-7 11-7 11Z' stroke='black' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+
+    .health-forms-stat-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(127, 29, 45, .36) !important;
+        box-shadow: 0 16px 30px rgba(112, 19, 27, .12) !important;
+    }
+
+    .health-forms-stat-card span,
+    .health-forms-stat-card strong {
+        grid-column: 2;
+        position: relative;
+        z-index: 1;
+    }
+
+    .health-forms-stat-card span {
+        color: #0f172a !important;
+        font-size: 12px !important;
+        line-height: 1.15;
+        font-weight: 900 !important;
+        letter-spacing: .04em !important;
+    }
+
+    .health-forms-stat-card strong {
+        margin-top: 6px !important;
+        color: #0f172a !important;
+        font-size: 24px !important;
+        line-height: 1 !important;
+    }
+
+    html[data-theme="dark"] .health-forms-stat-card {
+        background: rgba(15, 23, 42, .98) !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+    }
+
+    html[data-theme="dark"] .health-forms-stat-card span,
+    html[data-theme="dark"] .health-forms-stat-card strong {
+        color: #ffffff !important;
+    }
+
+    @media (max-width: 1180px) {
+        .health-forms-stat-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .health-forms-stat-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
 </style>
 @endpush
 
@@ -545,7 +698,6 @@
             <p class="health-forms-copy">Issued health forms summarized by course for the selected date range.</p>
         </div>
         <div style="display: flex; gap: 10px;">
-            <button type="button" class="health-forms-filter-trigger" onclick="openHealthFormsFilter()">Filter</button>
             <a href="{{ $applicantsListUrl }}" class="health-forms-action">Applicants List</a>
             <a href="{{ $reportsUrl }}" class="health-forms-action">&larr; Back to Reports</a>
         </div>

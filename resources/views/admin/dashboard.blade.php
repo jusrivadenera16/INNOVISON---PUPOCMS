@@ -37,14 +37,32 @@
     .stat-card::before {
         content: "";
         position: absolute;
-        right: -28px;
-        bottom: -34px;
-        width: 170px;
-        height: 110px;
-        background: url("data:image/svg+xml,%3Csvg viewBox='0 0 170 110' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 62C24 28 50 88 76 54C103 20 126 72 158 34L170 110H0Z' fill='%23facc15'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
-        opacity: .72;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 74px;
+        background:
+            url("data:image/svg+xml,%3Csvg viewBox='0 0 520 140' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 115 C70 20 130 92 190 58 C260 18 310 112 370 58 C430 6 466 76 520 48 L520 140 L0 140 Z' fill='VAR_FILL'/%3E%3Cpath d='M0 115 C70 20 130 92 190 58 C260 18 310 112 370 58 C430 6 466 76 520 48' fill='none' stroke='VAR_STROKE' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E") center bottom / 100% 100% no-repeat;
+        opacity: .92;
+        transform: translateY(var(--wave-offset, 0px));
         transition: background .22s ease, opacity .22s ease, transform .22s ease;
         z-index: 0;
+    }
+
+    .stat-card:nth-child(1)::before {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 520 140' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 115 C70 20 130 92 190 58 C260 18 310 112 370 58 C430 6 466 76 520 48 L520 140 L0 140 Z' fill='%23f9d4df' fill-opacity='.46'/%3E%3Cpath d='M0 115 C70 20 130 92 190 58 C260 18 310 112 370 58 C430 6 466 76 520 48' fill='none' stroke='%23f43f5e' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+
+    .stat-card:nth-child(2)::before {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 520 140' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 115 C70 20 130 92 190 58 C260 18 310 112 370 58 C430 6 466 76 520 48 L520 140 L0 140 Z' fill='%23fde68a' fill-opacity='.42'/%3E%3Cpath d='M0 115 C70 20 130 92 190 58 C260 18 310 112 370 58 C430 6 466 76 520 48' fill='none' stroke='%23f59e0b' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+
+    .stat-card:nth-child(3)::before {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 520 140' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 115 C70 20 130 92 190 58 C260 18 310 112 370 58 C430 6 466 76 520 48 L520 140 L0 140 Z' fill='%23bbf7d0' fill-opacity='.42'/%3E%3Cpath d='M0 115 C70 20 130 92 190 58 C260 18 310 112 370 58 C430 6 466 76 520 48' fill='none' stroke='%2322c55e' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+
+    .stat-card:nth-child(4)::before {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 520 140' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 115 C70 20 130 92 190 58 C260 18 310 112 370 58 C430 6 466 76 520 48 L520 140 L0 140 Z' fill='%23bfdbfe' fill-opacity='.42'/%3E%3Cpath d='M0 115 C70 20 130 92 190 58 C260 18 310 112 370 58 C430 6 466 76 520 48' fill='none' stroke='%233b82f6' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E");
     }
 
     .stat-card::after {
@@ -69,9 +87,8 @@
     }
 
     .stat-card:hover::before {
-        background: url("data:image/svg+xml,%3Csvg viewBox='0 0 170 110' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 62C24 28 50 88 76 54C103 20 126 72 158 34L170 110H0Z' fill='%237f1d2d'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
-        opacity: .86;
-        transform: translateY(-4px);
+        opacity: 1;
+        transform: translateY(calc(var(--wave-offset, 0px) - 3px));
     }
 
     .stat-card:hover::after {
@@ -94,13 +111,25 @@
         flex: 0 0 auto;
         padding: 5px 9px;
         border-radius: 999px;
-        background: rgba(250, 204, 21, .16);
-        border: 1px solid rgba(250, 204, 21, .32);
-        color: #facc15;
+        background: rgba(255, 255, 255, .14);
+        border: 1px solid rgba(255, 255, 255, .26);
+        color: #ffffff;
         font-size: 11px;
         font-weight: 900;
         line-height: 1;
         white-space: nowrap;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
     }
 
     /* Distinct Colors for active states if needed, 
@@ -133,18 +162,24 @@
         z-index: 1;
         display: inline-block;
         font-size: 11px;
-        font-weight: 600;
-        padding: 4px 10px;
-        border-radius: 6px;
+        font-weight: 900;
+        padding: 5px 10px;
+        border-radius: 999px;
         width: fit-content;
+        color: #70131B !important;
+        background: rgba(255, 255, 255, .92) !important;
+        border: 1px solid rgba(255, 255, 255, .68);
+        box-shadow: 0 8px 16px rgba(15, 23, 42, .10);
     }
 
     /* Badge Colors */
-    .badge-neutral { background: rgba(255,255,255,0.1); color: #cbd5e1; }
-    .badge-warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; } /* Orange tint */
-    .badge-success { background: rgba(16, 185, 129, 0.2); color: #34d399; } /* Green tint */
-    .badge-info    { background: rgba(59, 130, 246, 0.2); color: #60a5fa; } /* Blue tint */
-    .badge-danger  { background: rgba(239, 68, 68, 0.2);  color: #f87171; } /* Red tint */
+    .badge-neutral,
+    .badge-warning,
+    .badge-success,
+    .badge-info,
+    .badge-danger {
+        color: #70131B !important;
+    }
 
 
     /* --- 2. RECENT ACTIVITY PANEL --- */
@@ -368,14 +403,18 @@
     $pendingRate = $dashboardPercent($pending, $total);
     $todayRate = $dashboardPercent($upcoming, $total);
     $stockHealthRate = $dashboardPercent($inventoryInStock, $inventoryTotal);
+    $dashboardWaveOffset = function ($rate) {
+        $rate = max(0, min(100, (int) $rate));
+        return (int) round((100 - $rate) * 0.52);
+    };
 @endphp
 <div class="dashboard-container">
     <div class="stats-grid">
         
-        <div class="stat-card">
+        <div class="stat-card" style="--wave-offset: {{ $dashboardWaveOffset($completionRate) }}px;">
             <div class="stat-card-top">
                 <div class="stat-label">Total Appointments</div>
-                <span class="stat-percent">{{ $completionRate }}%</span>
+                <span class="stat-percent"><span class="sr-only">Completion rate </span>{{ $completionRate }}%</span>
             </div>
             <div>
                 <div class="stat-value">{{ $total }}</div>
@@ -383,10 +422,10 @@
             <div class="stat-badge badge-neutral">Completion Rate</div>
         </div>
 
-        <div class="stat-card">
+        <div class="stat-card" style="--wave-offset: {{ $dashboardWaveOffset($pendingRate) }}px;">
             <div class="stat-card-top">
                 <div class="stat-label">Pending Requests</div>
-                <span class="stat-percent">{{ $pendingRate }}%</span>
+                <span class="stat-percent"><span class="sr-only">Pending rate </span>{{ $pendingRate }}%</span>
             </div>
             <div>
                 <div class="stat-value">{{ $pending }}</div>
@@ -394,10 +433,10 @@
             <div class="stat-badge badge-warning">Action Needed</div>
         </div>
 
-        <div class="stat-card">
+        <div class="stat-card" style="--wave-offset: {{ $dashboardWaveOffset($todayRate) }}px;">
             <div class="stat-card-top">
                 <div class="stat-label">Scheduled Today</div>
-                <span class="stat-percent">{{ $todayRate }}%</span>
+                <span class="stat-percent"><span class="sr-only">Scheduled today rate </span>{{ $todayRate }}%</span>
             </div>
             <div>
                 <div class="stat-value">{{ $upcoming }}</div>
@@ -405,10 +444,10 @@
             <div class="stat-badge badge-success">Scheduled</div>
         </div>
 
-        <div class="stat-card">
+        <div class="stat-card" style="--wave-offset: {{ $dashboardWaveOffset($stockHealthRate) }}px;">
             <div class="stat-card-top">
                 <div class="stat-label">Inventory Items</div>
-                <span class="stat-percent">{{ $stockHealthRate }}%</span>
+                <span class="stat-percent"><span class="sr-only">Stock health rate </span>{{ $stockHealthRate }}%</span>
             </div>
             <div>
                 <div class="stat-value">{{ $inventoryTotal }}</div>

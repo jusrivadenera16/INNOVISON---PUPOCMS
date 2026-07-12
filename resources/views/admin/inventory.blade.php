@@ -3164,7 +3164,7 @@
     }
     body.admin-inventory-page .inventory-summary-head {
         align-items: end;
-        padding: 18px 20px 8px;
+        padding: 12px 20px 8px;
     }
     body.admin-inventory-page .inventory-search-wrap,
     body.admin-inventory-page .inventory-search-shell.is-open .inventory-search-wrap {
@@ -3286,7 +3286,7 @@
         height: 20px;
         display: block;
         margin: 0;
-        transform: translateY(3px);
+        transform: translateY(7px);
     }
     body.admin-inventory-page .inventory-last-updated span {
         display: block;
@@ -3306,6 +3306,31 @@
     }
     body.admin-inventory-page .inventory-title-block {
         min-width: 0;
+        display: grid !important;
+        grid-template-columns: 56px minmax(0, 1fr) !important;
+        column-gap: 12px !important;
+        row-gap: 2px !important;
+        align-items: center !important;
+    }
+    body.admin-inventory-page .inventory-title-block .inventory-page-title {
+        display: contents !important;
+    }
+    body.admin-inventory-page .inventory-title-block .inventory-page-title svg {
+        grid-column: 1 !important;
+        grid-row: 1 / span 2 !important;
+        margin-right: 0 !important;
+        align-self: center !important;
+    }
+    body.admin-inventory-page .inventory-title-block .inventory-page-title span,
+    body.admin-inventory-page .inventory-title-block .inventory-page-title {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+    }
+    body.admin-inventory-page .inventory-title-block .inventory-page-description {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+        margin: 0 !important;
+        align-self: start !important;
     }
     body.admin-inventory-page .inventory-modern-summary-container {
         width: 100% !important;
@@ -3371,6 +3396,19 @@
         color: #70131B !important;
         border-color: #facc15 !important;
         transform: translateY(-3px);
+        box-shadow: 0 18px 34px rgba(112, 19, 27, .14);
+        outline: none;
+    }
+    body.admin-inventory-page .inventory-modern-card:not(.is-clickable):hover::before,
+    body.admin-inventory-page .inventory-modern-card:not(.is-clickable):focus-visible::before {
+        opacity: 1;
+        transform: translateX(510%) skewX(-18deg);
+    }
+    body.admin-inventory-page .inventory-modern-card:not(.is-clickable):hover,
+    body.admin-inventory-page .inventory-modern-card:not(.is-clickable):focus-visible {
+        transform: translateY(-3px);
+        border-color: rgba(112, 19, 27, .24);
+        background: #fffaf0;
         box-shadow: 0 18px 34px rgba(112, 19, 27, .14);
         outline: none;
     }
@@ -3544,7 +3582,7 @@
     }
 
     body.admin-inventory-page .inventory-title-block .inventory-page-description {
-        margin-left: 66px !important;
+        margin-left: 0 !important;
     }
     body.admin-inventory-page .inventory-modern-summary-container {
         gap: 10px !important;
@@ -3634,7 +3672,7 @@
     <div class="controls">
         <div class="inventory-overview-head">
             <div class="inventory-title-block">
-                <h2 class="inventory-page-title"><x-outline-icon name="cube" />Clinic Inventory</h2>
+                <h2 class="inventory-page-title"><x-outline-icon name="cube" /><span>Clinic Inventory</span></h2>
                 <p class="inventory-page-description">Track medicines, supplies, stock levels, and clinic inventory movement.</p>
             </div>
             <div class="inventory-last-updated">

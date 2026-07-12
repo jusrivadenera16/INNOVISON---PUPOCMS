@@ -1002,6 +1002,85 @@
             grid-template-columns: 1fr;
         }
     }
+    @media (min-width: 901px) {
+        .dev-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            align-items: stretch;
+        }
+    }
+    .dev-card,
+    button.dev-card {
+        text-align: left;
+    }
+    .dev-card h2,
+    .dev-card p,
+    .dev-card .dev-action {
+        color: #ffffff !important;
+    }
+    .dev-card:hover h2,
+    .dev-card:focus-visible h2,
+    .dev-card:hover p,
+    .dev-card:focus-visible p,
+    .dev-card:hover .dev-action,
+    .dev-card:focus-visible .dev-action {
+        color: #70131B !important;
+    }
+
+    /* Patient Intake sizing parity */
+    .dev-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+        gap: 16px !important;
+        margin-top: 24px !important;
+    }
+    .dev-card,
+    button.dev-card {
+        min-height: unset !important;
+        height: 100% !important;
+        padding: 20px !important;
+        border-radius: 16px !important;
+    }
+    .dev-icon {
+        width: 58px !important;
+        height: 58px !important;
+        border-radius: 16px !important;
+        margin-bottom: 14px !important;
+    }
+    .dev-icon svg {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    .dev-card h2 {
+        margin: 0 0 8px !important;
+        font-size: 18px !important;
+        line-height: 1.25 !important;
+    }
+    .dev-card p,
+    .dev-card .dev-action {
+        font-size: 16px !important;
+        line-height: 1.55 !important;
+    }
+    .dev-action {
+        margin-top: 16px !important;
+    }
+    @media (min-width: 721px) {
+        .dev-grid {
+            grid-template-columns: repeat(2, minmax(220px, 224px)) !important;
+            justify-content: center !important;
+            align-items: stretch !important;
+        }
+    }
+    @media (max-width: 720px) {
+        .dev-grid {
+            grid-template-columns: 1fr !important;
+            justify-content: stretch !important;
+        }
+    }
+    @media (min-width: 721px) {
+        .dev-card,
+        button.dev-card {
+            min-height: 293px !important;
+        }
+    }
 </style>
 @endpush
 

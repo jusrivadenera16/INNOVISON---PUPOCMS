@@ -993,6 +993,111 @@
         stroke: currentColor !important;
     }
 
+    /* Patient Intake sizing parity */
+    .report-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+        gap: 16px !important;
+        margin-top: 24px !important;
+    }
+    .report-card,
+    .report-card.report-card-audit {
+        min-height: 314px !important;
+        height: 100% !important;
+        padding: 20px !important;
+        border-radius: 16px !important;
+    }
+    .report-card-chip {
+        top: 12px !important;
+        right: 12px !important;
+        width: 28px !important;
+        height: 28px !important;
+    }
+    .report-card-icon,
+    .report-card.report-card-audit .report-card-icon {
+        width: 58px !important;
+        height: 58px !important;
+        border-radius: 16px !important;
+        margin-bottom: 14px !important;
+    }
+    .report-card-icon svg {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    .report-main-title {
+        margin: 0 0 8px !important;
+        font-size: 18px !important;
+        line-height: 1.25 !important;
+    }
+    .report-card-copy {
+        font-size: 16px !important;
+        line-height: 1.55 !important;
+    }
+    .report-card,
+    .report-card.report-card-primary,
+    .report-card.report-card-audit,
+    html[data-theme="dark"] .report-card,
+    html[data-theme="dark"] .report-card.report-card-primary,
+    html[data-theme="dark"] .report-card.report-card-audit {
+        background: #70131B !important;
+        background-image: none !important;
+    }
+    .report-card::before,
+    .report-card.report-card-primary::before,
+    .report-card.report-card-audit::before {
+        background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 38%) !important;
+    }
+    .report-card:hover,
+    .report-card:focus-visible,
+    .report-card.report-card-primary:hover,
+    .report-card.report-card-primary:focus-visible,
+    .report-card.report-card-audit:hover,
+    .report-card.report-card-audit:focus-visible,
+    html[data-theme="dark"] .report-card:hover,
+    html[data-theme="dark"] .report-card:focus-visible,
+    html[data-theme="dark"] .report-card.report-card-primary:hover,
+    html[data-theme="dark"] .report-card.report-card-primary:focus-visible,
+    html[data-theme="dark"] .report-card.report-card-audit:hover,
+    html[data-theme="dark"] .report-card.report-card-audit:focus-visible {
+        background: #facc15 !important;
+        background-image: none !important;
+    }
+    .report-card .report-card-icon,
+    .report-card.report-card-primary .report-card-icon,
+    .report-card.report-card-audit .report-card-icon,
+    .report-card:hover .report-card-icon,
+    .report-card:focus-visible .report-card-icon,
+    .report-card.report-card-primary:hover .report-card-icon,
+    .report-card.report-card-primary:focus-visible .report-card-icon,
+    .report-card.report-card-audit:hover .report-card-icon,
+    .report-card.report-card-audit:focus-visible .report-card-icon {
+        color: #facc15 !important;
+    }
+    .report-card .report-card-icon svg,
+    .report-card .report-card-icon svg *,
+    .report-card.report-card-primary .report-card-icon svg,
+    .report-card.report-card-primary .report-card-icon svg *,
+    .report-card.report-card-audit .report-card-icon svg,
+    .report-card.report-card-audit .report-card-icon svg *,
+    .report-card:hover .report-card-icon svg,
+    .report-card:hover .report-card-icon svg *,
+    .report-card:focus-visible .report-card-icon svg,
+    .report-card:focus-visible .report-card-icon svg *,
+    .report-card.report-card-primary:hover .report-card-icon svg,
+    .report-card.report-card-primary:hover .report-card-icon svg *,
+    .report-card.report-card-primary:focus-visible .report-card-icon svg,
+    .report-card.report-card-primary:focus-visible .report-card-icon svg *,
+    .report-card.report-card-audit:hover .report-card-icon svg,
+    .report-card.report-card-audit:hover .report-card-icon svg *,
+    .report-card.report-card-audit:focus-visible .report-card-icon svg,
+    .report-card.report-card-audit:focus-visible .report-card-icon svg * {
+        color: #facc15 !important;
+        stroke: #facc15 !important;
+    }
+    .reports-header-description {
+        max-width: none !important;
+        width: 100% !important;
+    }
+
 </style>
 @endpush
 
@@ -1013,7 +1118,7 @@
         {{-- Reports Header --}}
         <div class="reports-header">
             <h1 class="reports-header-title">Reports</h1>
-            <p class="reports-header-description">Access comprehensive reports on clinic operations, medical records, inventory, and patient statistics.</p>
+            <p class="reports-header-description">Access reports on clinic operations, medical records, inventory, and patient statistics.</p>
         </div>
 
         <div class="report-grid">

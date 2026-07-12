@@ -199,8 +199,8 @@
         border: 1px solid #8f2230;
         background: linear-gradient(135deg, #70131B, #8f2230);
         color: #ffffff;
-        border-radius: 999px;
-        padding: 10px 14px;
+        border-radius: 10px;
+        padding: 11px 15px;
         font-size: 13px;
         font-weight: 800;
         cursor: pointer;
@@ -254,7 +254,7 @@
     }
     .table-panel-title {
         margin: 18px 0 8px;
-        display: inline-flex;
+        display: none;
         align-items: center;
         padding: 8px 14px;
         border-radius: 999px;
@@ -383,24 +383,58 @@
 
     /* Back to Reports Button */
     .mar-back-button {
-        display: inline-block;
-        padding: 0;
-        border: none;
-        background: none;
-        color: #000000;
+        min-width: 132px;
+        width: auto !important;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        gap: 7px;
+        padding: 10px 16px;
+        border: 1px solid #7f1d2d;
+        border-radius: 14px;
+        background: #7f1d2d;
+        color: #ffffff !important;
         font-size: 13px;
-        font-weight: 600;
+        font-weight: 800;
         text-decoration: none;
         white-space: nowrap;
-        cursor: pointer;
-        transition: color .2s ease;
+        box-shadow: 0 0 0 2px rgba(112, 19, 27, 0.09), 0 10px 20px rgba(15, 23, 42, 0.08);
+        transition: color .08s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
+        z-index: 0;
+    }
+
+    .mar-back-button::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(250, 204, 21, 0) 0%, rgba(250, 204, 21, 0.46) 45%, rgba(250, 204, 21, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.5s ease;
+        pointer-events: none;
+        z-index: -1;
     }
 
     .mar-back-button:hover,
     .mar-back-button:focus {
-        color: #333333;
+        color: #70131B !important;
+        border-color: #facc15;
+        background: #facc15;
+        box-shadow: 0 0 0 2px rgba(112, 19, 27, 0.12), 0 12px 28px rgba(15, 23, 42, 0.12);
+        transform: translateY(-1px);
         outline: none;
-        text-decoration: underline;
+        text-decoration: none;
+    }
+
+    .mar-back-button:hover::after,
+    .mar-back-button:focus::after {
+        left: 125%;
     }
 </style>
 @endpush
@@ -420,13 +454,10 @@
 
 
 
- <a href="{{ $reportsHomeUrl }}" class="mar-back-button">&larr; Back to Reports</a>
-
-
-
 <div class="card">
     <div class="mar-header-bar">
         <h2>Medical Accomplishment Report</h2>
+        <a href="{{ $reportsHomeUrl }}" class="mar-back-button">&larr; Back to Reports</a>
     </div>
 
     <form method="GET" class="mar-filter-bar">
