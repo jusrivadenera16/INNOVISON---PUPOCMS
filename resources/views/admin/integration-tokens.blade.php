@@ -849,7 +849,7 @@
                             <span class="system-avatar">{{ $initial }}</span>
                             <span>
                                 <span style="font-weight: 600;">{{ $client->system_name }}</span>
-                                <small><span class="status-dot {{ $hasToken && $client->is_active ? '' : 'warn' }}"></span>{{ $client->is_active ? ($hasToken ? 'Connected' : 'No token') : 'Inactive' }}</small>
+                                <small><span class="status-dot {{ $hasToken && $client->is_active ? '' : 'warn' }}"></span><span class="system-status-text">{{ $client->is_active ? ($hasToken ? 'Connected' : 'No token') : 'Inactive' }}</span></small>
                             </span>
                             <span class="item-last-used">
                                 {{ $latest && $latest->last_used_at ? $latest->last_used_at->diffForHumans() : ($latest ? 'Never used' : 'No token') }}
@@ -889,7 +889,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                <span class="connected-pill {{ $hasToken && $client->is_active ? '' : 'muted' }}">
+                                <span class="connected-pill client-status-pill {{ $hasToken && $client->is_active ? '' : 'muted' }}">
                                     {{ $client->is_active ? ($hasToken ? 'Connected' : 'No Token') : 'Inactive' }}
                                 </span>
                             </div>
@@ -918,8 +918,8 @@
                         <div class="token-facts">
                             <div class="fact-card">
                                 <span>Created</span>
-                                <span style="font-weight: 600; display: block; margin: 4px 0;">{{ $hasToken ? $latest->created_at->format('M d, Y') : 'N/A' }}</span>
-                                <small>{{ $hasToken ? $latest->created_at->format('h:i A') : 'No token' }}</small>
+                                <span class="token-created-date" style="font-weight: 600; display: block; margin: 4px 0;">{{ $hasToken ? $latest->created_at->format('M d, Y') : 'N/A' }}</span>
+                                <small class="token-created-time">{{ $hasToken ? $latest->created_at->format('h:i A') : 'No token' }}</small>
                             </div>
                             <div class="fact-card">
                                 <span>Last Used</span>
@@ -933,8 +933,8 @@
                             </div>
                             <div class="fact-card">
                                 <span>Permissions</span>
-                                <span style="font-weight: 600; display: block; margin: 4px 0;">{{ $hasToken ? count($latest->abilities ?? []) . ' abilities' : 'None' }}</span>
-                                <small>{{ $abilities }}</small>
+                                <span class="token-ability-count" style="font-weight: 600; display: block; margin: 4px 0;">{{ $hasToken ? count($latest->abilities ?? []) . ' abilities' : 'None' }}</span>
+                                <small class="token-ability-list">{{ $abilities }}</small>
                             </div>
                         </div>
 
@@ -1128,6 +1128,71 @@
 
     let tokenIsVisible = false;
 
+    function updateGeneratedTokenUi(clientId, systemName, data) {
+        const detail = document.querySelector(`.detail-card[data-client-id="${clientId}"]`);
+        const systemItem = document.querySelector(`.system-item[data-client-id="${clientId}"]`);
+        const tokenId = data.token_id || 'N/A';
+        const abilities = Array.isArray(data.abilities) ? data.abilities : [];
+        const createdDate = data.created_date || new Date().toLocaleDateString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric'
+        });
+        const createdTime = data.created_time || new Date().toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        if (detail) {
+            const statusPill = detail.querySelector('.client-status-pill');
+            const tokenValue = detail.querySelector('.masked-token-value');
+            const copyButton = detail.querySelector('.copy-detail-token-btn');
+            const revokeButton = detail.querySelector('.danger-btn');
+            const createdDateEl = detail.querySelector('.token-created-date');
+            const createdTimeEl = detail.querySelector('.token-created-time');
+            const abilityCount = detail.querySelector('.token-ability-count');
+            const abilityList = detail.querySelector('.token-ability-list');
+
+            statusPill?.classList.remove('muted');
+            if (statusPill) statusPill.textContent = 'Connected';
+            if (tokenValue) tokenValue.textContent = `Token ID ${tokenId}  |  ${'*'.repeat(80)}`;
+            copyButton?.removeAttribute('disabled');
+            if (createdDateEl) createdDateEl.textContent = createdDate;
+            if (createdTimeEl) createdTimeEl.textContent = createdTime;
+            if (abilityCount) abilityCount.textContent = `${abilities.length} ${abilities.length === 1 ? 'ability' : 'abilities'}`;
+            if (abilityList) abilityList.textContent = abilities.length ? abilities.join(', ') : 'None';
+            if (revokeButton) {
+                revokeButton.removeAttribute('disabled');
+                revokeButton.setAttribute('onclick', `revokeToken('${clientId}', '${String(systemName).replace(/'/g, "\\'")}', '${tokenId}')`);
+            }
+        }
+
+        if (systemItem) {
+            systemItem.dataset.status = 'connected';
+            const statusDot = systemItem.querySelector('.status-dot');
+            const statusText = systemItem.querySelector('.system-status-text');
+            const lastUsed = systemItem.querySelector('.item-last-used');
+
+            statusDot?.classList.remove('warn');
+            if (statusText) statusText.textContent = 'Connected';
+            if (lastUsed) lastUsed.textContent = 'Never used';
+        }
+
+        const statCards = document.querySelectorAll('.integration-stats .stat-card');
+        const generatedCount = statCards[1]?.querySelector('.stat-value');
+        const lastGeneratedDate = statCards[3]?.querySelector('.stat-value');
+        const lastGeneratedSystem = statCards[3]?.querySelector('.stat-sub');
+
+        if (generatedCount) {
+            const currentCount = Number.parseInt(generatedCount.textContent.trim(), 10);
+            generatedCount.textContent = Number.isNaN(currentCount) ? '1' : String(currentCount + 1);
+        }
+        if (lastGeneratedDate) lastGeneratedDate.textContent = `${createdDate.replace(',', '')}, ${createdTime}`;
+        if (lastGeneratedSystem) lastGeneratedSystem.textContent = systemName;
+
+        filterIntegrations();
+    }
+
     function toggleTokenVisibility() {
         const tokenBox = document.getElementById('generatedTokenValue');
         const eyeIcon = document.getElementById('tokenEyeIcon');
@@ -1186,6 +1251,7 @@
                 document.getElementById('generatedTokenValue').textContent = latestGeneratedToken;
                 document.getElementById('generatedTokenMeta').innerHTML = `<strong>System:</strong> ${systemName} | <strong>Token ID:</strong> ${data.token_id || 'N/A'} | <strong>Abilities:</strong> ${(data.abilities || []).join(', ')}`;
                 document.getElementById('generatedTokenModal').classList.add('show');
+                updateGeneratedTokenUi(clientId, systemName, data);
                 tokenIsVisible = false;
                 document.getElementById('generatedTokenValue').style.fontFamily = 'inherit';
                 document.getElementById('generatedTokenValue').textContent = '*'.repeat(80);

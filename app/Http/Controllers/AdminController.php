@@ -3845,6 +3845,8 @@ public function inventorySummary()
                 'token' => $newToken->plainTextToken,
                 'token_id' => $newToken->accessToken->id,
                 'abilities' => $abilities,
+                'created_date' => optional($newToken->accessToken->created_at)->format('M d, Y'),
+                'created_time' => optional($newToken->accessToken->created_at)->format('h:i A'),
             ]);
         } catch (\Exception $e) {
             return response()->json([
