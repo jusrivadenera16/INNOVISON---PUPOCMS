@@ -13,9 +13,11 @@ use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\StudentAssistantController;
 use App\Http\Controllers\WalkInController;
 use App\Models\Admin;
+use App\Models\Announcement;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 
 if (!function_exists('resolveWorkspaceRedirectForUser')) {
     function resolveWorkspaceRedirectForUser(User $user): string
@@ -76,7 +78,21 @@ Route::get('/', function () {
         return redirect(resolveWorkspaceRedirectForUser($user));
     }
 
-    return view('landing');
+    $landingAnnouncements = collect();
+
+    if (Schema::hasTable('announcements')) {
+        $landingAnnouncements = Announcement::query()
+            ->where('status', Announcement::STATUS_ACTIVE)
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhereDate('expires_at', '>=', now()->toDateString());
+            })
+            ->latest()
+            ->take(6)
+            ->get();
+    }
+
+    return view('landing', compact('landingAnnouncements'));
 })->name('landing');
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::get('/login/portal', [LoginController::class, 'redirectToIdpPortal'])->name('login.portal');
@@ -266,6 +282,9 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::get('/admin/notifications/feed', [AdminController::class, 'notificationsFeed'])->name('admin.notifications.feed');
         Route::post('/admin/notifications/mark-all-read', [AdminController::class, 'markAllAdminNotificationsRead'])->name('admin.notifications.read_all');
         Route::get('/admin/announcements', [AdminController::class, 'announcements'])->name('admin.announcements');
+        Route::post('/admin/announcements', [AdminController::class, 'storeAnnouncement'])->name('admin.announcements.store');
+        Route::patch('/admin/announcements/{announcement}/archive', [AdminController::class, 'archiveAnnouncement'])->name('admin.announcements.archive');
+        Route::delete('/admin/announcements/{announcement}', [AdminController::class, 'destroyAnnouncement'])->name('admin.announcements.destroy');
         Route::get('/admin/user-management', [AdminUserController::class, 'index'])->name('admin.user-management');
         Route::get('/admin/user-management/account-access', [AdminUserController::class, 'accountAccess'])->name('admin.user-management.account-access');
         Route::get('/admin/user-management/admin-hub', [AdminUserController::class, 'adminHub'])->name('admin.user-management.admin-hub');

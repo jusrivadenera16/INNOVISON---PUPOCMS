@@ -122,12 +122,41 @@
 
         :where(.asw-menu-btn) {
             position: fixed;
+            left: -9999px !important;
+            right: auto !important;
+            bottom: auto !important;
+            top: auto !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            transform: none !important;
+            z-index: -1 !important;
             overflow: visible !important;
             background: #800000 !important;
             background-image: none !important;
             border: 2px solid #5f0012 !important;
             outline: none !important;
             box-shadow: 0 10px 24px rgba(128, 0, 0, 0.28) !important;
+        }
+
+        :where(.asw-menu-btn.admin-sienna-trigger-hidden),
+        :where(.sienna-accessibility-button.admin-sienna-trigger-hidden),
+        :where(.sienna-accessibility-trigger.admin-sienna-trigger-hidden),
+        :where([data-sienna-accessibility-trigger].admin-sienna-trigger-hidden) {
+            position: fixed !important;
+            left: -9999px !important;
+            right: auto !important;
+            bottom: auto !important;
+            top: auto !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            transform: none !important;
+            z-index: -1 !important;
+        }
+
+        :where(.admin-sienna-trigger-hidden)::after {
+            display: none !important;
         }
 
         :where(.asw-menu-btn)::after {
@@ -4539,7 +4568,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.282m3.102.069a18.03 18.03 0 0 1-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 0 1 8.835 2.535M10.34 6.66a23.847 23.847 0 0 0 8.835-2.535m0 0A23.74 23.74 0 0 0 18.795 3m.38 1.125a23.91 23.91 0 0 1 1.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 0 0 1.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 0 1 0 3.46" />
           </svg>
-        </span><span class="sidebar-label">Announcement</span>
+        </span><span class="sidebar-label">Announcements</span>
       </a>
       @if($isAdminLike)
           <a href="{{ route('admin.logs') }}" class="nav-audit {{ (request()->routeIs('admin.logs') || Request::is('admin/activity-logs*')) ? 'active' : '' }}">
@@ -5419,6 +5448,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
         function findSiennaTrigger() {
             const selectorMatches = [
+                '.asw-menu-btn',
                 '#sienna-accessibility-button',
                 '.sienna-accessibility-button',
                 '.sienna-accessibility-trigger',
@@ -5462,10 +5492,27 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 return;
             }
 
-            trigger.style.position = 'fixed';
-            trigger.style.left = '-9999px';
-            trigger.style.opacity = '0';
-            trigger.style.pointerEvents = 'none';
+            const alreadyHidden =
+                trigger.classList.contains('admin-sienna-trigger-hidden') &&
+                trigger.style.getPropertyValue('left') === '-9999px' &&
+                trigger.style.getPropertyValue('visibility') === 'hidden';
+
+            if (alreadyHidden) {
+                trigger.setAttribute('aria-hidden', 'true');
+                return;
+            }
+
+            trigger.classList.add('admin-sienna-trigger-hidden');
+            trigger.style.setProperty('position', 'fixed', 'important');
+            trigger.style.setProperty('left', '-9999px', 'important');
+            trigger.style.setProperty('right', 'auto', 'important');
+            trigger.style.setProperty('bottom', 'auto', 'important');
+            trigger.style.setProperty('top', 'auto', 'important');
+            trigger.style.setProperty('opacity', '0', 'important');
+            trigger.style.setProperty('visibility', 'hidden', 'important');
+            trigger.style.setProperty('pointer-events', 'none', 'important');
+            trigger.style.setProperty('transform', 'none', 'important');
+            trigger.style.setProperty('z-index', '-1', 'important');
             trigger.setAttribute('aria-hidden', 'true');
         }
 
@@ -5586,8 +5633,15 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
         observer.observe(document.body, {
             childList: true,
-            subtree: true
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class', 'style']
         });
+
+        window.addEventListener('focus', hideSiennaTrigger);
+        window.addEventListener('pageshow', hideSiennaTrigger);
+        window.setTimeout(hideSiennaTrigger, 150);
+        window.setTimeout(hideSiennaTrigger, 500);
     }
 
     function toggleProfileMenu() {

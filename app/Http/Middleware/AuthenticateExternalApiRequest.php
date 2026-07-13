@@ -6,6 +6,7 @@ use App\Models\IntegrationClient;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -85,7 +86,18 @@ class AuthenticateExternalApiRequest
                 'sanctum'
             );
 
-            return $next($request);
+            $startedAt = microtime(true);
+            $response = $next($request);
+            $this->logIntegrationRequest($request, $response, [
+                'integration_client_id' => $client->id,
+                'token_id' => $accessToken->id,
+                'system_key' => $client->system_key,
+                'system_name' => $client->system_name,
+                'auth_method' => 'sanctum',
+                'started_at' => $startedAt,
+            ]);
+
+            return $response;
         }
 
     
@@ -136,7 +148,16 @@ class AuthenticateExternalApiRequest
                     'legacy-static-key'
                 );
 
-                return $next($request);
+                $startedAt = microtime(true);
+                $response = $next($request);
+                $this->logIntegrationRequest($request, $response, [
+                    'system_key' => $requestedSystem,
+                    'system_name' => $requestedSystem,
+                    'auth_method' => 'legacy-static-key',
+                    'started_at' => $startedAt,
+                ]);
+
+                return $response;
             }
 
             $matchedSystem = $systemKeys
@@ -162,7 +183,16 @@ class AuthenticateExternalApiRequest
                 'legacy-static-key'
             );
 
-            return $next($request);
+            $startedAt = microtime(true);
+            $response = $next($request);
+            $this->logIntegrationRequest($request, $response, [
+                'system_key' => $matchedSystem,
+                'system_name' => $matchedSystem,
+                'auth_method' => 'legacy-static-key',
+                'started_at' => $startedAt,
+            ]);
+
+            return $response;
         }
 
         if (!hash_equals($expectedKey, $providedCredential)) {
@@ -171,6 +201,57 @@ class AuthenticateExternalApiRequest
             ], 403);
         }
 
-        return $next($request);
+        $startedAt = microtime(true);
+        $response = $next($request);
+        $this->logIntegrationRequest($request, $response, [
+            'system_key' => 'legacy',
+            'system_name' => 'Legacy API Key',
+            'auth_method' => 'legacy-static-key',
+            'started_at' => $startedAt,
+        ]);
+
+        return $response;
+    }
+
+    private function logIntegrationRequest(Request $request, $response, array $context): void
+    {
+        try {
+            if (!Schema::hasTable('integration_request_logs')) {
+                return;
+            }
+
+            $statusCode = method_exists($response, 'getStatusCode')
+                ? (int) $response->getStatusCode()
+                : null;
+
+            $errorMessage = null;
+            if ($statusCode !== null && $statusCode >= 400) {
+                $content = method_exists($response, 'getContent') ? (string) $response->getContent() : '';
+                $decoded = json_decode($content, true);
+                $errorMessage = is_array($decoded)
+                    ? (string) ($decoded['message'] ?? $decoded['error'] ?? mb_substr($content, 0, 500))
+                    : mb_substr($content, 0, 500);
+            }
+
+            DB::table('integration_request_logs')->insert([
+                'integration_client_id' => $context['integration_client_id'] ?? null,
+                'token_id' => $context['token_id'] ?? null,
+                'system_key' => (string) ($context['system_key'] ?? 'unknown'),
+                'system_name' => $context['system_name'] ?? null,
+                'auth_method' => $context['auth_method'] ?? null,
+                'http_method' => $request->method(),
+                'endpoint' => '/' . ltrim($request->path(), '/'),
+                'status_code' => $statusCode,
+                'response_time_ms' => isset($context['started_at'])
+                    ? (int) round((microtime(true) - (float) $context['started_at']) * 1000)
+                    : null,
+                'error_message' => $errorMessage,
+                'ip_address' => $request->ip(),
+                'user_agent' => mb_substr((string) $request->userAgent(), 0, 255),
+                'created_at' => now(),
+            ]);
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
     }
 }

@@ -970,9 +970,9 @@
     }
 
     .api-pin-dialog {
-        width: min(440px, 100%);
+        width: min(620px, 100%);
         overflow: hidden;
-        border-radius: 20px;
+        border-radius: 18px;
         border: 1px solid rgba(255, 255, 255, .18);
         background: #ffffff;
         box-shadow: 0 24px 70px rgba(15, 23, 42, .26);
@@ -983,22 +983,46 @@
         align-items: center;
         justify-content: space-between;
         gap: 14px;
-        padding: 20px;
-        background: #8f1827;
+        padding: 20px 22px;
+        background: linear-gradient(135deg, #9d1427 0%, #710012 100%);
         color: #ffffff;
+    }
+
+    .api-pin-head-main {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .api-pin-head-icon {
+        width: 52px;
+        height: 52px;
+        flex: 0 0 52px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, .12);
+        border: 1px solid rgba(255, 255, 255, .18);
+        color: #ffffff;
+    }
+
+    .api-pin-head-icon svg {
+        width: 30px;
+        height: 30px;
     }
 
     .api-pin-head h3 {
         margin: 0;
         color: #ffffff;
-        font-size: 20px;
+        font-size: 22px;
         font-weight: 950;
     }
 
     .api-pin-head p {
-        margin: 4px 0 0;
-        color: rgba(255,255,255,.84);
-        font-size: 13px;
+        margin: 5px 0 0;
+        color: rgba(255,255,255,.9);
+        font-size: 14px;
         font-weight: 700;
     }
 
@@ -1025,30 +1049,151 @@
 
     .api-pin-body {
         display: grid;
-        gap: 12px;
-        padding: 22px;
+        gap: 14px;
+        padding: 18px 24px 0;
     }
 
-    .api-pin-body label {
-        color: #0f172a;
-        font-size: 12px;
+    .api-pin-warning {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-radius: 10px;
+        border: 1px solid #f1ccd3;
+        background: linear-gradient(135deg, #fff7f8, #ffffff);
+        padding: 12px 16px;
+    }
+
+    .api-pin-warning-icon {
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #ffe7eb;
+        color: #8f1827;
+    }
+
+    .api-pin-warning-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .api-pin-warning strong {
+        display: block;
+        color: #8f1827;
+        font-size: 15px;
         font-weight: 950;
-        letter-spacing: .05em;
+    }
+
+    .api-pin-warning span {
+        display: block;
+        margin-top: 3px;
+        color: #3f2a32;
+        font-size: 13px;
+        font-weight: 750;
+    }
+
+    .api-pin-entry {
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        padding: 0 0 2px;
+        text-align: center;
+    }
+
+    .api-pin-entry-icon {
+        color: #111827;
+    }
+
+    .api-pin-entry-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .api-pin-entry-title {
+        color: #111827;
+        font-size: 15px;
+        font-weight: 950;
+        letter-spacing: .04em;
         text-transform: uppercase;
     }
 
-    .api-pin-body input {
+    .api-pin-entry-copy {
+        margin-top: -6px;
+        color: #4b5563;
+        font-size: 13px;
+        font-weight: 750;
+    }
+
+    .api-pin-digits {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(44px, 60px));
+        gap: 22px;
+        justify-content: center;
+        margin: 5px 0;
+    }
+
+    .api-pin-digits input {
         width: 100%;
-        min-height: 48px;
-        border-radius: 12px;
-        border: 1px solid rgba(112, 19, 27, .22);
+        aspect-ratio: 1;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
         background: #ffffff;
         color: #0f172a;
-        padding: 0 14px;
-        font-size: 18px;
+        padding: 0;
+        font-size: 22px;
         font-weight: 950;
-        letter-spacing: .22em;
         text-align: center;
+        caret-color: #8f1827;
+    }
+
+    .api-pin-digits input:focus {
+        border-color: #8f1827;
+        box-shadow: 0 0 0 3px rgba(143, 24, 39, .12);
+        outline: none;
+    }
+
+    .api-pin-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .api-pin-security-note {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        color: #4b5563;
+        font-size: 13px;
+        font-weight: 750;
+    }
+
+    .api-pin-security-note svg {
+        width: 18px;
+        height: 18px;
+        color: #64748b;
+    }
+
+    .api-pin-reset-row {
+        width: 100%;
+        margin-top: 5px;
+        padding-top: 13px;
+        border-top: 1px dashed #d1d5db;
+        color: #4b5563;
+        font-size: 14px;
+        font-weight: 750;
+    }
+
+    .api-pin-reset-row a {
+        color: #8f1827;
+        font-weight: 950;
+        text-decoration: underline;
+        text-underline-offset: 3px;
     }
 
     .api-pin-error {
@@ -1066,17 +1211,22 @@
     }
 
     .api-pin-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin: 0 -24px;
+        padding: 16px 130px;
+        border-top: 1px solid #e5e7eb;
+        background: #ffffff;
     }
 
     .api-pin-cancel,
     .api-pin-submit {
-        min-height: 42px;
-        min-width: 110px;
-        border-radius: 10px;
-        padding: 0 16px;
+        min-height: 44px;
+        width: 100%;
+        min-width: 0;
+        border-radius: 8px;
+        padding: 0 22px;
         border: 1px solid rgba(112, 19, 27, .16);
         font-weight: 950;
         cursor: pointer;
@@ -1088,6 +1238,10 @@
     }
 
     .api-pin-submit {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
         background: #70131B;
         color: #ffffff;
         border-color: #70131B;
@@ -1101,6 +1255,36 @@
         border-color: #facc15;
         color: #70131B;
         outline: none;
+    }
+
+    @media (max-width: 640px) {
+        .api-pin-head {
+            padding: 18px;
+        }
+
+        .api-pin-head-main {
+            gap: 12px;
+        }
+
+        .api-pin-head-icon {
+            width: 48px;
+            height: 48px;
+            flex-basis: 48px;
+        }
+
+        .api-pin-digits {
+            grid-template-columns: repeat(4, minmax(42px, 58px));
+            gap: 12px;
+        }
+
+        .api-pin-actions {
+            padding: 16px 24px;
+        }
+
+        .api-pin-cancel,
+        .api-pin-submit {
+            width: 100%;
+        }
     }
 
     .api-search-form {
@@ -1466,12 +1650,12 @@
                 🔗 System Status
             </button>
             @php
-                $apiPinUser = auth()->user();
+                $apiPinUser = \Illuminate\Support\Facades\Auth::guard('admin')->user() ?? auth()->user();
                 $integrationPinDisabled = (bool) ($apiPinUser->api_pin_disabled ?? false);
-                $integrationPinEnabled = (bool) ($apiPinUser->api_pin_enabled ?? false);
-                $integrationPinUnlocked = $apiPinUser ? session('integration_tokens_pin_unlocked_user_' . $apiPinUser->id) === true : false;
+                $legacyIntegrationPinEnabled = (bool) ($apiPinUser->api_pin_enabled ?? false);
+                $integrationPinEnabled = $legacyIntegrationPinEnabled && (bool) ($apiPinUser->api_pin_page_enabled ?? true);
             @endphp
-            <a href="{{ route('admin.integration-tokens') }}" class="api-tab-button {{ $integrationPinDisabled ? 'is-disabled' : '' }}" id="integrationTokensGateButton" data-pin-disabled="{{ $integrationPinDisabled ? '1' : '0' }}" data-pin-enabled="{{ $integrationPinEnabled ? '1' : '0' }}" data-pin-unlocked="{{ $integrationPinUnlocked ? '1' : '0' }}" style="text-decoration: none; display: flex; align-items: center; justify-content: center;" aria-disabled="{{ $integrationPinDisabled ? 'true' : 'false' }}">
+            <a href="{{ route('admin.integration-tokens') }}" class="api-tab-button {{ $integrationPinDisabled ? 'is-disabled' : '' }}" id="integrationTokensGateButton" data-pin-disabled="{{ $integrationPinDisabled ? '1' : '0' }}" data-pin-enabled="{{ $integrationPinEnabled ? '1' : '0' }}" style="text-decoration: none; display: flex; align-items: center; justify-content: center;" aria-disabled="{{ $integrationPinDisabled ? 'true' : 'false' }}">
                 🔐 Integration Tokens
             </a>
         </div>
@@ -2001,19 +2185,60 @@
 <div class="api-pin-modal" id="integrationPinModal" aria-hidden="true">
     <section class="api-pin-dialog" role="dialog" aria-modal="true" aria-labelledby="integrationPinTitle">
         <header class="api-pin-head">
-            <div>
-                <h3 id="integrationPinTitle">Integration PIN</h3>
-                <p>Enter the 4-digit PIN to open Integration Tokens.</p>
+            <div class="api-pin-head-main">
+                <span class="api-pin-head-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2.75 4.75 5.5v5.4c0 4.72 3.02 8.92 7.25 10.35 4.23-1.43 7.25-5.63 7.25-10.35V5.5L12 2.75Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.25 11.25v-1.5a3.25 3.25 0 1 0-6.5 0v1.5m-.5 0h7.5v5.5h-7.5v-5.5Z" />
+                    </svg>
+                </span>
+                <div>
+                    <h3 id="integrationPinTitle">Integration PIN</h3>
+                    <p>Enter your 4-digit PIN to access Integration Tokens.</p>
+                </div>
             </div>
             <button type="button" class="api-pin-close" id="closeIntegrationPinModal" aria-label="Close PIN modal">&times;</button>
         </header>
         <form class="api-pin-body" id="integrationPinForm">
-            <label for="integrationPinInput">4-Digit PIN</label>
-            <input type="password" id="integrationPinInput" name="pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="one-time-code" required>
+            <div class="api-pin-warning">
+                <span class="api-pin-warning-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.75A11.959 11.959 0 0 1 12 2.714Z" />
+                    </svg>
+                </span>
+                <div>
+                    <strong>Administrator Verification Required</strong>
+                    <span>Only authorized administrators can access Integration Tokens.</span>
+                </div>
+            </div>
+            <div class="api-pin-entry">
+                <span class="api-pin-entry-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
+                    </svg>
+                </span>
+                <div class="api-pin-entry-title">Enter 4-Digit PIN</div>
+                <div class="api-pin-entry-copy">Please enter your 4-digit Integration PIN.</div>
+                <div class="api-pin-digits" id="integrationPinDigits">
+                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="PIN digit 1" required>
+                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="PIN digit 2" required>
+                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="PIN digit 3" required>
+                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="PIN digit 4" required>
+                </div>
+                <input class="api-pin-hidden" type="password" id="integrationPinInput" name="pin" pattern="[0-9]{4}" maxlength="4" tabindex="-1">
+                <div class="api-pin-reset-row">
+                    Your PIN is encrypted and safe.
+                </div>
+            </div>
             <div class="api-pin-error" id="integrationPinError"></div>
             <div class="api-pin-actions">
                 <button type="button" class="api-pin-cancel" id="cancelIntegrationPin">Cancel</button>
-                <button type="submit" class="api-pin-submit">Continue</button>
+                <button type="submit" class="api-pin-submit">
+                    <svg aria-hidden="true" width="17" height="17" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
+                    </svg>
+                    Verify PIN
+                </button>
             </div>
         </form>
     </section>
@@ -2070,9 +2295,22 @@
         const integrationPinModal = document.getElementById('integrationPinModal');
         const integrationPinForm = document.getElementById('integrationPinForm');
         const integrationPinInput = document.getElementById('integrationPinInput');
+        const integrationPinDigits = Array.from(document.querySelectorAll('#integrationPinDigits input'));
         const integrationPinError = document.getElementById('integrationPinError');
         const closeIntegrationPinModal = document.getElementById('closeIntegrationPinModal');
         const cancelIntegrationPin = document.getElementById('cancelIntegrationPin');
+
+        function syncIntegrationPinInput() {
+            if (!integrationPinInput) return;
+            integrationPinInput.value = integrationPinDigits.map((input) => input.value).join('');
+        }
+
+        function clearIntegrationPinInputs() {
+            integrationPinDigits.forEach((input) => {
+                input.value = '';
+            });
+            syncIntegrationPinInput();
+        }
 
         function setIntegrationPinModalOpen(isOpen) {
             if (!integrationPinModal) return;
@@ -2081,13 +2319,42 @@
             if (isOpen) {
                 integrationPinError?.classList.remove('is-visible');
                 if (integrationPinError) integrationPinError.textContent = '';
-                integrationPinInput?.focus();
-            } else if (integrationPinInput) {
-                integrationPinInput.value = '';
+                window.setTimeout(() => integrationPinDigits[0]?.focus(), 80);
+            } else {
+                clearIntegrationPinInputs();
             }
         }
 
-        integrationTokensButton?.addEventListener('click', function (event) {
+        integrationPinDigits.forEach((input, index) => {
+            input.addEventListener('input', () => {
+                input.value = input.value.replace(/\D/g, '').slice(0, 1);
+                syncIntegrationPinInput();
+
+                if (input.value && integrationPinDigits[index + 1]) {
+                    integrationPinDigits[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('keydown', (event) => {
+                if (event.key === 'Backspace' && !input.value && integrationPinDigits[index - 1]) {
+                    integrationPinDigits[index - 1].focus();
+                }
+            });
+
+            input.addEventListener('paste', (event) => {
+                event.preventDefault();
+                const pasted = (event.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, integrationPinDigits.length);
+                pasted.split('').forEach((value, pasteIndex) => {
+                    if (integrationPinDigits[pasteIndex]) {
+                        integrationPinDigits[pasteIndex].value = value;
+                    }
+                });
+                syncIntegrationPinInput();
+                integrationPinDigits[Math.min(pasted.length, integrationPinDigits.length) - 1]?.focus();
+            });
+        });
+
+        integrationTokensButton?.addEventListener('click', async function (event) {
             event.preventDefault();
 
             if (this.dataset.pinDisabled === '1') {
@@ -2096,8 +2363,32 @@
                 return;
             }
 
-            if (this.dataset.pinEnabled === '1' && this.dataset.pinUnlocked !== '1') {
-                setIntegrationPinModalOpen(true);
+            try {
+                const statusResponse = await fetch('{{ route('admin.integration-pin.status') }}', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}'
+                    }
+                });
+                const statusData = await statusResponse.json();
+                const state = statusData.state || {};
+
+                this.dataset.pinDisabled = state.disabled ? '1' : '0';
+                this.dataset.pinEnabled = state.page_pin_enabled ? '1' : '0';
+
+                if (state.disabled) {
+                    setIntegrationPinModalOpen(false);
+                    alert('Integration Tokens access is disabled in Developer Options.');
+                    return;
+                }
+
+                if (state.page_pin_enabled) {
+                    setIntegrationPinModalOpen(true);
+                    return;
+                }
+            } catch (error) {
+                setIntegrationPinModalOpen(false);
+                alert('Unable to check Integration PIN status. Please try again.');
                 return;
             }
 
@@ -2106,7 +2397,17 @@
 
         integrationPinForm?.addEventListener('submit', function (event) {
             event.preventDefault();
+            syncIntegrationPinInput();
             const pin = (integrationPinInput?.value || '').trim();
+
+            if (!/^\d{4}$/.test(pin)) {
+                if (integrationPinError) {
+                    integrationPinError.textContent = 'Enter a valid 4-digit Integration PIN.';
+                    integrationPinError.classList.add('is-visible');
+                }
+                integrationPinDigits.find((input) => !input.value)?.focus();
+                return;
+            }
 
             fetch('{{ route('admin.integration-pin.verify') }}', {
                 method: 'POST',
@@ -2115,14 +2416,13 @@
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}'
                 },
-                body: JSON.stringify({ pin })
+                body: JSON.stringify({ pin, purpose: 'open_integration_tokens' })
             })
                 .then(async response => {
                     const data = await response.json().catch(() => ({}));
                     if (!response.ok || !data.success) {
                         throw new Error(data.message || 'Unable to verify Integration PIN.');
                     }
-                    integrationTokensButton.dataset.pinUnlocked = '1';
                     window.location.href = integrationTokensButton.href;
                 })
                 .catch(error => {

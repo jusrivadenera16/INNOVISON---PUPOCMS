@@ -18,6 +18,59 @@
         ->sortByDesc(fn ($item) => optional($item['token']->created_at)->timestamp ?? 0)
         ->take(4)
         ->values();
+    $requestLogs = collect($integrationRequestLogs ?? []);
+    $errorLogs = collect($apiErrorLogs ?? []);
+    $clientLogPayload = $clients->mapWithKeys(function ($client) use ($requestLogs, $errorLogs) {
+        $clientKey = strtolower((string) $client->system_key);
+        $clientName = strtolower((string) $client->system_name);
+        $clientRequestLogs = $requestLogs
+            ->filter(fn ($log) => (int) ($log->integration_client_id ?? 0) === (int) $client->id
+                || strtolower((string) ($log->system_key ?? '')) === $clientKey)
+            ->take(30)
+            ->map(fn ($log) => [
+                'type' => ((int) ($log->status_code ?? 0)) >= 400 ? 'error' : 'request',
+                'title' => trim(($log->http_method ?? 'GET') . ' ' . ($log->endpoint ?? '/')),
+                'status' => $log->status_code ? 'HTTP ' . $log->status_code : 'No status',
+                'meta' => trim(($log->response_time_ms !== null ? $log->response_time_ms . ' ms' : 'No timing') . ' | ' . ($log->ip_address ?? 'No IP')),
+                'message' => $log->error_message ?: 'Request completed.',
+                'time' => $log->created_at ? \Carbon\Carbon::parse($log->created_at)->format('M d, Y h:i A') : 'N/A',
+            ])
+            ->values();
+        $clientErrorLogs = $errorLogs
+            ->filter(fn ($log) => in_array(strtolower((string) ($log->system_name ?? '')), [$clientKey, $clientName], true))
+            ->take(20)
+            ->map(fn ($log) => [
+                'type' => 'error',
+                'title' => ($log->endpoint ?? 'External API') . ' error',
+                'status' => $log->http_status ? 'HTTP ' . $log->http_status : ($log->error_code ?? 'Error'),
+                'meta' => trim(($log->response_time_ms !== null ? $log->response_time_ms . ' ms' : 'No timing') . ' | ' . ($log->ip_address ?? 'No IP')),
+                'message' => $log->error_message ?? 'External API error recorded.',
+                'time' => $log->created_at ? \Carbon\Carbon::parse($log->created_at)->format('M d, Y h:i A') : 'N/A',
+            ])
+            ->values();
+        $tokenEvents = $client->tokens
+            ->sortByDesc('created_at')
+            ->take(20)
+            ->map(fn ($token) => [
+                'type' => 'token',
+                'title' => 'Token generated',
+                'status' => 'Token ID ' . $token->id,
+                'meta' => 'Abilities: ' . implode(', ', $token->abilities ?? []),
+                'message' => $token->last_used_at ? 'Last used ' . $token->last_used_at->diffForHumans() : 'No API call recorded for this token yet.',
+                'time' => $token->created_at ? $token->created_at->format('M d, Y h:i A') : 'N/A',
+            ])
+            ->values();
+
+        return [
+            (string) $client->id => [
+                'name' => $client->system_name,
+                'key' => $client->system_key,
+                'logs' => $clientRequestLogs->concat($clientErrorLogs)->concat($tokenEvents)
+                    ->sortByDesc(fn ($log) => strtotime($log['time']) ?: 0)
+                    ->values(),
+            ],
+        ];
+    });
 @endphp
 
 <style>
@@ -633,6 +686,153 @@
         color: #fff;
     }
 
+    .integration-log-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 6000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 22px;
+        background: rgba(15, 23, 42, 0.56);
+        backdrop-filter: blur(10px);
+    }
+
+    .integration-log-modal.show {
+        display: flex;
+    }
+
+    .integration-log-dialog {
+        width: min(980px, 100%);
+        max-height: min(760px, calc(100vh - 44px));
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border-radius: 22px;
+        background: #ffffff;
+        border: 1px solid rgba(127, 29, 45, 0.16);
+        box-shadow: 0 28px 72px rgba(15, 23, 42, 0.28);
+    }
+
+    html[data-theme="dark"] .integration-log-dialog {
+        background: #171017;
+        border-color: rgba(250, 204, 21, 0.16);
+    }
+
+    .integration-log-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 18px 20px;
+        background: linear-gradient(135deg, #70131B, #8f2230);
+        color: #ffffff;
+    }
+
+    .integration-log-head h3 {
+        margin: 0;
+        color: #ffffff;
+        font-size: 1.08rem;
+        font-weight: 950;
+    }
+
+    .integration-log-head p {
+        margin: 4px 0 0;
+        color: rgba(255,255,255,.82);
+        font-size: .84rem;
+        font-weight: 750;
+    }
+
+    .integration-log-close {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        border: 1px solid rgba(250, 204, 21, .3);
+        background: rgba(0, 0, 0, .18);
+        color: #ffffff;
+        cursor: pointer;
+        font-size: 1.4rem;
+        line-height: 1;
+    }
+
+    .integration-log-body {
+        overflow-y: auto;
+        padding: 18px;
+    }
+
+    .integration-log-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .integration-log-item {
+        display: grid;
+        grid-template-columns: 36px minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: start;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 14px;
+        padding: 14px;
+        background: #fffafa;
+    }
+
+    html[data-theme="dark"] .integration-log-item {
+        background: rgba(255, 255, 255, .05);
+        border-color: rgba(255, 255, 255, .10);
+    }
+
+    .integration-log-dot {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #dbeafe;
+        color: #2563eb;
+        font-weight: 950;
+    }
+
+    .integration-log-dot.error {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .integration-log-dot.token {
+        background: #fef3c7;
+        color: #b45309;
+    }
+
+    .integration-log-item strong {
+        display: block;
+        color: #111827;
+        font-size: .92rem;
+        font-weight: 950;
+    }
+
+    html[data-theme="dark"] .integration-log-item strong {
+        color: #ffffff;
+    }
+
+    .integration-log-item span,
+    .integration-log-item p {
+        color: #64748b;
+        font-size: .8rem;
+        font-weight: 750;
+    }
+
+    .integration-log-item p {
+        margin: 6px 0 0;
+        line-height: 1.5;
+    }
+
+    .integration-log-time {
+        color: #64748b;
+        font-size: .76rem;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+
     .usage-card {
         min-height: 180px;
         display: grid;
@@ -1046,7 +1246,7 @@
                                 </svg>
                                 Revoke Token
                             </button>
-                            <button type="button" class="outline-btn" onclick="showAlert('Token logs are tracked through last used timestamps for now.')">
+                            <button type="button" class="outline-btn" onclick="openIntegrationLogs('{{ $client->id }}')">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4v15.5A2.5 2.5 0 0 0 6.5 22H20V6a2 2 0 0 0-2-2H4Z"/>
                                 </svg>
@@ -1145,9 +1345,109 @@
     </section>
 </div>
 
+<div id="integrationLogsModal" class="integration-log-modal" aria-hidden="true">
+    <div class="integration-log-dialog" role="dialog" aria-modal="true" aria-labelledby="integrationLogsTitle">
+        <div class="integration-log-head">
+            <div>
+                <h3 id="integrationLogsTitle">Integration Logs</h3>
+                <p id="integrationLogsSubtitle">Recent token activity, external API requests, and errors.</p>
+            </div>
+            <button type="button" class="integration-log-close" onclick="closeIntegrationLogs()" aria-label="Close integration logs">&times;</button>
+        </div>
+        <div class="integration-log-body">
+            <div id="integrationLogsList" class="integration-log-list"></div>
+        </div>
+    </div>
+</div>
+
 <script>
     let latestGeneratedToken = '';
     let selectedClientId = document.querySelector('.system-item')?.dataset.clientId || null;
+    let integrationPinRequired = null;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    const integrationLogData = @json($clientLogPayload);
+
+    async function isIntegrationPinRequired() {
+        try {
+            const response = await fetch('{{ route('admin.integration-pin.status') }}', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
+            const data = await response.json();
+            integrationPinRequired = Boolean(data?.state?.token_action_pin_enabled);
+
+            if (data?.state?.disabled) {
+                showAlert('Integration Tokens access is disabled.', true);
+                return null;
+            }
+
+            return integrationPinRequired;
+        } catch (error) {
+            showAlert('Unable to check Integration PIN status.', true);
+            return null;
+        }
+    }
+
+    async function requestIntegrationPin(actionLabel = 'continue') {
+        const required = await isIntegrationPinRequired();
+
+        if (required === null) {
+            return null;
+        }
+
+        if (!required) {
+            return '';
+        }
+
+        const pin = window.prompt(`Enter your 4-digit Integration PIN to ${actionLabel}.`);
+
+        if (pin === null) {
+            return null;
+        }
+
+        if (!/^\d{4}$/.test(pin.trim())) {
+            showAlert('Enter a valid 4-digit Integration PIN.', true);
+            return null;
+        }
+
+        const trimmedPin = pin.trim();
+
+        try {
+            const response = await fetch('{{ route('admin.integration-pin.verify') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ pin: trimmedPin })
+            });
+            const data = await readJsonResponse(response);
+
+            if (!data.success) {
+                showAlert(data.message || 'Incorrect Integration PIN.', true);
+                return null;
+            }
+        } catch (error) {
+            showAlert('Unable to verify Integration PIN.', true);
+            return null;
+        }
+
+        return trimmedPin;
+    }
+
+    async function readJsonResponse(response) {
+        try {
+            return await response.json();
+        } catch (error) {
+            return {
+                success: false,
+                message: response.ok ? 'Unexpected server response.' : 'Request failed.'
+            };
+        }
+    }
 
     function selectIntegration(clientId) {
         selectedClientId = clientId;
@@ -1171,6 +1471,62 @@
         generateToken(selectedClientId, detail.dataset.systemName || 'selected system');
     }
 
+    function openIntegrationLogs(clientId) {
+        const modal = document.getElementById('integrationLogsModal');
+        const title = document.getElementById('integrationLogsTitle');
+        const subtitle = document.getElementById('integrationLogsSubtitle');
+        const list = document.getElementById('integrationLogsList');
+        const payload = integrationLogData[String(clientId)] || null;
+
+        if (!modal || !list || !payload) {
+            showAlert('No logs available for this integration.', true);
+            return;
+        }
+
+        title.textContent = `${payload.name} Logs`;
+        subtitle.textContent = `System key: ${payload.key}`;
+        list.innerHTML = '';
+
+        if (!payload.logs || payload.logs.length === 0) {
+            list.innerHTML = '<div class="no-token-message">No request logs yet. New external API calls using this key will appear here after migration runs.</div>';
+        } else {
+            payload.logs.forEach((log) => {
+                const item = document.createElement('article');
+                item.className = 'integration-log-item';
+                const dotClass = log.type === 'error' ? 'error' : (log.type === 'token' ? 'token' : '');
+                const dotText = log.type === 'error' ? '!' : (log.type === 'token' ? 'T' : '✓');
+                item.innerHTML = `
+                    <span class="integration-log-dot ${dotClass}">${dotText}</span>
+                    <span>
+                        <strong>${escapeHtml(log.title || 'Integration activity')}</strong>
+                        <span>${escapeHtml(log.status || 'No status')} · ${escapeHtml(log.meta || '')}</span>
+                        <p>${escapeHtml(log.message || '')}</p>
+                    </span>
+                    <span class="integration-log-time">${escapeHtml(log.time || 'N/A')}</span>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeIntegrationLogs() {
+        const modal = document.getElementById('integrationLogsModal');
+        modal?.classList.remove('show');
+        modal?.setAttribute('aria-hidden', 'true');
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     function copyToken(clientId, tokenValue) {
         if (!tokenValue) {
             showAlert('Plaintext token is only available immediately after generation. Generate a new token if needed.', true);
@@ -1191,11 +1547,14 @@
         });
     }
 
-    function copyGeneratedTokenFromDetail(clientId) {
+    async function copyGeneratedTokenFromDetail(clientId) {
         if (!latestGeneratedToken) {
             showAlert('No token available to copy.', true);
             return;
         }
+
+        const pin = await requestIntegrationPin('copy this token');
+        if (pin === null) return;
 
         const copyBtn = document.getElementById(`copyDetailToken_${clientId}`);
         const originalContent = copyBtn.innerHTML;
@@ -1282,11 +1641,14 @@
         filterIntegrations();
     }
 
-    function toggleTokenVisibility() {
+    async function toggleTokenVisibility() {
         const tokenBox = document.getElementById('generatedTokenValue');
         const eyeIcon = document.getElementById('tokenEyeIcon');
 
         if (!tokenIsVisible) {
+            const pin = await requestIntegrationPin('reveal this token');
+            if (pin === null) return;
+
             // Show token
             tokenBox.textContent = latestGeneratedToken;
             tokenBox.style.fontFamily = "'Courier New', monospace";
@@ -1310,11 +1672,15 @@
         latestGeneratedToken = '';
     }
 
-    function copyGeneratedToken() {
+    async function copyGeneratedToken() {
         if (!latestGeneratedToken) {
             showAlert('No token available to copy.', true);
             return;
         }
+
+        const pin = await requestIntegrationPin('copy this token');
+        if (pin === null) return;
+
         navigator.clipboard.writeText(latestGeneratedToken).then(() => {
             showAlert('Token copied to clipboard!');
         }).catch(() => {
@@ -1322,18 +1688,22 @@
         });
     }
 
-    function generateToken(clientId, systemName) {
+    async function generateToken(clientId, systemName) {
         if (!confirm(`Generate a new API token for ${systemName}?`)) return;
+
+        const pin = await requestIntegrationPin(`generate a token for ${systemName}`);
+        if (pin === null) return;
 
         fetch('{{ route('admin.integration-tokens.generate') }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
             },
-            body: JSON.stringify({ client_id: clientId })
+            body: JSON.stringify({ client_id: clientId, pin })
         })
-        .then(r => r.json())
+        .then(readJsonResponse)
         .then(data => {
             if (data.success) {
                 latestGeneratedToken = data.token || '';
@@ -1357,7 +1727,7 @@
         });
     }
 
-    function revokeToken(clientId, systemName, tokenId = null) {
+    async function revokeToken(clientId, systemName, tokenId = null) {
         if (!tokenId) {
             showAlert('No token to revoke for this integration.', true);
             return;
@@ -1365,15 +1735,19 @@
 
         if (!confirm(`Revoke token for ${systemName}? This cannot be undone.`)) return;
 
+        const pin = await requestIntegrationPin(`revoke the token for ${systemName}`);
+        if (pin === null) return;
+
         fetch('{{ route('admin.integration-tokens.revoke') }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
             },
-            body: JSON.stringify({ client_id: clientId, token_id: tokenId })
+            body: JSON.stringify({ client_id: clientId, token_id: tokenId, pin })
         })
-        .then(r => r.json())
+        .then(readJsonResponse)
         .then(data => {
             if (data.success) {
                 showAlert(`Token revoked for ${systemName}.`);
@@ -1387,11 +1761,14 @@
         });
     }
 
-    function copyGeneratedToken() {
+    async function copyGeneratedToken() {
         if (!latestGeneratedToken) {
             showAlert('No newly generated token to copy.', true);
             return;
         }
+
+        const pin = await requestIntegrationPin('copy this token');
+        if (pin === null) return;
 
         const copyBtn = document.getElementById('copyButton');
         const originalContent = copyBtn.innerHTML;
@@ -1457,7 +1834,7 @@
         document.getElementById('createClientForm').reset();
     }
 
-    function createClient() {
+    async function createClient() {
         const systemKey = document.getElementById('systemKeyInput').value.trim();
         const systemName = document.getElementById('systemNameInput').value.trim();
 
@@ -1466,15 +1843,19 @@
             return;
         }
 
+        const pin = await requestIntegrationPin(`create ${systemName}`);
+        if (pin === null) return;
+
         fetch('{{ route('admin.integration-clients.store') }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
             },
-            body: JSON.stringify({ system_key: systemKey, system_name: systemName })
+            body: JSON.stringify({ system_key: systemKey, system_name: systemName, pin })
         })
-        .then(r => r.json())
+        .then(readJsonResponse)
         .then(data => {
             if (data.success) {
                 showAlert('Client created successfully!');
@@ -1493,6 +1874,18 @@
     document.getElementById('createClientModal')?.addEventListener('click', (e) => {
         if (e.target.id === 'createClientModal') {
             closeCreateClientModal();
+        }
+    });
+
+    document.getElementById('integrationLogsModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'integrationLogsModal') {
+            closeIntegrationLogs();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeIntegrationLogs();
         }
     });
 </script>

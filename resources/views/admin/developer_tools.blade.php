@@ -723,6 +723,11 @@
         background: rgba(255,255,255,.78);
     }
 
+    .dev-pin-fields:empty,
+    .dev-pin-fields.is-hidden {
+        display: none;
+    }
+
     .dev-pin-save,
     .dev-pin-reset {
         position: relative;
@@ -788,10 +793,23 @@
         gap: 9px;
     }
 
+    .dev-pin-child-toggles {
+        display: grid;
+        gap: 10px;
+        padding-left: 14px;
+        border-left: 3px solid rgba(143, 24, 39, .18);
+    }
+
+    #devApiPinFields[hidden],
+    #devApiPinControls[hidden],
+    #devApiPinChildToggles[hidden] {
+        display: none !important;
+    }
+
     .dev-reset-modal {
         position: fixed;
         inset: 0;
-        z-index: 6000;
+        z-index: 500100;
         display: none;
         align-items: center;
         justify-content: center;
@@ -805,9 +823,9 @@
     }
 
     .dev-reset-dialog {
-        width: min(520px, 100%);
+        width: min(660px, 100%);
         overflow: hidden;
-        border-radius: 20px;
+        border-radius: 18px;
         border: 1px solid rgba(255,255,255,.18);
         background: #ffffff;
         box-shadow: 0 24px 70px rgba(15, 23, 42, .26);
@@ -818,21 +836,46 @@
         justify-content: space-between;
         align-items: flex-start;
         gap: 14px;
-        padding: 20px;
-        background: #8f1827;
+        padding: 20px 22px;
+        background: linear-gradient(135deg, #9d1427 0%, #710012 100%);
         color: #ffffff;
+    }
+
+    .dev-reset-head-main {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .dev-reset-icon {
+        width: 44px;
+        height: 44px;
+        flex: 0 0 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, .14);
+        border: 1px solid rgba(255, 255, 255, .22);
+        color: #ffffff;
+    }
+
+    .dev-reset-icon svg {
+        width: 22px;
+        height: 22px;
+        stroke: currentColor;
     }
 
     .dev-reset-head h3 {
         margin: 0;
-        color: #ffffff;
+        color: #ffffff !important;
         font-size: 20px;
         font-weight: 950;
     }
 
     .dev-reset-head p {
         margin: 4px 0 0;
-        color: rgba(255,255,255,.86);
+        color: rgba(255,255,255,.9) !important;
         font-size: 13px;
         font-weight: 700;
     }
@@ -858,8 +901,260 @@
 
     .dev-reset-form {
         display: grid;
+        gap: 18px;
+        padding: 18px 20px 0;
+    }
+
+    .dev-reset-security {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px;
+        border-radius: 10px;
+        border: 1px solid #f3ccd3;
+        background: linear-gradient(135deg, #fff8f9, #ffffff);
+    }
+
+    .dev-reset-security-icon,
+    .dev-reset-step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+
+    .dev-reset-security-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        background: #ffe7eb;
+        color: #8f1827;
+    }
+
+    .dev-reset-security-icon svg,
+    .dev-reset-step-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    .dev-reset-security strong,
+    .dev-reset-step-title {
+        display: block;
+        color: #111827;
+        font-size: 15px;
+        font-weight: 950;
+    }
+
+    .dev-reset-security span,
+    .dev-reset-step-copy,
+    .dev-reset-safe-note {
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .dev-reset-step {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr);
         gap: 12px;
-        padding: 20px;
+    }
+
+    .dev-reset-step-number {
+        width: 24px;
+        height: 24px;
+        margin-top: 2px;
+        border-radius: 999px;
+        background: #8f1827;
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 950;
+    }
+
+    .dev-reset-step-body {
+        display: grid;
+        gap: 8px;
+    }
+
+    .dev-reset-password-wrap {
+        position: relative;
+    }
+
+    .dev-reset-password-wrap input {
+        width: 100%;
+        min-height: 42px;
+        padding: 0 46px 0 42px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #111827;
+        font-weight: 800;
+    }
+
+    .dev-reset-input-icon,
+    .dev-reset-eye {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+    }
+
+    .dev-reset-input-icon {
+        left: 14px;
+    }
+
+    .dev-reset-eye {
+        right: 10px;
+        width: 32px;
+        height: 32px;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .dev-reset-pin-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .dev-reset-pin-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #111827;
+        font-size: 12px;
+        font-weight: 950;
+    }
+
+    .dev-reset-pin-digits {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(36px, 50px));
+        gap: 12px;
+    }
+
+    .dev-reset-pin-digits input {
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #111827;
+        text-align: center;
+        font-size: 22px;
+        font-weight: 950;
+    }
+
+    .dev-reset-pin-digits input:focus {
+        border-color: #b91c1c;
+        box-shadow: 0 0 0 3px rgba(185, 28, 28, .12);
+        outline: none;
+    }
+
+    .dev-reset-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .dev-reset-requirements {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 16px;
+        width: fit-content;
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .dev-reset-requirements strong {
+        color: #64748b;
+    }
+
+    .dev-reset-footer {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 12px;
+        margin: 2px -20px 0;
+        padding: 14px 20px;
+        border-top: 1px solid #e5e7eb;
+        background: #ffffff;
+    }
+
+    .dev-reset-cancel,
+    .dev-reset-submit {
+        min-height: 44px;
+        border-radius: 8px;
+        padding: 0 26px;
+        font-weight: 950;
+        cursor: pointer;
+    }
+
+    .dev-reset-cancel {
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #374151;
+    }
+
+    .dev-reset-submit {
+        border: 0;
+        background: #8f1827;
+        color: #ffffff;
+    }
+
+    .dev-reset-submit:hover,
+    .dev-reset-submit:focus-visible {
+        background: #facc15;
+        color: #70131B;
+        outline: none;
+    }
+
+    .dev-reset-safe-note {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 7px;
+        padding: 0 20px 18px;
+        text-align: center;
+    }
+
+    .dev-reset-safe-note svg {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 auto;
+    }
+
+    @media (max-width: 640px) {
+        .dev-reset-modal {
+            padding: 12px;
+        }
+
+        .dev-reset-head {
+            padding: 18px;
+        }
+
+        .dev-reset-pin-grid {
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        .dev-reset-footer {
+            flex-direction: column-reverse;
+            align-items: stretch;
+        }
+
+        .dev-reset-cancel,
+        .dev-reset-submit {
+            width: 100%;
+        }
     }
 
     html[data-theme="dark"] .dev-hero {
@@ -1400,25 +1695,42 @@
                         @csrf
                         @method('PUT')
                         @php
-                            $devPinUser = auth()->user();
-                            $pinEnabled = (bool) ($devPinUser->api_pin_enabled ?? false);
+                            $devPinUser = \Illuminate\Support\Facades\Auth::guard('admin')->user() ?? auth()->user();
+                            $legacyPinEnabled = (bool) ($devPinUser->api_pin_enabled ?? false);
+                            $pinEnabled = $legacyPinEnabled;
+                            $pagePinEnabled = $pinEnabled && (bool) ($devPinUser->api_pin_page_enabled ?? true);
+                            $tokenActionPinEnabled = $pinEnabled && (bool) ($devPinUser->api_pin_token_action_enabled ?? true);
                             $hasPin = trim((string) ($devPinUser->api_pin ?? '')) !== '';
+                            $needsPinSetup = ! $hasPin;
                         @endphp
                         <label class="dev-live-toggle">
                             <span>
-                                <strong>Turn on PIN</strong>
-                                <span>Require a 4-digit PIN before opening Integration Tokens.</span>
+                                <strong>PIN Required</strong>
+                                <span>Turn on PIN protection for selected Integration Token controls.</span>
                             </span>
-                            <input type="checkbox" name="api_pin_enabled" value="1" id="devApiPinEnabled" {{ $pinEnabled ? 'checked' : '' }}>
+                            <input type="checkbox" name="api_pin_enabled" value="1" id="devApiPinMaster" {{ $pinEnabled ? 'checked' : '' }}>
                             <span class="dev-toggle-track" aria-hidden="true"><span class="dev-toggle-knob"></span></span>
                         </label>
-                        <div class="dev-pin-fields" id="devApiPinFields" {{ $pinEnabled ? '' : 'hidden' }}>
-                            @if($hasPin)
-                                <div class="dev-password-field">
-                                    <label for="devCurrentApiPin">Current PIN</label>
-                                    <input type="password" id="devCurrentApiPin" name="current_api_pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="{{ $pinEnabled ? 'Only needed when turning PIN back on' : 'Enter current 4-digit PIN' }}">
-                                </div>
-                            @else
+                        <div class="dev-pin-child-toggles" id="devApiPinChildToggles" {{ $pinEnabled ? '' : 'hidden' }}>
+                            <label class="dev-live-toggle">
+                                <span>
+                                    <strong>Integration Token Button</strong>
+                                    <span>Require PIN before opening the Integration Tokens page.</span>
+                                </span>
+                                <input type="checkbox" name="api_pin_page_enabled" value="1" class="dev-api-pin-toggle" {{ $pagePinEnabled ? 'checked' : '' }}>
+                                <span class="dev-toggle-track" aria-hidden="true"><span class="dev-toggle-knob"></span></span>
+                            </label>
+                            <label class="dev-live-toggle">
+                                <span>
+                                    <strong>Token Generation Button</strong>
+                                    <span>Require PIN before generate, rotate, revoke, or create token clients.</span>
+                                </span>
+                                <input type="checkbox" name="api_pin_token_action_enabled" value="1" class="dev-api-pin-toggle" {{ $tokenActionPinEnabled ? 'checked' : '' }}>
+                                <span class="dev-toggle-track" aria-hidden="true"><span class="dev-toggle-knob"></span></span>
+                            </label>
+                        </div>
+                        <div class="dev-pin-fields {{ $needsPinSetup ? '' : 'is-hidden' }}" id="devApiPinFields" {{ $pinEnabled ? '' : 'hidden' }}>
+                            @if($needsPinSetup)
                                 <div class="dev-password-field">
                                     <label for="devApiPin">4-Digit PIN</label>
                                     <input type="password" id="devApiPin" name="api_pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="Enter 4-digit PIN">
@@ -1429,17 +1741,16 @@
                                 </div>
                             @endif
                         </div>
-                        <div class="dev-pin-controls" id="devApiPinControls" {{ $pinEnabled ? '' : 'hidden' }}>
+                        <div class="dev-pin-controls" id="devApiPinControls" data-has-pin="{{ $hasPin ? '1' : '0' }}" {{ ($pinEnabled || $hasPin) ? '' : 'hidden' }}>
                             <div class="dev-password-note">
-                            Status: {{ $pinEnabled ? ($hasPin ? 'PIN required' : 'PIN setup needed') : 'PIN not required' }}
+                                {{ $hasPin ? ($pinEnabled ? 'Status: PIN required' : 'Status: PIN saved, not required') : 'Enter and confirm a new 4-digit PIN, then save.' }}
                             </div>
                             @error('api_pin')
                                 <div class="dev-pin-error">{{ $message }}</div>
                             @enderror
-                            @error('current_api_pin')
-                                <div class="dev-pin-error">{{ $message }}</div>
-                            @enderror
-                            <button type="submit" class="dev-pin-save">Save Integration PIN</button>
+                            @if($needsPinSetup)
+                                <button type="submit" class="dev-pin-save">Save Integration PIN</button>
+                            @endif
                             @if($hasPin)
                                 <button type="button" class="dev-pin-reset" id="openResetIntegrationPin">Reset PIN / Forgot PIN</button>
                             @endif
@@ -1505,32 +1816,110 @@
 <div class="dev-reset-modal" id="resetIntegrationPinModal" aria-hidden="true">
     <section class="dev-reset-dialog" role="dialog" aria-modal="true" aria-labelledby="resetIntegrationPinTitle">
         <header class="dev-reset-head">
-            <div>
-                <h3 id="resetIntegrationPinTitle">Reset Integration PIN</h3>
-                <p>Enter the emergency login password, then set a new 4-digit PIN.</p>
+            <div class="dev-reset-head-main">
+                <span class="dev-reset-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
+                    </svg>
+                </span>
+                <div>
+                    <h3 id="resetIntegrationPinTitle">Reset Integration PIN</h3>
+                    <p>Verify your identity before creating a new 4-digit Integration PIN.</p>
+                </div>
             </div>
             <button type="button" class="dev-reset-close" id="closeResetIntegrationPin" aria-label="Close reset PIN modal">&times;</button>
         </header>
         <form method="POST" action="{{ route('admin.integration-pin.reset') }}" class="dev-reset-form">
             @csrf
-            <div class="dev-password-field">
-                <label for="resetEmergencyPassword">Emergency Login Password</label>
-                <input type="password" id="resetEmergencyPassword" name="emergency_password" required placeholder="Enter emergency password">
-            </div>
-            <div class="dev-pin-fields">
-                <div class="dev-password-field">
-                    <label for="resetApiPin">New PIN</label>
-                    <input type="password" id="resetApiPin" name="api_pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required placeholder="Enter 4-digit PIN">
+            <div class="dev-reset-security">
+                <span class="dev-reset-security-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.75A11.959 11.959 0 0 1 12 2.714Z" />
+                    </svg>
+                </span>
+                <div>
+                    <strong>Security Verification</strong>
+                    <span>Only Super Administrators can reset the Integration PIN.</span>
                 </div>
-                <div class="dev-password-field">
-                    <label for="resetApiPinConfirm">Confirm New PIN</label>
-                    <input type="password" id="resetApiPinConfirm" name="api_pin_confirmation" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required placeholder="Confirm 4-digit PIN">
+            </div>
+
+            <div class="dev-reset-step">
+                <span class="dev-reset-step-number">1</span>
+                <div class="dev-reset-step-body">
+                    <div>
+                        <strong class="dev-reset-step-title">Verify Emergency Password</strong>
+                        <span class="dev-reset-step-copy">Enter your emergency login password to continue.</span>
+                    </div>
+                    <div class="dev-reset-password-wrap">
+                        <span class="dev-reset-input-icon" aria-hidden="true">
+                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
+                            </svg>
+                        </span>
+                        <input type="password" id="resetEmergencyPassword" name="emergency_password" required placeholder="Enter emergency password">
+                        <button type="button" class="dev-reset-eye" id="toggleResetEmergencyPassword" aria-label="Show emergency password">
+                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dev-reset-step">
+                <span class="dev-reset-step-number">2</span>
+                <div class="dev-reset-step-body">
+                    <div>
+                        <strong class="dev-reset-step-title">Create New 4-Digit PIN</strong>
+                        <span class="dev-reset-step-copy">Set and confirm your new 4-digit Integration PIN.</span>
+                    </div>
+                    <div class="dev-reset-pin-grid">
+                        <div class="dev-reset-pin-group">
+                            <label for="resetPinDigit1">New PIN</label>
+                            <div class="dev-reset-pin-digits" data-pin-target="resetApiPin">
+                                <input id="resetPinDigit1" type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
+                                <input type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
+                                <input type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
+                                <input type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
+                            </div>
+                            <input class="dev-reset-hidden" type="password" id="resetApiPin" name="api_pin" pattern="[0-9]{4}" maxlength="4" tabindex="-1">
+                        </div>
+                        <div class="dev-reset-pin-group">
+                            <label for="resetPinConfirmDigit1">Confirm New PIN</label>
+                            <div class="dev-reset-pin-digits" data-pin-target="resetApiPinConfirm">
+                                <input id="resetPinConfirmDigit1" type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
+                                <input type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
+                                <input type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
+                                <input type="password" inputmode="numeric" maxlength="1" autocomplete="off" required>
+                            </div>
+                            <input class="dev-reset-hidden" type="password" id="resetApiPinConfirm" name="api_pin_confirmation" pattern="[0-9]{4}" maxlength="4" tabindex="-1">
+                        </div>
+                    </div>
+                    <div class="dev-reset-requirements">
+                        <strong>PIN Requirements</strong>
+                        <span>Exactly 4 digits</span>
+                        <span>Numbers only</span>
+                        <span>Cannot match previous PIN</span>
+                    </div>
                 </div>
             </div>
             @error('emergency_password')
                 <div class="dev-pin-error">{{ $message }}</div>
             @enderror
-            <button type="submit" class="dev-pin-save">Reset Integration PIN</button>
+            @error('api_pin')
+                <div class="dev-pin-error">{{ $message }}</div>
+            @enderror
+            <div class="dev-reset-footer">
+                <button type="button" class="dev-reset-cancel" id="cancelResetIntegrationPin">Cancel</button>
+                <button type="submit" class="dev-reset-submit">Reset PIN</button>
+            </div>
+            <div class="dev-reset-safe-note">
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
+                </svg>
+                <span>Your security is important to us. All changes are encrypted and secure.</span>
+            </div>
         </form>
     </section>
 </div>
@@ -1565,29 +1954,50 @@
             }
         });
 
-        const pinEnabledToggle = document.getElementById('devApiPinEnabled');
+        const pinMasterToggle = document.getElementById('devApiPinMaster');
+        const pinChildToggleWrap = document.getElementById('devApiPinChildToggles');
+        const pinEnabledToggles = Array.from(document.querySelectorAll('.dev-api-pin-toggle'));
         const pinFields = document.getElementById('devApiPinFields');
         const pinControls = document.getElementById('devApiPinControls');
-        const pinForm = pinEnabledToggle?.closest('form');
+        const pinForm = pinMasterToggle?.closest('form');
         const resetPinButton = document.getElementById('openResetIntegrationPin');
         const resetPinModal = document.getElementById('resetIntegrationPinModal');
         const closeResetPinButton = document.getElementById('closeResetIntegrationPin');
+        const cancelResetPinButton = document.getElementById('cancelResetIntegrationPin');
+        const resetEmergencyPassword = document.getElementById('resetEmergencyPassword');
+        const toggleResetEmergencyPassword = document.getElementById('toggleResetEmergencyPassword');
 
         const syncPinControls = () => {
-            if (!pinEnabledToggle || !pinFields || !pinControls) {
+            if (!pinMasterToggle || !pinFields || !pinControls) {
                 return;
             }
 
-            pinFields.hidden = !pinEnabledToggle.checked;
-            pinControls.hidden = !pinEnabledToggle.checked;
+            const hasSavedPin = pinControls.dataset.hasPin === '1';
+            pinChildToggleWrap.hidden = !pinMasterToggle.checked;
+            pinFields.hidden = !pinMasterToggle.checked;
+            pinControls.hidden = !pinMasterToggle.checked && !hasSavedPin;
         };
 
-        pinEnabledToggle?.addEventListener('change', () => {
-            syncPinControls();
+        [pinMasterToggle, ...pinEnabledToggles].filter(Boolean).forEach((toggle) => {
+            toggle.addEventListener('change', () => {
+                if (toggle === pinMasterToggle && pinMasterToggle.checked && !pinEnabledToggles.some((child) => child.checked)) {
+                    pinEnabledToggles.forEach((child) => {
+                        child.checked = true;
+                    });
+                }
 
-            if (!pinEnabledToggle.checked) {
-                pinForm?.requestSubmit();
-            }
+                if (toggle !== pinMasterToggle && pinMasterToggle?.checked && !pinEnabledToggles.some((child) => child.checked)) {
+                    toggle.checked = true;
+                }
+
+                syncPinControls();
+
+                const hasSavedPin = pinControls?.dataset.hasPin === '1';
+
+                if (hasSavedPin) {
+                    pinForm?.requestSubmit();
+                }
+            });
         });
         syncPinControls();
 
@@ -1599,12 +2009,67 @@
             resetPinModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
         };
 
-        resetPinButton?.addEventListener('click', () => setResetPinModalOpen(true));
+        resetPinButton?.addEventListener('click', () => {
+            closePanel();
+            window.setTimeout(() => setResetPinModalOpen(true), 80);
+        });
         closeResetPinButton?.addEventListener('click', () => setResetPinModalOpen(false));
+        cancelResetPinButton?.addEventListener('click', () => setResetPinModalOpen(false));
         resetPinModal?.addEventListener('click', function (event) {
             if (event.target === resetPinModal) {
                 setResetPinModalOpen(false);
             }
+        });
+
+        toggleResetEmergencyPassword?.addEventListener('click', () => {
+            if (!resetEmergencyPassword) {
+                return;
+            }
+
+            const isHidden = resetEmergencyPassword.type === 'password';
+            resetEmergencyPassword.type = isHidden ? 'text' : 'password';
+            toggleResetEmergencyPassword.setAttribute('aria-label', isHidden ? 'Hide emergency password' : 'Show emergency password');
+        });
+
+        document.querySelectorAll('.dev-reset-pin-digits').forEach((group) => {
+            const target = document.getElementById(group.dataset.pinTarget || '');
+            const digits = Array.from(group.querySelectorAll('input'));
+
+            const syncTarget = () => {
+                if (target) {
+                    target.value = digits.map((input) => input.value).join('');
+                    target.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            };
+
+            digits.forEach((input, index) => {
+                input.addEventListener('input', () => {
+                    input.value = input.value.replace(/\D/g, '').slice(0, 1);
+                    syncTarget();
+
+                    if (input.value && digits[index + 1]) {
+                        digits[index + 1].focus();
+                    }
+                });
+
+                input.addEventListener('keydown', (event) => {
+                    if (event.key === 'Backspace' && !input.value && digits[index - 1]) {
+                        digits[index - 1].focus();
+                    }
+                });
+
+                input.addEventListener('paste', (event) => {
+                    event.preventDefault();
+                    const pasted = (event.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, digits.length);
+                    pasted.split('').forEach((value, pasteIndex) => {
+                        if (digits[pasteIndex]) {
+                            digits[pasteIndex].value = value;
+                        }
+                    });
+                    syncTarget();
+                    digits[Math.min(pasted.length, digits.length) - 1]?.focus();
+                });
+            });
         });
 
         document.addEventListener('keydown', function (event) {

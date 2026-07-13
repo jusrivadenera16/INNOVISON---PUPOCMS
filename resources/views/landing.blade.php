@@ -1502,7 +1502,7 @@
             transform: translateX(18px) scale(0.96);
             opacity: 0;
             transition: transform 0.22s ease, opacity 0.22s ease;
-            overflow-y: auto;
+            overflow: hidden;
         }
 
         .assistant-modal.is-open {
@@ -1515,37 +1515,109 @@
             align-items: center;
             justify-content: space-between;
             padding: 24px;
-            border-bottom: 1px solid rgba(250, 204, 21, 0.1);
+            background: linear-gradient(135deg, #70131b, #8f1827 58%, #a11d31);
+            border-bottom: 1px solid rgba(250, 204, 21, 0.22);
             flex-shrink: 0;
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18);
         }
 
-        .assistant-modal-title {
+        .assistant-modal-title,
+        .announcement-modal-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
             margin: 0;
             font-size: 1.2rem;
             font-weight: 900;
             color: #ffffff;
         }
 
+        .modal-title-icon {
+            width: 34px;
+            height: 34px;
+            flex: 0 0 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.16);
+        }
+
+        .modal-title-icon svg {
+            width: 22px;
+            height: 22px;
+            flex: 0 0 auto;
+            stroke: currentColor;
+            stroke-width: 1.6;
+            fill: none;
+        }
+
+        .modal-title-icon.is-assistant {
+            overflow: hidden;
+            padding: 0;
+            border-radius: 10px;
+            background: #8f1024;
+        }
+
+        .modal-title-icon.is-assistant svg {
+            width: 34px;
+            height: 34px;
+            stroke: none;
+        }
+
         .assistant-modal-close {
+            position: relative;
+            overflow: hidden;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             width: 40px;
             height: 40px;
-            border-radius: 8px;
-            border: none;
-            background: rgba(250, 204, 21, 0.1);
+            border-radius: 999px;
+            border: 1px solid rgba(250, 204, 21, 0.24);
+            background: rgba(18, 12, 15, 0.32);
             color: #ffffff;
             cursor: pointer;
-            transition: all 0.2s ease;
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.22);
+            transition: transform .18s ease, color .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+            z-index: 0;
         }
 
-        .assistant-modal-close:hover {
-            background: rgba(250, 204, 21, 0.2);
-            color: #facc15;
+        .assistant-modal-close::after {
+            content: "";
+            position: absolute;
+            top: -35%;
+            left: -78%;
+            width: 58%;
+            height: 170%;
+            background: linear-gradient(120deg, transparent 0%, rgba(255, 244, 180, .16) 34%, rgba(255, 244, 180, .62) 50%, rgba(255, 244, 180, .16) 66%, transparent 100%);
+            transform: skewX(-18deg);
+            transition: left .52s ease;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .assistant-modal-close:hover,
+        .assistant-modal-close:focus-visible {
+            transform: translateY(-1px);
+            background: #facc15;
+            color: #70131b;
+            border-color: #facc15;
+            box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.18), 0 14px 24px rgba(15, 23, 42, 0.2);
+            outline: none;
+        }
+
+        .assistant-modal-close:hover::after,
+        .assistant-modal-close:focus-visible::after {
+            left: 128%;
         }
 
         .assistant-modal-close svg {
+            position: relative;
+            z-index: 1;
             width: 20px;
             height: 20px;
             stroke: currentColor;
@@ -1555,6 +1627,8 @@
 
         .assistant-modal-content {
             flex: 1;
+            min-height: 0;
+            overflow-y: auto;
             padding: 24px;
             color: #cbd5e1;
             font-size: 0.95rem;
@@ -1576,21 +1650,24 @@
         }
 
         body.landing-theme-light .assistant-modal-header {
-            border-bottom-color: rgba(112, 19, 27, 0.1);
+            border-bottom-color: rgba(250, 204, 21, 0.22);
         }
 
         body.landing-theme-light .assistant-modal-title {
-            color: #111827;
+            color: #ffffff;
         }
 
         body.landing-theme-light .assistant-modal-close {
-            background: rgba(112, 19, 27, 0.08);
-            color: #111827;
+            background: rgba(18, 12, 15, 0.32);
+            color: #ffffff;
+            border-color: rgba(250, 204, 21, 0.24);
         }
 
-        body.landing-theme-light .assistant-modal-close:hover {
-            background: rgba(112, 19, 27, 0.12);
+        body.landing-theme-light .assistant-modal-close:hover,
+        body.landing-theme-light .assistant-modal-close:focus-visible {
+            background: #facc15;
             color: #70131b;
+            border-color: #facc15;
         }
 
         body.landing-theme-light .assistant-modal-content {
@@ -2393,7 +2470,7 @@
             flex-direction: column;
             transform: translateX(100%);
             transition: transform 0.3s ease;
-            overflow-y: auto;
+            overflow: hidden;
         }
 
         .announcement-modal.is-open {
@@ -2405,8 +2482,10 @@
             align-items: center;
             justify-content: space-between;
             padding: 24px;
-            border-bottom: 1px solid rgba(250, 204, 21, 0.1);
+            background: linear-gradient(135deg, #70131b, #8f1827 58%, #a11d31);
+            border-bottom: 1px solid rgba(250, 204, 21, 0.22);
             flex-shrink: 0;
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18);
         }
 
         .announcement-modal-title {
@@ -2417,25 +2496,55 @@
         }
 
         .announcement-modal-close {
+            position: relative;
+            overflow: hidden;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             width: 40px;
             height: 40px;
-            border-radius: 8px;
-            border: none;
-            background: rgba(250, 204, 21, 0.1);
+            border-radius: 999px;
+            border: 1px solid rgba(250, 204, 21, 0.24);
+            background: rgba(18, 12, 15, 0.32);
             color: #ffffff;
             cursor: pointer;
-            transition: all 0.2s ease;
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.22);
+            transition: transform .18s ease, color .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+            z-index: 0;
         }
 
-        .announcement-modal-close:hover {
-            background: rgba(250, 204, 21, 0.2);
-            color: #facc15;
+        .announcement-modal-close::after {
+            content: "";
+            position: absolute;
+            top: -35%;
+            left: -78%;
+            width: 58%;
+            height: 170%;
+            background: linear-gradient(120deg, transparent 0%, rgba(255, 244, 180, .16) 34%, rgba(255, 244, 180, .62) 50%, rgba(255, 244, 180, .16) 66%, transparent 100%);
+            transform: skewX(-18deg);
+            transition: left .52s ease;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .announcement-modal-close:hover,
+        .announcement-modal-close:focus-visible {
+            transform: translateY(-1px);
+            background: #facc15;
+            color: #70131b;
+            border-color: #facc15;
+            box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.18), 0 14px 24px rgba(15, 23, 42, 0.2);
+            outline: none;
+        }
+
+        .announcement-modal-close:hover::after,
+        .announcement-modal-close:focus-visible::after {
+            left: 128%;
         }
 
         .announcement-modal-close svg {
+            position: relative;
+            z-index: 1;
             width: 20px;
             height: 20px;
             stroke: currentColor;
@@ -2445,10 +2554,27 @@
 
         .announcement-modal-content {
             flex: 1;
+            min-height: 0;
+            overflow-y: auto;
             padding: 24px;
             color: #cbd5e1;
             font-size: 0.95rem;
             line-height: 1.6;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(250, 204, 21, 0.62) rgba(255, 255, 255, 0.08);
+        }
+
+        .announcement-modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .announcement-modal-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .announcement-modal-content::-webkit-scrollbar-thumb {
+            border-radius: 999px;
+            background: rgba(250, 204, 21, 0.62);
         }
 
         .announcement-modal-content p {
@@ -2459,6 +2585,98 @@
             margin-bottom: 0;
         }
 
+        .landing-announcement-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .landing-announcement-card {
+            position: relative;
+            display: grid;
+            gap: 9px;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid color-mix(in srgb, var(--landing-announcement-priority, #2563eb) 36%, rgba(255, 255, 255, 0.16));
+            background: rgba(255, 255, 255, 0.06);
+            padding: 14px 14px 14px 16px;
+        }
+
+        .landing-announcement-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 2px;
+            background: var(--landing-announcement-priority, #2563eb);
+        }
+
+        .landing-announcement-meta,
+        .landing-announcement-foot {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 850;
+        }
+
+        .landing-announcement-meta {
+            color: #cbd5e1;
+        }
+
+        .landing-announcement-priority {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--landing-announcement-priority, #2563eb);
+            font-weight: 950;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .landing-announcement-priority::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: currentColor;
+        }
+
+        .landing-announcement-title {
+            margin: 0;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 950;
+            line-height: 1.3;
+        }
+
+        .landing-announcement-message {
+            margin: 0;
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.55;
+        }
+
+        .landing-announcement-foot {
+            color: #94a3b8;
+        }
+
+        .landing-announcement-foot strong {
+            color: #facc15;
+            text-transform: uppercase;
+        }
+
+        .landing-announcement-empty {
+            border-radius: 12px;
+            border: 1px dashed rgba(250, 204, 21, 0.24);
+            padding: 18px;
+            color: #cbd5e1;
+        }
+
+        .landing-announcement-card.priority-urgent { --landing-announcement-priority: #fb7185; }
+        .landing-announcement-card.priority-info { --landing-announcement-priority: #60a5fa; }
+        .landing-announcement-card.priority-warning { --landing-announcement-priority: #f59e0b; }
+
         body.landing-theme-light .announcement-modal {
             background: rgba(255, 255, 255, 0.96);
             border-left-color: rgba(112, 19, 27, 0.1);
@@ -2466,25 +2684,55 @@
         }
 
         body.landing-theme-light .announcement-modal-header {
-            border-bottom-color: rgba(112, 19, 27, 0.1);
+            border-bottom-color: rgba(250, 204, 21, 0.22);
         }
 
         body.landing-theme-light .announcement-modal-title {
-            color: #111827;
+            color: #ffffff;
         }
 
         body.landing-theme-light .announcement-modal-close {
-            background: rgba(112, 19, 27, 0.08);
-            color: #111827;
+            background: rgba(18, 12, 15, 0.32);
+            color: #ffffff;
+            border-color: rgba(250, 204, 21, 0.24);
         }
 
-        body.landing-theme-light .announcement-modal-close:hover {
-            background: rgba(112, 19, 27, 0.12);
+        body.landing-theme-light .announcement-modal-close:hover,
+        body.landing-theme-light .announcement-modal-close:focus-visible {
+            background: #facc15;
             color: #70131b;
+            border-color: #facc15;
         }
 
         body.landing-theme-light .announcement-modal-content {
             color: #64748b;
+        }
+
+        body.landing-theme-light .landing-announcement-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(112, 19, 27, 0.12);
+        }
+
+        body.landing-theme-light .landing-announcement-title {
+            color: #111827;
+        }
+
+        body.landing-theme-light .landing-announcement-message,
+        body.landing-theme-light .landing-announcement-meta {
+            color: #475569;
+        }
+
+        body.landing-theme-light .landing-announcement-foot {
+            color: #64748b;
+        }
+
+        body.landing-theme-light .landing-announcement-foot strong {
+            color: #70131b;
+        }
+
+        body.landing-theme-light .landing-announcement-empty {
+            color: #475569;
+            border-color: rgba(112, 19, 27, 0.18);
         }
     </style>
 </head>
@@ -2579,7 +2827,14 @@
         <div class="announcement-modal-overlay" id="announcementModalOverlay">
             <div class="announcement-modal" id="announcementModal">
                 <div class="announcement-modal-header">
-                    <h2 class="announcement-modal-title">Announcements</h2>
+                    <h2 class="announcement-modal-title">
+                        <span class="modal-title-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.282m3.102.069a18.03 18.03 0 0 1-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 0 1 8.835 2.535M10.34 6.66a23.847 23.847 0 0 0 8.835-2.535m0 0A23.74 23.74 0 0 0 18.795 3m.38 1.125a23.91 23.91 0 0 1 1.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 0 0 1.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 0 1 0 3.46" />
+                            </svg>
+                        </span>
+                        Announcements
+                    </h2>
                     <button type="button" class="announcement-modal-close" id="announcementModalClose" aria-label="Close announcements">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -2587,8 +2842,44 @@
                     </button>
                 </div>
                 <div class="announcement-modal-content">
-                    <p><strong>📢 Welcome to PUP Taguig Medical Clinic</strong></p>
-                    <p>Check back soon for new announcements from the clinic management.</p>
+                    @php
+                        $landingAnnouncementItems = ($landingAnnouncements ?? collect())
+                            ->sortByDesc(fn ($announcement) => $announcement->created_at ?? $announcement->id)
+                            ->values();
+                        $landingPriorityLabels = [
+                            'urgent' => 'Urgent',
+                            'info' => 'Info',
+                            'warning' => 'Warning',
+                        ];
+                    @endphp
+
+                    @if($landingAnnouncementItems->isNotEmpty())
+                        <div class="landing-announcement-list">
+                            @foreach($landingAnnouncementItems as $announcement)
+                                @php
+                                    $priority = $announcement->priority ?: 'info';
+                                @endphp
+                                <article class="landing-announcement-card priority-{{ $priority }}">
+                                    <div class="landing-announcement-meta">
+                                        <span class="landing-announcement-priority">{{ $landingPriorityLabels[$priority] ?? ucfirst($priority) }}</span>
+                                        <span>&middot; {{ $announcement->created_at?->diffForHumans() ?? 'Just now' }}</span>
+                                    </div>
+                                    <h3 class="landing-announcement-title">{{ $announcement->title }}</h3>
+                                    <p class="landing-announcement-message">{{ $announcement->message }}</p>
+                                    @if($announcement->expires_at)
+                                        <div class="landing-announcement-foot">
+                                            <span>Expires: {{ $announcement->expires_at->format('M j, Y') }}</span>
+                                        </div>
+                                    @endif
+                                </article>
+                            @endforeach
+                        </div>
+                    @else
+                    <div class="landing-announcement-empty">
+                        <p><strong>No announcements at the moment.</strong></p>
+                        <p>Please check back later for clinic advisories, schedule updates, and system notices.</p>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -2597,7 +2888,48 @@
         <div class="assistant-modal-overlay" id="assistantModalOverlay">
             <div class="assistant-modal" id="assistantModal">
                 <div class="assistant-modal-header">
-                    <h2 class="assistant-modal-title">AI Chatbot</h2>
+                    <h2 class="assistant-modal-title">
+                        <span class="modal-title-icon is-assistant" aria-hidden="true">
+                            <svg viewBox="0 0 128 128">
+                                <defs>
+                                    <linearGradient id="assistantHeaderIconBg" x1="22" y1="12" x2="105" y2="118" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0" stop-color="#a5162c" />
+                                        <stop offset="1" stop-color="#6f0f1d" />
+                                    </linearGradient>
+                                    <linearGradient id="assistantHeaderIconFace" x1="36" y1="54" x2="85" y2="81" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0" stop-color="#4a1020" />
+                                        <stop offset="1" stop-color="#220812" />
+                                    </linearGradient>
+                                    <linearGradient id="assistantHeaderIconWhite" x1="26" y1="24" x2="95" y2="111" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0" stop-color="#ffffff" />
+                                        <stop offset="1" stop-color="#f5eff0" />
+                                    </linearGradient>
+                                </defs>
+                                <rect width="128" height="128" rx="30" fill="url(#assistantHeaderIconBg)" />
+                                <path d="M38 92c0-13 11-24 25-24h2c14 0 25 11 25 24v12c0 6-5 11-11 11H49c-6 0-11-5-11-11V92Z" fill="url(#assistantHeaderIconWhite)" />
+                                <path d="M40 63h-6c-6 0-11 5-11 11v10c0 6 5 11 11 11h6V63Z" fill="url(#assistantHeaderIconWhite)" />
+                                <path d="M88 63h6c6 0 11 5 11 11v10c0 6-5 11-11 11h-6V63Z" fill="url(#assistantHeaderIconWhite)" />
+                                <path d="M63 35h4v17h-4V35Z" fill="url(#assistantHeaderIconWhite)" />
+                                <circle cx="65" cy="31" r="10" fill="url(#assistantHeaderIconWhite)" />
+                                <rect x="30" y="42" width="70" height="52" rx="23" fill="url(#assistantHeaderIconWhite)" />
+                                <rect x="38" y="55" width="54" height="28" rx="14" fill="url(#assistantHeaderIconFace)" />
+                                <ellipse cx="51" cy="69" rx="5.2" ry="7.2" fill="#ffffff" />
+                                <ellipse cx="79" cy="69" rx="5.2" ry="7.2" fill="#ffffff" />
+                                <path d="M58 77c4 4 10 4 14 0" stroke="#ffffff" stroke-width="4" stroke-linecap="round" fill="none" />
+                                <path d="M47 91c-5 5-7 12-5 20" stroke="#7b1020" stroke-width="4" stroke-linecap="round" fill="none" />
+                                <path d="M83 91c5 5 7 12 5 20" stroke="#7b1020" stroke-width="4" stroke-linecap="round" fill="none" />
+                                <circle cx="51" cy="105" r="8" fill="none" stroke="#7b1020" stroke-width="4" />
+                                <path d="M87 105c3-9 10-13 17-10 8 3 10 11 7 20" fill="none" stroke="#7b1020" stroke-width="5" stroke-linecap="round" />
+                                <circle cx="106" cy="115" r="3" fill="#7b1020" />
+                                <circle cx="88" cy="115" r="3" fill="#7b1020" />
+                                <path d="M83 21h25c8 0 14 6 14 14v10c0 8-6 14-14 14H96l-10 10v-10h-3c-8 0-14-6-14-14V35c0-8 6-14 14-14Z" fill="#ffffff" />
+                                <circle cx="89" cy="40" r="4" fill="#871224" />
+                                <circle cx="98" cy="40" r="4" fill="#871224" />
+                                <circle cx="107" cy="40" r="4" fill="#871224" />
+                            </svg>
+                        </span>
+                        AI Chatbot
+                    </h2>
                     <button type="button" class="assistant-modal-close" id="assistantModalClose" aria-label="Close AI Chatbot">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -3038,11 +3370,11 @@
                                 <span class="help-guide-number">1</span>
                                 <span class="help-guide-text">
                                     <strong>For Students</strong>
-                                    <span>• Make sure you are using your official One Portal account.</span>
-                                    <span>• If One Portal does not open, refresh the page and try again.</span>
-                                    <span>• If you can log in but cannot see your clinic record, contact the clinic staff.</span>
-                                    <span>• For medical clearance, prepare your Admission System reference number.</span>
-                                    <span>• Visit the clinic if you are instructed to proceed with medical assessment.</span>
+                                    <span>&middot; Make sure you are using your official One Portal account.</span>
+                                    <span>&middot; If One Portal does not open, refresh the page and try again.</span>
+                                    <span>&middot; If you can log in but cannot see your clinic record, contact the clinic staff.</span>
+                                    <span>&middot; For medical clearance, prepare your Admission System reference number.</span>
+                                    <span>&middot; Visit the clinic if you are instructed to proceed with medical assessment.</span>
                                 </span>
                             </div>
                             
@@ -3051,8 +3383,8 @@
                                 <span class="help-guide-number">2</span>
                                 <span class="help-guide-text">
                                     <strong>For Clinic Staff</strong>
-                                    <span>• Use One Portal for normal login.</span>
-                                    <span>•If One Portal is unavailable, contact the system administrator.</span>
+                                    <span>&middot; Use One Portal for normal login.</span>
+                                    <span>&middot;If One Portal is unavailable, contact the system administrator.</span>
                                 </span>
                                 </span>
                             </div>
@@ -3061,12 +3393,12 @@
                                 <span class="help-guide-number">3</span>
                                 <span class="help-guide-text">
                                     <strong>Common Issues</strong>
-                                    <span>• One Portal is unavailable</span>
-                                    <span>• Wrong account used</span>
-                                    <span>• Missing applicant reference number</span>
-                                    <span>• Health profile not yet submitted</span>
-                                    <span>• Medical status not yet approved</span>
-                                    <span>• Clinic record is still under review</span>
+                                    <span>&middot; One Portal is unavailable</span>
+                                    <span>&middot; Wrong account used</span>
+                                    <span>&middot; Missing applicant reference number</span>
+                                    <span>&middot; Health profile not yet submitted</span>
+                                    <span>&middot; Medical status not yet approved</span>
+                                    <span>&middot; Clinic record is still under review</span>
                                 </span>
                             </div>
                            
@@ -3075,7 +3407,7 @@
                                 <span class="help-guide-number">4</span>
                                 <span class="help-guide-text">
                                     <strong>Contact</strong>
-                                    <span>• For assistance, contact the PUP Taguig Medical Clinic or the system administrator.</span>
+                                    <span>&middot; For assistance, contact the PUP Taguig Medical Clinic or the system administrator.</span>
                                 </span>
                             </div>
                         </div>
@@ -3483,8 +3815,7 @@
             }
         });
 
-        // Initialize announcement badge - hidden until announcements are added
-        updateAnnouncementBadge(0);
+        updateAnnouncementBadge({{ ($landingAnnouncements ?? collect())->count() }});
 
         // AI Chatbot Modal Handler
         const assistantBtn = document.getElementById('assistantBtn');
@@ -3519,3 +3850,4 @@
     </script>
 </body>
 </html>
+
