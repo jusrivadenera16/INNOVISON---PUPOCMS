@@ -5633,15 +5633,14 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
         observer.observe(document.body, {
             childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['class', 'style']
+            subtree: true
         });
 
         window.addEventListener('focus', hideSiennaTrigger);
         window.addEventListener('pageshow', hideSiennaTrigger);
         window.setTimeout(hideSiennaTrigger, 150);
         window.setTimeout(hideSiennaTrigger, 500);
+        window.setTimeout(hideSiennaTrigger, 1200);
     }
 
     function toggleProfileMenu() {
