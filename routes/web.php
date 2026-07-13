@@ -265,6 +265,7 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::get('/admin/reports/print-reports', [ReportsController::class, 'printReport'])->name('reports.print');
         Route::get('/admin/notifications/feed', [AdminController::class, 'notificationsFeed'])->name('admin.notifications.feed');
         Route::post('/admin/notifications/mark-all-read', [AdminController::class, 'markAllAdminNotificationsRead'])->name('admin.notifications.read_all');
+        Route::get('/admin/announcements', [AdminController::class, 'announcements'])->name('admin.announcements');
         Route::get('/admin/user-management', [AdminUserController::class, 'index'])->name('admin.user-management');
         Route::get('/admin/user-management/account-access', [AdminUserController::class, 'accountAccess'])->name('admin.user-management.account-access');
         Route::get('/admin/user-management/admin-hub', [AdminUserController::class, 'adminHub'])->name('admin.user-management.admin-hub');
@@ -279,6 +280,10 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::get('/admin/api/health-monitor', [AdminController::class, 'apiHealthMonitor'])->name('admin.api.health-monitor');
         Route::get('/admin/api/error-logs', [AdminController::class, 'apiErrorLogs'])->name('admin.api.error-logs');
         Route::get('/admin/api/system-status', [AdminController::class, 'apiSystemStatus'])->name('admin.api.system-status');
+        Route::put('/admin/integration-pin/settings', [AdminController::class, 'updateIntegrationPinSettings'])->name('admin.integration-pin.update');
+        Route::post('/admin/integration-pin/reset', [AdminController::class, 'resetIntegrationPin'])->name('admin.integration-pin.reset');
+        Route::get('/admin/integration-pin/status', [AdminController::class, 'integrationPinStatus'])->name('admin.integration-pin.status');
+        Route::post('/admin/integration-pin/verify', [AdminController::class, 'verifyIntegrationPin'])->name('admin.integration-pin.verify');
         Route::get('/admin/integration-tokens', [AdminController::class, 'integrationTokens'])->name('admin.integration-tokens');
         Route::get('/admin/integration-tokens/docs', [AdminController::class, 'integrationTokensDocs'])->name('admin.integration-tokens.docs');
         Route::get('/admin/integration-tokens/activity', [AdminController::class, 'integrationTokensActivity'])->name('admin.integration-tokens.activity');

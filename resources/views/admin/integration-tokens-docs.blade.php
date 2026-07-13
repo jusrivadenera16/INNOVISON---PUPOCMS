@@ -43,14 +43,16 @@
     }
 
     .docs-content {
-        display: block;
-        position: relative;
+        display: grid;
+        grid-template-columns: 250px minmax(0, 1fr);
+        gap: 28px;
+        align-items: start;
     }
 
     .docs-main {
         display: grid;
         gap: 32px;
-        margin-left: 290px;
+        margin-left: 0;
     }
 
     @media (max-width: 1024px) {
@@ -68,13 +70,12 @@
     }
 
     .docs-sidebar {
-        position: fixed;
+        position: sticky;
         width: 250px;
-        top: 120px;
-        left: 24px;
-        max-height: calc(100vh - 160px);
+        top: 24px;
+        max-height: calc(100vh - 48px);
         overflow-y: auto;
-        z-index: 50;
+        z-index: 1;
     }
 
     .docs-nav {
@@ -306,6 +307,15 @@
         overflow: hidden;
     }
 
+    .back-button {
+        font-size: 0;
+    }
+
+    .back-button::before {
+        content: "\2190 Back to API Dashboard";
+        font-size: 0.95rem;
+    }
+
     .back-button:hover {
         animation: sweep 0.6s ease-out forwards;
     }
@@ -336,7 +346,7 @@
 </style>
 
 <div class="docs-container">
-    <a href="{{ route('admin.integration-tokens') }}" class="back-button">
+    <a href="{{ route('admin.api-testing') }}" class="back-button">
         ← Back to Integration Tokens
     </a>
 

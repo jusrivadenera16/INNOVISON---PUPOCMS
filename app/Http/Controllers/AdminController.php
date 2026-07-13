@@ -21,6 +21,7 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response; 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use App\Models\HealthProfile;
@@ -184,6 +185,36 @@ class AdminController extends Controller
         $email = strtolower(trim((string) ($user->email ?? '')));
 
         return $email === 'pupocms2027@gmail.com';
+    }
+
+    private function integrationTokensPinSessionKey(User $user): string
+    {
+        return 'integration_tokens_pin_unlocked_user_' . $user->id;
+    }
+
+    private function integrationTokensAccessState(User $user): array
+    {
+        $pinEnabled = (bool) ($user->api_pin_enabled ?? false);
+
+        return [
+            'disabled' => (bool) ($user->api_pin_disabled ?? false),
+            'pin_enabled' => $pinEnabled,
+            'has_pin' => trim((string) ($user->api_pin ?? '')) !== '',
+            'unlocked' => ! $pinEnabled || session()->get($this->integrationTokensPinSessionKey($user)) === true,
+        ];
+    }
+
+    private function ensureIntegrationTokensUnlocked(User $user)
+    {
+        $state = $this->integrationTokensAccessState($user);
+
+        if ($state['disabled']) {
+            abort(403, 'Integration Tokens access is disabled.');
+        }
+
+        if ($state['pin_enabled'] && ! $state['unlocked']) {
+            abort(403, 'Integration Tokens access requires PIN verification.');
+        }
     }
 
     private function findLinkedAdminProfile(User $user): ?Admin
@@ -499,6 +530,11 @@ class AdminController extends Controller
             'inventoryChartStats',
             'recentAppointments'
         ));
+    }
+
+    public function announcements()
+    {
+        return view('admin.announcements');
     }
 
     public function developerTools()
@@ -3894,16 +3930,154 @@ public function inventorySummary()
     {
         $user = Auth::user();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+        $this->ensureIntegrationTokensUnlocked($user);
 
         $integrationClients = IntegrationClient::with('tokens')->get();
 
         return view('admin.integration-tokens', compact('integrationClients'));
     }
 
+    public function updateIntegrationPinSettings(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+
+        $validated = $request->validate([
+            'api_pin_disabled' => 'nullable|boolean',
+            'api_pin_enabled' => 'nullable|boolean',
+            'current_api_pin' => 'nullable|digits:4',
+            'api_pin' => 'nullable|digits:4',
+            'api_pin_confirmation' => 'nullable|same:api_pin',
+        ]);
+
+        $disabled = (bool) ($validated['api_pin_disabled'] ?? false);
+        $pinEnabled = ! $disabled && (bool) ($validated['api_pin_enabled'] ?? false);
+        $currentPin = trim((string) ($validated['current_api_pin'] ?? ''));
+        $pin = trim((string) ($validated['api_pin'] ?? ''));
+        $hasExistingPin = trim((string) ($user->api_pin ?? '')) !== '';
+
+        if ($pinEnabled && ! $hasExistingPin && $pin === '') {
+            return back()->withErrors([
+                'api_pin' => 'Enter and confirm a 4-digit PIN before turning on Integration PIN.',
+            ])->withInput();
+        }
+
+        if ($pinEnabled && ! (bool) ($user->api_pin_enabled ?? false) && $hasExistingPin) {
+            if ($currentPin === '' || ! Hash::check($currentPin, (string) $user->api_pin)) {
+                return back()->withErrors([
+                    'current_api_pin' => 'Enter the current Integration PIN to turn it on again.',
+                ])->withInput();
+            }
+        }
+
+        $user->api_pin_disabled = $disabled;
+        $user->api_pin_enabled = $pinEnabled;
+
+        if ($pin !== '') {
+            $user->api_pin = Hash::make($pin);
+            session()->forget($this->integrationTokensPinSessionKey($user));
+        }
+
+        if ($disabled || ! $pinEnabled) {
+            session()->forget($this->integrationTokensPinSessionKey($user));
+        }
+
+        $user->save();
+
+        return back()->with('success', 'Integration PIN settings updated.');
+    }
+
+    public function resetIntegrationPin(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+
+        $validated = $request->validate([
+            'emergency_password' => 'required|string',
+            'api_pin' => 'required|digits:4|confirmed',
+        ]);
+
+        $emergencyPassword = (string) $validated['emergency_password'];
+        $configuredPassword = (string) config('services.emergency.password', '');
+        $configuredHash = trim((string) config('services.emergency.password_hash', ''));
+        $passwordMatches = $configuredHash !== ''
+            ? Hash::check($emergencyPassword, $configuredHash)
+            : ($configuredPassword !== '' && hash_equals($configuredPassword, $emergencyPassword));
+
+        if (! $passwordMatches) {
+            return back()->withErrors([
+                'emergency_password' => 'Emergency login password is incorrect.',
+            ])->withInput();
+        }
+
+        $user->api_pin = Hash::make($validated['api_pin']);
+        $user->api_pin_enabled = true;
+        $user->api_pin_disabled = false;
+        $user->save();
+
+        session()->forget($this->integrationTokensPinSessionKey($user));
+
+        return back()->with('success', 'Integration PIN has been reset.');
+    }
+
+    public function integrationPinStatus()
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+
+        return response()->json([
+            'success' => true,
+            'state' => $this->integrationTokensAccessState($user),
+        ]);
+    }
+
+    public function verifyIntegrationPin(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+
+        $state = $this->integrationTokensAccessState($user);
+
+        if ($state['disabled']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Integration Tokens access is disabled.',
+            ], 423);
+        }
+
+        if (! $state['pin_enabled']) {
+            session()->put($this->integrationTokensPinSessionKey($user), true);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'PIN is not required.',
+            ]);
+        }
+
+        $validated = $request->validate([
+            'pin' => 'required|digits:4',
+        ]);
+
+        if (! Hash::check($validated['pin'], (string) ($user->api_pin ?? ''))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Incorrect Integration PIN.',
+            ], 422);
+        }
+
+        session()->put($this->integrationTokensPinSessionKey($user), true);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Integration PIN verified.',
+        ]);
+    }
+
     public function generateIntegrationToken(Request $request)
     {
         $user = Auth::user();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+        $this->ensureIntegrationTokensUnlocked($user);
 
         $allowedAbilities = [
             'external-admin:read',
@@ -3958,6 +4132,7 @@ public function inventorySummary()
     {
         $user = Auth::user();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+        $this->ensureIntegrationTokensUnlocked($user);
 
         $validated = $request->validate([
             'client_id' => 'required|exists:integration_clients,id',
@@ -3998,6 +4173,7 @@ public function inventorySummary()
     {
         $user = Auth::user();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+        $this->ensureIntegrationTokensUnlocked($user);
 
         $validated = $request->validate([
             'system_key' => 'required|string|unique:integration_clients,system_key|regex:/^[a-z0-9_]+$/',
@@ -4041,6 +4217,7 @@ public function inventorySummary()
     {
         $user = Auth::user();
         abort_unless($user instanceof User && $this->canAccessApiTesting($user), 403);
+        $this->ensureIntegrationTokensUnlocked($user);
 
         $allTokens = \DB::table('personal_access_tokens')
             ->where('tokenable_type', IntegrationClient::class)

@@ -651,6 +651,217 @@
         box-shadow: 0 6px 12px rgba(15,23,42,.16);
     }
 
+    .dev-pin-form {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+    }
+
+    .dev-live-toggle {
+        min-height: 58px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 12px;
+        border-radius: 15px;
+        border: 1px solid rgba(112,19,27,.14);
+        background: rgba(255,255,255,.86);
+        cursor: pointer;
+    }
+
+    .dev-live-toggle > span:first-child,
+    .dev-live-toggle strong,
+    .dev-live-toggle span span {
+        display: block;
+    }
+
+    .dev-live-toggle strong {
+        color: #111827;
+        font-size: .88rem;
+        font-weight: 950;
+    }
+
+    .dev-live-toggle span span {
+        margin-top: 3px;
+        color: #64748b;
+        font-size: .76rem;
+        line-height: 1.35;
+    }
+
+    .dev-live-toggle input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .dev-live-toggle input:checked + .dev-toggle-track {
+        background: #70131B;
+        border-color: #70131B;
+    }
+
+    .dev-live-toggle input:checked + .dev-toggle-track .dev-toggle-knob {
+        transform: translateX(22px);
+        background: #facc15;
+    }
+
+    .dev-live-toggle input:disabled + .dev-toggle-track {
+        opacity: .45;
+    }
+
+    .dev-live-toggle .dev-toggle-knob {
+        transition: transform .18s ease, background .18s ease;
+    }
+
+    .dev-pin-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding: 12px;
+        border-radius: 16px;
+        border: 1px solid rgba(112,19,27,.14);
+        background: rgba(255,255,255,.78);
+    }
+
+    .dev-pin-save,
+    .dev-pin-reset {
+        position: relative;
+        overflow: hidden;
+        min-height: 44px;
+        border: 1px solid #70131B;
+        border-radius: 10px;
+        background: #70131B;
+        color: #ffffff;
+        font-weight: 950;
+        cursor: pointer;
+        transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .dev-pin-reset {
+        background: #ffffff;
+        color: #70131B;
+    }
+
+    .dev-pin-save::after,
+    .dev-pin-reset::after {
+        content: "";
+        position: absolute;
+        top: -35%;
+        left: -72%;
+        width: 48%;
+        height: 170%;
+        background: linear-gradient(120deg, transparent 0%, rgba(255, 244, 180, .18) 34%, rgba(255, 244, 180, .58) 50%, rgba(255, 244, 180, .18) 66%, transparent 100%);
+        transform: skewX(-18deg);
+        transition: left .48s ease;
+        pointer-events: none;
+    }
+
+    .dev-pin-save:hover,
+    .dev-pin-save:focus-visible,
+    .dev-pin-reset:hover,
+    .dev-pin-reset:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        outline: none;
+        transform: translateY(-1px);
+    }
+
+    .dev-pin-save:hover::after,
+    .dev-pin-save:focus-visible::after,
+    .dev-pin-reset:hover::after,
+    .dev-pin-reset:focus-visible::after {
+        left: 128%;
+    }
+
+    .dev-pin-error {
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: #fee2e2;
+        color: #991b1b;
+        font-size: .78rem;
+        font-weight: 850;
+    }
+
+    .dev-pin-controls {
+        display: grid;
+        gap: 9px;
+    }
+
+    .dev-reset-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 6000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, .56);
+        backdrop-filter: blur(8px);
+    }
+
+    .dev-reset-modal.is-open {
+        display: flex;
+    }
+
+    .dev-reset-dialog {
+        width: min(520px, 100%);
+        overflow: hidden;
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,.18);
+        background: #ffffff;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, .26);
+    }
+
+    .dev-reset-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 20px;
+        background: #8f1827;
+        color: #ffffff;
+    }
+
+    .dev-reset-head h3 {
+        margin: 0;
+        color: #ffffff;
+        font-size: 20px;
+        font-weight: 950;
+    }
+
+    .dev-reset-head p {
+        margin: 4px 0 0;
+        color: rgba(255,255,255,.86);
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .dev-reset-close {
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.22);
+        background: rgba(255,255,255,.12);
+        color: #ffffff;
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    .dev-reset-close:hover,
+    .dev-reset-close:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        outline: none;
+    }
+
+    .dev-reset-form {
+        display: grid;
+        gap: 12px;
+        padding: 20px;
+    }
+
     html[data-theme="dark"] .dev-hero {
         background: linear-gradient(135deg, rgba(35,17,25,.96), rgba(24,11,18,.94));
         border-color: rgba(250,204,21,.18);
@@ -740,6 +951,20 @@
     }
 
     html[data-theme="dark"] .dev-password-note {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .dev-live-toggle,
+    html[data-theme="dark"] .dev-pin-fields {
+        background: rgba(15, 23, 42, .42);
+        border-color: rgba(250, 204, 21, .16);
+    }
+
+    html[data-theme="dark"] .dev-live-toggle strong {
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .dev-live-toggle span span {
         color: #cbd5e1;
     }
 
@@ -1104,7 +1329,7 @@
                     <path d="m14 5-4 14"/>
                 </svg>
             </span>
-            <h2>API Testing Page</h2>
+            <h2>API Dashboard</h2>
             <p>Validate connected systems and inspect integration responses.</p>
             <div class="dev-note">Use for endpoint checks and response review.</div>
             <div class="dev-action">Open integration tester</div>
@@ -1142,17 +1367,6 @@
         <div class="dev-panel-body">
             <div class="dev-options-grid">
                 <section class="dev-option-block">
-                    <p class="dev-option-kicker">Environment</p>
-                    <h3 class="dev-option-title">Deployment Status</h3>
-                    <p class="dev-option-copy">Reserved for core app configuration and deployment readiness.</p>
-                    <div class="dev-mini-summary">
-                        <div class="dev-mini-line"><span>App Environment</span><span class="dev-option-pill">Static</span></div>
-                        <div class="dev-mini-line"><span>Base URL</span><span class="dev-option-pill">Static</span></div>
-                        <div class="dev-mini-line"><span>Config Cache</span><span class="dev-option-pill">Static</span></div>
-                    </div>
-                </section>
-
-                <section class="dev-option-block">
                     <p class="dev-option-kicker">Access</p>
                     <h3 class="dev-option-title">Sign-In Controls</h3>
                     <p class="dev-option-copy">Future controls for One Portal status and emergency fallback access.</p>
@@ -1179,37 +1393,58 @@
                 </section>
 
                 <section class="dev-option-block">
-                    <p class="dev-option-kicker">Cleanup</p>
-                    <h3 class="dev-option-title">System Cleanup</h3>
-                    <p class="dev-option-copy">Static placeholders for cache and deployment maintenance actions.</p>
-                    <div class="dev-command-grid">
-                        <button type="button" class="dev-command-btn" disabled>Optimize Clear</button>
-                        <button type="button" class="dev-command-btn" disabled>Clear Route Cache</button>
-                        <button type="button" class="dev-command-btn" disabled>Clear Config Cache</button>
-                        <button type="button" class="dev-command-btn" disabled>Clear View Cache</button>
-                    </div>
-                </section>
-
-                <section class="dev-option-block">
                     <p class="dev-option-kicker">Integrations</p>
-                    <h3 class="dev-option-title">Connected Systems</h3>
-                    <p class="dev-option-copy">Future one-click checks for the systems used by clinic workflows.</p>
-                    <div class="dev-mini-summary">
-                        <div class="dev-mini-line"><span>One Portal / IdP</span><span class="dev-option-pill">Static</span></div>
-                        <div class="dev-mini-line"><span>GuiSIS</span><span class="dev-option-pill">Static</span></div>
-                        <div class="dev-mini-line"><span>PUPTAS / FLSS</span><span class="dev-option-pill">Static</span></div>
-                    </div>
-                </section>
-
-                <section class="dev-option-block">
-                    <p class="dev-option-kicker">Logs</p>
-                    <h3 class="dev-option-title">Log Viewer</h3>
-                    <p class="dev-option-copy">Future summary for recent warnings, errors, and emergency access events.</p>
-                    <div class="dev-status-list">
-                        <div class="dev-status-item"><span>Error Count</span><span class="dev-option-pill">Static</span></div>
-                        <div class="dev-status-item"><span>Warning Count</span><span class="dev-option-pill">Static</span></div>
-                        <div class="dev-status-item"><span>Emergency Events</span><span class="dev-option-pill">Static</span></div>
-                    </div>
+                    <h3 class="dev-option-title">Integration PIN</h3>
+                    <p class="dev-option-copy">Control access to Integration Tokens from API Testing and direct routes.</p>
+                    <form method="POST" action="{{ route('admin.integration-pin.update') }}" class="dev-pin-form">
+                        @csrf
+                        @method('PUT')
+                        @php
+                            $devPinUser = auth()->user();
+                            $pinEnabled = (bool) ($devPinUser->api_pin_enabled ?? false);
+                            $hasPin = trim((string) ($devPinUser->api_pin ?? '')) !== '';
+                        @endphp
+                        <label class="dev-live-toggle">
+                            <span>
+                                <strong>Turn on PIN</strong>
+                                <span>Require a 4-digit PIN before opening Integration Tokens.</span>
+                            </span>
+                            <input type="checkbox" name="api_pin_enabled" value="1" id="devApiPinEnabled" {{ $pinEnabled ? 'checked' : '' }}>
+                            <span class="dev-toggle-track" aria-hidden="true"><span class="dev-toggle-knob"></span></span>
+                        </label>
+                        <div class="dev-pin-fields" id="devApiPinFields" {{ $pinEnabled ? '' : 'hidden' }}>
+                            @if($hasPin)
+                                <div class="dev-password-field">
+                                    <label for="devCurrentApiPin">Current PIN</label>
+                                    <input type="password" id="devCurrentApiPin" name="current_api_pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="{{ $pinEnabled ? 'Only needed when turning PIN back on' : 'Enter current 4-digit PIN' }}">
+                                </div>
+                            @else
+                                <div class="dev-password-field">
+                                    <label for="devApiPin">4-Digit PIN</label>
+                                    <input type="password" id="devApiPin" name="api_pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="Enter 4-digit PIN">
+                                </div>
+                                <div class="dev-password-field">
+                                    <label for="devApiPinConfirm">Confirm PIN</label>
+                                    <input type="password" id="devApiPinConfirm" name="api_pin_confirmation" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="Confirm 4-digit PIN">
+                                </div>
+                            @endif
+                        </div>
+                        <div class="dev-pin-controls" id="devApiPinControls" {{ $pinEnabled ? '' : 'hidden' }}>
+                            <div class="dev-password-note">
+                            Status: {{ $pinEnabled ? ($hasPin ? 'PIN required' : 'PIN setup needed') : 'PIN not required' }}
+                            </div>
+                            @error('api_pin')
+                                <div class="dev-pin-error">{{ $message }}</div>
+                            @enderror
+                            @error('current_api_pin')
+                                <div class="dev-pin-error">{{ $message }}</div>
+                            @enderror
+                            <button type="submit" class="dev-pin-save">Save Integration PIN</button>
+                            @if($hasPin)
+                                <button type="button" class="dev-pin-reset" id="openResetIntegrationPin">Reset PIN / Forgot PIN</button>
+                            @endif
+                        </div>
+                    </form>
                 </section>
 
                 <section class="dev-option-block">
@@ -1266,6 +1501,39 @@
         </div>
     </section>
 </div>
+
+<div class="dev-reset-modal" id="resetIntegrationPinModal" aria-hidden="true">
+    <section class="dev-reset-dialog" role="dialog" aria-modal="true" aria-labelledby="resetIntegrationPinTitle">
+        <header class="dev-reset-head">
+            <div>
+                <h3 id="resetIntegrationPinTitle">Reset Integration PIN</h3>
+                <p>Enter the emergency login password, then set a new 4-digit PIN.</p>
+            </div>
+            <button type="button" class="dev-reset-close" id="closeResetIntegrationPin" aria-label="Close reset PIN modal">&times;</button>
+        </header>
+        <form method="POST" action="{{ route('admin.integration-pin.reset') }}" class="dev-reset-form">
+            @csrf
+            <div class="dev-password-field">
+                <label for="resetEmergencyPassword">Emergency Login Password</label>
+                <input type="password" id="resetEmergencyPassword" name="emergency_password" required placeholder="Enter emergency password">
+            </div>
+            <div class="dev-pin-fields">
+                <div class="dev-password-field">
+                    <label for="resetApiPin">New PIN</label>
+                    <input type="password" id="resetApiPin" name="api_pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required placeholder="Enter 4-digit PIN">
+                </div>
+                <div class="dev-password-field">
+                    <label for="resetApiPinConfirm">Confirm New PIN</label>
+                    <input type="password" id="resetApiPinConfirm" name="api_pin_confirmation" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required placeholder="Confirm 4-digit PIN">
+                </div>
+            </div>
+            @error('emergency_password')
+                <div class="dev-pin-error">{{ $message }}</div>
+            @enderror
+            <button type="submit" class="dev-pin-save">Reset Integration PIN</button>
+        </form>
+    </section>
+</div>
 @endsection
 
 @push('scripts')
@@ -1296,9 +1564,55 @@
                 closePanel();
             }
         });
+
+        const pinEnabledToggle = document.getElementById('devApiPinEnabled');
+        const pinFields = document.getElementById('devApiPinFields');
+        const pinControls = document.getElementById('devApiPinControls');
+        const pinForm = pinEnabledToggle?.closest('form');
+        const resetPinButton = document.getElementById('openResetIntegrationPin');
+        const resetPinModal = document.getElementById('resetIntegrationPinModal');
+        const closeResetPinButton = document.getElementById('closeResetIntegrationPin');
+
+        const syncPinControls = () => {
+            if (!pinEnabledToggle || !pinFields || !pinControls) {
+                return;
+            }
+
+            pinFields.hidden = !pinEnabledToggle.checked;
+            pinControls.hidden = !pinEnabledToggle.checked;
+        };
+
+        pinEnabledToggle?.addEventListener('change', () => {
+            syncPinControls();
+
+            if (!pinEnabledToggle.checked) {
+                pinForm?.requestSubmit();
+            }
+        });
+        syncPinControls();
+
+        const setResetPinModalOpen = (isOpen) => {
+            if (!resetPinModal) {
+                return;
+            }
+            resetPinModal.classList.toggle('is-open', isOpen);
+            resetPinModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        };
+
+        resetPinButton?.addEventListener('click', () => setResetPinModalOpen(true));
+        closeResetPinButton?.addEventListener('click', () => setResetPinModalOpen(false));
+        resetPinModal?.addEventListener('click', function (event) {
+            if (event.target === resetPinModal) {
+                setResetPinModalOpen(false);
+            }
+        });
+
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape' && panel.classList.contains('is-open')) {
                 closePanel();
+            }
+            if (event.key === 'Escape' && resetPinModal?.classList.contains('is-open')) {
+                setResetPinModalOpen(false);
             }
         });
     });

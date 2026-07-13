@@ -1270,9 +1270,9 @@
             align-items: center;
             justify-content: center;
             gap: 0;
-            min-height: 42px;
-            width: 42px;
-            height: 42px;
+            min-height: 56px;
+            width: 56px;
+            height: 56px;
             padding: 0;
             border-radius: 999px;
             border: 1px solid rgba(250, 204, 21, 0.45);
@@ -1298,8 +1298,8 @@
         }
 
         .landing-theme-toggle svg {
-            width: 18px;
-            height: 18px;
+            width: 26px;
+            height: 26px;
             stroke: currentColor;
             stroke-width: 2;
             fill: none;
@@ -1310,6 +1310,291 @@
             background: rgba(255, 255, 255, 0.88);
             color: #70131b;
             border-color: rgba(112, 19, 27, 0.24);
+        }
+
+        .landing-announcement-btn {
+            position: fixed;
+            top: 86px;
+            right: 18px;
+            z-index: 40;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            min-height: 56px;
+            width: 56px;
+            height: 56px;
+            padding: 0;
+            border-radius: 999px;
+            border: 1px solid rgba(250, 204, 21, 0.45);
+            background: rgba(20, 16, 20, 0.52);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 18px 32px rgba(15, 23, 42, 0.22);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+        }
+
+        .landing-announcement-btn:hover,
+        .landing-announcement-btn:focus-visible {
+            transform: translateY(-1px);
+            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            color: var(--maroon);
+            border-color: var(--gold);
+            outline: none;
+        }
+
+        .landing-announcement-btn svg {
+            width: 32px;
+            height: 32px;
+            flex: 0 0 auto;
+            stroke: currentColor;
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        body.landing-theme-light .landing-announcement-btn {
+            background: rgba(255, 255, 255, 0.88);
+            color: #70131b;
+            border-color: rgba(112, 19, 27, 0.24);
+        }
+
+        body.landing-theme-light .landing-announcement-btn:hover,
+        body.landing-theme-light .landing-announcement-btn:focus-visible {
+            background: linear-gradient(135deg, #facc15, #fef3c7);
+            color: #70131b;
+            border-color: #facc15;
+        }
+
+        .announcement-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #facc15, #fcd34d);
+            color: #70131b;
+            font-size: 11px;
+            font-weight: 900;
+            border: 2px solid rgba(20, 16, 20, 0.96);
+            box-shadow: 0 2px 8px rgba(250, 204, 21, 0.4);
+            animation: badge-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes badge-pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 2px 8px rgba(250, 204, 21, 0.4);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 4px 12px rgba(250, 204, 21, 0.6);
+            }
+        }
+
+        body.landing-theme-light .announcement-badge {
+            border-color: rgba(255, 255, 255, 0.96);
+        }
+
+        .landing-assistant-btn {
+            position: fixed;
+            top: 154px;
+            right: 18px;
+            z-index: 40;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            min-height: 56px;
+            width: 56px;
+            height: 56px;
+            padding: 0;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: #8f1024;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 900;
+            cursor: pointer;
+            overflow: hidden;
+            box-shadow: 0 18px 32px rgba(112, 19, 27, 0.28);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+        }
+
+        .landing-assistant-btn:hover,
+        .landing-assistant-btn:focus-visible {
+            transform: translateY(-1px);
+            background: #70131b;
+            color: #ffffff;
+            border-color: rgba(250, 204, 21, 0.75);
+            outline: none;
+        }
+
+        .landing-assistant-btn svg {
+            width: 100%;
+            height: 100%;
+            stroke: none;
+            stroke-width: 0;
+            fill: none;
+            flex: 0 0 auto;
+        }
+
+        .landing-assistant-btn .assistant-icon-shadow {
+            filter: drop-shadow(0 5px 8px rgba(55, 6, 18, 0.22));
+        }
+
+        body.landing-theme-light .landing-assistant-btn {
+            background: #8f1024;
+            color: #ffffff;
+            border-color: rgba(112, 19, 27, 0.16);
+        }
+
+        body.landing-theme-light .landing-assistant-btn:hover,
+        body.landing-theme-light .landing-assistant-btn:focus-visible {
+            background: #70131b;
+            color: #ffffff;
+            border-color: rgba(250, 204, 21, 0.75);
+        }
+
+        /* AI Chatbot Modal Styles */
+        .assistant-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            display: none;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 24px;
+        }
+
+        .assistant-modal-overlay.is-open {
+            display: flex;
+        }
+
+        .assistant-modal {
+            position: relative;
+            width: min(520px, calc(100vw - 48px));
+            min-height: 320px;
+            max-height: min(560px, calc(100vh - 48px));
+            background: rgba(20, 16, 20, 0.96);
+            border: 1px solid rgba(250, 204, 21, 0.2);
+            border-radius: 22px;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.36);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(18px) scale(0.96);
+            opacity: 0;
+            transition: transform 0.22s ease, opacity 0.22s ease;
+            overflow-y: auto;
+        }
+
+        .assistant-modal.is-open {
+            transform: translateX(0) scale(1);
+            opacity: 1;
+        }
+
+        .assistant-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px;
+            border-bottom: 1px solid rgba(250, 204, 21, 0.1);
+            flex-shrink: 0;
+        }
+
+        .assistant-modal-title {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .assistant-modal-close {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(250, 204, 21, 0.1);
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .assistant-modal-close:hover {
+            background: rgba(250, 204, 21, 0.2);
+            color: #facc15;
+        }
+
+        .assistant-modal-close svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .assistant-modal-content {
+            flex: 1;
+            padding: 24px;
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .assistant-modal-content p {
+            margin: 0 0 16px;
+        }
+
+        .assistant-modal-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        body.landing-theme-light .assistant-modal {
+            background: rgba(255, 255, 255, 0.96);
+            border-color: rgba(112, 19, 27, 0.1);
+            box-shadow: 0 24px 70px rgba(112, 19, 27, 0.16);
+        }
+
+        body.landing-theme-light .assistant-modal-header {
+            border-bottom-color: rgba(112, 19, 27, 0.1);
+        }
+
+        body.landing-theme-light .assistant-modal-title {
+            color: #111827;
+        }
+
+        body.landing-theme-light .assistant-modal-close {
+            background: rgba(112, 19, 27, 0.08);
+            color: #111827;
+        }
+
+        body.landing-theme-light .assistant-modal-close:hover {
+            background: rgba(112, 19, 27, 0.12);
+            color: #70131b;
+        }
+
+        body.landing-theme-light .assistant-modal-content {
+            color: #64748b;
         }
 
         .landing-panel {
@@ -1980,13 +2265,48 @@
         }
 
         @media (max-width: 640px) {
+            .landing-theme-toggle,
+            .landing-announcement-btn,
+            .landing-assistant-btn {
+                --landing-floating-button-size: clamp(42px, 10.5vw, 50px);
+                right: clamp(10px, 3.2vw, 16px);
+                min-height: var(--landing-floating-button-size);
+                width: var(--landing-floating-button-size);
+                height: var(--landing-floating-button-size);
+                padding: 0;
+                box-shadow: 0 12px 24px rgba(15, 23, 42, 0.22);
+            }
+
             .landing-theme-toggle {
                 top: 16px;
-                right: 16px;
-                min-height: 42px;
-                width: 42px;
-                height: 42px;
-                padding: 0;
+            }
+
+            .landing-announcement-btn {
+                top: calc(16px + var(--landing-floating-button-size) + 14px);
+            }
+
+            .landing-assistant-btn {
+                top: calc(16px + (var(--landing-floating-button-size) * 2) + 28px);
+                border-radius: clamp(12px, 3vw, 15px);
+            }
+
+            .landing-theme-toggle svg {
+                width: clamp(20px, 5.4vw, 24px);
+                height: clamp(20px, 5.4vw, 24px);
+            }
+
+            .landing-announcement-btn svg {
+                width: clamp(24px, 6.2vw, 30px);
+                height: clamp(24px, 6.2vw, 30px);
+            }
+
+            .announcement-badge {
+                top: -6px;
+                right: -6px;
+                min-width: 20px;
+                height: 20px;
+                padding: 0 5px;
+                font-size: 10px;
             }
 
             .landing-panel {
@@ -2017,6 +2337,154 @@
             .workspace-entry.gateway-actions {
                 width: 100%;
             }
+        }
+
+        @media (max-width: 380px) {
+            .landing-theme-toggle,
+            .landing-announcement-btn,
+            .landing-assistant-btn {
+                --landing-floating-button-size: 40px;
+                right: 8px;
+            }
+
+            .landing-theme-toggle {
+                top: 12px;
+            }
+
+            .landing-announcement-btn {
+                top: 64px;
+            }
+
+            .landing-assistant-btn {
+                top: 116px;
+                border-radius: 12px;
+            }
+        }
+
+        /* Announcement Modal Styles */
+        .announcement-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            display: none;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .announcement-modal-overlay.is-open {
+            display: flex;
+        }
+
+        .announcement-modal {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: min(420px, 100%);
+            background: rgba(20, 16, 20, 0.96);
+            border-left: 1px solid rgba(250, 204, 21, 0.2);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow: -10px 0 40px rgba(15, 23, 42, 0.3);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .announcement-modal.is-open {
+            transform: translateX(0);
+        }
+
+        .announcement-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px;
+            border-bottom: 1px solid rgba(250, 204, 21, 0.1);
+            flex-shrink: 0;
+        }
+
+        .announcement-modal-title {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .announcement-modal-close {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(250, 204, 21, 0.1);
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .announcement-modal-close:hover {
+            background: rgba(250, 204, 21, 0.2);
+            color: #facc15;
+        }
+
+        .announcement-modal-close svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .announcement-modal-content {
+            flex: 1;
+            padding: 24px;
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .announcement-modal-content p {
+            margin: 0 0 16px;
+        }
+
+        .announcement-modal-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        body.landing-theme-light .announcement-modal {
+            background: rgba(255, 255, 255, 0.96);
+            border-left-color: rgba(112, 19, 27, 0.1);
+            box-shadow: -10px 0 40px rgba(112, 19, 27, 0.15);
+        }
+
+        body.landing-theme-light .announcement-modal-header {
+            border-bottom-color: rgba(112, 19, 27, 0.1);
+        }
+
+        body.landing-theme-light .announcement-modal-title {
+            color: #111827;
+        }
+
+        body.landing-theme-light .announcement-modal-close {
+            background: rgba(112, 19, 27, 0.08);
+            color: #111827;
+        }
+
+        body.landing-theme-light .announcement-modal-close:hover {
+            background: rgba(112, 19, 27, 0.12);
+            color: #70131b;
+        }
+
+        body.landing-theme-light .announcement-modal-content {
+            color: #64748b;
         }
     </style>
 </head>
@@ -2058,6 +2526,91 @@
                 <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
         </button>
+        <button type="button" class="landing-announcement-btn" id="announcementBtn" aria-label="Announcements" title="Announcements">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.282m3.102.069a18.03 18.03 0 0 1-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 0 1 8.835 2.535M10.34 6.66a23.847 23.847 0 0 0 8.835-2.535m0 0A23.74 23.74 0 0 0 18.795 3m.38 1.125a23.91 23.91 0 0 1 1.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 0 0 1.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 0 1 0 3.46" />
+            </svg>
+            <span class="announcement-badge" id="announcementBadge" style="display: none;">1</span>
+        </button>
+
+        <button type="button" class="landing-assistant-btn" id="assistantBtn" aria-label="AI Chatbot" title="AI Chatbot">
+            <svg viewBox="0 0 128 128" aria-hidden="true">
+                <defs>
+                    <linearGradient id="assistantIconBg" x1="22" y1="12" x2="105" y2="118" gradientUnits="userSpaceOnUse">
+                        <stop offset="0" stop-color="#a5162c" />
+                        <stop offset="1" stop-color="#6f0f1d" />
+                    </linearGradient>
+                    <linearGradient id="assistantIconFace" x1="36" y1="54" x2="85" y2="81" gradientUnits="userSpaceOnUse">
+                        <stop offset="0" stop-color="#4a1020" />
+                        <stop offset="1" stop-color="#220812" />
+                    </linearGradient>
+                    <linearGradient id="assistantIconWhite" x1="26" y1="24" x2="95" y2="111" gradientUnits="userSpaceOnUse">
+                        <stop offset="0" stop-color="#ffffff" />
+                        <stop offset="1" stop-color="#f5eff0" />
+                    </linearGradient>
+                </defs>
+                <rect width="128" height="128" rx="30" fill="url(#assistantIconBg)" />
+                <g class="assistant-icon-shadow">
+                    <path d="M38 92c0-13 11-24 25-24h2c14 0 25 11 25 24v12c0 6-5 11-11 11H49c-6 0-11-5-11-11V92Z" fill="url(#assistantIconWhite)" />
+                    <path d="M40 63h-6c-6 0-11 5-11 11v10c0 6 5 11 11 11h6V63Z" fill="url(#assistantIconWhite)" />
+                    <path d="M88 63h6c6 0 11 5 11 11v10c0 6-5 11-11 11h-6V63Z" fill="url(#assistantIconWhite)" />
+                    <path d="M63 35h4v17h-4V35Z" fill="url(#assistantIconWhite)" />
+                    <circle cx="65" cy="31" r="10" fill="url(#assistantIconWhite)" />
+                    <rect x="30" y="42" width="70" height="52" rx="23" fill="url(#assistantIconWhite)" />
+                    <rect x="38" y="55" width="54" height="28" rx="14" fill="url(#assistantIconFace)" />
+                    <ellipse cx="51" cy="69" rx="5.2" ry="7.2" fill="#ffffff" />
+                    <ellipse cx="79" cy="69" rx="5.2" ry="7.2" fill="#ffffff" />
+                    <path d="M58 77c4 4 10 4 14 0" stroke="#ffffff" stroke-width="4" stroke-linecap="round" />
+                    <path d="M47 91c-5 5-7 12-5 20" stroke="#7b1020" stroke-width="4" stroke-linecap="round" fill="none" />
+                    <path d="M83 91c5 5 7 12 5 20" stroke="#7b1020" stroke-width="4" stroke-linecap="round" fill="none" />
+                    <circle cx="51" cy="105" r="8" fill="none" stroke="#7b1020" stroke-width="4" />
+                    <path d="M87 105c3-9 10-13 17-10 8 3 10 11 7 20" fill="none" stroke="#7b1020" stroke-width="5" stroke-linecap="round" />
+                    <circle cx="106" cy="115" r="3" fill="#7b1020" />
+                    <circle cx="88" cy="115" r="3" fill="#7b1020" />
+                    <path d="M83 21h25c8 0 14 6 14 14v10c0 8-6 14-14 14H96l-10 10v-10h-3c-8 0-14-6-14-14V35c0-8 6-14 14-14Z" fill="#ffffff" />
+                    <circle cx="89" cy="40" r="4" fill="#871224" />
+                    <circle cx="98" cy="40" r="4" fill="#871224" />
+                    <circle cx="107" cy="40" r="4" fill="#871224" />
+                </g>
+            </svg>
+        </button>
+
+        <!-- Announcement Modal -->
+        <div class="announcement-modal-overlay" id="announcementModalOverlay">
+            <div class="announcement-modal" id="announcementModal">
+                <div class="announcement-modal-header">
+                    <h2 class="announcement-modal-title">Announcements</h2>
+                    <button type="button" class="announcement-modal-close" id="announcementModalClose" aria-label="Close announcements">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="announcement-modal-content">
+                    <p><strong>📢 Welcome to PUP Taguig Medical Clinic</strong></p>
+                    <p>Check back soon for new announcements from the clinic management.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Chatbot Modal -->
+        <div class="assistant-modal-overlay" id="assistantModalOverlay">
+            <div class="assistant-modal" id="assistantModal">
+                <div class="assistant-modal-header">
+                    <h2 class="assistant-modal-title">AI Chatbot</h2>
+                    <button type="button" class="assistant-modal-close" id="assistantModalClose" aria-label="Close AI Chatbot">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="assistant-modal-content">
+                    <p><strong>We'll get back soon.</strong></p>
+                    <p>The AI Chatbot feature is being prepared for the PUP Taguig Medical Clinic.</p>
+                    <p>Please check back soon for clinic assistance and support.</p>
+                </div>
+            </div>
+        </div>
         <section class="landing-panel" aria-label="PUP medical clinic access">
             <div class="info-column">
                 <div class="info-default">
@@ -2896,7 +3449,68 @@
             });
         });
 
-   
+        // Announcement Modal Handler
+        const announcementBtn = document.getElementById('announcementBtn');
+        const announcementModal = document.getElementById('announcementModal');
+        const announcementModalOverlay = document.getElementById('announcementModalOverlay');
+        const announcementModalClose = document.getElementById('announcementModalClose');
+        const announcementBadge = document.getElementById('announcementBadge');
+
+        function openAnnouncementModal() {
+            announcementModalOverlay.classList.add('is-open');
+            announcementModal.classList.add('is-open');
+        }
+
+        function closeAnnouncementModal() {
+            announcementModalOverlay.classList.remove('is-open');
+            announcementModal.classList.remove('is-open');
+        }
+
+        function updateAnnouncementBadge(count) {
+            if (count > 0) {
+                announcementBadge.textContent = count > 99 ? '99+' : count;
+                announcementBadge.style.display = 'flex';
+            } else {
+                announcementBadge.style.display = 'none';
+            }
+        }
+
+        announcementBtn?.addEventListener('click', openAnnouncementModal);
+        announcementModalClose?.addEventListener('click', closeAnnouncementModal);
+        announcementModalOverlay?.addEventListener('click', function (e) {
+            if (e.target === announcementModalOverlay) {
+                closeAnnouncementModal();
+            }
+        });
+
+        // Initialize announcement badge - hidden until announcements are added
+        updateAnnouncementBadge(0);
+
+        // AI Chatbot Modal Handler
+        const assistantBtn = document.getElementById('assistantBtn');
+        const assistantModal = document.getElementById('assistantModal');
+        const assistantModalOverlay = document.getElementById('assistantModalOverlay');
+        const assistantModalClose = document.getElementById('assistantModalClose');
+
+        function openAssistantModal() {
+            assistantModalOverlay.classList.add('is-open');
+            assistantModal.classList.add('is-open');
+        }
+
+        function closeAssistantModal() {
+            assistantModalOverlay.classList.remove('is-open');
+            assistantModal.classList.remove('is-open');
+        }
+
+        assistantBtn?.addEventListener('click', openAssistantModal);
+        assistantModalClose?.addEventListener('click', closeAssistantModal);
+        assistantModalOverlay?.addEventListener('click', function (e) {
+            if (e.target === assistantModalOverlay) {
+                closeAssistantModal();
+            }
+        });
+
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeLanding);
         } else {

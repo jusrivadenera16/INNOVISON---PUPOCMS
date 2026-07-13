@@ -59,6 +59,9 @@ class User extends Authenticatable
     'user_type',
     'status',
     'password',
+    'api_pin',
+    'api_pin_enabled',
+    'api_pin_disabled',
     'is_health_profile_completed',
     'notification_read_map',
 
@@ -69,6 +72,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'api_pin',
         'remember_token',
     ];
 
@@ -78,6 +82,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'is_admin' => 'boolean',
+        'api_pin_enabled' => 'boolean',
+        'api_pin_disabled' => 'boolean',
         'notification_read_map' => 'array',
     ];
 

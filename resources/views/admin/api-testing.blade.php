@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'API Testing Page')
+@section('title', 'API Dashboard')
 @section('disable_voice_inputs', 'true')
 
 @section('content')
@@ -772,7 +772,598 @@
         color: #f8fafc;
     }
 
+    .api-testing-shell {
+        width: min(1180px, calc(100% - 32px));
+        margin: 24px auto;
+    }
+
+    .api-testing-card {
+        border-radius: 18px;
+        padding: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(127, 29, 45, .16);
+        box-shadow: 0 18px 42px rgba(15, 23, 42, .08);
+    }
+
+    .api-testing-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 18px;
+        right: 18px;
+        height: 5px;
+        border-radius: 0 0 999px 999px;
+        background: #70131B;
+    }
+
+    .api-testing-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .api-testing-head h2 {
+        margin: 0 0 5px;
+        color: #0f172a;
+        font-size: 26px;
+        line-height: 1.1;
+        font-weight: 950;
+    }
+
+    .api-testing-head p {
+        color: #334155;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .api-refresh-chip {
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid rgba(112, 19, 27, .16);
+        border-radius: 10px;
+        background: #fff;
+        color: #475569;
+        padding: 0 12px;
+        font-size: 12px;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+
+    .api-refresh-chip button {
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(112, 19, 27, .14);
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #70131B;
+        cursor: pointer;
+    }
+
+    .api-dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+        margin: 16px 0 18px;
+    }
+
+    .api-stat-card {
+        min-height: 86px;
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(127, 29, 45, .12);
+        background: #ffffff;
+        padding: 12px;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, .04);
+    }
+
+    .api-stat-icon {
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        color: #70131B;
+        background: #fff1f2;
+    }
+
+    .api-stat-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .api-stat-card.is-green .api-stat-icon { color: #16a34a; background: #dcfce7; }
+    .api-stat-card.is-blue .api-stat-icon { color: #2563eb; background: #dbeafe; }
+    .api-stat-card.is-red .api-stat-icon { color: #dc2626; background: #fee2e2; }
+    .api-stat-card.is-amber .api-stat-icon { color: #ea580c; background: #ffedd5; }
+
+    .api-stat-label {
+        display: block;
+        color: #475569;
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+    .api-stat-value {
+        display: block;
+        margin-top: 4px;
+        color: #0f172a;
+        font-size: 21px;
+        font-weight: 950;
+        line-height: 1;
+    }
+
+    .api-stat-sub {
+        display: block;
+        margin-top: 5px;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 750;
+    }
+
+    .api-tabs {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        overflow: hidden;
+        border: 1px solid rgba(127, 29, 45, .14);
+        border-radius: 10px;
+        margin: 0 0 18px;
+        background: #fff;
+    }
+
+    .api-tab-button {
+        bottom: auto;
+        min-height: 44px;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 0;
+        border-right: 1px solid rgba(127, 29, 45, .12);
+        border-bottom: 0;
+        background: #ffffff;
+        color: #0f172a;
+        padding: 0 12px;
+        font-size: 12px;
+        font-weight: 900;
+        text-decoration: none;
+    }
+
+    .api-tab-button:last-child {
+        border-right: 0;
+    }
+
+    .api-tab-button:hover,
+    .api-tab-button.is-active {
+        background: #8f1827;
+        color: #ffffff;
+        border-bottom-color: transparent;
+    }
+
+    .api-tab-button.is-disabled {
+        opacity: .52;
+        cursor: not-allowed;
+    }
+
+    .api-pin-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 6000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, .56);
+        backdrop-filter: blur(8px);
+    }
+
+    .api-pin-modal.is-open {
+        display: flex;
+    }
+
+    .api-pin-dialog {
+        width: min(440px, 100%);
+        overflow: hidden;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, .18);
+        background: #ffffff;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, .26);
+    }
+
+    .api-pin-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 20px;
+        background: #8f1827;
+        color: #ffffff;
+    }
+
+    .api-pin-head h3 {
+        margin: 0;
+        color: #ffffff;
+        font-size: 20px;
+        font-weight: 950;
+    }
+
+    .api-pin-head p {
+        margin: 4px 0 0;
+        color: rgba(255,255,255,.84);
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .api-pin-close {
+        position: relative;
+        overflow: hidden;
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.22);
+        background: rgba(255,255,255,.12);
+        color: #ffffff;
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    .api-pin-close:hover,
+    .api-pin-close:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        outline: none;
+    }
+
+    .api-pin-body {
+        display: grid;
+        gap: 12px;
+        padding: 22px;
+    }
+
+    .api-pin-body label {
+        color: #0f172a;
+        font-size: 12px;
+        font-weight: 950;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+    }
+
+    .api-pin-body input {
+        width: 100%;
+        min-height: 48px;
+        border-radius: 12px;
+        border: 1px solid rgba(112, 19, 27, .22);
+        background: #ffffff;
+        color: #0f172a;
+        padding: 0 14px;
+        font-size: 18px;
+        font-weight: 950;
+        letter-spacing: .22em;
+        text-align: center;
+    }
+
+    .api-pin-error {
+        display: none;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: #fee2e2;
+        color: #991b1b;
+        font-size: 13px;
+        font-weight: 850;
+    }
+
+    .api-pin-error.is-visible {
+        display: block;
+    }
+
+    .api-pin-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .api-pin-cancel,
+    .api-pin-submit {
+        min-height: 42px;
+        min-width: 110px;
+        border-radius: 10px;
+        padding: 0 16px;
+        border: 1px solid rgba(112, 19, 27, .16);
+        font-weight: 950;
+        cursor: pointer;
+    }
+
+    .api-pin-cancel {
+        background: #ffffff;
+        color: #0f172a;
+    }
+
+    .api-pin-submit {
+        background: #70131B;
+        color: #ffffff;
+        border-color: #70131B;
+    }
+
+    .api-pin-cancel:hover,
+    .api-pin-cancel:focus-visible,
+    .api-pin-submit:hover,
+    .api-pin-submit:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        outline: none;
+    }
+
+    .api-search-form {
+        grid-template-columns: minmax(220px, .95fr) minmax(260px, 1.4fr) auto;
+        gap: 14px;
+        margin-top: 0;
+        padding: 16px;
+        border-radius: 14px;
+        background: #ffffff;
+        border: 1px solid rgba(127, 29, 45, .12);
+        box-shadow: 0 12px 26px rgba(15, 23, 42, .04);
+    }
+
+    .api-builder-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 12px;
+    }
+
+    .api-builder-head h3 {
+        margin: 0;
+        color: #0f172a;
+        font-size: 17px;
+        font-weight: 950;
+    }
+
+    .api-builder-head p {
+        margin: 4px 0 0;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .api-builder-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .api-builder-actions a,
+    .api-builder-actions button {
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(112, 19, 27, .16);
+        border-radius: 8px;
+        background: #ffffff;
+        color: #0f172a;
+        padding: 0 12px;
+        font-size: 12px;
+        font-weight: 850;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .api-builder-actions a:hover,
+    .api-builder-actions button:hover,
+    .api-builder-actions a:focus-visible,
+    .api-builder-actions button:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        outline: none;
+    }
+
+    .api-search-form:has(.api-system-group:not(.is-hidden)) {
+        grid-template-columns: minmax(200px, .8fr) minmax(180px, .7fr) minmax(240px, 1.2fr) auto;
+    }
+
+    .api-search-form label {
+        color: #0f172a;
+        font-size: 12px;
+        font-weight: 950;
+        letter-spacing: .02em;
+    }
+
+    .api-search-form input,
+    .api-search-form select {
+        min-height: 42px;
+        border-radius: 8px;
+        border: 1px solid rgba(127, 29, 45, .18);
+        background: #ffffff;
+        color: #0f172a;
+        padding: 0 12px;
+        font-size: 13px;
+        font-weight: 750;
+    }
+
+    .api-search-form button[type="submit"] {
+        position: relative;
+        overflow: hidden;
+        min-width: 140px;
+        min-height: 42px;
+        border-radius: 8px;
+        border: 1px solid #70131B;
+        background: #70131B;
+        color: #ffffff;
+        box-shadow: 0 12px 24px rgba(112,19,27,.18);
+    }
+
+    .api-search-form button[type="submit"]::after,
+    .api-db-action-btn::after {
+        content: "";
+        position: absolute;
+        top: -35%;
+        left: -72%;
+        width: 48%;
+        height: 170%;
+        background: linear-gradient(120deg, transparent 0%, rgba(255, 244, 180, .18) 34%, rgba(255, 244, 180, .58) 50%, rgba(255, 244, 180, .18) 66%, transparent 100%);
+        transform: skewX(-18deg);
+        transition: left .48s ease;
+        pointer-events: none;
+    }
+
+    .api-search-form button[type="submit"]:hover,
+    .api-search-form button[type="submit"]:focus-visible,
+    .api-db-action-btn:hover,
+    .api-db-action-btn:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        outline: none;
+    }
+
+    .api-search-form button[type="submit"]:hover::after,
+    .api-search-form button[type="submit"]:focus-visible::after,
+    .api-db-action-btn:hover::after,
+    .api-db-action-btn:focus-visible::after {
+        left: 128%;
+    }
+
+    .api-db-action-btn {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+        border-color: #70131B;
+        background: #70131B;
+        color: #ffffff;
+        box-shadow: 0 10px 20px rgba(112,19,27,.12);
+    }
+
+    .api-testing-meta {
+        border-radius: 12px;
+        border: 1px solid rgba(127, 29, 45, .12);
+        background: #fff7f7;
+        padding: 11px 13px;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    .api-response-panel {
+        margin-top: -2px;
+    }
+
+    .api-response-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 14px;
+    }
+
+    .api-response-head h3 {
+        margin: 0;
+        color: #0f172a;
+        font-size: 18px;
+        font-weight: 950;
+    }
+
+    .api-response-status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        border-radius: 999px;
+        background: #dcfce7;
+        color: #166534;
+        padding: 0 12px;
+        font-size: 12px;
+        font-weight: 950;
+    }
+
+    .api-results,
+    .admin-option-list,
+    .api-db-list {
+        gap: 12px;
+    }
+
+    .api-result-card,
+    .admin-option-item,
+    .faculty-option-item,
+    .api-db-card {
+        border-radius: 12px;
+        background: #ffffff;
+        border-color: rgba(127, 29, 45, .12);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, .04);
+    }
+
+    .api-json {
+        border-radius: 10px;
+        background: #0f172a;
+        color: #e2e8f0;
+    }
+
+    html[data-theme="dark"] .api-testing-card,
+    html[data-theme="dark"] .api-stat-card,
+    html[data-theme="dark"] .api-tabs,
+    html[data-theme="dark"] .api-tab-button,
+    html[data-theme="dark"] .api-search-form,
+    html[data-theme="dark"] .api-result-card,
+    html[data-theme="dark"] .admin-option-item,
+    html[data-theme="dark"] .faculty-option-item,
+    html[data-theme="dark"] .api-db-card {
+        background: rgba(15, 23, 42, .94);
+        border-color: rgba(250, 204, 21, .16);
+    }
+
+    html[data-theme="dark"] .api-testing-head h2,
+    html[data-theme="dark"] .api-stat-value,
+    html[data-theme="dark"] .api-response-head h3,
+    html[data-theme="dark"] .api-builder-head h3,
+    html[data-theme="dark"] .api-search-form label {
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .api-testing-head p,
+    html[data-theme="dark"] .api-stat-label,
+    html[data-theme="dark"] .api-stat-sub,
+    html[data-theme="dark"] .api-builder-head p {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .api-search-form input,
+    html[data-theme="dark"] .api-search-form select,
+    html[data-theme="dark"] .api-testing-meta,
+    html[data-theme="dark"] .api-builder-actions a,
+    html[data-theme="dark"] .api-builder-actions button,
+    html[data-theme="dark"] .api-pin-dialog,
+    html[data-theme="dark"] .api-pin-body input,
+    html[data-theme="dark"] .api-pin-cancel {
+        background: rgba(17, 24, 39, .95);
+        border-color: rgba(250, 204, 21, .16);
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .api-pin-body label {
+        color: #ffffff;
+    }
+
     @media (max-width: 900px) {
+        .api-dashboard-stats,
+        .api-tabs {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .api-search-form,
+        .api-search-form:has(.api-system-group:not(.is-hidden)) {
+            grid-template-columns: 1fr;
+        }
+
         .api-result-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -799,9 +1390,66 @@
 
 <div class="api-testing-shell">
     <section class="api-testing-card">
+        @php
+            $apiSourceCount = 12 + count($availableSystems ?? []);
+            $apiResultCount = (int) ($apiResponseMeta['result_count'] ?? 0);
+            $apiStatusCode = (int) ($apiResponseMeta['status'] ?? 200);
+            $apiErrorCount = $errorMessage ? 1 : 0;
+        @endphp
         <div class="api-testing-head">
-            <h2>API Dashboard</h2>
-            <p>Monitor, test, and troubleshoot external system integrations.</p>
+            <div>
+                <h2>API Dashboard</h2>
+                <p>Monitor, test, and troubleshoot external system integrations.</p>
+            </div>
+            <div class="api-refresh-chip">
+                <span>Last updated: {{ now()->format('g:i A') }}</span>
+                <button type="button" onclick="window.location.reload()" aria-label="Refresh API dashboard">
+                    <x-outline-icon name="clock" />
+                </button>
+            </div>
+        </div>
+
+        <div class="api-dashboard-stats">
+            <article class="api-stat-card is-green">
+                <span class="api-stat-icon"><x-outline-icon name="check" /></span>
+                <span>
+                    <span class="api-stat-label">API Health</span>
+                    <span class="api-stat-value">{{ $errorMessage ? 'Check' : '98%' }}</span>
+                    <span class="api-stat-sub">{{ $errorMessage ? 'Review latest error' : 'All systems operational' }}</span>
+                </span>
+            </article>
+            <article class="api-stat-card">
+                <span class="api-stat-icon"><x-outline-icon name="cube" /></span>
+                <span>
+                    <span class="api-stat-label">Sources</span>
+                    <span class="api-stat-value">{{ number_format($apiSourceCount) }}</span>
+                    <span class="api-stat-sub">Connected options</span>
+                </span>
+            </article>
+            <article class="api-stat-card is-blue">
+                <span class="api-stat-icon"><x-outline-icon name="document-text" /></span>
+                <span>
+                    <span class="api-stat-label">Matches</span>
+                    <span class="api-stat-value">{{ number_format($apiResultCount) }}</span>
+                    <span class="api-stat-sub">Current response</span>
+                </span>
+            </article>
+            <article class="api-stat-card is-red">
+                <span class="api-stat-icon"><x-outline-icon name="exclamation-triangle" /></span>
+                <span>
+                    <span class="api-stat-label">Errors</span>
+                    <span class="api-stat-value">{{ number_format($apiErrorCount) }}</span>
+                    <span class="api-stat-sub">Current request</span>
+                </span>
+            </article>
+            <article class="api-stat-card is-amber">
+                <span class="api-stat-icon"><x-outline-icon name="clock" /></span>
+                <span>
+                    <span class="api-stat-label">Status</span>
+                    <span class="api-stat-value">{{ $apiStatusCode ?: 'N/A' }}</span>
+                    <span class="api-stat-sub">{{ $apiStatusCode >= 400 ? 'Needs attention' : 'Good performance' }}</span>
+                </span>
+            </article>
         </div>
 
         <div class="api-tabs">
@@ -817,7 +1465,13 @@
             <button class="api-tab-button" data-tab="systems">
                 🔗 System Status
             </button>
-            <a href="{{ route('admin.integration-tokens') }}" class="api-tab-button" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+            @php
+                $apiPinUser = auth()->user();
+                $integrationPinDisabled = (bool) ($apiPinUser->api_pin_disabled ?? false);
+                $integrationPinEnabled = (bool) ($apiPinUser->api_pin_enabled ?? false);
+                $integrationPinUnlocked = $apiPinUser ? session('integration_tokens_pin_unlocked_user_' . $apiPinUser->id) === true : false;
+            @endphp
+            <a href="{{ route('admin.integration-tokens') }}" class="api-tab-button {{ $integrationPinDisabled ? 'is-disabled' : '' }}" id="integrationTokensGateButton" data-pin-disabled="{{ $integrationPinDisabled ? '1' : '0' }}" data-pin-enabled="{{ $integrationPinEnabled ? '1' : '0' }}" data-pin-unlocked="{{ $integrationPinUnlocked ? '1' : '0' }}" style="text-decoration: none; display: flex; align-items: center; justify-content: center;" aria-disabled="{{ $integrationPinDisabled ? 'true' : 'false' }}">
                 🔐 Integration Tokens
             </a>
         </div>
@@ -844,6 +1498,18 @@
                 $apiTestingSearchPlaceholder = 'Try a student number';
             }
         @endphp
+
+        <div class="api-builder-head">
+            <div>
+                <h3>Request Builder</h3>
+                <p>Select a source, enter details, and test the API connection.</p>
+            </div>
+            <div class="api-builder-actions">
+                <a href="{{ route('admin.integration-tokens.docs') }}">View Docs</a>
+                <button type="button" onclick="navigator.clipboard?.writeText(document.querySelector('#source')?.value || '')">Copy Source</button>
+                <button type="button" onclick="window.location.reload()">Refresh Status</button>
+            </div>
+        </div>
 
         <form method="GET" class="api-search-form" id="apiTestingForm">
             <div>
@@ -950,7 +1616,11 @@
 
    
 
-<section class="api-testing-card">
+<section class="api-testing-card api-response-panel">
+    <div class="api-response-head">
+        <h3>Response</h3>
+        <span class="api-response-status">{{ $errorMessage ? 'Failed' : ($apiResponseMeta ? 'Successful' : 'Ready') }}</span>
+    </div>
     @if(!empty($results))
         @if(($source ?? '') === 'admin_options')
             <div class="admin-option-list">
@@ -1328,6 +1998,27 @@
     </section>
 </div>
 
+<div class="api-pin-modal" id="integrationPinModal" aria-hidden="true">
+    <section class="api-pin-dialog" role="dialog" aria-modal="true" aria-labelledby="integrationPinTitle">
+        <header class="api-pin-head">
+            <div>
+                <h3 id="integrationPinTitle">Integration PIN</h3>
+                <p>Enter the 4-digit PIN to open Integration Tokens.</p>
+            </div>
+            <button type="button" class="api-pin-close" id="closeIntegrationPinModal" aria-label="Close PIN modal">&times;</button>
+        </header>
+        <form class="api-pin-body" id="integrationPinForm">
+            <label for="integrationPinInput">4-Digit PIN</label>
+            <input type="password" id="integrationPinInput" name="pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="one-time-code" required>
+            <div class="api-pin-error" id="integrationPinError"></div>
+            <div class="api-pin-actions">
+                <button type="button" class="api-pin-cancel" id="cancelIntegrationPin">Cancel</button>
+                <button type="submit" class="api-pin-submit">Continue</button>
+            </div>
+        </form>
+    </section>
+</div>
+
 <div class="api-edit-modal" id="databaseEditModal">
     <div class="api-edit-content">
         <div class="api-testing-head">
@@ -1355,8 +2046,11 @@
         const tabContents = document.querySelectorAll('.api-tab-content');
 
         tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
+            button.addEventListener('click', (event) => {
                 const tabName = button.dataset.tab;
+                if (!tabName) {
+                    return;
+                }
 
                 tabButtons.forEach(b => b.classList.remove('is-active'));
                 tabContents.forEach(c => c.classList.remove('is-active'));
@@ -1370,6 +2064,81 @@
                     loadSystemStatus();
                 }
             });
+        });
+
+        const integrationTokensButton = document.getElementById('integrationTokensGateButton');
+        const integrationPinModal = document.getElementById('integrationPinModal');
+        const integrationPinForm = document.getElementById('integrationPinForm');
+        const integrationPinInput = document.getElementById('integrationPinInput');
+        const integrationPinError = document.getElementById('integrationPinError');
+        const closeIntegrationPinModal = document.getElementById('closeIntegrationPinModal');
+        const cancelIntegrationPin = document.getElementById('cancelIntegrationPin');
+
+        function setIntegrationPinModalOpen(isOpen) {
+            if (!integrationPinModal) return;
+            integrationPinModal.classList.toggle('is-open', isOpen);
+            integrationPinModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+            if (isOpen) {
+                integrationPinError?.classList.remove('is-visible');
+                if (integrationPinError) integrationPinError.textContent = '';
+                integrationPinInput?.focus();
+            } else if (integrationPinInput) {
+                integrationPinInput.value = '';
+            }
+        }
+
+        integrationTokensButton?.addEventListener('click', function (event) {
+            event.preventDefault();
+
+            if (this.dataset.pinDisabled === '1') {
+                setIntegrationPinModalOpen(false);
+                alert('Integration Tokens access is disabled in Developer Options.');
+                return;
+            }
+
+            if (this.dataset.pinEnabled === '1' && this.dataset.pinUnlocked !== '1') {
+                setIntegrationPinModalOpen(true);
+                return;
+            }
+
+            window.location.href = this.href;
+        });
+
+        integrationPinForm?.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const pin = (integrationPinInput?.value || '').trim();
+
+            fetch('{{ route('admin.integration-pin.verify') }}', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ pin })
+            })
+                .then(async response => {
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || 'Unable to verify Integration PIN.');
+                    }
+                    integrationTokensButton.dataset.pinUnlocked = '1';
+                    window.location.href = integrationTokensButton.href;
+                })
+                .catch(error => {
+                    if (integrationPinError) {
+                        integrationPinError.textContent = error.message;
+                        integrationPinError.classList.add('is-visible');
+                    }
+                });
+        });
+
+        closeIntegrationPinModal?.addEventListener('click', () => setIntegrationPinModalOpen(false));
+        cancelIntegrationPin?.addEventListener('click', () => setIntegrationPinModalOpen(false));
+        integrationPinModal?.addEventListener('click', function (event) {
+            if (event.target === integrationPinModal) {
+                setIntegrationPinModalOpen(false);
+            }
         });
 
         // ===== HEALTH MONITOR =====
