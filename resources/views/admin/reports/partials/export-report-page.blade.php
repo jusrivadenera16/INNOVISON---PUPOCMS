@@ -212,6 +212,12 @@
         line-height: 1.35;
     }
 
+    .export-action-card.is-filter .export-card-copy,
+    .export-action-card.is-export .export-card-copy {
+        display: block;
+        margin-top: 5px;
+    }
+
     .export-action-card:hover .export-card-label,
     .export-action-card:hover .export-card-value,
     .export-action-card:hover .export-card-copy,
@@ -705,6 +711,7 @@
                     <span>
                         <span class="export-card-label">Report Filter</span>
                         <span class="export-card-value">Filter</span>
+                        <span class="export-card-copy">Click to view</span>
                     </span>
                     <span class="export-card-arrow" aria-hidden="true">&rarr;</span>
                 </button>
@@ -715,6 +722,7 @@
                         <span>
                             <span class="export-card-label">Export Inventory</span>
                             <span class="export-card-value">{{ $link['label'] === 'Inventory of Medicines' ? 'Medicines' : 'Supplies' }}</span>
+                            <span class="export-card-copy">Click to view</span>
                         </span>
                         <span class="export-card-arrow" aria-hidden="true">&rarr;</span>
                     </a>
@@ -741,28 +749,24 @@
                 <span>
                     <span class="export-card-label">Report Filter</span>
                     <span class="export-card-value">Filter</span>
+                    <span class="export-card-copy">Click to view</span>
                 </span>
                 <span class="export-card-arrow" aria-hidden="true">→</span>
             </button>
 
-            <div class="export-action-card is-export">
+            <a href="{{ $exportUrl }}" target="_blank" class="export-action-card is-export">
                 <span class="export-card-icon"><x-outline-icon name="document-text" /></span>
                 <span>
                     <span class="export-card-label">Export Report</span>
                     <span class="export-card-value">{{ $exportLabel }}</span>
+                    <span class="export-card-copy">Click to view</span>
                 </span>
-                @if(!empty($exportLinks))
-                    <span class="export-link-stack">
-                        @foreach($exportLinks as $link)
-                            <a href="{{ $link['url'] }}" target="_blank" class="export-card-link">{{ $link['label'] }}</a>
-                        @endforeach
-                    </span>
-                @else
-                    <span class="export-link-stack">
+                <span class="export-card-arrow" aria-hidden="true">&rarr;</span>
+                @if(false)
                         <a href="{{ $exportUrl }}" target="_blank" class="export-card-link">→</a>
                     </span>
                 @endif
-            </div>
+            </a>
             @endif
         </div>
     </section>

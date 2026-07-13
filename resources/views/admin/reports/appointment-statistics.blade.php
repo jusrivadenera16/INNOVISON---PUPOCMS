@@ -117,6 +117,13 @@
         outline: none;
     }
 
+    .appointment-stats-back,
+    .appointment-stats-back:link,
+    .appointment-stats-back:visited,
+    .appointment-stats-back:active {
+        color: #ffffff !important;
+    }
+
     .appointment-stats-filter-toggle,
     .appointment-stats-filter-button {
         justify-content: center;

@@ -1098,6 +1098,92 @@
         width: 100% !important;
     }
 
+    /* Final uniform report-card color pass */
+    .report-card,
+    .report-card.report-card-primary,
+    .report-card.report-card-audit,
+    html[data-theme="dark"] .report-card,
+    html[data-theme="dark"] .report-card.report-card-primary,
+    html[data-theme="dark"] .report-card.report-card-audit {
+        background: #70131B !important;
+        background-image: none !important;
+        border: 1px solid rgba(250, 204, 21, 0.62) !important;
+        box-shadow: inset 0 -3px 0 rgba(250, 204, 21, 0.92), 0 14px 26px rgba(0, 0, 0, 0.18) !important;
+        color: #ffffff !important;
+    }
+
+    .report-card::before,
+    .report-card.report-card-primary::before,
+    .report-card.report-card-audit::before,
+    html[data-theme="dark"] .report-card::before,
+    html[data-theme="dark"] .report-card.report-card-primary::before,
+    html[data-theme="dark"] .report-card.report-card-audit::before {
+        background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 38%) !important;
+    }
+
+    .report-card:hover,
+    .report-card:focus-visible,
+    .report-card.report-card-primary:hover,
+    .report-card.report-card-primary:focus-visible,
+    .report-card.report-card-audit:hover,
+    .report-card.report-card-audit:focus-visible,
+    html[data-theme="dark"] .report-card:hover,
+    html[data-theme="dark"] .report-card:focus-visible,
+    html[data-theme="dark"] .report-card.report-card-primary:hover,
+    html[data-theme="dark"] .report-card.report-card-primary:focus-visible,
+    html[data-theme="dark"] .report-card.report-card-audit:hover,
+    html[data-theme="dark"] .report-card.report-card-audit:focus-visible {
+        background: #facc15 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+    }
+
+    .report-card .report-main-title,
+    .report-card .report-card-copy,
+    html[data-theme="dark"] .report-card .report-main-title,
+    html[data-theme="dark"] .report-card .report-card-copy {
+        color: #ffffff !important;
+    }
+
+    .report-card:hover .report-main-title,
+    .report-card:hover .report-card-copy,
+    .report-card:focus-visible .report-main-title,
+    .report-card:focus-visible .report-card-copy,
+    html[data-theme="dark"] .report-card:hover .report-main-title,
+    html[data-theme="dark"] .report-card:hover .report-card-copy,
+    html[data-theme="dark"] .report-card:focus-visible .report-main-title,
+    html[data-theme="dark"] .report-card:focus-visible .report-card-copy {
+        color: #70131B !important;
+    }
+
+    .report-card .report-card-icon,
+    .report-card.report-card-primary .report-card-icon,
+    .report-card.report-card-audit .report-card-icon,
+    html[data-theme="dark"] .report-card .report-card-icon,
+    html[data-theme="dark"] .report-card.report-card-primary .report-card-icon,
+    html[data-theme="dark"] .report-card.report-card-audit .report-card-icon {
+        color: #facc15 !important;
+        background: rgba(255, 248, 196, 0.12) !important;
+        border-color: rgba(255, 248, 196, 0.16) !important;
+    }
+
+    .report-card .report-card-icon svg,
+    .report-card .report-card-icon svg *,
+    .report-card.report-card-primary .report-card-icon svg,
+    .report-card.report-card-primary .report-card-icon svg *,
+    .report-card.report-card-audit .report-card-icon svg,
+    .report-card.report-card-audit .report-card-icon svg *,
+    html[data-theme="dark"] .report-card .report-card-icon svg,
+    html[data-theme="dark"] .report-card .report-card-icon svg *,
+    html[data-theme="dark"] .report-card.report-card-primary .report-card-icon svg,
+    html[data-theme="dark"] .report-card.report-card-primary .report-card-icon svg *,
+    html[data-theme="dark"] .report-card.report-card-audit .report-card-icon svg,
+    html[data-theme="dark"] .report-card.report-card-audit .report-card-icon svg * {
+        color: #facc15 !important;
+        stroke: #facc15 !important;
+    }
+
 </style>
 @endpush
 
@@ -1141,12 +1227,12 @@
             </div>
         </a>
 
-        <a href="{{ $digitalLogbookUrl }}" class="report-card report-card-primary">
+        <a href="{{ $healthFormsUrl }}" class="report-card">
             <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
-            <span class="report-card-icon"><x-outline-icon name="clipboard-document-list" /></span>
+            <span class="report-card-icon"><x-outline-icon name="document-text" /></span>
             <div>
-                <div class="report-main-title">Digital Logbook</div>
-                <p class="report-card-copy">Monitor clinic treatments, visit logs, and submitted form activity.</p>
+                <div class="report-main-title">Health Forms</div>
+                <p class="report-card-copy">View issued health forms summarized by course and selected date range.</p>
             </div>
         </a>
 
@@ -1159,12 +1245,12 @@
             </div>
         </a>
 
-        <a href="{{ $exportHubUrl }}" class="report-card">
+        <a href="{{ $digitalLogbookUrl }}" class="report-card report-card-primary">
             <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
-            <span class="report-card-icon"><x-outline-icon name="arrow-long-right" /></span>
+            <span class="report-card-icon"><x-outline-icon name="clipboard-document-list" /></span>
             <div>
-                <div class="report-main-title">Export Reports</div>
-                <p class="report-card-copy">Open the export hub for printable and downloadable clinic reports.</p>
+                <div class="report-main-title">Digital Logbook</div>
+                <p class="report-card-copy">Monitor clinic treatments, visit logs, and submitted form activity.</p>
             </div>
         </a>
 
@@ -1177,12 +1263,12 @@
             </div>
         </a>
 
-        <a href="{{ $healthFormsUrl }}" class="report-card">
+        <a href="{{ $exportHubUrl }}" class="report-card">
             <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
-            <span class="report-card-icon"><x-outline-icon name="document-text" /></span>
+            <span class="report-card-icon"><x-outline-icon name="arrow-long-right" /></span>
             <div>
-                <div class="report-main-title">Health Forms</div>
-                <p class="report-card-copy">View issued health forms summarized by course and selected date range.</p>
+                <div class="report-main-title">Export Reports</div>
+                <p class="report-card-copy">Open the export hub for printable and downloadable clinic reports.</p>
             </div>
         </a>
 
