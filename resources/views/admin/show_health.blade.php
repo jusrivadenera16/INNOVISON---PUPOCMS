@@ -84,8 +84,8 @@
     }
     .profile-quick-row {
         display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        gap: 10px;
+        grid-template-columns: minmax(146px, 1.25fr) minmax(86px, 0.8fr) minmax(72px, 0.65fr) minmax(188px, 1.55fr) minmax(156px, 1.25fr);
+        gap: 12px;
         margin-top: 16px;
     }
     .profile-quick-item {
@@ -125,6 +125,12 @@
         font-size: 11px;
         font-weight: 900;
         word-break: break-word;
+    }
+    .profile-quick-item:nth-child(4) strong,
+    .profile-quick-item:nth-child(5) strong {
+        white-space: nowrap;
+        word-break: normal;
+        overflow-wrap: normal;
     }
     .profile-status-card {
         min-height: 82px;
@@ -214,14 +220,14 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        border-radius: 999px;
+        border-radius: 10px;
         min-height: 44px;
         padding: 11px 18px;
         font-size: 15px;
         font-weight: 800;
-        color: #70131B;
-        background: #ffffff;
-        border: 1px solid rgba(112, 19, 27, 0.34);
+        color: #ffffff;
+        background: #70131B;
+        border: 1px solid #8f2230;
         text-decoration: none;
         box-shadow:
             0 0 0 2px rgba(112, 19, 27, 0.08),
@@ -252,8 +258,8 @@
         color: #70131B !important;
         text-decoration: none;
         transform: translateY(-1px);
-        border-color: rgba(112, 19, 27, 0.58);
-        background: #ffffff;
+        border-color: #facc15;
+        background: #facc15;
         box-shadow:
             0 0 0 3px rgba(250, 204, 21, 0.18),
             0 14px 24px rgba(112, 19, 27, 0.16);
@@ -265,14 +271,28 @@
     .profile-top-btn:hover,
     .profile-top-btn span,
     .profile-top-btn svg {
-        color: #70131B !important;
+        color: #ffffff !important;
     }
     .profile-top-btn svg,
     .profile-top-btn svg * {
+        stroke: #ffffff !important;
+    }
+    .profile-top-btn:hover span,
+    .profile-top-btn:hover svg {
+        color: #70131B !important;
+    }
+    .profile-top-btn:hover svg,
+    .profile-top-btn:hover svg * {
         stroke: #70131B !important;
     }
     .profile-top-btn:hover::after {
         left: 128%;
+    }
+    .profile-top-btn:hover,
+    .profile-top-btn:focus {
+        color: #70131B !important;
+        background: #facc15;
+        border-color: #facc15;
     }
     .profile-head-actions { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .profile-switch { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -388,9 +408,9 @@
     }
     .profile-sync-button {
         border: 1px solid #8f2230;
-        border-radius: 999px;
+        border-radius: 10px;
         background: #70131B;
-        color: #facc15;
+        color: #ffffff;
         min-height: 42px;
         padding: 10px 16px;
         font-size: 13px;
@@ -438,7 +458,7 @@
         border: 1px solid #8f2230;
         border-radius: 12px;
         background: #70131B;
-        color: #facc15;
+        color: #ffffff;
         min-height: 42px;
         padding: 10px 16px;
         font-size: 13px;
@@ -492,7 +512,7 @@
         border-radius: 18px;
         background: #ffffff;
         border: 1px solid #fecaca;
-        border-bottom: 4px solid #facc15;
+        border-bottom: 4px solid #70131B;
         overflow: hidden;
         box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
     }
@@ -505,18 +525,41 @@
         background: linear-gradient(135deg, #7f1d1d, #b91c1c);
         color: #ffffff;
     }
+    .correction-head-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+    .correction-head-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.26);
+        background: rgba(255, 255, 255, 0.10);
+        color: #facc15;
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+    }
+    .correction-head-icon svg {
+        width: 22px;
+        height: 22px;
+    }
     .correction-head h3 {
         margin: 0;
-        color: #ffffff;
+        color: #ffffff !important;
         font-size: 18px;
         font-weight: 900;
     }
     .correction-head p {
         margin: 4px 0 0;
-        color: rgba(255, 255, 255, 0.88);
+        color: rgba(255, 255, 255, 0.88) !important;
         font-size: 13px;
     }
     .correction-close {
+        position: relative;
+        overflow: hidden;
         width: 38px;
         height: 38px;
         border-radius: 999px;
@@ -527,6 +570,30 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
+        transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+    }
+    .correction-close::after {
+        content: "";
+        position: absolute;
+        top: -35%;
+        left: -72%;
+        width: 48%;
+        height: 170%;
+        background: linear-gradient(120deg, transparent 0%, rgba(255, 244, 180, .18) 34%, rgba(255, 244, 180, .58) 50%, rgba(255, 244, 180, .18) 66%, transparent 100%);
+        transform: skewX(-18deg);
+        transition: left .48s ease;
+        pointer-events: none;
+    }
+    .correction-close:hover,
+    .correction-close:focus {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+    }
+    .correction-close:hover::after,
+    .correction-close:focus::after {
+        left: 128%;
     }
     .correction-close svg {
         width: 18px;
@@ -587,6 +654,52 @@
         color: #111827;
         font-size: 14px;
         resize: vertical;
+    }
+    .correction-select-wrap {
+        position: relative;
+    }
+    .correction-select-wrap::after {
+        content: "";
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        width: 10px;
+        height: 10px;
+        border-right: 2px solid #70131B;
+        border-bottom: 2px solid #70131B;
+        transform: translateY(-65%) rotate(45deg);
+        pointer-events: none;
+    }
+    .correction-field select,
+    .correction-field input[type="text"] {
+        width: 100%;
+        min-height: 48px;
+        border: 1px solid #f3c7c7;
+        border-bottom: 3px solid #70131B;
+        border-radius: 12px;
+        padding: 0 42px 0 12px;
+        color: #111827;
+        background: #ffffff;
+        font-size: 14px;
+        font-weight: 800;
+    }
+    .correction-field select {
+        appearance: none;
+        cursor: pointer;
+    }
+    .correction-field select:focus,
+    .correction-field input[type="text"]:focus,
+    .correction-field textarea:focus {
+        outline: 0;
+        border-color: #8f2230;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, 0.12);
+    }
+    .correction-other-field {
+        display: none;
+        margin-top: 10px;
+    }
+    .correction-other-field.is-open {
+        display: block;
     }
     .correction-actions {
         display: flex;
@@ -721,29 +834,8 @@
     .doc-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 0; }
     .doc-link { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 0; padding: 0; color: #475569; font-size: 12px; font-weight: 900; text-decoration: none; background: transparent; }
     .doc-preview { width: 100%; aspect-ratio: 4 / 3; min-height: 210px; height: auto; border: 1px solid #f3d0d0; border-radius: 9px; overflow: hidden; background: #ffffff; }
-    .doc-preview iframe, .doc-preview img { width: 100%; height: 100%; border: 0; object-fit: cover; background: #fff; }
-    .doc-preview:has(iframe) {
-        display: grid;
-        place-items: center;
-        background:
-            radial-gradient(circle at 50% 42%, rgba(128, 0, 0, 0.09), transparent 46%),
-            linear-gradient(180deg, #fff7f7, #ffffff);
-    }
-    .doc-preview:has(iframe)::before {
-        content: "PDF";
-        width: 54px;
-        height: 54px;
-        border-radius: 14px;
-        display: grid;
-        place-items: center;
-        background: #fff1f2;
-        color: #7f1d2d;
-        font-size: 12px;
-        font-weight: 900;
-    }
-    .doc-preview:has(iframe) iframe {
-        display: none;
-    }
+    .doc-preview iframe, .doc-preview img { width: 100%; height: 100%; border: 0; background: #fff; }
+    .doc-preview img { object-fit: cover; }
     .doc-preview-health-form {
         display: grid;
         place-items: center;
@@ -845,6 +937,7 @@
         color: #facc15;
     }
     [data-theme="dark"] .profile-top-btn {
+        background: #70131B;
         color: #ffffff !important;
         border-color: rgba(250, 204, 21, 0.30);
         box-shadow:
@@ -894,6 +987,7 @@
         color: #f8fafc;
     }
     [data-theme="dark"] .correction-field label,
+    [data-theme="dark"] .profile-correction-title,
     [data-theme="dark"] .profile-correction-copy {
         color: #cbd5e1;
     }
@@ -901,6 +995,16 @@
         background: #0f172a;
         border-color: #334155;
         color: #f8fafc;
+    }
+    [data-theme="dark"] .correction-field select,
+    [data-theme="dark"] .correction-field input[type="text"] {
+        background: #0f172a;
+        border-color: #334155;
+        border-bottom-color: #70131B;
+        color: #f8fafc;
+    }
+    [data-theme="dark"] .correction-select-wrap::after {
+        border-color: #facc15;
     }
     [data-theme="dark"] .profile-sync-title,
     [data-theme="dark"] .profile-sync-message {
@@ -1019,6 +1123,12 @@
     };
     $profileStatusLabel = $profileStatusNormalized !== '' ? $profileStatusNormalized : 'Not Processed';
     $documentRouteName = request()->routeIs('assistant.*') ? 'assistant.walkin.document' : 'walkin.document';
+    $isImageDocument = function ($path) {
+        $path = parse_url((string) $path, PHP_URL_PATH) ?: (string) $path;
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        return in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'], true);
+    };
     $displayStudentNumber = trim((string) optional($profile->user)->student_number);
     if ($displayStudentNumber === '' || \Illuminate\Support\Str::startsWith(\Illuminate\Support\Str::upper($displayStudentNumber), 'CLN-')) {
         $displayStudentNumber = 'N/A';
@@ -1157,33 +1267,6 @@
             </div>
         </div>
 
-        @if($canRequestFileCorrection)
-            <div class="profile-correction-card">
-                <div class="profile-correction-icon"><x-outline-icon name="document-text" /></div>
-                <div>
-                    <p class="profile-correction-title">File Correction</p>
-                    <p class="profile-correction-copy">Request replacement of a specific uploaded requirement without deleting approval history or PUPTAS sync records.</p>
-                    <div class="profile-correction-meta">
-                        <span>Last Request:</span>
-                        <span class="profile-last-request">{{ $profile->resubmission_requested_at ? $profile->resubmission_requested_at->format('M d, Y h:i A') : 'None' }}</span>
-                        <span>Status:</span>
-                        <span class="profile-last-request">{{ $correctionStatusLabel }}</span>
-                        @if($hasCorrectionRequest)
-                            <span class="profile-correction-history-wrap">
-                                <button type="button" class="profile-correction-history-btn">History</button>
-                                <span class="profile-correction-history-bubble">
-                                    <strong>Correction History</strong>
-                                    <span>{!! nl2br(e($correctionHistoryText !== '' ? $correctionHistoryText : 'No history yet.')) !!}</span>
-                                </span>
-                            </span>
-                        @endif
-                    </div>
-                </div>
-                <button type="button" class="profile-correction-button" id="openCorrectionModal">
-                    Request File Correction
-                </button>
-            </div>
-        @endif
     </div>
 
     <div class="profile-card">
@@ -1316,7 +1399,13 @@
                             <x-outline-icon name="document-text" /> Open
                         </a>
                     </div>
-                    <div class="doc-preview"><iframe src="{{ $medicalCertificateUrl }}"></iframe></div>
+                    <div class="doc-preview">
+                        @if($isImageDocument($profile->medical_certificate))
+                            <img src="{{ $medicalCertificateUrl }}" alt="Medical Certificate">
+                        @else
+                            <iframe src="{{ $medicalCertificateUrl }}" title="Medical Certificate preview"></iframe>
+                        @endif
+                    </div>
                 @else
                     <div class="doc-missing">No medical certificate uploaded.</div>
                 @endif
@@ -1331,7 +1420,13 @@
                             <x-outline-icon name="document-text" /> Open
                         </a>
                     </div>
-                    <div class="doc-preview"><iframe src="{{ $medicalAssessmentUrl }}"></iframe></div>
+                    <div class="doc-preview">
+                        @if($isImageDocument($profile->medical_assessment_upload))
+                            <img src="{{ $medicalAssessmentUrl }}" alt="Medical Assessment Copy">
+                        @else
+                            <iframe src="{{ $medicalAssessmentUrl }}" title="Medical Assessment Copy preview"></iframe>
+                        @endif
+                    </div>
                 @else
                     <div class="doc-missing">No medical assessment copy uploaded.</div>
                 @endif
@@ -1346,7 +1441,13 @@
                             <x-outline-icon name="document-text" /> Open
                         </a>
                     </div>
-                    <div class="doc-preview"><iframe src="{{ $healthDeclarationUrl }}"></iframe></div>
+                    <div class="doc-preview">
+                        @if($isImageDocument($profile->health_declaration))
+                            <img src="{{ $healthDeclarationUrl }}" alt="Health Declaration">
+                        @else
+                            <iframe src="{{ $healthDeclarationUrl }}" title="Health Declaration preview"></iframe>
+                        @endif
+                    </div>
                 @else
                     <div class="doc-missing">No health declaration uploaded.</div>
                 @endif
@@ -1361,7 +1462,13 @@
                             <x-outline-icon name="document-text" /> Open
                         </a>
                     </div>
-                    <div class="doc-preview"><iframe src="{{ $chestXrayUrl }}"></iframe></div>
+                    <div class="doc-preview">
+                        @if($isImageDocument($profile->chest_xray_result))
+                            <img src="{{ $chestXrayUrl }}" alt="Chest X-ray Result">
+                        @else
+                            <iframe src="{{ $chestXrayUrl }}" title="Chest X-ray Result preview"></iframe>
+                        @endif
+                    </div>
                 @else
                     <div class="doc-missing">No chest X-ray result uploaded.</div>
                 @endif
@@ -1399,6 +1506,34 @@
                 @endif
             </div>
         </div>
+
+        @if($canRequestFileCorrection)
+            <div class="profile-correction-card">
+                <div class="profile-correction-icon"><x-outline-icon name="document-text" /></div>
+                <div>
+                    <p class="profile-correction-title">File Correction</p>
+                    <p class="profile-correction-copy">Request replacement of a specific uploaded requirement without deleting approval history or PUPTAS sync records.</p>
+                    <div class="profile-correction-meta">
+                        <span>Last Request:</span>
+                        <span class="profile-last-request">{{ $profile->resubmission_requested_at ? $profile->resubmission_requested_at->format('M d, Y h:i A') : 'None' }}</span>
+                        <span>Status:</span>
+                        <span class="profile-last-request">{{ $correctionStatusLabel }}</span>
+                        @if($hasCorrectionRequest)
+                            <span class="profile-correction-history-wrap">
+                                <button type="button" class="profile-correction-history-btn">History</button>
+                                <span class="profile-correction-history-bubble">
+                                    <strong>Correction History</strong>
+                                    <span>{!! nl2br(e($correctionHistoryText !== '' ? $correctionHistoryText : 'No history yet.')) !!}</span>
+                                </span>
+                            </span>
+                        @endif
+                    </div>
+                </div>
+                <button type="button" class="profile-correction-button" id="openCorrectionModal">
+                    Request File Correction
+                </button>
+            </div>
+        @endif
     </div>
 
     <div class="profile-card profile-timeline-card">
@@ -1439,9 +1574,12 @@
     <div class="correction-modal" id="correctionModal" aria-hidden="true">
         <div class="correction-card">
             <div class="correction-head">
-                <div>
-                    <h3>Request File Correction</h3>
-                    <p>Select only the file/s that need replacement. The student will see a reupload prompt.</p>
+                <div class="correction-head-title">
+                    <span class="correction-head-icon"><x-outline-icon name="document-text" /></span>
+                    <div>
+                        <h3>Request File Correction</h3>
+                        <p>Select only the file/s that need replacement. The student will see a reupload prompt.</p>
+                    </div>
                 </div>
                 <button type="button" class="correction-close" id="closeCorrectionModal" aria-label="Close correction modal">
                     <x-outline-icon name="x-mark" />
@@ -1475,8 +1613,25 @@
                     </label>
                 </div>
                 <div class="correction-field">
-                    <label for="correctionReason">Reason</label>
-                    <textarea id="correctionReason" name="pending_reason" required placeholder="Example: Medical certificate has no signature and must be replaced."></textarea>
+                    <label for="correctionReasonSelect">Reason</label>
+                    <input type="hidden" id="correctionReason" name="pending_reason" required>
+                    <div class="correction-select-wrap">
+                        <select id="correctionReasonSelect" required>
+                            <option value="">Select a reason</option>
+                            <option value="Blurred or unreadable uploaded document">Blurred or unreadable uploaded document</option>
+                            <option value="Incorrect file was uploaded">Incorrect file was uploaded</option>
+                            <option value="Document is missing signature">Document is missing signature</option>
+                            <option value="Document is expired or outdated">Document is expired or outdated</option>
+                            <option value="Document has incomplete information">Document has incomplete information</option>
+                            <option value="Wrong student document was uploaded">Wrong student document was uploaded</option>
+                            <option value="Photo or scan must be clearer">Photo or scan must be clearer</option>
+                            <option value="Others">Others</option>
+                        </select>
+                    </div>
+                    <div class="correction-other-field" id="correctionOtherField">
+                        <label for="correctionReasonOther">Other Reason</label>
+                        <textarea id="correctionReasonOther" placeholder="Type the specific reason for replacement."></textarea>
+                    </div>
                 </div>
                 <div class="correction-actions">
                     <button type="button" class="correction-cancel" id="cancelCorrectionModal">Cancel</button>
@@ -1514,6 +1669,29 @@
     const openCorrectionModal = document.getElementById('openCorrectionModal');
     const closeCorrectionModal = document.getElementById('closeCorrectionModal');
     const cancelCorrectionModal = document.getElementById('cancelCorrectionModal');
+    const correctionReason = document.getElementById('correctionReason');
+    const correctionReasonSelect = document.getElementById('correctionReasonSelect');
+    const correctionReasonOther = document.getElementById('correctionReasonOther');
+    const correctionOtherField = document.getElementById('correctionOtherField');
+    const correctionForm = document.querySelector('.correction-body');
+
+    function syncCorrectionReason() {
+        if (!correctionReason || !correctionReasonSelect) return '';
+
+        const selectedReason = correctionReasonSelect.value.trim();
+        const otherReason = correctionReasonOther ? correctionReasonOther.value.trim() : '';
+        const finalReason = selectedReason === 'Others' ? otherReason : selectedReason;
+
+        correctionReason.value = finalReason;
+        if (correctionOtherField) {
+            correctionOtherField.classList.toggle('is-open', selectedReason === 'Others');
+        }
+        if (correctionReasonOther) {
+            correctionReasonOther.required = selectedReason === 'Others';
+        }
+
+        return finalReason;
+    }
 
     function setCorrectionModal(open) {
         if (!correctionModal) return;
@@ -1531,6 +1709,20 @@
 
     cancelCorrectionModal?.addEventListener('click', function () {
         setCorrectionModal(false);
+    });
+
+    correctionReasonSelect?.addEventListener('change', syncCorrectionReason);
+    correctionReasonOther?.addEventListener('input', syncCorrectionReason);
+    correctionForm?.addEventListener('submit', function (event) {
+        const finalReason = syncCorrectionReason();
+        if (!finalReason) {
+            event.preventDefault();
+            if (correctionReasonSelect?.value === 'Others' && correctionReasonOther) {
+                correctionReasonOther.reportValidity();
+            } else {
+                correctionReasonSelect?.reportValidity();
+            }
+        }
     });
 
     correctionModal?.addEventListener('click', function (event) {

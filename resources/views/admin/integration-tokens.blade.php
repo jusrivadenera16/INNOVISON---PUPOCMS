@@ -652,6 +652,8 @@
     }
 
     .security-card {
+        position: relative;
+        overflow: hidden;
         border: 1px solid rgba(127, 29, 45, 0.10);
         border-radius: 16px;
         padding: 14px;
@@ -659,6 +661,7 @@
         display: flex;
         gap: 12px;
         align-items: center;
+        transition: background .22s ease, border-color .22s ease, color .22s ease, transform .22s ease, box-shadow .22s ease;
     }
 
     html[data-theme="dark"] .security-card {
@@ -672,6 +675,9 @@
         border-radius: 50%;
         background: #f8fafc;
         color: #64748b;
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
     }
 
     .security-card strong {
@@ -690,6 +696,89 @@
 
     html[data-theme="dark"] .security-card strong {
         color: #fff;
+    }
+
+    .security-card.docs-card {
+        border-color: rgba(250, 204, 21, .55);
+        background: #8f1827;
+        color: #ffffff;
+        cursor: pointer;
+        text-align: left;
+        box-shadow: 0 16px 30px rgba(112, 19, 27, .14);
+    }
+
+    .security-card.docs-card::after {
+        content: "";
+        position: absolute;
+        top: -45%;
+        bottom: -45%;
+        left: -130%;
+        width: 42%;
+        opacity: 0;
+        background: linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,248,196,.42) 48%, rgba(255,255,255,0) 100%);
+        transform: translateX(0) skewX(-18deg);
+        pointer-events: none;
+    }
+
+    .security-card.docs-card:hover,
+    .security-card.docs-card:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        transform: translateY(-3px);
+        box-shadow: 0 18px 34px rgba(112, 19, 27, .18);
+        outline: none;
+    }
+
+    .security-card.docs-card:hover::after,
+    .security-card.docs-card:focus-visible::after {
+        animation: docsCardSweep .92s ease both;
+    }
+
+    @keyframes docsCardSweep {
+        0% { opacity: 0; transform: translateX(0) skewX(-18deg); }
+        18%, 72% { opacity: .72; }
+        100% { opacity: 0; transform: translateX(720%) skewX(-18deg); }
+    }
+
+    .security-card.docs-card .security-icon {
+        border-radius: 12px;
+        background: rgba(255, 255, 255, .14);
+        border: 1px solid rgba(255, 255, 255, .18);
+        color: #facc15;
+    }
+
+    .security-card.docs-card strong,
+    .security-card.docs-card span,
+    .security-card.docs-card span span {
+        color: #ffffff;
+    }
+
+    .security-card.docs-card:hover .security-icon,
+    .security-card.docs-card:focus-visible .security-icon {
+        background: rgba(112, 19, 27, .12);
+        border-color: rgba(112, 19, 27, .24);
+        color: #70131B;
+    }
+
+    .security-card.docs-card:hover strong,
+    .security-card.docs-card:hover span,
+    .security-card.docs-card:hover span span,
+    .security-card.docs-card:focus-visible strong,
+    .security-card.docs-card:focus-visible span,
+    .security-card.docs-card:focus-visible span span {
+        color: #70131B;
+    }
+
+    html[data-theme="dark"] .security-card.docs-card {
+        background: #8f1827;
+        border-color: rgba(250, 204, 21, .55);
+    }
+
+    html[data-theme="dark"] .security-card.docs-card:hover,
+    html[data-theme="dark"] .security-card.docs-card:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
     }
 
     .sr-hidden {
@@ -1045,7 +1134,7 @@
             </span>
             <span><strong>Rotation Ready</strong><span>Generate, test, revoke</span></span>
         </div>
-        <button type="button" class="security-card" onclick="window.location.href='{{ route('admin.integration-tokens.docs') }}';" style="cursor: pointer; transition: all 0.2s ease;">
+        <button type="button" class="security-card docs-card" onclick="window.location.href='{{ route('admin.integration-tokens.docs') }}';">
             <span class="security-icon">
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4v15.5A2.5 2.5 0 0 0 6.5 22H20V6a2 2 0 0 0-2-2H4Z"/>

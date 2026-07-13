@@ -2084,10 +2084,10 @@
 
     .health-filter-form {
         display: grid;
-        grid-template-columns: minmax(180px, 1fr) minmax(150px, .72fr) minmax(180px, .72fr);
+        grid-template-columns: 1fr;
         align-items: end;
-        gap: 22px;
-        margin-top: 18px;
+        gap: 16px;
+        padding: 20px;
     }
 
     .health-filter-field {
@@ -2118,10 +2118,10 @@
     .health-filter-select {
         min-height: 48px;
         height: 48px;
-        padding: 12px 18px;
-        border-radius: 0 0 10px 10px;
-        border: 0 !important;
-        border-bottom: 3px solid #d8dee8 !important;
+        padding: 12px 42px 12px 14px;
+        border-radius: 12px;
+        border: 1px solid #f3c7c7 !important;
+        border-bottom: 3px solid #70131B !important;
         min-width: 180px;
         color: #111827;
         background: #ffffff !important;
@@ -2129,6 +2129,131 @@
         transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
         appearance: none;
         -webkit-appearance: none;
+    }
+
+    .health-filter-select-wrap {
+        position: relative;
+    }
+
+    .health-filter-select-wrap:not(.has-custom-dropdown)::after {
+        content: "";
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        width: 10px;
+        height: 10px;
+        border-right: 2px solid #70131B;
+        border-bottom: 2px solid #70131B;
+        transform: translateY(-65%) rotate(45deg);
+        pointer-events: none;
+    }
+
+    .health-filter-custom-source {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    .health-filter-custom-trigger {
+        width: 100%;
+        min-height: 48px;
+        border-radius: 14px;
+        border: 1px solid #efc7c7;
+        background: #fffdf8;
+        color: #111827;
+        padding: 12px 42px 12px 14px;
+        font-size: 14px;
+        font-weight: 800;
+        text-align: left;
+        box-shadow: 0 8px 16px rgba(112, 19, 27, .05);
+        position: relative;
+        cursor: pointer;
+        transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .health-filter-custom-trigger::after {
+        content: "";
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        width: 10px;
+        height: 10px;
+        border-right: 2px solid #70131B;
+        border-bottom: 2px solid #70131B;
+        transform: translateY(-65%) rotate(45deg);
+        transition: transform .18s ease;
+        pointer-events: none;
+    }
+
+    .health-filter-select-wrap.is-open .health-filter-custom-trigger {
+        border-color: #8f0012;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, .08), 0 10px 22px rgba(112, 19, 27, .10);
+        transform: translateY(-1px);
+    }
+
+    .health-filter-select-wrap.is-open .health-filter-custom-trigger::after {
+        transform: translateY(-35%) rotate(225deg);
+    }
+
+    .health-filter-custom-menu {
+        position: absolute;
+        z-index: 20;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        display: none;
+        padding: 8px;
+        border: 1px solid #f3c7c7;
+        border-radius: 14px;
+        background: #ffffff;
+        box-shadow: 0 18px 32px rgba(112, 19, 27, 0.14);
+        max-height: 180px;
+        overflow-y: auto;
+    }
+
+    .health-filter-select-wrap.is-open .health-filter-custom-menu {
+        display: grid;
+        gap: 6px;
+    }
+
+    .health-filter-select-wrap.is-year-level .health-filter-custom-menu {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .health-filter-select-wrap.is-year-level .health-filter-custom-option:first-child {
+        grid-column: 1 / -1;
+    }
+
+    .health-filter-select-wrap.is-year-level .health-filter-custom-option {
+        text-align: center;
+    }
+
+    .health-filter-custom-option {
+        border: 0;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #111827;
+        min-height: 34px;
+        padding: 7px 14px;
+        font-size: 13px;
+        font-weight: 900;
+        text-align: left;
+        cursor: pointer;
+        transition: background .18s ease, color .18s ease, transform .18s ease;
+    }
+
+    .health-filter-custom-option:hover,
+    .health-filter-custom-option:focus {
+        background: #8f0012;
+        color: #ffffff;
+        outline: 0;
+    }
+
+    .health-filter-custom-option.is-selected {
+        background: #8f0012;
+        color: #facc15;
     }
 
     .health-records-search {
@@ -2199,7 +2324,7 @@
         overflow: hidden;
         min-height: 44px;
         padding: 0 22px;
-        border-radius: 999px;
+        border-radius: 10px;
         border: 1px solid #7f1d2d !important;
         background: #7f1d2d !important;
         color: #ffffff !important;
@@ -2227,6 +2352,33 @@
         color: #ffffff !important;
     }
 
+    .health-filter-actions .health-filter-btn-reset {
+        background: #ffffff !important;
+        border-color: #cbd5e1 !important;
+        color: #111827 !important;
+        -webkit-text-fill-color: #111827 !important;
+    }
+    .health-filter-actions .health-filter-btn-reset,
+    .health-filter-actions .health-filter-btn-reset * {
+        color: #111827 !important;
+        -webkit-text-fill-color: #111827 !important;
+    }
+
+    .health-filter-actions button.health-filter-btn:not(.health-filter-btn-reset) {
+        background: #7f1d2d !important;
+        border-color: #7f1d2d !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    .health-filter-actions button.health-filter-btn:not(.health-filter-btn-reset):hover,
+    .health-filter-actions a.health-filter-btn-reset:hover {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #7f1d2d !important;
+        -webkit-text-fill-color: #7f1d2d !important;
+    }
+
     .health-filter-actions .health-filter-btn,
     .health-filter-actions .health-filter-btn *,
     button.health-filter-btn,
@@ -2242,6 +2394,22 @@
     button.health-filter-btn * {
         color: white !important;
         -webkit-text-fill-color: white !important;
+    }
+
+    .health-filter-form .health-filter-actions a.health-filter-btn-reset,
+    .health-filter-form .health-filter-actions a.health-filter-btn-reset:visited,
+    .health-filter-form .health-filter-actions a.health-filter-btn-reset *,
+    div.health-filter-actions a.health-filter-btn-reset {
+        color: #111827 !important;
+        -webkit-text-fill-color: #111827 !important;
+        fill: #111827 !important;
+        stroke: #111827 !important;
+    }
+
+    .health-filter-form .health-filter-actions a.health-filter-btn-reset:hover,
+    .health-filter-form .health-filter-actions a.health-filter-btn-reset:hover * {
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
     }
 
     .health-filter-btn::after {
@@ -2262,9 +2430,10 @@
 
     .health-filter-btn:hover {
         transform: translateY(-1px);
-        background: #facc15;
-        border-color: #facc15;
+        background: #facc15 !important;
+        border-color: #facc15 !important;
         color: #7f1d2d !important;
+        -webkit-text-fill-color: #7f1d2d !important;
         box-shadow:
             0 0 0 3px rgba(250, 204, 21, 0.18),
             0 14px 24px rgba(127, 29, 45, 0.16);
@@ -2279,11 +2448,12 @@
     }
 
     .health-filter-btn-reset {
-        background: linear-gradient(135deg, #64748b, #475569);
-        border-color: #475569;
+        background: #ffffff;
+        border-color: #cbd5e1;
+        color: #111827 !important;
         box-shadow:
-            0 0 0 3px rgba(100, 116, 139, 0.12),
-            0 10px 22px rgba(71, 85, 105, 0.20);
+            0 0 0 3px rgba(100, 116, 139, 0.08),
+            0 10px 22px rgba(71, 85, 105, 0.12);
     }
 
     .health-filter-modal {
@@ -2293,7 +2463,7 @@
         align-items: center;
         justify-content: center;
         padding: 24px;
-        background: rgba(15, 23, 42, 0.42);
+        background: rgba(15, 23, 42, 0.62);
         backdrop-filter: blur(6px);
         z-index: 1200;
     }
@@ -2303,52 +2473,115 @@
     }
 
     .health-filter-modal-card {
-        width: min(760px, 100%);
+        width: min(560px, 100%);
         border-radius: 18px;
         background: #ffffff;
-        border: 1px solid rgba(127, 29, 45, 0.12);
-        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
-        padding: 24px 22px 22px;
+        border: 1px solid #fecaca;
+        border-bottom: 4px solid #70131B;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+        overflow: visible;
+        padding: 0;
     }
 
     .health-filter-modal-head {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         gap: 16px;
-        margin-bottom: 12px;
+        padding: 18px 20px;
+        background: linear-gradient(135deg, #7f1d1d, #b91c1c);
+        color: #ffffff;
+        border-radius: 18px 18px 0 0;
+    }
+
+    .health-filter-modal-head-main {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    .health-filter-modal-badge {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.26);
+        background: rgba(255, 255, 255, 0.10);
+        color: #facc15;
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+    }
+
+    .health-filter-modal-badge svg {
+        width: 22px;
+        height: 22px;
     }
 
     .health-filter-modal-title {
         margin: 0;
         font-size: 20px;
         font-weight: 900;
-        color: #111827;
+        color: #ffffff !important;
     }
 
     .health-filter-modal-copy {
         margin: 6px 0 0;
-        color: #374151;
+        color: rgba(255, 255, 255, 0.88) !important;
         font-size: 13px;
         line-height: 1.6;
     }
 
     .health-filter-modal-close {
+        position: relative;
+        overflow: hidden;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        height: 40px;
-        border: 1px solid rgba(127, 29, 45, 0.12);
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        min-height: 44px;
+        flex: 0 0 44px;
+        border: 1px solid rgba(255,255,255,0.24);
         border-radius: 999px;
-        background: #ffffff;
-        color: #70131B;
+        background: rgba(112, 19, 27, 0.45);
+        color: #ffffff;
         cursor: pointer;
+        transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+    }
+
+    .health-filter-modal-close::after {
+        content: "";
+        position: absolute;
+        top: -35%;
+        left: -72%;
+        width: 48%;
+        height: 170%;
+        background: linear-gradient(120deg, transparent 0%, rgba(255, 244, 180, .18) 34%, rgba(255, 244, 180, .58) 50%, rgba(255, 244, 180, .18) 66%, transparent 100%);
+        transform: skewX(-18deg);
+        transition: left .48s ease;
+        pointer-events: none;
+    }
+
+    .health-filter-modal-close:hover,
+    .health-filter-modal-close:focus {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+    }
+
+    .health-filter-modal-close:hover::after,
+    .health-filter-modal-close:focus::after {
+        left: 128%;
     }
 
     .health-filter-modal-close svg {
         width: 18px;
         height: 18px;
+        position: relative;
+        z-index: 1;
     }
 
     .health-summary-label {
@@ -2868,9 +3101,49 @@
     html[data-theme="dark"] .health-filter-select {
         background: rgba(18, 8, 12, 0.86);
         border-color: rgba(250, 204, 21, 0.28);
+        border-bottom-color: #70131B !important;
         box-shadow:
             0 0 0 2px rgba(250, 204, 21, 0.06),
             0 10px 20px rgba(0, 0, 0, 0.20);
+    }
+
+    html[data-theme="dark"] .health-filter-select-wrap::after {
+        border-color: #facc15;
+    }
+
+    html[data-theme="dark"] .health-filter-custom-trigger {
+        background: rgba(18, 8, 12, 0.86);
+        border-color: rgba(250, 204, 21, 0.28);
+        color: #ffffff;
+        box-shadow:
+            0 0 0 2px rgba(250, 204, 21, 0.06),
+            0 10px 20px rgba(0, 0, 0, 0.20);
+    }
+
+    html[data-theme="dark"] .health-filter-custom-trigger::after {
+        border-color: #facc15;
+    }
+
+    html[data-theme="dark"] .health-filter-custom-menu {
+        background: #111827;
+        border-color: rgba(250, 204, 21, 0.18);
+        box-shadow: 0 18px 32px rgba(0, 0, 0, 0.34);
+    }
+
+    html[data-theme="dark"] .health-filter-custom-option {
+        background: #111827;
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .health-filter-custom-option:hover,
+    html[data-theme="dark"] .health-filter-custom-option:focus {
+        background: #8f0012;
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .health-filter-custom-option.is-selected {
+        background: #8f0012;
+        color: #facc15;
     }
 
     html[data-theme="dark"] .health-records-search-toggle {
@@ -2935,8 +3208,18 @@
 
     html[data-theme="dark"] .health-filter-modal-card {
         background: rgba(15, 23, 42, 0.98);
-        border-color: rgba(148, 163, 184, 0.14);
+        border-color: rgba(248, 113, 113, 0.45);
+        border-bottom-color: #70131B;
         box-shadow: 0 18px 32px rgba(0, 0, 0, 0.24);
+    }
+
+    html[data-theme="dark"] .health-filter-modal-head {
+        background: linear-gradient(135deg, #7f1d1d, #b91c1c);
+    }
+
+    html[data-theme="dark"] .health-filter-modal-title,
+    html[data-theme="dark"] .health-filter-modal-copy {
+        color: #ffffff !important;
     }
 
     html[data-theme="dark"] .health-filter-modal-title,
@@ -2949,8 +3232,15 @@
     }
 
     html[data-theme="dark"] .health-filter-modal-close {
-        background: rgba(15, 23, 42, 0.92);
-        border-color: rgba(148, 163, 184, 0.24);
+        background: rgba(112, 19, 27, 0.45);
+        border-color: rgba(255, 255, 255, 0.24);
+    }
+
+    html[data-theme="dark"] .health-filter-modal-close:hover,
+    html[data-theme="dark"] .health-filter-modal-close:focus {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
     }
 
     html[data-theme="dark"] .health-summary-card::before {
@@ -3898,6 +4188,15 @@
         .verify-approval-student {
             grid-template-columns: 1fr;
         }
+        .health-filter-form {
+            grid-template-columns: 1fr;
+        }
+        .health-filter-actions {
+            justify-content: stretch;
+        }
+        .health-filter-actions .health-filter-btn {
+            flex: 1 1 0;
+        }
         .verification-doc-grid {
             grid-template-columns: 1fr;
         }
@@ -4307,6 +4606,71 @@
             })
             ->max('verified_at');
         $latestApprovedAt = $latestApprovedAt ? \Carbon\Carbon::parse($latestApprovedAt) : null;
+        $formatHealthCourseCode = function ($courseName, $courseCode = '') {
+            $courseCode = strtoupper(trim((string) $courseCode));
+            if ($courseCode !== '') {
+                return $courseCode;
+            }
+
+            $courseName = trim((string) $courseName);
+            if ($courseName === '') {
+                return '';
+            }
+
+            $words = preg_split('/\s+/', preg_replace('/[^A-Za-z0-9\s]/', ' ', $courseName)) ?: [];
+            $stopWords = ['of', 'in', 'and', 'the', 'major'];
+            $code = collect($words)
+                ->map(fn ($word) => strtolower(trim((string) $word)))
+                ->filter(fn ($word) => $word !== '' && !in_array($word, $stopWords, true))
+                ->map(fn ($word) => \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($word, 0, 1)))
+                ->implode('');
+
+            return $code !== '' ? $code : $courseName;
+        };
+        $formatHealthYear = function ($year) {
+            $year = trim((string) $year);
+            if ($year === '') {
+                return '';
+            }
+
+            if (preg_match('/[1-4]/', $year, $matches)) {
+                return $matches[0];
+            }
+
+            return $year;
+        };
+        $formatHealthCourseYearSection = function ($courseName, $courseCode = '', $year = '', $section = '') use ($formatHealthCourseCode, $formatHealthYear) {
+            $code = $formatHealthCourseCode($courseName, $courseCode);
+            $year = $formatHealthYear($year);
+            $section = trim((string) $section);
+            $suffix = trim($year . ($section !== '' ? ' - ' . $section : ''));
+            $display = trim($code . ($suffix !== '' ? ' ' . $suffix : ''));
+
+            return $display !== '' ? $display : trim((string) $courseName);
+        };
+        $resolveHealthRecordUserType = function ($record) {
+            $user = optional($record->user);
+            $rawType = strtolower(trim((string) ($user->user_type ?: $user->user_role ?: '')));
+
+            if (str_contains($rawType, 'faculty')) {
+                return 'Faculty';
+            }
+            if (str_contains($rawType, 'dependent')) {
+                return 'Dependent';
+            }
+            if (str_contains($rawType, 'admin') || str_contains($rawType, 'nurse')) {
+                return 'Admin';
+            }
+            if (str_contains($rawType, 'applicant')) {
+                return 'Applicant';
+            }
+
+            $studentNumber = strtoupper(trim((string) ($record->student_number ?: $user->student_number)));
+            return $studentNumber !== ''
+                && !\Illuminate\Support\Str::startsWith($studentNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
+                    ? 'Student'
+                    : 'Applicant';
+        };
     @endphp
 
     <section class="health-records-overview">
@@ -4408,10 +4772,10 @@
         <thead>
             <tr>
                 <th>Full Name</th>
+                <th>User Type</th>
                 <th>Course / Yr / Sec</th>
                 <th>Medical Condition</th>
                 <th>Clearance Status</th>
-                <th>PUPTAS Status</th>
                 <th>Approved At</th>
                 <th style="text-align: center;">Actions</th>
             </tr>
@@ -4431,11 +4795,13 @@
                         ? 'pending_conditional'
                         : (in_array($recordStatus, ['Pending', 'For Verification', ''], true) ? 'pending_approval' : 'cleared');
                     $recordCourseName = trim((string) ($record->course_college ?: optional($record->user)->course ?: ''));
-                    $recordYearSection = trim((string) implode('-', array_filter([
-                        trim((string) optional($record->user)->year),
-                        trim((string) optional($record->user)->section),
-                    ])));
-                    $recordCourseDisplay = trim($recordCourseName . ($recordYearSection !== '' ? ' ' . $recordYearSection : ''));
+                    $recordCourseDisplay = $formatHealthCourseYearSection(
+                        $recordCourseName,
+                        $record->course_code ?? '',
+                        optional($record->user)->year,
+                        optional($record->user)->section
+                    );
+                    $recordUserType = $resolveHealthRecordUserType($record);
                     $puptasStatusRaw = strtolower(trim((string) ($record->puptas_sync_status ?? '')));
                     $puptasReference = strtoupper(trim((string) ($record->reference_number ?: $record->student_number ?: optional($record->user)->student_number)));
                     $isLocalPuptasReference = $puptasReference === ''
@@ -4546,6 +4912,9 @@
                     <td>
                         <div class="student-name" style="font-weight: 700;">{{ $record->user->name }}</div>
                     </td>
+                    <td>
+                        <span class="status {{ $recordUserType === 'Student' ? 'issued' : 'submitted' }}">{{ $recordUserType }}</span>
+                    </td>
                     <td>{{ $recordCourseDisplay !== '' ? $recordCourseDisplay : '-' }}</td>
                     
                     {{-- Column 1: Medical Condition Status --}}
@@ -4560,7 +4929,11 @@
                     {{-- Column 2: Clearance Issuance Status --}}
                     <td>
                         @if(in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true))
-                            <span class="status issued"><i class="fas fa-check-circle me-1"></i> Issued</span>
+                            @if($puptasStatusRaw === 'synced')
+                                <span class="status issued"><i class="fas fa-check-circle me-1"></i> Issued</span>
+                            @else
+                                <span class="status pending">Not Sync</span>
+                            @endif
                         @elseif($record->clearance_status == 'Pending/Conditional')
                             <span class="status review">Pending/Conditional</span>
                         @elseif($record->clearance_status == 'Rejected')
@@ -4570,10 +4943,6 @@
                         @else
                             <span class="status submitted">Not Processed</span>
                         @endif
-                    </td>
-
-                    <td>
-                        <span class="status {{ $puptasStatusClass }}">{{ $puptasStatusLabel }}</span>
                     </td>
 
                     <td style="color: #94a3b8; font-size: 12px;">
@@ -5298,9 +5667,16 @@
 <div class="health-filter-modal" id="healthFilterModal" aria-hidden="true">
     <div class="health-filter-modal-card">
         <div class="health-filter-modal-head">
-            <div>
-                <h3 class="health-filter-modal-title">Filter Health Forms</h3>
-                <p class="health-filter-modal-copy">Narrow the student health form list by course, month, or year level.</p>
+            <div class="health-filter-modal-head-main">
+                <span class="health-filter-modal-badge" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+                    </svg>
+                </span>
+                <div>
+                    <h3 class="health-filter-modal-title">Filter Health Records</h3>
+                    <p class="health-filter-modal-copy">Narrow the issued medical clearance list by user type, course, month, or year level.</p>
+                </div>
             </div>
             <button type="button" class="health-filter-modal-close" id="healthFilterCloseBtn" aria-label="Close filter popup">
                 <x-outline-icon name="x-mark" />
@@ -5309,13 +5685,40 @@
 
         <form method="GET" class="health-filter-form" id="healthFilterForm">
             <div class="health-filter-field">
+                <label for="userTypeFilter">User Type</label>
+                <div class="health-filter-select-wrap">
+                    <select id="userTypeFilter" name="user_type" class="health-filter-select health-filter-custom-source">
+                        <option value="">All User Types</option>
+                        @foreach(($userTypeOptions ?? collect()) as $userTypeValue => $userTypeLabel)
+                            <option value="{{ $userTypeValue }}" {{ ($userTypeFilter ?? '') === $userTypeValue ? 'selected' : '' }}>{{ $userTypeLabel }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="health-filter-field">
                 <label for="courseFilter">Course</label>
-                <select id="courseFilter" name="course" class="health-filter-select">
-                    <option value="">All Courses</option>
-                    @foreach(($courseOptions ?? collect()) as $courseOption)
-                        <option value="{{ $courseOption }}" {{ ($courseFilter ?? '') === $courseOption ? 'selected' : '' }}>{{ $courseOption }}</option>
-                    @endforeach
-                </select>
+                <div class="health-filter-select-wrap">
+                    <select id="courseFilter" name="course" class="health-filter-select health-filter-custom-source">
+                        <option value="">All Courses</option>
+                        @foreach(($courseOptions ?? collect()) as $courseOption)
+                            @php($courseOptionCode = $formatHealthCourseCode($courseOption))
+                            <option value="{{ $courseOption }}" {{ ($courseFilter ?? '') === $courseOption ? 'selected' : '' }}>
+                                {{ $courseOptionCode !== '' && $courseOptionCode !== $courseOption ? $courseOptionCode . ' - ' . $courseOption : $courseOption }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="health-filter-field">
+                <label for="yearFilter">Year Level</label>
+                <div class="health-filter-select-wrap is-year-level">
+                    <select id="yearFilter" name="year" class="health-filter-select health-filter-custom-source">
+                        <option value="">All Year Levels</option>
+                        @foreach(($yearOptions ?? collect()) as $yearOption)
+                            <option value="{{ $yearOption }}" {{ (string) ($yearFilter ?? '') === (string) $yearOption ? 'selected' : '' }}>{{ $yearOption }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
             <div class="health-filter-field">
                 <label for="monthFilter">Time</label>
@@ -5327,18 +5730,9 @@
                     class="health-filter-select"
                 >
             </div>
-            <div class="health-filter-field">
-                <label for="yearFilter">Year Level</label>
-                <select id="yearFilter" name="year" class="health-filter-select">
-                    <option value="">All Year Levels</option>
-                    @foreach(($yearOptions ?? collect()) as $yearOption)
-                        <option value="{{ $yearOption }}" {{ (string) ($yearFilter ?? '') === (string) $yearOption ? 'selected' : '' }}>{{ $yearOption }}</option>
-                    @endforeach
-                </select>
-            </div>
             <div class="health-filter-actions">
-                <button type="submit" class="health-filter-btn" style="color: #ffffff !important;">Apply</button>
                 <a href="{{ route('admin.health_records') }}" class="health-filter-btn health-filter-btn-reset">Reset</a>
+                <button type="submit" class="health-filter-btn" style="color: #ffffff !important;">Apply</button>
             </div>
         </form>
     </div>
@@ -5693,7 +6087,88 @@
         healthFilterModal.classList.toggle('is-open', isOpen);
         healthFilterModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
         healthFilterToggle?.classList.toggle('is-open', isOpen);
+        if (!isOpen) {
+            document.querySelectorAll('.health-filter-select-wrap.is-open').forEach(function (wrap) {
+                wrap.classList.remove('is-open');
+            });
+        }
     }
+
+    document.querySelectorAll('.health-filter-custom-source').forEach(function (select) {
+        const wrap = select.closest('.health-filter-select-wrap');
+        if (!wrap || wrap.dataset.customReady === '1') return;
+
+        wrap.dataset.customReady = '1';
+        wrap.classList.add('has-custom-dropdown');
+
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'health-filter-custom-trigger';
+        trigger.setAttribute('aria-haspopup', 'listbox');
+        trigger.setAttribute('aria-expanded', 'false');
+
+        const menu = document.createElement('div');
+        menu.className = 'health-filter-custom-menu';
+        menu.setAttribute('role', 'listbox');
+
+        function selectedOption() {
+            return select.options[select.selectedIndex] || select.options[0];
+        }
+
+        function syncTrigger() {
+            const option = selectedOption();
+            trigger.textContent = option ? option.textContent.trim() : '';
+            menu.querySelectorAll('.health-filter-custom-option').forEach(function (button) {
+                button.classList.toggle('is-selected', button.dataset.value === select.value);
+                button.setAttribute('aria-selected', button.dataset.value === select.value ? 'true' : 'false');
+            });
+        }
+
+        Array.prototype.forEach.call(select.options, function (option) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'health-filter-custom-option';
+            button.dataset.value = option.value;
+            button.textContent = option.textContent.trim();
+            button.setAttribute('role', 'option');
+            button.addEventListener('click', function () {
+                select.value = option.value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                syncTrigger();
+                wrap.classList.remove('is-open');
+                trigger.setAttribute('aria-expanded', 'false');
+            });
+            menu.appendChild(button);
+        });
+
+        trigger.addEventListener('click', function () {
+            const willOpen = !wrap.classList.contains('is-open');
+            document.querySelectorAll('.health-filter-select-wrap.is-open').forEach(function (openWrap) {
+                if (openWrap !== wrap) {
+                    openWrap.classList.remove('is-open');
+                    const openTrigger = openWrap.querySelector('.health-filter-custom-trigger');
+                    if (openTrigger) openTrigger.setAttribute('aria-expanded', 'false');
+                }
+            });
+            wrap.classList.toggle('is-open', willOpen);
+            trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        });
+
+        select.addEventListener('change', syncTrigger);
+        wrap.appendChild(trigger);
+        wrap.appendChild(menu);
+        syncTrigger();
+    });
+
+    document.addEventListener('click', function (event) {
+        if (event.target.closest('.health-filter-select-wrap')) return;
+
+        document.querySelectorAll('.health-filter-select-wrap.is-open').forEach(function (wrap) {
+            wrap.classList.remove('is-open');
+            const trigger = wrap.querySelector('.health-filter-custom-trigger');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        });
+    });
 
     healthRecordsOverviewFilterBtn?.addEventListener('click', function () {
         setHealthFilterModalOpen(true);

@@ -39,7 +39,7 @@
         border: 1px solid #7f1d2d;
         border-radius: 14px;
         background: #7f1d2d;
-        color: #ffffff;
+        color: #ffffff !important;
         font-size: 13px;
         font-weight: 800;
         text-decoration: none;
@@ -204,13 +204,14 @@
         justify-content: center;
     }
     .modal-content {
+        position: relative;
         background: #ffffff;
         border-radius: 20px;
-        padding: 32px;
-        max-width: 600px;
+        padding: 0;
+        max-width: 620px;
         width: 90%;
         max-height: 90vh;
-        overflow-y: auto;
+        overflow: visible;
         box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
         animation: slideUp 0.3s ease;
     }
@@ -225,33 +226,115 @@
         }
     }
     .modal-header {
-        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 112px;
+        margin: 0;
+        padding: 24px 72px 24px 26px;
+        border-radius: 20px 20px 0 0;
+        background: linear-gradient(135deg, #7f1d2d 0%, #a5121f 100%);
+        color: #ffffff;
+    }
+    .modal-title-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, .24);
+        background: rgba(255, 255, 255, .12);
+        color: #facc15;
+        flex: 0 0 auto;
+    }
+    .modal-title-icon svg {
+        width: 24px;
+        height: 24px;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
     }
     .modal-header h2 {
         margin: 0;
         font-size: 24px;
         font-weight: 900;
-        color: #111827;
+        color: #ffffff !important;
+    }
+    .modal-header p {
+        margin: 4px 0 0;
+        color: #ffffff !important;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.4;
     }
     .modal-close {
         position: absolute;
-        top: 20px;
-        right: 20px;
-        background: none;
-        border: none;
-        font-size: 28px;
-        color: #64748b;
+        top: 24px;
+        right: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, .24);
+        background: rgba(255, 255, 255, .12);
+        font-size: 26px;
+        color: #ffffff;
         cursor: pointer;
-        transition: color .18s ease;
+        line-height: 1;
+        overflow: hidden;
+        transition: color .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
     }
-    .modal-close:hover {
-        color: #111827;
+    .modal-close::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(250, 204, 21, 0) 0%, rgba(255, 247, 181, .65) 45%, rgba(250, 204, 21, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.35s ease;
+        pointer-events: none;
+    }
+    .modal-close:hover,
+    .modal-close:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .modal-close:hover::after,
+    .modal-close:focus-visible::after {
+        left: 125%;
     }
     .filters-grid {
         display: grid;
         grid-template-columns: 1fr;
         gap: 16px;
         margin-bottom: 24px;
+    }
+    .filters-form {
+        padding: 26px;
+        max-height: calc(90vh - 112px);
+        overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .filters-form::-webkit-scrollbar {
+        display: none;
+    }
+    .filter-group {
+        position: relative;
+    }
+    .filter-group:has(.premium-select-shell.is-open) {
+        z-index: 80;
+    }
+    .filter-group.is-select-open {
+        z-index: 80;
     }
     .filter-group label {
         display: block;
@@ -306,6 +389,11 @@
     .filter-btn.secondary {
         background: #7f1d2d;
         color: #ffffff;
+    }
+    .filter-btn.secondary {
+        background: #ffffff;
+        border-color: #e5e7eb;
+        color: #111827 !important;
     }
     .filter-btn:hover,
     .filter-btn:focus-visible {
@@ -559,13 +647,18 @@
     }
     .premium-select-native { position: absolute !important; width: 1px !important; height: 1px !important; opacity: 0 !important; pointer-events: none !important; }
     .premium-select-shell { position: relative; display: inline-flex; min-width: 132px; z-index: 30; }
+    .premium-select-shell.is-open { z-index: 120; }
+    .filter-group .premium-select-shell { width: 100%; display: flex; }
+    .filter-group .premium-select-button { min-height: 44px; border-radius: 12px; padding: 0 14px; font-size: 14px; }
     .premium-select-button { width: 100%; min-height: 38px; display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; border-radius: 9px; border: 1px solid rgba(112, 19, 27, .24); background: #fff; color: #111827; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 10px 20px rgba(15, 23, 42, .06); }
     .premium-select-button::after { content: ""; width: 8px; height: 8px; border-right: 2px solid #70131B; border-bottom: 2px solid #70131B; transform: rotate(45deg) translateY(-2px); }
     .premium-select-shell.is-open .premium-select-button::after { transform: rotate(225deg) translateY(-2px); }
-    .premium-select-menu { position: absolute; top: calc(100% + 8px); left: 0; right: 0; display: none; flex-direction: column; gap: 6px; padding: 8px; border-radius: 14px; border: 1px solid rgba(112, 19, 27, .16); background: #fff; box-shadow: 0 18px 36px rgba(15, 23, 42, .16); }
+    .premium-select-menu { position: absolute; top: calc(100% + 8px); left: 0; right: 0; display: none; flex-direction: column; gap: 6px; padding: 8px; border-radius: 14px; border: 1px solid rgba(112, 19, 27, .16); background: #fff; box-shadow: 0 18px 36px rgba(15, 23, 42, .16); z-index: 130; max-height: 220px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+    .premium-select-menu::-webkit-scrollbar { display: none; }
     .premium-select-shell.is-open .premium-select-menu { display: flex; }
     .premium-select-option { min-height: 34px; border: 1px solid rgba(226, 232, 240, .9); border-radius: 999px; background: #fff; color: #111827; font-size: 12px; font-weight: 900; text-align: left; padding: 0 12px; cursor: pointer; }
-    .premium-select-option:hover, .premium-select-option.is-selected { background: #7f0010; color: #facc15; border-color: #7f0010; }
+    .premium-select-option:hover { background: #7f0010; color: #ffffff; border-color: #7f0010; }
+    .premium-select-option.is-selected { background: #7f0010; color: #facc15; border-color: #7f0010; }
     html[data-theme="dark"] .logbook-shell {
         color: #f8fafc;
     }
@@ -623,11 +716,15 @@
         color: #ffffff;
     }
     html[data-theme="dark"] .logbook-page-link.is-active,
-    html[data-theme="dark"] .premium-select-option:hover,
-    html[data-theme="dark"] .premium-select-option.is-selected {
+    html[data-theme="dark"] .premium-select-option:hover {
         background: #7f0010 !important;
         border-color: #facc15 !important;
         color: #ffffff !important;
+    }
+    html[data-theme="dark"] .premium-select-option.is-selected {
+        background: #7f0010 !important;
+        border-color: #facc15 !important;
+        color: #facc15 !important;
     }
     @media (max-width: 720px) {
         .logbook-pagination {
@@ -665,8 +762,8 @@
 <div class="logbook-shell">
     <div class="logbook-head">
         <div>
-            <h1 class="logbook-title">Applicants List</h1>
-            <p class="logbook-copy">List of applicants, students, and staff who submitted health forms, including approval status and condition details.</p>
+            <h1 class="logbook-title">Health Forms</h1>
+            <p class="logbook-copy">List of applicants, students, and staff who submitted health forms.</p>
         </div>
         <div style="display: flex; gap: 10px;">
             <button type="button" class="filter-btn-open" onclick="openFilterModal()">🔍 Filter</button>
@@ -685,9 +782,19 @@
 
     <div class="modal-overlay" id="filterModal" onclick="closeFilterModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <button class="modal-close" onclick="closeFilterModal()">×</button>
+            <button type="button" class="modal-close" onclick="closeFilterModal()" aria-label="Close filter">&times;</button>
             <div class="modal-header">
-                <h2>Filter Records</h2>
+                <span class="modal-title-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M3 5h18"></path>
+                        <path d="M6 12h12"></path>
+                        <path d="M10 19h4"></path>
+                    </svg>
+                </span>
+                <div>
+                    <h2>Filter Records</h2>
+                    <p>Choose which health form records to review.</p>
+                </div>
             </div>
             <form method="GET" class="filters-form" id="filterForm">
                 <div class="filters-grid">
@@ -696,8 +803,8 @@
                         <select name="course">
                             <option value="">All Courses</option>
                             @foreach($courses as $course)
-                                <option value="{{ $course }}" {{ $courseFilter === $course ? 'selected' : '' }}>
-                                    {{ $course }}
+                                <option value="{{ $course['name'] }}" data-premium-label="{{ $course['code'] }}" {{ $courseFilter === $course['name'] ? 'selected' : '' }}>
+                                    {{ $course['name'] }}
                                 </option>
                             @endforeach
                         </select>
@@ -740,8 +847,8 @@
                     </div>
                 </div>
                 <div class="filter-actions">
-                    <button type="submit" class="filter-btn primary">Apply Filters</button>
                     <a href="{{ route($logbookRouteName) }}" class="filter-btn secondary">Reset</a>
+                    <button type="submit" class="filter-btn primary">Apply Filters</button>
                 </div>
             </form>
         </div>
@@ -1021,7 +1128,7 @@ document.addEventListener('keydown', function(e) {
         menu.className = 'premium-select-menu';
         function rebuild() {
             const selected = select.options[select.selectedIndex];
-            button.textContent = selected ? selected.textContent.trim() : 'Select';
+            button.textContent = selected ? (selected.dataset.premiumLabel || selected.textContent).trim() : 'Select';
             menu.innerHTML = '';
             Array.from(select.options).forEach(function(option) {
                 const item = document.createElement('button');
@@ -1032,6 +1139,7 @@ document.addEventListener('keydown', function(e) {
                 item.addEventListener('click', function() {
                     select.value = option.value;
                     shell.classList.remove('is-open');
+                    shell.closest('.filter-group')?.classList.remove('is-select-open');
                     rebuild();
                     select.dispatchEvent(new Event('change', { bubbles: true }));
                 });
@@ -1046,15 +1154,18 @@ document.addEventListener('keydown', function(e) {
             event.stopPropagation();
             document.querySelectorAll('.premium-select-shell.is-open').forEach(function(openShell) {
                 if (openShell !== shell) openShell.classList.remove('is-open');
+                if (openShell !== shell) openShell.closest('.filter-group')?.classList.remove('is-select-open');
             });
             shell.classList.toggle('is-open');
+            shell.closest('.filter-group')?.classList.toggle('is-select-open', shell.classList.contains('is-open'));
         });
         rebuild();
     }
-    document.querySelectorAll('.logbook-per-page-select').forEach(enhance);
+    document.querySelectorAll('.logbook-per-page-select, .filters-form select').forEach(enhance);
     document.addEventListener('click', function() {
         document.querySelectorAll('.premium-select-shell.is-open').forEach(function(shell) {
             shell.classList.remove('is-open');
+            shell.closest('.filter-group')?.classList.remove('is-select-open');
         });
     });
 })();

@@ -1023,10 +1023,16 @@ class ReportsController extends Controller
 
         $summaryQuery = HealthProfile::query()->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
 
-        $this->applyHealthApprovalDateRange($summaryQuery, $dateFrom, $dateTo);
-
         $totalIssued = (clone $summaryQuery)->count();
-        $totalCourses = $issuedFormsCollection->count();
+        $totalCourses = (clone $summaryQuery)
+            ->with('user:id,course')
+            ->get()
+            ->map(function (HealthProfile $form) {
+                return trim((string) ($form->course_college ?: optional($form->user)->course));
+            })
+            ->filter()
+            ->unique()
+            ->count();
         $issuedWithConditions = (clone $summaryQuery)->withMedicalCondition()->count();
         $topCourse = optional($issuedFormsCollection->first())->course ?? 'No course data yet';
 
@@ -1130,10 +1136,23 @@ class ReportsController extends Controller
             ->paginate($perPage === 'all' ? max(1, (clone $logbookQuery)->count()) : (int) $perPage)
             ->withQueryString();
 
-        $courses = HealthProfile::distinct('course_college')
-            ->pluck('course_college')
+        $courses = HealthProfile::query()
+            ->select('course_college', 'course_code')
+            ->whereNotNull('course_college')
+            ->get()
+            ->map(function (HealthProfile $profile) {
+                $name = trim((string) $profile->course_college);
+                $code = trim((string) $profile->course_code);
+
+                return [
+                    'name' => $name,
+                    'code' => $code !== '' ? $code : $name,
+                ];
+            })
+            ->filter(fn (array $course) => $course['name'] !== '')
+            ->unique('name')
+            ->sortBy('name')
             ->filter()
-            ->sort()
             ->values();
 
         return view('admin.reports.health-forms-applicants-list', compact(
@@ -1678,7 +1697,8 @@ private function exportReportsPreview(Request $request, string $reportType)
 
     abort_unless($config, 404);
 
-    [$previewHeaders, $previewRows, $previewCount] = $this->exportPreviewTable($reportType, $dateFrom, $dateTo);
+    [$previewHeaders, $previewRows, $previewCount] = $this->exportPreviewTable($reportType, $dateFrom, $dateTo, $request);
+    $previewMetrics = $this->exportPreviewMetrics($request, $reportType, $dateFrom, $dateTo, $previewCount);
     $filterActionUrl = $isAssistant
         ? url('/assistant/reports/export-hub/' . $reportType)
         : url('/admin/reports/export-hub/' . $reportType);
@@ -1699,6 +1719,7 @@ private function exportReportsPreview(Request $request, string $reportType)
         'previewHeaders' => $previewHeaders,
         'previewRows' => $previewRows,
         'previewCount' => $previewCount,
+        'previewMetrics' => $previewMetrics,
         'healthFormCourses' => HealthProfile::query()
             ->with('user:id,course')
             ->get()
@@ -1708,6 +1729,49 @@ private function exportReportsPreview(Request $request, string $reportType)
             ->sort()
             ->values(),
     ]);
+}
+
+private function exportPreviewMetrics(Request $request, string $reportType, Carbon $dateFrom, Carbon $dateTo, int $previewCount): array
+{
+    if ($reportType === 'audit-trail') {
+        $latestActivity = ActivityLog::query()
+            ->whereBetween('created_at', [$dateFrom->copy()->startOfDay(), $dateTo->copy()->endOfDay()])
+            ->latest('created_at')
+            ->first();
+
+        return [
+            'total_activities' => $previewCount,
+            'last_audit_export' => optional($latestActivity?->created_at)->format('M d, Y') ?: 'N/A',
+        ];
+    }
+
+    if ($reportType === 'health-forms') {
+        $records = $this->exportHealthFormsPreviewRecords($request, $dateFrom, $dateTo);
+
+        return [
+            'total_issued' => $records->count(),
+            'with_condition' => $records->filter(fn (HealthProfile $record) => $record->hasMedicalCondition())->count(),
+        ];
+    }
+
+    if ($reportType !== 'appointments') {
+        return [];
+    }
+
+    $commonService = Appointment::query()
+        ->whereBetween('date', [$dateFrom->toDateString(), $dateTo->toDateString()])
+        ->get()
+        ->map(fn (Appointment $appointment) => trim((string) ($appointment->service ?: 'N/A')))
+        ->filter(fn (string $service) => $service !== '')
+        ->countBy()
+        ->sortDesc()
+        ->keys()
+        ->first();
+
+    return [
+        'total_appointments' => $previewCount,
+        'common_service' => $commonService ?: 'N/A',
+    ];
 }
 
 private function exportPreviewDate($value, Carbon $fallback): Carbon
@@ -1720,7 +1784,7 @@ private function exportPreviewDate($value, Carbon $fallback): Carbon
     }
 }
 
-private function exportPreviewTable(string $reportType, Carbon $dateFrom, Carbon $dateTo): array
+private function exportPreviewTable(string $reportType, Carbon $dateFrom, Carbon $dateTo, ?Request $request = null): array
 {
     if ($reportType === 'mar') {
         $categories = Category::with(['medicalConditions.consultations' => function ($query) use ($dateFrom, $dateTo) {
@@ -1782,18 +1846,7 @@ private function exportPreviewTable(string $reportType, Carbon $dateFrom, Carbon
         return [['Date & Time', 'User', 'Action', 'Description'], $rows->take(10)->values(), $rows->count()];
     }
 
-    $records = HealthProfile::query()
-        ->with('user')
-        ->whereNotNull('clearance_status')
-        ->where(function ($builder) use ($dateFrom, $dateTo) {
-            $builder->whereBetween('verified_at', [$dateFrom->copy()->startOfDay(), $dateTo->copy()->endOfDay()])
-                ->orWhere(function ($fallback) use ($dateFrom, $dateTo) {
-                    $fallback->whereNull('verified_at')
-                        ->whereBetween('created_at', [$dateFrom->copy()->startOfDay(), $dateTo->copy()->endOfDay()]);
-                });
-        })
-        ->latest('updated_at')
-        ->get();
+    $records = $this->exportHealthFormsPreviewRecords($request ?? request(), $dateFrom, $dateTo);
 
     $rows = $records->map(function (HealthProfile $record) {
         $status = match (true) {
@@ -1813,6 +1866,118 @@ private function exportPreviewTable(string $reportType, Carbon $dateFrom, Carbon
     });
 
     return [['Reference', 'Name', 'Course', 'Status', 'With Condition', 'Approved At'], $rows->take(10)->values(), $rows->count()];
+}
+
+private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateFrom, Carbon $dateTo): Collection
+{
+    $courseFilter = trim((string) $request->query('course', ''));
+    $userTypeFilter = strtolower(trim((string) $request->query('user_type', '')));
+    $genderFilter = strtolower(trim((string) $request->query('gender', '')));
+    $conditionFilter = strtolower(trim((string) $request->query('condition', '')));
+    $statusFilter = strtolower(trim((string) $request->query('status', '')));
+    $conditionKeyword = trim((string) $request->query('condition_keyword', ''));
+    $conditionSource = trim((string) $request->query('condition_source', 'all'));
+    $conditionMatch = trim((string) $request->query('condition_match', 'any'));
+    $bmiCategories = collect((array) $request->query('bmi_categories', []))
+        ->flatMap(fn ($value) => explode(',', (string) $value))
+        ->map(fn ($value) => strtolower(trim($value)))
+        ->filter(fn ($value) => in_array($value, ['underweight', 'normal', 'overweight', 'obese', 'no_bmi'], true))
+        ->unique()
+        ->values();
+
+    if (!in_array($conditionSource, ['all', 'health_form', 'final_review', 'remarks'], true)) {
+        $conditionSource = 'all';
+    }
+
+    if (!in_array($conditionMatch, ['any', 'all', 'exact'], true)) {
+        $conditionMatch = 'any';
+    }
+
+    $query = HealthProfile::query()
+        ->with('user')
+        ->whereNotNull('clearance_status')
+        ->where(function ($builder) use ($dateFrom, $dateTo) {
+            $builder->whereBetween('verified_at', [$dateFrom->copy()->startOfDay(), $dateTo->copy()->endOfDay()])
+                ->orWhere(function ($fallback) use ($dateFrom, $dateTo) {
+                    $fallback->whereNull('verified_at')
+                        ->whereBetween('created_at', [$dateFrom->copy()->startOfDay(), $dateTo->copy()->endOfDay()]);
+                });
+        });
+
+    if ($courseFilter !== '') {
+        $query->where(function ($builder) use ($courseFilter) {
+            $builder->where('course_college', 'like', "%{$courseFilter}%")
+                ->orWhereHas('user', function ($userQuery) use ($courseFilter) {
+                    $userQuery->where('course', 'like', "%{$courseFilter}%");
+                });
+        });
+    }
+
+    if ($statusFilter === 'approved') {
+        $query->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
+    } elseif ($statusFilter === 'pending') {
+        $query->whereNotIn('clearance_status', ['Issued', 'Fully Cleared', 'Rejected']);
+    } elseif ($statusFilter === 'rejected') {
+        $query->where('clearance_status', 'Rejected');
+    }
+
+    $records = $query->orderByDesc(DB::raw('COALESCE(verified_at, created_at)'))->get();
+
+    if ($userTypeFilter !== '') {
+        $records = $records->filter(function (HealthProfile $record) use ($userTypeFilter) {
+            $user = $record->user;
+            $role = strtolower(trim((string) (optional($user)->user_type ?: optional($user)->user_role)));
+            return $role === $userTypeFilter || str_contains($role, $userTypeFilter);
+        })->values();
+    }
+
+    if ($genderFilter !== '') {
+        $records = $records->filter(function (HealthProfile $record) use ($genderFilter) {
+            $gender = strtolower(trim((string) ($record->sex ?: optional($record->user)->gender)));
+            return $gender === $genderFilter || str_contains($gender, $genderFilter);
+        })->values();
+    }
+
+    if ($conditionFilter === 'yes') {
+        $records = $records->filter(fn (HealthProfile $record) => $record->hasMedicalCondition())->values();
+    } elseif ($conditionFilter === 'no') {
+        $records = $records->filter(fn (HealthProfile $record) => ! $record->hasMedicalCondition())->values();
+    }
+
+    if ($bmiCategories->isNotEmpty()) {
+        $records = $records->filter(function (HealthProfile $record) use ($bmiCategories) {
+            $bmi = $this->healthProfileBmi($record);
+            return $bmiCategories->contains($this->healthProfileBmiCategory($bmi));
+        })->values();
+    }
+
+    if ($conditionKeyword !== '') {
+        $terms = collect(preg_split('/[\s,]+/', mb_strtolower($conditionKeyword), -1, PREG_SPLIT_NO_EMPTY))
+            ->map(fn ($term) => trim($term))
+            ->filter()
+            ->values();
+        $exactNeedle = mb_strtolower($conditionKeyword);
+
+        $records = $records->filter(function (HealthProfile $record) use ($conditionSource, $conditionMatch, $terms, $exactNeedle) {
+            $haystack = mb_strtolower($this->healthProfileConditionText($record, $conditionSource));
+
+            if ($conditionMatch === 'exact') {
+                return $haystack === $exactNeedle || str_contains($haystack, $exactNeedle);
+            }
+
+            if ($terms->isEmpty()) {
+                return true;
+            }
+
+            if ($conditionMatch === 'all') {
+                return $terms->every(fn ($term) => str_contains($haystack, $term));
+            }
+
+            return $terms->contains(fn ($term) => str_contains($haystack, $term));
+        })->values();
+    }
+
+    return $records->values();
 }
 
 public function exportHealthForms(Request $request)

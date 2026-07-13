@@ -109,13 +109,13 @@
 
     .export-action-card {
         position: relative;
-        min-height: 96px;
+        min-height: 124px;
         display: grid;
         grid-template-columns: 44px minmax(0, 1fr);
         align-items: center;
         gap: 14px;
         overflow: hidden;
-        padding: 10px 14px;
+        padding: 16px 16px;
         border-radius: 12px;
         border: 1px solid #e5e7eb;
         background: #ffffff;
@@ -230,6 +230,7 @@
     .export-action-card.is-filter,
     .export-action-card.is-export {
         grid-template-columns: 44px minmax(0, 1fr) 44px;
+        min-height: 124px;
         background: #8f1827;
         color: #ffffff;
         border-color: rgba(250, 204, 21, .72);
@@ -238,6 +239,15 @@
         text-align: left;
         font: inherit;
         width: 100%;
+    }
+
+    .export-action-grid-mar .export-action-card,
+    .export-action-grid-appointments .export-action-card,
+    .export-action-grid-audit-trail .export-action-card,
+    .export-action-grid-health-forms .export-action-card {
+        min-height: 104px;
+        padding-top: 14px;
+        padding-bottom: 14px;
     }
 
     .export-action-card.is-filter .export-card-icon,
@@ -353,9 +363,10 @@
         inset: 0;
         z-index: 1000;
         display: none;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
-        padding: 18px;
+        padding: 24px 18px;
+        overflow-y: auto;
         background: rgba(15, 23, 42, .56);
         backdrop-filter: blur(7px);
     }
@@ -368,6 +379,9 @@
         width: min(760px, 96vw);
         position: relative;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100dvh - 48px);
         border-radius: 22px;
         border: 1px solid rgba(112, 19, 27, .18);
         background: #ffffff;
@@ -424,6 +438,7 @@
         position: absolute;
         top: 18px;
         right: 18px;
+        overflow: hidden;
         width: 42px;
         height: 42px;
         border-radius: 999px;
@@ -432,6 +447,34 @@
         color: #ffffff;
         font-size: 24px;
         cursor: pointer;
+        transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .export-filter-modal-close::after {
+        content: "";
+        position: absolute;
+        top: -35%;
+        left: -72%;
+        width: 48%;
+        height: 170%;
+        background: linear-gradient(120deg, transparent 0%, rgba(255, 244, 180, .18) 34%, rgba(255, 244, 180, .58) 50%, rgba(255, 244, 180, .18) 66%, transparent 100%);
+        transform: skewX(-18deg);
+        transition: left .48s ease;
+        pointer-events: none;
+    }
+
+    .export-filter-modal-close:hover,
+    .export-filter-modal-close:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        outline: none;
+        transform: translateY(-1px);
+    }
+
+    .export-filter-modal-close:hover::after,
+    .export-filter-modal-close:focus-visible::after {
+        left: 128%;
     }
 
     .export-filter-form {
@@ -439,6 +482,8 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 16px;
         padding: 24px;
+        min-height: 0;
+        overflow-y: auto;
     }
 
     .export-filter-field {
@@ -465,6 +510,130 @@
         padding: 0 13px;
         font: inherit;
         font-weight: 800;
+    }
+
+    .export-date-input:focus,
+    .export-filter-select:focus {
+        border-color: #70131B;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, .10);
+        outline: none;
+    }
+
+    .export-filter-select option {
+        background: #ffffff;
+        color: #0f172a;
+        font-weight: 800;
+    }
+
+    .export-filter-select option:checked {
+        background: #70131B;
+        color: #facc15;
+    }
+
+    .export-filter-select option:hover {
+        background: #70131B;
+        color: #ffffff;
+    }
+
+    .export-filter-select-wrap {
+        position: relative;
+    }
+
+    .export-filter-custom-source {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    .export-filter-custom-trigger {
+        width: 100%;
+        min-height: 46px;
+        border-radius: 12px;
+        border: 1px solid rgba(112, 19, 27, .22);
+        background: #fffdf8;
+        color: #0f172a;
+        padding: 0 44px 0 13px;
+        font: inherit;
+        font-weight: 900;
+        text-align: left;
+        position: relative;
+        cursor: pointer;
+        box-shadow: 0 8px 16px rgba(112, 19, 27, .05);
+        transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .export-filter-custom-trigger::after {
+        content: "";
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        width: 10px;
+        height: 10px;
+        border-right: 2px solid #70131B;
+        border-bottom: 2px solid #70131B;
+        transform: translateY(-65%) rotate(45deg);
+        transition: transform .18s ease;
+        pointer-events: none;
+    }
+
+    .export-filter-select-wrap.is-open .export-filter-custom-trigger {
+        border-color: #8f0012;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, .08), 0 10px 22px rgba(112, 19, 27, .10);
+        transform: translateY(-1px);
+    }
+
+    .export-filter-select-wrap.is-open .export-filter-custom-trigger::after {
+        transform: translateY(-35%) rotate(225deg);
+    }
+
+    .export-filter-custom-menu {
+        position: absolute;
+        z-index: 30;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        display: none;
+        padding: 8px;
+        border: 1px solid #f3c7c7;
+        border-radius: 14px;
+        background: #ffffff;
+        box-shadow: 0 18px 32px rgba(112, 19, 27, .14);
+        max-height: 180px;
+        overflow-y: auto;
+    }
+
+    .export-filter-select-wrap.is-open .export-filter-custom-menu {
+        display: grid;
+        gap: 6px;
+    }
+
+    .export-filter-custom-option {
+        border: 0;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #111827;
+        min-height: 34px;
+        padding: 7px 14px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 900;
+        text-align: left;
+        cursor: pointer;
+        transition: background .18s ease, color .18s ease, transform .18s ease;
+    }
+
+    .export-filter-custom-option:hover,
+    .export-filter-custom-option:focus {
+        background: #8f0012;
+        color: #ffffff;
+        outline: 0;
+    }
+
+    .export-filter-custom-option.is-selected {
+        background: #8f0012;
+        color: #facc15;
     }
 
     .export-filter-field.is-wide {
@@ -508,6 +677,8 @@
 
     .export-filter-cancel,
     .export-filter-submit {
+        position: relative;
+        overflow: hidden;
         min-height: 44px;
         min-width: 130px;
         border-radius: 10px;
@@ -519,10 +690,39 @@
         transition: background .18s ease, color .18s ease, border-color .18s ease;
     }
 
+    .export-filter-cancel::after,
+    .export-filter-submit::after {
+        content: "";
+        position: absolute;
+        top: -35%;
+        left: -72%;
+        width: 48%;
+        height: 170%;
+        background: linear-gradient(120deg, transparent 0%, rgba(255, 244, 180, .18) 34%, rgba(255, 244, 180, .58) 50%, rgba(255, 244, 180, .18) 66%, transparent 100%);
+        transform: skewX(-18deg);
+        transition: left .48s ease;
+        pointer-events: none;
+    }
+
+    .export-filter-cancel:hover::after,
+    .export-filter-cancel:focus-visible::after,
+    .export-filter-submit:hover::after,
+    .export-filter-submit:focus-visible::after {
+        left: 128%;
+    }
+
     .export-filter-cancel {
         border: 1px solid rgba(148, 163, 184, .45);
         background: #f8fafc;
         color: #475569;
+    }
+
+    .export-filter-cancel:hover,
+    .export-filter-cancel:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        outline: none;
     }
 
     .export-filter-submit {
@@ -658,6 +858,29 @@
         color: #ffffff;
     }
 
+    html[data-theme="dark"] .export-filter-custom-trigger,
+    html[data-theme="dark"] .export-filter-custom-menu,
+    html[data-theme="dark"] .export-filter-custom-option {
+        background: #111827;
+        color: #ffffff;
+        border-color: rgba(250, 204, 21, .18);
+    }
+
+    html[data-theme="dark"] .export-filter-custom-trigger::after {
+        border-color: #facc15;
+    }
+
+    html[data-theme="dark"] .export-filter-custom-option:hover,
+    html[data-theme="dark"] .export-filter-custom-option:focus {
+        background: #8f0012;
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .export-filter-custom-option.is-selected {
+        background: #8f0012;
+        color: #facc15;
+    }
+
     html[data-theme="dark"] .export-preview-table td {
         background: rgba(112, 19, 27, .34);
         color: #ffffff;
@@ -696,7 +919,7 @@
             <a href="{{ $hubUrl }}" class="export-page-back">&larr; Export Hub</a>
         </header>
 
-        <div class="export-action-grid">
+        <div class="export-action-grid export-action-grid-{{ $reportType }}">
             @if(($reportType ?? '') === 'inventory')
                 <div class="export-action-card">
                     <span class="export-card-icon"><x-outline-icon name="cube" /></span>
@@ -707,7 +930,11 @@
                 </div>
 
                 <button type="button" class="export-action-card is-filter" onclick="openExportFilterModal()">
-                    <span class="export-card-icon"><x-outline-icon name="funnel" /></span>
+                    <span class="export-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+                        </svg>
+                    </span>
                     <span>
                         <span class="export-card-label">Report Filter</span>
                         <span class="export-card-value">Filter</span>
@@ -728,24 +955,86 @@
                     </a>
                 @endforeach
             @else
-            <div class="export-action-card">
-                <span class="export-card-icon"><x-outline-icon name="calendar-days" /></span>
-                <span>
-                    <span class="export-card-label">From Date</span>
-                    <span class="export-card-value">{{ $dateFrom->format('M d, Y') }}</span>
-                </span>
-            </div>
+            @if(($reportType ?? '') === 'appointments')
+                <div class="export-action-card">
+                    <span class="export-card-icon"><x-outline-icon name="calendar-days" /></span>
+                    <span>
+                        <span class="export-card-label">Total Appointments</span>
+                        <span class="export-card-value">{{ number_format($previewMetrics['total_appointments'] ?? $previewCount) }}</span>
+                    </span>
+                </div>
 
-            <div class="export-action-card">
-                <span class="export-card-icon"><x-outline-icon name="calendar-days" /></span>
-                <span>
-                    <span class="export-card-label">To Date</span>
-                    <span class="export-card-value">{{ $dateTo->format('M d, Y') }}</span>
-                </span>
-            </div>
+                <div class="export-action-card">
+                    <span class="export-card-icon"><x-outline-icon name="clipboard-document-list" /></span>
+                    <span>
+                        <span class="export-card-label">Common Service</span>
+                        <span class="export-card-value">{{ \Illuminate\Support\Str::limit($previewMetrics['common_service'] ?? 'N/A', 18) }}</span>
+                    </span>
+                </div>
+            @elseif(($reportType ?? '') === 'audit-trail')
+                <div class="export-action-card">
+                    <span class="export-card-icon"><x-outline-icon name="clipboard-document-list" /></span>
+                    <span>
+                        <span class="export-card-label">Total Activities</span>
+                        <span class="export-card-value">{{ number_format($previewMetrics['total_activities'] ?? $previewCount) }}</span>
+                    </span>
+                </div>
+
+                <div class="export-action-card">
+                    <span class="export-card-icon"><x-outline-icon name="clock" /></span>
+                    <span>
+                        <span class="export-card-label">Last Export</span>
+                        <span class="export-card-value">{{ $previewMetrics['last_audit_export'] ?? 'N/A' }}</span>
+                    </span>
+                </div>
+            @elseif(($reportType ?? '') === 'health-forms')
+                <div class="export-action-card">
+                    <span class="export-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path d="M20.8 5.8c-1.7-2-4.7-2.1-6.5-.3L12 7.8 9.7 5.5C7.9 3.7 4.9 3.8 3.2 5.8c-1.6 1.9-1.4 4.8.4 6.6L12 20.5l8.4-8.1c1.8-1.8 2-4.7.4-6.6Z" stroke-width="2" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    <span>
+                        <span class="export-card-label">Total Issued</span>
+                        <span class="export-card-value">{{ number_format($previewMetrics['total_issued'] ?? $previewCount) }}</span>
+                    </span>
+                </div>
+
+                <div class="export-action-card">
+                    <span class="export-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path d="M20.8 5.8c-1.7-2-4.7-2.1-6.5-.3L12 7.8 9.7 5.5C7.9 3.7 4.9 3.8 3.2 5.8c-1.6 1.9-1.4 4.8.4 6.6L12 20.5l8.4-8.1c1.8-1.8 2-4.7.4-6.6Z" stroke-width="2" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    <span>
+                        <span class="export-card-label">With Condition</span>
+                        <span class="export-card-value">{{ number_format($previewMetrics['with_condition'] ?? 0) }}</span>
+                    </span>
+                </div>
+            @else
+                <div class="export-action-card">
+                    <span class="export-card-icon"><x-outline-icon name="calendar-days" /></span>
+                    <span>
+                        <span class="export-card-label">From Date</span>
+                        <span class="export-card-value">{{ $dateFrom->format('M d, Y') }}</span>
+                    </span>
+                </div>
+
+                <div class="export-action-card">
+                    <span class="export-card-icon"><x-outline-icon name="calendar-days" /></span>
+                    <span>
+                        <span class="export-card-label">To Date</span>
+                        <span class="export-card-value">{{ $dateTo->format('M d, Y') }}</span>
+                    </span>
+                </div>
+            @endif
 
             <button type="button" class="export-action-card is-filter" onclick="openExportFilterModal()">
-                <span class="export-card-icon"><x-outline-icon name="funnel" /></span>
+                <span class="export-card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+                    </svg>
+                </span>
                 <span>
                     <span class="export-card-label">Report Filter</span>
                     <span class="export-card-value">Filter</span>
@@ -804,7 +1093,11 @@
 <div class="export-filter-backdrop" id="exportFilterModal" onclick="closeExportFilterModal(event)">
     <section class="export-filter-modal" role="dialog" aria-modal="true" aria-labelledby="exportFilterTitle">
         <header class="export-filter-modal-head">
-            <span class="export-filter-modal-icon"><x-outline-icon name="funnel" /></span>
+            <span class="export-filter-modal-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+                </svg>
+            </span>
             <div>
                 <h2 class="export-filter-modal-title" id="exportFilterTitle">Filter {{ $title }}</h2>
                 <p class="export-filter-modal-copy">Set the date range for the preview and generated export.</p>
@@ -830,47 +1123,57 @@
                 @endphp
                 <div class="export-filter-field">
                     <label for="exportHealthCourse">Course</label>
-                    <select class="export-filter-select" id="exportHealthCourse" name="course">
-                        <option value="">All Courses</option>
-                        @foreach(($healthFormCourses ?? collect()) as $course)
-                            <option value="{{ $course }}" {{ request('course') === $course ? 'selected' : '' }}>{{ $course }}</option>
-                        @endforeach
-                    </select>
+                    <div class="export-filter-select-wrap">
+                        <select class="export-filter-select export-filter-custom-source" id="exportHealthCourse" name="course">
+                            <option value="">All Courses</option>
+                            @foreach(($healthFormCourses ?? collect()) as $course)
+                                <option value="{{ $course }}" {{ request('course') === $course ? 'selected' : '' }}>{{ $course }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="export-filter-field">
                     <label for="exportHealthUserType">User Type</label>
-                    <select class="export-filter-select" id="exportHealthUserType" name="user_type">
-                        <option value="">All User Types</option>
-                        @foreach(['student' => 'Student', 'applicant' => 'Applicant', 'faculty' => 'Faculty', 'admin' => 'Admin'] as $value => $label)
-                            <option value="{{ $value }}" {{ request('user_type') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
+                    <div class="export-filter-select-wrap">
+                        <select class="export-filter-select export-filter-custom-source" id="exportHealthUserType" name="user_type">
+                            <option value="">All User Types</option>
+                            @foreach(['student' => 'Student', 'applicant' => 'Applicant', 'faculty' => 'Faculty', 'admin' => 'Admin'] as $value => $label)
+                                <option value="{{ $value }}" {{ request('user_type') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="export-filter-field">
                     <label for="exportHealthGender">Gender</label>
-                    <select class="export-filter-select" id="exportHealthGender" name="gender">
-                        <option value="">All Gender</option>
-                        @foreach(['male' => 'Male', 'female' => 'Female'] as $value => $label)
-                            <option value="{{ $value }}" {{ request('gender') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
+                    <div class="export-filter-select-wrap">
+                        <select class="export-filter-select export-filter-custom-source" id="exportHealthGender" name="gender">
+                            <option value="">All Gender</option>
+                            @foreach(['male' => 'Male', 'female' => 'Female'] as $value => $label)
+                                <option value="{{ $value }}" {{ request('gender') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="export-filter-field">
                     <label for="exportHealthCondition">Medical Condition</label>
-                    <select class="export-filter-select" id="exportHealthCondition" name="condition">
-                        <option value="">All Conditions</option>
-                        <option value="yes" {{ request('condition') === 'yes' ? 'selected' : '' }}>With Condition</option>
-                        <option value="no" {{ request('condition') === 'no' ? 'selected' : '' }}>No Condition</option>
-                    </select>
+                    <div class="export-filter-select-wrap">
+                        <select class="export-filter-select export-filter-custom-source" id="exportHealthCondition" name="condition">
+                            <option value="">All Conditions</option>
+                            <option value="yes" {{ request('condition') === 'yes' ? 'selected' : '' }}>With Condition</option>
+                            <option value="no" {{ request('condition') === 'no' ? 'selected' : '' }}>No Condition</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="export-filter-field">
                     <label for="exportHealthStatus">Status</label>
-                    <select class="export-filter-select" id="exportHealthStatus" name="status">
-                        <option value="">All Status</option>
-                        <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
-                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
-                    </select>
+                    <div class="export-filter-select-wrap">
+                        <select class="export-filter-select export-filter-custom-source" id="exportHealthStatus" name="status">
+                            <option value="">All Status</option>
+                            <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
+                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="export-filter-field is-wide">
                     <label for="exportHealthConditionKeyword">Condition Keyword</label>
@@ -912,6 +1215,82 @@
         if (event.key === 'Escape') {
             closeExportFilterModal();
         }
+    });
+
+    document.querySelectorAll('.export-filter-custom-source').forEach(function (select) {
+        const wrap = select.closest('.export-filter-select-wrap');
+        if (!wrap || wrap.dataset.customReady === '1') return;
+
+        wrap.dataset.customReady = '1';
+
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'export-filter-custom-trigger';
+        trigger.setAttribute('aria-haspopup', 'listbox');
+        trigger.setAttribute('aria-expanded', 'false');
+
+        const menu = document.createElement('div');
+        menu.className = 'export-filter-custom-menu';
+        menu.setAttribute('role', 'listbox');
+
+        function selectedOption() {
+            return select.options[select.selectedIndex] || select.options[0];
+        }
+
+        function syncTrigger() {
+            const option = selectedOption();
+            trigger.textContent = option ? option.textContent.trim() : '';
+            menu.querySelectorAll('.export-filter-custom-option').forEach(function (button) {
+                const isSelected = button.dataset.value === select.value;
+                button.classList.toggle('is-selected', isSelected);
+                button.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+            });
+        }
+
+        Array.prototype.forEach.call(select.options, function (option) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'export-filter-custom-option';
+            button.dataset.value = option.value;
+            button.textContent = option.textContent.trim();
+            button.setAttribute('role', 'option');
+            button.addEventListener('click', function () {
+                select.value = option.value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                syncTrigger();
+                wrap.classList.remove('is-open');
+                trigger.setAttribute('aria-expanded', 'false');
+            });
+            menu.appendChild(button);
+        });
+
+        trigger.addEventListener('click', function () {
+            const willOpen = !wrap.classList.contains('is-open');
+            document.querySelectorAll('.export-filter-select-wrap.is-open').forEach(function (openWrap) {
+                if (openWrap !== wrap) {
+                    openWrap.classList.remove('is-open');
+                    const openTrigger = openWrap.querySelector('.export-filter-custom-trigger');
+                    if (openTrigger) openTrigger.setAttribute('aria-expanded', 'false');
+                }
+            });
+            wrap.classList.toggle('is-open', willOpen);
+            trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        });
+
+        select.addEventListener('change', syncTrigger);
+        wrap.appendChild(trigger);
+        wrap.appendChild(menu);
+        syncTrigger();
+    });
+
+    document.addEventListener('click', function (event) {
+        if (event.target.closest('.export-filter-select-wrap')) return;
+
+        document.querySelectorAll('.export-filter-select-wrap.is-open').forEach(function (wrap) {
+            wrap.classList.remove('is-open');
+            const trigger = wrap.querySelector('.export-filter-custom-trigger');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        });
     });
 </script>
 @endpush

@@ -27,6 +27,7 @@ use App\Models\HealthProfile;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Models\IntegrationClient;
 
@@ -40,6 +41,85 @@ class AdminController extends Controller
         }
 
         return rtrim(rtrim(number_format($rounded, 2, '.', ''), '0'), '.');
+    }
+
+    private function applyHealthProfileUserTypeFilter($query, string $userTypeFilter): void
+    {
+        $userTypeFilter = strtolower(trim($userTypeFilter));
+
+        if ($userTypeFilter === '') {
+            return;
+        }
+
+        $roleAliases = [
+            'applicant' => ['applicant', 'applicants'],
+            'student' => ['student', 'students'],
+            'faculty' => ['faculty'],
+            'admin' => ['admin', 'superadmin', 'super_admin', 'clinic_staff', 'clinic staff', 'nurse'],
+            'dependent' => ['dependent', 'dependents'],
+        ];
+
+        $aliases = $roleAliases[$userTypeFilter] ?? [$userTypeFilter];
+
+        if (in_array($userTypeFilter, ['faculty', 'admin', 'dependent'], true)) {
+            $query->whereHas('user', function ($userQuery) use ($aliases) {
+                $userQuery->where(function ($builder) use ($aliases) {
+                    foreach ($aliases as $index => $alias) {
+                        $method = $index === 0 ? 'whereRaw' : 'orWhereRaw';
+                        $builder->{$method}("LOWER(COALESCE(user_type, user_role, '')) LIKE ?", ['%' . $alias . '%']);
+                    }
+                });
+            });
+
+            return;
+        }
+
+        $realStudentNumberQuery = function ($builder): void {
+            $builder->where(function ($numberQuery) {
+                $numberQuery->whereNotNull('student_number')
+                    ->where('student_number', '!=', '')
+                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
+                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
+                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%']);
+            })
+                ->orWhereHas('user', function ($userQuery) {
+                    $userQuery->whereNotNull('student_number')
+                        ->where('student_number', '!=', '')
+                        ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
+                        ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
+                        ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%']);
+                });
+        };
+
+        if ($userTypeFilter === 'student') {
+            $query->where($realStudentNumberQuery);
+
+            return;
+        }
+
+        if ($userTypeFilter === 'applicant') {
+            $query->where(function ($builder) {
+                $builder->where(function ($missingNumberQuery) {
+                    $missingNumberQuery->where(function ($profileNumberQuery) {
+                        $profileNumberQuery->whereNull('student_number')
+                            ->orWhere('student_number', '')
+                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
+                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
+                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%']);
+                    })
+                        ->whereDoesntHave('user', function ($userQuery) {
+                            $userQuery->whereNotNull('student_number')
+                                ->where('student_number', '!=', '')
+                                ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
+                                ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
+                                ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%']);
+                        });
+                })
+                    ->orWhereHas('user', function ($userQuery) {
+                        $userQuery->whereRaw("LOWER(COALESCE(user_type, user_role, '')) LIKE ?", ['%applicant%']);
+                    });
+            });
+        }
     }
 
     private function recordInventoryMovement(Item $item, string $type, float $quantity, float $stockBefore, float $stockAfter, ?string $notes = null, ?string $movementDate = null, ?string $reason = null): void
@@ -1374,6 +1454,7 @@ class AdminController extends Controller
         $courseFilter = trim((string) $request->query('course', ''));
         $monthFilter = trim((string) $request->query('month', ''));
         $yearFilter = trim((string) $request->query('year', ''));
+        $userTypeFilter = strtolower(trim((string) $request->query('user_type', '')));
         $perPageInput = trim((string) $request->query('per_page', '20'));
         $allowedPerPage = ['20', '40', '80', '100', 'all'];
         $issuedPerPage = in_array($perPageInput, $allowedPerPage, true) ? $perPageInput : '20';
@@ -1419,6 +1500,8 @@ class AdminController extends Controller
             });
         }
 
+        $this->applyHealthProfileUserTypeFilter($query, $userTypeFilter);
+
         if ($monthFilter !== '') {
             try {
                 $monthDate = Carbon::parse($monthFilter . '-01');
@@ -1450,7 +1533,10 @@ class AdminController extends Controller
         }
 
         $issuedQuery = (clone $query)
-            ->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
+            ->whereIn('clearance_status', ['Issued', 'Fully Cleared'])
+            ->orderByDesc('verified_at')
+            ->orderByDesc('updated_at')
+            ->orderByDesc('id');
 
         $healthProfileSummaryRecords = $issuedQuery
             ->paginate($issuedPerPage === 'all' ? max(1, (clone $issuedQuery)->count()) : (int) $issuedPerPage, ['*'], 'issued_page')
@@ -1469,7 +1555,14 @@ class AdminController extends Controller
             ->sort()
             ->values();
 
-        $yearOptions = collect(['1st Year', '2nd Year', '3rd Year', '4th Year']);
+        $yearOptions = collect(['1', '2', '3', '4']);
+        $userTypeOptions = collect([
+            'applicant' => 'Applicants',
+            'student' => 'Students',
+            'faculty' => 'Faculty',
+            'admin' => 'Admin',
+            'dependent' => 'Dependents',
+        ]);
 
         return view('admin.health_records', compact(
             'records',
@@ -1478,8 +1571,10 @@ class AdminController extends Controller
             'courseFilter',
             'monthFilter',
             'yearFilter',
+            'userTypeFilter',
             'courseOptions',
             'yearOptions',
+            'userTypeOptions',
             'issuedPerPage'
         ));
     }
@@ -1490,6 +1585,7 @@ class AdminController extends Controller
         $courseFilter = trim((string) $request->query('course', ''));
         $monthFilter = trim((string) $request->query('month', ''));
         $yearFilter = trim((string) $request->query('year', ''));
+        $userTypeFilter = strtolower(trim((string) $request->query('user_type', '')));
 
         $query = HealthProfile::with('user')->latest();
 
@@ -1531,6 +1627,8 @@ class AdminController extends Controller
                     });
             });
         }
+
+        $this->applyHealthProfileUserTypeFilter($query, $userTypeFilter);
 
         if ($monthFilter !== '') {
             try {
