@@ -159,6 +159,12 @@
             display: none !important;
         }
 
+        :where(.asw-overlay) {
+            display: none !important;
+            pointer-events: none !important;
+            visibility: hidden !important;
+        }
+
         :where(.asw-menu-btn)::after {
             content: "";
             position: absolute;
@@ -911,7 +917,7 @@
             bottom: 18px;
             display: flex;
             align-items: center;
-            z-index: 499997;
+            z-index: 600000;
         }
 
         .quick-actions-toggle,
