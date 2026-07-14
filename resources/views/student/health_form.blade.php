@@ -1660,17 +1660,22 @@
                 $referenceMode = trim((string) ($prefill['reference_mode'] ?? 'admission'));
                 $referenceRequiresValidation = (bool) ($prefill['reference_requires_validation'] ?? true);
                 $referenceVerificationUnavailable = $referenceMode === 'verification_unavailable';
+                $applicantDocumentsRequired = $referenceMode === 'admission';
                 $stepOneTitle = trim((string) ($prefill['step_1_title'] ?? 'Admission Reference'));
                 $stepOneDescription = trim((string) ($prefill['step_1_description'] ?? 'Confirm your admission reference, complete your health information, then upload the required clinic documents.'));
                 $referenceLabel = trim((string) ($prefill['reference_label'] ?? 'Admission Reference Number'));
                 $referenceDisplayFallback = $referenceMode === 'admission'
                     ? 'No Reference Received'
-                    : ($referenceVerificationUnavailable ? 'Verification Temporarily Unavailable' : 'No Clinic Reference Yet');
+                    : ($referenceMode === 'student_number'
+                        ? 'No Student Number Yet'
+                        : ($referenceVerificationUnavailable ? 'Verification Temporarily Unavailable' : 'No Clinic Reference Yet'));
                 $referenceStatusDefault = $referenceRequiresValidation
                     ? 'No Admission Reference was received. Use the pencil button to enter and verify the reference from Admissions. If you do not have one, contact Admissions or clinic staff at puptclinic@gmail.com.'
                     : ($referenceVerificationUnavailable
                         ? 'PUPTAS could not be reached after retrying. No clinic reference was generated. Please retry later or contact Admissions or clinic staff at puptclinic@gmail.com.'
-                        : 'This clinic reference is generated and managed inside the clinic system for local staff, admin, faculty, and guest records.');
+                        : ($referenceMode === 'student_number'
+                            ? 'Your official student number from GUISIS will be used as your clinic reference.'
+                            : 'This clinic reference is generated and managed inside the clinic system for local staff, admin, faculty, and guest records.'));
                 $courseOptions = $prefill['course_options'] ?? [];
                 $courseApplicable = (bool) ($prefill['course_applicable'] ?? false);
                 $selectedCourseCode = old('course_code', $prefill['course_code'] ?? '');
@@ -1777,7 +1782,7 @@
                                 </div>
                             @endif
                             <p class="reference-verify-status {{ $displayReferenceNumber === '' ? '' : 'is-success' }}" id="referenceVerifyStatus" aria-live="polite">
-                                {{ $displayReferenceNumber === '' ? $referenceStatusDefault : ($referenceRequiresValidation ? 'Reference already verified from the Admission System.' : 'Clinic reference is ready for use inside the clinic system.') }}
+                                {{ $displayReferenceNumber === '' ? $referenceStatusDefault : ($referenceRequiresValidation ? 'Reference already verified from the Admission System.' : ($referenceMode === 'student_number' ? 'Student number is ready for use inside the clinic system.' : 'Clinic reference is ready for use inside the clinic system.')) }}
                             </p>
                             @error('reference_number')
                                 <p class="reference-field-error">{{ $message }}</p>
@@ -1792,7 +1797,7 @@
                             <li>Complete every required field in Personal Information using accurate and current details.</li>
                             <li>Answer the Medical History, allergy, disability, smoking, and alcohol questions truthfully.</li>
                             <li>Provide your COVID-19 vaccination status and dose details, when applicable.</li>
-                            <li>Prepare clear PDF or image copies of your medical certificate and official chest X-ray report.</li>
+                            <li>{{ $applicantDocumentsRequired ? 'Prepare clear PDF or image copies of your medical certificate and official chest X-ray report.' : 'Upload medical certificate, health declaration, and chest X-ray documents only if they are available or requested by the clinic.' }}</li>
                             <li>If you are a PWD, upload your PWD ID in Step 5. Upload your formal 2x2 photo as JPG or PNG.</li>
                             <li>Download and print your Health Information Form before proceeding to Clinic for Assessment.</li>
                             <li>Don't forget to bring your hard copy of requirements and printed 2 by 2 photo to the clinic.</li>
@@ -2280,7 +2285,7 @@
                         </div>
                         <div class="requirement-card">
                             <div class="requirement-card-header">
-                                <strong>Declaration of Medical Information and Data Subject Consent Form <span class="required">*</span></strong>
+                                <strong>Declaration of Medical Information and Data Subject Consent Form @if($applicantDocumentsRequired)<span class="required">*</span>@endif</strong>
                                 <span class="requirement-badge">PDF/IMG</span>
                             </div>
                             <p class="requirement-guideline">Upload the signed, clear, and readable Declaration of Medical Information and Data Subject Consent Form. Do not upload without signature, blurry, or unreadable copies.</p>
@@ -2302,14 +2307,14 @@
                                     <a href="{{ $documentOpenUrl('health_declaration') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input type="file" name="health_declaration" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ (!$isHealthFormCorrectionMode || $declarationRequested) ? 'required' : '' }} {{ $declarationLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            <input type="file" name="health_declaration" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ (($applicantDocumentsRequired && !$isHealthFormCorrectionMode) || ($isHealthFormCorrectionMode && $declarationRequested)) ? 'required' : '' }} {{ $declarationLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($declarationLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $declarationRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new declaration form.</div>
                             @endif
-                            <small>Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.</small>
+                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : 'Optional for enrolled students unless requested by the clinic. ' }}Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.</small>
                         </div>
                         @php
                             $medicalCertificateRequested = $isDocumentRequested('medical_certificate');
@@ -2319,7 +2324,7 @@
                         @endphp
                         <div class="requirement-card {{ old('doctor_name', $prefill['doctor_name'] ?? '') || old('med_cert_date', $prefill['med_cert_date'] ?? '') || $selectedMedCertFindings || old('med_cert_findings_details', $prefill['med_cert_findings_details'] ?? '') ? 'has-old-data' : '' }}" data-requirement-card>
                             <div class="requirement-card-header">
-                                <strong>Medical Certificate <span class="required">*</span></strong>
+                                <strong>Medical Certificate @if($applicantDocumentsRequired)<span class="required">*</span>@endif</strong>
                                 <span class="requirement-badge">PDF/IMG</span>
                             </div>
                             <p class="requirement-guideline">Please ensure the doctor's signature and PRC License Number are clearly visible.</p>
@@ -2341,27 +2346,27 @@
                                     <a href="{{ $documentOpenUrl('medical_certificate') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input type="file" name="medical_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ (!$isHealthFormCorrectionMode || $medicalCertificateRequested) ? 'required' : '' }} {{ $medicalCertificateLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            <input type="file" name="medical_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ (($applicantDocumentsRequired && !$isHealthFormCorrectionMode) || ($isHealthFormCorrectionMode && $medicalCertificateRequested)) ? 'required' : '' }} {{ $medicalCertificateLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($medicalCertificateLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $medicalCertificateRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new medical certificate.</div>
                             @endif
-                            <small>Allowed: PDF, JPG, JPEG, or PNG, max 2MB. Compress the file if needed to meet the size requirement.</small>
+                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : 'Optional for enrolled students unless requested by the clinic. ' }}Allowed: PDF, JPG, JPEG, or PNG, max 2MB. Compress the file if needed to meet the size requirement.</small>
                             <div class="requirement-extra">
                                 <div class="form-field span-2">
-                                    <label class="form-label" for="doctor_name">Doctor's Full Name <span class="required">*</span></label>
-                                    <input id="doctor_name" type="text" name="doctor_name" class="form-control" value="{{ old('doctor_name', $prefill['doctor_name'] ?? '') }}" maxlength="255" required data-requirement-extra-field>
+                                    <label class="form-label" for="doctor_name">Doctor's Full Name @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
+                                    <input id="doctor_name" type="text" name="doctor_name" class="form-control" value="{{ old('doctor_name', $prefill['doctor_name'] ?? '') }}" maxlength="255" {{ $applicantDocumentsRequired ? 'required' : '' }} data-requirement-extra-field>
                                 </div>
                                 <div class="form-field">
-                                    <label class="form-label" for="med_cert_date">Date of Certificate <span class="required">*</span></label>
-                                    <input id="med_cert_date" type="date" name="med_cert_date" class="form-control" value="{{ old('med_cert_date', $prefill['med_cert_date'] ?? '') }}" required data-requirement-extra-field>
+                                    <label class="form-label" for="med_cert_date">Date of Certificate @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
+                                    <input id="med_cert_date" type="date" name="med_cert_date" class="form-control" value="{{ old('med_cert_date', $prefill['med_cert_date'] ?? '') }}" {{ $applicantDocumentsRequired ? 'required' : '' }} data-requirement-extra-field>
                                 </div>
                                 <div class="form-field">
-                                    <label class="form-label" for="med_cert_findings">Findings <span class="required">*</span></label>
+                                    <label class="form-label" for="med_cert_findings">Findings @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
                                     <div class="clinic-select-wrap" data-clinic-select>
-                                        <select id="med_cert_findings" name="med_cert_findings" class="form-select clinic-select-native" required data-requirement-extra-field>
+                                        <select id="med_cert_findings" name="med_cert_findings" class="form-select clinic-select-native" {{ $applicantDocumentsRequired ? 'required' : '' }} data-requirement-extra-field>
                                             <option value="">Select findings</option>
                                             <option value="No Findings / Normal" {{ $selectedMedCertFindings === 'No Findings / Normal' ? 'selected' : '' }}>No Findings / Normal</option>
                                             <option value="With Findings" {{ $selectedMedCertFindings === 'With Findings' ? 'selected' : '' }}>With Findings</option>
@@ -2397,7 +2402,7 @@
                         @endphp
                         <div class="requirement-card {{ old('xray_date', $prefill['xray_date'] ?? '') || $selectedXrayFindings || old('xray_findings_details', $prefill['xray_findings_details'] ?? '') ? 'has-old-data' : '' }}" data-requirement-card>
                             <div class="requirement-card-header">
-                                <strong>Chest X-ray Result <span class="required">*</span></strong>
+                                <strong>Chest X-ray Result @if($applicantDocumentsRequired)<span class="required">*</span>@endif</strong>
                                 <span class="requirement-badge">PDF/IMG</span>
                             </div>
                             <p class="requirement-guideline">Please upload the official radiologist's written report, not the actual film scanning image.</p>
@@ -2419,23 +2424,23 @@
                                     <a href="{{ $documentOpenUrl('chest_xray_result') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input type="file" name="chest_xray_result" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ (!$isHealthFormCorrectionMode || $xrayRequested) ? 'required' : '' }} {{ $xrayLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            <input type="file" name="chest_xray_result" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ (($applicantDocumentsRequired && !$isHealthFormCorrectionMode) || ($isHealthFormCorrectionMode && $xrayRequested)) ? 'required' : '' }} {{ $xrayLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($xrayLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $xrayRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new Chest X-ray Result.</div>
                             @endif
-                            <small>Allowed: PDF, JPG, JPEG, or PNG, max 2MB. Compress the file if needed to meet the size requirement.</small>
+                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : 'Optional for enrolled students unless requested by the clinic. ' }}Allowed: PDF, JPG, JPEG, or PNG, max 2MB. Compress the file if needed to meet the size requirement.</small>
                             <div class="requirement-extra">
                                 <div class="form-field">
-                                    <label class="form-label" for="xray_date">Date of Examination <span class="required">*</span></label>
-                                    <input id="xray_date" type="date" name="xray_date" class="form-control" value="{{ old('xray_date', $prefill['xray_date'] ?? '') }}" required data-requirement-extra-field>
+                                    <label class="form-label" for="xray_date">Date of Examination @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
+                                    <input id="xray_date" type="date" name="xray_date" class="form-control" value="{{ old('xray_date', $prefill['xray_date'] ?? '') }}" {{ $applicantDocumentsRequired ? 'required' : '' }} data-requirement-extra-field>
                                 </div>
                                 <div class="form-field">
-                                    <label class="form-label" for="xray_findings">Findings <span class="required">*</span></label>
+                                    <label class="form-label" for="xray_findings">Findings @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
                                     <div class="clinic-select-wrap" data-clinic-select>
-                                        <select id="xray_findings" name="xray_findings" class="form-select clinic-select-native" required data-requirement-extra-field>
+                                        <select id="xray_findings" name="xray_findings" class="form-select clinic-select-native" {{ $applicantDocumentsRequired ? 'required' : '' }} data-requirement-extra-field>
                                             <option value="">Select findings</option>
                                             <option value="Normal" {{ $selectedXrayFindings === 'Normal' ? 'selected' : '' }}>Normal</option>
                                             <option value="With Findings" {{ $selectedXrayFindings === 'With Findings' ? 'selected' : '' }}>With Findings</option>

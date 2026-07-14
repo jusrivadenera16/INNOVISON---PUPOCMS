@@ -2734,6 +2734,1102 @@
             color: #475569;
             border-color: rgba(112, 19, 27, 0.18);
         }
+
+        .announcement-modal-overlay {
+            background: rgba(4, 4, 8, 0.56);
+            backdrop-filter: blur(7px);
+            -webkit-backdrop-filter: blur(7px);
+        }
+
+        .announcement-modal {
+            right: 18px;
+            top: 14px;
+            bottom: 14px;
+            width: min(392px, calc(100vw - 28px));
+            border-radius: 14px;
+            background:
+                radial-gradient(circle at 16% 0%, rgba(157, 20, 39, .28), transparent 34%),
+                linear-gradient(180deg, rgba(17, 18, 26, .98), rgba(12, 14, 22, .98));
+            border: 1px solid rgba(255, 255, 255, .12);
+            box-shadow: -18px 24px 55px rgba(0, 0, 0, .45);
+        }
+
+        .announcement-modal-header {
+            align-items: center;
+            padding: 14px 14px 12px;
+            background: linear-gradient(135deg, rgba(112, 19, 27, .98), rgba(61, 10, 20, .92));
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            box-shadow: none;
+        }
+
+        .announcement-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .announcement-title-copy {
+            display: grid;
+            gap: 2px;
+        }
+
+        .announcement-title-copy strong {
+            color: #ffffff;
+            font-size: 16px;
+            line-height: 1.15;
+            font-weight: 950;
+        }
+
+        .announcement-modal-title {
+            font-size: 16px;
+            line-height: 1.15;
+        }
+
+        .announcement-title-sub {
+            color: rgba(255,255,255,.78);
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .announcement-modal-title .modal-title-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            background: rgba(255,255,255,.13);
+            border: 1px solid rgba(255,255,255,.16);
+            color: #ffffff;
+        }
+
+        .announcement-modal-close {
+            width: 31px;
+            height: 31px;
+            border-color: rgba(255,255,255,.2);
+            background: rgba(255,255,255,.06);
+        }
+
+        .announcement-modal-close svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .announcement-modal-content {
+            padding: 12px;
+            background: rgba(10, 12, 18, .72);
+        }
+
+        .announcement-overview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .announcement-overview-card {
+            min-height: 54px;
+            display: grid;
+            grid-template-columns: 26px minmax(0, 1fr);
+            gap: 8px;
+            align-items: center;
+            padding: 9px;
+            border-radius: 7px;
+            background: rgba(255,255,255,.035);
+            border: 1px solid rgba(255,255,255,.08);
+        }
+
+        .announcement-overview-icon,
+        .landing-announcement-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .announcement-overview-icon {
+            width: 25px;
+            height: 25px;
+            border-radius: 7px;
+            color: var(--announcement-accent, #60a5fa);
+            background: color-mix(in srgb, var(--announcement-accent, #60a5fa) 18%, transparent);
+        }
+
+        .announcement-overview-icon svg,
+        .landing-announcement-icon svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .announcement-overview-copy span {
+            display: block;
+            color: #cbd5e1;
+            font-size: 9px;
+            font-weight: 850;
+            line-height: 1;
+        }
+
+        .announcement-overview-copy strong {
+            display: block;
+            margin-top: 1px;
+            color: #ffffff;
+            font-size: 17px;
+            line-height: 1;
+            font-weight: 950;
+        }
+
+        .announcement-overview-copy small {
+            display: block;
+            margin-top: 2px;
+            color: #94a3b8;
+            font-size: 8px;
+            font-weight: 800;
+        }
+
+        .announcement-tools {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .announcement-search {
+            position: relative;
+        }
+
+        .announcement-search svg {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            width: 14px;
+            height: 14px;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        .announcement-search input {
+            width: 100%;
+            height: 34px;
+            padding: 0 10px 0 31px;
+            border-radius: 7px;
+            border: 1px solid rgba(255,255,255,.09);
+            background: rgba(255,255,255,.035);
+            color: #e5e7eb;
+            font-size: 11px;
+            font-weight: 750;
+            outline: none;
+        }
+
+        .announcement-search input::placeholder {
+            color: #64748b;
+        }
+
+        .announcement-section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0 2px 8px;
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: 850;
+        }
+
+        .landing-announcement-list {
+            gap: 9px;
+        }
+
+        .landing-announcement-card {
+            grid-template-columns: 35px minmax(0, 1fr);
+            gap: 10px;
+            padding: 10px;
+            border-radius: 9px;
+            background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.025));
+            border: 1px solid rgba(255,255,255,.09);
+            box-shadow: inset 3px 0 0 var(--landing-announcement-priority, #60a5fa);
+        }
+
+        .landing-announcement-card::before {
+            content: none;
+        }
+
+        .landing-announcement-icon {
+            width: 34px;
+            height: 34px;
+            margin-top: 20px;
+            border-radius: 8px;
+            color: var(--landing-announcement-priority, #60a5fa);
+            background: color-mix(in srgb, var(--landing-announcement-priority, #60a5fa) 18%, transparent);
+            border: 1px solid color-mix(in srgb, var(--landing-announcement-priority, #60a5fa) 28%, transparent);
+        }
+
+        .landing-announcement-body {
+            min-width: 0;
+            display: grid;
+            gap: 9px;
+        }
+
+        .landing-announcement-meta {
+            justify-content: space-between;
+            gap: 6px;
+            color: #94a3b8;
+            font-size: 9px;
+        }
+
+        .landing-announcement-meta-left,
+        .landing-announcement-meta-right {
+            display: inline-flex;
+            align-items: center;
+            min-width: 0;
+            gap: 6px;
+        }
+
+        .landing-announcement-priority {
+            padding: 2px 5px;
+            border-radius: 4px;
+            background: color-mix(in srgb, var(--landing-announcement-priority, #60a5fa) 18%, transparent);
+            font-size: 9px;
+        }
+
+        .landing-announcement-priority::before {
+            content: none;
+        }
+
+        .landing-announcement-title {
+            font-size: 14px;
+        }
+
+        .landing-announcement-message {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .landing-announcement-foot {
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 10px;
+        }
+
+        .landing-announcement-read {
+            min-height: 23px;
+            padding: 0 9px;
+            border-radius: 5px;
+            border: 1px solid rgba(239, 68, 68, .36);
+            background: rgba(127, 29, 45, .16);
+            color: #fda4af;
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+        .landing-announcement-card.priority-urgent { --landing-announcement-priority: #ef4444; }
+        .landing-announcement-card.priority-info { --landing-announcement-priority: #3b82f6; }
+        .landing-announcement-card.priority-warning { --landing-announcement-priority: #eab308; }
+        .landing-announcement-card.priority-health { --landing-announcement-priority: #22c55e; }
+        .landing-announcement-card.priority-event { --landing-announcement-priority: #a855f7; }
+
+        .announcement-view-all {
+            width: 100%;
+            margin-top: 12px;
+            border: 0;
+            background: transparent;
+            color: #f87171;
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        body.landing-theme-light .announcement-modal {
+            background:
+                radial-gradient(circle at 16% 0%, rgba(157, 20, 39, .12), transparent 34%),
+                linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.98));
+        }
+
+        .announcement-modal-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.landing-theme-light .announcement-modal-content {
+            color: #475569;
+            background: transparent;
+        }
+
+        body.landing-theme-light .announcement-overview-card {
+            background: rgba(255, 255, 255, .92);
+            border-color: rgba(112, 19, 27, .12);
+        }
+
+        body.landing-theme-light .announcement-overview-copy span,
+        body.landing-theme-light .announcement-section-head {
+            color: #64748b;
+        }
+
+        body.landing-theme-light .announcement-overview-copy strong {
+            color: #111827;
+        }
+
+        body.landing-theme-light .announcement-overview-copy small {
+            color: #64748b;
+        }
+
+        body.landing-theme-light .announcement-search input {
+            background: rgba(255, 255, 255, .92);
+            border-color: rgba(112, 19, 27, .14);
+            color: #334155;
+        }
+
+        body.landing-theme-light .announcement-search input::placeholder {
+            color: #64748b;
+        }
+
+        .announcement-title-copy strong {
+            font-size: 18px;
+        }
+
+        .announcement-title-sub {
+            font-size: 11px;
+        }
+
+        .announcement-overview-copy span,
+        .announcement-section-head {
+            font-size: 11px;
+        }
+
+        .announcement-overview-copy strong {
+            font-size: 20px;
+        }
+
+        .announcement-overview-copy small,
+        .landing-announcement-meta,
+        .landing-announcement-foot {
+            font-size: 10px;
+        }
+
+        .announcement-search input {
+            font-size: 12px;
+        }
+
+        .landing-announcement-list {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            padding-right: 2px;
+            align-content: start;
+        }
+
+        .landing-announcement-card {
+            flex-shrink: 0;
+            min-height: 124px;
+            padding: 10px;
+            gap: 10px;
+        }
+
+        body.landing-theme-light .landing-announcement-card {
+            background: rgba(255, 255, 255, .96);
+            border-color: rgba(112, 19, 27, .12);
+        }
+
+        .landing-announcement-card.is-expanded .landing-announcement-message {
+            display: block;
+            -webkit-line-clamp: unset;
+            overflow: visible;
+        }
+
+        .landing-announcement-card.is-hidden-by-limit {
+            display: none;
+        }
+
+        .landing-announcement-empty.is-search-empty {
+            grid-column: 1 / -1;
+            margin-top: 0;
+        }
+
+        .landing-announcement-title {
+            font-size: 14px;
+        }
+
+        .landing-announcement-message {
+            font-size: 12px;
+            -webkit-line-clamp: 2;
+        }
+
+        body.landing-theme-light .landing-announcement-title {
+            color: #111827;
+        }
+
+        body.landing-theme-light .landing-announcement-message {
+            color: #475569;
+        }
+
+        body.landing-theme-light .landing-announcement-meta,
+        body.landing-theme-light .landing-announcement-foot {
+            color: #64748b;
+        }
+
+        .landing-announcement-read {
+            font-size: 10px;
+        }
+
+        .announcement-view-all {
+            position: sticky;
+            bottom: 0;
+            flex: 0 0 auto;
+            min-height: 42px;
+            margin: 10px -12px -12px;
+            background: linear-gradient(180deg, rgba(12,14,22,.72), rgba(12,14,22,.98));
+            border-top: 1px solid rgba(255,255,255,.08);
+            z-index: 3;
+        }
+
+        body.landing-theme-light .announcement-view-all {
+            background: linear-gradient(180deg, rgba(255,255,255,.76), rgba(255,255,255,.98));
+        }
+
+        .announcement-modal.is-view-all {
+            width: min(790px, calc(100vw - 28px));
+        }
+
+        .announcement-modal.is-view-all .landing-announcement-list {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .announcement-modal.is-view-all .landing-announcement-card {
+            min-height: 140px;
+        }
+
+        @media (max-width: 720px) {
+            .announcement-modal.is-view-all .landing-announcement-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .assistant-modal-overlay {
+            justify-content: center;
+            padding: 18px;
+            background: rgba(5, 7, 12, .58);
+            backdrop-filter: blur(9px);
+            -webkit-backdrop-filter: blur(9px);
+        }
+
+        .assistant-modal {
+            width: min(660px, calc(100vw - 34px));
+            max-height: min(570px, calc(100vh - 34px));
+            min-height: 0;
+            border-radius: 14px;
+            background: #ffffff;
+            border: 1px solid rgba(255,255,255,.28);
+            box-shadow: 0 26px 75px rgba(0,0,0,.38);
+        }
+
+        .assistant-modal-header {
+            min-height: 86px;
+            padding: 18px 22px;
+            background:
+                radial-gradient(circle at 28% 10%, rgba(255,255,255,.12), transparent 34%),
+                linear-gradient(135deg, #8f1024, #a1142b 52%, #70131b);
+            border-bottom: 1px solid rgba(112, 19, 27, .12);
+            box-shadow: none;
+        }
+
+        .assistant-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .assistant-title-copy {
+            display: grid;
+            gap: 3px;
+        }
+
+        .assistant-title-copy strong {
+            color: #ffffff;
+            font-size: 23px;
+            line-height: 1;
+            font-weight: 950;
+        }
+
+        .assistant-title-copy span {
+            color: #facc15;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .assistant-modal-title {
+            font-size: 0;
+            gap: 0;
+        }
+
+        .modal-title-icon.is-assistant {
+            width: 52px;
+            height: 52px;
+            flex-basis: 52px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.18);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 16px 26px rgba(49,4,14,.2);
+        }
+
+        .modal-title-icon.is-assistant svg {
+            width: 52px;
+            height: 52px;
+        }
+
+        .assistant-modal-close {
+            width: 44px;
+            height: 44px;
+            background: rgba(112, 19, 27, .34);
+            border-color: rgba(250,204,21,.46);
+        }
+
+        .assistant-modal-content {
+            padding: 28px 26px 18px;
+            overflow-y: auto;
+            color: #1f2937;
+            background:
+                radial-gradient(circle at 15% 28%, rgba(252, 231, 235, .86), transparent 26%),
+                linear-gradient(180deg, #ffffff, #fffafa);
+        }
+
+        .assistant-coming-grid {
+            display: grid;
+            grid-template-columns: minmax(220px, .9fr) minmax(240px, 1fr);
+            gap: 26px;
+            align-items: center;
+        }
+
+        .assistant-robot-scene {
+            position: relative;
+            min-height: 210px;
+            display: flex;
+            align-items: end;
+            justify-content: center;
+        }
+
+        .assistant-robot-halo {
+            position: absolute;
+            width: 260px;
+            height: 166px;
+            border-radius: 50%;
+            background: #fae7eb;
+            opacity: .82;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .assistant-robot-art {
+            position: relative;
+            width: 205px;
+            height: 210px;
+            z-index: 1;
+        }
+
+        .assistant-robot-head {
+            position: absolute;
+            left: 40px;
+            top: 63px;
+            width: 126px;
+            height: 86px;
+            border-radius: 42px;
+            background: linear-gradient(145deg, #ffffff, #f3f4f6);
+            box-shadow: 0 18px 26px rgba(112,19,27,.18);
+        }
+
+        .assistant-robot-face {
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            top: 24px;
+            height: 40px;
+            border-radius: 20px;
+            background: linear-gradient(145deg, #2a0612, #5a1022);
+        }
+
+        .assistant-robot-face::before,
+        .assistant-robot-face::after {
+            content: "";
+            position: absolute;
+            top: 15px;
+            width: 13px;
+            height: 10px;
+            border-radius: 0 0 999px 999px;
+            border-bottom: 5px solid #ffffff;
+        }
+
+        .assistant-robot-face::before { left: 22px; }
+        .assistant-robot-face::after { right: 22px; }
+
+        .assistant-robot-smile {
+            position: absolute;
+            left: 50%;
+            top: 48px;
+            width: 24px;
+            height: 12px;
+            transform: translateX(-50%);
+            border-bottom: 5px solid #ffffff;
+            border-radius: 0 0 999px 999px;
+        }
+
+        .assistant-robot-ear {
+            position: absolute;
+            top: 93px;
+            width: 20px;
+            height: 43px;
+            border-radius: 14px;
+            background: #ffffff;
+            box-shadow: 0 10px 18px rgba(112,19,27,.12);
+        }
+
+        .assistant-robot-ear.left { left: 23px; }
+        .assistant-robot-ear.right { right: 23px; }
+
+        .assistant-robot-body {
+            position: absolute;
+            left: 57px;
+            bottom: 9px;
+            width: 94px;
+            height: 74px;
+            border-radius: 35px 35px 20px 20px;
+            background: #ffffff;
+            box-shadow: 0 16px 22px rgba(112,19,27,.13);
+        }
+
+        .assistant-robot-antenna {
+            position: absolute;
+            left: 101px;
+            top: 22px;
+            width: 7px;
+            height: 44px;
+            background: #d1d5db;
+            border-radius: 99px;
+        }
+
+        .assistant-robot-antenna::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: -12px;
+            width: 22px;
+            height: 22px;
+            transform: translateX(-50%);
+            border-radius: 999px;
+            background: linear-gradient(145deg, #ffffff, #d9dee7);
+            box-shadow: 0 8px 13px rgba(0,0,0,.12);
+        }
+
+        .assistant-robot-wave {
+            position: absolute;
+            right: 19px;
+            bottom: 62px;
+            width: 31px;
+            height: 62px;
+            border-radius: 99px;
+            border-right: 12px solid #ffffff;
+            transform: rotate(-27deg);
+        }
+
+        .assistant-stethoscope {
+            position: absolute;
+            left: 72px;
+            bottom: 22px;
+            width: 66px;
+            height: 44px;
+            border: 5px solid #7f1023;
+            border-top: 0;
+            border-radius: 0 0 28px 28px;
+        }
+
+        .assistant-stethoscope::before,
+        .assistant-stethoscope::after {
+            content: "";
+            position: absolute;
+            bottom: -9px;
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            border: 5px solid #7f1023;
+            background: #ffffff;
+        }
+
+        .assistant-stethoscope::before { left: -10px; }
+        .assistant-stethoscope::after { right: -10px; }
+
+        .assistant-speech-bubble {
+            position: absolute;
+            right: 6px;
+            top: 28px;
+            width: 112px;
+            height: 112px;
+            display: grid;
+            place-items: center;
+            padding: 14px;
+            border-radius: 999px;
+            background: #ffffff;
+            border: 2px solid #8f1024;
+            color: #4b1020;
+            font-size: 12px;
+            font-weight: 900;
+            text-align: center;
+            line-height: 1.25;
+            z-index: 2;
+            transform-origin: 18px 54px;
+            transition: opacity .28s ease, transform .28s cubic-bezier(.2, .9, .2, 1);
+        }
+
+        .assistant-speech-bubble.is-changing {
+            opacity: 0;
+            transform: translateY(8px) scale(.9);
+        }
+
+        .assistant-speech-bubble::after {
+            content: "";
+            position: absolute;
+            left: -12px;
+            top: 42px;
+            width: 22px;
+            height: 22px;
+            background: #ffffff;
+            border-left: 2px solid #8f1024;
+            border-bottom: 2px solid #8f1024;
+            transform: rotate(45deg);
+        }
+
+        .assistant-speech-bubble-text {
+            position: relative;
+            z-index: 1;
+        }
+
+        .assistant-speech-bubble span {
+            display: block;
+            color: #8f1024;
+            font-size: 17px;
+            line-height: 1;
+            margin-top: 4px;
+        }
+
+        .assistant-plus-mark {
+            position: absolute;
+            color: #e6a8b3;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .assistant-plus-mark.one { left: 8px; top: 62px; }
+        .assistant-plus-mark.two { right: 16px; bottom: 24px; }
+
+        .assistant-reference-icon {
+            position: relative;
+            z-index: 1;
+            width: min(185px, 66%);
+            height: auto;
+            object-fit: contain;
+            border-radius: 0;
+            filter: drop-shadow(0 18px 26px rgba(112, 19, 27, .2));
+            animation: assistantIconFloat 3.4s ease-in-out infinite;
+        }
+
+        .assistant-robot-scene .assistant-robot-art {
+            display: none;
+        }
+
+        .assistant-reference-icon .chat-bubble {
+            transform-origin: 96px 38px;
+            animation: assistantBubblePop 2.8s cubic-bezier(.2, .9, .2, 1) infinite;
+        }
+
+        @keyframes assistantIconFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes assistantBubblePop {
+            0%, 100% { transform: scale(1); }
+            45% { transform: scale(1.06); }
+        }
+
+        .assistant-coming-copy h3 {
+            margin: 0;
+            color: #7f1023;
+            font-size: 30px;
+            line-height: 1.05;
+            font-weight: 950;
+        }
+
+        .assistant-coming-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0 16px;
+            color: #d08a18;
+            font-size: 13px;
+            font-weight: 950;
+        }
+
+        .assistant-coming-copy p {
+            margin: 0 0 14px;
+            color: #374151;
+            font-size: 14px;
+            line-height: 1.55;
+            font-weight: 700;
+        }
+
+        .assistant-patience {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            color: #4b5563;
+            font-size: 14px;
+            font-weight: 750;
+        }
+
+        .assistant-patience span {
+            color: #e5a2ad;
+            font-size: 18px;
+        }
+
+        .assistant-features {
+            margin-top: 18px;
+            padding: 14px 14px 16px;
+            border-radius: 10px;
+            border: 1px solid #f4d6dc;
+            background: rgba(255, 247, 249, .92);
+        }
+
+        .assistant-features-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 13px;
+            color: #7f1023;
+            font-size: 12px;
+            font-weight: 950;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .assistant-features-title::before,
+        .assistant-features-title::after {
+            content: "";
+            height: 1px;
+            flex: 1;
+            background: #efd3d9;
+        }
+
+        .assistant-feature-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .assistant-feature {
+            display: grid;
+            justify-items: center;
+            gap: 6px;
+            text-align: center;
+            color: #374151;
+            font-size: 10px;
+            line-height: 1.3;
+            font-weight: 700;
+        }
+
+        .assistant-feature-icon {
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            background: #f8e5e9;
+            color: #8f1024;
+        }
+
+        .assistant-feature-icon svg {
+            width: 21px;
+            height: 21px;
+        }
+
+        .assistant-feature strong {
+            display: block;
+            color: #111827;
+            font-size: 11px;
+            font-weight: 950;
+        }
+
+        .assistant-notify {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 10px;
+            background: #fff0f3;
+            color: #8f1024;
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+        @media (max-width: 720px) {
+            .assistant-coming-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .assistant-feature-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .assistant-modal {
+                max-height: calc(100vh - 24px);
+            }
+        }
+
+        .announcement-title-copy strong {
+            font-size: 20px;
+        }
+
+        .announcement-title-sub {
+            font-size: 13px;
+        }
+
+        .announcement-overview-copy span,
+        .announcement-section-head {
+            font-size: 13px;
+        }
+
+        .announcement-overview-copy strong {
+            font-size: 24px;
+        }
+
+        .announcement-overview-copy small,
+        .landing-announcement-meta,
+        .landing-announcement-foot {
+            font-size: 12px;
+        }
+
+        .announcement-search input {
+            font-size: 14px;
+        }
+
+        .landing-announcement-title {
+            font-size: 16px;
+            line-height: 1.25;
+        }
+
+        .landing-announcement-message {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .landing-announcement-read,
+        .announcement-view-all {
+            font-size: 12px;
+        }
+
+        .assistant-modal-overlay {
+            justify-content: flex-end;
+            align-items: stretch;
+            padding: 14px 14px 14px 0;
+        }
+
+        .assistant-modal {
+            width: min(420px, calc(100vw - 28px));
+            height: calc(100vh - 28px);
+            max-height: none;
+            transform: translateX(112%);
+            opacity: 1;
+            transition: transform .28s ease;
+        }
+
+        .assistant-modal.is-open {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .assistant-modal-header {
+            min-height: 74px;
+            padding: 14px 16px;
+        }
+
+        .assistant-title-wrap {
+            gap: 10px;
+        }
+
+        .assistant-title-copy strong {
+            font-size: 18px;
+        }
+
+        .assistant-title-copy span {
+            font-size: 11px;
+        }
+
+        .modal-title-icon.is-assistant {
+            width: 42px;
+            height: 42px;
+            flex-basis: 42px;
+            border-radius: 11px;
+        }
+
+        .modal-title-icon.is-assistant svg {
+            width: 42px;
+            height: 42px;
+        }
+
+        .assistant-modal-close {
+            width: 34px;
+            height: 34px;
+        }
+
+        .assistant-modal-content {
+            padding: 14px;
+        }
+
+        .assistant-coming-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .assistant-robot-scene {
+            min-height: 150px;
+            transform: scale(.78);
+            transform-origin: center bottom;
+            margin: -28px 0 -16px;
+        }
+
+        .assistant-coming-copy h3 {
+            font-size: 24px;
+        }
+
+        .assistant-coming-label {
+            margin: 7px 0 10px;
+            font-size: 11px;
+        }
+
+        .assistant-coming-copy p,
+        .assistant-patience {
+            font-size: 12px;
+        }
+
+        .assistant-features {
+            margin-top: 12px;
+            padding: 11px;
+        }
+
+        .assistant-feature-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .assistant-feature-icon {
+            width: 36px;
+            height: 36px;
+        }
+
+        .assistant-notify {
+            gap: 10px;
+            padding: 10px;
+            font-size: 11px;
+            flex-wrap: wrap;
+        }
     </style>
 </head>
 <body>
@@ -2827,14 +3923,19 @@
         <div class="announcement-modal-overlay" id="announcementModalOverlay">
             <div class="announcement-modal" id="announcementModal">
                 <div class="announcement-modal-header">
-                    <h2 class="announcement-modal-title">
-                        <span class="modal-title-icon" aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.282m3.102.069a18.03 18.03 0 0 1-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 0 1 8.835 2.535M10.34 6.66a23.847 23.847 0 0 0 8.835-2.535m0 0A23.74 23.74 0 0 0 18.795 3m.38 1.125a23.91 23.91 0 0 1 1.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 0 0 1.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 0 1 0 3.46" />
-                            </svg>
-                        </span>
-                        Announcements
-                    </h2>
+                    <div class="announcement-title-wrap">
+                        <h2 class="announcement-modal-title">
+                            <span class="modal-title-icon" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.282m3.102.069a18.03 18.03 0 0 1-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 0 1 8.835 2.535M10.34 6.66a23.847 23.847 0 0 0 8.835-2.535m0 0A23.74 23.74 0 0 0 18.795 3m.38 1.125a23.91 23.91 0 0 1 1.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 0 0 1.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 0 1 0 3.46" />
+                                </svg>
+                            </span>
+                        </h2>
+                        <div class="announcement-title-copy">
+                            <strong>Announcements</strong>
+                            <span class="announcement-title-sub">Stay updated with the latest clinic updates.</span>
+                        </div>
+                    </div>
                     <button type="button" class="announcement-modal-close" id="announcementModalClose" aria-label="Close announcements">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -2849,31 +3950,88 @@
                         $landingPriorityLabels = [
                             'urgent' => 'Urgent',
                             'info' => 'Info',
-                            'warning' => 'Warning',
+                            'warning' => 'Notice',
+                            'health' => 'Health',
+                            'event' => 'Event',
                         ];
+                        $landingTotalAnnouncements = $landingAnnouncementItems->count();
+                        $landingLatestCount = $landingAnnouncementItems
+                            ->filter(fn ($announcement) => $announcement->created_at && $announcement->created_at->gte(now()->subDays(3)))
+                            ->count();
+                        $landingEventCount = $landingAnnouncementItems->filter(fn ($announcement) => ($announcement->priority ?: 'info') === 'event')->count();
                     @endphp
 
+                    <div class="announcement-overview-grid">
+                        <div class="announcement-overview-card" style="--announcement-accent:#3b82f6">
+                            <span class="announcement-overview-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16v-4"/><path d="M12 8h.01"/><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/></svg>
+                            </span>
+                            <span class="announcement-overview-copy"><span>Latest</span><strong>{{ $landingLatestCount }}</strong><small>new posts</small></span>
+                        </div>
+                        <div class="announcement-overview-card" style="--announcement-accent:#f59e0b">
+                            <span class="announcement-overview-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16v10H4z"/><path d="m4 8 8 5 8-5"/></svg>
+                            </span>
+                            <span class="announcement-overview-copy"><span>All</span><strong>{{ $landingTotalAnnouncements }}</strong><small>updates</small></span>
+                        </div>
+                        <div class="announcement-overview-card" style="--announcement-accent:#a855f7">
+                            <span class="announcement-overview-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v13H4V7a2 2 0 0 1 2-2z"/><path d="M8 13h3M8 17h6"/></svg>
+                            </span>
+                            <span class="announcement-overview-copy"><span>Events</span><strong>{{ $landingEventCount }}</strong><small>updates</small></span>
+                        </div>
+                    </div>
+
+                    <div class="announcement-tools">
+                        <label class="announcement-search">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m21 21-4.3-4.3"/><path d="M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z"/></svg>
+                            <input type="search" id="announcementSearchInput" placeholder="Search announcements...">
+                        </label>
+                    </div>
+
                     @if($landingAnnouncementItems->isNotEmpty())
+                        <div class="announcement-section-head">
+                            <span data-announcement-section-title>Latest Announcements</span>
+                            <span>{{ $landingTotalAnnouncements }} of {{ $landingTotalAnnouncements }}</span>
+                        </div>
                         <div class="landing-announcement-list">
-                            @foreach($landingAnnouncementItems as $announcement)
+                            @foreach($landingAnnouncementItems as $announcementIndex => $announcement)
                                 @php
                                     $priority = $announcement->priority ?: 'info';
+                                    $priorityClass = in_array($priority, ['urgent', 'info', 'warning', 'health', 'event'], true) ? $priority : 'info';
                                 @endphp
-                                <article class="landing-announcement-card priority-{{ $priority }}">
-                                    <div class="landing-announcement-meta">
-                                        <span class="landing-announcement-priority">{{ $landingPriorityLabels[$priority] ?? ucfirst($priority) }}</span>
-                                        <span>&middot; {{ $announcement->created_at?->diffForHumans() ?? 'Just now' }}</span>
-                                    </div>
-                                    <h3 class="landing-announcement-title">{{ $announcement->title }}</h3>
-                                    <p class="landing-announcement-message">{{ $announcement->message }}</p>
-                                    @if($announcement->expires_at)
-                                        <div class="landing-announcement-foot">
-                                            <span>Expires: {{ $announcement->expires_at->format('M j, Y') }}</span>
+                                <article class="landing-announcement-card priority-{{ $priorityClass }}" data-announcement-card data-announcement-index="{{ $announcementIndex }}" data-priority="{{ $priorityClass }}" data-search="{{ \Illuminate\Support\Str::lower($announcement->title . ' ' . $announcement->message) }}">
+                                    <span class="landing-announcement-icon" aria-hidden="true">
+                                        @if($priorityClass === 'urgent')
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 9 16H3L12 3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                                        @elseif($priorityClass === 'warning')
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 4.3 2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z"/></svg>
+                                        @else
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16v-4"/><path d="M12 8h.01"/><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/></svg>
+                                        @endif
+                                    </span>
+                                    <div class="landing-announcement-body">
+                                        <div class="landing-announcement-meta">
+                                            <span class="landing-announcement-meta-left">
+                                                <span class="landing-announcement-priority">{{ $landingPriorityLabels[$priorityClass] ?? ucfirst($priorityClass) }}</span>
+                                            </span>
+                                            <span class="landing-announcement-meta-right">{{ $announcement->created_at?->format('M j, Y · g:i A') ?? 'Just now' }}</span>
                                         </div>
-                                    @endif
+                                        <h3 class="landing-announcement-title">{{ $announcement->title }}</h3>
+                                        <p class="landing-announcement-message">{{ $announcement->message }}</p>
+                                        <div class="landing-announcement-foot">
+                                            <span>Target: {{ strtoupper($announcement->target_audience ?? 'All Users') }}</span>
+                                            <button type="button" class="landing-announcement-read" data-announcement-read>Read More →</button>
+                                        </div>
+                                    </div>
                                 </article>
                             @endforeach
+                            <div class="landing-announcement-empty is-search-empty" data-announcement-empty hidden>
+                                <p><strong>No announcement posted...</strong></p>
+                                <p>No clinic announcements matched your search.</p>
+                            </div>
                         </div>
+                        <button type="button" class="announcement-view-all">View All Announcements →</button>
                     @else
                     <div class="landing-announcement-empty">
                         <p><strong>No announcements at the moment.</strong></p>
@@ -2888,8 +4046,9 @@
         <div class="assistant-modal-overlay" id="assistantModalOverlay">
             <div class="assistant-modal" id="assistantModal">
                 <div class="assistant-modal-header">
-                    <h2 class="assistant-modal-title">
-                        <span class="modal-title-icon is-assistant" aria-hidden="true">
+                    <div class="assistant-title-wrap">
+                        <h2 class="assistant-modal-title">
+                            <span class="modal-title-icon is-assistant" aria-hidden="true">
                             <svg viewBox="0 0 128 128">
                                 <defs>
                                     <linearGradient id="assistantHeaderIconBg" x1="22" y1="12" x2="105" y2="118" gradientUnits="userSpaceOnUse">
@@ -2927,9 +4086,13 @@
                                 <circle cx="98" cy="40" r="4" fill="#871224" />
                                 <circle cx="107" cy="40" r="4" fill="#871224" />
                             </svg>
-                        </span>
-                        AI Chatbot
-                    </h2>
+                            </span>
+                        </h2>
+                        <div class="assistant-title-copy">
+                            <strong>Clinic Chatbot</strong>
+                            <span>✨ Coming Soon ✨</span>
+                        </div>
+                    </div>
                     <button type="button" class="assistant-modal-close" id="assistantModalClose" aria-label="Close AI Chatbot">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -2937,9 +4100,69 @@
                     </button>
                 </div>
                 <div class="assistant-modal-content">
-                    <p><strong>We'll get back soon.</strong></p>
-                    <p>The AI Chatbot feature is being prepared for the PUP Taguig Medical Clinic.</p>
-                    <p>Please check back soon for clinic assistance and support.</p>
+                    <div class="assistant-coming-grid">
+                        <div class="assistant-robot-scene" aria-hidden="true">
+                            <span class="assistant-robot-halo"></span>
+                            <span class="assistant-plus-mark one">+</span>
+                            <span class="assistant-plus-mark two">+</span>
+                            <img class="assistant-reference-icon" src="{{ url('/images/clinic-robot-nobg.png') }}" alt="">
+                            <div class="assistant-speech-bubble" data-assistant-bubble>
+                                <span class="assistant-speech-bubble-text" data-assistant-bubble-text>We'll get<br>back soon<span>♥</span></span>
+                            </div>
+                            <div class="assistant-robot-art">
+                                <span class="assistant-robot-antenna"></span>
+                                <span class="assistant-robot-ear left"></span>
+                                <span class="assistant-robot-ear right"></span>
+                                <span class="assistant-robot-head">
+                                    <span class="assistant-robot-face">
+                                        <span class="assistant-robot-smile"></span>
+                                    </span>
+                                </span>
+                                <span class="assistant-robot-body"></span>
+                                <span class="assistant-robot-wave"></span>
+                                <span class="assistant-stethoscope"></span>
+                            </div>
+                        </div>
+                        <div class="assistant-coming-copy">
+                            <h3>AI Chatbot Assistant</h3>
+                            <div class="assistant-coming-label">— ✨ Coming Soon ✨ —</div>
+                            <p>The AI Clninc Chatbot Assistant is currently under development and will soon be available to help answer clinic-related questions, provide guidance, and assist with common inquiries.</p>
+                            <div class="assistant-patience"><span>♥</span><strong>Thank you for your patience while we build this feature.</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="assistant-features">
+                        <div class="assistant-features-title">✨ Coming Features</div>
+                        <div class="assistant-feature-grid">
+                            <div class="assistant-feature">
+                                <span class="assistant-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v12H8l-4 4V5z"/><path d="M8 9h8M8 13h5"/></svg></span>
+                                <strong>Answer Clinic FAQs</strong>
+                                <span>Get quick answers to common questions.</span>
+                            </div>
+                            <div class="assistant-feature">
+                                <span class="assistant-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v13H4V7a2 2 0 0 1 2-2z"/><path d="M8 13h3M8 17h6"/></svg></span>
+                                <strong>Appointment Guidance</strong>
+                                <span>Help with schedules, appointments, and more.</span>
+                            </div>
+                            <div class="assistant-feature">
+                                <span class="assistant-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-4.4 7-11a4 4 0 0 0-7-2.6A4 4 0 0 0 5 10c0 6.6 7 11 7 11z"/><path d="M8 13h3l1-2 2 4 1-2h3"/></svg></span>
+                                <strong>Health Information</strong>
+                                <span>Access trusted health advice and reminders.</span>
+                            </div>
+                            <div class="assistant-feature">
+                                <span class="assistant-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m21 21-4.3-4.3"/><path d="M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z"/></svg></span>
+                                <strong>Smart Search</strong>
+                                <span>Find the information you need, faster.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="assistant-notify">
+                        <span>🔔</span>
+                        <span>We'll notify you once this feature becomes available.</span>
+                       
+                        <span>See you soon! ♥</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3787,10 +5010,18 @@
         const announcementModalOverlay = document.getElementById('announcementModalOverlay');
         const announcementModalClose = document.getElementById('announcementModalClose');
         const announcementBadge = document.getElementById('announcementBadge');
+        const announcementSearchInput = document.getElementById('announcementSearchInput');
+        const announcementCards = Array.from(document.querySelectorAll('[data-announcement-card]'));
+        const announcementSectionTitle = document.querySelector('[data-announcement-section-title]');
+        const announcementSectionCount = document.querySelector('.announcement-section-head span:last-child');
+        const announcementViewAllButton = document.querySelector('.announcement-view-all');
+        const announcementEmptyState = document.querySelector('[data-announcement-empty]');
+        let announcementViewAll = false;
 
         function openAnnouncementModal() {
             announcementModalOverlay.classList.add('is-open');
             announcementModal.classList.add('is-open');
+            window.setTimeout(syncAnnouncementReadButtons, 80);
         }
 
         function closeAnnouncementModal() {
@@ -3815,13 +5046,108 @@
             }
         });
 
+        function filterAnnouncements() {
+            const query = (announcementSearchInput?.value || '').trim().toLowerCase();
+            let visibleCount = 0;
+            let shownCount = 0;
+            let totalMatches = 0;
+
+            announcementCards.forEach(function (card) {
+                const searchable = card.dataset.search || '';
+                const searchMatches = query === '' || searchable.includes(query);
+                if (searchMatches) {
+                    totalMatches += 1;
+                }
+                const shouldShow = searchMatches && (announcementViewAll || shownCount < 5);
+                card.hidden = !shouldShow;
+                card.classList.toggle('is-hidden-by-limit', !shouldShow && searchMatches && !announcementViewAll);
+                if (shouldShow) {
+                    visibleCount += 1;
+                    shownCount += 1;
+                } else if (searchMatches) {
+                    shownCount += 1;
+                }
+            });
+
+            if (announcementSectionTitle) {
+                announcementSectionTitle.textContent = query ? 'Search Results' : 'Latest Announcements';
+            }
+
+            if (announcementSectionCount) {
+                announcementSectionCount.textContent = `${visibleCount} of ${totalMatches}`;
+            }
+
+            if (announcementEmptyState) {
+                announcementEmptyState.hidden = totalMatches > 0;
+            }
+
+            if (announcementViewAllButton) {
+                announcementViewAllButton.hidden = announcementViewAll || totalMatches <= 5;
+            }
+        }
+
+        announcementSearchInput?.addEventListener('input', filterAnnouncements);
+
+        function syncAnnouncementReadButtons() {
+            announcementCards.forEach(function (card) {
+                const message = card.querySelector('.landing-announcement-message');
+                const button = card.querySelector('[data-announcement-read]');
+                if (!message || !button) {
+                    return;
+                }
+
+                const wasExpanded = card.classList.contains('is-expanded');
+                card.classList.remove('is-expanded');
+                const isOverflowing = message.scrollHeight > message.clientHeight + 2;
+                card.classList.toggle('is-expanded', wasExpanded);
+                button.hidden = !isOverflowing && !wasExpanded;
+                button.textContent = wasExpanded ? 'Read Less ↑' : 'Read More →';
+            });
+        }
+
+        announcementCards.forEach(function (card) {
+            const button = card.querySelector('[data-announcement-read]');
+            button?.addEventListener('click', function () {
+                card.classList.toggle('is-expanded');
+                syncAnnouncementReadButtons();
+            });
+        });
+
+        announcementViewAllButton?.addEventListener('click', function () {
+            announcementViewAll = true;
+            announcementModal?.classList.add('is-view-all');
+            filterAnnouncements();
+            syncAnnouncementReadButtons();
+        });
+
         updateAnnouncementBadge({{ ($landingAnnouncements ?? collect())->count() }});
+        filterAnnouncements();
+        window.setTimeout(syncAnnouncementReadButtons, 50);
+        window.addEventListener('resize', syncAnnouncementReadButtons);
 
         // AI Chatbot Modal Handler
         const assistantBtn = document.getElementById('assistantBtn');
         const assistantModal = document.getElementById('assistantModal');
         const assistantModalOverlay = document.getElementById('assistantModalOverlay');
         const assistantModalClose = document.getElementById('assistantModalClose');
+        const assistantBubble = document.querySelector('[data-assistant-bubble]');
+        const assistantBubbleText = document.querySelector('[data-assistant-bubble-text]');
+        const assistantBubbleMessages = [
+            "We'll get<br>back soon<span>♥</span>",
+            "See ya!<span>♥</span>",
+        ];
+        let assistantBubbleIndex = 0;
+
+        if (assistantBubble && assistantBubbleText) {
+            window.setInterval(function () {
+                assistantBubble.classList.add('is-changing');
+                window.setTimeout(function () {
+                    assistantBubbleIndex = (assistantBubbleIndex + 1) % assistantBubbleMessages.length;
+                    assistantBubbleText.innerHTML = assistantBubbleMessages[assistantBubbleIndex];
+                    assistantBubble.classList.remove('is-changing');
+                }, 280);
+            }, 5000);
+        }
 
         function openAssistantModal() {
             assistantModalOverlay.classList.add('is-open');

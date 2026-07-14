@@ -26,9 +26,9 @@
     .um-modal-head h3 { color:#fff !important; font-size:1rem; font-weight:900; text-transform:uppercase; }
     .um-modal-head .um-note { margin-top:5px; color:rgba(255,255,255,.92) !important; font-size:12px; }
     .um-modal-close {
-        position:relative; display:inline-flex; width:40px; height:40px; min-width:40px; padding:0; overflow:hidden;
+        position:relative; display:inline-flex; width:40px; height:40px; min-width:40px; padding:0 0 3px; overflow:hidden;
         align-items:center; justify-content:center; border:1px solid #8f2230; border-radius:50%; background:#70131b;
-        color:#fff; cursor:pointer; font-size:24px; line-height:1;
+        color:#fff; cursor:pointer; font-size:24px; line-height:.75;
         transition:border-color .18s ease, box-shadow .18s ease, transform .18s ease;
     }
     .um-modal-close::after {

@@ -165,6 +165,15 @@
             visibility: hidden !important;
         }
 
+        :where(.asw-container),
+        :where(.asw-widget) {
+            pointer-events: none !important;
+        }
+
+        :where(.asw-container .asw-menu) {
+            pointer-events: auto !important;
+        }
+
         :where(.asw-menu-btn)::after {
             content: "";
             position: absolute;
@@ -917,7 +926,15 @@
             bottom: 18px;
             display: flex;
             align-items: center;
-            z-index: 600000;
+            z-index: 214748300;
+            pointer-events: auto !important;
+            isolation: isolate;
+        }
+
+        .quick-actions-wrap,
+        .quick-actions-wrap *,
+        .quick-actions-toggle {
+            pointer-events: auto !important;
         }
 
         .quick-actions-toggle,
@@ -4455,7 +4472,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             <span>AI Assistant</span>
         </button>
         <div class="quick-actions-wrap" id="headerQuickActions">
-            <button type="button" class="quick-actions-toggle" aria-label="Open quick actions" aria-expanded="false" onclick="toggleHeaderQuickActions()">
+            <button type="button" class="quick-actions-toggle" aria-label="Open quick actions" aria-expanded="false">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 5.25v13.5M5.25 12h13.5" />
                 </svg>
@@ -5715,6 +5732,44 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         }
     }
 
+    function initHeaderQuickActionsToggle() {
+        const wrap = document.getElementById('headerQuickActions');
+        const toggle = wrap ? wrap.querySelector('.quick-actions-toggle') : null;
+        if (!wrap || !toggle || toggle.dataset.quickActionsBound === '1') {
+            return;
+        }
+
+        if (wrap.parentElement !== document.body) {
+            document.body.appendChild(wrap);
+        }
+
+        toggle.dataset.quickActionsBound = '1';
+        let lastPointerToggleAt = 0;
+
+        const handleQuickToggleEvent = function (event) {
+            const quickToggle = event.target.closest?.('#headerQuickActions .quick-actions-toggle');
+            if (!quickToggle) {
+                return;
+            }
+
+            if (event.type === 'click' && Date.now() - lastPointerToggleAt < 450) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                return;
+            }
+
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            if (event.type === 'pointerdown') {
+                lastPointerToggleAt = Date.now();
+            }
+            toggleHeaderQuickActions();
+        };
+
+        document.addEventListener('pointerdown', handleQuickToggleEvent, true);
+        document.addEventListener('click', handleQuickToggleEvent, true);
+    }
+
     function initTreatmentRecordModal() {
         const openButton = document.getElementById('openTreatmentRecordModal');
         const modal = document.getElementById('treatmentRecordModal');
@@ -6004,6 +6059,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         initAssistantUi();
         initThemeToggle();
         initSidebarScrollIndicator();
+        initHeaderQuickActionsToggle();
         initMedicineAlerts();
         initTreatmentRecordModal();
         initAdminLiveAlerts();

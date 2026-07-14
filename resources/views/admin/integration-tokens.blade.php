@@ -901,7 +901,7 @@
     .security-card.docs-card {
         border-color: rgba(250, 204, 21, .55);
         background: #8f1827;
-        color: #ffffff;
+        color: #ffffff !important;
         cursor: pointer;
         text-align: left;
         box-shadow: 0 16px 30px rgba(112, 19, 27, .14);
@@ -924,7 +924,7 @@
     .security-card.docs-card:focus-visible {
         background: #facc15;
         border-color: #facc15;
-        color: #70131B;
+        color: #ffffff !important;
         transform: translateY(-3px);
         box-shadow: 0 18px 34px rgba(112, 19, 27, .18);
         outline: none;
@@ -946,19 +946,29 @@
         background: rgba(255, 255, 255, .14);
         border: 1px solid rgba(255, 255, 255, .18);
         color: #facc15;
+        display: grid;
+        place-items: center;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+    }
+
+    .security-card.docs-card .security-icon svg {
+        display: block;
+        margin: auto;
     }
 
     .security-card.docs-card strong,
     .security-card.docs-card span,
     .security-card.docs-card span span {
-        color: #ffffff;
+        color: #ffffff !important;
     }
 
     .security-card.docs-card:hover .security-icon,
     .security-card.docs-card:focus-visible .security-icon {
         background: rgba(112, 19, 27, .12);
         border-color: rgba(112, 19, 27, .24);
-        color: #70131B;
+        color: #ffffff;
     }
 
     .security-card.docs-card:hover strong,
@@ -967,7 +977,7 @@
     .security-card.docs-card:focus-visible strong,
     .security-card.docs-card:focus-visible span,
     .security-card.docs-card:focus-visible span span {
-        color: #70131B;
+        color: #ffffff !important;
     }
 
     html[data-theme="dark"] .security-card.docs-card {

@@ -96,7 +96,7 @@
     .export-page-back:focus-visible {
         background: #facc15;
         border-color: #facc15;
-        color: #70131B;
+        color: #70131B !important;
         transform: translateY(-1px);
         outline: none;
     }
@@ -363,9 +363,9 @@
         inset: 0;
         z-index: 1000;
         display: none;
-        align-items: flex-start;
+        align-items: center;
         justify-content: center;
-        padding: 24px 18px;
+        padding: 32px 18px;
         overflow-y: auto;
         background: rgba(15, 23, 42, .56);
         backdrop-filter: blur(7px);
@@ -381,7 +381,8 @@
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        max-height: calc(100dvh - 48px);
+        max-height: calc(100dvh - 64px);
+        margin: auto 0;
         border-radius: 22px;
         border: 1px solid rgba(112, 19, 27, .18);
         background: #ffffff;
@@ -438,16 +439,32 @@
         position: absolute;
         top: 18px;
         right: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         overflow: hidden;
         width: 42px;
         height: 42px;
+        padding: 0;
         border-radius: 999px;
         border: 1px solid rgba(255,255,255,.20);
         background: rgba(255,255,255,.12);
         color: #ffffff;
         font-size: 24px;
+        line-height: 1;
         cursor: pointer;
         transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .export-filter-modal-close span {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        transform: translateY(-1px);
     }
 
     .export-filter-modal-close::after {
@@ -493,8 +510,8 @@
 
     .export-filter-field label {
         color: #0f172a;
-        font-size: 12px;
-        font-weight: 950;
+        font-size: 11px;
+        font-weight: 900;
         letter-spacing: .04em;
         text-transform: uppercase;
     }
@@ -509,6 +526,7 @@
         color: #0f172a;
         padding: 0 13px;
         font: inherit;
+        font-size: 13px;
         font-weight: 800;
     }
 
@@ -522,6 +540,7 @@
     .export-filter-select option {
         background: #ffffff;
         color: #0f172a;
+        font-size: 13px;
         font-weight: 800;
     }
 
@@ -556,7 +575,8 @@
         color: #0f172a;
         padding: 0 44px 0 13px;
         font: inherit;
-        font-weight: 900;
+        font-size: 13px;
+        font-weight: 800;
         text-align: left;
         position: relative;
         cursor: pointer;
@@ -617,8 +637,8 @@
         min-height: 34px;
         padding: 7px 14px;
         font: inherit;
-        font-size: 13px;
-        font-weight: 900;
+        font-size: 12px;
+        font-weight: 800;
         text-align: left;
         cursor: pointer;
         transition: background .18s ease, color .18s ease, transform .18s ease;
@@ -638,6 +658,82 @@
 
     .export-filter-field.is-wide {
         grid-column: 1 / -1;
+    }
+
+    .export-condition-keyword-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .export-condition-suggest-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        padding: 0 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(112, 19, 27, .18);
+        background: #fff7ed;
+        color: #70131B;
+        font: inherit;
+        font-size: 10.5px;
+        font-weight: 900;
+        letter-spacing: .03em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .export-condition-suggest-toggle:hover,
+    .export-condition-suggest-toggle:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        outline: none;
+        transform: translateY(-1px);
+    }
+
+    .export-condition-suggestions {
+        display: none;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 3px;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(112, 19, 27, .12);
+        background: #fffdf8;
+    }
+
+    .export-condition-suggestions.is-open {
+        display: flex;
+    }
+
+    .export-condition-suggestion {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 32px;
+        padding: 7px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(112, 19, 27, .16);
+        background: #ffffff;
+        color: #70131B;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .export-condition-suggestion:hover,
+    .export-condition-suggestion:focus-visible {
+        background: #70131B;
+        border-color: #70131B;
+        color: #ffffff;
+        outline: none;
+        transform: translateY(-1px);
     }
 
     .export-filter-checks {
@@ -881,6 +977,28 @@
         color: #facc15;
     }
 
+    html[data-theme="dark"] .export-condition-suggest-toggle,
+    html[data-theme="dark"] .export-condition-suggestions,
+    html[data-theme="dark"] .export-condition-suggestion {
+        background: #111827;
+        color: #ffffff;
+        border-color: rgba(250, 204, 21, .18);
+    }
+
+    html[data-theme="dark"] .export-condition-suggest-toggle:hover,
+    html[data-theme="dark"] .export-condition-suggest-toggle:focus-visible {
+        background: #facc15;
+        color: #70131B;
+        border-color: #facc15;
+    }
+
+    html[data-theme="dark"] .export-condition-suggestion:hover,
+    html[data-theme="dark"] .export-condition-suggestion:focus-visible {
+        background: #8f0012;
+        color: #ffffff;
+        border-color: #8f0012;
+    }
+
     html[data-theme="dark"] .export-preview-table td {
         background: rgba(112, 19, 27, .34);
         color: #ffffff;
@@ -1015,16 +1133,18 @@
                 <div class="export-action-card">
                     <span class="export-card-icon"><x-outline-icon name="calendar-days" /></span>
                     <span>
-                        <span class="export-card-label">From Date</span>
-                        <span class="export-card-value">{{ $dateFrom->format('M d, Y') }}</span>
+                        <span class="export-card-label">Selected Period</span>
+                        <span class="export-card-value">{{ $dateFrom->format('M d') }} - {{ $dateTo->format($dateFrom->isSameYear($dateTo) ? 'M d, Y' : 'M d, Y') }}</span>
+                        <span class="export-card-copy">{{ $dateFrom->diffInDays($dateTo) + 1 }} day{{ $dateFrom->diffInDays($dateTo) + 1 === 1 ? '' : 's' }} included</span>
                     </span>
                 </div>
 
                 <div class="export-action-card">
-                    <span class="export-card-icon"><x-outline-icon name="calendar-days" /></span>
+                    <span class="export-card-icon"><x-outline-icon name="clipboard-document-list" /></span>
                     <span>
-                        <span class="export-card-label">To Date</span>
-                        <span class="export-card-value">{{ $dateTo->format('M d, Y') }}</span>
+                        <span class="export-card-label">Preview Records</span>
+                        <span class="export-card-value">{{ number_format($previewCount) }}</span>
+                        <span class="export-card-copy">Ready for export</span>
                     </span>
                 </div>
             @endif
@@ -1102,7 +1222,7 @@
                 <h2 class="export-filter-modal-title" id="exportFilterTitle">Filter {{ $title }}</h2>
                 <p class="export-filter-modal-copy">Set the date range for the preview and generated export.</p>
             </div>
-            <button type="button" class="export-filter-modal-close" onclick="closeExportFilterModal()" aria-label="Close filter">&times;</button>
+            <button type="button" class="export-filter-modal-close" onclick="closeExportFilterModal()" aria-label="Close filter"><span aria-hidden="true">&times;</span></button>
         </header>
         <form method="GET" action="{{ $filterActionUrl }}" class="export-filter-form">
             <div class="export-filter-field">
@@ -1176,8 +1296,24 @@
                     </div>
                 </div>
                 <div class="export-filter-field is-wide">
-                    <label for="exportHealthConditionKeyword">Condition Keyword</label>
+                    <div class="export-condition-keyword-head">
+                        <label for="exportHealthConditionKeyword">Condition Keyword</label>
+                        @if(($healthConditionSuggestions ?? collect())->isNotEmpty())
+                            <button type="button" class="export-condition-suggest-toggle" id="toggleConditionSuggestions" aria-expanded="false" aria-controls="conditionKeywordSuggestions">
+                                Suggestions
+                            </button>
+                        @endif
+                    </div>
                     <input class="export-date-input" id="exportHealthConditionKeyword" type="search" name="condition_keyword" value="{{ request('condition_keyword') }}" placeholder="Asthma, allergy, remarks">
+                    @if(($healthConditionSuggestions ?? collect())->isNotEmpty())
+                        <div class="export-condition-suggestions" id="conditionKeywordSuggestions">
+                            @foreach($healthConditionSuggestions as $suggestion)
+                                <button type="button" class="export-condition-suggestion" data-condition-suggestion="{{ $suggestion }}">
+                                    {{ $suggestion }}
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
                     <input type="hidden" name="condition_source" value="{{ request('condition_source', 'all') }}">
                     <input type="hidden" name="condition_match" value="{{ request('condition_match', 'any') }}">
                 </div>
@@ -1215,6 +1351,27 @@
         if (event.key === 'Escape') {
             closeExportFilterModal();
         }
+    });
+
+    const conditionSuggestionToggle = document.getElementById('toggleConditionSuggestions');
+    const conditionSuggestionPanel = document.getElementById('conditionKeywordSuggestions');
+    const conditionKeywordInput = document.getElementById('exportHealthConditionKeyword');
+
+    if (conditionSuggestionToggle && conditionSuggestionPanel) {
+        conditionSuggestionToggle.addEventListener('click', function () {
+            const willOpen = !conditionSuggestionPanel.classList.contains('is-open');
+            conditionSuggestionPanel.classList.toggle('is-open', willOpen);
+            conditionSuggestionToggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        });
+    }
+
+    document.querySelectorAll('[data-condition-suggestion]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            if (!conditionKeywordInput) return;
+            conditionKeywordInput.value = button.dataset.conditionSuggestion || button.textContent.trim();
+            conditionKeywordInput.focus();
+            conditionKeywordInput.dispatchEvent(new Event('input', { bubbles: true }));
+        });
     });
 
     document.querySelectorAll('.export-filter-custom-source').forEach(function (select) {

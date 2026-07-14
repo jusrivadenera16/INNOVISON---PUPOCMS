@@ -63,6 +63,7 @@ class User extends Authenticatable
     'api_pin_enabled',
     'api_pin_page_enabled',
     'api_pin_token_action_enabled',
+    'api_pin_emergency_credentials_enabled',
     'api_pin_disabled',
     'is_health_profile_completed',
     'notification_read_map',
@@ -87,6 +88,7 @@ class User extends Authenticatable
         'api_pin_enabled' => 'boolean',
         'api_pin_page_enabled' => 'boolean',
         'api_pin_token_action_enabled' => 'boolean',
+        'api_pin_emergency_credentials_enabled' => 'boolean',
         'api_pin_disabled' => 'boolean',
         'notification_read_map' => 'array',
     ];

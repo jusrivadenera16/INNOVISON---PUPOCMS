@@ -132,6 +132,15 @@
         border: 1px solid rgba(112, 19, 27, 0.14);
         background: #ffffff;
         padding: 16px;
+        transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .announcement-stat-card:hover,
+    .announcement-stat-card:focus-visible {
+        transform: translateY(-6px) scale(1.025);
+        border-color: rgba(250, 204, 21, 0.78);
+        box-shadow: 0 20px 36px rgba(112, 19, 27, 0.16);
+        outline: none;
     }
 
     .announcement-stat-card.is-primary {
@@ -146,15 +155,6 @@
         font: inherit;
         text-align: left;
         cursor: pointer;
-        transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
-    }
-
-    .announcement-stat-button:hover,
-    .announcement-stat-button:focus-visible {
-        transform: translateY(-2px);
-        border-color: rgba(112, 19, 27, 0.34);
-        box-shadow: 0 16px 30px rgba(112, 19, 27, 0.12);
-        outline: none;
     }
 
     .announcement-stat-icon {
@@ -633,6 +633,8 @@
     .priority-urgent { --announcement-priority-color: #e11d48; }
     .priority-info { --announcement-priority-color: #2563eb; }
     .priority-warning { --announcement-priority-color: #f59e0b; }
+    .priority-health { --announcement-priority-color: #16a34a; }
+    .priority-event { --announcement-priority-color: #9333ea; }
 
     @media (max-width: 980px) {
         .announcement-grid {
@@ -942,6 +944,8 @@
         'urgent' => 'Urgent',
         'info' => 'Info',
         'warning' => 'Warning',
+        'health' => 'Health',
+        'event' => 'Events',
     ];
 
     $lastUpdated = $lastUpdatedAnnouncement

@@ -256,9 +256,14 @@
     }
 
     .um-btn-ghost {
-        background: transparent;
-        color: #800000;
-        border: 1px solid rgba(128, 0, 0, 0.16);
+        background: linear-gradient(135deg, #70131B, #8f2230);
+        color: #ffffff !important;
+        border: 1px solid #8f2230;
+    }
+
+    .um-btn-ghost:hover,
+    .um-btn-ghost:focus-visible {
+        color: #ffffff !important;
     }
 
     @keyframes umModeFloat {
@@ -365,8 +370,8 @@
 
     .um-btn {
         border: 1px solid #8f2230;
-        border-radius: 999px;
-        padding: 11px 18px;
+        border-radius: 10px;
+        padding: 10px 16px;
         font-weight: 800;
         cursor: pointer;
         text-decoration: none;
@@ -399,6 +404,8 @@
     .um-btn:hover {
         transform: translateY(-1px);
         border-color: #facc15;
+        background: #facc15 !important;
+        color: #70131B !important;
         box-shadow:
             0 0 0 3px rgba(250, 204, 21, 0.18),
             0 14px 24px rgba(112, 19, 27, 0.16);
@@ -1007,7 +1014,7 @@
         width: 40px;
         height: 40px;
         min-width: 40px;
-        padding: 0;
+        padding: 0 0 3px;
         overflow: hidden;
         align-items: center;
         justify-content: center;
@@ -1017,7 +1024,7 @@
         color: #ffffff;
         cursor: pointer;
         font-size: 24px;
-        line-height: 1;
+        line-height: .75;
         transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
     }
 

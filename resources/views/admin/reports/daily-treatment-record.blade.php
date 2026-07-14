@@ -30,7 +30,7 @@
         line-height: 1.6;
     }
     .treatment-record-back {
-        min-width: 132px;
+        min-width: 124px;
         width: auto !important;
         flex: 0 0 auto;
         display: inline-flex;
@@ -40,17 +40,18 @@
         position: relative;
         overflow: hidden;
         gap: 7px;
-        padding: 10px 16px;
-        border: 1px solid rgba(112, 19, 27, 0.3);
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.96);
-        color: #70131B;
+        min-height: 44px;
+        padding: 0 18px;
+        border: 1px solid #70131B;
+        border-radius: 12px;
+        background: #70131B;
+        color: #ffffff !important;
         font-size: 13px;
         font-weight: 800;
         text-decoration: none;
         white-space: nowrap;
-        box-shadow: 0 0 0 2px rgba(112, 19, 27, 0.09), 0 10px 20px rgba(15, 23, 42, 0.08);
-        transition: color .08s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+        box-shadow: 0 12px 22px rgba(112, 19, 27, 0.18);
+        transition: color .08s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
     }
 
     .treatment-record-back::after {
@@ -73,10 +74,11 @@
 
     .treatment-record-back:hover,
     .treatment-record-back:focus {
-        color: #70131B;
-        border-color: rgba(112, 19, 27, 0.48);
-        background: #ffffff;
-        box-shadow: 0 0 0 2px rgba(112, 19, 27, 0.12), 0 12px 28px rgba(15, 23, 42, 0.12);
+        color: #70131B !important;
+        border-color: #facc15;
+        background: #facc15;
+        box-shadow: 0 12px 28px rgba(112, 19, 27, 0.18);
+        transform: translateY(-1px);
         outline: none;
     }
 

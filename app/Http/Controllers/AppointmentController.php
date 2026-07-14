@@ -8,6 +8,7 @@ use App\Models\Appointment;
 use App\Models\AppointmentFeedback;
 use App\Models\Consultation;
 use App\Models\HealthProfile;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Services\GuisisApiService;
 use App\Services\PuptasWebhookService;
@@ -15,6 +16,7 @@ use App\Services\ClinicWorkflowService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -515,6 +517,13 @@ class AppointmentController extends Controller
 
     public function home()
     {
+        if (
+            Schema::hasTable('system_settings')
+            && SystemSetting::booleanValue('maintenance_mode_enabled', false)
+        ) {
+            return redirect()->route('maintenance');
+        }
+
         $this->promoteDesigneeAdminToStudentGuard();
         $allFeedback = $this->buildRecentFeedbackCollection();
         $feedbackCount = $allFeedback->count();
@@ -766,6 +775,44 @@ class AppointmentController extends Controller
             || strtolower(trim((string) ($user->user_type ?? ''))) === 'applicant';
     }
 
+    private function isStudentAccount(User $user): bool
+    {
+        if ($this->isApplicantAccount($user)) {
+            return false;
+        }
+
+        $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
+        $userType = strtolower(trim((string) ($user->user_type ?? '')));
+        $userRole = User::normalizeRole((string) ($user->user_role ?? ''));
+
+        return $idpRole === 'student'
+            || $userType === 'student'
+            || ($userType === '' && $userRole === User::ROLE_STUDENT);
+    }
+
+    private function enrolledStudentReferenceNumber(User $user, ?HealthProfile $healthProfile = null, ?array $guisisAccountData = null): string
+    {
+        if (!$this->isStudentAccount($user)) {
+            return '';
+        }
+
+        $candidates = [
+            trim((string) data_get($guisisAccountData, 'student_number')),
+            trim((string) optional($healthProfile)->student_number),
+            trim((string) ($user->student_number ?? '')),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if ($candidate === '' || $this->looksLikeIdpIdentifier($candidate, $user) || $this->looksLikeReferenceIdentifier($candidate)) {
+                continue;
+            }
+
+            return $candidate;
+        }
+
+        return '';
+    }
+
     private function findHealthFormCourse(?string $code, ?string $name = null): array
     {
         $map = $this->healthFormCourseMap();
@@ -931,6 +978,10 @@ class AppointmentController extends Controller
     ): string
     {
         $linkedAdminProfile = $linkedAdminProfile ?: $this->resolveLinkedAdminProfile($user);
+        if ($this->enrolledStudentReferenceNumber($user) !== '') {
+            return 'student_number';
+        }
+
         if (!is_array($applicantData) && $lookupOutcome === null) {
             $lookup = $this->fetchPuptasApplicantLookupForUser($user);
             $applicantData = is_array($lookup['data'] ?? null) ? $lookup['data'] : null;
@@ -1045,12 +1096,26 @@ class AppointmentController extends Controller
     private function buildHealthFormPrefill(User $user, ?Admin $linkedAdminProfile = null, ?HealthProfile $healthProfile = null): array
     {
         $linkedAdminProfile = $linkedAdminProfile ?: $this->resolveLinkedAdminProfile($user);
-        $applicantLookup = $this->fetchPuptasApplicantLookupForUser($user);
-        $applicantData = is_array($applicantLookup['data'] ?? null) ? $applicantLookup['data'] : null;
-        $lookupOutcome = (string) ($applicantLookup['outcome'] ?? 'not_found');
+        $guisisAccountData = $this->isStudentAccount($user) ? $this->buildGuisisAccountData($user) : ['available' => false];
+        $studentNumberReference = $this->enrolledStudentReferenceNumber($user, $healthProfile, $guisisAccountData);
+        if ($studentNumberReference !== '') {
+            $applicantLookup = [
+                'success' => false,
+                'outcome' => 'skipped_student_number',
+                'message' => 'Student number from GUISIS is used for enrolled student health profiles.',
+                'data' => null,
+            ];
+            $applicantData = null;
+            $lookupOutcome = 'skipped_student_number';
+            $referenceMode = 'student_number';
+        } else {
+            $applicantLookup = $this->fetchPuptasApplicantLookupForUser($user);
+            $applicantData = is_array($applicantLookup['data'] ?? null) ? $applicantLookup['data'] : null;
+            $lookupOutcome = (string) ($applicantLookup['outcome'] ?? 'not_found');
+            $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile, $applicantData, $lookupOutcome);
+        }
         $applicantIdentity = $this->normalizePuptasApplicantIdentity($applicantData);
         $this->persistPuptasApplicantIdentity($user, $applicantIdentity);
-        $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile, $applicantData, $lookupOutcome);
         $usePuptasApplicantPrefill = $referenceMode === 'admission' && is_array($applicantData) && !empty($applicantData);
 
         $calculatedAge = null;
@@ -1111,6 +1176,7 @@ class AppointmentController extends Controller
         $hasOfficialApplicantIdentity = (bool) $applicantIdentity['available'];
         $resolvedReferenceNumber = match ($referenceMode) {
             'admission' => $this->resolveReferenceNumber($user, $healthProfile, $applicantData),
+            'student_number' => $studentNumberReference,
             'verification_unavailable' => '',
             default => $this->resolveClinicReferenceNumber($user, $healthProfile),
         };
@@ -1120,12 +1186,17 @@ class AppointmentController extends Controller
             'reference_requires_validation' => $referenceMode === 'admission',
             'reference_label' => $referenceMode === 'admission'
                 ? 'Admission Reference Number'
-                : ($referenceMode === 'verification_unavailable' ? 'PUPTAS Verification' : 'Clinic Reference Number'),
+                : ($referenceMode === 'student_number'
+                    ? 'Student Number'
+                    : ($referenceMode === 'verification_unavailable' ? 'PUPTAS Verification' : 'Clinic Reference Number')),
             'step_1_title' => $referenceMode === 'admission'
                 ? 'Admission Reference'
-                : ($referenceMode === 'verification_unavailable' ? 'PUPTAS Verification' : 'Clinic Reference'),
+                : ($referenceMode === 'student_number'
+                    ? 'Student Number'
+                    : ($referenceMode === 'verification_unavailable' ? 'PUPTAS Verification' : 'Clinic Reference')),
             'step_1_description' => match ($referenceMode) {
                 'admission' => 'Confirm your admission reference, complete your health information, then upload the required clinic documents.',
+                'student_number' => 'Review your official student number, complete your health information, then upload any available clinic documents.',
                 'verification_unavailable' => 'PUPTAS verification is temporarily unavailable. The form remains locked to prevent an incorrect clinic reference from being generated.',
                 default => 'Review your clinic reference, complete your health information, then upload the required clinic documents.',
             },
@@ -2645,15 +2716,26 @@ public function validateHealthFormReference(Request $request)
     /** @var \App\Models\User|null $user */
     $user = Auth::user();
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
-    $accountLookup = $this->fetchPuptasApplicantLookupForUser($user);
-    $accountApplicantData = is_array($accountLookup['data'] ?? null) ? $accountLookup['data'] : null;
-    $accountLookupOutcome = (string) ($accountLookup['outcome'] ?? 'not_found');
-    $referenceMode = $this->resolveHealthReferenceMode(
-        $user,
-        $linkedAdminProfile,
-        $accountApplicantData,
-        $accountLookupOutcome
-    );
+    $existingHealthProfile = $user
+        ? HealthProfile::query()->where('user_id', $user->id)->first()
+        : null;
+    $studentNumberReference = $user ? $this->enrolledStudentReferenceNumber($user, $existingHealthProfile) : '';
+
+    if ($studentNumberReference !== '') {
+        $referenceMode = 'student_number';
+        $accountApplicantData = null;
+        $accountLookupOutcome = 'skipped_student_number';
+    } else {
+        $accountLookup = $this->fetchPuptasApplicantLookupForUser($user);
+        $accountApplicantData = is_array($accountLookup['data'] ?? null) ? $accountLookup['data'] : null;
+        $accountLookupOutcome = (string) ($accountLookup['outcome'] ?? 'not_found');
+        $referenceMode = $this->resolveHealthReferenceMode(
+            $user,
+            $linkedAdminProfile,
+            $accountApplicantData,
+            $accountLookupOutcome
+        );
+    }
 
     if ($referenceMode === 'verification_unavailable') {
         return response()->json([
@@ -2664,16 +2746,17 @@ public function validateHealthFormReference(Request $request)
     }
 
     if ($referenceMode !== 'admission') {
-        $clinicReference = $this->resolveClinicReferenceNumber(
-            $user,
-            HealthProfile::query()->where('user_id', optional($user)->id)->first()
-        );
+        $clinicReference = $referenceMode === 'student_number'
+            ? $studentNumberReference
+            : $this->resolveClinicReferenceNumber($user, $existingHealthProfile);
         $this->persistResolvedReferenceNumber($user, $clinicReference);
 
         return response()->json([
             'success' => true,
             'reference_number' => $clinicReference,
-            'message' => 'Clinic reference is ready for this account.',
+            'message' => $referenceMode === 'student_number'
+                ? 'Student number is ready for this account.'
+                : 'Clinic reference is ready for this account.',
         ]);
     }
 
@@ -2845,14 +2928,20 @@ public function storeHealthForm(Request $request)
     }
 
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
-    $accountLookup = $this->fetchPuptasApplicantLookupForUser($user);
-    $accountApplicantData = is_array($accountLookup['data'] ?? null) ? $accountLookup['data'] : null;
-    $referenceMode = $this->resolveHealthReferenceMode(
-        $user,
-        $linkedAdminProfile,
-        $accountApplicantData,
-        (string) ($accountLookup['outcome'] ?? 'not_found')
-    );
+    $studentNumberReference = $user ? $this->enrolledStudentReferenceNumber($user, $existingHealthProfile) : '';
+    if ($studentNumberReference !== '') {
+        $accountApplicantData = null;
+        $referenceMode = 'student_number';
+    } else {
+        $accountLookup = $this->fetchPuptasApplicantLookupForUser($user);
+        $accountApplicantData = is_array($accountLookup['data'] ?? null) ? $accountLookup['data'] : null;
+        $referenceMode = $this->resolveHealthReferenceMode(
+            $user,
+            $linkedAdminProfile,
+            $accountApplicantData,
+            (string) ($accountLookup['outcome'] ?? 'not_found')
+        );
+    }
     if ($referenceMode === 'verification_unavailable') {
         throw ValidationException::withMessages([
             'reference_number' => 'PUPTAS verification is temporarily unavailable. Please try again later or contact Admissions or clinic staff.',
@@ -2878,15 +2967,21 @@ public function storeHealthForm(Request $request)
         'school_year' => $resolvedSchoolYear,
     ]);
 
+    $isStudentNumberReferenceMode = $referenceMode === 'student_number';
+    $applicantDocumentsRequired = $referenceMode === 'admission';
+    $referenceNumberRules = $isStudentNumberReferenceMode
+        ? ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9\-_]+$/']
+        : ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$/'];
+
     $request->validate([
         'student_id'        => 'nullable|string|max:255',
-        'reference_number'  => ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$/'],
+        'reference_number'  => $referenceNumberRules,
         'school_year'       => ['required', 'string', 'regex:/^\d{4}-\d{4}$/'],
         'home_address'      => 'required|string|max:255',
         'zipcode'           => 'required|string|max:20',
         'birthday'          => 'required|date',
         'student_photo'     => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'student_photo', ['image', 'mimes:jpeg,png,jpg', 'max:1024']),
-        'health_declaration' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'health_declaration', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:1024']),
+        'health_declaration' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'health_declaration', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'], $applicantDocumentsRequired),
         'age'               => 'required|numeric|min:15|max:100',
         'sex'               => 'required|string',
         'civil_status'      => 'required|string',
@@ -2919,19 +3014,19 @@ public function storeHealthForm(Request $request)
         'vaccine_history.booster_2.date' => 'nullable|required_with:vaccine_history.booster_2.brand|date|after_or_equal:2021-03-01|before_or_equal:today',
         'vaccine_history.booster_2.brand' => 'nullable|required_with:vaccine_history.booster_2.date|string|max:100',
 
-        'chest_xray_result' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'chest_xray_result', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:2048']),
-        'xray_date'         => 'required|date',
-        'xray_findings'     => 'required|string|in:Normal,With Findings,Not Sure / For Clinic Review',
+        'chest_xray_result' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'chest_xray_result', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'], $applicantDocumentsRequired),
+        'xray_date'         => $applicantDocumentsRequired ? 'required|date' : 'nullable|date',
+        'xray_findings'     => $applicantDocumentsRequired ? 'required|string|in:Normal,With Findings,Not Sure / For Clinic Review' : 'nullable|string|in:Normal,With Findings,Not Sure / For Clinic Review',
         'xray_findings_details' => 'required_if:xray_findings,With Findings|nullable|string|max:1000',
         'has_disability'    => 'required|string',
         'disability_type'   => 'required_if:has_disability,Yes|nullable|string|max:255',
         'pwd_id_proof'      => $isHealthFormCorrectionMode
             ? $this->healthProfileFileRule(true, $requestedCorrectionDocuments, 'pwd_id_proof', ['file', 'mimes:pdf', 'max:2048'], false)
             : ['required_if:has_disability,Yes', 'file', 'mimes:pdf', 'max:2048'],
-        'medical_certificate' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'medical_certificate', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:2048']),
-        'doctor_name'       => 'required|string|max:255',
-        'med_cert_date'     => 'required|date',
-        'med_cert_findings' => 'required|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review',
+        'medical_certificate' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'medical_certificate', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'], $applicantDocumentsRequired),
+        'doctor_name'       => $applicantDocumentsRequired ? 'required|string|max:255' : 'nullable|string|max:255',
+        'med_cert_date'     => $applicantDocumentsRequired ? 'required|date' : 'nullable|date',
+        'med_cert_findings' => $applicantDocumentsRequired ? 'required|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review' : 'nullable|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review',
         'med_cert_findings_details' => 'required_if:med_cert_findings,With Findings|nullable|string|max:1000',
         'health_profile_certified' => 'accepted',
     ]);
@@ -3023,7 +3118,14 @@ public function storeHealthForm(Request $request)
         }
     }
 
-    if ($referenceMode === 'admission') {
+    if ($referenceMode === 'student_number') {
+        $officialReference = $studentNumberReference;
+        if ($officialReference === '' || $submittedReference !== strtoupper($officialReference)) {
+            throw ValidationException::withMessages([
+                'reference_number' => 'Student Number must come from your official GUISIS account before submitting the Health Profile.',
+            ]);
+        }
+    } elseif ($referenceMode === 'admission') {
         $officialReference = strtoupper(trim((string) ($user->reference_number ?? '')));
         if ($this->isClinicReference($officialReference)) {
             $officialReference = '';
@@ -3151,7 +3253,7 @@ public function storeHealthForm(Request $request)
             'user_agent'  => $request->userAgent(),
         ]);
 
-        if (!$isHealthFormCorrectionMode) {
+        if (!$isHealthFormCorrectionMode && $referenceMode === 'admission') {
             $puptasService = new \App\Services\PuptasWebhookService();
             $webhookResult = $puptasService->sendMedicalClearance(
                 $officialReference,

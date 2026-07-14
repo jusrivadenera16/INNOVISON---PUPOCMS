@@ -14,6 +14,7 @@ use App\Http\Controllers\StudentAssistantController;
 use App\Http\Controllers\WalkInController;
 use App\Models\Admin;
 use App\Models\Announcement;
+use App\Models\SystemSetting;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -71,8 +72,20 @@ if (!function_exists('resolveWorkspaceRedirectForUser')) {
     }
 }
 
+if (!function_exists('clinicMaintenanceModeEnabled')) {
+    function clinicMaintenanceModeEnabled(): bool
+    {
+        return Schema::hasTable('system_settings')
+            && SystemSetting::booleanValue('maintenance_mode_enabled', false);
+    }
+}
+
 // --- PUBLIC ROUTES (No login required) ---
 Route::get('/', function () {
+    if (clinicMaintenanceModeEnabled()) {
+        return redirect()->route('maintenance');
+    }
+
     $user = Auth::guard('admin')->user() ?? Auth::guard('student')->user();
     if ($user instanceof User) {
         return redirect(resolveWorkspaceRedirectForUser($user));
@@ -102,6 +115,16 @@ Route::get('/system-admin/emergency-login', [EmergencyAuthController::class, 'sh
 Route::post('/system-admin/emergency-login', [EmergencyAuthController::class, 'login'])
     ->middleware('throttle:10,1')
     ->name('system-admin.emergency-login.submit');
+Route::get('/maintenance', function () {
+    $estimatedCompletion = Schema::hasTable('system_settings')
+        ? SystemSetting::getValue('maintenance_estimated_completion', null)
+        : null;
+    $lastUpdated = Schema::hasTable('system_settings')
+        ? SystemSetting::getValue('maintenance_last_updated', null)
+        : null;
+
+    return view('maintenance', compact('estimatedCompletion', 'lastUpdated'));
+})->name('maintenance');
 Route::post('/register-action', [RegisterController::class, 'register']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/idp/logout', [LoginController::class, 'handleIdpLogout'])->name('idp.logout');
@@ -303,6 +326,8 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::post('/admin/integration-pin/reset', [AdminController::class, 'resetIntegrationPin'])->name('admin.integration-pin.reset');
         Route::get('/admin/integration-pin/status', [AdminController::class, 'integrationPinStatus'])->name('admin.integration-pin.status');
         Route::post('/admin/integration-pin/verify', [AdminController::class, 'verifyIntegrationPin'])->name('admin.integration-pin.verify');
+        Route::put('/admin/emergency-credentials', [AdminController::class, 'updateEmergencyCredentials'])->name('admin.emergency-credentials.update');
+        Route::put('/admin/maintenance-policy', [AdminController::class, 'updateMaintenancePolicy'])->name('admin.maintenance-policy.update');
         Route::get('/admin/integration-tokens', [AdminController::class, 'integrationTokens'])->name('admin.integration-tokens');
         Route::get('/admin/integration-tokens/docs', [AdminController::class, 'integrationTokensDocs'])->name('admin.integration-tokens.docs');
         Route::get('/admin/integration-tokens/activity', [AdminController::class, 'integrationTokensActivity'])->name('admin.integration-tokens.activity');

@@ -222,6 +222,10 @@
         overflow: hidden;
     }
 
+    .patient-intake-entry-shell {
+        margin-top: 8px !important;
+    }
+
     .walkin-strip-card::before {
         content: "";
         position: absolute;
@@ -1138,6 +1142,8 @@
     .applicant-modal-close:focus {
         transform: translateY(-1px);
         border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
         box-shadow:
             0 0 0 3px rgba(250, 204, 21, 0.18),
             0 14px 24px rgba(112, 19, 27, 0.16);
@@ -6961,7 +6967,7 @@
     $idpRegistrationLink = 'https://identity-provider.isaxbsit2027.com/register?client_id=7112646b-c785-4306-b00f-87d29ad54fb2';
 @endphp
 
-<div style="max-width: 980px; margin: 20px auto;">
+<div class="patient-intake-entry-shell" style="max-width: 980px; margin: 20px auto;">
     @if($currentMode === '')
     <div class="card p-4 shadow-sm walkin-strip-card" style="border-radius: 18px; border: none; margin-bottom: 20px;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:18px; flex-wrap:wrap;">

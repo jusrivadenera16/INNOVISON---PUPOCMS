@@ -312,7 +312,7 @@
     $hubBaseUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/export-hub') : url('/admin/reports/export-hub');
     $cards = [
         [
-            'title' => 'MAR Report',
+            'title' => 'Monthly Accomplishment Report',
             'copy' => 'Preview medical accomplishment categories before opening the existing MAR export template.',
             'icon' => 'clipboard-document-list',
             'url' => $hubBaseUrl . '/mar',
@@ -322,6 +322,12 @@
             'copy' => 'Preview inventory balances, then export the existing Inventory of Medicines or Inventory of Supplies template.',
             'icon' => 'cube',
             'url' => $hubBaseUrl . '/inventory',
+        ],
+         [
+            'title' => 'Health Forms',
+            'copy' => 'Preview issued health form records before exporting the CSV file.',
+            'icon' => 'document-text',
+            'url' => $hubBaseUrl . '/health-forms',
         ],
         [
             'title' => 'Appointments',
@@ -335,12 +341,7 @@
             'icon' => 'clock',
             'url' => $hubBaseUrl . '/audit-trail',
         ],
-        [
-            'title' => 'Health Forms',
-            'copy' => 'Preview issued health form records before exporting the CSV file.',
-            'icon' => 'document-text',
-            'url' => $hubBaseUrl . '/health-forms',
-        ],
+       
     ];
 @endphp
 

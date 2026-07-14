@@ -2,7 +2,7 @@
     <h4 class="um-section-title">{{ ($managementView ?? '') === 'admin-hub' ? 'Admin Hub Access' : 'Account Access' }}</h4>
     <p class="um-section-copy">
         {{ ($managementView ?? '') === 'admin-hub'
-            ? 'Classify this shared directory profile without changing clinic account permissions.'
+            ? 'Classify this shared directory profile, remove designee access, or deactivate resigned accounts.'
             : 'Assign clinic staff, Student Assistant, or super administrator access to this account.' }}
     </p>
     <div class="um-field">

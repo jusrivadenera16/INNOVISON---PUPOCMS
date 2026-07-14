@@ -256,9 +256,14 @@
     }
 
     .um-btn-ghost {
-        background: transparent;
-        color: #800000;
-        border: 1px solid rgba(128, 0, 0, 0.16);
+        background: linear-gradient(135deg, #70131B, #8f2230);
+        color: #ffffff !important;
+        border: 1px solid #8f2230;
+    }
+
+    .um-btn-ghost:hover,
+    .um-btn-ghost:focus-visible {
+        color: #ffffff !important;
     }
 
     @keyframes umModeFloat {
@@ -365,8 +370,8 @@
 
     .um-btn {
         border: 1px solid #8f2230;
-        border-radius: 999px;
-        padding: 11px 18px;
+        border-radius: 10px;
+        padding: 10px 16px;
         font-weight: 800;
         cursor: pointer;
         text-decoration: none;
@@ -399,6 +404,8 @@
     .um-btn:hover {
         transform: translateY(-1px);
         border-color: #facc15;
+        background: #facc15 !important;
+        color: #70131B !important;
         box-shadow:
             0 0 0 3px rgba(250, 204, 21, 0.18),
             0 14px 24px rgba(112, 19, 27, 0.16);
@@ -464,6 +471,13 @@
 
     .um-table .um-sub {
         font-size: .72rem;
+    }
+
+    .um-table .um-office-cell {
+        color: #475569;
+        font-size: .74rem;
+        font-weight: 750;
+        line-height: 1.35;
     }
 
     .um-table thead th:last-child,
@@ -1071,7 +1085,7 @@
                                 </td>
                                 <td>{{ $record['meta']['admin_login_email'] ?: 'Not assigned yet' }}</td>
                                 <td>{{ $record['role'] }}</td>
-                                <td>{{ $record['meta']['office'] ?: 'Not assigned yet' }}</td>
+                                <td class="um-office-cell">{{ $record['meta']['office'] ?: 'Not assigned yet' }}</td>
                                 <td>
                                     <span class="um-badge {{ $record['status'] === 'inactive' ? 'inactive' : 'active' }}">
                                         {{ ucfirst($record['status']) }}
@@ -1215,8 +1229,20 @@
                             <input type="text" id="detailEmail" readonly>
                         </div>
                         <div class="um-field">
-                            <label id="detailIdentifierLabel">Student / Faculty ID</label>
+                            <label id="detailIdentifierLabel">ID Number</label>
                             <input type="text" id="detailIdentifier" readonly>
+                        </div>
+                        <div class="um-field">
+                            <label>DOB</label>
+                            <input type="text" id="detailDob" readonly>
+                        </div>
+                        <div class="um-field">
+                            <label>Number</label>
+                            <input type="text" id="detailContactNo" readonly>
+                        </div>
+                        <div class="um-field">
+                            <label>Address</label>
+                            <input type="text" id="detailAddress" readonly>
                         </div>
                         <div class="um-field">
                             <label>Source</label>
@@ -1251,14 +1277,14 @@
                             This faculty profile comes from the external source. Saving here will add a clinic-side user and admin hub record without changing the source system.
                         </div>
                         <div class="um-actions">
-                            <button type="button" class="um-settings-action um-action-neutral" id="deactivateBtn">Mark Directory Inactive</button>
+                            <button type="button" class="um-settings-action um-action-neutral" id="deactivateBtn">Deactivate Account</button>
                             <button
                                 type="submit"
                                 form="deleteForm"
                                 class="um-settings-action um-action-warning"
-                                onclick="return confirm('Remove this profile from the Admin Hub directory? Clinic account permissions will remain unchanged.')"
+                                onclick="return confirm('Remove only the Admin Designee role and restore the linked account to its base role?')"
                             >
-                                Remove Access
+                                Remove Admin Designee Role
                             </button>
                             <button
                                 type="submit"
@@ -1314,6 +1340,9 @@
     const detailAccessLevel = document.getElementById('detailAccessLevel');
     const detailAccessLevelLabel = document.getElementById('detailAccessLevelLabel');
     const detailIdentifier = document.getElementById('detailIdentifier');
+    const detailDob = document.getElementById('detailDob');
+    const detailContactNo = document.getElementById('detailContactNo');
+    const detailAddress = document.getElementById('detailAddress');
     const detailSource = document.getElementById('detailSource');
     const detailUpdated = document.getElementById('detailUpdated');
     const detailRole = document.getElementById('detailRole');
@@ -1422,11 +1451,32 @@
             deleteAdminHubManagementView.value = managementView;
         }
 
+        const meta = (() => {
+            try {
+                return JSON.parse(row.dataset.meta || '{}') || {};
+            } catch (error) {
+                return {};
+            }
+        })();
+        const displayValue = (value) => {
+            const normalized = String(value || '').trim();
+            return normalized !== '' ? normalized : 'N/A';
+        };
+
         detailName.value = row.dataset.name || '';
         detailEmail.value = row.dataset.email || '';
-        detailIdentifier.value = row.dataset.studentId || row.dataset.id || '';
+        detailIdentifier.value = displayValue(meta.external_identifier || meta.faculty_identifier || row.dataset.studentId || row.dataset.id);
         if (detailIdentifierLabel) {
-            detailIdentifierLabel.textContent = managementView === 'admin-hub' ? 'Faculty / External ID' : 'Student / Faculty ID';
+            detailIdentifierLabel.textContent = 'ID Number';
+        }
+        if (detailDob) {
+            detailDob.value = displayValue(meta.DOB || meta.birthday);
+        }
+        if (detailContactNo) {
+            detailContactNo.value = displayValue(meta.contact_no || meta.emergency_contact_no);
+        }
+        if (detailAddress) {
+            detailAddress.value = displayValue(meta.address || meta.home_address);
         }
         detailSource.value = row.dataset.sourceLabel || row.dataset.source || '';
         detailUpdated.value = row.dataset.updated || 'N/A';
@@ -1443,13 +1493,6 @@
         })();
         detailRole.value = normalizedRole;
         detailStatus.value = row.dataset.status || 'active';
-        const meta = (() => {
-            try {
-                return JSON.parse(row.dataset.meta || '{}') || {};
-            } catch (error) {
-                return {};
-            }
-        })();
         const accessLevel = (meta.access_level || '').toLowerCase();
         const adminLoginEmail = meta.admin_login_email || '';
         const office = meta.office || '';
@@ -1606,7 +1649,7 @@
     });
 
     deactivateBtn.addEventListener('click', () => {
-        const confirmDeactivate = window.confirm('Mark this Admin Hub directory profile as inactive? Clinic access will not be changed.');
+        const confirmDeactivate = window.confirm('Deactivate this account as resigned/inactive? This restores the base role, revokes access tokens, and preserves audit history.');
         if (!confirmDeactivate) {
             return;
         }

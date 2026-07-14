@@ -196,6 +196,53 @@ class ReportsController extends Controller
             ->implode(' | ');
     }
 
+    private function healthConditionKeywordSuggestions(int $limit = 18): Collection
+    {
+        return HealthProfile::query()
+            ->latest('updated_at')
+            ->limit(250)
+            ->get([
+                'medical_history',
+                'other_illness',
+                'food_allergies',
+                'medicine_allergies',
+                'other_med_allergies',
+                'medical_condition_remarks',
+                'assessment_remarks',
+                'med_assessment_remarks',
+                'pending_reason',
+                'encode_remarks',
+            ])
+            ->flatMap(function (HealthProfile $profile) {
+                return [
+                    $this->healthProfileTextValue($profile->medical_history),
+                    $this->healthProfileTextValue($profile->other_illness),
+                    $this->healthProfileTextValue($profile->food_allergies),
+                    $this->healthProfileTextValue($profile->medicine_allergies),
+                    $this->healthProfileTextValue($profile->other_med_allergies),
+                    $this->healthProfileTextValue($profile->medical_condition_remarks),
+                    $this->healthProfileTextValue($profile->assessment_remarks),
+                    $this->healthProfileTextValue($profile->med_assessment_remarks),
+                    $this->healthProfileTextValue($profile->pending_reason),
+                    $this->healthProfileTextValue($profile->encode_remarks),
+                ];
+            })
+            ->flatMap(function ($value) {
+                return preg_split('/[|;,\\r\\n]+/', (string) $value, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            })
+            ->map(function ($value) {
+                $value = trim(preg_replace('/\s+/', ' ', (string) $value));
+                $value = preg_replace('/^(?:Medical Condition|Condition|Remarks?|Reason|Pending Reason|Nurse Remarks|Assessment Remarks)\s*:\s*/i', '', $value) ?? $value;
+
+                return trim(Str::limit($value, 44, ''));
+            })
+            ->filter(fn ($value) => $value !== '' && $value !== '[]' && mb_strlen($value) >= 3)
+            ->reject(fn ($value) => in_array(mb_strtolower($value), ['yes', 'none', 'n/a', 'na', 'normal', 'no findings'], true))
+            ->unique(fn ($value) => mb_strtolower($value))
+            ->take($limit)
+            ->values();
+    }
+
     public function digitalLogbook(Request $request)
     {
         return view('admin.reports.digital-logbook');
@@ -1648,7 +1695,7 @@ private function exportReportsPreview(Request $request, string $reportType)
             'title' => 'MAR Report Export',
             'kicker' => 'Monthly Report',
             'subtitle' => 'Preview medical accomplishment categories before exporting the MAR report.',
-            'export_label' => 'Export MAR Report',
+            'export_label' => 'MAR Report',
             'export_url' => $printReportUrl . '?' . http_build_query($baseExportQuery + ['type' => 'mar', 'output' => 'pdf', 'month' => $monthFilter]),
         ],
         'inventory' => [
@@ -1674,7 +1721,7 @@ private function exportReportsPreview(Request $request, string $reportType)
             'title' => 'Appointments Export',
             'kicker' => 'Clinic Activity',
             'subtitle' => 'Preview appointment requests and clinic consultation activity for the selected period.',
-            'export_label' => 'Export Appointments',
+            'export_label' => 'Appointments',
             'export_url' => $printReportUrl . '?' . http_build_query($baseExportQuery + ['type' => 'appointment', 'output' => 'pdf', 'month' => $monthFilter]),
         ],
         'audit-trail' => [
@@ -1682,7 +1729,7 @@ private function exportReportsPreview(Request $request, string $reportType)
             'title' => 'Audit Trail Export',
             'kicker' => 'System Monitoring',
             'subtitle' => 'Preview system activity logs before exporting the audit trail report.',
-            'export_label' => 'Export Audit Trail',
+            'export_label' => 'Audit Trail',
             'export_url' => $printReportUrl . '?' . http_build_query($baseExportQuery + ['type' => 'audit', 'output' => 'pdf', 'month' => $monthFilter]),
         ],
         'health-forms' => [
@@ -1690,7 +1737,7 @@ private function exportReportsPreview(Request $request, string $reportType)
             'title' => 'Health Forms Export',
             'kicker' => 'Medical Clearance',
             'subtitle' => 'Preview issued health form records before exporting the CSV file.',
-            'export_label' => 'Export Health Forms',
+            'export_label' => 'Health Forms',
             'export_url' => $healthFormsExportUrl . '?' . http_build_query($baseExportQuery + $healthFormsExtraQuery),
         ],
     ][$reportType] ?? null;
@@ -1728,6 +1775,9 @@ private function exportReportsPreview(Request $request, string $reportType)
             ->unique()
             ->sort()
             ->values(),
+        'healthConditionSuggestions' => $reportType === 'health-forms'
+            ? $this->healthConditionKeywordSuggestions()
+            : collect(),
     ]);
 }
 
@@ -1846,26 +1896,98 @@ private function exportPreviewTable(string $reportType, Carbon $dateFrom, Carbon
         return [['Date & Time', 'User', 'Action', 'Description'], $rows->take(10)->values(), $rows->count()];
     }
 
-    $records = $this->exportHealthFormsPreviewRecords($request ?? request(), $dateFrom, $dateTo);
+    $request = $request ?? request();
+    $records = $this->exportHealthFormsPreviewRecords($request, $dateFrom, $dateTo);
+    [$headers, $columns] = $this->exportHealthFormsPreviewColumns($request);
 
-    $rows = $records->map(function (HealthProfile $record) {
-        $status = match (true) {
+    $rows = $records->map(function (HealthProfile $record) use ($columns) {
+        return collect($columns)
+            ->map(fn (callable $resolver) => $resolver($record))
+            ->values()
+            ->all();
+    });
+
+    return [$headers, $rows->take(10)->values(), $rows->count()];
+}
+
+private function exportHealthFormsPreviewColumns(Request $request): array
+{
+    $hasCourseFilter = trim((string) $request->query('course', '')) !== '';
+    $hasUserTypeFilter = trim((string) $request->query('user_type', '')) !== '';
+    $hasGenderFilter = trim((string) $request->query('gender', '')) !== '';
+    $hasConditionFilter = trim((string) $request->query('condition', '')) !== '';
+    $hasStatusFilter = trim((string) $request->query('status', '')) !== '';
+    $hasConditionKeyword = trim((string) $request->query('condition_keyword', '')) !== '';
+    $hasBmiFilter = collect((array) $request->query('bmi_categories', []))
+        ->flatMap(fn ($value) => explode(',', (string) $value))
+        ->filter(fn ($value) => trim((string) $value) !== '')
+        ->isNotEmpty();
+
+    $statusLabel = function (HealthProfile $record): string {
+        return match (true) {
             in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true) => 'Approved',
             $record->clearance_status === 'Rejected' => 'Rejected',
             default => 'Pending',
         };
+    };
 
-        return [
-            $record->reference_number ?: $record->student_number ?: optional($record->user)->student_number ?: 'N/A',
-            optional($record->user)->name ?: 'N/A',
-            $record->course_college ?: optional($record->user)->course ?: 'N/A',
-            $status,
-            $record->hasMedicalCondition() ? 'Yes' : 'No',
-            $record->verified_at ? Carbon::parse($record->verified_at)->format('M d, Y g:i A') : 'N/A',
-        ];
-    });
+    $recordDate = function (HealthProfile $record): string {
+        $date = $record->verified_at ?: $record->created_at;
 
-    return [['Reference', 'Name', 'Course', 'Status', 'With Condition', 'Approved At'], $rows->take(10)->values(), $rows->count()];
+        return $date ? Carbon::parse($date)->format('M d, Y g:i A') : 'N/A';
+    };
+
+    $definitions = [
+        'Reference' => fn (HealthProfile $record) => $record->reference_number ?: $record->student_number ?: optional($record->user)->student_number ?: 'N/A',
+        'Name' => fn (HealthProfile $record) => optional($record->user)->name ?: 'N/A',
+        'Course' => fn (HealthProfile $record) => $record->course_college ?: optional($record->user)->course ?: 'N/A',
+        'User Type' => fn (HealthProfile $record) => optional($record->user)->user_type ?: optional($record->user)->user_role ?: 'N/A',
+        'Gender' => fn (HealthProfile $record) => $record->sex ?: optional($record->user)->gender ?: 'N/A',
+        'Status' => $statusLabel,
+        'With Condition' => fn (HealthProfile $record) => $record->hasMedicalCondition() ? 'Yes' : 'No',
+        'Condition Details' => fn (HealthProfile $record) => Str::limit($this->healthProfileConditionText($record), 90) ?: 'N/A',
+        'BMI Category' => fn (HealthProfile $record) => $this->healthProfileBmiCategoryLabel($this->healthProfileBmi($record)),
+        'BMI' => fn (HealthProfile $record) => ($bmi = $this->healthProfileBmi($record)) !== null ? number_format($bmi, 1) : 'N/A',
+        'Record Date' => $recordDate,
+    ];
+
+    $headers = ['Reference', 'Name'];
+
+    if (!$hasUserTypeFilter || $hasCourseFilter) {
+        $headers[] = 'Course';
+    }
+
+    if ($hasUserTypeFilter) {
+        $headers[] = 'User Type';
+    }
+
+    if ($hasGenderFilter) {
+        $headers[] = 'Gender';
+    }
+
+    $headers[] = 'Status';
+
+    if (!$hasConditionFilter && !$hasConditionKeyword && !$hasBmiFilter) {
+        $headers[] = 'With Condition';
+    }
+
+    if ($hasConditionFilter || $hasConditionKeyword) {
+        $headers[] = 'With Condition';
+        $headers[] = 'Condition Details';
+    }
+
+    if ($hasBmiFilter) {
+        $headers[] = 'BMI Category';
+        $headers[] = 'BMI';
+    }
+
+    $headers[] = 'Record Date';
+    $headers = collect($headers)->unique()->values();
+
+    return [
+        $headers->all(),
+        $headers->map(fn (string $header) => $definitions[$header])->all(),
+    ];
 }
 
 private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateFrom, Carbon $dateTo): Collection

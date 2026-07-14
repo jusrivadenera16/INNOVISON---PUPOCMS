@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\SystemSetting;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,13 +37,10 @@ class EmergencyAuthController extends Controller
         $email = strtolower(trim((string) $validated['email']));
         $password = (string) $validated['password'];
         $guard = Auth::guard('admin');
-        $bootstrapEnabled = (bool) config('services.emergency.enabled', false);
-        $bootstrapEmail = strtolower(trim((string) config('services.emergency.email', '')));
-        $bootstrapPassword = (string) config('services.emergency.password', '');
-        $bootstrapPasswordHash = trim((string) config('services.emergency.password_hash', ''));
-        $bootstrapRole = User::normalizeRole((string) config('services.emergency.role', User::ROLE_ADMIN));
+        $emergencyConfig = $this->emergencyConfig();
+        $bootstrapAccounts = $emergencyConfig['accounts'] ?? [];
 
-        if (!$bootstrapEnabled || $bootstrapEmail === '' || ($bootstrapPassword === '' && $bootstrapPasswordHash === '')) {
+        if (empty($bootstrapAccounts)) {
             $this->logAttempt($request, null, 'Emergency login failed because bootstrap credentials are not configured.', 503);
 
             throw ValidationException::withMessages([
@@ -50,17 +48,33 @@ class EmergencyAuthController extends Controller
             ]);
         }
 
-        $passwordMatches = $bootstrapPasswordHash !== ''
-            ? Hash::check($password, $bootstrapPasswordHash)
-            : hash_equals($bootstrapPassword, $password);
+        $matchedAccount = null;
+        foreach ($bootstrapAccounts as $account) {
+            $accountEmail = strtolower(trim((string) ($account['email'] ?? '')));
+            $accountPassword = (string) ($account['password'] ?? '');
+            $accountPasswordHash = trim((string) ($account['password_hash'] ?? ''));
+            $passwordMatches = $accountPasswordHash !== ''
+                ? Hash::check($password, $accountPasswordHash)
+                : ($accountPassword !== '' && hash_equals($accountPassword, $password));
 
-        if ($email !== $bootstrapEmail || !$passwordMatches) {
+            if ($email === $accountEmail && $passwordMatches) {
+                $matchedAccount = $account;
+                break;
+            }
+        }
+
+        if (!$matchedAccount) {
             $this->logAttempt($request, null, 'Emergency login failed because the bootstrap credentials did not match.', 401);
 
             throw ValidationException::withMessages([
                 'email' => 'Invalid emergency credentials.',
             ]);
         }
+
+        $bootstrapEmail = strtolower(trim((string) ($matchedAccount['email'] ?? '')));
+        $bootstrapPassword = (string) ($matchedAccount['password'] ?? '');
+        $bootstrapPasswordHash = trim((string) ($matchedAccount['password_hash'] ?? ''));
+        $bootstrapRole = User::normalizeRole((string) ($matchedAccount['role'] ?? User::ROLE_ADMIN));
 
         $user = User::query()->where('email', $bootstrapEmail)->first();
         $newUser = false;
@@ -163,5 +177,44 @@ class EmergencyAuthController extends Controller
                 'message' => $exception->getMessage(),
             ]);
         }
+    }
+
+    private function emergencyConfig(): array
+    {
+        $configEnabled = true;
+        $configEmail = (string) config('services.emergency.email', '');
+        $configPassword = (string) config('services.emergency.password', '');
+        $configPasswordHash = trim((string) config('services.emergency.password_hash', ''));
+        $configRole = (string) config('services.emergency.role', User::ROLE_ADMIN);
+        $accounts = [];
+        if ($configEmail !== '' && ($configPassword !== '' || $configPasswordHash !== '')) {
+            $accounts[] = [
+                'email' => $configEmail,
+                'password' => $configPassword,
+                'password_hash' => $configPasswordHash,
+                'role' => $configRole,
+            ];
+        }
+
+        return [
+            'enabled' => $configEnabled,
+            'accounts' => array_merge($accounts, $this->emergencyAdditionalAccounts()),
+        ];
+    }
+
+    private function emergencyAdditionalAccounts(): array
+    {
+        $encoded = trim((string) env('EMERGENCY_ADMIN_ADDITIONAL_ACCOUNTS', ''));
+        if ($encoded === '') {
+            return [];
+        }
+
+        $decoded = base64_decode($encoded, true);
+        if ($decoded === false) {
+            return [];
+        }
+
+        $accounts = json_decode($decoded, true);
+        return is_array($accounts) ? array_values(array_filter($accounts, fn ($account) => is_array($account))) : [];
     }
 }

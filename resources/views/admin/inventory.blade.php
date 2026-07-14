@@ -925,6 +925,30 @@
         width: 100%;
         height: 100%;
     }
+    .inventory-modal-title-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+    .inventory-modal-title-icon {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+    }
+    .inventory-modal-title-icon svg {
+        width: 21px;
+        height: 21px;
+        stroke-width: 1.8;
+    }
     .modal-box .inventory-modal-head-main,
     .modal-box .inventory-modal-head > button {
         position: relative;
@@ -1516,6 +1540,12 @@
         background: transparent;
         border-top: none;
         flex: 0 0 auto;
+    }
+    .modal-actions-row .btn-add,
+    .modal-actions-row .inventory-btn-cancel {
+        border-radius: 8px;
+        min-height: 46px;
+        padding: 11px 20px;
     }
     .inventory-modal-close {
         width: 40px;
@@ -3632,6 +3662,11 @@
         }
     }
 
+    body.admin-inventory-page .modal-actions-row .btn-add,
+    body.admin-inventory-page .modal-actions-row .inventory-btn-cancel {
+        border-radius: 8px !important;
+    }
+
 </style>
 @endpush
 
@@ -3966,7 +4001,16 @@
             <div class="modal-box">
                 <div class="inventory-modal-head">
                     <div class="inventory-modal-head-main">
-                        <h3 class="inventory-modal-title" style="font-size:clamp(17px,1.6vw,22px); margin:0; font-weight:900;">Import Latest Inventory</h3>
+                        <div class="inventory-modal-title-row">
+                            <span class="inventory-modal-title-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 3v12" />
+                                    <path d="m7 10 5 5 5-5" />
+                                    <path d="M5 21h14" />
+                                </svg>
+                            </span>
+                            <h3 class="inventory-modal-title" style="font-size:clamp(17px,1.6vw,22px); margin:0; font-weight:900;">Import Latest Inventory</h3>
+                        </div>
                         <p class="inventory-modal-copy">Upload a clear inventory photo or structured file. The system analyzes it first and waits for your confirmation.</p>
                     </div>
                     <button type="button" class="inventory-btn-cancel inventory-modal-close" onclick="closeInventoryImportModal()" aria-label="Close import modal">
@@ -4016,7 +4060,16 @@
                 <div class="modal-box">
                     <div class="inventory-modal-head">
                         <div class="inventory-modal-head-main">
-                            <h3 class="inventory-modal-title" style="font-size:clamp(17px,1.6vw,22px); margin:0; font-weight:900;">Review Inventory Import</h3>
+                            <div class="inventory-modal-title-row">
+                                <span class="inventory-modal-title-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M9 11.5 11 13.5 15.5 9" />
+                                        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v13a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5z" />
+                                        <path d="M8 17h8" />
+                                    </svg>
+                                </span>
+                                <h3 class="inventory-modal-title" style="font-size:clamp(17px,1.6vw,22px); margin:0; font-weight:900;">Review Inventory Import</h3>
+                            </div>
                             <p class="inventory-modal-copy">Check each extracted row before committing it to clinic inventory.</p>
                         </div>
                         <button type="button" class="inventory-btn-cancel inventory-modal-close" onclick="closeInventoryImportReviewModal()" aria-label="Close review modal">
@@ -4190,7 +4243,16 @@
             <div class="modal-box">
                 <div class="inventory-modal-head">
                     <div class="inventory-modal-head-main">
-                        <h3 id="modalTitle" class="inventory-modal-title" style="font-size:clamp(17px,1.6vw,22px); margin:0; font-weight:900;">Add New Item</h3>
+                        <div class="inventory-modal-title-row">
+                            <span class="inventory-modal-title-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                                    <path d="M3.3 7 12 12l8.7-5" />
+                                    <path d="M12 22V12" />
+                                </svg>
+                            </span>
+                            <h3 id="modalTitle" class="inventory-modal-title" style="font-size:clamp(17px,1.6vw,22px); margin:0; font-weight:900;">Add New Item</h3>
+                        </div>
                         <p class="inventory-modal-copy" style="margin:5px 0 0; font-size:13.5px; line-height:1.5;">Provide inventory details and save to update clinic stock records.</p>
                     </div>
                     <div class="item-modal-head-icon" aria-hidden="true">
@@ -4474,7 +4536,16 @@
             <div class="modal-box">
                 <div class="inventory-modal-head">
                     <div class="inventory-modal-head-main">
-                        <h3 class="inventory-modal-title">Restock Item</h3>
+                        <div class="inventory-modal-title-row">
+                            <span class="inventory-modal-title-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 5v14" />
+                                    <path d="M5 12h14" />
+                                    <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z" />
+                                </svg>
+                            </span>
+                            <h3 class="inventory-modal-title">Restock Item</h3>
+                        </div>
                         <p class="inventory-modal-copy" id="restockItemName">Add stock without overwriting the item record.</p>
                     </div>
                     <div class="restock-head-right">
@@ -4531,7 +4602,16 @@
             <div class="modal-box">
                 <div class="inventory-modal-head">
                     <div class="inventory-modal-head-main">
-                        <h3 class="inventory-modal-title">Issue Stock</h3>
+                        <div class="inventory-modal-title-row">
+                            <span class="inventory-modal-title-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z" />
+                                    <path d="M9 12h10" />
+                                    <path d="m15 8 4 4-4 4" />
+                                </svg>
+                            </span>
+                            <h3 class="inventory-modal-title">Issue Stock</h3>
+                        </div>
                         <p class="inventory-modal-copy" id="issueItemName">Record consumed or dispensed stock without editing the item record.</p>
                     </div>
                     <div class="restock-head-right">
@@ -4593,7 +4673,16 @@
             <div class="modal-box">
                 <div class="inventory-modal-head">
                     <div class="inventory-modal-head-main">
-                        <h3 class="inventory-modal-title">Stock Movement History</h3>
+                        <div class="inventory-modal-title-row">
+                            <span class="inventory-modal-title-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 12a9 9 0 1 0 3-6.7" />
+                                    <path d="M3 4v5h5" />
+                                    <path d="M12 7v5l3 2" />
+                                </svg>
+                            </span>
+                            <h3 class="inventory-modal-title">Stock Movement History</h3>
+                        </div>
                         <p class="inventory-modal-copy">Review item movement activity, stock changes, and related notes.</p>
                     </div>
                     <button type="button" class="inventory-btn-cancel inventory-modal-close" onclick="closeHistoryModal()" aria-label="Close history modal">

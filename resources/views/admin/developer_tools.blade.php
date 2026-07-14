@@ -197,7 +197,7 @@
     }
 
     .dev-action::after {
-        content: "->";
+        content: "\2192";
         transition: transform .2s ease;
     }
 
@@ -471,7 +471,8 @@
         text-transform: uppercase;
     }
 
-    .dev-password-field input {
+    .dev-password-field input,
+    .dev-password-select {
         width: 100%;
         min-height: 44px;
         padding: 11px 13px;
@@ -484,9 +485,19 @@
         outline: none;
     }
 
+    .dev-password-select {
+        appearance: none;
+    }
+
     .dev-password-field input::placeholder {
         color: #94a3b8;
         font-weight: 700;
+    }
+
+    .dev-maintenance-datetime {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(120px, .55fr);
+        gap: 10px;
     }
 
     .dev-password-field input:disabled {
@@ -498,6 +509,112 @@
         color: #64748b;
         font-size: .78rem;
         line-height: 1.45;
+    }
+
+    .dev-compact-settings {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+    }
+
+    .dev-setting-row {
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(112,19,27,.14);
+        background: rgba(255,255,255,.86);
+    }
+
+    .dev-setting-row-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .dev-setting-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .dev-setting-label {
+        display: block;
+        color: #70131b;
+        font-size: .74rem;
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .dev-setting-value {
+        min-width: 0;
+        color: #111827;
+        font-size: .88rem;
+        font-weight: 900;
+        overflow-wrap: anywhere;
+    }
+
+    .dev-setting-subtext {
+        color: #64748b;
+        font-size: .76rem;
+        font-weight: 700;
+        line-height: 1.4;
+    }
+
+    .dev-mini-action,
+    .dev-icon-action {
+        border: 1px solid rgba(112,19,27,.18);
+        background: #fff;
+        color: #70131b;
+        cursor: pointer;
+        font-weight: 900;
+        transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .dev-mini-action {
+        min-height: 34px;
+        padding: 7px 11px;
+        border-radius: 10px;
+        font-size: .72rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .dev-icon-action {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 36px;
+    }
+
+    .dev-icon-action svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .dev-mini-action:hover,
+    .dev-icon-action:hover {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131b;
+        transform: translateY(-1px);
+    }
+
+    .dev-collapsible-fields {
+        display: grid;
+        gap: 10px;
+        padding-top: 4px;
+    }
+
+    .dev-collapsible-fields[hidden] {
+        display: none;
     }
 
     .dev-mini-summary {
@@ -651,7 +768,8 @@
         box-shadow: 0 6px 12px rgba(15,23,42,.16);
     }
 
-    .dev-pin-form {
+    .dev-pin-form,
+    .dev-policy-form {
         display: grid;
         gap: 10px;
         margin-top: 14px;
@@ -1108,6 +1226,15 @@
         border: 0;
         background: #8f1827;
         color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .dev-reset-submit svg {
+        width: 16px;
+        height: 16px;
     }
 
     .dev-reset-submit:hover,
@@ -1130,6 +1257,75 @@
         width: 14px;
         height: 14px;
         flex: 0 0 auto;
+    }
+
+    .dev-enter-pin-dialog {
+        width: min(620px, 100%);
+    }
+
+    .dev-enter-pin-form {
+        padding: 18px 24px 0;
+    }
+
+    .dev-enter-pin-center {
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        text-align: center;
+        color: #111827;
+    }
+
+    .dev-enter-pin-lock {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #111827;
+    }
+
+    .dev-enter-pin-lock svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .dev-enter-pin-center strong {
+        font-size: 14px;
+        letter-spacing: .06em;
+        font-weight: 950;
+    }
+
+    .dev-enter-pin-center > span:not(.dev-enter-pin-lock) {
+        color: #475569;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .dev-enter-pin-digits {
+        grid-template-columns: repeat(4, 60px);
+        gap: 22px;
+        margin-top: 8px;
+        justify-content: center;
+    }
+
+    .dev-enter-pin-digits input {
+        border-radius: 10px;
+    }
+
+    .dev-enter-pin-safe {
+        margin-top: 10px;
+        padding: 15px 0 0;
+        border-top: 1px dashed #cbd5e1;
+        text-align: center;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 900;
+    }
+
+    .dev-enter-pin-error {
+        color: #b91c1c;
+        font-size: 13px;
+        font-weight: 900;
     }
 
     @media (max-width: 640px) {
@@ -1598,7 +1794,7 @@
     @media (min-width: 721px) {
         .dev-card,
         button.dev-card {
-            min-height: 293px !important;
+            min-height: 314px !important;
         }
     }
 </style>
@@ -1627,7 +1823,7 @@
             <h2>API Dashboard</h2>
             <p>Validate connected systems and inspect integration responses.</p>
             <div class="dev-note">Use for endpoint checks and response review.</div>
-            <div class="dev-action">Open integration tester</div>
+            <div class="dev-action">Click to view</div>
         </a>
 
         <button type="button" class="dev-card" id="openDeveloperOptionsPanel">
@@ -1639,9 +1835,9 @@
                 </svg>
             </span>
             <h2>Developer Options</h2>
-            <p>Open prepared maintenance controls for future developer use.</p>
+            <p>Prepared maintenance controls for future developer use.</p>
             <div class="dev-note">Static controls only.</div>
-            <div class="dev-action">Open options</div>
+            <div class="dev-action">Click to view</div>
         </button>
     </div>
 </div>
@@ -1664,42 +1860,142 @@
                 <section class="dev-option-block">
                     <p class="dev-option-kicker">Access</p>
                     <h3 class="dev-option-title">Sign-In Controls</h3>
-                    <p class="dev-option-copy">Future controls for One Portal status and emergency fallback access.</p>
+                    <p class="dev-option-copy">Manage emergency fallback access when One Portal is unavailable.</p>
+                    @php
+                        $devPinUser = \Illuminate\Support\Facades\Auth::guard('admin')->user() ?? auth()->user();
+                        $configEmergencyEmail = (string) config('services.emergency.email', '');
+                        $configEmergencyHash = trim((string) config('services.emergency.password_hash', ''));
+                        $configEmergencyPassword = (string) config('services.emergency.password', '');
+                        $configEmergencyRole = (string) config('services.emergency.role', 'admin');
+                        $emergencyEnabled = true;
+                        $emergencyEmail = $configEmergencyEmail;
+                        $emergencyRole = $configEmergencyRole;
+                        $emergencyConfigured = $configEmergencyHash !== '' || $configEmergencyPassword !== '';
+                        $emergencySource = 'Environment';
+                        $emergencyPinRequired = ($devPinUser->api_pin_enabled ?? false)
+                            && ($devPinUser->api_pin_emergency_credentials_enabled ?? false)
+                            && trim((string) ($devPinUser->api_pin ?? '')) !== '';
+                    @endphp
                     <div class="dev-mini-summary">
-                        <div class="dev-mini-line"><span>One Portal / IdP</span><span class="dev-option-pill">Static</span></div>
-                        <div class="dev-mini-line"><span>Emergency Login</span><span class="dev-option-pill">Static</span></div>
-                        <div class="dev-mini-line"><span>Allowed Role</span><span class="dev-option-pill">Static</span></div>
+                        <div class="dev-mini-line"><span>One Portal / IdP</span><span class="dev-option-pill">Primary</span></div>
+                        <div class="dev-mini-line"><span>Emergency Login</span><span class="dev-option-pill">{{ $emergencyEnabled ? 'Enabled' : 'Disabled' }}</span></div>
+                        <div class="dev-mini-line"><span>Password</span><span class="dev-option-pill">{{ $emergencyConfigured ? 'Configured' : 'Missing' }}</span></div>
+                        <div class="dev-mini-line"><span>Source</span><span class="dev-option-pill">{{ $emergencySource }}</span></div>
                     </div>
-                    <div class="dev-password-box">
-                        <div class="dev-password-field">
-                            <label for="devTeamPassword">Team Password</label>
-                            <input
-                                type="password"
-                                id="devTeamPassword"
-                                value="••••••••••"
-                                disabled
-                                aria-label="Static team password placeholder"
-                            >
+                    <form method="POST" action="{{ route('admin.emergency-credentials.update') }}" class="dev-compact-settings" id="devEmergencyCredentialsForm" data-pin-required="{{ $emergencyPinRequired ? '1' : '0' }}">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="emergency_action" id="devEmergencyAction" value="update">
+
+                        <div class="dev-setting-row">
+                            <div class="dev-setting-row-head">
+                                <div>
+                                    <span class="dev-setting-label">Emergency Email</span>
+                                    <div class="dev-setting-value">{{ $emergencyEmail !== '' ? $emergencyEmail : 'No emergency email set' }}</div>
+                                </div>
+                                <div class="dev-setting-actions">
+                                    <button type="button" class="dev-mini-action" id="devToggleEmergencyEmail" data-closed-label="Update">Update</button>
+                                </div>
+                            </div>
+                            <div class="dev-collapsible-fields" id="devEmergencyEmailFields" {{ $emergencyEmail !== '' ? 'hidden' : '' }}>
+                                <div class="dev-password-field">
+                                    <label for="devEmergencyEmail">Email Address</label>
+                                    <input type="email" id="devEmergencyEmail" name="emergency_email" value="{{ old('emergency_email', $emergencyEmail) }}" placeholder="system-admin@example.com" required>
+                                </div>
+                                <button type="submit" class="dev-mini-action">Save Email</button>
+                            </div>
                         </div>
-                        <div class="dev-password-note">
-                            Static placeholder for a future backup password update flow.
+
+                        <input type="hidden" name="emergency_role" value="{{ in_array($emergencyRole, ['superadmin', 'super_admin'], true) ? 'superadmin' : 'admin' }}">
+                        <input type="hidden" name="pin" id="devEmergencyCredentialPin">
+
+                        <div class="dev-setting-row">
+                            <div class="dev-setting-row-head">
+                                <div>
+                                    <span class="dev-setting-label">Current Password</span>
+                                    <div class="dev-setting-value" id="devEmergencyPasswordStatus">{{ $emergencyConfigured ? '**********' : 'No password configured' }}</div>
+                                </div>
+                                <button type="button" class="dev-icon-action" id="devViewEmergencyPassword" aria-label="View emergency password status" {{ $emergencyConfigured ? '' : 'disabled' }}>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M2.25 12s3.5-6.75 9.75-6.75S21.75 12 21.75 12 18.25 18.75 12 18.75 2.25 12 2.25 12Z"/>
+                                        <path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
-                    </div>
+
+                        <div class="dev-setting-row">
+                            <div class="dev-setting-row-head">
+                                <div>
+                                    <span class="dev-setting-label">Reset Emergency Password</span>
+                                    <div class="dev-setting-subtext">Create a new fallback password when the current one is unknown or rotated.</div>
+                                </div>
+                                <button type="button" class="dev-mini-action" id="devToggleEmergencyReset">Reset</button>
+                            </div>
+                            <div class="dev-collapsible-fields" id="devEmergencyResetFields" {{ $emergencyConfigured ? 'hidden' : '' }}>
+                                <div class="dev-password-field">
+                                    <label for="devNewEmergencyPassword">New Emergency Password</label>
+                                    <input type="password" id="devNewEmergencyPassword" name="new_emergency_password" placeholder="Create emergency password" autocomplete="new-password" {{ $emergencyConfigured ? '' : 'required' }}>
+                                </div>
+                                <div class="dev-password-field">
+                                    <label for="devNewEmergencyPasswordConfirm">Confirm New Password</label>
+                                    <input type="password" id="devNewEmergencyPasswordConfirm" name="new_emergency_password_confirmation" placeholder="Confirm new password" autocomplete="new-password" {{ $emergencyConfigured ? '' : 'required' }}>
+                                </div>
+                                <button type="submit" class="dev-mini-action">Save Password</button>
+                            </div>
+                        </div>
+
+                        <div class="dev-setting-row">
+                            <div class="dev-setting-row-head">
+                                <div>
+                                    <span class="dev-setting-label">Add Emergency Email</span>
+                                    <div class="dev-setting-subtext">Add another emergency login account.</div>
+                                </div>
+                                <button type="button" class="dev-mini-action" id="devToggleEmergencyAdd" data-closed-label="Add Email">Add Email</button>
+                            </div>
+                            <div class="dev-collapsible-fields" id="devEmergencyAddFields" hidden>
+                                <div class="dev-password-field">
+                                    <label for="devAdditionalEmergencyEmail">Email Address</label>
+                                    <input type="email" id="devAdditionalEmergencyEmail" name="additional_emergency_email" placeholder="another-admin@example.com">
+                                </div>
+                                <div class="dev-password-field">
+                                    <label for="devAdditionalEmergencyPassword">Password</label>
+                                    <input type="password" id="devAdditionalEmergencyPassword" name="additional_emergency_password" placeholder="Create emergency password" autocomplete="new-password">
+                                </div>
+                                <div class="dev-password-field">
+                                    <label for="devAdditionalEmergencyPasswordConfirm">Confirm Password</label>
+                                    <input type="password" id="devAdditionalEmergencyPasswordConfirm" name="additional_emergency_password_confirmation" placeholder="Confirm emergency password" autocomplete="new-password">
+                                </div>
+                                <button type="submit" class="dev-mini-action">Save New Email</button>
+                            </div>
+                        </div>
+                        @error('current_emergency_password')
+                            <div class="dev-pin-error">{{ $message }}</div>
+                        @enderror
+                        @error('new_emergency_password')
+                            <div class="dev-pin-error">{{ $message }}</div>
+                        @enderror
+                        @error('pin')
+                            <div class="dev-pin-error">{{ $message }}</div>
+                        @enderror
+                    </form>
                 </section>
 
                 <section class="dev-option-block">
                     <p class="dev-option-kicker">Integrations</p>
-                    <h3 class="dev-option-title">Integration PIN</h3>
-                    <p class="dev-option-copy">Control access to Integration Tokens from API Testing and direct routes.</p>
+                    <h3 class="dev-option-title">PIN Management</h3>
+                    <p class="dev-option-copy">Control security PIN requirements for Integration Tokens and emergency credential changes.</p>
                     <form method="POST" action="{{ route('admin.integration-pin.update') }}" class="dev-pin-form">
                         @csrf
                         @method('PUT')
+                        <input type="hidden" name="current_security_pin" id="devApiCurrentPin">
                         @php
                             $devPinUser = \Illuminate\Support\Facades\Auth::guard('admin')->user() ?? auth()->user();
                             $legacyPinEnabled = (bool) ($devPinUser->api_pin_enabled ?? false);
                             $pinEnabled = $legacyPinEnabled;
                             $pagePinEnabled = $pinEnabled && (bool) ($devPinUser->api_pin_page_enabled ?? true);
                             $tokenActionPinEnabled = $pinEnabled && (bool) ($devPinUser->api_pin_token_action_enabled ?? true);
+                            $emergencyCredentialsPinEnabled = $pinEnabled && (bool) ($devPinUser->api_pin_emergency_credentials_enabled ?? false);
                             $hasPin = trim((string) ($devPinUser->api_pin ?? '')) !== '';
                             $needsPinSetup = ! $hasPin;
                         @endphp
@@ -1728,6 +2024,14 @@
                                 <input type="checkbox" name="api_pin_token_action_enabled" value="1" class="dev-api-pin-toggle" {{ $tokenActionPinEnabled ? 'checked' : '' }}>
                                 <span class="dev-toggle-track" aria-hidden="true"><span class="dev-toggle-knob"></span></span>
                             </label>
+                            <label class="dev-live-toggle">
+                                <span>
+                                    <strong>Emergency Credentials</strong>
+                                    <span>Require PIN before changing emergency login email, role, or password.</span>
+                                </span>
+                                <input type="checkbox" name="api_pin_emergency_credentials_enabled" value="1" class="dev-api-pin-toggle" id="devEmergencyCredentialsPinToggle" {{ $emergencyCredentialsPinEnabled ? 'checked' : '' }}>
+                                <span class="dev-toggle-track" aria-hidden="true"><span class="dev-toggle-knob"></span></span>
+                            </label>
                         </div>
                         <div class="dev-pin-fields {{ $needsPinSetup ? '' : 'is-hidden' }}" id="devApiPinFields" {{ $pinEnabled ? '' : 'hidden' }}>
                             @if($needsPinSetup)
@@ -1742,14 +2046,16 @@
                             @endif
                         </div>
                         <div class="dev-pin-controls" id="devApiPinControls" data-has-pin="{{ $hasPin ? '1' : '0' }}" {{ ($pinEnabled || $hasPin) ? '' : 'hidden' }}>
-                            <div class="dev-password-note">
-                                {{ $hasPin ? ($pinEnabled ? 'Status: PIN required' : 'Status: PIN saved, not required') : 'Enter and confirm a new 4-digit PIN, then save.' }}
-                            </div>
+                            @unless($hasPin)
+                                <div class="dev-password-note">
+                                    Enter and confirm a new 4-digit PIN, then save.
+                                </div>
+                            @endunless
                             @error('api_pin')
                                 <div class="dev-pin-error">{{ $message }}</div>
                             @enderror
                             @if($needsPinSetup)
-                                <button type="submit" class="dev-pin-save">Save Integration PIN</button>
+                                <button type="submit" class="dev-pin-save">Save Security PIN</button>
                             @endif
                             @if($hasPin)
                                 <button type="button" class="dev-pin-reset" id="openResetIntegrationPin">Reset PIN / Forgot PIN</button>
@@ -1797,17 +2103,116 @@
                 <section class="dev-option-block">
                     <p class="dev-option-kicker">Policies</p>
                     <h3 class="dev-option-title">Student Side Notices</h3>
-                    <p class="dev-option-copy">Static switches for future student-facing announcements.</p>
-                    <button type="button" class="dev-static-toggle" disabled>
-                        <span>
-                            <strong>Maintenance Banner</strong>
-                            <span>Display "Under Maintenance" on the student side.</span>
-                        </span>
-                        <span class="dev-toggle-track" aria-hidden="true">
-                            <span class="dev-toggle-knob"></span>
-                        </span>
-                    </button>
+                    <p class="dev-option-copy">Control student-facing access during scheduled maintenance.</p>
+                    @php
+                        $maintenanceSettingsAvailable = \Illuminate\Support\Facades\Schema::hasTable('system_settings');
+                        $maintenanceEnabled = $maintenanceSettingsAvailable
+                            ? \App\Models\SystemSetting::booleanValue('maintenance_mode_enabled', false)
+                            : false;
+                        $maintenanceEstimate = $maintenanceSettingsAvailable
+                            ? \App\Models\SystemSetting::getValue('maintenance_estimated_completion', null)
+                            : null;
+                        try {
+                            $maintenanceEstimateDate = $maintenanceEstimate ? \Carbon\Carbon::parse($maintenanceEstimate)->format('Y-m-d') : '';
+                            $maintenanceEstimateTime = $maintenanceEstimate ? \Carbon\Carbon::parse($maintenanceEstimate)->format('H:i') : '';
+                        } catch (\Throwable $exception) {
+                            $maintenanceEstimateDate = '';
+                            $maintenanceEstimateTime = '';
+                        }
+                    @endphp
+                    <form method="POST" action="{{ route('admin.maintenance-policy.update') }}" class="dev-policy-form">
+                        @csrf
+                        @method('PUT')
+                        <label class="dev-live-toggle">
+                            <span>
+                                <strong>Maintenance Mode</strong>
+                                <span>Redirect student home access to the maintenance page.</span>
+                            </span>
+                            <input type="checkbox" name="maintenance_mode_enabled" value="1" id="devMaintenanceModeToggle" {{ $maintenanceEnabled ? 'checked' : '' }}>
+                            <span class="dev-toggle-track" aria-hidden="true"><span class="dev-toggle-knob"></span></span>
+                        </label>
+                        <div class="dev-password-field">
+                            <label>Estimated Completion</label>
+                            <div class="dev-maintenance-datetime">
+                                <input type="date" id="devMaintenanceEstimatedDate" name="maintenance_estimated_date" value="{{ old('maintenance_estimated_date', $maintenanceEstimateDate) }}" aria-label="Estimated completion date">
+                                <input type="time" id="devMaintenanceEstimatedTime" name="maintenance_estimated_time" value="{{ old('maintenance_estimated_time', $maintenanceEstimateTime) }}" step="60" aria-label="Estimated completion time">
+                            </div>
+                        </div>
+                        @error('maintenance_estimated_date')
+                            <div class="dev-pin-error">{{ $message }}</div>
+                        @enderror
+                        @error('maintenance_estimated_time')
+                            <div class="dev-pin-error">{{ $message }}</div>
+                        @enderror
+                        <div class="dev-password-note">
+                            When enabled, students opening the clinic workspace are sent to the maintenance page.
+                        </div>
+                        <button type="submit" class="dev-pin-save" id="devMaintenanceSaveButton" {{ $maintenanceEnabled ? '' : 'hidden' }}>Save Student Notice</button>
+                    </form>
                 </section>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div class="dev-reset-modal" id="disablePinVerifyModal" aria-hidden="true">
+    <section class="dev-reset-dialog dev-enter-pin-dialog" role="dialog" aria-modal="true" aria-labelledby="disablePinVerifyTitle">
+        <header class="dev-reset-head">
+            <div class="dev-reset-head-main">
+                <span class="dev-reset-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M7.5 10.5V7.75a4.5 4.5 0 0 1 9 0v2.75"/>
+                        <path d="M6.75 10.5h10.5c.83 0 1.5.67 1.5 1.5v6.25c0 .83-.67 1.5-1.5 1.5H6.75c-.83 0-1.5-.67-1.5-1.5V12c0-.83.67-1.5 1.5-1.5Z"/>
+                    </svg>
+                </span>
+                <div>
+                    <h3 id="disablePinVerifyTitle">Enter Pin</h3>
+                    <p>Enter your 4-digit PIN to turn off PIN Required.</p>
+                </div>
+            </div>
+            <button type="button" class="dev-reset-close" id="closeDisablePinVerify" aria-label="Close Enter PIN modal">&times;</button>
+        </header>
+        <div class="dev-reset-form dev-enter-pin-form">
+            <div class="dev-reset-security">
+                <span class="dev-reset-security-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3.75 5.25 6.5v5.3c0 4.2 2.85 7.35 6.75 8.45 3.9-1.1 6.75-4.25 6.75-8.45V6.5L12 3.75Z"/>
+                        <path d="m9.75 12 1.5 1.5 3.25-3.25"/>
+                    </svg>
+                </span>
+                <div>
+                    <strong>Administrator Verification Required</strong>
+                    <span>Only authorized administrators can change PIN protection.</span>
+                </div>
+            </div>
+            <div class="dev-enter-pin-center">
+                <span class="dev-enter-pin-lock" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+                        <path d="M7 11h10v9H7z"/>
+                    </svg>
+                </span>
+                <strong>ENTER 4-DIGIT PIN</strong>
+                <span>Please enter your 4-digit Integration PIN.</span>
+                <div class="dev-reset-pin-digits dev-enter-pin-digits" data-pin-target="disableApiPinValue">
+                    <input id="disablePinDigit1" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+                </div>
+                <input class="dev-reset-hidden" type="password" id="disableApiPinValue" pattern="[0-9]{4}" maxlength="4" tabindex="-1">
+                <div class="dev-enter-pin-error" id="disablePinVerifyError" hidden></div>
+            </div>
+            <div class="dev-enter-pin-safe">Your PIN is encrypted and safe.</div>
+            <div class="dev-reset-footer">
+                <button type="button" class="dev-reset-cancel" id="cancelDisablePinVerify">Cancel</button>
+                <button type="button" class="dev-reset-submit" id="submitDisablePinVerify">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+                        <path d="M7 11h10v9H7z"/>
+                    </svg>
+                    <span>Verify PIN</span>
+                </button>
             </div>
         </div>
     </section>
@@ -1960,12 +2365,36 @@
         const pinFields = document.getElementById('devApiPinFields');
         const pinControls = document.getElementById('devApiPinControls');
         const pinForm = pinMasterToggle?.closest('form');
+        const pinCurrentInput = document.getElementById('devApiCurrentPin');
+        const emergencyCredentialsPinToggle = document.getElementById('devEmergencyCredentialsPinToggle');
+        const emergencyForm = document.getElementById('devEmergencyCredentialsForm');
+        const emergencyCredentialPinInput = document.getElementById('devEmergencyCredentialPin');
+        const emergencyActionInput = document.getElementById('devEmergencyAction');
+        const emergencyEmailToggle = document.getElementById('devToggleEmergencyEmail');
+        const emergencyEmailFields = document.getElementById('devEmergencyEmailFields');
+        const emergencyAddToggle = document.getElementById('devToggleEmergencyAdd');
+        const emergencyAddFields = document.getElementById('devEmergencyAddFields');
+        const emergencyResetToggle = document.getElementById('devToggleEmergencyReset');
+        const emergencyResetFields = document.getElementById('devEmergencyResetFields');
+        const emergencyPasswordView = document.getElementById('devViewEmergencyPassword');
+        const emergencyPasswordStatus = document.getElementById('devEmergencyPasswordStatus');
         const resetPinButton = document.getElementById('openResetIntegrationPin');
         const resetPinModal = document.getElementById('resetIntegrationPinModal');
         const closeResetPinButton = document.getElementById('closeResetIntegrationPin');
         const cancelResetPinButton = document.getElementById('cancelResetIntegrationPin');
         const resetEmergencyPassword = document.getElementById('resetEmergencyPassword');
         const toggleResetEmergencyPassword = document.getElementById('toggleResetEmergencyPassword');
+        const maintenanceToggle = document.getElementById('devMaintenanceModeToggle');
+        const maintenanceSaveButton = document.getElementById('devMaintenanceSaveButton');
+        const maintenanceForm = maintenanceToggle?.closest('form');
+        const disablePinModal = document.getElementById('disablePinVerifyModal');
+        const closeDisablePinButton = document.getElementById('closeDisablePinVerify');
+        const cancelDisablePinButton = document.getElementById('cancelDisablePinVerify');
+        const submitDisablePinButton = document.getElementById('submitDisablePinVerify');
+        const disablePinValue = document.getElementById('disableApiPinValue');
+        const disablePinError = document.getElementById('disablePinVerifyError');
+        const disablePinFirstDigit = document.getElementById('disablePinDigit1');
+        let bypassDisablePinPrompt = false;
 
         const syncPinControls = () => {
             if (!pinMasterToggle || !pinFields || !pinControls) {
@@ -1976,10 +2405,22 @@
             pinChildToggleWrap.hidden = !pinMasterToggle.checked;
             pinFields.hidden = !pinMasterToggle.checked;
             pinControls.hidden = !pinMasterToggle.checked && !hasSavedPin;
+            if (emergencyForm) {
+                emergencyForm.dataset.pinRequired = (pinMasterToggle.checked && emergencyCredentialsPinToggle?.checked && hasSavedPin) ? '1' : '0';
+            }
         };
 
         [pinMasterToggle, ...pinEnabledToggles].filter(Boolean).forEach((toggle) => {
             toggle.addEventListener('change', () => {
+                const hasSavedPin = pinControls?.dataset.hasPin === '1';
+
+                if (toggle === pinMasterToggle && !pinMasterToggle.checked && hasSavedPin && !bypassDisablePinPrompt) {
+                    pinMasterToggle.checked = true;
+                    syncPinControls();
+                    setDisablePinModalOpen(true);
+                    return;
+                }
+
                 if (toggle === pinMasterToggle && pinMasterToggle.checked && !pinEnabledToggles.some((child) => child.checked)) {
                     pinEnabledToggles.forEach((child) => {
                         child.checked = true;
@@ -1992,14 +2433,210 @@
 
                 syncPinControls();
 
-                const hasSavedPin = pinControls?.dataset.hasPin === '1';
-
                 if (hasSavedPin) {
                     pinForm?.requestSubmit();
                 }
             });
         });
         syncPinControls();
+
+        const setDisablePinModalOpen = (isOpen) => {
+            if (!disablePinModal) {
+                return;
+            }
+            disablePinModal.classList.toggle('is-open', isOpen);
+            disablePinModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+            if (disablePinError) {
+                disablePinError.hidden = true;
+                disablePinError.textContent = '';
+            }
+            if (disablePinValue) {
+                disablePinValue.value = '';
+            }
+            disablePinModal.querySelectorAll('.dev-enter-pin-digits input').forEach((input) => {
+                input.value = '';
+            });
+            if (isOpen) {
+                window.setTimeout(() => disablePinFirstDigit?.focus(), 60);
+            }
+        };
+
+        const verifyPinForDisable = async (pin) => {
+            const response = await fetch('{{ route('admin.integration-pin.verify') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                },
+                body: JSON.stringify({ purpose: 'pin_management', pin }),
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.message || 'Incorrect PIN.');
+            }
+        };
+
+        closeDisablePinButton?.addEventListener('click', () => setDisablePinModalOpen(false));
+        cancelDisablePinButton?.addEventListener('click', () => setDisablePinModalOpen(false));
+        disablePinModal?.addEventListener('click', (event) => {
+            if (event.target === disablePinModal) {
+                setDisablePinModalOpen(false);
+            }
+        });
+
+        submitDisablePinButton?.addEventListener('click', async () => {
+            const pin = (disablePinValue?.value || '').trim();
+            if (!/^\d{4}$/.test(pin)) {
+                if (disablePinError) {
+                    disablePinError.textContent = 'Enter a valid 4-digit PIN.';
+                    disablePinError.hidden = false;
+                }
+                return;
+            }
+
+            submitDisablePinButton.disabled = true;
+            try {
+                await verifyPinForDisable(pin);
+                if (pinCurrentInput) {
+                    pinCurrentInput.value = pin;
+                }
+                bypassDisablePinPrompt = true;
+                pinMasterToggle.checked = false;
+                syncPinControls();
+                setDisablePinModalOpen(false);
+                pinForm?.requestSubmit();
+            } catch (error) {
+                if (disablePinError) {
+                    disablePinError.textContent = error.message || 'Incorrect PIN.';
+                    disablePinError.hidden = false;
+                }
+            } finally {
+                submitDisablePinButton.disabled = false;
+            }
+        });
+
+        const setFieldsRequired = (wrapper, required) => {
+            wrapper?.querySelectorAll('input, select, textarea').forEach((field) => {
+                field.required = required;
+            });
+        };
+
+        setFieldsRequired(emergencyEmailFields, !emergencyEmailFields?.hidden);
+        setFieldsRequired(emergencyAddFields, false);
+        setFieldsRequired(emergencyResetFields, !emergencyResetFields?.hidden);
+
+        emergencyEmailToggle?.addEventListener('click', () => {
+            if (!emergencyEmailFields) {
+                return;
+            }
+            if (emergencyActionInput) {
+                emergencyActionInput.value = 'update';
+            }
+            if (emergencyAddFields) {
+                emergencyAddFields.hidden = true;
+                setFieldsRequired(emergencyAddFields, false);
+            }
+            emergencyEmailFields.hidden = !emergencyEmailFields.hidden;
+            setFieldsRequired(emergencyEmailFields, !emergencyEmailFields.hidden);
+            emergencyEmailToggle.textContent = emergencyEmailFields.hidden ? (emergencyEmailToggle.dataset.closedLabel || 'Update') : 'Done';
+        });
+
+        emergencyAddToggle?.addEventListener('click', () => {
+            if (!emergencyAddFields) {
+                return;
+            }
+            if (emergencyActionInput) {
+                emergencyActionInput.value = 'add';
+            }
+            if (emergencyEmailFields) {
+                emergencyEmailFields.hidden = true;
+                setFieldsRequired(emergencyEmailFields, false);
+                emergencyEmailToggle.textContent = emergencyEmailToggle.dataset.closedLabel || 'Update';
+            }
+            emergencyAddFields.hidden = !emergencyAddFields.hidden;
+            setFieldsRequired(emergencyAddFields, !emergencyAddFields.hidden);
+            emergencyAddToggle.textContent = emergencyAddFields.hidden ? (emergencyAddToggle.dataset.closedLabel || 'Add Email') : 'Done';
+        });
+
+        emergencyResetToggle?.addEventListener('click', () => {
+            if (!emergencyResetFields) {
+                return;
+            }
+            if (emergencyActionInput) {
+                emergencyActionInput.value = 'reset';
+            }
+            emergencyResetFields.hidden = !emergencyResetFields.hidden;
+            setFieldsRequired(emergencyResetFields, !emergencyResetFields.hidden);
+            emergencyResetToggle.textContent = emergencyResetFields.hidden ? 'Reset' : 'Hide';
+        });
+
+        const verifyEmergencyPin = async () => {
+            if (emergencyForm?.dataset.pinRequired !== '1') {
+                return '';
+            }
+
+            const pin = window.prompt('Enter your 4-digit PIN from PIN Management.');
+            if (!pin) {
+                return null;
+            }
+
+            try {
+                const response = await fetch('{{ route('admin.integration-pin.verify') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    },
+                    body: JSON.stringify({ purpose: 'emergency_credentials', pin }),
+                });
+                const payload = await response.json();
+                if (!response.ok || !payload.success) {
+                    alert(payload.message || 'PIN verification failed.');
+                    return null;
+                }
+                return pin;
+            } catch (error) {
+                alert('PIN verification failed. Please try again.');
+                return null;
+            }
+        };
+
+        emergencyPasswordView?.addEventListener('click', async () => {
+            const pin = await verifyEmergencyPin();
+            if (pin === null) {
+                return;
+            }
+            if (emergencyPasswordStatus) {
+                emergencyPasswordStatus.textContent = 'Password secured';
+            }
+        });
+
+        emergencyForm?.addEventListener('submit', async (event) => {
+            if (emergencyForm.dataset.pinRequired !== '1' || emergencyCredentialPinInput?.value) {
+                return;
+            }
+
+            event.preventDefault();
+            const pin = await verifyEmergencyPin();
+            if (pin === null) {
+                return;
+            }
+            if (emergencyCredentialPinInput) {
+                emergencyCredentialPinInput.value = pin;
+            }
+            emergencyForm.requestSubmit();
+        });
+
+        maintenanceToggle?.addEventListener('change', () => {
+            if (maintenanceSaveButton) {
+                maintenanceSaveButton.hidden = !maintenanceToggle.checked;
+            }
+            if (!maintenanceToggle.checked) {
+                maintenanceForm?.requestSubmit();
+            }
+        });
 
         const setResetPinModalOpen = (isOpen) => {
             if (!resetPinModal) {

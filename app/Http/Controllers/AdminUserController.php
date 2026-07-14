@@ -156,6 +156,7 @@ class AdminUserController extends Controller
 
         if ($managementView === 'admin-hub') {
             $linkedAdmin = $this->findLinkedAdminProfile($user) ?? new Admin();
+            $requestedStatus = strtolower(trim((string) $request->status));
 
             if (Admin::hasColumn('user_id')) {
                 $linkedAdmin->user_id = $user->id;
@@ -192,10 +193,16 @@ class AdminUserController extends Controller
             }
             $linkedAdmin->save();
 
+            if ($requestedStatus === 'inactive') {
+                $this->deactivateUserAccess($user, $linkedAdmin);
+            }
+
             $this->logUserManagementAction(
-                'Added local account to Admin Hub',
+                $requestedStatus === 'inactive' ? 'Deactivated admin hub account' : 'Added local account to Admin Hub',
                 sprintf(
-                    'Added %s (%s) to the centralized Admin Hub as %s without changing clinic access.',
+                    $requestedStatus === 'inactive'
+                        ? 'Marked %s (%s) inactive, revoked access, and preserved Admin Hub history.'
+                        : 'Added %s (%s) to the centralized Admin Hub as %s without changing clinic access.',
                     $user->name ?? $user->email,
                     $user->email,
                     $request->user_role
@@ -205,7 +212,9 @@ class AdminUserController extends Controller
             return $this->redirectToManagementView(
                 $request,
                 'success',
-                'The profile was added to the Admin Hub. Clinic account permissions were not changed.'
+                $requestedStatus === 'inactive'
+                    ? 'Account deactivated. The profile history remains available for audit records.'
+                    : 'The profile was added to the Admin Hub. Clinic account permissions were not changed.'
             );
         }
 
@@ -290,6 +299,10 @@ class AdminUserController extends Controller
                 $linkedAdmin->office = $request->input('office');
             }
             $linkedAdmin->save();
+        }
+
+        if (strtolower(trim((string) $request->status)) === 'inactive') {
+            $this->deactivateUserAccess($user, $linkedAdmin);
         }
 
         $this->logUserManagementAction(
@@ -546,16 +559,30 @@ class AdminUserController extends Controller
         }
         $admin->save();
 
+        $requestedStatus = strtolower(trim((string) $request->status));
+        $linkedUser = $this->resolveLinkedUserForAdminRecord($admin);
+        if ($linkedUser && $requestedStatus === 'inactive') {
+            $this->deactivateUserAccess($linkedUser, $admin);
+        }
+
         $this->logUserManagementAction(
-            'Updated admin hub profile',
+            $requestedStatus === 'inactive' ? 'Deactivated admin hub profile' : 'Updated admin hub profile',
             sprintf(
-                'Updated admin hub record #%s (%s).',
+                $requestedStatus === 'inactive'
+                    ? 'Marked admin hub record #%s (%s) inactive and revoked linked account access when available.'
+                    : 'Updated admin hub record #%s (%s).',
                 $admin->admin_id,
                 $admin->name ?? ($admin->email ?? 'Unknown Admin')
             )
         );
 
-        return $this->redirectToManagementView($request, 'success', 'Admin Hub profile updated successfully.');
+        return $this->redirectToManagementView(
+            $request,
+            'success',
+            $requestedStatus === 'inactive'
+                ? 'Admin Hub profile deactivated. Linked account access was revoked when available.'
+                : 'Admin Hub profile updated successfully.'
+        );
     }
 
     public function destroyAdminHub(Request $request, Admin $admin)
@@ -862,6 +889,7 @@ class AdminUserController extends Controller
                         'DOB' => (string) ($user->DOB ?? ''),
                         'gender' => (string) ($user->gender ?? ''),
                         'contact_no' => (string) ($user->contact_no ?? ''),
+                        'address' => (string) ($user->healthProfile?->home_address ?? ''),
                         'is_health_profile_completed' => (bool) ($user->is_health_profile_completed ?? false),
                         'access_level' => $resolvedAccessLevel,
                         'idp_role' => (string) ($user->idp_role ?? ''),
@@ -869,6 +897,7 @@ class AdminUserController extends Controller
                         'admin_login_email' => (string) ($linkedAdmin?->email_address ?? $linkedAdmin?->email ?? ''),
                         'admin_profile_id' => $linkedAdmin?->admin_id,
                         'admin_profile_name' => (string) ($linkedAdmin?->name ?? ''),
+                        'external_identifier' => (string) ($linkedAdmin?->external_identifier ?? ''),
                         'office' => (string) ($linkedAdmin?->office ?? ''),
                         'updated_at' => optional($user->updated_at)->toIso8601String(),
                     ],
@@ -950,6 +979,10 @@ class AdminUserController extends Controller
                         'admin_profile_id' => $adminId,
                         'admin_profile_name' => $displayName,
                         'external_identifier' => $identifier,
+                        'DOB' => (string) ($admin->birthday ?? ''),
+                        'gender' => (string) ($admin->gender ?? ''),
+                        'contact_no' => (string) ($admin->emergency_contact_no ?? ''),
+                        'address' => (string) ($admin->address ?? ''),
                         'office' => (string) ($admin->office ?? ''),
                         'lookup_source' => 'admin_profile',
                         'updated_at' => optional($admin->updated_at)->toIso8601String(),
@@ -1149,6 +1182,10 @@ class AdminUserController extends Controller
                         'admin_profile_name' => $displayName,
                         'external_identifier' => $resolvedIdentifier,
                         'faculty_identifier' => $facultyIdentifier,
+                        'DOB' => (string) ($linkedUser?->DOB ?? $admin->birthday ?? ''),
+                        'gender' => (string) ($linkedUser?->gender ?? $admin->gender ?? ''),
+                        'contact_no' => (string) ($linkedUser?->contact_no ?? $admin->emergency_contact_no ?? ''),
+                        'address' => (string) ($linkedUser?->healthProfile?->home_address ?? $admin->address ?? ''),
                         'office' => (string) ($admin->office ?? ''),
                         'lookup_source' => 'admin-hub',
                         'updated_at' => optional($admin->updated_at)->toIso8601String(),
@@ -1565,6 +1602,49 @@ class AdminUserController extends Controller
             $user->status = 'active';
         }
         $user->save();
+    }
+
+    private function deactivateUserAccess(User $user, ?Admin $linkedAdmin = null): void
+    {
+        $this->applyBaseRoleToUser($user);
+
+        if (Schema::hasColumn('users', 'status')) {
+            $user->status = 'inactive';
+        }
+
+        if (Schema::hasColumn('users', 'remember_token')) {
+            $user->remember_token = null;
+        }
+
+        $user->save();
+
+        if (method_exists($user, 'tokens')) {
+            $user->tokens()->delete();
+        }
+
+        $adminProfiles = $this->linkedAdminProfilesForUser($user);
+        if ($linkedAdmin) {
+            $adminProfiles = $adminProfiles
+                ->prepend($linkedAdmin)
+                ->unique(fn (Admin $admin) => (string) ($admin->admin_id ?? spl_object_id($admin)))
+                ->values();
+        }
+
+        foreach ($adminProfiles as $adminProfile) {
+            if (Admin::hasColumn('status')) {
+                $adminProfile->status = 'inactive';
+            }
+            if (Admin::hasColumn('access_level')) {
+                $adminProfile->access_level = null;
+            }
+            if (Admin::hasColumn('admin_hub_enabled')) {
+                $adminProfile->admin_hub_enabled = false;
+            }
+            if (Admin::hasColumn('admin_hub_role')) {
+                $adminProfile->admin_hub_role = null;
+            }
+            $adminProfile->save();
+        }
     }
 
     private function logUserManagementAction(string $action, string $description): void

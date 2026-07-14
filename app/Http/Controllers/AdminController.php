@@ -12,6 +12,7 @@ use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\MedicineType;
 use App\Models\Setting;
+use App\Models\SystemSetting;
 use App\Models\Admin;
 use App\Services\FacultySyncService;
 use App\Services\GuisisApiService;
@@ -205,15 +206,139 @@ class AdminController extends Controller
         $pinEnabled = (bool) ($user->api_pin_enabled ?? false);
         $pagePinEnabled = $pinEnabled && (bool) ($user->api_pin_page_enabled ?? true);
         $tokenActionPinEnabled = $pinEnabled && (bool) ($user->api_pin_token_action_enabled ?? true);
+        $emergencyCredentialsPinEnabled = $pinEnabled && (bool) ($user->api_pin_emergency_credentials_enabled ?? false);
 
         return [
             'disabled' => (bool) ($user->api_pin_disabled ?? false),
             'pin_enabled' => $pinEnabled,
             'page_pin_enabled' => $pagePinEnabled,
             'token_action_pin_enabled' => $tokenActionPinEnabled,
+            'emergency_credentials_pin_enabled' => $emergencyCredentialsPinEnabled,
             'has_pin' => trim((string) ($user->api_pin ?? '')) !== '',
             'unlocked' => ! $pinEnabled,
         ];
+    }
+
+    private function emergencyAccessSettings(): array
+    {
+        $configEnabled = true;
+        $configEmail = (string) config('services.emergency.email', '');
+        $configHash = trim((string) config('services.emergency.password_hash', ''));
+        $configPassword = (string) config('services.emergency.password', '');
+        $configRole = (string) config('services.emergency.role', User::ROLE_ADMIN);
+
+        return [
+            'enabled' => $configEnabled,
+            'email' => $configEmail,
+            'password_hash' => $configHash,
+            'password' => $configPassword,
+            'role' => $configRole,
+            'configured' => $configHash !== '' || $configPassword !== '',
+            'source' => 'environment',
+        ];
+    }
+
+    private function emergencyAdditionalAccounts(): array
+    {
+        $encoded = trim((string) env('EMERGENCY_ADMIN_ADDITIONAL_ACCOUNTS', ''));
+        if ($encoded === '') {
+            return [];
+        }
+
+        $decoded = base64_decode($encoded, true);
+        if ($decoded === false) {
+            return [];
+        }
+
+        $accounts = json_decode($decoded, true);
+        return is_array($accounts) ? array_values(array_filter($accounts, fn ($account) => is_array($account))) : [];
+    }
+
+    private function writeEnvironmentValues(array $values): void
+    {
+        $path = base_path('.env');
+        abort_unless(is_file($path) && is_writable($path), 503, '.env is not writable.');
+
+        $content = (string) file_get_contents($path);
+        foreach ($values as $key => $value) {
+            $line = $key . '=' . $this->formatEnvironmentValue((string) $value);
+            if (preg_match('/^' . preg_quote($key, '/') . '=.*$/m', $content)) {
+                $content = preg_replace('/^' . preg_quote($key, '/') . '=.*$/m', $line, $content);
+            } else {
+                $content = rtrim($content) . PHP_EOL . $line . PHP_EOL;
+            }
+        }
+
+        file_put_contents($path, $content);
+    }
+
+    private function formatEnvironmentValue(string $value): string
+    {
+        if ($value === '') {
+            return '';
+        }
+
+        if (preg_match('/^[A-Za-z0-9_@.\/:+-]+$/', $value)) {
+            return $value;
+        }
+
+        return '"' . str_replace(['\\', '"'], ['\\\\', '\\"'], $value) . '"';
+    }
+
+    private function emergencyPasswordMatches(string $password): bool
+    {
+        $settings = $this->emergencyAccessSettings();
+        $configuredHash = trim((string) ($settings['password_hash'] ?? ''));
+        $configuredPassword = (string) ($settings['password'] ?? '');
+
+        return $configuredHash !== ''
+            ? Hash::check($password, $configuredHash)
+            : ($configuredPassword !== '' && hash_equals($configuredPassword, $password));
+    }
+
+    private function ensureSecurityPinForPurpose(Request $request, User $user, string $purpose): void
+    {
+        $state = $this->integrationTokensAccessState($user);
+
+        if ($purpose === 'emergency_credentials' && ! $state['emergency_credentials_pin_enabled']) {
+            return;
+        }
+
+        $validated = $request->validate([
+            'pin' => 'required|digits:4',
+        ]);
+
+        if (! Hash::check($validated['pin'], (string) ($user->api_pin ?? ''))) {
+            abort(422, 'Incorrect security PIN.');
+        }
+    }
+
+    private function logDeveloperSecurityAction(User $user, string $action, string $description, int $statusCode = 200): void
+    {
+        try {
+            ActivityLog::create([
+                'user_id' => $user->id,
+                'user_name' => $user->name ?? $user->email ?? 'Unknown User',
+                'user_role' => strtolower((string) ($user->user_role ?? '')),
+                'action' => $action,
+                'module' => 'developer_tools',
+                'event_type' => $statusCode >= 400 ? 'error' : 'administrative_action',
+                'description' => $description,
+                'route_name' => optional(request()->route())->getName(),
+                'http_method' => strtoupper((string) request()->method()),
+                'request_path' => '/' . ltrim((string) request()->path(), '/'),
+                'status_code' => $statusCode,
+                'subject_type' => 'system_setting',
+                'subject_id' => 'emergency_access',
+                'metadata' => [
+                    'security_setting' => 'emergency_access',
+                ],
+                'ip_address' => request()->ip(),
+                'user_agent' => substr((string) request()->userAgent(), 0, 255),
+            ]);
+        } catch (\Throwable) {
+            // Recovery controls should remain usable even if audit storage is temporarily unavailable.
+        }
     }
 
     private function ensureIntegrationTokensAvailable(User $user): void
@@ -597,7 +722,7 @@ class AdminController extends Controller
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:140'],
-            'priority' => ['required', Rule::in(['urgent', 'info', 'warning'])],
+            'priority' => ['required', Rule::in(['urgent', 'info', 'warning', 'health', 'event'])],
             'message' => ['required', 'string', 'max:2000'],
             'expires_at' => ['nullable', 'date'],
         ]);
@@ -4048,33 +4173,47 @@ public function inventorySummary()
             'api_pin_enabled' => 'nullable|boolean',
             'api_pin_page_enabled' => 'nullable|boolean',
             'api_pin_token_action_enabled' => 'nullable|boolean',
+            'api_pin_emergency_credentials_enabled' => 'nullable|boolean',
             'api_pin' => 'nullable|digits:4',
             'api_pin_confirmation' => 'nullable|same:api_pin',
+            'current_security_pin' => 'nullable|digits:4',
         ]);
 
         $disabled = (bool) ($validated['api_pin_disabled'] ?? false);
         $pinEnabled = ! $disabled && (bool) ($validated['api_pin_enabled'] ?? false);
         $pagePinEnabled = $pinEnabled && (bool) ($validated['api_pin_page_enabled'] ?? false);
         $tokenActionPinEnabled = $pinEnabled && (bool) ($validated['api_pin_token_action_enabled'] ?? false);
+        $emergencyCredentialsPinEnabled = $pinEnabled && (bool) ($validated['api_pin_emergency_credentials_enabled'] ?? false);
         $pin = trim((string) ($validated['api_pin'] ?? ''));
         $hasExistingPin = trim((string) ($user->api_pin ?? '')) !== '';
+        $wasPinEnabled = (bool) ($user->api_pin_enabled ?? false);
 
         if ($pinEnabled && ! $hasExistingPin && $pin === '') {
             return back()->withErrors([
-                'api_pin' => 'Enter and confirm a 4-digit PIN before turning on a protected Integration option.',
+                'api_pin' => 'Enter and confirm a 4-digit PIN before turning on a protected security option.',
             ])->withInput();
         }
 
-        if ($pinEnabled && ! $pagePinEnabled && ! $tokenActionPinEnabled) {
+        if ($pinEnabled && ! $pagePinEnabled && ! $tokenActionPinEnabled && ! $emergencyCredentialsPinEnabled) {
             return back()->withErrors([
-                'api_pin' => 'Choose at least one Integration PIN requirement.',
+                'api_pin' => 'Choose at least one PIN-protected action.',
             ])->withInput();
+        }
+
+        if (! $pinEnabled && $wasPinEnabled && $hasExistingPin) {
+            $currentPin = trim((string) ($validated['current_security_pin'] ?? ''));
+            if ($currentPin === '' || ! Hash::check($currentPin, (string) $user->api_pin)) {
+                return back()->withErrors([
+                    'api_pin' => 'Enter the current PIN before turning off PIN Required.',
+                ])->withInput();
+            }
         }
 
         $user->api_pin_disabled = $disabled;
         $user->api_pin_enabled = $pinEnabled;
         $user->api_pin_page_enabled = $pagePinEnabled;
         $user->api_pin_token_action_enabled = $tokenActionPinEnabled;
+        $user->api_pin_emergency_credentials_enabled = $emergencyCredentialsPinEnabled;
 
         if ($pin !== '') {
             $user->api_pin = Hash::make($pin);
@@ -4087,7 +4226,7 @@ public function inventorySummary()
 
         $user->save();
 
-        return back()->with('success', 'Integration PIN settings updated.');
+        return back()->with('success', 'PIN Management settings updated.');
     }
 
     public function resetIntegrationPin(Request $request)
@@ -4100,14 +4239,7 @@ public function inventorySummary()
             'api_pin' => 'required|digits:4|confirmed',
         ]);
 
-        $emergencyPassword = (string) $validated['emergency_password'];
-        $configuredPassword = (string) config('services.emergency.password', '');
-        $configuredHash = trim((string) config('services.emergency.password_hash', ''));
-        $passwordMatches = $configuredHash !== ''
-            ? Hash::check($emergencyPassword, $configuredHash)
-            : ($configuredPassword !== '' && hash_equals($configuredPassword, $emergencyPassword));
-
-        if (! $passwordMatches) {
+        if (! $this->emergencyPasswordMatches((string) $validated['emergency_password'])) {
             return back()->withErrors([
                 'emergency_password' => 'Emergency login password is incorrect.',
             ])->withInput();
@@ -4121,13 +4253,141 @@ public function inventorySummary()
 
         $user->api_pin = Hash::make($validated['api_pin']);
         $state = $this->integrationTokensAccessState($user);
-        $user->api_pin_enabled = $state['page_pin_enabled'] || $state['token_action_pin_enabled'];
+        $user->api_pin_enabled = $state['page_pin_enabled'] || $state['token_action_pin_enabled'] || $state['emergency_credentials_pin_enabled'];
         $user->api_pin_disabled = false;
         $user->save();
 
         session()->forget($this->integrationTokensPinSessionKey($user));
 
         return back()->with('success', 'Integration PIN has been reset.');
+    }
+
+    public function updateEmergencyCredentials(Request $request)
+    {
+        $user = $this->currentAdminUser();
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user) && $this->isSuperadminAccount($user), 403);
+
+        $this->ensureSecurityPinForPurpose($request, $user, 'emergency_credentials');
+
+        $settings = $this->emergencyAccessSettings();
+        $isConfigured = (bool) ($settings['configured'] ?? false);
+        $action = (string) $request->input('emergency_action', 'update');
+
+        $rules = [
+            'emergency_action' => ['nullable', Rule::in(['update', 'add', 'reset'])],
+            'emergency_role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_SUPERADMIN, 'super_admin'])],
+            'current_emergency_password' => ['nullable', 'string', 'max:255'],
+        ];
+
+        if ($action === 'add') {
+            $rules['additional_emergency_email'] = ['required', 'email', 'max:255'];
+            $rules['additional_emergency_password'] = ['required', 'confirmed', 'min:8', 'max:255', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'];
+        } else {
+            $rules['emergency_email'] = ['required', 'email', 'max:255'];
+            $rules['new_emergency_password'] = [$action === 'reset' || ! $isConfigured ? 'required' : 'nullable', 'confirmed', 'min:8', 'max:255', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'];
+        }
+
+        $validated = $request->validate($rules, [
+            'new_emergency_password.regex' => 'Emergency password must contain at least one letter and one number.',
+            'additional_emergency_password.regex' => 'Emergency password must contain at least one letter and one number.',
+        ]);
+
+        $role = User::normalizeRole((string) $validated['emergency_role']);
+        if (!in_array($role, [User::ROLE_ADMIN, User::ROLE_SUPERADMIN], true)) {
+            $role = User::ROLE_ADMIN;
+        }
+
+        if ($action === 'add') {
+            $additionalEmail = strtolower(trim((string) $validated['additional_emergency_email']));
+            $accounts = $this->emergencyAdditionalAccounts();
+            $accounts = array_values(array_filter($accounts, fn ($account) => strtolower(trim((string) ($account['email'] ?? ''))) !== $additionalEmail));
+            $accounts[] = [
+                'email' => $additionalEmail,
+                'password_hash' => Hash::make((string) $validated['additional_emergency_password']),
+                'role' => $role,
+            ];
+
+            $this->writeEnvironmentValues([
+                'EMERGENCY_ACCESS_ENABLED' => 'true',
+                'EMERGENCY_ADMIN_ADDITIONAL_ACCOUNTS' => base64_encode(json_encode($accounts)),
+            ]);
+
+            $this->logDeveloperSecurityAction($user, 'Emergency Credentials Updated', 'A secondary emergency login account was added.', 200);
+
+            return back()->with('success', 'Emergency email account added.');
+        }
+
+        $currentEmergencyPassword = trim((string) ($validated['current_emergency_password'] ?? ''));
+        if ($currentEmergencyPassword !== '' && $isConfigured && ! $this->emergencyPasswordMatches($currentEmergencyPassword)) {
+            $this->logDeveloperSecurityAction($user, 'Emergency Credentials Update Failed', 'Emergency credentials update failed because the current emergency password was incorrect.', 422);
+
+            return back()->withErrors([
+                'current_emergency_password' => 'Current emergency password is incorrect.',
+            ])->withInput();
+        }
+
+        $newPassword = trim((string) ($validated['new_emergency_password'] ?? ''));
+        if ($newPassword !== '' && $isConfigured && $this->emergencyPasswordMatches($newPassword)) {
+            return back()->withErrors([
+                'new_emergency_password' => 'New emergency password cannot match the current emergency password.',
+            ])->withInput();
+        }
+
+        $environmentValues = [
+            'EMERGENCY_ACCESS_ENABLED' => 'true',
+            'EMERGENCY_ADMIN_EMAIL' => strtolower(trim((string) $validated['emergency_email'])),
+            'EMERGENCY_ADMIN_ROLE' => $role,
+        ];
+
+        if ($newPassword !== '') {
+            $environmentValues['EMERGENCY_ADMIN_PASSWORD'] = '';
+            $environmentValues['EMERGENCY_ADMIN_PASSWORD_HASH'] = Hash::make($newPassword);
+        }
+
+        $this->writeEnvironmentValues($environmentValues);
+
+        $this->logDeveloperSecurityAction(
+            $user,
+            'Emergency Credentials Updated',
+            sprintf('Emergency login credentials were updated. Access is enabled and role is %s.', $role),
+            200
+        );
+
+        return back()->with('success', 'Emergency access credentials updated.');
+    }
+
+    public function updateMaintenancePolicy(Request $request)
+    {
+        $user = $this->currentAdminUser();
+        abort_unless($user instanceof User && $this->canAccessApiTesting($user) && $this->isSuperadminAccount($user), 403);
+        abort_unless(Schema::hasTable('system_settings'), 503, 'System settings table is not available. Run migrations first.');
+
+        $validated = $request->validate([
+            'maintenance_mode_enabled' => ['nullable', 'boolean'],
+            'maintenance_estimated_date' => ['nullable', 'date'],
+            'maintenance_estimated_time' => ['nullable', 'date_format:H:i'],
+        ]);
+
+        $enabled = (bool) ($validated['maintenance_mode_enabled'] ?? false);
+        $estimatedCompletion = null;
+        if (! empty($validated['maintenance_estimated_date'])) {
+            $estimatedCompletion = trim((string) $validated['maintenance_estimated_date'])
+                . ' '
+                . trim((string) ($validated['maintenance_estimated_time'] ?? '00:00'));
+        }
+
+        SystemSetting::putValue('maintenance_mode_enabled', $enabled ? '1' : '0');
+        SystemSetting::putValue('maintenance_estimated_completion', $estimatedCompletion);
+        SystemSetting::putValue('maintenance_last_updated', now()->toIso8601String());
+
+        $this->logDeveloperSecurityAction(
+            $user,
+            'Maintenance Policy Updated',
+            sprintf('Student maintenance mode was %s.', $enabled ? 'enabled' : 'disabled'),
+            200
+        );
+
+        return back()->with('success', 'Student maintenance policy updated.');
     }
 
     public function integrationPinStatus()
@@ -4156,9 +4416,12 @@ public function inventorySummary()
         }
 
         $purpose = (string) $request->input('purpose', 'token_action');
-        $requiresPin = $purpose === 'open_integration_tokens'
-            ? (bool) $state['page_pin_enabled']
-            : (bool) $state['token_action_pin_enabled'];
+        $requiresPin = match ($purpose) {
+            'open_integration_tokens' => (bool) $state['page_pin_enabled'],
+            'emergency_credentials' => (bool) $state['emergency_credentials_pin_enabled'],
+            'pin_management' => (bool) ($state['pin_enabled'] ?? false) && trim((string) ($user->api_pin ?? '')) !== '',
+            default => (bool) $state['token_action_pin_enabled'],
+        };
 
         if (! $requiresPin) {
             return response()->json([
