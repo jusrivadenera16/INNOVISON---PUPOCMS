@@ -4105,7 +4105,7 @@
                             <span class="assistant-robot-halo"></span>
                             <span class="assistant-plus-mark one">+</span>
                             <span class="assistant-plus-mark two">+</span>
-                            <img class="assistant-reference-icon" src="{{ url('/images/clinic-robot-nobg.png') }}" alt="">
+                            <img class="assistant-reference-icon" src="{{ asset('images/clinic-robot-nobg.png') }}" onerror="this.onerror=null;this.src='{{ asset('images/clinic-robot.png') }}';" alt="">
                             <div class="assistant-speech-bubble" data-assistant-bubble>
                                 <span class="assistant-speech-bubble-text" data-assistant-bubble-text>We'll get<br>back soon<span>♥</span></span>
                             </div>

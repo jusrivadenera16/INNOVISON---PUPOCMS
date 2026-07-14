@@ -26,7 +26,7 @@
             padding: 24px;
             background:
                 linear-gradient(135deg, rgba(51, 8, 13, 0.82), rgba(112, 19, 27, 0.66)),
-                url('{{ url('/images/PUPBG.jpg') }}') center center / cover no-repeat fixed;
+                url('{{ asset('images/PUPBG.jpg') }}') center center / cover no-repeat fixed;
             color: var(--ink);
             font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
@@ -521,7 +521,7 @@
             <span class="spark one">+</span>
             <span class="spark two">+</span>
             <span class="spark three">+</span>
-            <img class="maintenance-robot-image" src="{{ url('/images/clinic-robot.png') }}" alt="">
+            <img class="maintenance-robot-image" src="{{ asset('images/clinic-robot.png') }}" alt="">
             <div class="bot-tile">
                 <div class="bot-antenna"></div>
                 <div class="bot-ear left"></div>
