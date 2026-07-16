@@ -2594,20 +2594,18 @@ public function updateClearance(Request $request, $id)
         $recentPendingAppointments = Appointment::query()
             ->where('status', 'Pending')
             ->orderByDesc('created_at')
-            ->limit(4)
             ->get();
 
         $recentHealthFormSubmissions = $isStudentAssistant
             ? collect()
             : HealthProfile::query()
-                ->with('user')
+                ->with('user.adminProfile')
                 ->where(function ($query) {
                     $query->whereIn('clearance_status', ['Pending', 'For Verification'])
                         ->orWhereNull('clearance_status')
                         ->orWhere('clearance_status', '');
                 })
                 ->latest('created_at')
-                ->limit(3)
                 ->get();
 
         $notifications = collect();

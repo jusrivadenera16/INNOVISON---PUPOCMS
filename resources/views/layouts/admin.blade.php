@@ -4279,13 +4279,60 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     $adminNotificationReadMap = is_array(optional(auth()->user())->notification_read_map ?? null)
         ? (optional(auth()->user())->notification_read_map ?? [])
         : [];
+    $adminNotificationPublicIdentifier = function ($profile) {
+        $profileUser = optional($profile)->user;
+        $adminProfile = $profileUser?->adminProfile;
+        $role = strtolower(trim((string) ($profileUser->idp_role ?? $profileUser->user_type ?? $profileUser->user_role ?? '')));
+        $profileReference = strtoupper(trim((string) (optional($profile)->reference_number ?? '')));
+        $userReference = strtoupper(trim((string) ($profileUser->reference_number ?? '')));
+        $studentNumber = trim((string) (optional($profile)->student_number ?: ($profileUser->student_number ?? '')));
+        $externalIdentifier = trim((string) ($adminProfile->external_identifier ?? ''));
+        $isStudent = in_array($role, ['student', 'enrolled', ''], true);
+        $isApplicant = str_contains($role, 'applicant');
+        $isStaffOrDependent = in_array($role, ['admin', 'superadmin', 'super_admin', 'faculty', 'dependent', 'dependents'], true)
+            || str_contains($role, 'faculty')
+            || str_contains($role, 'dependent');
+
+        if ($isStaffOrDependent && $externalIdentifier !== '') {
+            return ['ID Number', $externalIdentifier];
+        }
+
+        if ($isStudent && $studentNumber !== '') {
+            return ['Student No', $studentNumber];
+        }
+
+        if ($isApplicant && $profileReference !== '') {
+            return ['Reference No', $profileReference];
+        }
+
+        if ($isApplicant && $userReference !== '') {
+            return ['Reference No', $userReference];
+        }
+
+        if ($profileReference !== '') {
+            return ['Reference No', $profileReference];
+        }
+
+        if ($userReference !== '') {
+            return ['Reference No', $userReference];
+        }
+
+        if ($studentNumber !== '') {
+            return ['Student No', $studentNumber];
+        }
+
+        if ($externalIdentifier !== '') {
+            return ['ID Number', $externalIdentifier];
+        }
+
+        return ['Reference No', $profileReference ?: $userReference ?: 'N/A'];
+    };
     $adminMarkAllReadUrl = $isStudentAssistant
         ? route('assistant.notifications.read_all')
         : route('admin.notifications.read_all');
     $recentPendingAppointments = \App\Models\Appointment::query()
         ->where('status', 'Pending')
         ->orderByDesc('created_at')
-        ->limit(4)
         ->get();
     $todayApprovedAppointments = \App\Models\Appointment::query()
         ->where('status', 'Approved')
@@ -4301,14 +4348,13 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     $recentHealthFormSubmissions = $isStudentAssistant
         ? collect()
         : \App\Models\HealthProfile::query()
-            ->with('user')
+            ->with('user.adminProfile')
             ->where(function ($query) {
                 $query->whereIn('clearance_status', ['Pending', 'For Verification'])
                     ->orWhereNull('clearance_status')
                     ->orWhere('clearance_status', '');
             })
             ->latest('created_at')
-            ->limit(3)
             ->get();
 
     $adminNotifications = collect();
@@ -4372,7 +4418,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     foreach ($recentHealthFormSubmissions as $healthProfile) {
         $profileUser = $healthProfile->user;
         $studentName = trim((string) ($profileUser->name ?? 'Unknown student'));
-        $studentNumber = trim((string) ($profileUser->student_number ?? $profileUser->student_id ?? 'N/A'));
+        [$identityLabel, $identityNumber] = $adminNotificationPublicIdentifier($healthProfile);
 
         $adminNotifications->push([
             'id' => 'health-form:' . $healthProfile->id . ':' . optional($healthProfile->created_at)->timestamp,
@@ -4381,7 +4427,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             'link' => $healthRecordsUrl . '?tab=pending_approval&highlight_health=' . $healthProfile->id,
             'hover_hint' => implode(' | ', array_filter([
                 'Name: ' . $studentName,
-                'Student No: ' . $studentNumber,
+                $identityLabel . ': ' . $identityNumber,
                 'Submitted: ' . optional($healthProfile->created_at)->format('M d, Y g:i A'),
             ])),
             'state_class' => 'is-notification-health',
@@ -4420,14 +4466,14 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         })
         ->values();
 
-    $adminNotifications = $allAdminNotifications
+    $adminUnreadNotifications = $allAdminNotifications
         ->filter(fn (array $notification) => $notification['is_unread'])
-        ->take(10)
         ->values();
-    $adminNotificationCount = $adminNotifications->count();
+    $adminNotifications = $adminUnreadNotifications->take(10)->values();
+    $adminNotificationCount = $adminUnreadNotifications->count();
     $adminNotificationPreview = $adminNotifications->take(4);
     $adminNotificationOverflow = $adminNotifications->slice(4)->values();
-    $adminNotificationHistory = $allAdminNotifications->take(20)->values();
+    $adminNotificationHistory = $allAdminNotifications->values();
     $adminLiveAlertItems = $adminNotifications
         ->filter(function (array $notification) {
             $id = (string) ($notification['id'] ?? '');
@@ -4677,7 +4723,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             <div class="medicine-alert-actions-menu" id="medicineAlertActionsMenu">
                     <form method="POST" action="{{ $adminMarkAllReadUrl }}">
                         @csrf
-                        @foreach($adminNotifications as $notification)
+                        @foreach($adminUnreadNotifications as $notification)
                             <input type="hidden" name="notification_ids[]" value="{{ $notification['id'] }}">
                         @endforeach
                         <button type="submit" class="medicine-alert-actions-submit" {{ $adminNotificationCount === 0 ? 'disabled' : '' }}>
@@ -4805,7 +4851,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
 <form method="POST" action="{{ $adminMarkAllReadUrl }}" id="adminNotificationOpenForm" style="display:none;">
     @csrf
-    @foreach($adminNotifications as $notification)
+    @foreach($adminUnreadNotifications as $notification)
         <input type="hidden" name="notification_ids[]" value="{{ $notification['id'] }}">
     @endforeach
     <input type="hidden" name="redirect_to" id="adminNotificationRedirectTo" value="">
