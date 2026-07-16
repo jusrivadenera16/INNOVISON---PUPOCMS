@@ -1966,7 +1966,7 @@ private function exportHealthFormsPreviewColumns(Request $request): array
         'Reference' => fn (HealthProfile $record) => $record->reference_number ?: $record->student_number ?: optional($record->user)->student_number ?: 'N/A',
         'Name' => fn (HealthProfile $record) => optional($record->user)->name ?: 'N/A',
         'Course' => fn (HealthProfile $record) => $record->course_college ?: optional($record->user)->course ?: 'N/A',
-        'User Type' => fn (HealthProfile $record) => optional($record->user)->user_type ?: optional($record->user)->user_role ?: 'N/A',
+        'User Type' => fn (HealthProfile $record) => $this->healthFormsExportUserType($record),
         'Gender' => fn (HealthProfile $record) => $record->sex ?: optional($record->user)->gender ?: 'N/A',
         'Status' => $statusLabel,
         'With Condition' => fn (HealthProfile $record) => $record->hasMedicalCondition() ? 'Yes' : 'No',
@@ -2072,8 +2072,7 @@ private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateF
 
     if ($userTypeFilter !== '') {
         $records = $records->filter(function (HealthProfile $record) use ($userTypeFilter) {
-            $user = $record->user;
-            $role = strtolower(trim((string) (optional($user)->user_type ?: optional($user)->user_role)));
+            $role = strtolower($this->healthFormsExportUserType($record));
             return $role === $userTypeFilter || str_contains($role, $userTypeFilter);
         })->values();
     }
@@ -2197,8 +2196,7 @@ public function exportHealthForms(Request $request)
 
     if ($userTypeFilter !== '') {
         $records = $records->filter(function (HealthProfile $record) use ($userTypeFilter) {
-            $user = $record->user;
-            $role = strtolower(trim((string) (optional($user)->user_type ?: optional($user)->user_role)));
+            $role = strtolower($this->healthFormsExportUserType($record));
             return $role === $userTypeFilter || str_contains($role, $userTypeFilter);
         })->values();
     }
@@ -2551,9 +2549,57 @@ private function healthFormsCourseSheetRow(HealthProfile $record): array
     ];
 }
 
+private function healthFormsExportUserType(HealthProfile $record): string
+{
+    $user = $record->user;
+    $role = strtolower(trim((string) (optional($user)->user_type ?: optional($user)->user_role ?: optional($user)->idp_role)));
+    $profileReference = strtoupper(trim((string) ($record->reference_number ?? '')));
+    $userReference = strtoupper(trim((string) (optional($user)->reference_number ?? '')));
+
+    if ($role === 'applicant' || str_contains($role, 'applicant')) {
+        return 'Applicant';
+    }
+
+    if ($this->healthFormsExportLooksLikeApplicantReference($profileReference)
+        || $this->healthFormsExportLooksLikeApplicantReference($userReference)) {
+        return 'Applicant';
+    }
+
+    if ($role === 'faculty' || str_contains($role, 'faculty')) {
+        return 'Faculty';
+    }
+
+    if (in_array($role, ['admin', 'superadmin', 'super_admin'], true) || str_contains($role, 'admin')) {
+        return 'Admin';
+    }
+
+    if ($role === 'dependent' || str_contains($role, 'dependent')) {
+        return 'Dependent';
+    }
+
+    if ($role === 'student' || str_contains($role, 'student')) {
+        return 'Student';
+    }
+
+    return $role !== '' ? Str::headline($role) : 'N/A';
+}
+
+private function healthFormsExportLooksLikeApplicantReference(string $reference): bool
+{
+    if ($reference === '') {
+        return false;
+    }
+
+    if (str_starts_with($reference, 'CLN-') || str_starts_with($reference, 'LOC-') || str_starts_with($reference, 'TEST-LOCAL')) {
+        return false;
+    }
+
+    return (bool) preg_match('/^\d{4}-\d{4}-\d+$/', $reference);
+}
+
 private function healthFormsCourseSheetIsApplicant(HealthProfile $record): bool
 {
-    $role = strtolower(trim((string) (optional($record->user)->user_type ?: optional($record->user)->user_role)));
+    $role = strtolower($this->healthFormsExportUserType($record));
 
     return $role === 'applicant' || str_contains($role, 'applicant');
 }
