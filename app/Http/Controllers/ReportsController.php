@@ -2345,10 +2345,10 @@ private function exportHealthFormsCourseSheets(Collection $records, Carbon $date
     ];
 
     $workbookXml = $this->healthFormsCourseSheetsWorkbookXml($sheets, $headers);
-    $filename = 'health-forms-course-sheets-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '-' . now()->format('His') . '.xls';
+    $filename = 'health-forms-course-sheets-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '-' . now()->format('His') . '.xml';
 
     return response($workbookXml, 200, [
-        'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+        'Content-Type' => 'application/xml; charset=UTF-8',
         'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         'Cache-Control' => 'no-store, no-cache, must-revalidate',
     ]);
