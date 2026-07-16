@@ -744,6 +744,25 @@
         gap: 10px;
     }
 
+    .export-filter-option-section {
+        grid-column: 1 / -1;
+        display: grid;
+        gap: 8px;
+    }
+
+    .export-filter-option-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .export-filter-checks.is-single {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     .export-filter-check {
         min-height: 44px;
         display: flex;
@@ -999,6 +1018,10 @@
         background: #8f0012;
         color: #ffffff;
         border-color: #8f0012;
+    }
+
+    html[data-theme="dark"] .export-filter-option-title {
+        color: #ffffff;
     }
 
     html[data-theme="dark"] .export-preview-table td {
@@ -1315,17 +1338,24 @@
                     <input type="hidden" name="condition_source" value="{{ request('condition_source', 'all') }}">
                     <input type="hidden" name="condition_match" value="{{ request('condition_match', 'any') }}">
                 </div>
-                <div class="export-filter-checks">
-                    <label class="export-filter-check">
-                        <input type="checkbox" name="course_sheets" value="1" {{ request()->boolean('course_sheets') ? 'checked' : '' }}>
-                        Export Applicants by Course Sheets
-                    </label>
-                    @foreach(['underweight' => 'Underweight', 'normal' => 'Normal', 'overweight' => 'Overweight', 'obese' => 'Obese', 'no_bmi' => 'No BMI Recorded'] as $value => $label)
+                <div class="export-filter-option-section">
+                    <div class="export-filter-checks is-single">
                         <label class="export-filter-check">
-                            <input type="checkbox" name="bmi_categories[]" value="{{ $value }}" {{ $selectedBmiCategories->contains($value) ? 'checked' : '' }}>
-                            {{ $label }}
+                            <input type="checkbox" name="course_sheets" value="1" {{ request()->boolean('course_sheets') ? 'checked' : '' }}>
+                            Export Applicants by Course Sheets
                         </label>
-                    @endforeach
+                    </div>
+                </div>
+                <div class="export-filter-option-section">
+                    <p class="export-filter-option-title">BMI Category</p>
+                    <div class="export-filter-checks">
+                        @foreach(['underweight' => 'Underweight', 'normal' => 'Normal', 'overweight' => 'Overweight', 'obese' => 'Obese', 'no_bmi' => 'No BMI Recorded'] as $value => $label)
+                            <label class="export-filter-check">
+                                <input type="checkbox" name="bmi_categories[]" value="{{ $value }}" {{ $selectedBmiCategories->contains($value) ? 'checked' : '' }}>
+                                {{ $label }}
+                            </label>
+                        @endforeach
+                    </div>
                 </div>
             @endif
             <div class="export-filter-actions">
