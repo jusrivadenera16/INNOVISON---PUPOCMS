@@ -2344,51 +2344,193 @@ private function exportHealthFormsCourseSheets(Collection $records, Carbon $date
         'Approval Date and Time',
     ];
 
-    $workbookXml = $this->healthFormsCourseSheetsWorkbookXml($sheets, $headers);
-    $filename = 'health-forms-course-sheets-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '-' . now()->format('His') . '.xml';
+    $workbook = $this->healthFormsCourseSheetsXlsx($sheets, $headers);
+    $filename = 'health-forms-course-sheets-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '-' . now()->format('His') . '.xlsx';
 
-    return response($workbookXml, 200, [
-        'Content-Type' => 'application/xml; charset=UTF-8',
+    return response($workbook, 200, [
+        'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         'Cache-Control' => 'no-store, no-cache, must-revalidate',
     ]);
 }
 
-private function healthFormsCourseSheetsWorkbookXml(Collection $sheets, array $headers): string
+private function healthFormsCourseSheetsXlsx(Collection $sheets, array $headers): string
 {
     $usedSheetNames = [];
-    $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-    $xml .= '<?mso-application progid="Excel.Sheet"?>' . "\n";
-    $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '
-        . 'xmlns:o="urn:schemas-microsoft-com:office:office" '
-        . 'xmlns:x="urn:schemas-microsoft-com:office:excel" '
-        . 'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" '
-        . 'xmlns:html="http://www.w3.org/TR/REC-html40">' . "\n";
-    $xml .= '<Styles><Style ss:ID="Header"><Font ss:Bold="1"/><Interior ss:Color="#F8E8EA" ss:Pattern="Solid"/></Style></Styles>' . "\n";
+    $files = [];
+    $sheetMeta = [];
+    $sheetIndex = 1;
 
     foreach ($sheets as $course => $records) {
         $sheetName = $this->healthFormsCourseSheetName((string) $course, $usedSheetNames);
-        $xml .= '<Worksheet ss:Name="' . $this->excelXml($sheetName) . '"><Table>' . "\n";
-        $xml .= '<Row>';
-        foreach ($headers as $header) {
-            $xml .= '<Cell ss:StyleID="Header"><Data ss:Type="String">' . $this->excelXml($header) . '</Data></Cell>';
-        }
-        $xml .= '</Row>' . "\n";
+        $sheetPath = 'xl/worksheets/sheet' . $sheetIndex . '.xml';
+        $rows = $records
+            ->map(fn (HealthProfile $record) => $this->healthFormsCourseSheetRow($record))
+            ->values()
+            ->all();
 
-        foreach ($records as $record) {
-            $xml .= '<Row>';
-            foreach ($this->healthFormsCourseSheetRow($record) as $value) {
-                $xml .= '<Cell><Data ss:Type="String">' . $this->excelXml($value) . '</Data></Cell>';
-            }
-            $xml .= '</Row>' . "\n";
-        }
+        $files[$sheetPath] = $this->xlsxWorksheetXml($headers, $rows);
+        $sheetMeta[] = [
+            'name' => $sheetName,
+            'sheet_id' => $sheetIndex,
+            'rel_id' => 'rId' . $sheetIndex,
+            'target' => 'worksheets/sheet' . $sheetIndex . '.xml',
+        ];
 
-        $xml .= '</Table></Worksheet>' . "\n";
+        $sheetIndex++;
     }
 
-    $xml .= '</Workbook>';
+    $files = array_merge([
+        '[Content_Types].xml' => $this->xlsxContentTypesXml(count($sheetMeta)),
+        '_rels/.rels' => $this->xlsxRootRelationshipsXml(),
+        'xl/workbook.xml' => $this->xlsxWorkbookXml($sheetMeta),
+        'xl/_rels/workbook.xml.rels' => $this->xlsxWorkbookRelationshipsXml($sheetMeta),
+        'xl/styles.xml' => $this->xlsxStylesXml(),
+    ], $files);
+
+    return $this->buildStoredZip($files);
+}
+
+private function xlsxWorksheetXml(array $headers, array $rows): string
+{
+    $xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n";
+    $xml .= '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">';
+    $xml .= '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>';
+    $xml .= '<sheetFormatPr defaultRowHeight="18"/><sheetData>';
+    $xml .= $this->xlsxRowXml(1, $headers, 1);
+
+    foreach ($rows as $index => $row) {
+        $xml .= $this->xlsxRowXml($index + 2, $row, 0);
+    }
+
+    $xml .= '</sheetData><autoFilter ref="A1:' . $this->xlsxColumnName(max(count($headers), 1)) . max(count($rows) + 1, 1) . '"/>';
+    $xml .= '</worksheet>';
 
     return $xml;
+}
+
+private function xlsxRowXml(int $rowNumber, array $values, int $styleIndex = 0): string
+{
+    $xml = '<row r="' . $rowNumber . '">';
+
+    foreach (array_values($values) as $columnIndex => $value) {
+        $cellRef = $this->xlsxColumnName($columnIndex + 1) . $rowNumber;
+        $style = $styleIndex > 0 ? ' s="' . $styleIndex . '"' : '';
+        $xml .= '<c r="' . $cellRef . '" t="inlineStr"' . $style . '><is><t xml:space="preserve">'
+            . $this->excelXml($value)
+            . '</t></is></c>';
+    }
+
+    return $xml . '</row>';
+}
+
+private function xlsxContentTypesXml(int $sheetCount): string
+{
+    $xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n";
+    $xml .= '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">';
+    $xml .= '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>';
+    $xml .= '<Default Extension="xml" ContentType="application/xml"/>';
+    $xml .= '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>';
+    $xml .= '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>';
+
+    for ($index = 1; $index <= $sheetCount; $index++) {
+        $xml .= '<Override PartName="/xl/worksheets/sheet' . $index . '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+    }
+
+    return $xml . '</Types>';
+}
+
+private function xlsxRootRelationshipsXml(): string
+{
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n"
+        . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+        . '</Relationships>';
+}
+
+private function xlsxWorkbookXml(array $sheetMeta): string
+{
+    $xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n";
+    $xml .= '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>';
+
+    foreach ($sheetMeta as $sheet) {
+        $xml .= '<sheet name="' . $this->excelXml($sheet['name']) . '" sheetId="' . (int) $sheet['sheet_id'] . '" r:id="' . $sheet['rel_id'] . '"/>';
+    }
+
+    return $xml . '</sheets></workbook>';
+}
+
+private function xlsxWorkbookRelationshipsXml(array $sheetMeta): string
+{
+    $xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n";
+    $xml .= '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">';
+
+    foreach ($sheetMeta as $sheet) {
+        $xml .= '<Relationship Id="' . $sheet['rel_id'] . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="' . $sheet['target'] . '"/>';
+    }
+
+    $xml .= '<Relationship Id="rId' . (count($sheetMeta) + 1) . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>';
+
+    return $xml . '</Relationships>';
+}
+
+private function xlsxStylesXml(): string
+{
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n"
+        . '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+        . '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'
+        . '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF8E8EA"/><bgColor indexed="64"/></patternFill></fill></fills>'
+        . '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+        . '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+        . '<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="1" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs>'
+        . '</styleSheet>';
+}
+
+private function buildStoredZip(array $files): string
+{
+    $localFiles = '';
+    $centralDirectory = '';
+    $offset = 0;
+    $timestamp = now();
+    $dosTime = ((int) $timestamp->format('H') << 11)
+        | ((int) $timestamp->format('i') << 5)
+        | ((int) floor(((int) $timestamp->format('s')) / 2));
+    $dosDate = (((int) $timestamp->format('Y') - 1980) << 9)
+        | ((int) $timestamp->format('m') << 5)
+        | (int) $timestamp->format('d');
+
+    foreach ($files as $path => $content) {
+        $path = str_replace('\\', '/', (string) $path);
+        $content = (string) $content;
+        $crc = crc32($content);
+        $size = strlen($content);
+        $pathLength = strlen($path);
+        $localHeader = pack('VvvvvvVVVvv', 0x04034b50, 20, 0, 0, $dosTime, $dosDate, $crc, $size, $size, $pathLength, 0) . $path;
+
+        $localFiles .= $localHeader . $content;
+        $centralDirectory .= pack('VvvvvvvVVVvvvvvVV', 0x02014b50, 0x0314, 20, 0, 0, $dosTime, $dosDate, $crc, $size, $size, $pathLength, 0, 0, 0, 0, 0, $offset) . $path;
+        $offset += strlen($localHeader) + $size;
+    }
+
+    $centralOffset = strlen($localFiles);
+    $centralSize = strlen($centralDirectory);
+    $fileCount = count($files);
+    $endRecord = pack('VvvvvVVv', 0x06054b50, 0, 0, $fileCount, $fileCount, $centralSize, $centralOffset, 0);
+
+    return $localFiles . $centralDirectory . $endRecord;
+}
+
+private function xlsxColumnName(int $index): string
+{
+    $name = '';
+
+    while ($index > 0) {
+        $index--;
+        $name = chr(65 + ($index % 26)) . $name;
+        $index = intdiv($index, 26);
+    }
+
+    return $name;
 }
 
 private function healthFormsCourseSheetRow(HealthProfile $record): array
