@@ -232,12 +232,36 @@ class ReportsController extends Controller
             })
             ->map(function ($value) {
                 $value = trim(preg_replace('/\s+/', ' ', (string) $value));
-                $value = preg_replace('/^(?:Medical Condition|Condition|Remarks?|Reason|Pending Reason|Nurse Remarks|Assessment Remarks)\s*:\s*/i', '', $value) ?? $value;
+                $value = preg_replace('/^(?:Medical Condition|Condition|Remarks?|Reason|Pending Reason|Nurse Remarks|Assessment Remarks|Medical Assessment Remarks|Final Review Remarks)\s*:\s*/i', '', $value) ?? $value;
 
-                return trim(Str::limit($value, 44, ''));
+                return trim(Str::limit(trim($value, " \t\n\r\0\x0B-:"), 44, ''));
             })
             ->filter(fn ($value) => $value !== '' && $value !== '[]' && mb_strlen($value) >= 3)
-            ->reject(fn ($value) => in_array(mb_strtolower($value), ['yes', 'none', 'n/a', 'na', 'normal', 'no findings'], true))
+            ->reject(function ($value) {
+                $normalized = mb_strtolower(trim((string) $value));
+                $plain = preg_replace('/[^a-z0-9]+/', '', $normalized) ?? $normalized;
+
+                if (in_array($normalized, ['yes', 'none', 'n/a', 'na', 'normal', 'no findings', 'no restriction'], true)) {
+                    return true;
+                }
+
+                if (preg_match('/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/', (string) $value)
+                    || preg_match('/^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}$/', (string) $value)) {
+                    return true;
+                }
+
+                if (preg_match('/\bdr\.?\b|\bdoctor\b/i', (string) $value)
+                    || preg_match('/\bOD\s*:\s*\d+.*\bOS\s*:\s*\d+/i', (string) $value)) {
+                    return true;
+                }
+
+                if (in_array($plain, ['normalpe', 'normalpefindings', 'normalpr', 'normalfindings', 'nofindings', 'norestriction'], true)) {
+                    return true;
+                }
+
+                return str_contains($normalized, 'normal')
+                    && preg_match('/\b(p\.?e\.?|pr|findings?)\b/i', (string) $value);
+            })
             ->unique(fn ($value) => mb_strtolower($value))
             ->take($limit)
             ->values();
@@ -1677,6 +1701,7 @@ private function exportReportsPreview(Request $request, string $reportType)
         'condition_keyword' => trim((string) $request->query('condition_keyword', '')),
         'condition_source' => trim((string) $request->query('condition_source', 'all')),
         'condition_match' => trim((string) $request->query('condition_match', 'any')),
+        'course_sheets' => $request->boolean('course_sheets') ? '1' : '',
     ])->filter(fn ($value) => $value !== '')->all();
     $healthFormsBmiCategories = collect((array) $request->query('bmi_categories', []))
         ->flatMap(fn ($value) => explode(',', (string) $value))
@@ -1736,7 +1761,7 @@ private function exportReportsPreview(Request $request, string $reportType)
             'view' => 'admin.reports.export-reports-health-forms',
             'title' => 'Health Forms Export',
             'kicker' => 'Medical Clearance',
-            'subtitle' => 'Preview issued health form records before exporting the CSV file.',
+            'subtitle' => 'Preview health form records before exporting the report.',
             'export_label' => 'Health Forms',
             'export_url' => $healthFormsExportUrl . '?' . http_build_query($baseExportQuery + $healthFormsExtraQuery),
         ],
@@ -2224,6 +2249,10 @@ public function exportHealthForms(Request $request)
         })->values();
     }
 
+    if ($request->boolean('course_sheets')) {
+        return $this->exportHealthFormsCourseSheets($records, $dateFrom, $dateTo);
+    }
+
     $filename = 'health-forms-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '-' . now()->format('His') . '.csv';
 
     return response()->streamDownload(function () use ($records) {
@@ -2269,6 +2298,170 @@ public function exportHealthForms(Request $request)
         'Content-Type' => 'text/csv; charset=UTF-8',
         'Cache-Control' => 'no-store, no-cache, must-revalidate',
     ]);
+}
+
+private function exportHealthFormsCourseSheets(Collection $records, Carbon $dateFrom, Carbon $dateTo)
+{
+    $applicantRecords = $records
+        ->filter(fn (HealthProfile $record) => $this->healthFormsCourseSheetIsApplicant($record))
+        ->values();
+
+    $sheets = $applicantRecords
+        ->groupBy(fn (HealthProfile $record) => $this->healthFormsCourseSheetCourse($record))
+        ->sortKeys()
+        ->map(function (Collection $courseRecords) {
+            return $courseRecords
+                ->sortBy(function (HealthProfile $record) {
+                    $statusRank = $this->healthFormsCourseSheetStatusRank($record);
+                    $date = $statusRank === 0
+                        ? ($record->verified_at ?: $record->created_at)
+                        : ($record->created_at ?: $record->updated_at);
+
+                    return sprintf(
+                        '%d-%s-%010d',
+                        $statusRank,
+                        $date ? Carbon::parse($date)->format('YmdHis') : '99999999999999',
+                        $record->id
+                    );
+                })
+                ->values();
+        });
+
+    if ($sheets->isEmpty()) {
+        $sheets = collect(['No Applicants' => collect()]);
+    }
+
+    $headers = [
+        'Reference Number',
+        'Full Name',
+        'Course',
+        'Gender',
+        'Status',
+        'Medical Condition',
+        'BMI',
+        'BMI Category',
+        'Condition Details',
+        'Approval Date and Time',
+    ];
+
+    $workbookXml = $this->healthFormsCourseSheetsWorkbookXml($sheets, $headers);
+    $filename = 'health-forms-course-sheets-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '-' . now()->format('His') . '.xls';
+
+    return response($workbookXml, 200, [
+        'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+        'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        'Cache-Control' => 'no-store, no-cache, must-revalidate',
+    ]);
+}
+
+private function healthFormsCourseSheetsWorkbookXml(Collection $sheets, array $headers): string
+{
+    $usedSheetNames = [];
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    $xml .= '<?mso-application progid="Excel.Sheet"?>' . "\n";
+    $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '
+        . 'xmlns:o="urn:schemas-microsoft-com:office:office" '
+        . 'xmlns:x="urn:schemas-microsoft-com:office:excel" '
+        . 'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" '
+        . 'xmlns:html="http://www.w3.org/TR/REC-html40">' . "\n";
+    $xml .= '<Styles><Style ss:ID="Header"><Font ss:Bold="1"/><Interior ss:Color="#F8E8EA" ss:Pattern="Solid"/></Style></Styles>' . "\n";
+
+    foreach ($sheets as $course => $records) {
+        $sheetName = $this->healthFormsCourseSheetName((string) $course, $usedSheetNames);
+        $xml .= '<Worksheet ss:Name="' . $this->excelXml($sheetName) . '"><Table>' . "\n";
+        $xml .= '<Row>';
+        foreach ($headers as $header) {
+            $xml .= '<Cell ss:StyleID="Header"><Data ss:Type="String">' . $this->excelXml($header) . '</Data></Cell>';
+        }
+        $xml .= '</Row>' . "\n";
+
+        foreach ($records as $record) {
+            $xml .= '<Row>';
+            foreach ($this->healthFormsCourseSheetRow($record) as $value) {
+                $xml .= '<Cell><Data ss:Type="String">' . $this->excelXml($value) . '</Data></Cell>';
+            }
+            $xml .= '</Row>' . "\n";
+        }
+
+        $xml .= '</Table></Worksheet>' . "\n";
+    }
+
+    $xml .= '</Workbook>';
+
+    return $xml;
+}
+
+private function healthFormsCourseSheetRow(HealthProfile $record): array
+{
+    $bmi = $this->healthProfileBmi($record);
+
+    return [
+        $record->reference_number ?: $record->student_number ?: optional($record->user)->student_number ?: 'N/A',
+        optional($record->user)->name ?: 'N/A',
+        $this->healthFormsCourseSheetCourse($record),
+        $record->sex ?: optional($record->user)->gender ?: 'N/A',
+        $this->healthFormsCourseSheetStatus($record),
+        $record->hasMedicalCondition() ? 'Yes' : 'No',
+        $bmi !== null ? number_format($bmi, 1) : 'N/A',
+        $this->healthProfileBmiCategoryLabel($bmi),
+        $this->healthProfileConditionText($record, 'all') ?: 'N/A',
+        $record->verified_at ? Carbon::parse($record->verified_at)->format('M d, Y g:i A') : 'N/A',
+    ];
+}
+
+private function healthFormsCourseSheetIsApplicant(HealthProfile $record): bool
+{
+    $role = strtolower(trim((string) (optional($record->user)->user_type ?: optional($record->user)->user_role)));
+
+    return $role === 'applicant' || str_contains($role, 'applicant');
+}
+
+private function healthFormsCourseSheetCourse(HealthProfile $record): string
+{
+    $course = trim((string) ($record->course_college ?: optional($record->user)->course ?: ''));
+
+    return $course !== '' ? $course : 'No Course';
+}
+
+private function healthFormsCourseSheetStatus(HealthProfile $record): string
+{
+    return match (true) {
+        in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true) => 'Approved',
+        $record->clearance_status === 'Rejected' => 'Rejected',
+        default => 'Pending',
+    };
+}
+
+private function healthFormsCourseSheetStatusRank(HealthProfile $record): int
+{
+    return match ($this->healthFormsCourseSheetStatus($record)) {
+        'Approved' => 0,
+        'Rejected' => 1,
+        default => 2,
+    };
+}
+
+private function healthFormsCourseSheetName(string $course, array &$usedSheetNames): string
+{
+    $name = trim(preg_replace('/[:\\\\\/\?\*\[\]]+/', ' ', $course) ?? '');
+    $name = $name !== '' ? $name : 'No Course';
+    $name = mb_substr($name, 0, 31);
+    $base = $name;
+    $counter = 2;
+
+    while (in_array(mb_strtolower($name), $usedSheetNames, true)) {
+        $suffix = ' ' . $counter++;
+        $name = mb_substr($base, 0, 31 - mb_strlen($suffix)) . $suffix;
+    }
+
+    $usedSheetNames[] = mb_strtolower($name);
+
+    return $name;
+}
+
+private function excelXml($value): string
+{
+    return htmlspecialchars((string) $value, ENT_QUOTES | ENT_XML1, 'UTF-8');
 }
 
 // Para sa Universal Printing System

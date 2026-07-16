@@ -1709,7 +1709,7 @@ class AdminController extends Controller
         $allowedPerPage = ['20', '40', '80', '100', 'all'];
         $issuedPerPage = in_array($perPageInput, $allowedPerPage, true) ? $perPageInput : '20';
 
-        $query = HealthProfile::with('user')->latest();
+        $query = HealthProfile::with('user');
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
@@ -1784,6 +1784,7 @@ class AdminController extends Controller
 
         $issuedQuery = (clone $query)
             ->whereIn('clearance_status', ['Issued', 'Fully Cleared'])
+            ->reorder()
             ->orderByDesc('verified_at')
             ->orderByDesc('updated_at')
             ->orderByDesc('id');
@@ -1837,7 +1838,7 @@ class AdminController extends Controller
         $yearFilter = trim((string) $request->query('year', ''));
         $userTypeFilter = strtolower(trim((string) $request->query('user_type', '')));
 
-        $query = HealthProfile::with('user')->latest();
+        $query = HealthProfile::with('user');
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
@@ -2153,7 +2154,8 @@ public function updateClearance(Request $request, $id)
     {
         $validated = $request->validate([
             'pending_reason' => ['required', 'string', 'max:2000'],
-            'resubmission_required_documents' => ['required', 'array', 'min:1'],
+            'needs_health_form_correction' => ['nullable', 'boolean'],
+            'resubmission_required_documents' => ['nullable', 'array'],
             'resubmission_required_documents.*' => ['string', Rule::in([
                 'student_photo',
                 'health_declaration',
@@ -2169,6 +2171,13 @@ public function updateClearance(Request $request, $id)
         $wasAlreadyIssued = in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true)
             || !empty($record->verified_at);
         $requestedDocuments = array_values(array_unique((array) $validated['resubmission_required_documents']));
+        $needsHealthFormCorrection = $request->boolean('needs_health_form_correction')
+            || str_contains(strtolower((string) $validated['pending_reason']), 'health form correction');
+
+        if (!$needsHealthFormCorrection && empty($requestedDocuments)) {
+            return back()->withInput()->with('error', 'Select at least one file or Health Form Correction.');
+        }
+
         $documentColumns = [
             'student_photo' => 'student_photo',
             'health_declaration' => 'health_declaration',
@@ -2180,7 +2189,11 @@ public function updateClearance(Request $request, $id)
         if (!$wasAlreadyIssued) {
             $record->clearance_status = 'Pending Resubmission';
         }
-        $record->pending_reason = trim((string) $validated['pending_reason']);
+        $pendingReason = trim((string) $validated['pending_reason']);
+        if ($needsHealthFormCorrection && !str_contains(strtolower($pendingReason), 'health form correction')) {
+            $pendingReason = trim($pendingReason . "\nHealth Form Correction");
+        }
+        $record->pending_reason = $pendingReason;
         $record->documents_valid = false;
         $record->resubmission_required_documents = $requestedDocuments;
         $record->resubmission_requested_at = now();
@@ -2209,7 +2222,10 @@ public function updateClearance(Request $request, $id)
             'action' => 'Health Profile Resubmission Requested',
             'module' => 'Health Records',
             'event_type' => 'health_profile_resubmission_requested',
-            'description' => 'Requested replacement file/s for approved health profile #' . $record->id . ': ' . implode(', ', $requestedDocuments),
+            'description' => 'Requested correction for approved health profile #' . $record->id . ': ' . implode(', ', array_filter([
+                empty($requestedDocuments) ? null : 'Files: ' . implode(', ', $requestedDocuments),
+                $needsHealthFormCorrection ? 'Health Form Correction' : null,
+            ])),
             'route_name' => optional(request()->route())->getName(),
             'request_method' => request()->method(),
             'request_path' => request()->path(),
@@ -2217,9 +2233,11 @@ public function updateClearance(Request $request, $id)
             'ip_address' => request()->ip(),
         ]);
 
-        $message = $request->boolean('clear_uploaded_documents')
+        $message = $needsHealthFormCorrection && empty($requestedDocuments)
+            ? 'Health form correction request sent. The student can update their health form details.'
+            : ($request->boolean('clear_uploaded_documents')
             ? 'Replacement file request sent. Selected uploaded document references were removed from the record.'
-            : 'Replacement file request sent. The student will see the reupload prompt in Health Records.';
+            : 'Replacement file request sent. The student will see the reupload prompt in Health Records.');
 
         $redirect = ($validated['return_to'] ?? 'show_health') === 'health_records'
             ? redirect()->route('admin.health_records', ['tab' => $wasAlreadyIssued ? 'approved' : 'pending_compliance'])

@@ -1512,7 +1512,7 @@
                 <div class="profile-correction-icon"><x-outline-icon name="document-text" /></div>
                 <div>
                     <p class="profile-correction-title">File Correction</p>
-                    <p class="profile-correction-copy">Request replacement of a specific uploaded requirement without deleting approval history or PUPTAS sync records.</p>
+                    <p class="profile-correction-copy">Request file replacement or health form correction without deleting approval history or PUPTAS sync records.</p>
                     <div class="profile-correction-meta">
                         <span>Last Request:</span>
                         <span class="profile-last-request">{{ $profile->resubmission_requested_at ? $profile->resubmission_requested_at->format('M d, Y h:i A') : 'None' }}</span>
@@ -1578,7 +1578,7 @@
                     <span class="correction-head-icon"><x-outline-icon name="document-text" /></span>
                     <div>
                         <h3>Request File Correction</h3>
-                        <p>Select only the file/s that need replacement. The student will see a reupload prompt.</p>
+                        <p>Select file/s for replacement or Health Form Correction so the student can update their health information.</p>
                     </div>
                 </div>
                 <button type="button" class="correction-close" id="closeCorrectionModal" aria-label="Close correction modal">
@@ -1588,7 +1588,7 @@
             <form method="POST" action="{{ route('admin.health_profile.request_resubmission', $profile->id) }}" class="correction-body">
                 @csrf
                 <div class="correction-note">
-                    This request keeps the existing approval and PUPTAS sync history. The student will only replace the selected file/s.
+                    This request keeps the existing approval and PUPTAS sync history. The student will only update the selected file/s or health form data.
                 </div>
                 <div class="correction-doc-grid">
                     <label class="correction-doc-option">
@@ -1611,6 +1611,10 @@
                         <input type="checkbox" name="resubmission_required_documents[]" value="pwd_id_proof">
                         <span>PWD ID Proof</span>
                     </label>
+                    <label class="correction-doc-option">
+                        <input type="checkbox" id="correctionHealthFormOption" name="needs_health_form_correction" value="1">
+                        <span>Health Form Correction</span>
+                    </label>
                 </div>
                 <div class="correction-field">
                     <label for="correctionReasonSelect">Reason</label>
@@ -1625,6 +1629,7 @@
                             <option value="Document has incomplete information">Document has incomplete information</option>
                             <option value="Wrong student document was uploaded">Wrong student document was uploaded</option>
                             <option value="Photo or scan must be clearer">Photo or scan must be clearer</option>
+                            <option value="Health Form Correction">Health Form Correction</option>
                             <option value="Others">Others</option>
                         </select>
                     </div>
@@ -1673,6 +1678,7 @@
     const correctionReasonSelect = document.getElementById('correctionReasonSelect');
     const correctionReasonOther = document.getElementById('correctionReasonOther');
     const correctionOtherField = document.getElementById('correctionOtherField');
+    const correctionHealthFormOption = document.getElementById('correctionHealthFormOption');
     const correctionForm = document.querySelector('.correction-body');
 
     function syncCorrectionReason() {
@@ -1713,8 +1719,21 @@
 
     correctionReasonSelect?.addEventListener('change', syncCorrectionReason);
     correctionReasonOther?.addEventListener('input', syncCorrectionReason);
+    correctionHealthFormOption?.addEventListener('change', function () {
+        if (correctionHealthFormOption.checked && correctionReasonSelect && correctionReasonSelect.value === '') {
+            correctionReasonSelect.value = 'Health Form Correction';
+            syncCorrectionReason();
+        }
+    });
     correctionForm?.addEventListener('submit', function (event) {
         const finalReason = syncCorrectionReason();
+        const hasSelectedDocument = Boolean(correctionForm.querySelector('input[name="resubmission_required_documents[]"]:checked'));
+        const hasHealthFormCorrection = Boolean(correctionHealthFormOption?.checked);
+        if (!hasSelectedDocument && !hasHealthFormCorrection) {
+            event.preventDefault();
+            alert('Select at least one file or Health Form Correction.');
+            return;
+        }
         if (!finalReason) {
             event.preventDefault();
             if (correctionReasonSelect?.value === 'Others' && correctionReasonOther) {

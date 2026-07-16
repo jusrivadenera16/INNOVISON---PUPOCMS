@@ -325,7 +325,7 @@
         ],
          [
             'title' => 'Health Forms',
-            'copy' => 'Preview issued health form records before exporting the CSV file.',
+            'copy' => 'Preview health form records before exporting the report.',
             'icon' => 'document-text',
             'url' => $hubBaseUrl . '/health-forms',
         ],

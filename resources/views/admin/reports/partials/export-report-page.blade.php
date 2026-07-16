@@ -728,7 +728,8 @@
     }
 
     .export-condition-suggestion:hover,
-    .export-condition-suggestion:focus-visible {
+    .export-condition-suggestion:focus-visible,
+    .export-condition-suggestion.is-selected {
         background: #70131B;
         border-color: #70131B;
         color: #ffffff;
@@ -993,7 +994,8 @@
     }
 
     html[data-theme="dark"] .export-condition-suggestion:hover,
-    html[data-theme="dark"] .export-condition-suggestion:focus-visible {
+    html[data-theme="dark"] .export-condition-suggestion:focus-visible,
+    html[data-theme="dark"] .export-condition-suggestion.is-selected {
         background: #8f0012;
         color: #ffffff;
         border-color: #8f0012;
@@ -1107,11 +1109,7 @@
                 </div>
             @elseif(($reportType ?? '') === 'health-forms')
                 <div class="export-action-card">
-                    <span class="export-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                            <path d="M20.8 5.8c-1.7-2-4.7-2.1-6.5-.3L12 7.8 9.7 5.5C7.9 3.7 4.9 3.8 3.2 5.8c-1.6 1.9-1.4 4.8.4 6.6L12 20.5l8.4-8.1c1.8-1.8 2-4.7.4-6.6Z" stroke-width="2" stroke-linejoin="round"/>
-                        </svg>
-                    </span>
+                    <span class="export-card-icon"><x-outline-icon name="check" /></span>
                     <span>
                         <span class="export-card-label">Total Issued</span>
                         <span class="export-card-value">{{ number_format($previewMetrics['total_issued'] ?? $previewCount) }}</span>
@@ -1318,6 +1316,10 @@
                     <input type="hidden" name="condition_match" value="{{ request('condition_match', 'any') }}">
                 </div>
                 <div class="export-filter-checks">
+                    <label class="export-filter-check">
+                        <input type="checkbox" name="course_sheets" value="1" {{ request()->boolean('course_sheets') ? 'checked' : '' }}>
+                        Export Applicants by Course Sheets
+                    </label>
                     @foreach(['underweight' => 'Underweight', 'normal' => 'Normal', 'overweight' => 'Overweight', 'obese' => 'Obese', 'no_bmi' => 'No BMI Recorded'] as $value => $label)
                         <label class="export-filter-check">
                             <input type="checkbox" name="bmi_categories[]" value="{{ $value }}" {{ $selectedBmiCategories->contains($value) ? 'checked' : '' }}>
@@ -1365,14 +1367,57 @@
         });
     }
 
-    document.querySelectorAll('[data-condition-suggestion]').forEach(function (button) {
+    const conditionSuggestionButtons = document.querySelectorAll('[data-condition-suggestion]');
+
+    function selectedConditionKeywords() {
+        if (!conditionKeywordInput) return [];
+
+        return conditionKeywordInput.value
+            .split(',')
+            .map(function (value) { return value.trim().toLowerCase(); })
+            .filter(Boolean);
+    }
+
+    function syncConditionSuggestionSelection() {
+        const selectedValues = selectedConditionKeywords();
+
+        conditionSuggestionButtons.forEach(function (button) {
+            const suggestion = (button.dataset.conditionSuggestion || button.textContent.trim()).trim().toLowerCase();
+            button.classList.toggle('is-selected', selectedValues.includes(suggestion));
+        });
+    }
+
+    conditionSuggestionButtons.forEach(function (button) {
         button.addEventListener('click', function () {
             if (!conditionKeywordInput) return;
-            conditionKeywordInput.value = button.dataset.conditionSuggestion || button.textContent.trim();
+            const suggestion = (button.dataset.conditionSuggestion || button.textContent.trim()).trim();
+            const values = conditionKeywordInput.value
+                .split(',')
+                .map(function (value) { return value.trim(); })
+                .filter(Boolean);
+            const existingIndex = values.findIndex(function (value) {
+                return value.toLowerCase() === suggestion.toLowerCase();
+            });
+
+            if (existingIndex >= 0) {
+                values.splice(existingIndex, 1);
+                button.classList.remove('is-selected');
+            } else {
+                values.push(suggestion);
+                button.classList.add('is-selected');
+            }
+
+            conditionKeywordInput.value = values.join(', ');
             conditionKeywordInput.focus();
             conditionKeywordInput.dispatchEvent(new Event('input', { bubbles: true }));
+            syncConditionSuggestionSelection();
         });
     });
+
+    if (conditionKeywordInput) {
+        conditionKeywordInput.addEventListener('input', syncConditionSuggestionSelection);
+        syncConditionSuggestionSelection();
+    }
 
     document.querySelectorAll('.export-filter-custom-source').forEach(function (select) {
         const wrap = select.closest('.export-filter-select-wrap');

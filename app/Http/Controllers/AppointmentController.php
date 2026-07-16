@@ -1574,13 +1574,17 @@ class AppointmentController extends Controller
             return false;
         }
 
-        $status = strtolower(trim((string) $healthProfile->clearance_status));
-        if (!str_contains($status, 'pending') && !str_contains($status, 'conditional')) {
+        $reason = strtolower(trim((string) $healthProfile->pending_reason));
+        if ($reason === '') {
             return false;
         }
 
-        $reason = strtolower(trim((string) $healthProfile->pending_reason));
-        if ($reason === '') {
+        if (str_contains($reason, 'health form correction')) {
+            return true;
+        }
+
+        $status = strtolower(trim((string) $healthProfile->clearance_status));
+        if (!str_contains($status, 'pending') && !str_contains($status, 'conditional')) {
             return false;
         }
 
