@@ -223,7 +223,19 @@
         overflow: hidden;
         box-shadow: 0 12px 22px rgba(127, 0, 0, 0.14);
     }
-    .settings-edit-btn,
+    .settings-edit-btn svg,
+    .settings-save-btn svg,
+    .settings-cancel-btn svg {
+        width: 17px;
+        height: 17px;
+        flex: 0 0 auto;
+        stroke: currentColor;
+    }
+    .settings-edit-btn {
+        background: #ffffff;
+        color: #111827;
+        border: 1px solid rgba(127, 0, 0, 0.12);
+    }
     .settings-save-btn {
         background: var(--stg-maroon);
         color: #ffffff;
@@ -266,6 +278,26 @@
     .settings-save-btn:focus-visible::before,
     .settings-cancel-btn:focus-visible::before {
         transform: translateX(0);
+    }
+    .settings-section-page .settings-edit-btn {
+        background-color: #ffffff !important;
+        color: #111827 !important;
+    }
+    .settings-section-page .settings-save-btn {
+        background-color: var(--stg-maroon) !important;
+        color: #ffffff !important;
+    }
+    .settings-section-page .settings-save-btn:hover,
+    .settings-section-page .settings-save-btn:focus-visible {
+        color: var(--stg-maroon) !important;
+    }
+    .settings-section-page .settings-cancel-btn {
+        background-color: #e5e7eb !important;
+        color: #111827 !important;
+    }
+    .settings-section-page .settings-cancel-btn:hover,
+    .settings-section-page .settings-cancel-btn:focus-visible {
+        color: var(--stg-maroon) !important;
     }
     .settings-edit-actions {
         display: none;

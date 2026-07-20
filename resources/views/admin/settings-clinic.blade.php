@@ -59,7 +59,7 @@
                     <div class="settings-action-row">
                         <span class="settings-edit-actions">
                             <button type="button" class="settings-cancel-btn" data-edit-cancel><span>Cancel</span></button>
-                            <button type="submit" class="settings-save-btn"><x-outline-icon name="check" /> <span>Save Clinic Profile</span></button>
+                            <button type="submit" class="settings-save-btn"><x-outline-icon name="check" /> <span>Save</span></button>
                         </span>
                     </div>
                 </form>
@@ -94,7 +94,7 @@
                     <div class="settings-action-row">
                         <span class="settings-edit-actions">
                             <button type="button" class="settings-cancel-btn" data-edit-cancel><span>Cancel</span></button>
-                            <button type="submit" class="settings-save-btn"><x-outline-icon name="check" /> <span>Save Clinic Hours</span></button>
+                            <button type="submit" class="settings-save-btn"><x-outline-icon name="check" /> <span>Save</span></button>
                         </span>
                     </div>
                 </form>

@@ -7,8 +7,8 @@
 <style>
     .medical-config-list {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
+        grid-template-columns: 1fr;
+        gap: 14px;
     }
     .medical-config-actions {
         display: none;
@@ -18,20 +18,19 @@
     }
     .medical-config-row {
         position: relative;
-        min-height: 250px;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 20px;
+        min-height: 88px;
+        display: grid;
+        grid-template-columns: 70px minmax(150px, 210px) minmax(0, 1fr) 32px;
+        align-items: center;
+        gap: 18px;
         overflow: hidden;
-        padding: 20px;
-        border-radius: 16px;
-        border: 1px solid rgba(112, 19, 27, 0.38);
-        background: #70131B;
-        color: #ffffff;
+        padding: 16px 20px;
+        border-radius: 8px;
+        border: 1px solid rgba(112, 19, 27, 0.14);
+        background: #ffffff;
+        color: #111827;
         text-decoration: none;
-        box-shadow: 0 14px 26px rgba(112, 19, 27, 0.18);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
         transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease, background .22s ease, color .22s ease;
     }
     .medical-config-row > * {
@@ -55,9 +54,9 @@
     .medical-config-row:focus-visible {
         background: #facc15;
         color: #70131B;
-        transform: translateY(-6px);
+        transform: translateY(-3px);
         border-color: #facc15;
-        box-shadow: 0 20px 34px rgba(112, 19, 27, 0.20);
+        box-shadow: 0 16px 28px rgba(112, 19, 27, 0.14);
         outline: none;
     }
     .medical-config-row:hover::after,
@@ -70,56 +69,54 @@
         100% { opacity: 0; transform: translateX(720%) skewX(-18deg); }
     }
     .medical-config-main {
-        display: grid;
-        gap: 18px;
+        display: contents;
         min-width: 0;
     }
     .medical-config-icon {
-        width: 58px;
-        height: 58px;
+        width: 50px;
+        height: 50px;
         display: grid;
         place-items: center;
         flex: 0 0 auto;
-        border-radius: 14px;
-        color: #facc15;
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, .18);
+        border-radius: 999px;
+        color: #70131B;
+        background: #fff7ed;
+        border: 1px solid rgba(112, 19, 27, .10);
         transition: background .22s ease, border-color .22s ease, color .22s ease;
     }
     .medical-config-icon svg {
-        width: 30px;
-        height: 30px;
+        width: 24px;
+        height: 24px;
+    }
+    .medical-config-copy {
+        display: contents;
     }
     .medical-config-copy h4 {
-        margin: 0 0 5px;
-        color: #ffffff;
-        font-size: 19px;
+        margin: 0;
+        color: #111827;
+        font-size: 15px;
         font-weight: 900;
-        line-height: 1.15;
+        line-height: 1.2;
         transition: color .22s ease;
     }
     .medical-config-copy p {
-        max-width: 420px;
         margin: 0;
-        color: rgba(255,255,255,.92);
-        font-size: 14px;
-        line-height: 1.48;
+        color: #475569;
+        font-size: 12px;
+        line-height: 1.45;
         font-weight: 700;
         transition: color .22s ease;
     }
     .medical-config-arrow {
-        position: absolute;
-        top: 20px;
-        right: 18px;
         width: 30px;
         height: 30px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border-radius: 999px;
-        color: #ffffff;
-        background: rgba(255,255,255,.10);
-        border: 1px solid rgba(255,255,255,.28);
+        color: #70131B;
+        background: transparent;
+        border: 0;
         flex: 0 0 auto;
         transition: transform .2s ease, color .2s ease, background .2s ease, border-color .2s ease;
     }
@@ -130,8 +127,6 @@
     .medical-config-row:hover .medical-config-arrow,
     .medical-config-row:focus-visible .medical-config-arrow {
         color: #70131B;
-        background: rgba(112, 19, 27, .10);
-        border-color: rgba(112, 19, 27, .22);
         transform: translateX(4px);
     }
     .medical-config-row:hover .medical-config-copy h4,
@@ -142,24 +137,30 @@
     }
     .medical-config-row:hover .medical-config-icon,
     .medical-config-row:focus-visible .medical-config-icon {
-        color: #facc15;
-        background: rgba(112, 19, 27, .16);
+        color: #70131B;
+        background: rgba(255, 255, 255, .46);
         border-color: rgba(112, 19, 27, .24);
     }
     html[data-theme="dark"] .medical-config-row {
-        background: linear-gradient(135deg, #70131B, #8f2230);
-        border-color: rgba(250, 204, 21, .36);
+        background: #ffffff;
+        border-color: rgba(112, 19, 27, .14);
     }
     html[data-theme="dark"] .medical-config-row:hover,
     html[data-theme="dark"] .medical-config-row:focus-visible {
         background: #facc15;
     }
     @media (max-width: 720px) {
-        .medical-config-list {
-            grid-template-columns: 1fr;
-        }
         .medical-config-row {
-            min-height: 220px;
+            grid-template-columns: 56px minmax(0, 1fr) 30px;
+            gap: 12px;
+            min-height: 96px;
+        }
+        .medical-config-copy p {
+            grid-column: 2 / 3;
+        }
+        .medical-config-arrow {
+            grid-column: 3;
+            grid-row: 1 / span 2;
         }
     }
 </style>
