@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>PUP Taguig Medical Clinic</title>
     <style>
         :root {
@@ -137,7 +138,7 @@
         .topbar-btn:hover,
         .topbar-btn:focus-visible {
             transform: translateY(-1px);
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            background: var(--gold);
             border-color: var(--gold);
             color: var(--maroon);
             box-shadow: 0 12px 26px rgba(15, 23, 42, 0.20);
@@ -173,7 +174,7 @@
         .topbar-btn-local:hover,
         .topbar-btn-local:focus-visible {
             border-color: var(--gold);
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            background: var(--gold);
             color: var(--maroon);
         }
 
@@ -428,7 +429,7 @@
             align-items: center;
             justify-content: center;
             color: var(--maroon);
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            background: var(--gold);
             flex: 0 0 auto;
         }
 
@@ -698,7 +699,7 @@
         .portal-btn:hover,
         .portal-btn:focus-visible {
             transform: translateY(-1px);
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            background: var(--gold);
             border-color: var(--gold);
             color: var(--maroon);
             box-shadow:
@@ -736,7 +737,7 @@
         .help-btn:focus-visible,
         .landing-panel.is-help .help-btn {
             transform: translateY(-1px);
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            background: var(--gold);
             border-color: var(--gold);
             color: var(--maroon);
             box-shadow:
@@ -907,7 +908,7 @@
             align-items: center;
             justify-content: center;
             flex: 0 0 36px;
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            background: var(--gold);
             color: var(--maroon);
             box-shadow: 0 8px 18px rgba(250, 204, 21, .12);
         }
@@ -1876,7 +1877,7 @@
             content: "";
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            background: var(--gold);
             transform: scaleX(0);
             transform-origin: left center;
             transition: transform 0.32s ease;
@@ -1975,7 +1976,7 @@
 
         .gateway-actions .portal-btn:hover .portal-btn__icon,
         .gateway-actions .portal-btn:focus-visible .portal-btn__icon {
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            background: var(--gold);
             border-color: var(--gold);
             color: var(--maroon);
         }
@@ -2007,14 +2008,14 @@
         .gateway-actions .portal-btn--idp:focus-visible .portal-btn__icon,
         .gateway-actions .portal-btn--idp:hover .portal-btn__label,
         .gateway-actions .portal-btn--idp:focus-visible .portal-btn__label {
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+            background: var(--gold);
             border-color: var(--gold);
             color: var(--maroon);
         }
 
         .gateway-actions .portal-btn--idp:hover .portal-btn__arrow,
         .gateway-actions .portal-btn--idp:focus-visible .portal-btn__arrow {
-            background: linear-gradient(135deg, #fff4b8, #ffe693);
+            background: var(--gold);
             border-color: #ffffff;
             color: var(--maroon);
         }
@@ -2145,6 +2146,598 @@
 
         body.landing-theme-light .gateway-feature-copy {
             color: #64748b;
+        }
+
+        /* Screenshot-matched landing refresh */
+        .landing-shell {
+            min-height: 100vh;
+            align-items: center;
+            padding: clamp(18px, 3.2vw, 40px) 92px clamp(18px, 2.5vw, 28px) 18px;
+        }
+
+        body::before {
+            background:
+                linear-gradient(90deg, rgba(29, 3, 10, .74), rgba(112, 19, 27, .54) 48%, rgba(23, 2, 8, .72)),
+                radial-gradient(circle at 26% 20%, rgba(250, 204, 21, .08), transparent 26%),
+                linear-gradient(180deg, rgba(15, 23, 42, .02), rgba(15, 23, 42, .26));
+        }
+
+        .landing-panel {
+            width: min(1180px, 100%);
+            min-height: min(700px, calc(100vh - 42px));
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-column {
+            min-height: 100%;
+            padding: 0 !important;
+        }
+
+        .login-primary.gateway-stage {
+            width: min(1000px, 100%);
+            min-height: min(650px, calc(100vh - 60px));
+            justify-content: center;
+            gap: 26px;
+        }
+
+        .gateway-top-content {
+            gap: 18px;
+        }
+
+        .gateway-logo-row {
+            gap: 18px;
+            margin-bottom: 4px;
+        }
+
+        .gateway-logo-card {
+            width: 70px;
+            height: 70px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, .96);
+            border-color: rgba(255, 255, 255, .62);
+            box-shadow: 0 18px 36px rgba(0, 0, 0, .26);
+        }
+
+        .gateway-logo-card img {
+            width: 52px;
+            height: 52px;
+        }
+
+        .gateway-kicker {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            color: rgba(255, 255, 255, .88);
+            font-size: 13px;
+            letter-spacing: .26em;
+            font-weight: 800;
+        }
+
+        .gateway-kicker::before,
+        .gateway-kicker::after {
+            content: "";
+            width: 38px;
+            height: 1px;
+            background: rgba(255, 255, 255, .46);
+        }
+
+        .gateway-title {
+            font-size: clamp(42px, 5.5vw, 64px);
+            line-height: .98;
+            font-weight: 950;
+            letter-spacing: 0;
+            text-shadow: 0 10px 28px rgba(0, 0, 0, .34);
+        }
+
+        .gateway-copy {
+            max-width: 620px !important;
+            color: rgba(255, 255, 255, .86);
+            font-size: clamp(18px, 1.85vw, 23px);
+            line-height: 1.48;
+            font-weight: 400;
+        }
+
+        .workspace-entry.gateway-actions {
+            width: min(640px, 100%);
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 28px;
+            align-items: center;
+            margin-top: 2px;
+        }
+
+        .gateway-actions .portal-btn {
+            min-height: 62px;
+            display: flex;
+            grid-template-columns: none;
+            gap: 0;
+            border-radius: 16px;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .gateway-actions .portal-btn:hover,
+        .gateway-actions .portal-btn:focus-visible {
+            transform: translateY(-2px);
+        }
+
+        .gateway-actions .portal-btn .portal-btn__icon {
+            width: 70px;
+            min-height: 62px;
+            border-radius: 16px 0 0 16px;
+            border-right: 0;
+            background: rgba(120, 16, 32, .92);
+            border-color: rgba(255, 255, 255, .18);
+            box-shadow: 0 14px 28px rgba(0, 0, 0, .22);
+        }
+
+        .gateway-actions .portal-btn .portal-btn__label {
+            flex: 1;
+            min-height: 62px;
+            padding: 0 62px 0 18px;
+            border-radius: 0 16px 16px 0;
+            background: rgba(151, 19, 38, .84);
+            border-color: rgba(255, 255, 255, .18);
+            color: #ffffff;
+            font-size: 15px;
+            box-shadow: 0 14px 28px rgba(0, 0, 0, .22);
+        }
+
+        .gateway-actions .portal-btn--idp .portal-btn__icon,
+        .gateway-actions .portal-btn--idp .portal-btn__label,
+        .gateway-actions .portal-btn--idp .portal-btn__arrow {
+            background: rgba(255, 255, 255, .94);
+            color: #70131b;
+            border-color: rgba(255, 255, 255, .68);
+        }
+
+        .gateway-actions .portal-btn .portal-btn__arrow {
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            min-height: 32px;
+            border: 0;
+            background: transparent;
+        }
+
+        .workspace-utility-actions.gateway-utility {
+            grid-column: 1 / -1;
+            margin-top: -12px;
+        }
+
+        .gateway-feature-grid {
+            max-width: 990px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            margin-top: 0;
+        }
+
+        .gateway-feature-card {
+            min-height: 250px;
+            display: grid;
+            justify-items: center;
+            align-content: center;
+            gap: 13px;
+            padding: 24px 20px 20px;
+            text-align: center;
+            border-radius: 16px;
+            background:
+                radial-gradient(circle at 50% 22%, rgba(255, 255, 255, .08), transparent 24%),
+                rgba(91, 10, 25, .54);
+            border: 1px solid rgba(255, 176, 190, .56);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 18px 38px rgba(0, 0, 0, .16);
+            transition: transform .24s cubic-bezier(.2, .9, .2, 1), box-shadow .24s ease, border-color .24s ease, background .24s ease;
+        }
+
+        .gateway-feature-card:hover,
+        .gateway-feature-card:focus-within {
+            transform: translateY(-10px) scale(1.035);
+            border-color: rgba(255, 221, 228, .92);
+            background:
+                radial-gradient(circle at 50% 22%, rgba(255, 255, 255, .12), transparent 27%),
+                rgba(109, 13, 31, .68);
+            box-shadow: 0 26px 52px rgba(0, 0, 0, .26), 0 0 0 1px rgba(250, 204, 21, .18);
+        }
+
+        .gateway-feature-card::before,
+        .gateway-feature-card::after {
+            content: none;
+        }
+
+        .gateway-feature-icon {
+            width: 82px;
+            height: 82px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            color: #ffffff;
+            background: radial-gradient(circle at 50% 42%, rgba(255, 255, 255, .1), rgba(151, 19, 38, .64));
+            border: 1px solid rgba(255, 176, 190, .46);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 12px 24px rgba(0, 0, 0, .18);
+        }
+
+        .gateway-feature-icon svg {
+            width: 43px;
+            height: 43px;
+            stroke: currentColor;
+            stroke-width: 1.65;
+            fill: none;
+        }
+
+        .gateway-feature-title {
+            position: relative;
+            margin: 0;
+            color: #ffffff;
+            font-size: 18px;
+            line-height: 1.2;
+            font-weight: 900;
+        }
+
+        .gateway-feature-title::after {
+            content: "";
+            display: block;
+            width: 34px;
+            height: 2px;
+            margin: 12px auto 0;
+            background: #ff415d;
+            border-radius: 999px;
+        }
+
+        .gateway-feature-copy {
+            max-width: 190px;
+            color: rgba(255, 255, 255, .78);
+            font-size: 14px;
+            line-height: 1.48;
+            font-weight: 400;
+        }
+
+        .gateway-feature-arrow {
+            color: #ff415d;
+            font-size: 27px;
+            line-height: 1;
+        }
+
+        .system-foot {
+            width: min(960px, 100%);
+            margin-top: -8px !important;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 255, 255, .14);
+            color: rgba(255, 255, 255, .58) !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+        }
+
+        .landing-theme-toggle,
+        .landing-announcement-btn,
+        .landing-assistant-btn {
+            right: 22px;
+            width: 72px;
+            min-height: 72px;
+            height: auto;
+            flex-direction: column;
+            gap: 0;
+            border-radius: 0;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+
+        .landing-theme-toggle {
+            border-radius: 18px 18px 0 0;
+        }
+
+        .landing-assistant-btn {
+            border-radius: 0 0 18px 18px;
+        }
+
+        .landing-theme-toggle { top: 64px; }
+        .landing-announcement-btn { top: 136px; }
+        .landing-assistant-btn { top: 208px; }
+
+        .landing-theme-toggle::before {
+            content: "";
+            position: fixed;
+            top: 64px;
+            right: 22px;
+            width: 72px;
+            height: 216px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 176, 190, .46);
+            background: rgba(92, 9, 25, .58);
+            box-shadow: 0 18px 32px rgba(15, 23, 42, 0.22);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .landing-announcement-btn::before,
+        .landing-assistant-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 14px;
+            right: 14px;
+            height: 1px;
+            background: rgba(255, 176, 190, .34);
+        }
+
+        .landing-theme-toggle span,
+        .landing-announcement-btn span:not(.announcement-badge),
+        .landing-assistant-btn span {
+            display: none;
+        }
+
+        .landing-assistant-btn svg {
+            width: 34px;
+            height: 34px;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            fill: none;
+            flex: 0 0 auto;
+        }
+
+        .landing-assistant-btn img {
+            width: 42px;
+            height: 42px;
+            object-fit: contain;
+            display: block;
+            flex: 0 0 auto;
+            filter: drop-shadow(0 5px 8px rgba(55, 6, 18, 0.22));
+        }
+
+        .landing-assistant-btn svg path {
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .landing-theme-toggle svg,
+        .landing-announcement-btn svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .landing-theme-toggle:hover,
+        .landing-theme-toggle:focus-visible,
+        .landing-announcement-btn:hover,
+        .landing-announcement-btn:focus-visible,
+        .landing-assistant-btn:hover,
+        .landing-assistant-btn:focus-visible {
+            transform: none;
+            background: radial-gradient(circle at center, rgba(250, 204, 21, .18), rgba(250, 204, 21, .04) 58%, transparent 72%);
+            color: #facc15;
+            border-color: transparent;
+            box-shadow: inset 0 0 22px rgba(250, 204, 21, .16), 0 0 18px rgba(250, 204, 21, .16);
+            outline: none;
+        }
+
+        body.landing-theme-light .gateway-feature-card {
+            background: rgba(255, 255, 255, .78);
+            border-color: rgba(112, 19, 27, .12);
+            box-shadow: 0 18px 34px rgba(112, 19, 27, .08);
+        }
+
+        body.landing-theme-light .gateway-feature-card:hover,
+        body.landing-theme-light .gateway-feature-card:focus-within {
+            background: rgba(255, 255, 255, .94);
+            border-color: rgba(112, 19, 27, .26);
+            box-shadow: 0 24px 48px rgba(112, 19, 27, .14);
+        }
+
+        body.landing-theme-light .gateway-feature-icon {
+            color: #111111;
+            background: radial-gradient(circle at 50% 42%, rgba(255, 255, 255, .25), rgba(143, 16, 36, .58));
+            border-color: rgba(112, 19, 27, .16);
+            box-shadow: 0 14px 26px rgba(143, 16, 36, .18);
+        }
+
+        body.landing-theme-light .gateway-feature-title {
+            color: #70131b;
+        }
+
+        body.landing-theme-light .gateway-feature-copy {
+            color: #53657c;
+        }
+
+        body.landing-theme-light .gateway-feature-arrow {
+            color: #e11d48;
+        }
+
+        body.landing-theme-light .system-foot {
+            border-top-color: rgba(112, 19, 27, .12);
+            color: rgba(112, 19, 27, .48) !important;
+        }
+
+        .landing-proactive-message {
+            position: fixed;
+            top: 199px;
+            right: 104px;
+            z-index: 46;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: min(210px, calc(100vw - 132px));
+            min-height: 54px;
+            padding: 9px 13px 9px 10px;
+            border: 1px solid rgba(112, 19, 27, .14);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .96);
+            color: #111827;
+            box-shadow: 0 14px 34px rgba(20, 2, 8, .28), 0 0 0 4px rgba(255, 255, 255, .08);
+            font-family: inherit;
+            text-align: left;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateX(14px) scale(.94);
+            pointer-events: none;
+            transition: opacity .34s ease, transform .38s cubic-bezier(.2, .9, .2, 1), box-shadow .2s ease;
+        }
+
+        .landing-proactive-message::after {
+            content: "";
+            position: absolute;
+            right: -9px;
+            top: 50%;
+            width: 15px;
+            height: 15px;
+            background: #ffffff;
+            border-top: 1px solid rgba(112, 19, 27, .14);
+            border-right: 1px solid rgba(112, 19, 27, .14);
+            transform: translateY(-50%) rotate(45deg);
+            border-radius: 2px;
+            transform-origin: center;
+        }
+
+        .landing-proactive-message.is-visible {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .landing-proactive-message.is-leaving {
+            opacity: 0;
+            transform: translateX(12px) scale(.97);
+            pointer-events: none;
+        }
+
+        .landing-proactive-message:hover,
+        .landing-proactive-message:focus-visible {
+            outline: none;
+            box-shadow: 0 18px 40px rgba(20, 2, 8, .34), 0 0 0 4px rgba(250, 204, 21, .12);
+        }
+
+        .landing-proactive-message img {
+            width: 31px;
+            height: 31px;
+            object-fit: contain;
+            flex: 0 0 auto;
+            border-radius: 999px;
+            background: #fff7cc;
+            border: 1px solid rgba(250, 204, 21, .5);
+        }
+
+        .landing-proactive-message strong {
+            display: block;
+            color: #70131b;
+            font-size: 12px;
+            line-height: 1.2;
+            font-weight: 950;
+        }
+
+        .landing-proactive-message span {
+            display: block;
+            margin-top: 2px;
+            color: #64748b;
+            font-size: 10px;
+            line-height: 1.2;
+            font-weight: 800;
+        }
+
+        body.landing-theme-light .landing-proactive-message {
+            background: rgba(255, 255, 255, .98);
+            border-color: rgba(112, 19, 27, .16);
+        }
+
+        body.landing-theme-light .landing-theme-toggle::before {
+            background: rgba(255, 255, 255, .72);
+            border-color: rgba(112, 19, 27, .18);
+            box-shadow: 0 18px 34px rgba(112, 19, 27, .10);
+        }
+
+        body.landing-theme-light .landing-theme-toggle,
+        body.landing-theme-light .landing-announcement-btn,
+        body.landing-theme-light .landing-assistant-btn {
+            background: transparent;
+            color: #70131b;
+            border-color: transparent;
+            box-shadow: none;
+        }
+
+        body.landing-theme-light .landing-announcement-btn::before,
+        body.landing-theme-light .landing-assistant-btn::before {
+            background: rgba(112, 19, 27, .16);
+        }
+
+        body.landing-theme-light .landing-theme-toggle:hover,
+        body.landing-theme-light .landing-theme-toggle:focus-visible,
+        body.landing-theme-light .landing-announcement-btn:hover,
+        body.landing-theme-light .landing-announcement-btn:focus-visible,
+        body.landing-theme-light .landing-assistant-btn:hover,
+        body.landing-theme-light .landing-assistant-btn:focus-visible {
+            background: radial-gradient(circle at center, rgba(250, 204, 21, .2), rgba(250, 204, 21, .06) 58%, transparent 72%);
+            color: #70131b;
+            box-shadow: inset 0 0 22px rgba(250, 204, 21, .16), 0 0 18px rgba(250, 204, 21, .16);
+        }
+
+        body.landing-theme-light .announcement-badge {
+            border-color: rgba(255, 255, 255, .9);
+        }
+
+        .landing-announcement-btn:hover,
+        .landing-announcement-btn:focus-visible,
+        .landing-assistant-btn:hover,
+        .landing-assistant-btn:focus-visible {
+            transform: none !important;
+            background: radial-gradient(circle at center, rgba(250, 204, 21, .18), rgba(250, 204, 21, .04) 58%, transparent 72%) !important;
+            color: #facc15 !important;
+            border-color: transparent !important;
+            box-shadow: inset 0 0 22px rgba(250, 204, 21, .16), 0 0 18px rgba(250, 204, 21, .16) !important;
+        }
+
+        body.landing-theme-light .landing-announcement-btn:hover,
+        body.landing-theme-light .landing-announcement-btn:focus-visible,
+        body.landing-theme-light .landing-assistant-btn:hover,
+        body.landing-theme-light .landing-assistant-btn:focus-visible {
+            background: radial-gradient(circle at center, rgba(250, 204, 21, .2), rgba(250, 204, 21, .06) 58%, transparent 72%) !important;
+            color: #70131b !important;
+            border-color: transparent !important;
+            box-shadow: inset 0 0 22px rgba(250, 204, 21, .16), 0 0 18px rgba(250, 204, 21, .16) !important;
+        }
+
+        .landing-announcement-btn:hover svg,
+        .landing-announcement-btn:focus-visible svg {
+            color: #facc15 !important;
+        }
+
+        body.landing-theme-light .landing-announcement-btn:hover svg,
+        body.landing-theme-light .landing-announcement-btn:focus-visible svg {
+            color: #70131b !important;
+        }
+
+        @media (max-width: 980px) {
+            .landing-shell {
+                padding-right: 18px;
+            }
+
+            .landing-theme-toggle,
+            .landing-announcement-btn,
+            .landing-assistant-btn {
+                width: 58px;
+                min-height: 58px;
+                border-radius: 16px;
+            }
+
+            .landing-theme-toggle span,
+            .landing-announcement-btn span:not(.announcement-badge),
+            .landing-assistant-btn span {
+                display: none;
+            }
+
+            .gateway-feature-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .workspace-entry.gateway-actions {
+                grid-template-columns: 1fr;
+                width: min(520px, 100%);
+                gap: 12px;
+            }
         }
 
         .help-panel {
@@ -2345,36 +2938,61 @@
             .landing-theme-toggle,
             .landing-announcement-btn,
             .landing-assistant-btn {
-                --landing-floating-button-size: clamp(42px, 10.5vw, 50px);
-                right: clamp(10px, 3.2vw, 16px);
+                --landing-floating-button-size: 56px;
+                right: 14px;
                 min-height: var(--landing-floating-button-size);
-                width: var(--landing-floating-button-size);
+                width: 58px;
                 height: var(--landing-floating-button-size);
                 padding: 0;
-                box-shadow: 0 12px 24px rgba(15, 23, 42, 0.22);
+                border-radius: 0;
+                box-shadow: none;
+                background: transparent;
+                border: 0;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
             }
 
             .landing-theme-toggle {
-                top: 16px;
+                top: 70px;
+                border-radius: 16px 16px 0 0;
             }
 
             .landing-announcement-btn {
-                top: calc(16px + var(--landing-floating-button-size) + 14px);
+                top: 126px;
             }
 
             .landing-assistant-btn {
-                top: calc(16px + (var(--landing-floating-button-size) * 2) + 28px);
-                border-radius: clamp(12px, 3vw, 15px);
+                top: 182px;
+                border-radius: 0 0 16px 16px;
+            }
+
+            .landing-theme-toggle::before {
+                top: 70px;
+                right: 14px;
+                width: 58px;
+                height: 168px;
+                border-radius: 16px;
+            }
+
+            .landing-announcement-btn::before,
+            .landing-assistant-btn::before {
+                left: 12px;
+                right: 12px;
             }
 
             .landing-theme-toggle svg {
-                width: clamp(20px, 5.4vw, 24px);
-                height: clamp(20px, 5.4vw, 24px);
+                width: 25px;
+                height: 25px;
             }
 
             .landing-announcement-btn svg {
-                width: clamp(24px, 6.2vw, 30px);
-                height: clamp(24px, 6.2vw, 30px);
+                width: 29px;
+                height: 29px;
+            }
+
+            .landing-assistant-btn svg {
+                width: 38px;
+                height: 38px;
             }
 
             .announcement-badge {
@@ -2420,21 +3038,28 @@
             .landing-theme-toggle,
             .landing-announcement-btn,
             .landing-assistant-btn {
-                --landing-floating-button-size: 40px;
-                right: 8px;
+                --landing-floating-button-size: 50px;
+                right: 10px;
+                width: 52px;
             }
 
             .landing-theme-toggle {
-                top: 12px;
+                top: 66px;
             }
 
             .landing-announcement-btn {
-                top: 64px;
+                top: 116px;
             }
 
             .landing-assistant-btn {
-                top: 116px;
-                border-radius: 12px;
+                top: 166px;
+            }
+
+            .landing-theme-toggle::before {
+                top: 66px;
+                right: 10px;
+                width: 52px;
+                height: 150px;
             }
         }
 
@@ -2848,8 +3473,8 @@
             width: 25px;
             height: 25px;
             border-radius: 7px;
-            color: var(--announcement-accent, #60a5fa);
-            background: color-mix(in srgb, var(--announcement-accent, #60a5fa) 18%, transparent);
+            color: var(--announcement-accent, #facc15);
+            background: color-mix(in srgb, var(--announcement-accent, #facc15) 18%, transparent);
         }
 
         .announcement-overview-icon svg,
@@ -2909,14 +3534,14 @@
             border-radius: 7px;
             border: 1px solid rgba(255,255,255,.09);
             background: rgba(255,255,255,.035);
-            color: #e5e7eb;
+            color: #ffffff;
             font-size: 11px;
             font-weight: 750;
             outline: none;
         }
 
         .announcement-search input::placeholder {
-            color: #64748b;
+            color: rgba(255,255,255,.74);
         }
 
         .announcement-section-head {
@@ -2924,7 +3549,7 @@
             justify-content: space-between;
             align-items: center;
             margin: 0 2px 8px;
-            color: #94a3b8;
+            color: #ffffff;
             font-size: 10px;
             font-weight: 850;
         }
@@ -2939,8 +3564,8 @@
             padding: 10px;
             border-radius: 9px;
             background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.025));
-            border: 1px solid rgba(255,255,255,.09);
-            box-shadow: inset 3px 0 0 var(--landing-announcement-priority, #60a5fa);
+            border: 1px solid rgba(255,255,255,.16);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .14);
         }
 
         .landing-announcement-card::before {
@@ -2966,7 +3591,7 @@
         .landing-announcement-meta {
             justify-content: space-between;
             gap: 6px;
-            color: #94a3b8;
+            color: #ffffff;
             font-size: 9px;
         }
 
@@ -3021,10 +3646,10 @@
         }
 
         .landing-announcement-card.priority-urgent { --landing-announcement-priority: #ef4444; }
-        .landing-announcement-card.priority-info { --landing-announcement-priority: #3b82f6; }
+        .landing-announcement-card.priority-info { --landing-announcement-priority: #facc15; }
         .landing-announcement-card.priority-warning { --landing-announcement-priority: #eab308; }
         .landing-announcement-card.priority-health { --landing-announcement-priority: #22c55e; }
-        .landing-announcement-card.priority-event { --landing-announcement-priority: #a855f7; }
+        .landing-announcement-card.priority-event { --landing-announcement-priority: #facc15; }
 
         .announcement-view-all {
             width: 100%;
@@ -3234,6 +3859,90 @@
             display: flex;
             align-items: center;
             gap: 14px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .assistant-history-toggle {
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            border-radius: 12px;
+            border: 1px solid rgba(250, 204, 21, .46);
+            background: rgba(112, 19, 27, .34);
+            color: #ffffff;
+            cursor: pointer;
+            transition: background .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+        }
+
+        .assistant-history-toggle:hover,
+        .assistant-history-toggle:focus-visible {
+            background: #facc15;
+            color: #70131b;
+            transform: translateY(-1px);
+            outline: none;
+        }
+
+        .assistant-history-toggle svg {
+            width: 22px;
+            height: 22px;
+            stroke: currentColor;
+            transition: transform .2s ease;
+        }
+
+        .assistant-history-toggle:active {
+            transform: scale(.92);
+            box-shadow: 0 0 0 6px rgba(250, 204, 21, .18);
+        }
+
+        .assistant-history-toggle.is-clicking {
+            animation: assistantHistoryPop .34s cubic-bezier(.2, .9, .2, 1);
+        }
+
+        .assistant-history-toggle.is-clicking svg {
+            animation: assistantHistoryLines .34s cubic-bezier(.2, .9, .2, 1);
+        }
+
+        @keyframes assistantHistoryPop {
+            0% { transform: scale(1); }
+            45% { transform: scale(.9) rotate(-3deg); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes assistantHistoryLines {
+            0% { transform: scaleX(1); }
+            45% { transform: scaleX(.72); }
+            100% { transform: scaleX(1); }
+        }
+
+        .assistant-powered-badge {
+            min-height: 27px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 0 10px;
+            margin-left: auto;
+            border-radius: 999px;
+            background: rgba(250, 204, 21, .16);
+            border: 1px solid rgba(250, 204, 21, .42);
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 950;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .assistant-powered-badge::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, .18);
         }
 
         .assistant-title-copy {
@@ -3280,13 +3989,648 @@
             border-color: rgba(250,204,21,.46);
         }
 
+        .assistant-modal-close:hover,
+        .assistant-modal-close:focus-visible {
+            background: #facc15;
+            border-color: #facc15;
+            color: #70131b;
+        }
+
         .assistant-modal-content {
+            position: relative;
             padding: 28px 26px 18px;
             overflow-y: auto;
             color: #1f2937;
             background:
                 radial-gradient(circle at 15% 28%, rgba(252, 231, 235, .86), transparent 26%),
                 linear-gradient(180deg, #ffffff, #fffafa);
+        }
+
+        .cici-chat-content {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 430px;
+            padding: 18px;
+            overflow: hidden;
+        }
+
+        .cici-history-drawer {
+            position: absolute;
+            inset: 0 auto 0 0;
+            z-index: 5;
+            width: min(276px, 86%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 14px;
+            background: rgba(255, 255, 255, .98);
+            border-right: 1px solid rgba(112, 19, 27, .12);
+            box-shadow: 16px 0 34px rgba(15, 23, 42, .14);
+            transform: translateX(-104%);
+            transition: transform .22s ease;
+        }
+
+        .assistant-modal.is-history-open .cici-history-drawer {
+            transform: translateX(0);
+        }
+
+        .cici-history-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .cici-history-head strong,
+        .cici-background-tools strong {
+            color: #70131b;
+            font-size: 13px;
+            font-weight: 950;
+        }
+
+        .cici-history-close {
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(112, 19, 27, .14);
+            border-radius: 999px;
+            background: #fff7f9;
+            color: #70131b;
+            cursor: pointer;
+        }
+
+        .cici-history-close:hover,
+        .cici-history-close:focus-visible {
+            background: #facc15;
+            border-color: #facc15;
+            color: #70131b;
+            outline: none;
+        }
+
+        .cici-background-tools {
+            display: grid;
+            gap: 8px;
+            padding: 10px;
+            border-radius: 14px;
+            border: 1px solid rgba(112, 19, 27, .1);
+            background: #fffafa;
+        }
+
+        .cici-background-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+
+        .cici-bg-swatch,
+        .cici-bg-preset,
+        .cici-bg-image,
+        .cici-bg-reset {
+            height: 30px;
+            border-radius: 999px;
+            border: 1px solid rgba(112, 19, 27, .16);
+            background: #ffffff;
+            color: #70131b;
+            font-size: 11px;
+            font-weight: 950;
+            cursor: pointer;
+            transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+        }
+
+        .cici-bg-swatch {
+            width: 30px;
+        }
+
+        .cici-bg-swatch.is-default {
+            background: #ffffff;
+        }
+
+        .cici-bg-swatch.is-maroon {
+            background: linear-gradient(135deg, #fff5f7, #8f1024);
+        }
+
+        .cici-bg-swatch.is-light-black {
+            background: linear-gradient(135deg, #ffffff, #d1d5db 55%, #6b7280);
+        }
+
+        .cici-bg-preset {
+            width: 40px;
+            border-radius: 10px;
+            background-position: center;
+            background-size: cover;
+        }
+
+        .cici-bg-image,
+        .cici-bg-reset {
+            padding: 0 10px;
+        }
+
+        .cici-bg-swatch:hover,
+        .cici-bg-swatch:focus-visible,
+        .cici-bg-preset:hover,
+        .cici-bg-preset:focus-visible,
+        .cici-bg-image:hover,
+        .cici-bg-image:focus-visible,
+        .cici-bg-reset:hover,
+        .cici-bg-reset:focus-visible {
+            transform: translateY(-1px);
+            border-color: #facc15;
+            box-shadow: 0 8px 18px rgba(250, 204, 21, .22);
+            outline: none;
+        }
+
+        .cici-history-list {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            align-content: start;
+            gap: 8px;
+            overflow-y: auto;
+        }
+
+        .cici-history-item {
+            width: 100%;
+            padding: 10px 11px;
+            border-radius: 12px;
+            border: 1px solid rgba(112, 19, 27, .1);
+            background: #fffafa;
+            color: #1f2937;
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color .18s ease, background .18s ease, transform .18s ease;
+        }
+
+        .cici-history-item:hover,
+        .cici-history-item:focus-visible {
+            background: #fff7d6;
+            border-color: #facc15;
+            transform: translateY(-1px);
+            outline: none;
+        }
+
+        .cici-history-title {
+            display: block;
+            color: #70131b;
+            font-size: 13px;
+            font-weight: 950;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cici-history-meta,
+        .cici-history-empty {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 850;
+        }
+
+        .cici-history-meta {
+            display: block;
+            margin-top: 3px;
+        }
+
+        .cici-history-empty {
+            padding: 14px 12px;
+            border: 1px dashed rgba(112, 19, 27, .18);
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .cici-messages {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 13px;
+            overflow-y: auto;
+            padding: 2px 4px 4px;
+        }
+
+        .cici-message-row {
+            display: grid;
+            grid-template-columns: 34px minmax(0, 1fr);
+            align-items: end;
+            gap: 9px;
+            max-width: 100%;
+        }
+
+        .cici-message-row.user {
+            grid-template-columns: minmax(0, 1fr) 34px;
+            justify-items: end;
+        }
+
+        .cici-avatar {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            background: #fff7d6;
+            color: #70131b;
+            border: 1px solid rgba(112, 19, 27, .12);
+            overflow: hidden;
+            box-shadow: 0 10px 18px rgba(112, 19, 27, .09);
+        }
+
+        .cici-avatar img {
+            width: 26px;
+            height: 26px;
+            object-fit: contain;
+        }
+
+        .cici-avatar.user {
+            background: #ffffff;
+            color: #971326;
+            border-color: rgba(112, 19, 27, .14);
+            font-size: 13px;
+            font-weight: 950;
+        }
+
+        .cici-message-stack {
+            display: grid;
+            gap: 4px;
+            justify-items: start;
+            min-width: 0;
+        }
+
+        .cici-message-row.user .cici-message-stack {
+            justify-items: end;
+        }
+
+        .cici-message {
+            max-width: min(82%, 420px);
+            padding: 12px 14px;
+            border-radius: 14px;
+            font-size: 14px;
+            line-height: 1.5;
+            font-weight: 650;
+            white-space: pre-line;
+            box-shadow: 0 10px 20px rgba(15, 23, 42, .08);
+        }
+
+        .cici-message.bot {
+            align-self: flex-start;
+            color: #1f2937;
+            background: #ffffff;
+            border: 1px solid rgba(112, 19, 27, .1);
+        }
+
+        .cici-message.user {
+            align-self: flex-end;
+            color: #ffffff;
+            background: #971326;
+            border-bottom-right-radius: 6px;
+        }
+
+        .cici-message-time {
+            color: #8a6770;
+            font-size: 10px;
+            font-weight: 850;
+            padding: 0 3px;
+        }
+
+        .cici-typing {
+            min-width: 76px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 14px 16px;
+        }
+
+        .cici-typing span {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #971326;
+            opacity: .42;
+            animation: ciciTypingWave 1s ease-in-out infinite;
+        }
+
+        .cici-typing span:nth-child(2) {
+            animation-delay: .16s;
+        }
+
+        .cici-typing span:nth-child(3) {
+            animation-delay: .32s;
+        }
+
+        @keyframes ciciTypingWave {
+            0%, 80%, 100% {
+                transform: translateY(0);
+                opacity: .38;
+            }
+            40% {
+                transform: translateY(-5px);
+                opacity: 1;
+            }
+        }
+
+        .cici-shortcuts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .cici-chip {
+            min-height: 34px;
+            padding: 0 13px;
+            border: 1px solid rgba(112, 19, 27, .18);
+            border-radius: 999px;
+            background: #fff7d6;
+            color: #70131b;
+            font-size: 12px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+        }
+
+        .cici-chip:hover,
+        .cici-chip:focus-visible {
+            transform: translateY(-1px);
+            background: #70131b;
+            color: #ffffff;
+            border-color: #70131b;
+            outline: none;
+        }
+
+        .cici-input-row {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            gap: 10px;
+            padding-top: 2px;
+        }
+
+        .cici-file-chip {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+            gap: 8px;
+            max-width: 100%;
+        }
+
+        .cici-file-chip.is-visible {
+            display: grid;
+        }
+
+        .cici-message-attachments {
+            display: grid;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .cici-message-image {
+            width: min(190px, 100%);
+            max-height: 150px;
+            object-fit: cover;
+            border-radius: 12px;
+            cursor: zoom-in;
+            box-shadow: 0 10px 22px rgba(15, 23, 42, .14);
+        }
+
+        .cici-message-image.is-expanded {
+            width: min(100%, 330px);
+            max-height: 300px;
+            object-fit: contain;
+            cursor: zoom-out;
+            background: #ffffff;
+        }
+
+        .cici-message-file {
+            width: fit-content;
+            max-width: 100%;
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: rgba(250, 204, 21, .22);
+            color: inherit;
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .cici-file-preview {
+            position: relative;
+            min-width: 0;
+            display: grid;
+            grid-template-columns: 34px minmax(0, 1fr);
+            align-items: center;
+            gap: 7px;
+            padding: 5px 28px 5px 6px;
+            border-radius: 12px;
+            border: 1px solid rgba(112, 19, 27, .12);
+            background: #fff7d6;
+            color: #70131b;
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+        .cici-file-preview img {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            object-fit: cover;
+            background: #ffffff;
+            border: 1px solid rgba(112, 19, 27, .1);
+        }
+
+        .cici-file-preview span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cici-file-remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(112, 19, 27, .16);
+            border-radius: 999px;
+            background: #ffffff;
+            color: #70131b;
+            font-size: 14px;
+            line-height: 1;
+            font-weight: 950;
+            cursor: pointer;
+        }
+
+        .cici-file-remove:hover,
+        .cici-file-remove:focus-visible {
+            background: #facc15;
+            border-color: #facc15;
+            outline: none;
+        }
+
+        .cici-attach {
+            width: 46px;
+            min-height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(112, 19, 27, .2);
+            border-radius: 999px;
+            background: #ffffff;
+            color: #70131b;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+        }
+
+        .cici-attach:hover,
+        .cici-attach:focus-visible {
+            transform: translateY(-1px);
+            background: #facc15;
+            border-color: #facc15;
+            color: #70131b;
+            outline: none;
+        }
+
+        .cici-attach svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+        }
+
+        .cici-input {
+            width: 100%;
+            min-height: 46px;
+            border: 1px solid rgba(112, 19, 27, .2);
+            border-radius: 999px;
+            padding: 0 16px;
+            color: #1f2937;
+            background: #ffffff;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 10px 18px rgba(15,23,42,.06);
+        }
+
+        .cici-input:focus {
+            outline: none;
+            border-color: #facc15;
+            box-shadow: 0 0 0 4px rgba(250, 204, 21, .2);
+        }
+
+        .cici-send {
+            width: 48px;
+            min-height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border: 0;
+            border-radius: 999px;
+            background: #70131b;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 950;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease, color .18s ease;
+        }
+
+        .cici-send:hover,
+        .cici-send:focus-visible {
+            transform: translateY(-1px);
+            background: #facc15;
+            color: #70131b;
+            outline: none;
+        }
+
+        .cici-send svg {
+            width: 21px;
+            height: 21px;
+            stroke: currentColor;
+        }
+
+        .cici-action-link {
+            align-self: flex-start;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            margin-top: -4px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: #facc15;
+            color: #70131b;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 950;
+        }
+
+        .cici-detail-form {
+            align-self: flex-start;
+            width: min(100%, 330px);
+            display: grid;
+            gap: 9px;
+            margin: 0 0 4px 40px;
+            padding: 12px;
+            border: 1px solid rgba(112, 19, 27, .14);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, .96);
+            box-shadow: 0 14px 28px rgba(112, 19, 27, .12);
+        }
+
+        .cici-detail-form strong {
+            color: #70131b;
+            font-size: 13px;
+            font-weight: 950;
+        }
+
+        .cici-detail-form small {
+            color: #7b6470;
+            font-size: 11px;
+            font-weight: 800;
+            line-height: 1.35;
+        }
+
+        .cici-detail-form label {
+            display: grid;
+            gap: 4px;
+            color: #1f2937;
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .cici-detail-form input {
+            width: 100%;
+            min-height: 36px;
+            border: 1px solid rgba(112, 19, 27, .18);
+            border-radius: 10px;
+            padding: 0 10px;
+            background: #fffafa;
+            color: #111827;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 750;
+        }
+
+        .cici-detail-form input:focus {
+            border-color: #facc15;
+            outline: 2px solid rgba(250, 204, 21, .28);
+        }
+
+        .cici-detail-form button {
+            min-height: 38px;
+            border: 1px solid #70131b;
+            border-radius: 999px;
+            background: #971326;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 950;
+            cursor: pointer;
+        }
+
+        .cici-detail-form button:hover,
+        .cici-detail-form button:focus-visible {
+            background: #facc15;
+            color: #70131b;
+            outline: none;
         }
 
         .assistant-coming-grid {
@@ -3869,54 +5213,27 @@
             <svg id="landingThemeToggleIcon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
+            <span>Theme</span>
         </button>
         <button type="button" class="landing-announcement-btn" id="announcementBtn" aria-label="Announcements" title="Announcements">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.282m3.102.069a18.03 18.03 0 0 1-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 0 1 8.835 2.535M10.34 6.66a23.847 23.847 0 0 0 8.835-2.535m0 0A23.74 23.74 0 0 0 18.795 3m.38 1.125a23.91 23.91 0 0 1 1.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 0 0 1.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 0 1 0 3.46" />
             </svg>
             <span class="announcement-badge" id="announcementBadge" style="display: none;">1</span>
+            <span>Announcements</span>
         </button>
 
-        <button type="button" class="landing-assistant-btn" id="assistantBtn" aria-label="AI Chatbot" title="AI Chatbot">
-            <svg viewBox="0 0 128 128" aria-hidden="true">
-                <defs>
-                    <linearGradient id="assistantIconBg" x1="22" y1="12" x2="105" y2="118" gradientUnits="userSpaceOnUse">
-                        <stop offset="0" stop-color="#a5162c" />
-                        <stop offset="1" stop-color="#6f0f1d" />
-                    </linearGradient>
-                    <linearGradient id="assistantIconFace" x1="36" y1="54" x2="85" y2="81" gradientUnits="userSpaceOnUse">
-                        <stop offset="0" stop-color="#4a1020" />
-                        <stop offset="1" stop-color="#220812" />
-                    </linearGradient>
-                    <linearGradient id="assistantIconWhite" x1="26" y1="24" x2="95" y2="111" gradientUnits="userSpaceOnUse">
-                        <stop offset="0" stop-color="#ffffff" />
-                        <stop offset="1" stop-color="#f5eff0" />
-                    </linearGradient>
-                </defs>
-                <rect width="128" height="128" rx="30" fill="url(#assistantIconBg)" />
-                <g class="assistant-icon-shadow">
-                    <path d="M38 92c0-13 11-24 25-24h2c14 0 25 11 25 24v12c0 6-5 11-11 11H49c-6 0-11-5-11-11V92Z" fill="url(#assistantIconWhite)" />
-                    <path d="M40 63h-6c-6 0-11 5-11 11v10c0 6 5 11 11 11h6V63Z" fill="url(#assistantIconWhite)" />
-                    <path d="M88 63h6c6 0 11 5 11 11v10c0 6-5 11-11 11h-6V63Z" fill="url(#assistantIconWhite)" />
-                    <path d="M63 35h4v17h-4V35Z" fill="url(#assistantIconWhite)" />
-                    <circle cx="65" cy="31" r="10" fill="url(#assistantIconWhite)" />
-                    <rect x="30" y="42" width="70" height="52" rx="23" fill="url(#assistantIconWhite)" />
-                    <rect x="38" y="55" width="54" height="28" rx="14" fill="url(#assistantIconFace)" />
-                    <ellipse cx="51" cy="69" rx="5.2" ry="7.2" fill="#ffffff" />
-                    <ellipse cx="79" cy="69" rx="5.2" ry="7.2" fill="#ffffff" />
-                    <path d="M58 77c4 4 10 4 14 0" stroke="#ffffff" stroke-width="4" stroke-linecap="round" />
-                    <path d="M47 91c-5 5-7 12-5 20" stroke="#7b1020" stroke-width="4" stroke-linecap="round" fill="none" />
-                    <path d="M83 91c5 5 7 12 5 20" stroke="#7b1020" stroke-width="4" stroke-linecap="round" fill="none" />
-                    <circle cx="51" cy="105" r="8" fill="none" stroke="#7b1020" stroke-width="4" />
-                    <path d="M87 105c3-9 10-13 17-10 8 3 10 11 7 20" fill="none" stroke="#7b1020" stroke-width="5" stroke-linecap="round" />
-                    <circle cx="106" cy="115" r="3" fill="#7b1020" />
-                    <circle cx="88" cy="115" r="3" fill="#7b1020" />
-                    <path d="M83 21h25c8 0 14 6 14 14v10c0 8-6 14-14 14H96l-10 10v-10h-3c-8 0-14-6-14-14V35c0-8 6-14 14-14Z" fill="#ffffff" />
-                    <circle cx="89" cy="40" r="4" fill="#871224" />
-                    <circle cx="98" cy="40" r="4" fill="#871224" />
-                    <circle cx="107" cy="40" r="4" fill="#871224" />
-                </g>
-            </svg>
+        <button type="button" class="landing-assistant-btn landing-botpress-btn" id="bp-toggle-chat" aria-label="Open clinic chat" title="AI Assistant">
+            <img src="{{ asset('images/clinic-robot-nobg.png') }}" alt="" aria-hidden="true">
+            <span>AI Assistant</span>
+        </button>
+
+        <button type="button" class="landing-proactive-message" id="landingProactiveMessage" aria-label="Open Cici chat">
+            <img src="{{ asset('images/clinic-robot-nobg.png') }}" alt="" aria-hidden="true">
+            <span>
+                <strong>Hi! Need help?</strong>
+                <span data-proactive-copy>Cici is ready to assist you.</span>
+            </span>
         </button>
 
         <!-- Announcement Modal -->
@@ -3962,7 +5279,7 @@
                     @endphp
 
                     <div class="announcement-overview-grid">
-                        <div class="announcement-overview-card" style="--announcement-accent:#3b82f6">
+                        <div class="announcement-overview-card" style="--announcement-accent:#facc15">
                             <span class="announcement-overview-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16v-4"/><path d="M12 8h.01"/><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/></svg>
                             </span>
@@ -3974,7 +5291,7 @@
                             </span>
                             <span class="announcement-overview-copy"><span>All</span><strong>{{ $landingTotalAnnouncements }}</strong><small>updates</small></span>
                         </div>
-                        <div class="announcement-overview-card" style="--announcement-accent:#a855f7">
+                        <div class="announcement-overview-card" style="--announcement-accent:#facc15">
                             <span class="announcement-overview-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v13H4V7a2 2 0 0 1 2-2z"/><path d="M8 13h3M8 17h6"/></svg>
                             </span>
@@ -4046,6 +5363,11 @@
         <div class="assistant-modal-overlay" id="assistantModalOverlay">
             <div class="assistant-modal" id="assistantModal">
                 <div class="assistant-modal-header">
+                    <button type="button" class="assistant-history-toggle" id="assistantHistoryToggle" aria-label="Open Cici chat history" aria-expanded="false">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                    </button>
                     <div class="assistant-title-wrap">
                         <h2 class="assistant-modal-title">
                             <span class="modal-title-icon is-assistant" aria-hidden="true">
@@ -4089,9 +5411,10 @@
                             </span>
                         </h2>
                         <div class="assistant-title-copy">
-                            <strong>Clinic Chatbot</strong>
-                            <span>✨ Coming Soon ✨</span>
+                            <strong>Cici</strong>
+                            <span>Clinic AI Assistant</span>
                         </div>
+                        <span class="assistant-powered-badge">Powered by AI</span>
                     </div>
                     <button type="button" class="assistant-modal-close" id="assistantModalClose" aria-label="Close AI Chatbot">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -4099,69 +5422,59 @@
                         </svg>
                     </button>
                 </div>
-                <div class="assistant-modal-content">
-                    <div class="assistant-coming-grid">
-                        <div class="assistant-robot-scene" aria-hidden="true">
-                            <span class="assistant-robot-halo"></span>
-                            <span class="assistant-plus-mark one">+</span>
-                            <span class="assistant-plus-mark two">+</span>
-                            <img class="assistant-reference-icon" src="{{ asset('images/clinic-robot-nobg.png') }}" onerror="this.onerror=null;this.src='{{ asset('images/clinic-robot.png') }}';" alt="">
-                            <div class="assistant-speech-bubble" data-assistant-bubble>
-                                <span class="assistant-speech-bubble-text" data-assistant-bubble-text>We'll get<br>back soon<span>♥</span></span>
-                            </div>
-                            <div class="assistant-robot-art">
-                                <span class="assistant-robot-antenna"></span>
-                                <span class="assistant-robot-ear left"></span>
-                                <span class="assistant-robot-ear right"></span>
-                                <span class="assistant-robot-head">
-                                    <span class="assistant-robot-face">
-                                        <span class="assistant-robot-smile"></span>
-                                    </span>
-                                </span>
-                                <span class="assistant-robot-body"></span>
-                                <span class="assistant-robot-wave"></span>
-                                <span class="assistant-stethoscope"></span>
+                <div class="assistant-modal-content cici-chat-content">
+                    <aside class="cici-history-drawer" id="ciciHistoryDrawer" aria-label="Cici chat history">
+                        <div class="cici-history-head">
+                            <strong>Chat History</strong>
+                            <button type="button" class="cici-history-close" id="ciciHistoryClose" aria-label="Close Cici history">&times;</button>
+                        </div>
+                        <div class="cici-background-tools" aria-label="Change Cici background">
+                            <strong>Change Background</strong>
+                            <div class="cici-background-options">
+                                <button type="button" class="cici-bg-swatch is-default" data-cici-bg="default" aria-label="Use default white background"></button>
+                                <button type="button" class="cici-bg-swatch is-maroon" data-cici-bg="maroon" aria-label="Use maroon background"></button>
+                                <button type="button" class="cici-bg-swatch is-light-black" data-cici-bg="light-black" aria-label="Use light black background"></button>
+                                <button type="button" class="cici-bg-preset" data-cici-bg-image="{{ asset('images/cici-bg-medical-soft.svg') }}" aria-label="Use medical icons background" style="background-image: url('{{ asset('images/cici-bg-medical-soft.svg') }}')"></button>
+                                <button type="button" class="cici-bg-preset" data-cici-bg-image="{{ asset('images/cici-bg-clinic-corners.svg') }}" aria-label="Use clinic corners background" style="background-image: url('{{ asset('images/cici-bg-clinic-corners.svg') }}')"></button>
+                                <button type="button" class="cici-bg-preset" data-cici-bg-image="{{ asset('images/cici-bg-rose-waves.svg') }}" aria-label="Use rose waves background" style="background-image: url('{{ asset('images/cici-bg-rose-waves.svg') }}')"></button>
+                                <button type="button" class="cici-bg-reset" id="ciciBgResetBtn">Reset</button>
                             </div>
                         </div>
-                        <div class="assistant-coming-copy">
-                            <h3>AI Chatbot Assistant</h3>
-                            <div class="assistant-coming-label">— ✨ Coming Soon ✨ —</div>
-                            <p>The AI Clninc Chatbot Assistant is currently under development and will soon be available to help answer clinic-related questions, provide guidance, and assist with common inquiries.</p>
-                            <div class="assistant-patience"><span>♥</span><strong>Thank you for your patience while we build this feature.</strong></div>
+                        <div class="cici-history-list" id="ciciHistoryList">
+                            <div class="cici-history-empty">No chat history yet.</div>
                         </div>
-                    </div>
-
-                    <div class="assistant-features">
-                        <div class="assistant-features-title">✨ Coming Features</div>
-                        <div class="assistant-feature-grid">
-                            <div class="assistant-feature">
-                                <span class="assistant-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v12H8l-4 4V5z"/><path d="M8 9h8M8 13h5"/></svg></span>
-                                <strong>Answer Clinic FAQs</strong>
-                                <span>Get quick answers to common questions.</span>
+                    </aside>
+                    <div class="cici-messages" id="ciciMessages" aria-live="polite">
+                        <div class="cici-message-row bot">
+                            <div class="cici-avatar" aria-hidden="true">
+                                <img src="{{ asset('images/clinic-robot-nobg.png') }}" onerror="this.onerror=null;this.src='{{ asset('images/clinic-robot.png') }}';" alt="">
                             </div>
-                            <div class="assistant-feature">
-                                <span class="assistant-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v13H4V7a2 2 0 0 1 2-2z"/><path d="M8 13h3M8 17h6"/></svg></span>
-                                <strong>Appointment Guidance</strong>
-                                <span>Help with schedules, appointments, and more.</span>
-                            </div>
-                            <div class="assistant-feature">
-                                <span class="assistant-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-4.4 7-11a4 4 0 0 0-7-2.6A4 4 0 0 0 5 10c0 6.6 7 11 7 11z"/><path d="M8 13h3l1-2 2 4 1-2h3"/></svg></span>
-                                <strong>Health Information</strong>
-                                <span>Access trusted health advice and reminders.</span>
-                            </div>
-                            <div class="assistant-feature">
-                                <span class="assistant-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m21 21-4.3-4.3"/><path d="M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z"/></svg></span>
-                                <strong>Smart Search</strong>
-                                <span>Find the information you need, faster.</span>
+                            <div class="cici-message-stack">
+                                <div class="cici-message bot">Hi! I am Cici. How can I help you today?</div>
+                                <div class="cici-message-time" data-cici-initial-time>Now</div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="assistant-notify">
-                        <span>🔔</span>
-                        <span>We'll notify you once this feature becomes available.</span>
-                       
-                        <span>See you soon! ♥</span>
+                    <div class="cici-shortcuts" aria-label="Cici quick prompts">
+                        <button type="button" class="cici-chip" data-cici-prompt="How can I book an appointment?">Book appointment</button>
+                        <button type="button" class="cici-chip" data-cici-prompt="How do I download my health form?">Health form</button>
+                        <button type="button" class="cici-chip" data-cici-prompt="What are the clinic hours?">Clinic hours</button>
+                        <button type="button" class="cici-chip" data-cici-prompt="Where is the clinic located?">Clinic location</button>
+                    </div>
+                    <div class="cici-file-chip" id="ciciFileChip"></div>
+                    <div class="cici-input-row">
+                        <button type="button" class="cici-attach" id="ciciAttachBtn" aria-label="Attach file">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+                            </svg>
+                        </button>
+                        <input type="file" id="ciciFileInput" accept="image/*" multiple hidden>
+                        <input type="text" class="cici-input" id="ciciInput" placeholder="Type your clinic question..." maxlength="500" autocomplete="off">
+                        <button type="button" class="cici-send" id="ciciSendBtn" aria-label="Send message">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -4449,27 +5762,54 @@
 
                         <div class="gateway-feature-grid" aria-label="Clinic system capabilities">
                             <article class="gateway-feature-card">
-                                <h3 class="gateway-feature-title">Clinic Access</h3>
-                                <p class="gateway-feature-copy">Secure workspace entry through One Portal and role-aware portal routing.</p>
-                            </article>
-
-                            <article class="gateway-feature-card">
+                                <span class="gateway-feature-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                    </svg>
+                                </span>
                                 <h3 class="gateway-feature-title">Health Records</h3>
-                                <p class="gateway-feature-copy">Student profiles, digital clearances, and clinic-ready submission workflows.</p>
+                                <p class="gateway-feature-copy">Access your digital health profiles and records.</p>
+                                <span class="gateway-feature-arrow" aria-hidden="true">→</span>
                             </article>
 
                             <article class="gateway-feature-card">
+                                <span class="gateway-feature-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M7 3.75v3M17 3.75v3M4.75 8.75h14.5M6.25 5.75h11.5a2 2 0 0 1 2 2v10.5a2 2 0 0 1-2 2H6.25a2 2 0 0 1-2-2V7.75a2 2 0 0 1 2-2Z"></path>
+                                        <path d="M8 12h2.5M13.5 12H16M8 16h2.5M13.5 16H16"></path>
+                                    </svg>
+                                </span>
                                 <h3 class="gateway-feature-title">Appointments</h3>
-                                <p class="gateway-feature-copy">Book clinic services, monitor schedules, and follow your visit status.</p>
+                                <p class="gateway-feature-copy">Book, manage, and track your clinic appointments.</p>
+                                <span class="gateway-feature-arrow" aria-hidden="true">→</span>
                             </article>
 
                             <article class="gateway-feature-card">
-                                <h3 class="gateway-feature-title">AI Integrated</h3>
-                                <p class="gateway-feature-copy">Assisted intake tools and smarter clinic-side workflow support.</p>
+                                <span class="gateway-feature-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12" />
+                                    </svg>
+                                </span>
+                                <h3 class="gateway-feature-title">Medical Clearance</h3>
+                                <p class="gateway-feature-copy">Track your medical clearance status online.</p>
+                                <span class="gateway-feature-arrow" aria-hidden="true">→</span>
+                            </article>
+
+                            <article class="gateway-feature-card">
+                                <span class="gateway-feature-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M4.75 14.25h2.5l8.5 3.75V6l-8.5 3.75h-2.5a1.5 1.5 0 0 0-1.5 1.5v1.5a1.5 1.5 0 0 0 1.5 1.5Z"></path>
+                                        <path d="M7.25 14.25l1.25 5"></path>
+                                        <path d="M19 9.25a4 4 0 0 1 0 5.5M21 7a7 7 0 0 1 0 10"></path>
+                                    </svg>
+                                </span>
+                                <h3 class="gateway-feature-title">Announcements</h3>
+                                <p class="gateway-feature-copy">Stay updated with the latest clinic news.</p>
+                                <span class="gateway-feature-arrow" aria-hidden="true">→</span>
                             </article>
                         </div>
 
-                        <p class="system-foot">PUP Taguig Clinic Management System</p>
+                        <p class="system-foot">© 2026 PUP Taguig Medical Clinic. All rights reserved.</p>
                     </div>
 
                     <div class="help-panel" id="landingHelpPanel" aria-hidden="true">
@@ -5149,22 +6489,888 @@
             }, 5000);
         }
 
+        const ciciEndpoint = @json(\Illuminate\Support\Facades\Route::has('cici.intent') ? route('cici.intent') : null);
+        const ciciMessages = document.getElementById('ciciMessages');
+        const ciciInput = document.getElementById('ciciInput');
+        const ciciSendBtn = document.getElementById('ciciSendBtn');
+        const ciciHistoryToggle = document.getElementById('assistantHistoryToggle');
+        const ciciHistoryClose = document.getElementById('ciciHistoryClose');
+        const ciciHistoryList = document.getElementById('ciciHistoryList');
+        const ciciChatContent = document.querySelector('.cici-chat-content');
+        const ciciAttachBtn = document.getElementById('ciciAttachBtn');
+        const ciciFileInput = document.getElementById('ciciFileInput');
+        const ciciFileChip = document.getElementById('ciciFileChip');
+        const ciciBgButtons = document.querySelectorAll('[data-cici-bg]');
+        const ciciBgPresetButtons = document.querySelectorAll('[data-cici-bg-image]');
+        const ciciBgResetBtn = document.getElementById('ciciBgResetBtn');
+        const ciciCsrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const ciciRobotIcon = @json(asset('images/clinic-robot-nobg.png'));
+        const ciciRobotFallback = @json(asset('images/clinic-robot.png'));
+        const ciciAuthUserKey = @json($landingStudentUser ? 'student-' . $landingStudentUser->getAuthIdentifier() : ($landingAdminUser ? 'admin-' . $landingAdminUser->getAuthIdentifier() : null));
+        const ciciUserLetter = @json(strtoupper(substr(trim((string) ($landingStudentUser?->first_name ?? $landingStudentUser?->name ?? $landingAdminUser?->name ?? 'Guest')), 0, 1)) ?: 'G');
+        const ciciUserPhotoUrl = @json(($landingStudentUser && filled(optional($landingStudentUser?->healthProfile)->student_photo)) ? asset('storage/' . ltrim(optional($landingStudentUser?->healthProfile)->student_photo, '/')) : null);
+        let ciciSelectedFiles = [];
+
+        function getCiciVisitorKey() {
+            if (ciciAuthUserKey) {
+                return ciciAuthUserKey;
+            }
+
+            const key = 'cici-landing-guest-id';
+            try {
+                let guestId = localStorage.getItem(key);
+                if (!guestId) {
+                    guestId = 'guest-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+                    localStorage.setItem(key, guestId);
+                }
+                return guestId;
+            } catch (error) {
+                return 'guest-session';
+            }
+        }
+
+        const ciciVisitorKey = getCiciVisitorKey();
+        const ciciHistoryKey = 'landing-cici-chat-history:' + ciciVisitorKey;
+        const ciciArchiveKey = 'landing-cici-chat-archives:' + ciciVisitorKey;
+        const ciciBackgroundKey = 'landing-cici-chat-background:' + ciciVisitorKey;
+        const ciciEscalationKey = 'landing-cici-escalation:' + ciciVisitorKey;
+        let ciciEscalationPollTimer = null;
+        let ciciViewingArchivedConversation = false;
+
+        function formatCiciTime(date = new Date()) {
+            return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        }
+
+        const ciciInitialTime = document.querySelector('[data-cici-initial-time]');
+        if (ciciInitialTime) {
+            ciciInitialTime.textContent = formatCiciTime();
+        }
+
+        function readCiciHistory() {
+            try {
+                return JSON.parse(localStorage.getItem(ciciHistoryKey) || '[]');
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function writeCiciHistory(items) {
+            try {
+                localStorage.setItem(ciciHistoryKey, JSON.stringify(items.slice(-40)));
+            } catch (error) {
+                // Chat still works if browser storage is unavailable.
+            }
+        }
+
+        function readCiciArchives() {
+            try {
+                return JSON.parse(localStorage.getItem(ciciArchiveKey) || '[]');
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function writeCiciArchives(items) {
+            try {
+                localStorage.setItem(ciciArchiveKey, JSON.stringify(items.slice(0, 20)));
+            } catch (error) {
+                // Chat still works if browser storage is unavailable.
+            }
+        }
+
+        function normalizeCiciHistoryItem(item) {
+            const normalized = { ...item };
+            normalized.attachments = Array.isArray(normalized.attachments) ? normalized.attachments : [];
+            const text = String(normalized.text || '');
+            if (normalized.role === 'bot' && text.toLowerCase().startsWith('clinic staff:')) {
+                normalized.role = 'staff';
+                normalized.text = text.replace(/^clinic staff:\s*/i, '');
+                normalized.senderInitial = normalized.senderInitial || 'S';
+            }
+            return normalized;
+        }
+
+        function getCiciHistoryTitle(items) {
+            const latestUserMessage = items
+                .slice()
+                .reverse()
+                .find(function (item) {
+                    return item.role === 'user' && (item.text || '').trim() !== '' && !String(item.text).startsWith('Attached file:');
+                });
+
+            return latestUserMessage ? latestUserMessage.text : 'Current conversation';
+        }
+
+        function renderCiciHistory() {
+            if (!ciciHistoryList) return;
+            const items = readCiciHistory().map(normalizeCiciHistoryItem);
+            const archives = readCiciArchives();
+            writeCiciHistory(items);
+            ciciHistoryList.innerHTML = '';
+
+            if (items.length === 0 && archives.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'cici-history-empty';
+                empty.textContent = 'No chat history yet.';
+                ciciHistoryList.appendChild(empty);
+                return;
+            }
+
+            if (items.length > 0) {
+                ciciHistoryList.appendChild(createCiciHistoryEntry(getCiciHistoryTitle(items), items.length + ' messages - active chat', function () {
+                    ciciViewingArchivedConversation = false;
+                    renderCiciConversation();
+                    assistantModal?.classList.remove('is-history-open');
+                    ciciHistoryToggle?.setAttribute('aria-expanded', 'false');
+                    ciciInput?.focus({ preventScroll: true });
+                }));
+            }
+
+            archives.forEach(function (session) {
+                const sessionItems = Array.isArray(session.items) ? session.items.map(normalizeCiciHistoryItem) : [];
+                ciciHistoryList.appendChild(createCiciHistoryEntry(session.title || getCiciHistoryTitle(sessionItems), (session.status || 'closed') + ' - readonly', function () {
+                    ciciViewingArchivedConversation = true;
+                    renderCiciConversation(sessionItems, true);
+                    assistantModal?.classList.remove('is-history-open');
+                    ciciHistoryToggle?.setAttribute('aria-expanded', 'false');
+                }));
+            });
+        }
+
+        function createCiciHistoryEntry(titleText, metaText, onClick) {
+            const entry = document.createElement('button');
+            entry.type = 'button';
+            entry.className = 'cici-history-item';
+            const title = document.createElement('span');
+            title.className = 'cici-history-title';
+            title.textContent = titleText;
+            const meta = document.createElement('span');
+            meta.className = 'cici-history-meta';
+            meta.textContent = metaText;
+            entry.appendChild(title);
+            entry.appendChild(meta);
+            entry.addEventListener('click', onClick);
+            return entry;
+        }
+
+        function updateCiciPromptVisibility() {
+            const hasUserChat = readCiciHistory().some(function (item) {
+                return item.role === 'user';
+            });
+
+            document.querySelectorAll('[data-cici-prompt]').forEach(function (button) {
+                button.hidden = hasUserChat || ciciViewingArchivedConversation;
+                button.disabled = ciciViewingArchivedConversation;
+            });
+        }
+
+        function setCiciComposerReadonly(readonly) {
+            if (ciciInput) {
+                ciciInput.disabled = readonly;
+                ciciInput.placeholder = readonly ? 'This conversation is closed.' : 'Type your clinic question...';
+            }
+            if (ciciSendBtn) ciciSendBtn.disabled = readonly;
+            if (ciciAttachBtn) ciciAttachBtn.disabled = readonly;
+            if (ciciFileInput) ciciFileInput.disabled = readonly;
+            document.querySelectorAll('[data-cici-prompt]').forEach(function (button) {
+                button.hidden = readonly || readCiciHistory().some(function (item) { return item.role === 'user'; });
+                button.disabled = readonly;
+            });
+        }
+
+        function saveCiciHistory(role, text, senderInitial = null, attachments = []) {
+            const cleanText = (text || '').trim();
+            if (!cleanText && (!Array.isArray(attachments) || attachments.length === 0)) return;
+
+            const items = readCiciHistory();
+            items.push(normalizeCiciHistoryItem({
+                role,
+                text: cleanText,
+                senderInitial,
+                attachments: Array.isArray(attachments) ? attachments : [],
+                at: new Date().toISOString()
+            }));
+            writeCiciHistory(items);
+            renderCiciHistory();
+            updateCiciPromptVisibility();
+        }
+
+        function isTerminalCiciUpdate(text) {
+            return /^Cici update:/i.test(String(text || ''))
+                && /(resolved|closed this conversation|unresolved)/i.test(String(text || ''));
+        }
+
+        function archiveCiciCurrentConversation(status = 'closed') {
+            const items = readCiciHistory().map(normalizeCiciHistoryItem);
+            if (items.length === 0) return;
+            const archives = readCiciArchives();
+            archives.unshift({
+                id: 'cici-' + Date.now(),
+                title: getCiciHistoryTitle(items),
+                status,
+                closedAt: new Date().toISOString(),
+                items
+            });
+            writeCiciArchives(archives);
+            writeCiciHistory([]);
+            localStorage.removeItem(ciciEscalationKey);
+            ciciViewingArchivedConversation = false;
+            seedCiciGreeting();
+            renderCiciConversation();
+            renderCiciHistory();
+        }
+
+        function readCiciEscalation() {
+            try {
+                return JSON.parse(localStorage.getItem(ciciEscalationKey) || 'null');
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function writeCiciEscalation(escalation) {
+            if (!escalation?.id || !escalation?.token) return;
+            try {
+                const existing = readCiciEscalation();
+                const seenStaffIds = Number(existing?.id) === Number(escalation.id)
+                    ? (existing.seenStaffIds || [])
+                    : [];
+                localStorage.setItem(ciciEscalationKey, JSON.stringify({
+                    id: escalation.id,
+                    token: escalation.token,
+                    seenStaffIds
+                }));
+            } catch (error) {
+                // Escalation still exists server-side.
+            }
+        }
+
+        async function pollCiciEscalationReplies() {
+            const escalation = readCiciEscalation();
+            if (!escalation?.id || !escalation?.token) return;
+
+            try {
+                const response = await fetch(`/cici/escalations/${escalation.id}/messages?token=${encodeURIComponent(escalation.token)}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!response.ok) return;
+
+                const payload = await response.json();
+                const seen = new Set(escalation.seenStaffIds || []);
+                let changed = false;
+                let shouldArchive = false;
+                let archiveStatus = 'closed';
+
+                (payload.messages || []).forEach(function (message) {
+                    const isVisibleCiciUpdate = message.sender_type === 'cici' && String(message.message || '').startsWith('Cici update:');
+                    if (!(message.sender_type === 'staff' || isVisibleCiciUpdate) || seen.has(message.id)) return;
+                    const attachments = Array.isArray(message.attachments) ? message.attachments : [];
+                    appendCiciMessage(message.sender_type === 'staff' ? 'staff' : 'bot', message.message, null, message.sender_initial, attachments);
+                    saveCiciHistory(message.sender_type === 'staff' ? 'staff' : 'bot', message.message, message.sender_initial, attachments);
+                    if (isTerminalCiciUpdate(message.message)) {
+                        shouldArchive = true;
+                        archiveStatus = /resolved/i.test(String(message.message || '')) ? 'resolved' : 'closed';
+                    }
+                    seen.add(message.id);
+                    changed = true;
+                });
+
+                if (changed) {
+                    escalation.seenStaffIds = Array.from(seen);
+                    localStorage.setItem(ciciEscalationKey, JSON.stringify(escalation));
+                }
+                if (shouldArchive) {
+                    archiveCiciCurrentConversation(archiveStatus);
+                }
+            } catch (error) {
+                // Poll again later.
+            }
+        }
+
+        function startCiciEscalationPolling() {
+            if (ciciEscalationPollTimer) return;
+            pollCiciEscalationReplies();
+            ciciEscalationPollTimer = window.setInterval(pollCiciEscalationReplies, 7000);
+        }
+
+        function renderCiciUserAvatar(avatar) {
+            if (!avatar) return;
+            avatar.innerHTML = '';
+
+            if (ciciUserPhotoUrl) {
+                const img = document.createElement('img');
+                img.src = ciciUserPhotoUrl;
+                img.alt = '';
+                img.onerror = function () {
+                    this.remove();
+                    avatar.textContent = ciciUserLetter || 'G';
+                };
+                avatar.appendChild(img);
+                return;
+            }
+
+            avatar.textContent = ciciUserLetter || 'G';
+        }
+
+        function appendCiciMessage(role, text, sentAt = null, senderInitial = null, attachments = []) {
+            if (!ciciMessages) return null;
+            const isUser = role === 'user';
+            const isStaff = role === 'staff';
+            const row = document.createElement('div');
+            row.className = 'cici-message-row ' + (isUser ? 'user' : 'bot');
+
+            const avatar = document.createElement('div');
+            avatar.className = 'cici-avatar ' + (isUser ? 'user' : 'bot');
+            avatar.setAttribute('aria-hidden', 'true');
+            if (isUser) {
+                renderCiciUserAvatar(avatar);
+            } else if (isStaff) {
+                avatar.textContent = senderInitial || 'S';
+            } else {
+                const icon = document.createElement('img');
+                icon.src = ciciRobotIcon;
+                icon.alt = '';
+                icon.onerror = function () {
+                    this.onerror = null;
+                    this.src = ciciRobotFallback;
+                };
+                avatar.appendChild(icon);
+            }
+
+            const stack = document.createElement('div');
+            stack.className = 'cici-message-stack';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'cici-message ' + (role === 'user' ? 'user' : 'bot');
+            bubble.textContent = text;
+            renderCiciMessageAttachments(bubble, attachments);
+
+            const time = document.createElement('div');
+            time.className = 'cici-message-time';
+            time.textContent = formatCiciTime(sentAt ? new Date(sentAt) : new Date());
+
+            stack.appendChild(bubble);
+            stack.appendChild(time);
+            if (isUser) {
+                row.appendChild(stack);
+                row.appendChild(avatar);
+            } else {
+                row.appendChild(avatar);
+                row.appendChild(stack);
+            }
+
+            ciciMessages.appendChild(row);
+            ciciMessages.scrollTop = ciciMessages.scrollHeight;
+            return bubble;
+        }
+
+        function renderCiciMessageAttachments(bubble, attachments = []) {
+            if (!Array.isArray(attachments) || attachments.length === 0) return;
+            const wrap = document.createElement('div');
+            wrap.className = 'cici-message-attachments';
+            attachments.forEach(function (attachment) {
+                const isImage = String(attachment.mime || '').startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(String(attachment.name || ''));
+                if (isImage && attachment.url) {
+                    const img = document.createElement('img');
+                    img.className = 'cici-message-image';
+                    img.src = attachment.url;
+                    img.alt = attachment.name || 'Attached image';
+                    img.loading = 'lazy';
+                    img.addEventListener('click', function () {
+                        img.classList.toggle('is-expanded');
+                    });
+                    wrap.appendChild(img);
+                    return;
+                }
+                const file = document.createElement(attachment.url ? 'a' : 'span');
+                file.className = 'cici-message-file';
+                file.textContent = '📎 ' + (attachment.name || 'Attached file');
+                if (attachment.url) {
+                    file.href = attachment.url;
+                    file.target = '_blank';
+                    file.rel = 'noopener';
+                }
+                wrap.appendChild(file);
+            });
+            bubble.appendChild(wrap);
+        }
+
+        function renderCiciConversation(itemsOverride = null, readonly = false) {
+            if (!ciciMessages) return;
+            const items = Array.isArray(itemsOverride) ? itemsOverride.map(normalizeCiciHistoryItem) : readCiciHistory().map(normalizeCiciHistoryItem);
+            if (items.length === 0) return;
+            if (!itemsOverride) writeCiciHistory(items);
+
+            ciciMessages.innerHTML = '';
+            items.forEach(function (item) {
+                appendCiciMessage(item.role === 'user' ? 'user' : (item.role === 'staff' ? 'staff' : 'bot'), item.text, item.at, item.senderInitial, item.attachments);
+            });
+            setCiciComposerReadonly(readonly);
+            updateCiciPromptVisibility();
+        }
+
+        function seedCiciGreeting() {
+            const items = readCiciHistory();
+            if (items.length > 0) return;
+
+            const greeting = document.querySelector('.cici-message-row.bot .cici-message.bot')?.textContent?.trim();
+            if (!greeting) return;
+
+            writeCiciHistory([{
+                role: 'bot',
+                text: greeting,
+                at: new Date().toISOString()
+            }]);
+        }
+
+        function defaultCiciBackground() {
+            return 'linear-gradient(180deg, #ffffff, #fffdfd)';
+        }
+
+        function applyCiciBackground(background) {
+            if (!ciciChatContent) return;
+
+            if (!background || background === 'default') {
+                ciciChatContent.style.background = defaultCiciBackground();
+                return;
+            }
+
+            if (background === 'maroon') {
+                ciciChatContent.style.background = 'linear-gradient(180deg, rgba(128, 0, 0, .16), rgba(255, 250, 250, .94))';
+                return;
+            }
+
+            if (background === 'light-black') {
+                ciciChatContent.style.background = 'linear-gradient(180deg, rgba(15, 23, 42, .1), rgba(248, 250, 252, .96))';
+                return;
+            }
+
+            if (background.indexOf('cici-bg-') !== -1) {
+                ciciChatContent.style.background = 'linear-gradient(rgba(255, 255, 255, .78), rgba(255, 250, 250, .86)), url("' + background + '") center / cover no-repeat';
+            }
+        }
+
+        function saveCiciBackground(background) {
+            try {
+                if (!background || background === 'default') {
+                    localStorage.removeItem(ciciBackgroundKey);
+                } else {
+                    localStorage.setItem(ciciBackgroundKey, background);
+                }
+            } catch (error) {
+                // Background can remain visual only when storage is unavailable.
+            }
+
+            applyCiciBackground(background);
+        }
+
+        function renderCiciFilePreviews() {
+            if (!ciciFileChip) return;
+
+            ciciFileChip.innerHTML = '';
+
+            if (ciciSelectedFiles.length === 0) {
+                ciciFileChip.classList.remove('is-visible');
+                return;
+            }
+
+            ciciSelectedFiles.forEach(function (file, index) {
+                const preview = document.createElement('div');
+                preview.className = 'cici-file-preview';
+
+                const image = document.createElement('img');
+                image.alt = '';
+                image.src = URL.createObjectURL(file);
+                image.onload = function () {
+                    URL.revokeObjectURL(image.src);
+                };
+
+                const name = document.createElement('span');
+                name.textContent = file.name;
+
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'cici-file-remove';
+                remove.setAttribute('aria-label', 'Remove ' + file.name);
+                remove.textContent = '×';
+                remove.addEventListener('click', function () {
+                    ciciSelectedFiles.splice(index, 1);
+                    if (ciciFileInput) {
+                        ciciFileInput.value = '';
+                    }
+                    renderCiciFilePreviews();
+                });
+
+                preview.appendChild(image);
+                preview.appendChild(name);
+                preview.appendChild(remove);
+                ciciFileChip.appendChild(preview);
+            });
+
+            ciciFileChip.classList.add('is-visible');
+        }
+
+        function appendCiciAction(action) {
+            if (!ciciMessages || !action?.url) return;
+            const link = document.createElement('a');
+            link.className = 'cici-action-link';
+            link.href = action.url;
+            link.textContent = action.label || 'Open link';
+            ciciMessages.appendChild(link);
+            ciciMessages.scrollTop = ciciMessages.scrollHeight;
+        }
+
+        function appendCiciDetailForm(form) {
+            if (!ciciMessages || form?.kind !== 'cici_escalation_details') return;
+
+            const card = document.createElement('form');
+            card.className = 'cici-detail-form';
+            card.noValidate = true;
+
+            const title = document.createElement('strong');
+            title.textContent = form.title || 'Clinic Staff Handoff';
+            card.appendChild(title);
+
+            const hint = document.createElement('small');
+            hint.textContent = 'Use N/A or None for optional numbers that do not apply.';
+            card.appendChild(hint);
+
+            (form.fields || []).forEach(function (field) {
+                const label = document.createElement('label');
+                label.textContent = field.label + (field.required ? ' *' : '');
+
+                const input = document.createElement('input');
+                input.name = field.name;
+                input.placeholder = field.placeholder || '';
+                input.value = field.value || '';
+                input.required = Boolean(field.required);
+                input.autocomplete = field.name === 'email' ? 'email' : 'off';
+
+                label.appendChild(input);
+                card.appendChild(label);
+            });
+
+            const submit = document.createElement('button');
+            submit.type = 'submit';
+            submit.textContent = form.submit_label || 'Send to Cici';
+            card.appendChild(submit);
+
+            card.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const missing = Array.from(card.querySelectorAll('input[required]'))
+                    .filter(function (input) { return !input.value.trim(); });
+                if (missing.length > 0) {
+                    missing[0].focus();
+                    return;
+                }
+
+                const values = Array.from(card.querySelectorAll('input')).map(function (input) {
+                    const label = input.closest('label')?.childNodes[0]?.textContent?.replace('*', '').trim() || input.name;
+                    const value = input.value.trim() || 'N/A';
+                    return label + ': ' + value;
+                });
+
+                submit.disabled = true;
+                submit.textContent = 'Sent';
+                card.querySelectorAll('input').forEach(function (input) {
+                    input.disabled = true;
+                });
+                sendCiciMessage(values.join('\n'));
+            });
+
+            ciciMessages.appendChild(card);
+            ciciMessages.scrollTop = ciciMessages.scrollHeight;
+        }
+
+        async function sendCiciMessage(rawText) {
+            if (ciciViewingArchivedConversation) return;
+            if (!ciciEndpoint) return;
+            const text = (rawText || '').trim();
+            if (!text && ciciSelectedFiles.length === 0) return;
+
+            if (text) {
+                appendCiciMessage('user', text);
+                saveCiciHistory('user', text);
+            }
+
+            if (ciciSelectedFiles.length > 0) {
+                const fileText = 'Attached images: ' + ciciSelectedFiles.map(function (file) { return file.name; }).join(', ');
+                appendCiciMessage('user', fileText);
+                saveCiciHistory('user', fileText);
+                ciciSelectedFiles = [];
+                renderCiciFilePreviews();
+                if (ciciFileInput) {
+                    ciciFileInput.value = '';
+                }
+            }
+
+            const pending = appendCiciMessage('bot', '');
+            if (pending) {
+                pending.innerHTML = '<span class="cici-typing" aria-label="Cici is typing"><span></span><span></span><span></span></span>';
+            }
+
+            try {
+                const response = await fetch(ciciEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': ciciCsrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ text: text || 'I attached images.' })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Cici request failed');
+                }
+
+                const payload = await response.json();
+                if (payload.type === 'no_reply') {
+                    pending?.closest('.cici-message-row')?.remove();
+                    if (payload.escalation) {
+                        writeCiciEscalation(payload.escalation);
+                        startCiciEscalationPolling();
+                    }
+                    return;
+                }
+                const replyText = payload.message || 'Done. What else can I help with?';
+                if (pending) {
+                    pending.textContent = replyText;
+                }
+                if (payload.escalation) {
+                    writeCiciEscalation(payload.escalation);
+                    startCiciEscalationPolling();
+                }
+                saveCiciHistory('bot', replyText);
+                appendCiciAction(payload.action);
+                appendCiciDetailForm(payload.form);
+            } catch (error) {
+                const errorText = 'Cici cannot reply right now. Please try again in a moment.';
+                if (pending) {
+                    pending.textContent = errorText;
+                }
+                saveCiciHistory('bot', errorText);
+            }
+        }
+
+        const ciciActiveHistoryAtLoad = readCiciHistory();
+        const ciciLoadTerminal = ciciActiveHistoryAtLoad.find(function (item) {
+            return isTerminalCiciUpdate(item.text);
+        });
+        if (ciciLoadTerminal) {
+            archiveCiciCurrentConversation(/resolved/i.test(String(ciciLoadTerminal.text || '')) ? 'resolved' : 'closed');
+        } else {
+            seedCiciGreeting();
+            renderCiciConversation();
+            renderCiciHistory();
+        }
+        updateCiciPromptVisibility();
+        startCiciEscalationPolling();
+
+        try {
+            applyCiciBackground(localStorage.getItem(ciciBackgroundKey));
+        } catch (error) {
+            applyCiciBackground(null);
+        }
+
         function openAssistantModal() {
             assistantModalOverlay.classList.add('is-open');
             assistantModal.classList.add('is-open');
+            window.setTimeout(function () {
+                ciciInput?.focus({ preventScroll: true });
+            }, 180);
         }
 
         function closeAssistantModal() {
             assistantModalOverlay.classList.remove('is-open');
             assistantModal.classList.remove('is-open');
+            assistantModal.classList.remove('is-history-open');
+            ciciHistoryToggle?.setAttribute('aria-expanded', 'false');
         }
 
-        assistantBtn?.addEventListener('click', openAssistantModal);
         assistantModalClose?.addEventListener('click', closeAssistantModal);
+        ciciHistoryToggle?.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            ciciHistoryToggle.classList.remove('is-clicking');
+            void ciciHistoryToggle.offsetWidth;
+            ciciHistoryToggle.classList.add('is-clicking');
+            const shouldOpen = !assistantModal?.classList.contains('is-history-open');
+            assistantModal?.classList.toggle('is-history-open', shouldOpen);
+            ciciHistoryToggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+            if (shouldOpen) renderCiciHistory();
+        });
+
+        ciciHistoryToggle?.addEventListener('animationend', function () {
+            ciciHistoryToggle.classList.remove('is-clicking');
+        });
+
+        ciciHistoryClose?.addEventListener('click', function (event) {
+            event.preventDefault();
+            assistantModal?.classList.remove('is-history-open');
+            ciciHistoryToggle?.setAttribute('aria-expanded', 'false');
+        });
+
         assistantModalOverlay?.addEventListener('click', function (e) {
             if (e.target === assistantModalOverlay) {
                 closeAssistantModal();
             }
+        });
+
+        ciciAttachBtn?.addEventListener('click', function (event) {
+            event.preventDefault();
+            ciciFileInput?.click();
+        });
+
+        ciciFileInput?.addEventListener('change', function () {
+            const selectedImages = Array.from(ciciFileInput.files || [])
+                .filter(function (file) {
+                    return !file.type || file.type.startsWith('image/');
+                });
+
+            ciciSelectedFiles = ciciSelectedFiles.concat(selectedImages);
+            renderCiciFilePreviews();
+        });
+
+        ciciBgButtons.forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                saveCiciBackground(button.dataset.ciciBg || 'default');
+            });
+        });
+
+        ciciBgPresetButtons.forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                saveCiciBackground(button.dataset.ciciBgImage || 'default');
+            });
+        });
+
+        ciciBgResetBtn?.addEventListener('click', function (event) {
+            event.preventDefault();
+            saveCiciBackground('default');
+        });
+
+        ciciSendBtn?.addEventListener('click', function () {
+            const value = ciciInput?.value || '';
+            if (ciciInput) ciciInput.value = '';
+            sendCiciMessage(value);
+        });
+
+        ciciInput?.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const value = ciciInput.value;
+                ciciInput.value = '';
+                sendCiciMessage(value);
+            }
+        });
+
+        document.querySelectorAll('[data-cici-prompt]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                if (ciciViewingArchivedConversation || button.disabled) return;
+                const prompt = button.dataset.ciciPrompt || button.textContent || '';
+                sendCiciMessage(prompt);
+            });
+        });
+
+        const landingProactiveMessage = document.getElementById('landingProactiveMessage');
+        const landingBotpressToggle = document.getElementById('bp-toggle-chat');
+        let landingBotpressWasOpened = false;
+        let landingBotpressWasOpen = false;
+        let landingProactiveHideTimer = null;
+        let landingProactiveThanksShowing = false;
+
+        function hideLandingProactiveMessage() {
+            if (!landingProactiveMessage) return;
+            if (landingProactiveHideTimer) {
+                window.clearTimeout(landingProactiveHideTimer);
+                landingProactiveHideTimer = null;
+            }
+            landingProactiveMessage.classList.add('is-leaving');
+            landingProactiveMessage.classList.remove('is-visible');
+            window.setTimeout(function () {
+                landingProactiveMessage.classList.remove('is-leaving');
+            }, 420);
+        }
+
+        function isLandingBotpressChatOpen() {
+            return Array.from(document.querySelectorAll('iframe')).some(function (frame) {
+                const rect = frame.getBoundingClientRect();
+                const style = window.getComputedStyle(frame);
+                if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false;
+
+                const descriptor = [
+                    frame.getAttribute('src') || '',
+                    frame.getAttribute('title') || '',
+                    frame.id || '',
+                    frame.className || ''
+                ].join(' ');
+                const isBotpress = /botpress|bpcontent|webchat|bpw|bp-/i.test(descriptor);
+                return isBotpress && rect.width > 260 && rect.height > 320;
+            });
+        }
+
+        function setLandingProactiveThanks() {
+            const title = landingProactiveMessage?.querySelector('strong');
+            const copy = landingProactiveMessage?.querySelector('[data-proactive-copy]');
+            if (title) title.textContent = 'Thank you!';
+            if (copy) copy.textContent = 'Have a great day!';
+        }
+
+        function setLandingProactiveHelp() {
+            const title = landingProactiveMessage?.querySelector('strong');
+            const copy = landingProactiveMessage?.querySelector('[data-proactive-copy]');
+            if (title) title.textContent = 'Hi! Need help?';
+            if (copy) copy.textContent = 'Cici is ready to assist you.';
+            landingProactiveThanksShowing = false;
+        }
+
+        function showLandingProactiveMessage() {
+            if (!landingProactiveMessage) return;
+            if (isLandingBotpressChatOpen()) {
+                hideLandingProactiveMessage();
+                return;
+            }
+            landingProactiveMessage.classList.remove('is-leaving');
+            landingProactiveMessage.classList.add('is-visible');
+            landingProactiveHideTimer = window.setTimeout(function () {
+                hideLandingProactiveMessage();
+                if (landingProactiveThanksShowing) {
+                    window.setTimeout(setLandingProactiveHelp, 450);
+                }
+            }, 5000);
+        }
+
+        window.setTimeout(showLandingProactiveMessage, 5000);
+        window.setInterval(showLandingProactiveMessage, 20000);
+        window.setInterval(function () {
+            const isOpen = isLandingBotpressChatOpen();
+            if (isOpen) {
+                landingBotpressWasOpened = true;
+                hideLandingProactiveMessage();
+            }
+
+            if (landingBotpressWasOpen && !isOpen && landingBotpressWasOpened) {
+                setLandingProactiveThanks();
+                landingProactiveThanksShowing = true;
+                showLandingProactiveMessage();
+                landingBotpressWasOpened = false;
+            }
+
+            landingBotpressWasOpen = isOpen;
+        }, 1000);
+
+        landingProactiveMessage?.addEventListener('click', function () {
+            hideLandingProactiveMessage();
+            landingBotpressWasOpened = true;
+            landingBotpressToggle?.click();
+        });
+
+        landingBotpressToggle?.addEventListener('click', function () {
+            landingBotpressWasOpened = true;
+            hideLandingProactiveMessage();
         });
 
 
@@ -5175,7 +7381,7 @@
         }
     </script>
     <script src="https://cdn.botpress.cloud/desk/webchat/v4.1/inject.js"></script>
-    <script src="https://files.bpcontent.cloud/2026/07/21/03/20260721035514-0QEJ8G8D.js" defer></script>
+    <script src="https://files.bpcontent.cloud/2026/07/21/04/20260721040029-YLMY6KM6.js" defer></script>
 </body>
 </html>
 

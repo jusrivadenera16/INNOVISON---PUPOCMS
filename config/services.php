@@ -45,6 +45,10 @@ return [
         'provider' => env('AI_PROVIDER', 'auto'),
     ],
 
+    'botpress' => [
+        'client_id' => env('BOTPRESS_CLIENT_ID'),
+    ],
+
     'idp' => [
         'enabled' => filter_var(env('IDP_ENABLED', false), FILTER_VALIDATE_BOOL),
         'base_url' => rtrim((string) env('IDP_BASE_URL', ''), '/'),
