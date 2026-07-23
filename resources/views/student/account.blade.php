@@ -3396,6 +3396,25 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         </div>
     </div>
+    @if(!empty($pendingHealthFormRequest))
+        <div class="health-declaration-card">
+            <div class="health-declaration-head">
+                <div>
+                    <div class="health-declaration-title">
+                        <x-outline-icon name="document-text" />
+                        New Health Form Requested: {{ $pendingHealthFormRequest->category }}
+                    </div>
+                    <p class="health-declaration-note">
+                        {{ $pendingHealthFormRequest->remarks ?: 'The clinic requested a fresh Health Information Form. Your latest details will be prefilled.' }}
+                    </p>
+                </div>
+                <a href="{{ route('health.form') }}" class="btn-print-form pending">
+                    <x-outline-icon name="document-text" />
+                    Fill Up New Health Form
+                </a>
+            </div>
+        </div>
+    @endif
     @if($healthFormSubmitted && $healthProfileRecord && !$hasHealthDeclaration)
         <div class="health-declaration-card">
             <div class="health-declaration-head">
@@ -3550,6 +3569,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         <x-outline-icon name="eye" />
                         View Record Details
                     </button>
+                    @if(!empty($pendingHealthFormRequest))
+                        <a href="{{ route('health.form') }}" class="btn-print-form pending">
+                            <x-outline-icon name="document-text" />
+                            Fill Up New Health Form
+                        </a>
+                    @endif
                     <a href="https://puptas.undraftedbsit2027.com/applicant-dashboard" class="health-status-link">
                         <x-outline-icon name="document-text" />
                         Proceed to Admission System
@@ -3584,6 +3609,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         <x-outline-icon name="eye" />
                         View Submitted Record
                     </button>
+                    @if(!empty($pendingHealthFormRequest))
+                        <a href="{{ route('health.form') }}" class="btn-print-form pending">
+                            <x-outline-icon name="document-text" />
+                            Fill Up New Health Form
+                        </a>
+                    @endif
                     @if($requiresHealthFormCorrection)
                         <a href="{{ route('health.form') }}" class="btn-print-form pending">
                             <x-outline-icon name="document-text" />
@@ -3634,7 +3665,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <span class="record-modal-label">Current Status</span>
                             <span class="record-modal-status">{{ $status }}</span>
                         </div>
-                        <a class="record-modal-summary-card record-modal-summary-download" href="{{ route('student.health_form.print') }}" target="_blank" rel="noopener">
+                        <a class="record-modal-summary-card record-modal-summary-download" href="{{ route('student.health_record.document', ['document' => 'health_form']) }}" target="_blank" rel="noopener">
                             <span>
                                 <span class="record-modal-label">Health Form</span>
                                 <span class="record-modal-value">Download</span>
@@ -3717,6 +3748,13 @@ document.addEventListener('DOMContentLoaded', function () {
                             @php
                                 $recordDocuments = [
                                     [
+                                        'key' => 'health_form',
+                                        'title' => 'Health Information Form',
+                                        'meta' => 'Saved PDF Snapshot',
+                                        'path' => 'saved-health-form.pdf',
+                                        'is_image' => false,
+                                    ],
+                                    [
                                         'key' => 'student_photo',
                                         'title' => '2x2 Student Photo',
                                         'meta' => 'Image Upload',
@@ -3784,6 +3822,31 @@ document.addEventListener('DOMContentLoaded', function () {
                                     </div>
                                 @empty
                                     <div class="record-modal-empty">No digital copies uploaded yet.</div>
+                                @endforelse
+                            </div>
+                        </div>
+                        <div class="record-modal-card is-full">
+                            <span class="record-modal-label">Health Form History</span>
+                            <div class="record-modal-links">
+                                @forelse(($healthFormSubmissions ?? collect()) as $submission)
+                                    <div class="record-document-card">
+                                        <div class="record-document-preview" aria-hidden="true">
+                                            <x-outline-icon name="document-text" />
+                                        </div>
+                                        <div class="record-document-body">
+                                            <span class="record-document-title">{{ $submission->category }}</span>
+                                            <span class="record-document-meta">
+                                                {{ ucwords(str_replace('_', ' ', $submission->status)) }}
+                                                {{ $submission->school_year ? ' - ' . $submission->school_year : '' }}
+                                                {{ $submission->submitted_at ? ' - ' . $submission->submitted_at->format('M d, Y h:i A') : '' }}
+                                            </span>
+                                            <div class="record-document-actions">
+                                                <a class="record-document-btn" href="{{ route('student.health_form.submission', $submission->id) }}" target="_blank" rel="noopener noreferrer">View PDF</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="record-modal-empty">No saved Health Form PDFs yet.</div>
                                 @endforelse
                             </div>
                         </div>

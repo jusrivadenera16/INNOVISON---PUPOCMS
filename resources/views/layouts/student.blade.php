@@ -2856,9 +2856,9 @@
 
     @if($showHealthFormModal)
     <div id="healthFormModal" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; z-index: 999999 !important;">
-        <div class="health-profile-prompt-card" style="background: #fff; border-radius: 24px; padding: 40px; max-width: 520px; width: 92%; text-align: center; box-shadow: 0 25px 80px rgba(0,0,0,0.4); margin: auto; position: relative; border-top: 2px solid #ffc107; border-bottom: 2px solid #ffc107;">
-            <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 24px;">
-                <div style="width: 90px; height: 90px; background: linear-gradient(135deg, #8b0000 0%, #6b0000 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: floatIcon 3s ease-in-out infinite; box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+        <div class="health-profile-prompt-card" style="background: #fff; border-radius: 24px; padding: 40px; max-width: 580px; width: 92%; text-align: center; box-shadow: 0 25px 80px rgba(0,0,0,0.4); margin: auto; position: relative; border-top: 2px solid #ffc107; border-bottom: 2px solid #ffc107;">
+            <div class="health-profile-orb" aria-hidden="true">
+                <div class="health-profile-orb-inner">
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                         <circle cx="9" cy="7" r="4"></circle>
@@ -2866,14 +2866,85 @@
                         <line x1="22" y1="11" x2="16" y2="11"></line>
                     </svg>
                 </div>
-                <div style="width: 70px; height: 20px; background: radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 70%); margin: 8px auto 0; border-radius: 50%;"></div>
             </div>
-            <h2 class="health-profile-prompt-title" style="color: #1f2937; font-size: 24px; font-weight: 800; margin: 0 0 16px;">Complete Your Health Profile</h2>
-            <p class="health-profile-prompt-copy" style="color: #4b5563; font-size: 16px; line-height: 1.7; margin: 0 0 28px;">
-                Hello <strong>{{ $studentUser->first_name ?? 'Student' }}</strong>! Good day!<br>
-                Please fill up your <strong>Health Profile</strong> to complete your clinic record.<br>
-                <span class="health-profile-prompt-instruction" style="color: #6b7280; font-size: 14px;">Prepare your personal information, medical history, vaccination details, and clinic requirement files before you begin.</span>
+            <div class="health-profile-kicker">
+                <span aria-hidden="true">▣</span>
+                Health Information Form
+            </div>
+            <h2 class="health-profile-prompt-title" style="color: #1f2937; font-size: 24px; font-weight: 800; margin: 0 0 16px;">
+                Complete Your Health Profile
+                <span class="health-profile-required">Required</span>
+            </h2>
+            <p class="health-profile-prompt-copy" style="color: #4b5563; font-size: 13px; line-height: 1.45; margin: -8px 0 12px;">
+                Welcome, <strong>{{ $studentUser->first_name ?? 'Student' }}!</strong> 👋<br>
+                Let’s complete your <strong>Health Information Form</strong><br>
+                to complete your clinic record.
             </p>
+            <div class="health-profile-prepare">
+                <strong>Please prepare:</strong>
+                <div class="health-profile-prepare-grid">
+                    <div>
+                        <span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                            </svg>
+                        </span>
+                        <small>Personal<br>Information</small>
+                    </div>
+                    <div>
+                        <span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                            </svg>
+                        </span>
+                        <small>Medical<br>History</small>
+                    </div>
+                    <div>
+                        <span>
+                            <img width="50" height="50" src="https://img.icons8.com/ios/50/syringe--v1.png" alt="syringe--v1">
+                        </span>
+                        <small>Vaccination<br>Details</small>
+                    </div>
+                    <div>
+                        <span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                            </svg>
+                        </span>
+                        <small>Required<br>Documents</small>
+                    </div>
+                </div>
+            </div>
+            <div class="health-profile-time">Estimated time: <strong>5–8 minutes</strong></div>
+            <div class="health-profile-benefits">
+                <div>
+                    <span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                        </svg>
+                    </span>
+                    <strong>Secure</strong>
+                    <small>Your information is protected</small>
+                </div>
+                <div>
+                    <span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                    </span>
+                    <strong>Complete</strong>
+                    <small>Submit all required information</small>
+                </div>
+                <div>
+                    <span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                        </svg>
+                    </span>
+                    <strong>Fast</strong>
+                    <small>Takes only a few minutes to finish</small>
+                </div>
+            </div>
             <div class="health-profile-prompt-actions" style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
                 <a class="health-profile-fill-button" href="{{ route('health.form') }}">
                     <span>Get Started</span>
@@ -2896,8 +2967,16 @@
             backdrop-filter: blur(8px);
         }
         #healthFormModal .health-profile-prompt-card {
-            background: #ffffff !important;
+                max-height: calc(100vh - 28px);
+                overflow-x: hidden;
+                overflow-y: auto;
+                background:
+                    linear-gradient(rgba(255, 255, 255, .24), rgba(255, 255, 255, .38)),
+                    url('{{ asset('images/hif_bg.png') }}') center / cover no-repeat,
+                    linear-gradient(180deg, #fffdf8 0%, #fff8e7 100%) !important;
             color: #1f2937 !important;
+            border: 1px solid rgba(250, 204, 21, .8) !important;
+            border-bottom: 3px solid #facc15 !important;
         }
         #healthFormModal .health-profile-prompt-title {
             color: #1f2937 !important;
@@ -2907,6 +2986,162 @@
         }
         #healthFormModal .health-profile-prompt-instruction {
             color: #6b7280 !important;
+        }
+        #healthFormModal .health-profile-orb {
+            position: relative;
+            width: 86px;
+            height: 86px;
+            margin: -14px auto 18px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(250, 204, 21, .34), rgba(250, 204, 21, 0) 68%);
+        }
+        #healthFormModal .health-profile-orb-inner {
+            width: 64px;
+            height: 64px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b0000 0%, #6b0000 100%);
+            animation: floatIcon 3s ease-in-out infinite;
+            box-shadow: 0 10px 24px rgba(139, 0, 0, .28), 0 0 0 8px rgba(250, 204, 21, .18);
+        }
+        #healthFormModal .health-profile-orb-inner svg {
+            width: 34px;
+            height: 34px;
+        }
+        #healthFormModal .health-profile-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding: 6px 16px;
+            border: 1px solid rgba(250, 204, 21, .85);
+            border-radius: 999px;
+            background: rgba(255, 248, 225, .88);
+            color: #70131b;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+        #healthFormModal .health-profile-required {
+            display: inline-flex;
+            vertical-align: middle;
+            margin-left: 8px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: #ffe4e6;
+            color: #9f1239;
+            font-size: 11px;
+            font-weight: 900;
+        }
+        #healthFormModal .health-profile-prepare {
+            margin: -6px auto 8px;
+            max-width: 396px;
+            padding: 12px 14px 14px;
+            border: 1px solid rgba(250, 204, 21, .42);
+            border-radius: 12px;
+            background: rgba(255, 251, 235, .68);
+            text-align: left;
+        }
+        #healthFormModal .health-profile-prepare > strong {
+            display: block;
+            margin-bottom: 12px;
+            color: #70131b;
+            font-size: 12px;
+            font-weight: 900;
+        }
+        #healthFormModal .health-profile-prepare-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            text-align: center;
+        }
+        #healthFormModal .health-profile-prepare-grid div {
+            display: grid;
+            justify-items: center;
+            gap: 6px;
+            padding: 0 8px;
+            border-right: 1px solid rgba(127, 29, 45, .14);
+        }
+        #healthFormModal .health-profile-prepare-grid div:last-child {
+            border-right: 0;
+        }
+        #healthFormModal .health-profile-prepare-grid span,
+        #healthFormModal .health-profile-benefits span {
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: #fff7ed;
+            color: #70131b;
+            border: 1px solid rgba(127, 29, 45, .12);
+            font-size: 13px;
+            font-weight: 900;
+        }
+        #healthFormModal .health-profile-prepare-grid span svg,
+        #healthFormModal .health-profile-prepare-grid span img,
+        #healthFormModal .health-profile-benefits span svg {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+        }
+        #healthFormModal .health-profile-prepare-grid span img {
+            filter: sepia(1) saturate(4) hue-rotate(315deg) brightness(.55);
+        }
+        #healthFormModal .health-profile-prepare-grid small {
+            color: #3f1d1d;
+            font-size: 10px;
+            font-weight: 900;
+            line-height: 1.22;
+        }
+        #healthFormModal .health-profile-time {
+            margin: 0 0 10px;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        #healthFormModal .health-profile-time::before {
+            content: "◷";
+            color: #f59e0b;
+            margin-right: 6px;
+        }
+        #healthFormModal .health-profile-time strong {
+            color: #70131b;
+        }
+        #healthFormModal .health-profile-benefits {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin: 0 auto 18px;
+            max-width: 450px;
+            text-align: left;
+        }
+        #healthFormModal .health-profile-benefits div {
+            display: grid;
+            grid-template-columns: 34px 1fr;
+            column-gap: 8px;
+            align-items: center;
+        }
+        #healthFormModal .health-profile-benefits span {
+            grid-row: span 2;
+        }
+        #healthFormModal .health-profile-benefits strong {
+            color: #70131b;
+            font-size: 11px;
+            font-weight: 900;
+        }
+        #healthFormModal .health-profile-benefits small {
+            color: #334155;
+            font-size: 9px;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+        #healthFormModal .health-profile-prompt-actions {
+            margin-top: 8px;
         }
         #healthFormModal .health-profile-fill-button {
             position: relative;
@@ -2962,6 +3197,28 @@
             }
             50% {
                 transform: translateY(-8px);
+            }
+        }
+        @media (max-width: 620px) {
+            #healthFormModal {
+                align-items: flex-start !important;
+                overflow-y: auto !important;
+                padding: 12px 0 !important;
+            }
+            #healthFormModal .health-profile-prompt-card {
+                max-height: none;
+                padding: 28px 18px !important;
+            }
+            #healthFormModal .health-profile-prepare-grid {
+                grid-template-columns: repeat(2, 1fr);
+                row-gap: 12px;
+            }
+            #healthFormModal .health-profile-prepare-grid div:nth-child(2) {
+                border-right: 0;
+            }
+            #healthFormModal .health-profile-benefits {
+                grid-template-columns: 1fr;
+                max-width: 280px;
             }
         }
     </style>

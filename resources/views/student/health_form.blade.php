@@ -43,7 +43,10 @@
         .health-shell {
             max-width: 980px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.97);
+            background:
+                linear-gradient(rgba(255, 255, 255, .24), rgba(255, 255, 255, .38)),
+                url('{{ asset('images/hif_bg.png') }}') center / cover no-repeat,
+                rgba(255, 255, 255, 0.97);
             border: 1px solid rgba(127, 29, 45, 0.16);
             border-radius: 24px;
             box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
@@ -61,10 +64,30 @@
         }
 
         .form-intro h1 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             margin: 0;
             font-size: 1.6rem;
             font-weight: 800;
             color: #70131b;
+        }
+
+        .form-intro h1::before,
+        .section-title.step-page-title::before {
+            content: attr(data-title-letter);
+            display: inline-grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            border: 1.5px solid rgba(127, 29, 45, 0.5);
+            border-radius: 50%;
+            background: #fff7f8;
+            color: var(--clinic-maroon);
+            font-size: 0.86rem;
+            font-weight: 900;
+            line-height: 1;
+            flex: 0 0 auto;
         }
 
         .form-intro p {
@@ -87,31 +110,156 @@
         }
 
         .section-title.step-page-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             font-size: 1.6rem;
             font-weight: 800;
         }
 
+
         .stepper-shell {
-            display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
-            gap: 10px;
-            min-height: 91px;
             position: fixed;
-            left: 50%;
-            top: 14px;
-            transform: translateX(-50%);
-            width: min(972px, calc(100vw - 10px));
+            left: 0;
+            right: 0;
+            top: 0;
+            width: 100%;
             box-sizing: border-box;
             z-index: 50;
-            background: rgba(255, 255, 255, 0.32);
-            padding: 10px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.62);
-            box-shadow:
-                0 10px 30px rgba(74, 15, 26, 0.14),
-                inset 0 1px 0 rgba(255, 255, 255, 0.72);
-            -webkit-backdrop-filter: blur(18px) saturate(145%);
-            backdrop-filter: blur(18px) saturate(145%);
+            color: #111827;
+            pointer-events: none;
+        }
+
+        .step-progress-top {
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr) 136px;
+            align-items: center;
+            gap: 16px;
+            min-height: 64px;
+            padding: 8px 24px;
+            background: linear-gradient(135deg, var(--clinic-maroon) 0%, var(--clinic-maroon-dark) 100%);
+            border-bottom: 3px solid var(--clinic-yellow);
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+            pointer-events: auto;
+        }
+
+        .step-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .step-brand img {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 8px 20px rgba(74, 15, 26, 0.12);
+        }
+
+        .step-brand-text {
+            color: #ffffff;
+            font-size: 0.8rem;
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .step-progress-center {
+            display: grid;
+            grid-template-columns: 132px minmax(110px, 1fr) 104px;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .step-progress-copy strong,
+        .step-progress-percent {
+            color: var(--clinic-yellow);
+            font-weight: 900;
+        }
+
+        .step-progress-copy strong {
+            display: block;
+            font-size: 0.92rem;
+        }
+
+        .step-progress-copy span {
+            display: block;
+            margin-top: 3px;
+            color: #ffffff;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .step-progress-track {
+            position: relative;
+            height: 9px;
+            border-radius: 999px;
+            background: rgba(190, 91, 105, 0.58);
+            overflow: hidden;
+        }
+
+        .step-progress-fill {
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 20%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--clinic-yellow) 0%, #f59e0b 100%);
+            transition: width 0.24s ease;
+        }
+
+        .step-progress-percent {
+            font-size: 0.84rem;
+            white-space: nowrap;
+        }
+
+        .step-form-title-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 136px;
+            padding: 8px 12px;
+            border: 1px solid rgba(127, 29, 45, 0.12);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+        }
+
+        .step-number svg path {
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .step-form-title-card strong {
+            display: block;
+            color: var(--clinic-maroon);
+            font-size: 0.78rem;
+            font-weight: 900;
+            line-height: 1.15;
+            text-align: center;
+        }
+
+        .step-list-card {
+            display: none;
+        }
+
+        @keyframes activeStepGlow {
+            0%, 100% {
+                box-shadow:
+                    0 0 0 5px rgba(250, 204, 21, 0.16),
+                    0 0 22px rgba(250, 204, 21, 0.58),
+                    0 12px 26px rgba(127, 29, 45, 0.28);
+            }
+            50% {
+                box-shadow:
+                    0 0 0 8px rgba(250, 204, 21, 0.2),
+                    0 0 34px rgba(250, 204, 21, 0.82),
+                    0 16px 32px rgba(127, 29, 45, 0.34);
+            }
         }
 
         :where(.asw-menu-btn),
@@ -149,44 +297,75 @@
             pointer-events: auto !important;
         }
 
-        .stepper-spacer {
-            height: 109px;
-        }
-
         .step-chip {
-            border: 1px solid rgba(127, 29, 45, 0.2);
-            border-radius: 14px;
-            padding: 12px 14px;
-            background: #fff7d6;
-            opacity: 0.78;
-            transition: all 0.2s ease;
+            position: relative;
+            display: grid;
+            place-items: center;
+            gap: 0;
+            min-width: 0;
+            min-height: 36px;
+            text-align: center;
         }
 
-        .step-chip small {
-            display: block;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            font-size: 0.72rem;
-            margin-bottom: 2px;
-            font-weight: 700;
+        .step-chip:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            top: 39px;
+            bottom: -24px;
+            left: 20px;
+            width: 2px;
+            background: rgba(17, 24, 39, 0.14);
         }
 
-        .step-chip strong {
+        .step-number {
+            position: relative;
+            z-index: 1;
+            display: inline-grid;
+            place-items: center;
+            width: 36px;
+            height: 36px;
+            border: 2px solid #f59e0b;
+            border-radius: 50%;
+            background: #ffffff;
             color: #70131b;
-            font-size: 0.95rem;
+            font-size: 0.86rem;
+            font-weight: 900;
+            box-shadow: 0 8px 18px rgba(127, 29, 45, 0.08);
         }
 
-        .step-chip.is-active {
-            background: linear-gradient(135deg, var(--clinic-maroon) 0%, var(--clinic-maroon-dark) 100%);
+        .step-number svg {
+            width: 21px;
+            height: 21px;
+            stroke-width: 3;
+        }
+
+        .step-label {
+            display: none;
+            color: #4b5563;
+            font-size: 0.8rem;
+            font-weight: 800;
+            line-height: 1.15;
+        }
+
+        .step-chip.is-active .step-number {
             border-color: transparent;
-            opacity: 1;
-            box-shadow: 0 8px 20px rgba(127, 29, 45, 0.24);
+            background: linear-gradient(135deg, var(--clinic-maroon) 0%, var(--clinic-maroon-dark) 100%);
+            color: #ffffff;
+            animation: activeStepGlow 1.45s ease-in-out infinite;
         }
 
-        .step-chip.is-active small,
-        .step-chip.is-active strong {
-            color: #fff;
+        .step-chip.is-active .step-label {
+            color: #70131b;
+        }
+
+        .step-chip.is-complete .step-number {
+            border-color: transparent;
+            background: linear-gradient(135deg, var(--clinic-maroon) 0%, var(--clinic-maroon-dark) 100%);
+            color: #ffffff;
+        }
+
+        .stepper-spacer {
+            height: 82px;
         }
 
         .profile-readonly-grid {
@@ -706,6 +885,101 @@
             max-width: 590px;
         }
 
+        .esign-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        .esign-card {
+            border: 1px solid rgba(127, 29, 45, 0.14);
+            border-radius: 16px;
+            background: #ffffff;
+            padding: 16px;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+        }
+
+        .esign-card h3 {
+            margin: 0 0 6px;
+            color: var(--clinic-maroon);
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .esign-card p {
+            margin: 0 0 12px;
+            color: #64748b;
+            font-size: 0.84rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .esign-upload-instructions {
+            margin: 12px 0 0;
+            padding-left: 20px;
+            color: #64748b;
+            font-size: 0.84rem;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .esign-upload-instructions li + li {
+            margin-top: 4px;
+        }
+
+        .signature-pad-wrap {
+            border: 1.5px dashed rgba(127, 29, 45, 0.35);
+            border-radius: 14px;
+            background:
+                linear-gradient(rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.82)),
+                repeating-linear-gradient(0deg, transparent 0, transparent 35px, rgba(127, 29, 45, 0.08) 36px);
+            overflow: hidden;
+        }
+
+        #digitalSignaturePad {
+            display: block;
+            width: 100%;
+            height: 190px;
+            background: #fff;
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        .esign-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .esign-secondary-btn {
+            border: 1px solid rgba(127, 29, 45, 0.2);
+            border-radius: 999px;
+            background: #fff;
+            color: var(--clinic-maroon);
+            padding: 9px 14px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .esign-upload-input {
+            width: 100%;
+            border: 1px solid rgba(127, 29, 45, 0.18);
+            border-radius: 12px;
+            background: #fff7f8;
+            color: #111827;
+            padding: 10px;
+            font-weight: 800;
+        }
+
+        .esign-status {
+            margin-top: 10px;
+            color: #64748b;
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+
         .upload-preview-card {
             display: none;
             align-items: center;
@@ -888,6 +1162,64 @@
         .upload-preview-error-actions {
             display: flex;
             gap: 8px;
+        }
+
+        .health-error-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 2147482500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            background: rgba(17, 24, 39, 0.38);
+        }
+
+        .health-error-modal.is-visible {
+            display: flex;
+        }
+
+        .health-error-card {
+            width: min(320px, 100%);
+            padding: 24px 20px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(250, 204, 21, 0.24);
+            background: #ffffff;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.25);
+            text-align: center;
+        }
+
+        .health-error-card h3 {
+            margin: 0;
+            color: var(--clinic-maroon);
+            font-size: 1.18rem;
+            font-weight: 900;
+        }
+
+        .health-error-card p {
+            margin: 10px 0 18px;
+            color: #5b677a;
+            font-size: 0.92rem;
+            line-height: 1.35;
+        }
+
+        .health-error-card button {
+            width: 100%;
+            min-height: 42px;
+            border: 0;
+            border-radius: 999px;
+            background: linear-gradient(135deg, var(--clinic-maroon) 0%, var(--clinic-maroon-dark) 100%);
+            color: #ffffff;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(127, 29, 45, 0.22);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .health-error-card button:hover,
+        .health-error-card button:focus {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px rgba(127, 29, 45, 0.3);
         }
 
         .clinic-select-wrap {
@@ -1417,6 +1749,23 @@
             grid-column: span 2;
         }
 
+        .address-split-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .address-split-grid .form-field {
+            padding: 0;
+            border: 0;
+            background: transparent;
+            border-radius: 0;
+        }
+
+        .home-address-label {
+            color: #111827 !important;
+        }
+
         .form-field .form-label {
             display: block;
             color: #6b7280;
@@ -1555,45 +1904,120 @@
                 grid-column: span 1;
             }
 
-            .stepper-shell {
-                top: 8px;
-                width: calc(100vw - 16px);
-                min-height: auto;
-                padding: 8px;
+            .address-split-grid {
+                grid-template-columns: 1fr;
             }
 
-            .stepper-spacer {
-                height: 74px;
+            .stepper-shell {
+                top: 0;
+                width: 100%;
+                min-height: auto;
+            }
+
+            .step-progress-top {
+                grid-template-columns: 42px minmax(0, 1fr) 86px;
+                gap: 10px;
+                min-height: 74px;
+                padding: 8px 16px;
+            }
+
+            .step-brand {
+                justify-content: flex-start;
+            }
+
+            .step-brand img {
+                width: 40px;
+                height: 40px;
+            }
+
+            .step-brand-text {
+                display: none;
+            }
+
+            .step-progress-center {
+                grid-template-columns: 82px minmax(60px, 1fr) 76px;
+                gap: 8px;
+                text-align: left;
+            }
+
+            .step-progress-copy strong {
+                font-size: 0.82rem;
+            }
+
+            .step-progress-copy span {
+                font-size: 0.72rem;
+                margin-top: 1px;
+            }
+
+            .step-progress-track {
+                height: 7px;
+            }
+
+            .step-progress-percent {
+                font-size: 0.7rem;
+            }
+
+            .step-form-title-card {
+                display: flex;
+                min-width: 0;
+                padding: 8px 8px;
+                border-radius: 10px;
+            }
+
+            .step-form-title-card strong {
+                font-size: 0.66rem;
+                line-height: 1.08;
+            }
+
+            .step-list-card {
+                overflow-x: auto;
+                position: static;
+                grid-template-columns: repeat(5, 54px);
+                width: calc(100vw - 24px);
+                margin: 8px auto 0;
+                min-height: 58px;
+                padding: 12px 14px;
+                border-radius: 14px;
             }
 
             .step-chip {
+                display: grid;
+                justify-items: center;
+                align-content: start;
+                gap: 8px;
+                min-height: 0;
+                text-align: center;
+            }
+
+            .step-chip:not(:last-child)::after {
+                left: calc(50% + 31px);
+                right: calc(-50% + 31px);
+                top: 16px;
+                bottom: auto;
+                width: auto;
+                height: 2px;
+            }
+
+            .step-number {
+                width: 32px;
+                height: 32px;
+                font-size: 0.82rem;
+            }
+
+            .step-label {
                 display: none;
-                padding: 10px 12px;
-                border-radius: 12px;
             }
 
-            .step-chip.is-active {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 12px;
-                min-height: 48px;
+            .stepper-spacer {
+                height: 86px;
             }
 
-            .step-chip.is-active small {
-                margin: 0;
-                font-size: 0.68rem;
-                white-space: nowrap;
+            .esign-grid {
+                grid-template-columns: 1fr;
             }
 
-            .step-chip.is-active small::after {
-                content: " of 5";
-            }
-
-            .step-chip.is-active strong {
-                font-size: 0.9rem;
-                text-align: right;
-                line-height: 1.2;
+            #digitalSignaturePad {
+                height: 160px;
             }
         }
 
@@ -1617,22 +2041,18 @@
         <div class="health-header"></div>
 
         <div class="section-body">
-            @if(session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
-            @endif
-            @if($errors->any())
-                <div class="alert alert-danger">{{ $errors->first() }}</div>
-            @endif
             @php
                 $selectedPwd = old('has_disability', $prefill['has_disability'] ?? 'No');
                 $personalErrorFields = ['school_year', 'course_code', 'course_college', 'home_address', 'zipcode', 'birthday', 'age', 'sex', 'civil_status', 'blood_type', 'contact_no', 'guardian_name', 'landline', 'cellphone'];
                 $medicalErrorFields = ['has_illness', 'medical_history', 'other_illness', 'has_disability', 'disability_type', 'food_allergies', 'no_allergies', 'medicine_allergies', 'other_med_allergies', 'is_smoker', 'is_drinker'];
                 $covidErrorFields = ['covid_vaccinated', 'vaccine_history'];
-                $uploadErrorFields = ['medical_certificate', 'doctor_name', 'med_cert_date', 'med_cert_findings', 'med_cert_findings_details', 'chest_xray_result', 'xray_date', 'xray_findings', 'xray_findings_details', 'pwd_id_proof', 'student_photo', 'health_declaration', 'health_profile_certified'];
-                $startStep = collect($uploadErrorFields)->contains(fn ($field) => $errors->has($field)) ? 5
+                $uploadErrorFields = ['medical_certificate', 'doctor_name', 'med_cert_date', 'med_cert_findings', 'med_cert_findings_details', 'chest_xray_result', 'xray_date', 'xray_findings', 'xray_findings_details', 'pwd_id_proof', 'student_photo', 'health_declaration'];
+                $esignErrorFields = ['digital_signature_data', 'digital_signature_upload', 'digital_signature_existing', 'health_profile_certified'];
+                $startStep = collect($esignErrorFields)->contains(fn ($field) => $errors->has($field)) ? 6
+                    : (collect($uploadErrorFields)->contains(fn ($field) => $errors->has($field)) ? 5
                     : (collect($covidErrorFields)->contains(fn ($field) => $errors->has($field)) ? 4
                     : (collect($medicalErrorFields)->contains(fn ($field) => $errors->has($field)) ? 3
-                    : (collect($personalErrorFields)->contains(fn ($field) => $errors->has($field)) ? 2 : 1)));
+                    : (collect($personalErrorFields)->contains(fn ($field) => $errors->has($field)) ? 2 : 1))));
                 $selectedMedicalHistory = old('medical_history', $prefill['medical_history'] ?? []);
                 $selectedMedicineAllergies = old('medicine_allergies', $prefill['medicine_allergies'] ?? []);
                 $selectedHasIllness = old('has_illness', $prefill['has_illness'] ?? 'No');
@@ -1684,28 +2104,36 @@
                 if ($displayReferenceNumber === '' && ($referenceRequiresValidation || $referenceVerificationUnavailable)) {
                     $startStep = 1;
                 }
+
+                $healthFormSteps = [
+                    1 => $stepOneTitle,
+                    2 => 'Personal Information',
+                    3 => 'Medical History',
+                    4 => 'COVID-19',
+                    5 => 'Clinic Requirements',
+                    6 => 'E-Signature',
+                ];
             @endphp
 
             <div class="stepper-shell">
-                <div class="step-chip {{ $startStep === 1 ? 'is-active' : '' }}" id="chipStep1">
-                    <small>Step 1</small>
-                    <strong>{{ $stepOneTitle }}</strong>
-                </div>
-                <div class="step-chip {{ $startStep === 2 ? 'is-active' : '' }}" id="chipStep2">
-                    <small>Step 2</small>
-                    <strong>Personal Information</strong>
-                </div>
-                <div class="step-chip {{ $startStep === 3 ? 'is-active' : '' }}" id="chipStep3">
-                    <small>Step 3</small>
-                    <strong>Medical History</strong>
-                </div>
-                <div class="step-chip {{ $startStep === 4 ? 'is-active' : '' }}" id="chipStep4">
-                    <small>Step 4</small>
-                    <strong>COVID-19</strong>
-                </div>
-                <div class="step-chip {{ $startStep === 5 ? 'is-active' : '' }}" id="chipStep5">
-                    <small>Step 5</small>
-                    <strong>Clinic Requirements</strong>
+                <div class="step-progress-top">
+                    <div class="step-brand">
+                        <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
+                        <div class="step-brand-text">PUP Taguig<br>Medical Clinic</div>
+                    </div>
+                    <div class="step-progress-center">
+                        <div class="step-progress-copy">
+                            <strong id="currentStepLabel">Step {{ $startStep }} of {{ count($healthFormSteps) }}</strong>
+                            <span id="currentStepName">{{ $healthFormSteps[$startStep] ?? 'Clinic Reference' }}</span>
+                        </div>
+                        <div class="step-progress-track" aria-hidden="true">
+                            <div class="step-progress-fill" id="stepProgressFill" style="width: {{ round(($startStep / count($healthFormSteps)) * 100) }}%;"></div>
+                        </div>
+                        <div class="step-progress-percent" id="stepProgressPercent">{{ round(($startStep / count($healthFormSteps)) * 100) }}% Complete</div>
+                    </div>
+                    <div class="step-form-title-card" aria-label="Current form">
+                        <strong>Health Information Form</strong>
+                    </div>
                 </div>
             </div>
             <div class="stepper-spacer"></div>
@@ -1713,11 +2141,18 @@
             <form action="{{ route('store.health.form') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" id="course_college" name="course_college" value="{{ $courseApplicable ? $selectedCourseName : '' }}">
+                <input type="hidden" name="health_form_category" value="{{ optional($pendingHealthFormRequest ?? null)->category ?: 'General' }}">
+                <input type="hidden" name="health_form_request_remarks" value="{{ optional($pendingHealthFormRequest ?? null)->remarks ?: '' }}">
 
                 <div class="step-panel {{ $startStep === 1 ? '' : 'is-hidden' }}" id="stepPanel1">
                     <div class="form-intro">
-                        <h1>{{ $stepOneTitle }}</h1>
+                        <h1 data-title-letter="C">{{ $stepOneTitle }}</h1>
                         <p>{{ $stepOneDescription }}</p>
+                        @if(!empty($pendingHealthFormRequest))
+                            <p style="margin-top:10px;color:#7f1d2d;font-weight:900;">
+                                New Health Form Request: {{ $pendingHealthFormRequest->category }}{{ $pendingHealthFormRequest->remarks ? ' - ' . $pendingHealthFormRequest->remarks : '' }}
+                            </p>
+                        @endif
                     </div>
 
                     <div class="identity-overview">
@@ -1845,7 +2280,7 @@
                 </div>
 
                 <div class="step-panel {{ $startStep === 2 ? '' : 'is-hidden' }}" id="stepPanel2">
-                    <h2 class="section-title step-page-title">Personal Information</h2>
+                    <h2 class="section-title step-page-title" data-title-letter="P">Personal Information</h2>
                     <p class="step-fill-note">Complete the student and emergency contact details from the official PUP Health Information Form.</p>
                     <div class="personal-identity-grid">
                         <div class="form-field">
@@ -1967,17 +2402,93 @@
                                 </div>
                             </div>
                         </div>
+                        @php
+                            $combinedHomeAddress = old('home_address', $prefill['home_address'] ?? '');
+                            $oldAddressStreet = old('home_address_street');
+                            $oldAddressBarangay = old('home_address_barangay');
+                            $oldAddressCity = old('home_address_city_municipality');
+                            $oldAddressProvince = old('home_address_province');
+                            $hasSplitAddressOldInput = $oldAddressStreet !== null
+                                || $oldAddressBarangay !== null
+                                || $oldAddressCity !== null
+                                || $oldAddressProvince !== null;
+                            $addressStreet = '';
+                            $addressBarangay = '';
+                            $addressCity = '';
+                            $addressProvince = '';
+
+                            if ($hasSplitAddressOldInput) {
+                                $addressStreet = $oldAddressStreet ?? '';
+                                $addressBarangay = $oldAddressBarangay ?? '';
+                                $addressCity = $oldAddressCity ?? '';
+                                $addressProvince = $oldAddressProvince ?? '';
+                            } else {
+                                $addressParts = array_values(array_filter(array_map('trim', explode(',', (string) $combinedHomeAddress)), fn ($part) => $part !== ''));
+
+                                if (count($addressParts) >= 4) {
+                                    $addressStreet = $addressParts[0];
+                                    $addressBarangay = $addressParts[1];
+                                    $addressCity = $addressParts[2];
+                                    $addressProvince = implode(', ', array_slice($addressParts, 3));
+                                } else {
+                                    $addressStreet = $combinedHomeAddress;
+                                }
+                            }
+                        @endphp
                         <div class="form-field span-2">
-                            <label class="form-label" for="home_address">Home Address <span class="required">*</span></label>
-                            <input
-                                id="home_address"
-                                class="form-control field-maroon"
-                                name="home_address"
-                                value="{{ old('home_address', $prefill['home_address'] ?? '') }}"
-                                placeholder="House No./Street, Barangay, City/Municipality, Province"
-                                required
-                            >
-                            <div class="field-helper">Example: 123 Mabini St., Brgy. Central, Taguig City, Metro Manila</div>
+                            <label class="form-label home-address-label" for="home_address_street">Home Address <span class="required">*</span></label>
+                            <input id="home_address" type="hidden" name="home_address" value="{{ $combinedHomeAddress }}" required>
+                            <div class="address-split-grid">
+                                <div class="form-field">
+                                    <label class="form-label" for="home_address_street">House No. / Street <span class="required">*</span></label>
+                                    <input
+                                        id="home_address_street"
+                                        class="form-control field-maroon"
+                                        name="home_address_street"
+                                        value="{{ $addressStreet }}"
+                                        placeholder="e.g., 123 Mabini St."
+                                        data-home-address-part
+                                        required
+                                    >
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label" for="home_address_barangay">Barangay <span class="required">*</span></label>
+                                    <input
+                                        id="home_address_barangay"
+                                        class="form-control field-maroon"
+                                        name="home_address_barangay"
+                                        value="{{ $addressBarangay }}"
+                                        placeholder="e.g., Brgy. Central"
+                                        data-home-address-part
+                                        required
+                                    >
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label" for="home_address_city_municipality">City / Municipality <span class="required">*</span></label>
+                                    <input
+                                        id="home_address_city_municipality"
+                                        class="form-control field-maroon"
+                                        name="home_address_city_municipality"
+                                        value="{{ $addressCity }}"
+                                        placeholder="e.g., Taguig City"
+                                        data-home-address-part
+                                        required
+                                    >
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label" for="home_address_province">Province <span class="required">*</span></label>
+                                    <input
+                                        id="home_address_province"
+                                        class="form-control field-maroon"
+                                        name="home_address_province"
+                                        value="{{ $addressProvince }}"
+                                        placeholder="e.g., Metro Manila"
+                                        data-home-address-part
+                                        required
+                                    >
+                                </div>
+                            </div>
+                            <div class="field-helper"></div>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="zipcode">ZIP Code <span class="required">*</span></label>
@@ -2024,8 +2535,16 @@
                             <div class="field-helper">Example: 09123456789</div>
                         </div>
                         <div class="form-field">
-                            <label class="form-label" for="landline">Landline</label>
-                            <input id="landline" class="form-control field-maroon" name="landline" value="{{ old('landline', $prefill['landline'] ?? '') }}">
+                            <label class="form-label" for="landline">Landline <span class="required">*</span></label>
+                            <input
+                                id="landline"
+                                class="form-control field-maroon"
+                                name="landline"
+                                value="{{ old('landline', $prefill['landline'] ?? '') }}"
+                                placeholder="Enter landline or NA / None"
+                                required
+                            >
+                            <div class="field-helper">Put NA or None if not applicable.</div>
                         </div>
                     </div>
                     <div class="btn-row">
@@ -2045,7 +2564,7 @@
                 </div>
 
                 <div class="step-panel {{ $startStep === 3 ? '' : 'is-hidden' }}" id="stepPanel3">
-                    <h2 class="section-title step-page-title">Medical History</h2>
+                    <h2 class="section-title step-page-title" data-title-letter="M">Medical History</h2>
                     <div class="form-field mb-3">
                         <label class="form-label">Do you need medical attention or have a known medical illness? <span class="required">*</span></label>
                         <div class="pwd-toggle">
@@ -2157,7 +2676,7 @@
                 </div>
 
                 <div class="step-panel {{ $startStep === 4 ? '' : 'is-hidden' }}" id="stepPanel4">
-                    <h2 class="section-title step-page-title">COVID-19</h2>
+                    <h2 class="section-title step-page-title" data-title-letter="C">COVID-19</h2>
                     <p class="step-fill-note">Select your vaccination status. If vaccinated, provide dose details if available.</p>
                     @php
                         $selectedCovidVaccinated = old('covid_vaccinated', $prefill['covid_vaccinated'] ?? '');
@@ -2206,7 +2725,7 @@
                 </div>
 
                 <div class="step-panel {{ $startStep === 5 ? '' : 'is-hidden' }}" id="stepPanel5">
-                    <h2 class="section-title step-page-title">Clinic Requirements</h2>
+                    <h2 class="section-title step-page-title" data-title-letter="R">Clinic Requirements</h2>
                     @if($isHealthFormCorrectionMode)
                         <div class="correction-mode-note">
                             Clinic note: {{ $healthFormCorrectionNotes !== '' ? $healthFormCorrectionNotes : 'Please review and correct your Health Information Form details.' }}
@@ -2314,7 +2833,7 @@
                             @elseif($isHealthFormCorrectionMode && $declarationRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new declaration form.</div>
                             @endif
-                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : 'Optional for enrolled students unless requested by the clinic. ' }}Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.</small>
+                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : '' }}Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.</small>
                         </div>
                         @php
                             $medicalCertificateRequested = $isDocumentRequested('medical_certificate');
@@ -2353,7 +2872,7 @@
                             @elseif($isHealthFormCorrectionMode && $medicalCertificateRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new medical certificate.</div>
                             @endif
-                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : 'Optional for enrolled students unless requested by the clinic. ' }}Allowed: PDF, JPG, JPEG, or PNG, max 2MB. Compress the file if needed to meet the size requirement.</small>
+                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : '' }}Allowed: PDF, JPG, JPEG, or PNG, max 2MB. Compress the file if needed to meet the size requirement.</small>
                             <div class="requirement-extra">
                                 <div class="form-field span-2">
                                     <label class="form-label" for="doctor_name">Doctor's Full Name @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
@@ -2431,7 +2950,7 @@
                             @elseif($isHealthFormCorrectionMode && $xrayRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new Chest X-ray Result.</div>
                             @endif
-                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : 'Optional for enrolled students unless requested by the clinic. ' }}Allowed: PDF, JPG, JPEG, or PNG, max 2MB. Compress the file if needed to meet the size requirement.</small>
+                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : '' }}Allowed: PDF, JPG, JPEG, or PNG, max 2MB. Compress the file if needed to meet the size requirement.</small>
                             <div class="requirement-extra">
                                 <div class="form-field">
                                     <label class="form-label" for="xray_date">Date of Examination @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
@@ -2469,6 +2988,53 @@
                             </div>
                         </div>
                     </div>
+                    <div class="btn-row">
+                        <button type="button" class="btn btn-health btn-health-back" data-step-back="4">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="m15 18-6-6 6-6"></path>
+                            </svg>
+                            <span>Back</span>
+                        </button>
+                        <button type="button" class="btn btn-health btn-health-next" data-step-next="6">
+                            <span>Next</span>
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="m9 18 6-6-6-6"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="step-panel {{ $startStep === 6 ? '' : 'is-hidden' }}" id="stepPanel6">
+                    <h2 class="section-title step-page-title" data-title-letter="E">E-Signature</h2>
+                    <p class="step-fill-note">Draw your signature or upload a clear signature image to certify your Health Profile.</p>
+                    <input type="text" id="digital_signature_data" name="digital_signature_data" value="{{ old('digital_signature_data') }}" class="visually-hidden" data-signature-field>
+                    <input type="hidden" id="digital_signature_existing" name="digital_signature_existing" value="{{ $prefill['digital_signature'] ?? '' }}">
+                    <div class="esign-grid">
+                        <div class="esign-card">
+                            <h3>Draw Signature</h3>
+                            <p>Use your mouse, touchpad, or finger. You can clear and redraw anytime before saving.</p>
+                            <div class="signature-pad-wrap">
+                                <canvas id="digitalSignaturePad" aria-label="Draw your signature"></canvas>
+                            </div>
+                            <div class="esign-actions">
+                                <button type="button" class="esign-secondary-btn" id="clearSignatureBtn">Clear Signature</button>
+                            </div>
+                            <div class="esign-status" id="signatureDrawStatus">No drawn signature yet.</div>
+                        </div>
+                        <div class="esign-card">
+                            <h3>Upload Signature</h3>
+                            <input id="digital_signature_upload" type="file" name="digital_signature_upload" class="esign-upload-input" accept=".png,image/png" data-upload-input data-preview-kind="image">
+                            <ol class="esign-upload-instructions">
+                                <li>Upload a black PNG signature only.</li>
+                                <li>Use a transparent/no-background signature file.</li>
+                                <li>If the background is not removed yet, use remove.bg first, then upload the PNG file.</li>
+                            </ol>
+                            <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
+                            @if(!empty($prefill['digital_signature']))
+                                <div class="esign-status">Existing signature is on file. Drawing or uploading a new one will replace it.</div>
+                            @endif
+                        </div>
+                    </div>
                     <div class="certify-row final-certification">
                         <input id="health_profile_certified" type="checkbox" name="health_profile_certified" value="1" required {{ old('health_profile_certified') ? 'checked' : '' }}>
                         <label for="health_profile_certified">
@@ -2476,7 +3042,7 @@
                         </label>
                     </div>
                     <div class="btn-row">
-                        <button type="button" class="btn btn-health btn-health-back" data-step-back="4">
+                        <button type="button" class="btn btn-health btn-health-back" data-step-back="5">
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="m15 18-6-6 6-6"></path>
                             </svg>
@@ -2501,11 +3067,28 @@
         </div>
     </div>
 
+    <div class="health-error-modal" id="healthErrorModal" aria-hidden="true" data-initial-message="{{ session('error') ? e(session('error')) : ($errors->any() ? e($errors->first()) : '') }}">
+        <div class="health-error-card" role="alertdialog" aria-modal="true" aria-labelledby="healthErrorTitle" aria-describedby="healthErrorMessage">
+            <h3 id="healthErrorTitle">Error</h3>
+            <p id="healthErrorMessage">Please complete the required field.</p>
+            <button type="button" id="healthErrorContinue">Continue</button>
+        </div>
+    </div>
+
     <script>
         (function () {
             const form = document.querySelector('form[action="{{ route('store.health.form') }}"]');
-            const stepPanels = Array.from({ length: 5 }, (_, index) => document.getElementById(`stepPanel${index + 1}`));
-            const stepChips = Array.from({ length: 5 }, (_, index) => document.getElementById(`chipStep${index + 1}`));
+            const totalSteps = 6;
+            const stepNames = @json($healthFormSteps);
+            const stepPanels = Array.from({ length: totalSteps }, (_, index) => document.getElementById(`stepPanel${index + 1}`));
+            const stepChips = [];
+            const currentStepLabel = document.getElementById('currentStepLabel');
+            const currentStepName = document.getElementById('currentStepName');
+            const stepProgressFill = document.getElementById('stepProgressFill');
+            const stepProgressPercent = document.getElementById('stepProgressPercent');
+            const healthErrorModal = document.getElementById('healthErrorModal');
+            const healthErrorMessage = document.getElementById('healthErrorMessage');
+            const healthErrorContinue = document.getElementById('healthErrorContinue');
             const nextToStep2Btn = document.getElementById('nextToStep2');
             const referenceInput = document.getElementById('reference_number');
             const referenceEditorInput = document.getElementById('reference_editor');
@@ -2546,11 +3129,170 @@
             const xrayFindingsDetails = document.getElementById('xray_findings_details');
             const uploadInputs = Array.from(document.querySelectorAll('[data-upload-input]'));
             const numericContactInputs = Array.from(document.querySelectorAll('[data-numeric-contact]'));
+            const homeAddressInput = document.getElementById('home_address');
+            const homeAddressPartInputs = Array.from(document.querySelectorAll('[data-home-address-part]'));
+            const signatureCanvas = document.getElementById('digitalSignaturePad');
+            const signatureDataInput = document.getElementById('digital_signature_data');
+            const signatureUploadInput = document.getElementById('digital_signature_upload');
+            const signatureExistingInput = document.getElementById('digital_signature_existing');
+            const signatureDrawStatus = document.getElementById('signatureDrawStatus');
+            const clearSignatureBtn = document.getElementById('clearSignatureBtn');
             const healthFormStoreUrl = @json(route('store.health.form'));
             let currentStep = {{ $startStep }};
+            let maxVisitedStep = {{ $startStep }};
             let isSubmitting = false;
             let isReferenceValidating = false;
+            let resizeSignatureCanvas = () => {};
             const referenceRequiresValidation = referencePanel?.dataset.referenceRequiresValidation === 'true';
+
+            function syncHomeAddressValue() {
+                if (!homeAddressInput || homeAddressPartInputs.length === 0) return;
+                const addressParts = homeAddressPartInputs
+                    .map((input) => input.value.trim())
+                    .filter((value) => value !== '');
+
+                homeAddressInput.value = addressParts.join(', ');
+            }
+
+            homeAddressPartInputs.forEach((input) => {
+                input.addEventListener('input', syncHomeAddressValue);
+                input.addEventListener('change', syncHomeAddressValue);
+            });
+            syncHomeAddressValue();
+
+            function hasSignatureValue() {
+                return Boolean(
+                    (signatureDataInput?.value || '').trim()
+                    || (signatureUploadInput?.files && signatureUploadInput.files.length > 0)
+                    || (signatureExistingInput?.value || '').trim()
+                );
+            }
+
+            function syncSignatureValidity() {
+                if (!signatureDataInput) return;
+                const message = hasSignatureValue() ? '' : 'Please draw or upload your e-signature.';
+                signatureDataInput.setCustomValidity(message);
+                if (message) {
+                    signatureDataInput.dataset.validationMessage = message;
+                } else {
+                    delete signatureDataInput.dataset.validationMessage;
+                }
+            }
+
+            function setupSignaturePad() {
+                if (!signatureCanvas || !signatureDataInput) {
+                    syncSignatureValidity();
+                    return;
+                }
+
+                const context = signatureCanvas.getContext('2d');
+                let drawing = false;
+                let hasDrawing = Boolean(signatureDataInput.value);
+
+                function applySignatureStroke() {
+                    context.lineCap = 'round';
+                    context.lineJoin = 'round';
+                    context.lineWidth = 3.5;
+                    context.strokeStyle = '#000000';
+                    context.fillStyle = '#000000';
+                }
+
+                function resizeCanvas() {
+                    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                    const rect = signatureCanvas.getBoundingClientRect();
+                    const previousData = hasDrawing ? signatureCanvas.toDataURL('image/png') : '';
+                    signatureCanvas.width = Math.max(1, Math.floor(rect.width * ratio));
+                    signatureCanvas.height = Math.max(1, Math.floor(rect.height * ratio));
+                    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+                    applySignatureStroke();
+
+                    if (previousData) {
+                        const image = new Image();
+                        image.onload = () => context.drawImage(image, 0, 0, rect.width, rect.height);
+                        image.src = previousData;
+                    }
+                }
+
+                function positionFromEvent(event) {
+                    const rect = signatureCanvas.getBoundingClientRect();
+                    return {
+                        x: event.clientX - rect.left,
+                        y: event.clientY - rect.top,
+                    };
+                }
+
+                function startDrawing(event) {
+                    event.preventDefault();
+                    signatureCanvas.setPointerCapture?.(event.pointerId);
+                    drawing = true;
+                    const point = positionFromEvent(event);
+                    applySignatureStroke();
+                    context.beginPath();
+                    context.arc(point.x, point.y, 1.8, 0, Math.PI * 2);
+                    context.fill();
+                    context.beginPath();
+                    context.moveTo(point.x, point.y);
+                    hasDrawing = true;
+                    signatureDataInput.value = signatureCanvas.toDataURL('image/png');
+                    if (signatureDrawStatus) signatureDrawStatus.textContent = 'Drawn signature ready.';
+                    if (signatureUploadInput) signatureUploadInput.value = '';
+                    syncSignatureValidity();
+                }
+
+                function draw(event) {
+                    if (!drawing) return;
+                    event.preventDefault();
+                    const point = positionFromEvent(event);
+                    context.lineTo(point.x, point.y);
+                    context.stroke();
+                    hasDrawing = true;
+                    signatureDataInput.value = signatureCanvas.toDataURL('image/png');
+                    if (signatureDrawStatus) signatureDrawStatus.textContent = 'Drawn signature ready.';
+                    if (signatureUploadInput) signatureUploadInput.value = '';
+                    syncSignatureValidity();
+                }
+
+                function stopDrawing(event) {
+                    if (!drawing) return;
+                    drawing = false;
+                    signatureCanvas.releasePointerCapture?.(event.pointerId);
+                    context.closePath();
+                }
+
+                function clearSignature(clearUpload = true) {
+                    context.save();
+                    context.setTransform(1, 0, 0, 1, 0, 0);
+                    context.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+                    context.restore();
+                    applySignatureStroke();
+                    hasDrawing = false;
+                    signatureDataInput.value = '';
+                    if (clearUpload && signatureUploadInput) {
+                        signatureUploadInput.value = '';
+                        renderUploadPreview(signatureUploadInput);
+                    }
+                    if (signatureDrawStatus) signatureDrawStatus.textContent = 'No drawn signature yet.';
+                    syncSignatureValidity();
+                }
+
+                resizeSignatureCanvas = resizeCanvas;
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+                signatureCanvas.addEventListener('pointerdown', startDrawing);
+                signatureCanvas.addEventListener('pointermove', draw);
+                signatureCanvas.addEventListener('pointerup', stopDrawing);
+                signatureCanvas.addEventListener('pointercancel', stopDrawing);
+                signatureCanvas.addEventListener('pointerleave', stopDrawing);
+                clearSignatureBtn?.addEventListener('click', clearSignature);
+                signatureUploadInput?.addEventListener('change', () => {
+                    if (signatureUploadInput.files && signatureUploadInput.files.length > 0) {
+                        clearSignature(false);
+                        if (signatureDrawStatus) signatureDrawStatus.textContent = 'Uploaded signature will be used.';
+                    }
+                    syncSignatureValidity();
+                });
+                syncSignatureValidity();
+            }
 
             function isReferenceLocked() {
                 return referencePanel?.dataset.referenceLocked === 'true';
@@ -2660,20 +3402,31 @@
             }
 
             function setStep(step) {
-                const normalizedStep = Math.min(5, Math.max(1, Number(step) || 1));
+                const normalizedStep = Math.min(totalSteps, Math.max(1, Number(step) || 1));
                 currentStep = normalizedStep;
+                maxVisitedStep = Math.max(maxVisitedStep, normalizedStep);
                 stepPanels.forEach((panel, index) => {
                     panel?.classList.toggle('is-hidden', index + 1 !== normalizedStep);
                 });
-                stepChips.forEach((chip, index) => {
-                    chip?.classList.toggle('is-active', index + 1 === normalizedStep);
-                });
+                if (normalizedStep === 6) {
+                    window.requestAnimationFrame(() => resizeSignatureCanvas());
+                }
+
+                const progressPercent = Math.round((maxVisitedStep / totalSteps) * 100);
+                const activeStepName = stepNames[normalizedStep] || '';
+                if (currentStepLabel) currentStepLabel.textContent = `Step ${normalizedStep} of ${totalSteps}`;
+                if (currentStepName) currentStepName.textContent = activeStepName;
+                if (stepProgressFill) stepProgressFill.style.width = `${progressPercent}%`;
+                if (stepProgressPercent) stepProgressPercent.textContent = `${progressPercent}% Complete`;
             }
 
             function validateStep(step) {
                 const panel = stepPanels[step - 1];
                 if (!panel) return true;
                 clearValidationBubble();
+                if (step === 6) {
+                    syncSignatureValidity();
+                }
                 const fields = Array.from(panel.querySelectorAll('input, select, textarea'))
                     .filter((field) => !field.disabled);
                 const firstInvalid = fields.find((field) => !field.checkValidity());
@@ -2691,11 +3444,80 @@
                 return false;
             }
 
+            function validateWholeForm() {
+                syncHomeAddressValue();
+                syncSignatureValidity();
+                const fields = Array.from(form?.querySelectorAll('input, select, textarea') || [])
+                    .filter((field) => !field.disabled);
+                const firstInvalid = fields.find((field) => !field.checkValidity());
+                if (!firstInvalid) {
+                    return true;
+                }
+
+                const panel = firstInvalid.closest('.step-panel');
+                const panelIndex = stepPanels.findIndex((stepPanel) => stepPanel === panel);
+                if (panelIndex >= 0) {
+                    setStep(panelIndex + 1);
+                }
+                showValidationBubble(firstInvalid);
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+
             function clearValidationBubble() {
                 document.querySelectorAll('.validation-bubble').forEach((bubble) => bubble.remove());
                 document.querySelectorAll('.validation-anchor').forEach((anchor) => {
                     anchor.classList.remove('validation-anchor');
                 });
+            }
+
+            function validationMessageForField(field) {
+                if (field.type === 'file' && field.required && field.validity?.valueMissing) {
+                    const requirementName = field.closest('.requirement-card, .upload-card')
+                        ?.querySelector('.requirement-card-header strong, .form-label, h3')
+                        ?.textContent
+                        ?.replace(/\*/g, '')
+                        ?.replace(/\s+/g, ' ')
+                        ?.trim();
+
+                    return requirementName
+                        ? `Please upload the required ${requirementName}.`
+                        : 'Please upload the required file.';
+                }
+                if (field.validity?.rangeUnderflow) {
+                    return field.dataset.validationMessage
+                        || 'Date must be January 1, 2020 or later.';
+                }
+                if (field.validity?.rangeOverflow) {
+                    return 'Date must not be later than December 31, 2025.';
+                }
+                if (field.validationMessage && field.dataset.validationMessage) {
+                    return field.dataset.validationMessage;
+                }
+                return 'Please complete the required field.';
+            }
+
+            function showErrorModal(message) {
+                if (!healthErrorModal || !healthErrorMessage) return;
+                healthErrorMessage.textContent = message || 'Please complete the required field.';
+                healthErrorModal.classList.add('is-visible');
+                healthErrorModal.setAttribute('aria-hidden', 'false');
+                healthErrorContinue?.focus({ preventScroll: true });
+            }
+
+            function hideErrorModal() {
+                healthErrorModal?.classList.remove('is-visible');
+                healthErrorModal?.setAttribute('aria-hidden', 'true');
+            }
+
+            healthErrorContinue?.addEventListener('click', hideErrorModal);
+            healthErrorModal?.addEventListener('click', (event) => {
+                if (event.target === healthErrorModal) {
+                    hideErrorModal();
+                }
+            });
+            if (healthErrorModal?.dataset.initialMessage) {
+                showErrorModal(healthErrorModal.dataset.initialMessage);
             }
 
             function showValidationBubble(field) {
@@ -2704,20 +3526,7 @@
                 if (!anchor) return;
 
                 anchor.classList.add('validation-anchor');
-                const bubble = document.createElement('div');
-                bubble.className = 'validation-bubble';
-                bubble.setAttribute('role', 'alert');
-                if (field.validity?.rangeUnderflow) {
-                    bubble.textContent = field.dataset.validationMessage
-                        || 'Date must be January 1, 2020 or later.';
-                } else if (field.validity?.rangeOverflow) {
-                    bubble.textContent = 'Date must not be later than December 31, 2025.';
-                } else if (field.validationMessage && field.dataset.validationMessage) {
-                    bubble.textContent = field.dataset.validationMessage;
-                } else {
-                    bubble.textContent = 'Please fill this field.';
-                }
-                anchor.appendChild(bubble);
+                showErrorModal(validationMessageForField(field));
             }
 
             function updateAgeFromBirthday() {
@@ -3026,7 +3835,9 @@
                     return;
                 }
 
-                const isOneMbInput = input.name === 'student_photo' || input.name === 'health_declaration';
+                const isOneMbInput = input.name === 'student_photo'
+                    || input.name === 'health_declaration'
+                    || input.name === 'digital_signature_upload';
                 const maxSize = isOneMbInput ? 1 * 1024 * 1024 : 2 * 1024 * 1024;
                 const maxSizeLabel = isOneMbInput ? '1MB' : '2MB';
 
@@ -3043,8 +3854,9 @@
                         </div>
                     `;
                     input.setCustomValidity(`File size exceeds ${maxSizeLabel} limit`);
-                    previewScope?.classList.add('has-upload-preview');
-                    preview.classList.add('is-visible');
+                    previewScope?.classList.remove('has-upload-preview');
+                    preview.classList.remove('is-visible');
+                    showErrorModal(`File is too large (${formatFileSize(file.size)}). Maximum size is ${maxSizeLabel}.`);
 
                     preview.querySelector('[data-upload-replace]')?.addEventListener('click', () => {
                         input.click();
@@ -3089,6 +3901,7 @@
             }
 
             birthdayInput?.addEventListener('change', updateAgeFromBirthday);
+            setupSignaturePad();
             form?.addEventListener('input', clearValidationBubble);
             form?.addEventListener('change', clearValidationBubble);
             numericContactInputs.forEach((input) => {
@@ -3221,6 +4034,8 @@
                 });
             });
             form?.addEventListener('submit', (event) => {
+                syncHomeAddressValue();
+
                 if (event.submitter?.hasAttribute('data-testing-skip')) {
                     return;
                 }
@@ -3239,7 +4054,18 @@
                     return;
                 }
 
-                if (!form.checkValidity()) {
+                if (currentStep < totalSteps) {
+                    event.preventDefault();
+                    if (!validateStep(currentStep)) {
+                        return;
+                    }
+                    setStep(currentStep + 1);
+                    stepPanels[currentStep - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    return;
+                }
+
+                if (!validateWholeForm()) {
+                    event.preventDefault();
                     return;
                 }
 

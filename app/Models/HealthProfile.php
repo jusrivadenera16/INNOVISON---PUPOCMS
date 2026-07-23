@@ -10,6 +10,7 @@ class HealthProfile extends Model
         'user_id', 
         'student_id', 'student_number', 'reference_number',
         'school_year', 'home_address', 'zipcode', 'birthday', 'student_photo', 'health_declaration',
+        'digital_signature',
         'height', 'weight',
         'age', 'sex', 'civil_status', 'course_college', 'course_code',
         'blood_type', 'guardian_name', 'landline', 'cellphone',
@@ -88,6 +89,16 @@ class HealthProfile extends Model
     public function reviewStartedBy()
     {
         return $this->belongsTo(User::class, 'review_started_by_user_id');
+    }
+
+    public function healthFormSubmissions()
+    {
+        return $this->hasMany(HealthFormSubmission::class);
+    }
+
+    public function latestHealthFormSubmission()
+    {
+        return $this->hasOne(HealthFormSubmission::class)->latestOfMany('submitted_at');
     }
 
     public function hasMedicalCondition(): bool

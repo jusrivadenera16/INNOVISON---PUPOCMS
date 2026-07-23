@@ -1184,6 +1184,36 @@
         stroke: #facc15 !important;
     }
 
+    .report-card:hover .report-card-icon,
+    .report-card:focus-visible .report-card-icon,
+    .report-card.report-card-primary:hover .report-card-icon,
+    .report-card.report-card-primary:focus-visible .report-card-icon,
+    .report-card.report-card-audit:hover .report-card-icon,
+    .report-card.report-card-audit:focus-visible .report-card-icon,
+    html[data-theme="dark"] .report-card:hover .report-card-icon,
+    html[data-theme="dark"] .report-card:focus-visible .report-card-icon,
+    html[data-theme="dark"] .report-card.report-card-primary:hover .report-card-icon,
+    html[data-theme="dark"] .report-card.report-card-primary:focus-visible .report-card-icon,
+    html[data-theme="dark"] .report-card.report-card-audit:hover .report-card-icon,
+    html[data-theme="dark"] .report-card.report-card-audit:focus-visible .report-card-icon {
+        background: #70131B !important;
+        border-color: rgba(112, 19, 27, 0.88) !important;
+        color: #facc15 !important;
+        box-shadow: 0 12px 22px rgba(112, 19, 27, 0.28) !important;
+    }
+
+    .report-card:hover .report-card-icon svg,
+    .report-card:hover .report-card-icon svg *,
+    .report-card:focus-visible .report-card-icon svg,
+    .report-card:focus-visible .report-card-icon svg *,
+    html[data-theme="dark"] .report-card:hover .report-card-icon svg,
+    html[data-theme="dark"] .report-card:hover .report-card-icon svg *,
+    html[data-theme="dark"] .report-card:focus-visible .report-card-icon svg,
+    html[data-theme="dark"] .report-card:focus-visible .report-card-icon svg * {
+        color: #facc15 !important;
+        stroke: #facc15 !important;
+    }
+
 </style>
 @endpush
 

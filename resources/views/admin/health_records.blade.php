@@ -1376,18 +1376,22 @@
         width: 42px;
         height: 42px;
         border-radius: 12px;
-        display: grid;
-        place-items: center;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         background: #fff1f2;
         color: #b91c1c;
         line-height: 0;
     }
     .health-records-last-updated-icon svg {
-        width: 20px;
-        height: 20px;
-        display: block;
-        margin: 0;
-        transform: translateY(7px);
+        width: 20px !important;
+        height: 20px !important;
+        display: block !important;
+        margin: auto !important;
+        transform: none !important;
+        position: static !important;
+        inset: auto !important;
+        flex: 0 0 20px !important;
     }
     .health-records-last-updated span {
         display: block;
@@ -1403,6 +1407,21 @@
         font-size: 13px;
         font-weight: 900;
         line-height: 1.25;
+    }
+    .health-records-last-updated > .health-records-last-updated-icon {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        place-items: center !important;
+        padding: 0 !important;
+        text-align: center !important;
+    }
+    .health-records-last-updated > .health-records-last-updated-icon > svg {
+        display: block !important;
+        width: 20px !important;
+        height: 20px !important;
+        margin: 0 !important;
+        transform: translate(0, 0) !important;
     }
     .health-records-overview-search {
         display: grid;
@@ -5646,6 +5665,10 @@
                             <input type="checkbox" name="resubmission_required_documents[]" value="pwd_id_proof">
                             <span>PWD ID Proof</span>
                         </label>
+                        <label class="verify-resubmission-option">
+                            <input type="checkbox" id="verifyNeedsHealthFormCorrection" name="needs_health_form_correction" value="1">
+                            <span>Health Form Correction</span>
+                        </label>
                     </div>
                     <label class="verify-textarea-field">
                         <span>Remarks <small>(Optional)</small></span>
@@ -5908,6 +5931,10 @@
             Array.prototype.forEach.call(document.querySelectorAll('#verifyDocumentResubmissionForm input[name="resubmission_required_documents[]"]'), function (input) {
                 input.checked = false;
             });
+            var healthFormCorrectionInput = getNode('verifyNeedsHealthFormCorrection');
+            if (healthFormCorrectionInput) {
+                healthFormCorrectionInput.checked = false;
+            }
 
             setValue('verifyMedicalRemarks', payload.medical_condition_remarks || '');
             setValue('verifyPendingReason', '');
@@ -6076,6 +6103,7 @@
     const verifyDocumentResubmissionActions = document.querySelector('.verify-resubmission-only-actions');
     const verifyDocumentResubmissionRemarks = document.getElementById('verifyDocumentResubmissionRemarks');
     const verifyDocumentResubmissionReason = document.getElementById('verifyDocumentResubmissionReason');
+    const verifyNeedsHealthFormCorrection = document.getElementById('verifyNeedsHealthFormCorrection');
     const verifyDocumentResubmissionInputs = Array.from(document.querySelectorAll('#verifyDocumentResubmissionForm input[name="resubmission_required_documents[]"]'));
 
     healthRecordsSearchShell?.addEventListener('submit', function (event) {
@@ -6194,9 +6222,16 @@
         }
 
         const remarks = verifyDocumentResubmissionRemarks ? verifyDocumentResubmissionRemarks.value.trim() : '';
-        verifyDocumentResubmissionReason.value = remarks !== ''
+        const needsHealthFormCorrection = Boolean(verifyNeedsHealthFormCorrection && verifyNeedsHealthFormCorrection.checked);
+        let reason = remarks !== ''
             ? 'Document Resubmission: ' + remarks
             : 'Document Resubmission';
+
+        if (needsHealthFormCorrection && reason.toLowerCase().indexOf('health form correction') === -1) {
+            reason += '\nHealth Form Correction';
+        }
+
+        verifyDocumentResubmissionReason.value = reason;
     }
 
     function resetDocumentResubmissionForm(actionUrl) {
@@ -6227,6 +6262,9 @@
         verifyDocumentResubmissionInputs.forEach(function (input) {
             input.checked = false;
         });
+        if (verifyNeedsHealthFormCorrection) {
+            verifyNeedsHealthFormCorrection.checked = false;
+        }
 
         syncDocumentResubmissionReason();
     }
@@ -6416,6 +6454,9 @@
     if (verifyDocumentResubmissionRemarks) {
         verifyDocumentResubmissionRemarks.addEventListener('input', syncDocumentResubmissionReason);
     }
+    if (verifyNeedsHealthFormCorrection) {
+        verifyNeedsHealthFormCorrection.addEventListener('change', syncDocumentResubmissionReason);
+    }
 
     if (verifyDocumentResubmissionForm) {
         verifyDocumentResubmissionForm.addEventListener('submit', function (event) {
@@ -6434,12 +6475,13 @@
             const hasSelectedDocument = verifyDocumentResubmissionInputs.some(function (input) {
                 return input.checked;
             });
+            const hasHealthFormCorrection = Boolean(verifyNeedsHealthFormCorrection && verifyNeedsHealthFormCorrection.checked);
 
-            if (!hasSelectedDocument) {
+            if (!hasSelectedDocument && !hasHealthFormCorrection) {
                 event.preventDefault();
-                const firstInput = verifyDocumentResubmissionInputs[0];
+                const firstInput = verifyDocumentResubmissionInputs[0] || verifyNeedsHealthFormCorrection;
                 if (firstInput) {
-                    firstInput.setCustomValidity('Select at least one document to resubmit.');
+                    firstInput.setCustomValidity('Select at least one document or Health Form Correction.');
                     firstInput.reportValidity();
                     firstInput.setCustomValidity('');
                 }

@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Appointment;
+use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\ActivityLog;
 use App\Models\Consultation;
 use App\Services\PuptasWebhookService;
+use App\Services\HealthFormPdfSnapshotService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -583,7 +585,7 @@ class WalkInController extends Controller
             'key' => 'health_form',
             'label' => 'Health Information Form',
             'url' => route($this->walkinRouteName($request, 'healthForm'), ['healthProfile' => $profile->id]),
-            'type' => 'form',
+            'type' => 'file',
         ];
 
         return $documents;
@@ -1531,6 +1533,32 @@ class WalkInController extends Controller
     {
         $healthProfile->loadMissing('user');
         abort_unless($healthProfile->user, 404);
+
+        $submission = HealthFormSubmission::query()
+            ->where(function ($query) use ($healthProfile) {
+                $query->where('health_profile_id', $healthProfile->id)
+                    ->orWhere('user_id', $healthProfile->user_id);
+            })
+            ->whereNotNull('pdf_path')
+            ->whereIn('status', [
+                HealthFormSubmission::STATUS_SUBMITTED,
+                HealthFormSubmission::STATUS_APPROVED,
+                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+            ])
+            ->latest('submitted_at')
+            ->latest('id')
+            ->first();
+
+        $snapshotPath = ltrim((string) ($submission?->pdf_path ?? ''), '/');
+        $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
+        if ($snapshotPath !== '' && Storage::disk('public')->exists($snapshotPath)) {
+            return response()->file(Storage::disk('public')->path($snapshotPath), [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($snapshotPath)) . '"',
+                'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control' => 'private, max-age=300',
+            ]);
+        }
 
         return view('student.print_health_form', [
             'profile' => $healthProfile,
@@ -2510,6 +2538,39 @@ PROMPT;
                 'webhook_success' => (bool) ($webhookResult['success'] ?? false),
                 'user_id' => auth()->id(),
             ]);
+
+            if (!$hasPendingFinding) {
+                try {
+                    app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($profile->fresh('user'));
+                } catch (\Throwable $exception) {
+                    Log::error('Unable to save approved applicant Health Form PDF snapshot.', [
+                        'health_profile_id' => $profile->id,
+                        'reference_number' => $referenceNumber,
+                        'error' => $exception->getMessage(),
+                    ]);
+                }
+            } elseif ($needsHealthFormCorrection) {
+                $submission = HealthFormSubmission::query()
+                    ->where(function ($query) use ($profile) {
+                        $query->where('health_profile_id', $profile->id)
+                            ->orWhere('user_id', $profile->user_id);
+                    })
+                    ->whereIn('status', [
+                        HealthFormSubmission::STATUS_SUBMITTED,
+                        HealthFormSubmission::STATUS_APPROVED,
+                        HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                    ])
+                    ->latest('submitted_at')
+                    ->latest('approved_at')
+                    ->latest('id')
+                    ->first();
+
+                if ($submission) {
+                    $submission->status = HealthFormSubmission::STATUS_NEEDS_CORRECTION;
+                    $submission->approved_at = null;
+                    $submission->save();
+                }
+            }
 
             ActivityLog::create([
                 'user_id' => auth()->id(),

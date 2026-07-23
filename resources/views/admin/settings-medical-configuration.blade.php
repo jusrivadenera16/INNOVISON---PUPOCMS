@@ -210,6 +210,21 @@
                 <x-outline-icon name="chevron-right" />
             </div>
         </a>
+
+        <a href="{{ route('admin.reports.manage-health-form-categories') }}" class="medical-config-row">
+            <div class="medical-config-main">
+                <div class="medical-config-icon">
+                    <x-outline-icon name="document-text" />
+                </div>
+                <div class="medical-config-copy">
+                    <h4>Health Form Categories</h4>
+                    <p>Manage Health Form request purposes such as OJT, annual updates, and medical clearance.</p>
+                </div>
+            </div>
+            <div class="medical-config-arrow">
+                <x-outline-icon name="chevron-right" />
+            </div>
+        </a>
     </div>
 </div>
 @endsection

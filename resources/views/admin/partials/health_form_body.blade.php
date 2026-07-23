@@ -42,6 +42,11 @@
         )) ?: 'N/A';
         $printedStudentEmail = trim((string) ($healthFormIdentity['email'] ?? ''))
             ?: trim((string) ($profile->user->email ?? ''));
+        $printedStudentContact = trim((string) ($healthFormIdentity['contact_no'] ?? ''))
+            ?: trim((string) ($healthFormIdentity['contact_number'] ?? ''))
+            ?: trim((string) ($profile->user->contact_no ?? ''))
+            ?: trim((string) ($profile->contact_no ?? ''))
+            ?: trim((string) ($profile->cellphone ?? ''));
     @endphp
     <table class="student-information-table">
         <colgroup>
@@ -101,7 +106,7 @@
         <tr>
             <td colspan="4" class="compound-row">
                 <div class="contact-information-row">
-                    <span class="contact-label landline-label">Landline:</span><span class="contact-value landline-value">{{ $profile->landline ?? 'N/A' }}</span><span class="contact-label cellphone-label">Cellphone:</span><span class="contact-value cellphone-value">{{ $profile->cellphone ?? '' }}</span>
+                    <span class="contact-label landline-label">Landline:</span><span class="contact-value landline-value">{{ $profile->landline ?? 'N/A' }}</span><span class="contact-label cellphone-label">Cellphone:</span><span class="contact-value cellphone-value">{{ $printedStudentContact }}</span>
                 </div>
             </td>
         </tr>

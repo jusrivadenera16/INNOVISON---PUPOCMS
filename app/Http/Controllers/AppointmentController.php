@@ -7,12 +7,14 @@ use App\Models\Admin;
 use App\Models\Appointment;
 use App\Models\AppointmentFeedback;
 use App\Models\Consultation;
+use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
 use App\Models\SystemSetting;
 use App\Models\User;
 use App\Services\GuisisApiService;
 use App\Services\PuptasWebhookService;
 use App\Services\ClinicWorkflowService;
+use App\Services\HealthFormPdfSnapshotService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -1289,6 +1291,7 @@ class AppointmentController extends Controller
             'xray_date' => (string) (optional($healthProfile)->xray_date ?? ''),
             'xray_findings' => (string) (optional($healthProfile)->xray_findings ?? ''),
             'xray_findings_details' => (string) (optional($healthProfile)->xray_findings_details ?? ''),
+            'digital_signature' => (string) (optional($healthProfile)->digital_signature ?? ''),
         ];
     }
 
@@ -1649,6 +1652,46 @@ class AppointmentController extends Controller
         }
 
         return $request->file($document)->store($folder, 'public');
+    }
+
+    private function storeDigitalSignatureOrKeep(Request $request, ?HealthProfile $existingHealthProfile, array &$oldPaths): ?string
+    {
+        $existingPath = trim((string) (optional($existingHealthProfile)->digital_signature ?? ''));
+
+        if ($request->hasFile('digital_signature_upload')) {
+            if ($existingPath !== '') {
+                $oldPaths['digital_signature'] = ltrim($existingPath, '/');
+            }
+
+            return $request->file('digital_signature_upload')->store('health_profiles/signatures', 'public');
+        }
+
+        $signatureData = trim((string) $request->input('digital_signature_data'));
+        if ($signatureData !== '') {
+            if (!preg_match('/^data:image\/png;base64,/', $signatureData)) {
+                throw ValidationException::withMessages([
+                    'digital_signature_data' => 'Drawn e-signature is invalid. Please clear it and draw again.',
+                ]);
+            }
+
+            $decodedSignature = base64_decode(substr($signatureData, strpos($signatureData, ',') + 1), true);
+            if ($decodedSignature === false || strlen($decodedSignature) < 200) {
+                throw ValidationException::withMessages([
+                    'digital_signature_data' => 'Drawn e-signature is empty. Please draw your signature again.',
+                ]);
+            }
+
+            if ($existingPath !== '') {
+                $oldPaths['digital_signature'] = ltrim($existingPath, '/');
+            }
+
+            $path = 'health_profiles/signatures/signature_' . uniqid('', true) . '.png';
+            Storage::disk('public')->put($path, $decodedSignature);
+
+            return $path;
+        }
+
+        return $existingPath !== '' ? $existingPath : null;
     }
 
     private function resolveStudentContext(?User $user): array
@@ -2018,6 +2061,17 @@ public function account(Request $request)
     // 4. Notification Logic
     $notifications = collect($this->getStudentNotifications($user));
     $hasSubmittedHealthProfile = $this->hasSubmittedHealthProfile($user);
+    $pendingHealthFormRequest = HealthFormSubmission::query()
+        ->where('user_id', $user->id)
+        ->where('status', HealthFormSubmission::STATUS_REQUESTED)
+        ->latest('requested_at')
+        ->first();
+    $healthFormSubmissions = HealthFormSubmission::query()
+        ->where('user_id', $user->id)
+        ->whereNotNull('pdf_path')
+        ->latest('submitted_at')
+        ->latest('id')
+        ->get();
 
     // 5. Return view user
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
@@ -2094,7 +2148,9 @@ public function account(Request $request)
         'accountProfileData',
         'guisisAccountData',
         'isEnrolled',
-        'accountView'
+        'accountView',
+        'pendingHealthFormRequest',
+        'healthFormSubmissions'
     ));
 }
 
@@ -2107,6 +2163,7 @@ public function account(Request $request)
         $healthProfile = HealthProfile::query()->where('user_id', $user->id)->firstOrFail();
 
         $allowedDocuments = [
+            'health_form',
             'medical_certificate',
             'chest_xray_result',
             'student_photo',
@@ -2116,6 +2173,23 @@ public function account(Request $request)
         ];
 
         abort_unless(in_array($document, $allowedDocuments, true), 404);
+
+        if ($document === 'health_form') {
+            $submission = $this->latestHealthFormSubmissionForProfile($healthProfile);
+            $path = ltrim((string) ($submission?->pdf_path ?? ''), '/');
+            $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+
+            if ($path !== '' && Storage::disk('public')->exists($path)) {
+                return response()->file(Storage::disk('public')->path($path), [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
+                    'X-Content-Type-Options' => 'nosniff',
+                    'Cache-Control' => 'private, max-age=300',
+                ]);
+            }
+
+            return $this->printHealthForm();
+        }
 
         $path = ltrim((string) $healthProfile->{$document}, '/');
         $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
@@ -2692,8 +2766,15 @@ public function showHealthForm()
         ? HealthProfile::query()->where('user_id', $user->id)->first()
         : null;
     $isHealthFormCorrectionMode = $this->healthProfileNeedsFormCorrection($existingHealthProfile);
+    $pendingHealthFormRequest = $user
+        ? HealthFormSubmission::query()
+            ->where('user_id', $user->id)
+            ->where('status', HealthFormSubmission::STATUS_REQUESTED)
+            ->latest('requested_at')
+            ->first()
+        : null;
 
-    if ($this->hasSubmittedHealthProfile($user) && !$isHealthFormCorrectionMode) {
+    if ($this->hasSubmittedHealthProfile($user) && !$isHealthFormCorrectionMode && !$pendingHealthFormRequest) {
         return redirect('/student/account?view=health-record')
             ->with('info', 'You have already submitted your health profile.');
     }
@@ -2701,6 +2782,7 @@ public function showHealthForm()
     // Resolve the linked admin profile (Required by your view to avoid Undefined Variable error)
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
     $healthFormPrefill = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $existingHealthProfile);
+    $healthFormPrefill['pending_health_form_request'] = $pendingHealthFormRequest;
     $this->persistResolvedUserProfileFields($user, $healthFormPrefill);
     $this->persistResolvedReferenceNumber($user, $healthFormPrefill['reference_number'] ?? '');
     $calculatedAge = $healthFormPrefill['age'] ?? null;
@@ -2712,7 +2794,7 @@ public function showHealthForm()
     $displayReferenceNumber = $healthFormPrefill['reference_number'] ?? '';
     $prefill = $healthFormPrefill;
 
-    return view('student.health_form', compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill'));
+    return view('student.health_form', compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest'));
 }
 
 public function validateHealthFormReference(Request $request)
@@ -2925,8 +3007,15 @@ public function storeHealthForm(Request $request)
         : \App\Models\HealthProfile::where('user_id', $user?->id)->first();
     $isHealthFormCorrectionMode = $this->healthProfileNeedsFormCorrection($existingHealthProfile);
     $requestedCorrectionDocuments = $this->requestedHealthProfileDocuments($existingHealthProfile);
+    $pendingHealthFormRequest = $user
+        ? HealthFormSubmission::query()
+            ->where('user_id', $user->id)
+            ->where('status', HealthFormSubmission::STATUS_REQUESTED)
+            ->latest('requested_at')
+            ->first()
+        : null;
 
-    if ($this->hasSubmittedHealthProfile($user) && !$isHealthFormCorrectionMode) {
+    if ($this->hasSubmittedHealthProfile($user) && !$isHealthFormCorrectionMode && !$pendingHealthFormRequest) {
         return redirect('/student/account?view=health-record')
             ->with('info', 'Your health profile is already submitted.');
     }
@@ -2994,7 +3083,7 @@ public function storeHealthForm(Request $request)
         'blood_type'        => 'required|string|max:20',
         'contact_no'        => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
         'guardian_name'     => 'required|string|max:255',
-        'landline'          => 'nullable|string|max:20',
+        'landline'          => ['required', 'string', 'max:20', 'regex:/^(?:[0-9+\-\s()]+|N\/?A|NONE)$/i'],
         'cellphone'         => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
         'has_illness'       => 'required|string|in:Yes,No',
         'medical_history'   => 'nullable|array',
@@ -3032,8 +3121,21 @@ public function storeHealthForm(Request $request)
         'med_cert_date'     => $applicantDocumentsRequired ? 'required|date' : 'nullable|date',
         'med_cert_findings' => $applicantDocumentsRequired ? 'required|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review' : 'nullable|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review',
         'med_cert_findings_details' => 'required_if:med_cert_findings,With Findings|nullable|string|max:1000',
+        'digital_signature_data' => 'nullable|string',
+        'digital_signature_upload' => ['nullable', 'image', 'mimes:png', 'max:1024'],
+        'digital_signature_existing' => 'nullable|string|max:255',
         'health_profile_certified' => 'accepted',
     ]);
+
+    if (
+        !$request->hasFile('digital_signature_upload')
+        && trim((string) $request->input('digital_signature_data')) === ''
+        && trim((string) $request->input('digital_signature_existing')) === ''
+    ) {
+        throw ValidationException::withMessages([
+            'digital_signature_data' => 'Please draw or upload your e-signature.',
+        ]);
+    }
 
     if ($user && $this->isHealthCourseApplicable($user) && $resolvedCourseCode === '') {
         throw ValidationException::withMessages([
@@ -3171,6 +3273,7 @@ public function storeHealthForm(Request $request)
         $pwdIdProofPath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'pwd_id_proof', 'health_profiles/pwd_id_proofs', $oldPaths);
         $medicalCertificatePath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'medical_certificate', 'health_profiles/medical_certificates', $oldPaths);
         $healthDeclarationPath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'health_declaration', 'health_profiles/health_declarations', $oldPaths);
+        $digitalSignaturePath = $this->storeDigitalSignatureOrKeep($request, $existingHealthProfile, $oldPaths);
 
         $healthProfile = \App\Models\HealthProfile::updateOrCreate(
             ['user_id' => $user->id],
@@ -3183,6 +3286,7 @@ public function storeHealthForm(Request $request)
                 'birthday'           => $request->input('birthday'),
                 'student_photo'      => $photoPath,
                 'health_declaration' => $healthDeclarationPath,
+                'digital_signature'  => $digitalSignaturePath,
                 'age'                => $request->age,
                 'sex'                => $request->sex,
                 'civil_status'       => $request->civil_status,
@@ -3246,6 +3350,13 @@ public function storeHealthForm(Request $request)
         $user->is_health_profile_completed = 0;
         $user->save();
 
+        app(HealthFormPdfSnapshotService::class)->recordSubmittedWithoutPdf(
+            $healthProfile->fresh('user'),
+            $user,
+            $request->input('health_form_category', 'General'),
+            trim((string) $request->input('health_form_request_remarks'))
+        );
+
         \App\Models\ActivityLog::create([
             'user_id'     => $user->id,
             'user_name'   => $user->name,
@@ -3307,6 +3418,18 @@ public function printHealthForm()
             ->with('error', 'Submit your health profile before printing the form.');
     }
 
+    $submission = $this->latestHealthFormSubmissionForProfile($profile);
+    $snapshotPath = ltrim((string) ($submission?->pdf_path ?? ''), '/');
+    $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
+    if ($snapshotPath !== '' && Storage::disk('public')->exists($snapshotPath)) {
+        return response()->file(Storage::disk('public')->path($snapshotPath), [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($snapshotPath)) . '"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, max-age=300',
+        ]);
+    }
+
     $pdf = $this->buildStudentHealthFormPdf($profile);
     $fileName = $this->studentHealthFormFileName($profile, $user);
 
@@ -3335,10 +3458,37 @@ public function downloadHealthForm()
             ->with('error', 'Submit your health profile before downloading the form.');
     }
 
+    $submission = $this->latestHealthFormSubmissionForProfile($profile);
+    $snapshotPath = ltrim((string) ($submission?->pdf_path ?? ''), '/');
+    $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
+    if ($snapshotPath !== '' && Storage::disk('public')->exists($snapshotPath)) {
+        return Storage::disk('public')->download($snapshotPath, basename($snapshotPath), [
+            'Content-Type' => 'application/pdf',
+        ]);
+    }
+
     $pdf = $this->buildStudentHealthFormPdf($profile);
     $fileName = $this->studentHealthFormFileName($profile, $user);
 
     return $pdf->download($fileName);
+}
+
+public function showHealthFormSubmissionPdf(HealthFormSubmission $submission)
+{
+    /** @var \App\Models\User|null $user */
+    $user = Auth::guard('student')->user();
+    abort_unless($user && (int) $submission->user_id === (int) $user->id, 403);
+
+    $path = ltrim((string) $submission->pdf_path, '/');
+    $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+    abort_if($path === '' || !Storage::disk('public')->exists($path), 404, 'Saved Health Form PDF not found.');
+
+    return response()->file(Storage::disk('public')->path($path), [
+        'Content-Type' => 'application/pdf',
+        'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
+        'X-Content-Type-Options' => 'nosniff',
+        'Cache-Control' => 'private, max-age=300',
+    ]);
 }
 
 private function buildStudentHealthFormPdf(HealthProfile $profile)
@@ -3363,6 +3513,24 @@ private function buildStudentHealthFormPdf(HealthProfile $profile)
     $pdf->setPaper([0, 0, 612, 936]);
 
     return $pdf;
+}
+
+private function latestHealthFormSubmissionForProfile(HealthProfile $profile): ?HealthFormSubmission
+{
+    return HealthFormSubmission::query()
+        ->where(function ($query) use ($profile) {
+            $query->where('health_profile_id', $profile->id)
+                ->orWhere('user_id', $profile->user_id);
+        })
+        ->whereNotNull('pdf_path')
+        ->whereIn('status', [
+            HealthFormSubmission::STATUS_SUBMITTED,
+            HealthFormSubmission::STATUS_APPROVED,
+            HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+        ])
+        ->latest('submitted_at')
+        ->latest('id')
+        ->first();
 }
 
 private function studentHealthFormFileName(HealthProfile $profile, User $user): string

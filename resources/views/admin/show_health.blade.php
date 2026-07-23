@@ -303,6 +303,80 @@
         gap: 12px;
         flex-wrap: wrap;
     }
+    .profile-actions-menu-wrap {
+        position: relative;
+        margin-left: auto;
+    }
+    .profile-actions-toggle {
+        width: 42px;
+        height: 42px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 12px;
+        border: 1px solid rgba(112, 19, 27, 0.18);
+        background: #ffffff;
+        color: #70131B;
+        cursor: pointer;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+        transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    .profile-actions-toggle svg {
+        width: 22px;
+        height: 22px;
+        stroke-width: 2;
+    }
+    .profile-actions-toggle:hover,
+    .profile-actions-toggle:focus {
+        transform: translateY(-1px);
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        box-shadow: 0 12px 26px rgba(250, 204, 21, 0.26);
+        outline: none;
+    }
+    .profile-actions-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 20;
+        min-width: 232px;
+        display: none;
+        padding: 8px;
+        border-radius: 14px;
+        border: 1px solid rgba(112, 19, 27, 0.16);
+        background: #ffffff;
+        box-shadow: 0 20px 42px rgba(15, 23, 42, 0.16);
+    }
+    .profile-actions-menu.is-open {
+        display: grid;
+        gap: 8px;
+    }
+    .profile-actions-menu button {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-height: 40px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(112, 19, 27, 0.12);
+        background: #fffafa;
+        color: #70131B;
+        font-size: 12px;
+        font-weight: 900;
+        text-align: left;
+        cursor: pointer;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+    }
+    .profile-actions-menu button:hover,
+    .profile-actions-menu button:focus {
+        transform: translateY(-1px);
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        outline: none;
+    }
     .profile-tab {
         display: inline-flex;
         align-items: center;
@@ -531,6 +605,103 @@
         gap: 12px;
         min-width: 0;
     }
+    .correction-head-title.is-hidden {
+        display: none;
+    }
+    .correction-modal-back {
+        display: none;
+        width: 38px;
+        height: 38px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.24);
+        background: rgba(112, 19, 27, 0.45);
+        color: #ffffff;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform .18s ease, background .18s ease, color .18s ease;
+    }
+    .correction-modal-back.is-visible {
+        display: inline-flex;
+    }
+    .correction-modal-back:hover,
+    .correction-modal-back:focus {
+        transform: translateY(-1px);
+        background: #facc15;
+        color: #70131B;
+        outline: none;
+    }
+    .correction-modal-back svg {
+        width: 18px;
+        height: 18px;
+    }
+    .correction-head-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex: 0 0 auto;
+    }
+    .correction-actions-menu-wrap {
+        position: relative;
+    }
+    .correction-actions-toggle {
+        width: 38px;
+        height: 38px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.24);
+        background: rgba(112, 19, 27, 0.45);
+        color: #ffffff;
+        cursor: pointer;
+        transition: transform .18s ease, background .18s ease, color .18s ease;
+    }
+    .correction-actions-toggle svg {
+        width: 20px;
+        height: 20px;
+    }
+    .correction-actions-toggle:hover,
+    .correction-actions-toggle:focus {
+        transform: translateY(-1px);
+        background: #facc15;
+        color: #70131B;
+        outline: none;
+    }
+    .correction-actions-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 30;
+        min-width: 170px;
+        display: none;
+        padding: 8px;
+        border-radius: 14px;
+        border: 1px solid rgba(112, 19, 27, .18);
+        background: #ffffff;
+        box-shadow: 0 20px 42px rgba(15, 23, 42, .18);
+    }
+    .correction-actions-menu.is-open {
+        display: grid;
+        gap: 8px;
+    }
+    .correction-actions-menu button {
+        min-height: 38px;
+        padding: 9px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(112, 19, 27, .14);
+        background: #fffafa;
+        color: #70131B;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+    .correction-actions-menu button:hover,
+    .correction-actions-menu button:focus {
+        background: #facc15;
+        border-color: #facc15;
+        outline: none;
+    }
     .correction-head-icon {
         width: 48px;
         height: 48px;
@@ -603,6 +774,43 @@
         padding: 20px;
         display: grid;
         gap: 16px;
+    }
+    .correction-body.is-hidden {
+        display: none;
+    }
+    .correction-status-view,
+    .correction-history-view {
+        display: none;
+        gap: 14px;
+        padding: 20px;
+    }
+    .correction-status-view.is-active,
+    .correction-history-view.is-active {
+        display: grid;
+    }
+    .correction-info-list {
+        display: grid;
+        gap: 10px;
+    }
+    .correction-info-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 48px;
+        padding: 12px 14px;
+        border: 1px solid #f3c7c7;
+        border-radius: 12px;
+        background: #fffafa;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 900;
+    }
+    .correction-info-row span:first-child {
+        color: #64748b;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
     }
     .correction-note {
         border: 1px solid #fed7aa;
@@ -720,6 +928,40 @@
     }
     .profile-panel { display: none; }
     .profile-panel.is-active { display: block; }
+    .health-form-history-table-wrap { overflow-x: auto; border: 1px solid rgba(112, 19, 27, .12); border-radius: 12px; background: #fff; }
+    .health-form-history-table { width: 100%; border-collapse: collapse; min-width: 640px; }
+    .health-form-history-table th { background: #f8eeee; color: #70131B; padding: 12px; text-align: left; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
+    .health-form-history-table td { padding: 12px; border-top: 1px solid #f1dada; color: #111827; font-size: 13px; font-weight: 800; vertical-align: middle; }
+    .health-form-history-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .health-form-history-actions form { margin: 0; }
+    .health-form-history-pill,
+    .health-form-history-btn { border-radius: 999px; padding: 7px 11px; font-size: 11px; font-weight: 900; text-decoration: none; border: 1px solid #fecaca; background: #fff7ed; color: #70131B; cursor: pointer; }
+    .health-form-history-btn.is-primary { background: #70131B; color: #fff; border-color: #70131B; }
+    #healthFormHistoryModal .correction-card {
+        max-width: min(940px, calc(100vw - 28px));
+    }
+    #healthFormHistoryModal .correction-body {
+        gap: 14px;
+    }
+    #healthFormHistoryModal .health-form-history-table-wrap {
+        max-height: min(58vh, 520px);
+        overflow: auto;
+    }
+    .health-form-history-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 2px;
+    }
+    .pullout-static-note {
+        border: 1px solid #facc15;
+        border-radius: 14px;
+        background: #fff8db;
+        color: #70131B;
+        padding: 16px;
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1.5;
+    }
 
     .profile-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
     #summaryPanel .profile-grid,
@@ -752,7 +994,7 @@
         border: 1px solid #fee2e2;
         color: #9f1239;
     }
-    .profile-meta-k { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 900; letter-spacing: .05em; margin-bottom: 4px; }
+    .profile-meta-k { font-size: 10px; color: #111827; text-transform: uppercase; font-weight: 900; letter-spacing: .05em; margin-bottom: 4px; }
     #summaryPanel .profile-meta-k,
     #healthPanel .profile-meta-k { margin-bottom: 0; }
     .profile-meta-v { font-size: 14px; color: #0f172a; font-weight: 900; word-break: break-word; line-height: 1.25; }
@@ -809,6 +1051,22 @@
         background: #22c55e;
         color: #ffffff;
         border: 4px solid #dcfce7;
+    }
+    .timeline-node > span {
+        display: grid;
+        place-items: center;
+        width: 100%;
+        height: 100%;
+        font-size: 18px;
+        font-weight: 900;
+        line-height: 1;
+    }
+    .profile-timeline-step.is-unsynced .timeline-node {
+        background: #dc2626;
+        border-color: #fee2e2;
+    }
+    .profile-timeline-step.is-unsynced strong {
+        color: #991b1b;
     }
     .profile-timeline-step strong,
     .timeline-copy strong {
@@ -922,6 +1180,7 @@
     [data-theme="dark"] .profile-title,
     [data-theme="dark"] .profile-name,
     [data-theme="dark"] .profile-timeline-title,
+    [data-theme="dark"] .profile-quick-item strong,
     [data-theme="dark"] .profile-meta-v,
     [data-theme="dark"] .doc-file h4 { color: #f8fafc; }
     [data-theme="dark"] .profile-sub,
@@ -946,6 +1205,42 @@
     }
     [data-theme="dark"] .profile-tab { background: #111827; border-color: #475569; color: #f8fafc; }
     [data-theme="dark"] .profile-tab.is-active { background: #70131B; border-color: #8f2230; color: #fff; }
+    [data-theme="dark"] .profile-actions-toggle,
+    [data-theme="dark"] .profile-actions-menu {
+        background: #111827;
+        border-color: #475569;
+        color: #f8fafc;
+    }
+    [data-theme="dark"] .profile-actions-menu button {
+        background: #1f2937;
+        border-color: #475569;
+        color: #f8fafc;
+    }
+    [data-theme="dark"] .health-form-history-table-wrap {
+        background: #0f172a;
+        border-color: #334155;
+    }
+    [data-theme="dark"] .health-form-history-table th {
+        background: #1f2937;
+        color: #facc15;
+    }
+    [data-theme="dark"] .health-form-history-table td {
+        border-color: #334155;
+        color: #f8fafc;
+    }
+    [data-theme="dark"] .pullout-static-note {
+        background: rgba(250, 204, 21, .14);
+        border-color: rgba(250, 204, 21, .45);
+        color: #f8fafc;
+    }
+    [data-theme="dark"] .profile-actions-toggle:hover,
+    [data-theme="dark"] .profile-actions-toggle:focus,
+    [data-theme="dark"] .profile-actions-menu button:hover,
+    [data-theme="dark"] .profile-actions-menu button:focus {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+    }
     [data-theme="dark"] .doc-link { background: #111827; border-color: #475569; color: #f8fafc; }
     [data-theme="dark"] .profile-status-issued {
         background: rgba(21, 128, 61, 0.25);
@@ -1184,17 +1479,17 @@
 @endphp
 <div class="health-profile-wrap">
     <div class="profile-card profile-hero-card">
-        <div class="profile-hero-head">
-            <div class="profile-hero-main">
-                <h1 class="profile-title">Student Health Profile</h1>
-                <p class="profile-sub">Issued health profile details and submitted documents.</p>
-            </div>
-            <div class="profile-head-actions">
+            <div class="profile-hero-head">
+                <div class="profile-hero-main">
+                    <h1 class="profile-title">Student Health Profile</h1>
+                    <p class="profile-sub">Issued health profile details and submitted documents.</p>
+                </div>
+                <div class="profile-head-actions">
                 <a href="{{ route('admin.health_records') }}" class="profile-top-btn">
                     <span aria-hidden="true">&larr;</span>
                     Back
                 </a>
-            </div>
+                </div>
         </div>
 
         <div class="profile-hero-layout">
@@ -1285,18 +1580,33 @@
                     Uploaded Documents
                 </button>
             </div>
-            <span class="profile-status-badge {{ $profileStatusClass }}">
-                @if(in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true))
-                    <x-outline-icon name="check" />
-                @elseif($profileStatusNormalized === 'Pending')
-                    <x-outline-icon name="clock" />
-                @elseif($profileStatusNormalized === 'Rejected')
-                    <x-outline-icon name="exclamation-triangle" />
-                @else
-                    <x-outline-icon name="information-circle" />
-                @endif
-                Status: {{ $profileStatusLabel }}
-            </span>
+            <div class="profile-actions-menu-wrap">
+                <button type="button" class="profile-actions-toggle" id="profileActionsToggle" aria-label="Open health profile actions" aria-expanded="false" aria-controls="profileActionsMenu">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+                    </svg>
+                </button>
+                <div class="profile-actions-menu" id="profileActionsMenu">
+                    <button type="button" id="openNewHealthFormModal">
+                        Request New Health Form
+                        <span aria-hidden="true">+</span>
+                    </button>
+                    @if($canRequestFileCorrection)
+                        <button type="button" id="openCorrectionModal">
+                            Request File Correction
+                            <span aria-hidden="true">&rarr;</span>
+                        </button>
+                    @endif
+                    <button type="button" id="openHealthFormHistoryModal">
+                        Health Form History
+                        <span aria-hidden="true">&rarr;</span>
+                    </button>
+                    <button type="button" id="openPulloutRequestModal">
+                        Request for Pullout
+                        <span aria-hidden="true">&minus;</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1376,6 +1686,11 @@
             <div class="doc-file">
                 <h4>Health Information Form</h4>
                 @php($healthInformationFormUrl = route('walkin.healthForm', ['healthProfile' => $profile->id]))
+                @if(!empty($pendingHealthFormRequest))
+                    <div class="doc-missing" style="margin-bottom:10px;">
+                        New form requested: {{ $pendingHealthFormRequest->category }}{{ $pendingHealthFormRequest->requested_at ? ' on ' . $pendingHealthFormRequest->requested_at->format('M d, Y h:i A') : '' }}
+                    </div>
+                @endif
                 <div class="doc-actions">
                     <a class="doc-link" href="{{ $healthInformationFormUrl }}" target="_blank" rel="noopener">
                         <x-outline-icon name="document-text" /> Open
@@ -1507,33 +1822,6 @@
             </div>
         </div>
 
-        @if($canRequestFileCorrection)
-            <div class="profile-correction-card">
-                <div class="profile-correction-icon"><x-outline-icon name="document-text" /></div>
-                <div>
-                    <p class="profile-correction-title">File Correction</p>
-                    <p class="profile-correction-copy">Request file replacement or health form correction without deleting approval history or PUPTAS sync records.</p>
-                    <div class="profile-correction-meta">
-                        <span>Last Request:</span>
-                        <span class="profile-last-request">{{ $profile->resubmission_requested_at ? $profile->resubmission_requested_at->format('M d, Y h:i A') : 'None' }}</span>
-                        <span>Status:</span>
-                        <span class="profile-last-request">{{ $correctionStatusLabel }}</span>
-                        @if($hasCorrectionRequest)
-                            <span class="profile-correction-history-wrap">
-                                <button type="button" class="profile-correction-history-btn">History</button>
-                                <span class="profile-correction-history-bubble">
-                                    <strong>Correction History</strong>
-                                    <span>{!! nl2br(e($correctionHistoryText !== '' ? $correctionHistoryText : 'No history yet.')) !!}</span>
-                                </span>
-                            </span>
-                        @endif
-                    </div>
-                </div>
-                <button type="button" class="profile-correction-button" id="openCorrectionModal">
-                    Request File Correction
-                </button>
-            </div>
-        @endif
     </div>
 
     <div class="profile-card profile-timeline-card">
@@ -1553,8 +1841,14 @@
                 <span>{{ $formatProfileDate($profile->assessment_date ?: $profile->verified_at) }}</span>
                 <small>Initial assessment and review completed</small>
             </div>
-            <div class="profile-timeline-step">
-                <span class="timeline-node"><x-outline-icon name="check" /></span>
+            <div class="profile-timeline-step {{ $puptasSyncRaw === 'synced' ? '' : 'is-unsynced' }}">
+                <span class="timeline-node">
+                    @if($puptasSyncRaw === 'synced')
+                        <x-outline-icon name="check" />
+                    @else
+                        <span aria-hidden="true">!</span>
+                    @endif
+                </span>
                 <strong>Synced to PUPTAS</strong>
                 <span>{{ $profile->puptas_synced_at ? $profile->puptas_synced_at->format('M d, Y h:i A') : $puptasSyncLabel }}</span>
                 <small>Health record sync status</small>
@@ -1570,10 +1864,126 @@
 
 </div>
 
+<div class="correction-modal" id="newHealthFormModal" aria-hidden="true">
+    <div class="correction-card">
+        <div class="correction-head">
+            <div class="correction-head-title">
+                <span class="correction-head-icon"><x-outline-icon name="document-text" /></span>
+                <div>
+                    <h3>Request New Health Form</h3>
+                    <p>Ask this student to submit a fresh Health Information Form for a specific purpose.</p>
+                </div>
+            </div>
+            <button type="button" class="correction-close" id="closeNewHealthFormModal" aria-label="Close new health form modal">
+                <x-outline-icon name="x-mark" />
+            </button>
+        </div>
+        <form method="POST" action="{{ route('admin.health_profile.request_health_form', $profile->id) }}" class="correction-body">
+            @csrf
+            <div class="correction-field">
+                <label for="newHealthFormCategory">Category / Purpose</label>
+                <div class="correction-select-wrap">
+                    <select id="newHealthFormCategory" name="category" required>
+                        <option value="">Select category</option>
+                        @foreach(($healthFormCategories ?? collect()) as $category)
+                            <option value="{{ $category }}">{{ $category }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="correction-field">
+                <label for="newHealthFormRemarks">Remarks</label>
+                <textarea id="newHealthFormRemarks" name="remarks" placeholder="Optional note for why a new form is needed.">{{ old('remarks') }}</textarea>
+            </div>
+            <div class="correction-actions">
+                <button type="button" class="correction-cancel" id="cancelNewHealthFormModal">Cancel</button>
+                <button type="submit" class="correction-submit">Send Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="correction-modal" id="healthFormHistoryModal" aria-hidden="true">
+    <div class="correction-card">
+        <div class="correction-head">
+            <div class="correction-head-title">
+                <span class="correction-head-icon"><x-outline-icon name="document-text" /></span>
+                <div>
+                    <h3>Health Form History</h3>
+                    <p>Saved PDF snapshots submitted by the student for each category or request.</p>
+                </div>
+            </div>
+            <button type="button" class="correction-close" id="closeHealthFormHistoryModal" aria-label="Close health form history modal">
+                <x-outline-icon name="x-mark" />
+            </button>
+        </div>
+        <div class="correction-body">
+            <div class="health-form-history-table-wrap">
+                <table class="health-form-history-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>School Year</th>
+                            <th>Status</th>
+                            <th>Submitted At</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse(($healthFormSubmissions ?? collect()) as $submission)
+                            <tr>
+                                <td>{{ $submission->category }}</td>
+                                <td>{{ $submission->school_year ?: '-' }}</td>
+                                <td><span class="health-form-history-pill">{{ ucwords(str_replace('_', ' ', $submission->status)) }}</span></td>
+                                <td>{{ $submission->submitted_at ? $submission->submitted_at->format('M d, Y h:i A') : ($submission->requested_at ? 'Requested ' . $submission->requested_at->format('M d, Y h:i A') : '-') }}</td>
+                                <td>{{ $submission->remarks ?: '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5">No saved Health Form PDFs yet.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="correction-modal" id="pulloutRequestModal" aria-hidden="true">
+    <div class="correction-card">
+        <div class="correction-head">
+            <div class="correction-head-title">
+                <span class="correction-head-icon"><x-outline-icon name="document-text" /></span>
+                <div>
+                    <h3>Request for Pullout</h3>
+                    <p>Health form pullout request status.</p>
+                </div>
+            </div>
+            <button type="button" class="correction-close" id="closePulloutRequestModal" aria-label="Close request pullout modal">
+                <x-outline-icon name="x-mark" />
+            </button>
+        </div>
+        <div class="correction-body">
+            <div class="pullout-static-note">
+                Currently coordination with PUPTAS.
+            </div>
+            <div class="correction-actions">
+                <button type="button" class="correction-submit" id="closePulloutRequestDone">Done</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @if($canRequestFileCorrection)
     <div class="correction-modal" id="correctionModal" aria-hidden="true">
         <div class="correction-card">
             <div class="correction-head">
+                <button type="button" class="correction-modal-back" id="correctionModalBack" aria-label="Back to correction request">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                    </svg>
+                </button>
                 <div class="correction-head-title">
                     <span class="correction-head-icon"><x-outline-icon name="document-text" /></span>
                     <div>
@@ -1581,11 +1991,24 @@
                         <p>Select file/s for replacement or Health Form Correction so the student can update their health information.</p>
                     </div>
                 </div>
-                <button type="button" class="correction-close" id="closeCorrectionModal" aria-label="Close correction modal">
-                    <x-outline-icon name="x-mark" />
-                </button>
+                <div class="correction-head-actions">
+                    <div class="correction-actions-menu-wrap">
+                        <button type="button" class="correction-actions-toggle" id="correctionActionsToggle" aria-label="Open correction actions" aria-expanded="false" aria-controls="correctionActionsMenu">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+                            </svg>
+                        </button>
+                        <div class="correction-actions-menu" id="correctionActionsMenu">
+                            <button type="button" data-correction-view-trigger="status">Status</button>
+                            <button type="button" data-correction-view-trigger="history">History</button>
+                        </div>
+                    </div>
+                    <button type="button" class="correction-close" id="closeCorrectionModal" aria-label="Close correction modal">
+                        <x-outline-icon name="x-mark" />
+                    </button>
+                </div>
             </div>
-            <form method="POST" action="{{ route('admin.health_profile.request_resubmission', $profile->id) }}" class="correction-body">
+            <form method="POST" action="{{ route('admin.health_profile.request_resubmission', $profile->id) }}" class="correction-body" id="correctionRequestView">
                 @csrf
                 <div class="correction-note">
                     This request keeps the existing approval and PUPTAS sync history. The student will only update the selected file/s or health form data.
@@ -1643,6 +2066,31 @@
                     <button type="submit" class="correction-submit">Send Correction Request</button>
                 </div>
             </form>
+            <div class="correction-status-view" id="correctionStatusView">
+                <div class="correction-info-list">
+                    <div class="correction-info-row">
+                        <span>Current Status</span>
+                        <strong>{{ $correctionStatusLabel }}</strong>
+                    </div>
+                    <div class="correction-info-row">
+                        <span>Last Request</span>
+                        <strong>{{ $profile->resubmission_requested_at ? $profile->resubmission_requested_at->format('M d, Y h:i A') : 'None' }}</strong>
+                    </div>
+                    <div class="correction-info-row">
+                        <span>Submitted At</span>
+                        <strong>{{ $profile->resubmitted_at ? $profile->resubmitted_at->format('M d, Y h:i A') : 'None' }}</strong>
+                    </div>
+                    <div class="correction-info-row">
+                        <span>Reason</span>
+                        <strong>{{ $profile->pending_reason ?: 'None' }}</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="correction-history-view" id="correctionHistoryView">
+                <div class="correction-note">
+                    {!! nl2br(e($correctionHistoryText !== '' ? $correctionHistoryText : 'No correction history yet.')) !!}
+                </div>
+            </div>
         </div>
     </div>
 @endif
@@ -1679,7 +2127,150 @@
     const correctionReasonOther = document.getElementById('correctionReasonOther');
     const correctionOtherField = document.getElementById('correctionOtherField');
     const correctionHealthFormOption = document.getElementById('correctionHealthFormOption');
-    const correctionForm = document.querySelector('.correction-body');
+    const correctionForm = correctionModal?.querySelector('.correction-body');
+    const correctionRequestView = document.getElementById('correctionRequestView');
+    const correctionStatusView = document.getElementById('correctionStatusView');
+    const correctionHistoryView = document.getElementById('correctionHistoryView');
+    const correctionModalBack = document.getElementById('correctionModalBack');
+    const correctionActionsToggle = document.getElementById('correctionActionsToggle');
+    const correctionActionsMenu = document.getElementById('correctionActionsMenu');
+    const newHealthFormModal = document.getElementById('newHealthFormModal');
+    const openNewHealthFormModal = document.getElementById('openNewHealthFormModal');
+    const closeNewHealthFormModal = document.getElementById('closeNewHealthFormModal');
+    const cancelNewHealthFormModal = document.getElementById('cancelNewHealthFormModal');
+    const profileActionsToggle = document.getElementById('profileActionsToggle');
+    const profileActionsMenu = document.getElementById('profileActionsMenu');
+    const healthFormHistoryModal = document.getElementById('healthFormHistoryModal');
+    const openHealthFormHistoryModal = document.getElementById('openHealthFormHistoryModal');
+    const closeHealthFormHistoryModal = document.getElementById('closeHealthFormHistoryModal');
+    const pulloutRequestModal = document.getElementById('pulloutRequestModal');
+    const openPulloutRequestModal = document.getElementById('openPulloutRequestModal');
+    const closePulloutRequestModal = document.getElementById('closePulloutRequestModal');
+    const closePulloutRequestDone = document.getElementById('closePulloutRequestDone');
+
+    function setProfileActionsMenu(open) {
+        if (!profileActionsMenu || !profileActionsToggle) return;
+        profileActionsMenu.classList.toggle('is-open', open);
+        profileActionsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    profileActionsToggle?.addEventListener('click', function (event) {
+        event.stopPropagation();
+        setProfileActionsMenu(!profileActionsMenu?.classList.contains('is-open'));
+    });
+
+    profileActionsMenu?.addEventListener('click', function (event) {
+        event.stopPropagation();
+    });
+
+    document.addEventListener('click', function () {
+        setProfileActionsMenu(false);
+        setCorrectionActionsMenu(false);
+    });
+
+    function setNewHealthFormModal(open) {
+        if (!newHealthFormModal) return;
+        newHealthFormModal.classList.toggle('is-open', open);
+        newHealthFormModal.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+
+    openNewHealthFormModal?.addEventListener('click', function () {
+        setProfileActionsMenu(false);
+        setNewHealthFormModal(true);
+    });
+
+    closeNewHealthFormModal?.addEventListener('click', function () {
+        setNewHealthFormModal(false);
+    });
+
+    cancelNewHealthFormModal?.addEventListener('click', function () {
+        setNewHealthFormModal(false);
+    });
+
+    newHealthFormModal?.addEventListener('click', function (event) {
+        if (event.target === newHealthFormModal) {
+            setNewHealthFormModal(false);
+        }
+    });
+
+    function setHealthFormHistoryModal(open) {
+        if (!healthFormHistoryModal) return;
+        healthFormHistoryModal.classList.toggle('is-open', open);
+        healthFormHistoryModal.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+
+    openHealthFormHistoryModal?.addEventListener('click', function () {
+        setProfileActionsMenu(false);
+        setHealthFormHistoryModal(true);
+    });
+
+    closeHealthFormHistoryModal?.addEventListener('click', function () {
+        setHealthFormHistoryModal(false);
+    });
+
+    healthFormHistoryModal?.addEventListener('click', function (event) {
+        if (event.target === healthFormHistoryModal) {
+            setHealthFormHistoryModal(false);
+        }
+    });
+
+    function setPulloutRequestModal(open) {
+        if (!pulloutRequestModal) return;
+        pulloutRequestModal.classList.toggle('is-open', open);
+        pulloutRequestModal.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+
+    openPulloutRequestModal?.addEventListener('click', function () {
+        setPulloutRequestModal(true);
+    });
+
+    closePulloutRequestModal?.addEventListener('click', function () {
+        setPulloutRequestModal(false);
+    });
+
+    closePulloutRequestDone?.addEventListener('click', function () {
+        setPulloutRequestModal(false);
+    });
+
+    pulloutRequestModal?.addEventListener('click', function (event) {
+        if (event.target === pulloutRequestModal) {
+            setPulloutRequestModal(false);
+        }
+    });
+
+    function setCorrectionActionsMenu(open) {
+        if (!correctionActionsMenu || !correctionActionsToggle) return;
+        correctionActionsMenu.classList.toggle('is-open', open);
+        correctionActionsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    function setCorrectionView(view) {
+        const isRequest = view === 'request';
+        correctionRequestView?.classList.toggle('is-hidden', !isRequest);
+        correctionStatusView?.classList.toggle('is-active', view === 'status');
+        correctionHistoryView?.classList.toggle('is-active', view === 'history');
+        correctionModalBack?.classList.toggle('is-visible', !isRequest);
+        setCorrectionActionsMenu(false);
+    }
+
+    correctionActionsToggle?.addEventListener('click', function (event) {
+        event.stopPropagation();
+        setCorrectionActionsMenu(!correctionActionsMenu?.classList.contains('is-open'));
+    });
+
+    correctionActionsMenu?.addEventListener('click', function (event) {
+        event.stopPropagation();
+    });
+
+    document.querySelectorAll('[data-correction-view-trigger]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            setCorrectionView(button.dataset.correctionViewTrigger || 'request');
+        });
+    });
+
+    correctionModalBack?.addEventListener('click', function () {
+        setCorrectionView('request');
+    });
 
     function syncCorrectionReason() {
         if (!correctionReason || !correctionReasonSelect) return '';
@@ -1703,9 +2294,15 @@
         if (!correctionModal) return;
         correctionModal.classList.toggle('is-open', open);
         correctionModal.setAttribute('aria-hidden', open ? 'false' : 'true');
+        if (open) {
+            setCorrectionView('request');
+        } else {
+            setCorrectionActionsMenu(false);
+        }
     }
 
     openCorrectionModal?.addEventListener('click', function () {
+        setProfileActionsMenu(false);
         setCorrectionModal(true);
     });
 

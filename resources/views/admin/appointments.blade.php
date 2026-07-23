@@ -2731,18 +2731,22 @@
         width: 42px;
         height: 42px;
         border-radius: 12px;
-        display: grid;
-        place-items: center;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         background: #fff1f2;
         color: #b91c1c;
         line-height: 0;
     }
     .appointments-last-updated-icon svg {
-        width: 20px;
-        height: 20px;
-        display: block;
-        margin: 0;
-        transform: translateY(7px);
+        width: 20px !important;
+        height: 20px !important;
+        display: block !important;
+        margin: auto !important;
+        transform: none !important;
+        position: static !important;
+        inset: auto !important;
+        flex: 0 0 20px !important;
     }
     .appointments-last-updated span {
         display: block;
@@ -2758,6 +2762,21 @@
         font-size: 13px;
         font-weight: 900;
         line-height: 1.25;
+    }
+    .appointments-last-updated > .appointments-last-updated-icon {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        place-items: center !important;
+        padding: 0 !important;
+        text-align: center !important;
+    }
+    .appointments-last-updated > .appointments-last-updated-icon > svg {
+        display: block !important;
+        width: 20px !important;
+        height: 20px !important;
+        margin: 0 !important;
+        transform: translate(0, 0) !important;
     }
     .appointments-modern-summary {
         display: grid;
@@ -3532,7 +3551,7 @@
                 </div>
             </div>
             <div class="appointments-modern-card is-service">
-                <span class="appointments-modern-icon"><x-outline-icon name="clipboard-document-list" /></span>
+                <span class="appointments-modern-icon"><x-outline-icon name="heart-pulse" /></span>
                 <div class="appointments-modern-copy">
                     <span class="appointments-modern-label">Common Illness</span>
                     <strong>{{ $commonIllness }}</strong>

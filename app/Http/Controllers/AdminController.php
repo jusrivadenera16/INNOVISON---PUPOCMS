@@ -8,6 +8,8 @@ use App\Models\Announcement;
 use App\Models\Appointment;
 use App\Models\ActivityLog;
 use App\Models\Consultation;
+use App\Models\HealthFormSubmission;
+use App\Models\HealthFormCategory;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\MedicineType;
@@ -16,6 +18,7 @@ use App\Models\SystemSetting;
 use App\Models\Admin;
 use App\Services\FacultySyncService;
 use App\Services\GuisisApiService;
+use App\Services\HealthFormPdfSnapshotService;
 use App\Services\InventoryImportAnalyzer;
 use App\Services\InventoryDataNormalizer;
 use App\Services\PuptasWebhookService;
@@ -1957,8 +1960,118 @@ class AdminController extends Controller
 
 
         $calculatedAge = Carbon::parse($profile->user->DOB)->age;
+        $pendingHealthFormRequest = HealthFormSubmission::query()
+            ->where('user_id', $profile->user_id)
+            ->where('status', HealthFormSubmission::STATUS_REQUESTED)
+            ->latest('requested_at')
+            ->first();
+        $healthFormCategories = HealthFormCategory::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name')
+            ->values();
+        $healthFormSubmissions = HealthFormSubmission::query()
+            ->where('user_id', $profile->user_id)
+            ->orderByRaw('submitted_at IS NULL ASC')
+            ->latest('submitted_at')
+            ->latest('requested_at')
+            ->latest('id')
+            ->get();
 
-        return view('admin.show_health', compact('profile', 'calculatedAge'));
+        return view('admin.show_health', compact('profile', 'calculatedAge', 'pendingHealthFormRequest', 'healthFormCategories', 'healthFormSubmissions'));
+    }
+
+    public function requestNewHealthForm(Request $request, $id)
+    {
+        $profile = HealthProfile::with('user')->findOrFail($id);
+
+        $validated = $request->validate([
+            'category' => [
+                'required',
+                'string',
+                'max:120',
+                Rule::exists('health_form_categories', 'name')->where(fn ($query) => $query->where('is_active', true)),
+            ],
+            'remarks' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $adminUser = Auth::guard('admin')->user();
+
+        HealthFormSubmission::query()->updateOrCreate(
+            [
+                'user_id' => $profile->user_id,
+                'status' => HealthFormSubmission::STATUS_REQUESTED,
+            ],
+            [
+                'health_profile_id' => $profile->id,
+                'category' => trim((string) $validated['category']),
+                'school_year' => trim((string) ($profile->school_year ?? '')) ?: null,
+                'requested_by_user_id' => $adminUser?->id,
+                'requested_at' => now(),
+                'remarks' => trim((string) ($validated['remarks'] ?? '')) ?: null,
+            ]
+        );
+
+        $this->logActivity(
+            'New Health Form Requested',
+            'Requested a new Health Form for ' . ($profile->user->name ?? 'student') . ' under ' . trim((string) $validated['category']) . '.',
+            'Health Records',
+            'ACTION'
+        );
+
+        return redirect()->route('admin.show_health', $profile->id)
+            ->with('success', 'New Health Form request sent to the student.');
+    }
+
+    public function updateHealthFormSubmissionStatus(Request $request, HealthFormSubmission $submission)
+    {
+        $validated = $request->validate([
+            'status' => ['required', Rule::in([
+                HealthFormSubmission::STATUS_SUBMITTED,
+                HealthFormSubmission::STATUS_APPROVED,
+                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+            ])],
+        ]);
+
+        $submission->status = $validated['status'];
+        if ($submission->status === HealthFormSubmission::STATUS_APPROVED) {
+            $submission->approved_at = now();
+            if ($submission->healthProfile && $submission->user) {
+                app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot(
+                    $submission->healthProfile,
+                    $submission->user,
+                    $submission->category,
+                    $submission->remarks
+                );
+                $submission->refresh();
+            }
+        } elseif ($submission->status !== HealthFormSubmission::STATUS_APPROVED) {
+            $submission->approved_at = null;
+        }
+        $submission->save();
+
+        $this->logActivity(
+            'Health Form Submission Status Updated',
+            'Updated Health Form submission #' . $submission->id . ' to ' . str_replace('_', ' ', $submission->status) . '.',
+            'Health Records',
+            'ACTION'
+        );
+
+        return back()->with('success', 'Health Form submission status updated.');
+    }
+
+    public function showHealthFormSubmissionPdf(HealthFormSubmission $submission)
+    {
+        $path = ltrim((string) $submission->pdf_path, '/');
+        $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+        abort_if($path === '' || !Storage::disk('public')->exists($path), 404, 'Saved Health Form PDF not found.');
+
+        return response()->file(Storage::disk('public')->path($path), [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, max-age=300',
+        ]);
     }
 
     public function resyncPuptasHealthProfile($id, PuptasWebhookService $puptasService)
@@ -2013,6 +2126,29 @@ class AdminController extends Controller
     public function exportHealthPdf($id)
     {
         $profile = HealthProfile::with('user')->findOrFail($id);
+        $submission = HealthFormSubmission::query()
+            ->where(function ($query) use ($profile) {
+                $query->where('health_profile_id', $profile->id)
+                    ->orWhere('user_id', $profile->user_id);
+            })
+            ->whereNotNull('pdf_path')
+            ->whereIn('status', [
+                HealthFormSubmission::STATUS_SUBMITTED,
+                HealthFormSubmission::STATUS_APPROVED,
+                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+            ])
+            ->latest('submitted_at')
+            ->latest('id')
+            ->first();
+
+        $snapshotPath = ltrim((string) ($submission?->pdf_path ?? ''), '/');
+        $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
+        if ($snapshotPath !== '' && Storage::disk('public')->exists($snapshotPath)) {
+            return Storage::disk('public')->download($snapshotPath, basename($snapshotPath), [
+                'Content-Type' => 'application/pdf',
+            ]);
+        }
+
         $calculatedAge = !empty($profile->user->DOB)
             ? Carbon::parse($profile->user->DOB)->age
             : null;
@@ -2107,6 +2243,15 @@ public function updateClearance(Request $request, $id)
             $record->user->save();
 
             if ($isApproval) {
+                try {
+                    app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($record->fresh('user'));
+                } catch (\Throwable $exception) {
+                    \Log::error('Unable to save approved Health Form PDF snapshot.', [
+                        'health_profile_id' => $record->id,
+                        'error' => $exception->getMessage(),
+                    ]);
+                }
+
                 try {
                     $puptasService = app(PuptasWebhookService::class);
                     $referenceNumber = $this->resolvePuptasReferenceNumber($record);
@@ -2209,6 +2354,30 @@ public function updateClearance(Request $request, $id)
         }
 
         $record->save();
+
+        if ($needsHealthFormCorrection && $record->user) {
+            $submission = HealthFormSubmission::query()
+                ->where(function ($query) use ($record) {
+                    $query->where('health_profile_id', $record->id)
+                        ->orWhere('user_id', $record->user_id);
+                })
+                ->whereIn('status', [
+                    HealthFormSubmission::STATUS_SUBMITTED,
+                    HealthFormSubmission::STATUS_APPROVED,
+                    HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                ])
+                ->latest('submitted_at')
+                ->latest('approved_at')
+                ->latest('id')
+                ->first();
+
+            if ($submission) {
+                $submission->status = HealthFormSubmission::STATUS_NEEDS_CORRECTION;
+                $submission->approved_at = null;
+                $submission->remarks = trim((string) ($submission->remarks ?: $pendingReason)) ?: null;
+                $submission->save();
+            }
+        }
 
         if ($record->user && !$wasAlreadyIssued) {
             $record->user->is_health_profile_completed = 0;

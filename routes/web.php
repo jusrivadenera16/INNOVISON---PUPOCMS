@@ -7,6 +7,7 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\Auth\EmergencyAuthController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\HealthFormCategoryController;
 use App\Http\Controllers\MedicalConditionController;
 use App\Http\Controllers\MedicineTypeController;
 use App\Http\Controllers\ReportsController;
@@ -179,6 +180,7 @@ Route::middleware(['auth:student', 'idp.session', 'audit'])->group(function () {
         }
         Route::get('/student/health-form/print', [AppointmentController::class, 'printHealthForm'])->name('student.health_form.print');
         Route::get('/student/health-form/download', [AppointmentController::class, 'downloadHealthForm'])->name('student.health_form.download');
+        Route::get('/student/health-form/submissions/{submission}', [AppointmentController::class, 'showHealthFormSubmissionPdf'])->name('student.health_form.submission');
         Route::get('/student/health-record/document/{document}', [AppointmentController::class, 'showStudentHealthRecordDocument'])
             ->name('student.health_record.document');
         Route::post('/student/health-record/resubmit', [AppointmentController::class, 'resubmitHealthRecordRequirements'])
@@ -240,6 +242,15 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
     Route::post('/health-profile/{id}/request-resubmission', [AdminController::class, 'requestHealthProfileResubmission'])
         ->middleware('role:superadmin,admin')
         ->name('admin.health_profile.request_resubmission');
+    Route::post('/health-profile/{id}/request-health-form', [AdminController::class, 'requestNewHealthForm'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.health_profile.request_health_form');
+    Route::post('/health-form-submissions/{submission}/status', [AdminController::class, 'updateHealthFormSubmissionStatus'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.health_form_submissions.status');
+    Route::get('/health-form-submissions/{submission}/pdf', [AdminController::class, 'showHealthFormSubmissionPdf'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.health_form_submissions.pdf');
     Route::post('/health-profile/{id}/for-final-review', [AdminController::class, 'markHealthProfileForFinalReview'])
         ->middleware('role:superadmin,admin')
         ->name('admin.health_profile.for_final_review');
@@ -362,11 +373,14 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
 
         Route::get('/admin/reports/manage-mar', [ReportsController::class, 'manageMar'])->name('admin.reports.manage-mar');
         Route::get('/admin/reports/manage-medicine-types', [MedicineTypeController::class, 'index'])->name('admin.reports.manage-medicine-types');
+        Route::get('/admin/reports/manage-health-form-categories', [HealthFormCategoryController::class, 'index'])->name('admin.reports.manage-health-form-categories');
         Route::put('/admin/conditions/{id}', [ReportsController::class, 'update'])->name('conditions.update');
         Route::post('/admin/medical-conditions', [MedicalConditionController::class, 'store'])->name('conditions.store');
         Route::delete('/admin/medical-conditions/{id}', [MedicalConditionController::class, 'destroy'])->name('conditions.destroy');
         Route::post('/admin/medicine-types', [MedicineTypeController::class, 'store'])->name('medicine-types.store');
         Route::delete('/admin/medicine-types/{id}', [MedicineTypeController::class, 'destroy'])->name('medicine-types.destroy');
+        Route::post('/admin/health-form-categories', [HealthFormCategoryController::class, 'store'])->name('health-form-categories.store');
+        Route::delete('/admin/health-form-categories/{id}', [HealthFormCategoryController::class, 'destroy'])->name('health-form-categories.destroy');
 
         Route::get('/admin/student-assistants', [StudentAssistantController::class, 'index'])->name('admin.student-assistants.index');
         Route::post('/admin/student-assistants', [StudentAssistantController::class, 'store'])->name('admin.student-assistants.store');
