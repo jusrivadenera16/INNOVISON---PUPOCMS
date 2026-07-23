@@ -5613,7 +5613,7 @@
 
                         @guest('student')
                             @guest('admin')
-                                @env('local')
+                                @if(app()->environment('local') || config('services.local_login.enabled'))
                                     <a class="local-login-link" href="{{ route('login') }}">
                                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                             <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor"/>
@@ -5621,7 +5621,7 @@
                                         </svg>
                                         <span>Local Login</span>
                                     </a>
-                                @endenv
+                                @endif
                             @endguest
                         @endguest
                     </div>
@@ -5716,7 +5716,7 @@
 
                                 @guest('student')
                                     @guest('admin')
-                                        @env('local')
+                                        @if(app()->environment('local') || config('services.local_login.enabled'))
                                             <a class="local-login-link" href="{{ route('login') }}">
                                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                                     <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor"/>
@@ -5724,7 +5724,7 @@
                                                 </svg>
                                                 <span>Local Login</span>
                                             </a>
-                                        @endenv
+                                        @endif
                                     @endguest
                                 @endguest
                             </div>

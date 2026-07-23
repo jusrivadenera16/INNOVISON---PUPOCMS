@@ -157,6 +157,11 @@ class LoginController extends Controller
         return (bool) config('services.idp.enabled', false);
     }
 
+    private function localLoginEnabled(): bool
+    {
+        return app()->environment('local') || (bool) config('services.local_login.enabled', false);
+    }
+
     private function redirectPathByRole(string $role): string
     {
         $normalizedRole = User::normalizeRole($role);
@@ -1785,7 +1790,7 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        if ($this->useIdpAuth()) {
+        if ($this->useIdpAuth() && !$this->localLoginEnabled()) {
             return redirect('/login?idp_error=1')->withErrors([
                 'idp' => 'Centralized login is enabled. Use the identity provider sign-in flow.',
             ]);
@@ -2118,7 +2123,7 @@ class LoginController extends Controller
             return redirect($this->resolveRedirectPathForUser($authenticatedUser));
         }
 
-        if ($this->useIdpAuth()) {
+        if ($this->useIdpAuth() && !$this->localLoginEnabled()) {
             if ($request->boolean('idp_error')) {
                 return view('login');
             }

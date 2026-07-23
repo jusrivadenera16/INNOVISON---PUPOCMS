@@ -49,6 +49,10 @@ return [
         'client_id' => env('BOTPRESS_CLIENT_ID'),
     ],
 
+    'local_login' => [
+        'enabled' => filter_var(env('LOCAL_LOGIN_ENABLED', false), FILTER_VALIDATE_BOOL),
+    ],
+
     'idp' => [
         'enabled' => filter_var(env('IDP_ENABLED', false), FILTER_VALIDATE_BOOL),
         'base_url' => rtrim((string) env('IDP_BASE_URL', ''), '/'),
