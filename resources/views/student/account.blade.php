@@ -1569,6 +1569,167 @@
         margin-bottom: 24px;
         color: var(--text-main, #1e293b);
     }
+    .missing-requirements-panel {
+        margin: 18px 0 24px;
+        padding: 22px;
+        border-radius: 14px;
+        border: 1px solid #fecaca;
+        background: linear-gradient(135deg, #fff7f7 0%, #ffffff 100%);
+        box-shadow: 0 14px 34px rgba(112, 19, 27, 0.08);
+    }
+    .missing-requirements-main {
+        display: grid;
+        grid-template-columns: minmax(180px, .85fr) minmax(260px, 1fr) minmax(170px, .55fr);
+        gap: 18px;
+        align-items: stretch;
+    }
+    .missing-requirements-lead {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 14px;
+        align-items: start;
+    }
+    .missing-requirements-icon,
+    .missing-requirements-doc-icon,
+    .missing-requirements-upload-icon,
+    .missing-requirements-reminder-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+    .missing-requirements-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        color: #dc2626;
+        background: #fff7f7;
+        border: 2px solid #fca5a5;
+    }
+    .missing-requirements-icon svg,
+    .missing-requirements-doc-icon svg,
+    .missing-requirements-upload-icon svg,
+    .missing-requirements-reminder-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+    .missing-requirements-title {
+        margin: 0;
+        color: #8B0000;
+        font-size: 18px;
+        font-weight: 950;
+        line-height: 1.2;
+    }
+    .missing-requirements-copy {
+        margin: 8px 0 0;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 750;
+        line-height: 1.45;
+    }
+    .missing-requirements-list {
+        margin: 0;
+        padding: 16px 18px;
+        border-radius: 12px;
+        border: 1px solid rgba(112, 19, 27, .10);
+        background: #ffffff;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, .06);
+        display: grid;
+        gap: 12px;
+    }
+    .missing-requirement-item {
+        display: grid;
+        grid-template-columns: 28px 24px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 900;
+        line-height: 1.35;
+    }
+    .missing-requirements-doc-icon {
+        width: 24px;
+        height: 24px;
+        color: #dc2626;
+    }
+    .missing-requirement-number {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff1f2;
+        color: #dc2626;
+        font-size: 10px;
+        font-weight: 950;
+    }
+    .missing-requirements-upload-card {
+        min-height: 136px;
+        border-radius: 12px;
+        border: 1px dashed #fca5a5;
+        background: #fffafa;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 18px;
+        text-align: center;
+    }
+    .missing-requirements-upload-icon {
+        color: #8B0000;
+    }
+    .missing-requirements-upload-btn {
+        border: 1px solid #8B0000;
+        border-radius: 10px;
+        background: #8B0000;
+        color: #ffffff;
+        padding: 12px 18px;
+        font-size: 13px;
+        font-weight: 950;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+    }
+    .missing-requirements-upload-btn:hover,
+    .missing-requirements-upload-btn:focus-visible {
+        background: #facc15;
+        color: #70131B;
+        border-color: #facc15;
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .missing-requirements-upload-help {
+        margin: 0;
+        color: #475569;
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 1.35;
+    }
+    .missing-requirements-reminder {
+        margin-top: 18px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        border: 1px solid #bfdbfe;
+        background: #eff6ff;
+        color: #1e3a8a;
+        display: grid;
+        grid-template-columns: 26px minmax(0, 1fr);
+        gap: 10px;
+    }
+    .missing-requirements-reminder strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 13px;
+        font-weight: 950;
+    }
+    .missing-requirements-reminder p {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 750;
+        line-height: 1.45;
+    }
     .health-status-head {
         display: flex;
         align-items: center;
@@ -1941,6 +2102,22 @@
         outline: none;
     }
     @media (max-width: 640px) {
+        .missing-requirements-panel {
+            padding: 16px;
+        }
+        .missing-requirements-main {
+            grid-template-columns: 1fr;
+        }
+        .missing-requirements-list {
+            padding: 14px;
+        }
+        .missing-requirement-item {
+            grid-template-columns: 24px 22px minmax(0, 1fr);
+            align-items: start;
+        }
+        .missing-requirements-upload-card {
+            min-height: 118px;
+        }
         .health-declaration-card {
             padding: 16px;
         }
@@ -2606,141 +2783,462 @@
         text-decoration: none;
         transform: translateY(-1px);
     }
+    .resubmission-upload-modal {
+        width: min(920px, 100%);
+        border-top: 0;
+        border-bottom: 4px solid #facc15;
+    }
+    .missing-requirements-hidden-input {
+        display: none;
+    }
+    .resubmission-upload-modal .record-modal-head {
+        min-height: 108px;
+        padding: 24px 72px 22px 30px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+    }
+    .resubmission-head-icon,
+    .resubmission-doc-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+    .resubmission-head-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 18px;
+        color: #ffffff;
+        background: rgba(255, 255, 255, .12);
+        border: 1px solid rgba(255, 255, 255, .18);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14);
+    }
+    .resubmission-head-icon svg {
+        width: 28px;
+        height: 28px;
+        stroke-width: 1.8;
+    }
+    .resubmission-progress-card,
+    .resubmission-note-card,
+    .resubmission-doc-card,
+    .resubmission-selected-summary {
+        border: 1px solid rgba(112, 19, 27, .12);
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, .06);
+    }
+    .resubmission-progress-card {
+        display: grid;
+        grid-template-columns: auto auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 18px;
+        padding: 14px 18px;
+        margin-bottom: 18px;
+    }
+    .resubmission-progress-icon,
+    .resubmission-note-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+    .resubmission-progress-icon {
+        color: #be123c;
+        background: #fff1f2;
+    }
+    .resubmission-progress-icon svg,
+    .resubmission-note-icon svg,
+    .resubmission-doc-icon svg,
+    .resubmission-remove-file svg {
+        width: 20px;
+        height: 20px;
+    }
+    .resubmission-progress-label,
+    .resubmission-progress-count,
+    .resubmission-note-title,
+    .resubmission-doc-title,
+    .resubmission-selected-title {
+        display: block;
+        color: #70131B;
+        font-weight: 900;
+    }
+    .resubmission-progress-label {
+        color: #64748b;
+        font-size: 11px;
+    }
+    .resubmission-progress-count {
+        font-size: 13px;
+    }
+    .resubmission-progress-track {
+        height: 8px;
+        border-radius: 999px;
+        background: #f9dce0;
+        overflow: hidden;
+    }
+    .resubmission-progress-fill {
+        display: block;
+        height: 100%;
+        width: 0%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #70131B, #a2162b);
+        transition: width .24s ease;
+    }
+    .resubmission-progress-percent {
+        min-width: 44px;
+        color: #70131B;
+        font-size: 15px;
+        font-weight: 950;
+        text-align: right;
+    }
+    .resubmission-note-card {
+        position: relative;
+        display: flex;
+        gap: 14px;
+        padding: 16px 18px;
+        margin-bottom: 22px;
+        border-color: rgba(250, 204, 21, .55);
+        background: linear-gradient(135deg, #fff8dd, #ffffff);
+        overflow: hidden;
+    }
+    .resubmission-note-card::after {
+        content: "";
+        position: absolute;
+        right: 18px;
+        bottom: -12px;
+        width: 84px;
+        height: 70px;
+        border: 3px solid rgba(250, 204, 21, .18);
+        border-radius: 18px;
+        opacity: .7;
+    }
+    .resubmission-note-icon {
+        color: #f59e0b;
+        background: #ffffff;
+        border: 1px solid rgba(250, 204, 21, .45);
+    }
+    .resubmission-note-title {
+        margin-bottom: 5px;
+        font-size: 13px;
+    }
+    .resubmission-note-text {
+        margin: 0;
+        color: #4b5563;
+        font-size: 12px;
+        font-weight: 750;
+        line-height: 1.55;
+        max-width: 680px;
+    }
     .resubmission-doc-list {
         display: grid;
         gap: 14px;
-        margin-top: 14px;
     }
     .resubmission-doc-card {
         display: grid;
-        gap: 10px;
-        padding: 16px;
-        border: 1px solid rgba(112, 19, 27, 0.14);
+        grid-template-columns: minmax(0, 1fr) minmax(250px, .9fr);
+        align-items: stretch;
+        gap: 20px;
+        padding: 18px;
+    }
+    .resubmission-doc-info {
+        display: grid;
+        grid-template-columns: 58px minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+        min-width: 0;
+        padding-right: 8px;
+        border-right: 1px solid rgba(112, 19, 27, .12);
+    }
+    .resubmission-doc-icon {
+        width: 54px;
+        height: 54px;
         border-radius: 14px;
-        background: #fffafa;
+        background: #fff1f2;
+        color: #be123c;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .08);
     }
     .resubmission-doc-title {
+        margin: 0 0 6px;
+        font-size: 14px;
+        line-height: 1.25;
+    }
+    .resubmission-needed-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        width: fit-content;
+        margin-bottom: 10px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: #ffe4e6;
+        color: #be123c;
+        font-size: 10px;
+        font-weight: 950;
+    }
+    .resubmission-needed-badge::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: currentColor;
+    }
+    .resubmission-doc-reason,
+    .resubmission-doc-hint {
         margin: 0;
-        color: #70131B;
-        font-size: 13px;
-        font-weight: 900;
-        letter-spacing: .02em;
-        text-transform: uppercase;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 750;
+        line-height: 1.45;
     }
     .resubmission-doc-hint {
-        margin: -4px 0 0;
+        margin-top: 10px;
         color: #64748b;
-        font-size: 12px;
-        font-weight: 700;
+        font-size: 11px;
+        font-weight: 850;
     }
-    .resubmission-file-input {
-        width: 100%;
-        border: 1px solid rgba(148, 163, 184, 0.45);
-        border-radius: 12px;
-        background: #ffffff;
-        color: #111827;
-        padding: 8px;
-        font-size: 13px;
-        font-weight: 800;
+    .resubmission-upload-zone {
+        position: relative;
+        min-height: 112px;
+        border: 1px dashed rgba(190, 18, 60, .36);
+        border-radius: 10px;
+        background: linear-gradient(180deg, #fffafa, #ffffff);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        color: #70131B;
+        text-align: center;
         cursor: pointer;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 8px 18px rgba(15, 23, 42, .05);
-        transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+        transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
     }
-    .resubmission-file-input:hover,
-    .resubmission-file-input:focus {
+    .resubmission-upload-zone:hover,
+    .resubmission-upload-zone:focus-within,
+    .resubmission-doc-card.has-file .resubmission-upload-zone {
         border-color: #facc15;
         background: #fffdf2;
-        box-shadow: 0 0 0 4px rgba(250, 204, 21, .14), 0 10px 22px rgba(112, 19, 27, .08);
-        outline: none;
+        box-shadow: 0 0 0 4px rgba(250, 204, 21, .12);
     }
-    .resubmission-file-input::file-selector-button {
-        margin-right: 12px;
-        padding: 10px 16px;
-        border: 1px solid #70131B;
-        border-radius: 10px;
+    .resubmission-doc-card.has-file .resubmission-upload-zone > svg,
+    .resubmission-doc-card.has-file .resubmission-upload-copy,
+    .resubmission-doc-card.has-file .resubmission-upload-or,
+    .resubmission-doc-card.has-file .resubmission-choose-file {
+        display: none;
+    }
+    .resubmission-upload-zone svg {
+        width: 24px;
+        height: 24px;
+    }
+    .resubmission-upload-copy {
+        color: #70131B;
+        font-size: 11px;
+        font-weight: 850;
+    }
+    .resubmission-upload-or {
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 850;
+    }
+    .resubmission-file-input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+    .resubmission-choose-file {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 92px;
+        min-height: 28px;
+        padding: 7px 12px;
+        border-radius: 6px;
         background: #70131B;
         color: #ffffff;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 900;
-        cursor: pointer;
-        transition: background .2s ease, color .2s ease, border-color .2s ease;
-    }
-    .resubmission-file-input:hover::file-selector-button,
-    .resubmission-file-input:focus::file-selector-button {
-        border-color: #facc15;
-        background: #facc15;
-        color: #70131B;
     }
     .resubmission-file-preview {
         display: none;
+        width: 100%;
+        height: 100%;
+        min-height: 96px;
+        grid-template-columns: 54px minmax(0, 1fr) auto auto;
         align-items: center;
         gap: 10px;
-        min-height: 58px;
         padding: 10px;
-        border: 1px dashed rgba(112, 19, 27, .22);
-        border-radius: 12px;
-        background: #ffffff;
         color: #475569;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 800;
+        text-align: left;
+        pointer-events: none;
     }
     .resubmission-file-preview.is-visible {
-        display: flex;
+        display: grid;
     }
-    .resubmission-file-preview img {
+    .resubmission-file-thumb {
         width: 54px;
         height: 54px;
         border-radius: 10px;
-        object-fit: cover;
         border: 1px solid #f0c9ce;
-    }
-    .resubmission-file-preview-badge {
-        display: inline-flex;
-        width: 54px;
-        height: 54px;
-        align-items: center;
-        justify-content: center;
-        border-radius: 10px;
         background: #fff7ed;
         color: #70131B;
-        border: 1px solid #f0c9ce;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
         font-size: 11px;
-        font-weight: 900;
+        font-weight: 950;
         text-transform: uppercase;
     }
-    .resubmission-reason {
-        margin: 0 0 14px;
+    .resubmission-file-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .resubmission-file-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #0f172a;
+        font-weight: 900;
+    }
+    .resubmission-ready {
+        color: #16a34a;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+    .resubmission-remove-file {
+        width: 26px;
+        height: 26px;
+        border: 0;
+        border-radius: 8px;
+        background: #fff1f2;
+        color: #be123c;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        pointer-events: auto;
+        transition: background .18s ease, color .18s ease, transform .18s ease;
+    }
+    .resubmission-remove-file:hover {
+        background: #be123c;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+    .resubmission-error {
+        display: block;
+        margin-top: 8px;
+        color: #be123c;
+        font-size: 12px;
+        font-weight: 850;
+    }
+    .resubmission-footer-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: center;
+        margin-top: 20px;
+        padding-top: 18px;
+        border-top: 1px solid rgba(112, 19, 27, .12);
+    }
+    .resubmission-selected-summary {
+        display: flex;
+        align-items: center;
+        gap: 12px;
         padding: 14px 16px;
-        border: 1px solid rgba(245, 158, 11, 0.32);
-        border-radius: 14px;
-        background: #fffbeb;
-        color: #78350f;
-        font-size: 13px;
-        font-weight: 800;
-        line-height: 1.55;
+        background: #fff7f7;
+    }
+    .resubmission-selected-summary svg {
+        width: 24px;
+        height: 24px;
+        color: #be123c;
+        flex: 0 0 auto;
+    }
+    .resubmission-selected-title {
+        font-size: 12px;
+    }
+    .resubmission-selected-help,
+    .resubmission-secure-note {
+        margin: 0;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 750;
     }
     .resubmission-actions {
         display: flex;
         justify-content: flex-end;
         gap: 12px;
-        margin-top: 18px;
+    }
+    .resubmission-cancel,
+    .resubmission-submit {
+        min-height: 44px;
+        border-radius: 10px;
+        padding: 0 22px;
+        font-size: 13px;
+        font-weight: 950;
+        cursor: pointer;
+        transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .2s ease, opacity .2s ease;
+    }
+    .resubmission-cancel {
+        border: 1px solid rgba(112, 19, 27, .24);
+        background: #ffffff;
+        color: #70131B;
     }
     .resubmission-submit {
         border: 1px solid #70131B;
-        border-radius: 14px;
         background: #70131B;
         color: #ffffff;
-        padding: 13px 18px;
-        font-size: 13px;
-        font-weight: 900;
-        cursor: pointer;
-        transition: background-color .25s ease, color .25s ease, transform .25s ease;
     }
-    .resubmission-submit:hover {
-        background: #ffcc00;
-        color: #111827;
-        border-color: #ffcc00;
+    .resubmission-cancel:hover,
+    .resubmission-submit:hover:not(:disabled) {
+        background: #facc15;
+        color: #70131B;
+        border-color: #facc15;
         transform: translateY(-1px);
+    }
+    .resubmission-submit:disabled {
+        cursor: not-allowed;
+        opacity: .58;
+    }
+    .resubmission-secure-note {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 16px;
+    }
+    .resubmission-secure-note svg {
+        width: 14px;
+        height: 14px;
+    }
+    @media (max-width: 760px) {
+        .resubmission-upload-modal .record-modal-head {
+            padding: 20px 64px 18px 20px;
+        }
+        .resubmission-progress-card,
+        .resubmission-doc-card,
+        .resubmission-footer-row {
+            grid-template-columns: 1fr;
+        }
+        .resubmission-progress-percent {
+            text-align: left;
+        }
+        .resubmission-doc-info {
+            border-right: 0;
+            border-bottom: 1px solid rgba(112, 19, 27, .12);
+            padding-right: 0;
+            padding-bottom: 14px;
+        }
+        .resubmission-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+        }
     }
     html[data-theme="dark"] .record-modal {
         background: linear-gradient(180deg, #0f0f10 0%, #161618 100%) !important;
@@ -3360,6 +3858,23 @@ document.addEventListener('DOMContentLoaded', function () {
         $recordReferenceNumber = $recordReferenceNumber !== '' ? $recordReferenceNumber : trim((string) ($user->reference_number ?? '-'));
         $hasHealthDeclaration = filled(optional($healthProfileRecord)->health_declaration);
         $healthDeclarationUploadError = $errors->has('health_declaration');
+        $healthRecordMissingRequirements = collect();
+        if ($healthFormSubmitted && $healthProfileRecord && !$hasHealthDeclaration) {
+            $healthRecordMissingRequirements->push([
+                'key' => 'health_declaration',
+                'title' => 'Declaration of Medical Information and Data Subject Consent Form',
+            ]);
+        }
+        $resubmissionDocuments
+            ->filter(fn ($documentKey) => isset($resubmissionDocumentLabels[$documentKey]))
+            ->each(function ($documentKey) use ($healthRecordMissingRequirements, $resubmissionDocumentLabels) {
+                if (!$healthRecordMissingRequirements->contains('key', $documentKey)) {
+                    $healthRecordMissingRequirements->push([
+                        'key' => $documentKey,
+                        'title' => $resubmissionDocumentLabels[$documentKey],
+                    ]);
+                }
+            });
         $recordStudentNumber = trim((string) (
             optional($healthProfileRecord)->student_number
             ?: ($accountProfileData['student_number'] ?? $user->student_number ?? '')
@@ -3415,44 +3930,72 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         </div>
     @endif
-    @if($healthFormSubmitted && $healthProfileRecord && !$hasHealthDeclaration)
-        <div class="health-declaration-card">
-            <div class="health-declaration-head">
-                <div>
-                    <div class="health-declaration-title">
-                        <x-outline-icon name="document-text" />
-                        Declaration of Medical Information and Data Subject Consent Form
+    @if($healthRecordMissingRequirements->isNotEmpty())
+        <div class="missing-requirements-panel">
+            <div class="missing-requirements-main">
+                <div class="missing-requirements-lead">
+                    <span class="missing-requirements-icon" aria-hidden="true">
+                        <x-outline-icon name="exclamation-triangle" />
+                    </span>
+                    <div>
+                        <h2 class="missing-requirements-title">Missing Requirements ({{ $healthRecordMissingRequirements->count() }})</h2>
+                        <p class="missing-requirements-copy">Please upload the following required documents to continue verification.</p>
                     </div>
-                    <p class="health-declaration-note">
-                        Please upload your Declaration of Medical Information and Data Subject Consent Form. This additional file will be included in your clinic verification documents.
-                    </p>
                 </div>
-                <span class="health-declaration-badge {{ $hasHealthDeclaration ? 'is-uploaded' : '' }}">
-                    {{ $hasHealthDeclaration ? 'Uploaded' : 'Missing Consent Form' }}
-                </span>
-            </div>
-            <form class="health-declaration-form" method="POST" action="{{ route('student.health_record.health_declaration') }}" enctype="multipart/form-data">
-                @csrf
-                <div class="health-declaration-upload">
-                    <label class="health-declaration-picker">
-                        <input class="health-declaration-file" type="file" name="health_declaration" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required data-health-declaration-input onchange="window.updateHealthDeclarationPreview && window.updateHealthDeclarationPreview(this)">
-                        <span class="health-declaration-choose">Choose File</span>
-                        <span class="health-declaration-filename" data-health-declaration-filename>No file chosen</span>
-                    </label>
-                    <span class="health-declaration-limit">PDF, JPG, or PNG only. Maximum file size: 1 MB.</span>
-                    <div class="health-declaration-preview" data-health-declaration-preview>
-                        <span class="health-declaration-preview-thumb" data-health-declaration-preview-thumb>FILE</span>
-                        <span class="health-declaration-preview-copy">
-                            <strong data-health-declaration-preview-name>Selected file</strong>
-                            <small data-health-declaration-preview-size>Ready to upload</small>
+
+                <div class="missing-requirements-list">
+                    @foreach($healthRecordMissingRequirements as $missingIndex => $missingRequirement)
+                        <div class="missing-requirement-item">
+                            <span class="missing-requirements-doc-icon" aria-hidden="true">
+                                <x-outline-icon name="document-text" />
+                            </span>
+                            <span class="missing-requirement-number">{{ $missingIndex + 1 }}</span>
+                            <span>{{ $missingRequirement['title'] }}</span>
+                        </div>
+                    @endforeach
+                </div>
+
+                @if($isResubmissionStatus && $resubmissionDocuments->isNotEmpty())
+                    <div class="missing-requirements-upload-card">
+                        <span class="missing-requirements-upload-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 2.25 2.25M12 9.75 9.75 12M4.5 15.75a4.5 4.5 0 0 1 4.5-4.5h.75A5.25 5.25 0 0 1 20.25 12 3.75 3.75 0 0 1 16.5 15.75H4.5Z" />
+                            </svg>
                         </span>
+                        <button type="button" class="missing-requirements-upload-btn" onclick="window.openGlobalResubmissionModal ? window.openGlobalResubmissionModal() : null">
+                            Upload Missing Files
+                        </button>
+                        <p class="missing-requirements-upload-help">PDF, JPG, or PNG only<br>Max file size: 1MB</p>
                     </div>
+                @elseif($healthFormSubmitted && $healthProfileRecord && !$hasHealthDeclaration)
+                    <form class="missing-requirements-upload-card" method="POST" action="{{ route('student.health_record.health_declaration') }}" enctype="multipart/form-data">
+                        @csrf
+                        <span class="missing-requirements-upload-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 2.25 2.25M12 9.75 9.75 12M4.5 15.75a4.5 4.5 0 0 1 4.5-4.5h.75A5.25 5.25 0 0 1 20.25 12 3.75 3.75 0 0 1 16.5 15.75H4.5Z" />
+                            </svg>
+                        </span>
+                        <label class="missing-requirements-upload-btn">
+                            Upload Missing Files
+                            <input class="missing-requirements-hidden-input" type="file" name="health_declaration" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required onchange="this.form.submit()">
+                        </label>
+                        <p class="missing-requirements-upload-help">PDF, JPG, or PNG only<br>Max file size: 1MB</p>
+                        @if($healthDeclarationUploadError)
+                            <div class="field-error-message">{{ $errors->first('health_declaration') }}</div>
+                        @endif
+                    </form>
+                @endif
+            </div>
+
+            <div class="missing-requirements-reminder">
+                <span class="missing-requirements-reminder-icon" aria-hidden="true">
+                    <x-outline-icon name="information-circle" />
+                </span>
+                <div>
+                    <strong>Important Reminders</strong>
+                    <p>Your submitted documents cannot be edited while under clinic review. For corrections, please contact the Medical Clinic.</p>
                 </div>
-                <button type="submit" class="health-declaration-submit">Upload Consent Form</button>
-            </form>
-            @if($healthDeclarationUploadError)
-                <div class="field-error-message">{{ $errors->first('health_declaration') }}</div>
-            @endif
+            </div>
         </div>
     @endif
     <div class="health-status-card">
@@ -3621,12 +4164,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             Edit Health Form
                         </a>
                     @endif
-                    @if($isResubmissionStatus && $resubmissionDocuments->isNotEmpty())
-                        <button type="button" class="btn-print-form pending" onclick="openResubmissionModal()">
-                            <x-outline-icon name="document-text" />
-                            Upload Required Files
-                        </button>
-                    @else
+                    @if(!$isResubmissionStatus || $resubmissionDocuments->isEmpty())
                         <button class="btn-print-form disabled" disabled>
                             <x-outline-icon name="clock" />
                             Approval Required
@@ -3855,59 +4393,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             </div>
         </div>
-        @if($isResubmissionStatus && $resubmissionDocuments->isNotEmpty())
-            <div class="record-modal-overlay" id="resubmissionModal" aria-hidden="true">
-                <div class="record-modal" role="dialog" aria-modal="true" aria-labelledby="resubmissionModalTitle">
-                    <div class="record-modal-head">
-                        <button type="button" class="record-modal-close" aria-label="Close resubmission upload" onclick="closeResubmissionModal()">
-                            <x-outline-icon name="x-mark" />
-                        </button>
-                        <div class="record-modal-head-main">
-                            <h2 class="record-modal-title" id="resubmissionModalTitle">Upload Required Files</h2>
-                            <p class="record-modal-subtitle">Replace only the requirement file/s requested by the Medical Clinic. Other submitted files will stay unchanged.</p>
-                        </div>
-                    </div>
-                    <div class="record-modal-body">
-                        @if($recordPendingReason !== '')
-                            <p class="resubmission-reason">
-                                Clinic note: {{ $recordPendingReason }}
-                            </p>
-                        @endif
-
-                        <form action="{{ route('student.health_record.resubmit') }}" method="POST" enctype="multipart/form-data">
-                            @csrf
-                            <div class="resubmission-doc-list">
-                                @foreach($resubmissionDocuments as $documentKey)
-                                    @continue(!isset($resubmissionDocumentLabels[$documentKey]))
-                                    @php($documentMeta = $resubmissionDocumentMeta[$documentKey] ?? ['accept' => '', 'hint' => 'Upload the requested replacement file.'])
-                                    <label class="resubmission-doc-card">
-                                        <span class="resubmission-doc-title">{{ $resubmissionDocumentLabels[$documentKey] }}</span>
-                                        <span class="resubmission-doc-hint">{{ $documentMeta['hint'] }}</span>
-                                        <input
-                                            type="file"
-                                            name="{{ $documentKey }}"
-                                            class="resubmission-file-input"
-                                            accept="{{ $documentMeta['accept'] }}"
-                                            required
-                                            data-resubmission-preview-input
-                                        >
-                                        <span class="resubmission-file-preview" data-resubmission-preview>
-                                            <span>Selected file preview will appear here.</span>
-                                        </span>
-                                        @error($documentKey)
-                                            <span class="text-danger" style="font-size: 12px; font-weight: 800;">{{ $message }}</span>
-                                        @enderror
-                                    </label>
-                                @endforeach
-                            </div>
-                            <div class="resubmission-actions">
-                                <button type="submit" class="resubmission-submit">Submit Replacement Files</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        @endif
     @endif
 @else
     <div class="page-hero">
@@ -3997,69 +4482,6 @@ function closeHealthRecordModal() {
     document.body.style.overflow = '';
 }
 
-function openResubmissionModal() {
-    const modal = document.getElementById('resubmissionModal');
-    if (!modal) {
-        return;
-    }
-    modal.classList.add('is-open');
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeResubmissionModal() {
-    const modal = document.getElementById('resubmissionModal');
-    if (!modal) {
-        return;
-    }
-    modal.classList.remove('is-open');
-    modal.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-}
-
-function initializeResubmissionFilePreviews(root = document) {
-    root.querySelectorAll('[data-resubmission-preview-input]').forEach(function (input) {
-        if (input.dataset.previewBound === 'true') {
-            return;
-        }
-
-        input.dataset.previewBound = 'true';
-        input.addEventListener('change', function () {
-            const preview = input.closest('.resubmission-doc-card')?.querySelector('[data-resubmission-preview]');
-            const file = input.files && input.files[0] ? input.files[0] : null;
-            if (!preview) {
-                return;
-            }
-
-            preview.innerHTML = '';
-            preview.classList.remove('is-visible');
-            if (!file) {
-                return;
-            }
-
-            preview.classList.add('is-visible');
-            if (file.type && file.type.startsWith('image/')) {
-                const image = document.createElement('img');
-                image.alt = '';
-                image.src = URL.createObjectURL(file);
-                image.onload = function () {
-                    URL.revokeObjectURL(image.src);
-                };
-                preview.appendChild(image);
-            } else {
-                const badge = document.createElement('span');
-                badge.className = 'resubmission-file-preview-badge';
-                badge.textContent = (file.name.split('.').pop() || 'file').slice(0, 4);
-                preview.appendChild(badge);
-            }
-
-            const name = document.createElement('span');
-            name.textContent = file.name;
-            preview.appendChild(name);
-        });
-    });
-}
-
 function initializeHealthDeclarationPreview(root = document) {
     root.querySelectorAll('[data-health-declaration-input]').forEach(function (input) {
         if (input.dataset.previewBound === 'true') {
@@ -4129,7 +4551,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const profileHeroCard = document.getElementById('profileHeroCard');
     const profilePhotoToggle = document.getElementById('profilePhotoToggle');
     const modal = document.getElementById('healthRecordModal');
-    const resubmissionModal = document.getElementById('resubmissionModal');
     const modalCard = modal?.querySelector('.record-modal');
     const shouldOpenResubmissionModal = @json($hasResubmissionUploadErrors ?? false);
 
@@ -4140,11 +4561,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     modalCard?.addEventListener('scroll', updateHealthRecordModalIndicator);
-    initializeResubmissionFilePreviews(document);
     initializeHealthDeclarationPreview(document);
 
     if (shouldOpenResubmissionModal) {
-        openResubmissionModal();
+        window.openGlobalResubmissionModal && window.openGlobalResubmissionModal();
     }
 
     modal?.addEventListener('click', function (event) {
@@ -4153,18 +4573,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    resubmissionModal?.addEventListener('click', function (event) {
-        if (event.target === resubmissionModal) {
-            closeResubmissionModal();
-        }
-    });
-
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape' && modal?.classList.contains('is-open')) {
             closeHealthRecordModal();
-        }
-        if (event.key === 'Escape' && resubmissionModal?.classList.contains('is-open')) {
-            closeResubmissionModal();
         }
     });
 });

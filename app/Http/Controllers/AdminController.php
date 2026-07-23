@@ -2408,7 +2408,8 @@ public function updateClearance(Request $request, $id)
             ? 'Replacement file request sent. Selected uploaded document references were removed from the record.'
             : 'Replacement file request sent. The student will see the reupload prompt in Health Records.');
 
-        $redirect = ($validated['return_to'] ?? 'show_health') === 'health_records'
+        $returnTo = (string) ($validated['return_to'] ?? '');
+        $redirect = (!$wasAlreadyIssued || $returnTo === 'health_records')
             ? redirect()->route('admin.health_records', ['tab' => $wasAlreadyIssued ? 'approved' : 'pending_compliance'])
             : redirect()->route('admin.show_health', $record->id);
 
