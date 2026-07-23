@@ -1790,12 +1790,6 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        if ($this->useIdpAuth() && !$this->localLoginEnabled()) {
-            return redirect('/login?idp_error=1')->withErrors([
-                'idp' => 'Centralized login is enabled. Use the identity provider sign-in flow.',
-            ]);
-        }
-
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -2121,37 +2115,6 @@ class LoginController extends Controller
         $authenticatedUser = $this->authenticatedUser();
         if ($authenticatedUser) {
             return redirect($this->resolveRedirectPathForUser($authenticatedUser));
-        }
-
-        if ($this->useIdpAuth() && !$this->localLoginEnabled()) {
-            if ($request->boolean('idp_error')) {
-                return view('login');
-            }
-
-            $pkceVerifier = null;
-            if ($this->useIdpPkce()) {
-                $pkceVerifier = $this->buildPkceVerifier();
-                $request->session()->put('idp_pkce_verifier', $pkceVerifier);
-            } else {
-                $request->session()->forget('idp_pkce_verifier');
-            }
-
-            $authorizeUrl = $this->buildAuthorizeUrl();
-            if ($authorizeUrl === null) {
-                return view('login')->withErrors([
-                    'idp' => 'Identity provider login is enabled but not configured.',
-                ]);
-            }
-
-            if ($pkceVerifier !== null) {
-                $separator = str_contains($authorizeUrl, '?') ? '&' : '?';
-                $authorizeUrl .= $separator . http_build_query([
-                    'code_challenge' => $this->buildPkceChallenge($pkceVerifier),
-                    'code_challenge_method' => $this->idpPkceChallengeMethod(),
-                ]);
-            }
-
-            return redirect()->away($authorizeUrl);
         }
 
         return view('login');
