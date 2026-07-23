@@ -57,11 +57,14 @@
                 <td><span class="status-pill {{ $category->is_active ? 'active' : 'archived' }}">{{ $category->is_active ? 'Active' : 'Archived' }}</span></td>
                 <td class="table-action-cell">
                     <div class="table-action-wrap">
-                        <button type="button" class="btn-view" onclick='openViewModal(@json([
-                            "name" => $category->name,
-                            "count" => $category->submissions_count,
-                            "status" => $category->is_active ? "Active" : "Archived",
-                        ]))'>View</button>
+                        <button
+                            type="button"
+                            class="btn-view"
+                            data-category-name="{{ $category->name }}"
+                            data-category-count="{{ $category->submissions_count }}"
+                            data-category-status="{{ $category->is_active ? 'Active' : 'Archived' }}"
+                            onclick="openViewModalFromButton(this)"
+                        >View</button>
                         <form action="{{ route('health-form-categories.destroy', $category->id) }}" method="POST" onsubmit="return confirmDelete(event)">
                             @csrf
                             @method('DELETE')
@@ -92,6 +95,13 @@
 
 @push('scripts')
 <script>
+function openViewModalFromButton(button) {
+    openViewModal({
+        name: button.dataset.categoryName || '',
+        count: button.dataset.categoryCount || '0',
+        status: button.dataset.categoryStatus || '',
+    });
+}
 function openViewModal(category) {
     const details = document.getElementById('categoryDetails');
     details.innerHTML = '';

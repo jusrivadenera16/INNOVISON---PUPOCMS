@@ -2838,6 +2838,8 @@
             && $studentUser
             && $studentUser->healthProfile
             && $studentResubmissionDocuments->isNotEmpty();
+        $studentResubmissionNote = trim((string) optional($studentUser?->healthProfile)->pending_reason);
+        $studentResubmissionNote = trim(preg_replace('/^Document\s+Resubmission:\s*/i', '', $studentResubmissionNote));
         $studentResubmissionLabels = [
             'student_photo' => '2x2 Student Photo',
             'health_declaration' => 'Health Declaration',
@@ -3231,36 +3233,130 @@
                 &times;
             </button>
             <div class="global-resubmission-head">
-                <h2 id="globalResubmissionTitle">Upload Required Files</h2>
-                <p>Replace only the requirement file/s requested by the Medical Clinic. Other submitted files will stay unchanged.</p>
-            </div>
-            @if(trim((string) optional($studentUser->healthProfile)->pending_reason) !== '')
-                <div class="global-resubmission-note">
-                    Clinic note: {{ optional($studentUser->healthProfile)->pending_reason }}
+                <span class="global-resubmission-head-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M12 3.75 4.5 7.5v5.25c0 4.125 2.55 7.8 6.405 9.255.705.267 1.485.267 2.19 0C16.95 20.55 19.5 16.875 19.5 12.75V7.5L12 3.75Z" />
+                    </svg>
+                </span>
+                <div>
+                    <h2 id="globalResubmissionTitle">Document Resubmission</h2>
+                    <p>Replace only the requested documents. Previously approved files will remain unchanged.</p>
                 </div>
-            @endif
+            </div>
             <form action="{{ route('student.health_record.resubmit') }}" method="POST" enctype="multipart/form-data" class="global-resubmission-form">
                 @csrf
+                <div class="global-resubmission-progress-card">
+                    <span class="global-resubmission-progress-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M6.75 3.75h10.5c.621 0 1.125.504 1.125 1.125v14.25c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125V4.875c0-.621.504-1.125 1.125-1.125Z" />
+                        </svg>
+                    </span>
+                    <div>
+                        <span class="global-resubmission-progress-label">Upload Progress</span>
+                        <span class="global-resubmission-progress-count"><span data-global-resubmission-selected>0</span> of <span data-global-resubmission-total>{{ $studentResubmissionDocuments->count() }}</span> files uploaded</span>
+                    </div>
+                    <div class="global-resubmission-progress-track" aria-hidden="true">
+                        <span class="global-resubmission-progress-fill" data-global-resubmission-progress-fill></span>
+                    </div>
+                    <span class="global-resubmission-progress-percent" data-global-resubmission-percent>0%</span>
+                </div>
+                <div class="global-resubmission-note">
+                    <span class="global-resubmission-note-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12h.008v.008h-.008V12Zm3.375 0h.008v.008H12V12Zm3.375 0h.008v.008h-.008V12ZM21 12c0 4.142-4.03 7.5-9 7.5a10.4 10.4 0 0 1-3.355-.54L3 20.25l1.505-4.012C3.55 15.024 3 13.568 3 12c0-4.142 4.03-7.5 9-7.5s9 3.358 9 7.5Z" />
+                        </svg>
+                    </span>
+                    <div>
+                        <strong>Clinic Note</strong>
+                        <p>
+                            {{ $studentResubmissionNote !== '' ? $studentResubmissionNote : 'Please review the requested document replacement.' }}
+                        </p>
+                    </div>
+                </div>
                 <div class="global-resubmission-docs">
                     @foreach($studentResubmissionDocuments as $documentKey)
                         @continue(!isset($studentResubmissionLabels[$documentKey]))
                         @php($documentMeta = $studentResubmissionMeta[$documentKey] ?? ['accept' => '', 'hint' => 'Upload the requested replacement file.'])
-                        <label class="global-resubmission-doc">
-                            <span class="global-resubmission-doc-title">{{ $studentResubmissionLabels[$documentKey] }}</span>
-                            <span class="global-resubmission-doc-hint">{{ $documentMeta['hint'] }}</span>
-                            <input type="file" name="{{ $documentKey }}" accept="{{ $documentMeta['accept'] }}" required data-resubmission-preview-input>
-                            <span class="global-resubmission-preview" data-resubmission-preview>
-                                <span class="global-resubmission-preview-placeholder">Selected file preview will appear here.</span>
-                            </span>
+                        <div class="global-resubmission-doc" data-global-resubmission-card>
+                            <div class="global-resubmission-doc-info">
+                                <span class="global-resubmission-doc-icon" aria-hidden="true">
+                                    @if($documentKey === 'student_photo')
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25a7.5 7.5 0 0 1 15 0" />
+                                        </svg>
+                                    @elseif($documentKey === 'medical_certificate')
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 3.75h6m-6 0A2.25 2.25 0 0 0 6.75 6v12A2.25 2.25 0 0 0 9 20.25h6A2.25 2.25 0 0 0 17.25 18V6A2.25 2.25 0 0 0 15 3.75m-6 0v2.25h6V3.75M12 9v6m3-3H9" />
+                                        </svg>
+                                    @elseif($documentKey === 'chest_xray_result')
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16M8.25 5.25c-2.1 1.2-3.6 3.15-4.05 5.4-.45 2.25.3 4.8 2.25 7.65M15.75 5.25c2.1 1.2 3.6 3.15 4.05 5.4.45 2.25-.3 4.8-2.25 7.65M12 7.5c-2.7.15-4.95.9-6.75 2.25M12 10.5c-3.15.15-5.7 1.05-7.65 2.7M12 13.5c-2.85.15-5.1.9-6.75 2.25M12 16.5c-1.95.15-3.45.6-4.5 1.35M12 7.5c2.7.15 4.95.9 6.75 2.25M12 10.5c3.15.15 5.7 1.05 7.65 2.7M12 13.5c2.85.15 5.1.9 6.75 2.25M12 16.5c1.95.15 3.45.6 4.5 1.35" />
+                                        </svg>
+                                    @elseif($documentKey === 'pwd_id_proof')
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 7.5A3.75 3.75 0 1 1 12 3.75 3.75 3.75 0 0 1 15.75 7.5ZM4.5 20.25a7.5 7.5 0 0 1 15 0M18 14.25h2.25l-1.5 2.25H21" />
+                                        </svg>
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5A3.375 3.375 0 0 0 10.125 2.25h-4.5C5.004 2.25 4.5 2.754 4.5 3.375v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V14.25Z" />
+                                        </svg>
+                                    @endif
+                                </span>
+                                <div>
+                                    <span class="global-resubmission-doc-title">{{ $studentResubmissionLabels[$documentKey] }}</span>
+                                    <span class="global-resubmission-needed">Needs Replacement</span>
+                                    <span class="global-resubmission-doc-reason">Reason: {{ $studentResubmissionNote !== '' ? $studentResubmissionNote : 'Requested by the Medical Clinic.' }}</span>
+                                    <span class="global-resubmission-doc-hint">Accepted: {{ $documentMeta['hint'] }}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="global-resubmission-upload-zone">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 2.25 2.25M12 9.75 9.75 12M4.5 15.75a4.5 4.5 0 0 1 4.5-4.5h.75A5.25 5.25 0 0 1 20.25 12 3.75 3.75 0 0 1 16.5 15.75H4.5Z" />
+                                    </svg>
+                                    <span class="global-resubmission-upload-copy">Drag & drop file here</span>
+                                    <span class="global-resubmission-upload-or">or</span>
+                                    <span class="global-resubmission-choose">Choose File</span>
+                                    <span class="global-resubmission-preview" data-global-resubmission-preview>
+                                        <span class="global-resubmission-thumb" data-global-resubmission-thumb></span>
+                                        <span class="global-resubmission-file-name" data-global-resubmission-file-name></span>
+                                        <span class="global-resubmission-ready">Ready</span>
+                                        <button type="button" class="global-resubmission-remove" aria-label="Remove selected file" data-global-resubmission-remove>
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166M4.772 5.79c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0M6 5.79l1.068 13.883A2.25 2.25 0 0 0 9.312 21h5.376a2.25 2.25 0 0 0 2.244-2.077L18 5.79" />
+                                            </svg>
+                                        </button>
+                                    </span>
+                                    <input type="file" name="{{ $documentKey }}" accept="{{ $documentMeta['accept'] }}" required data-global-resubmission-input>
+                                </label>
+                            </div>
                             @error($documentKey)
                                 <span class="global-resubmission-error">{{ $message }}</span>
                             @enderror
-                        </label>
+                        </div>
                     @endforeach
                 </div>
-                <div class="global-resubmission-actions">
-                    <button type="submit" class="global-resubmission-submit">Submit Replacement Files</button>
+                <div class="global-resubmission-footer">
+                    <div class="global-resubmission-summary">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5A3.375 3.375 0 0 0 10.125 2.25h-4.5C5.004 2.25 4.5 2.754 4.5 3.375v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V14.25Z" />
+                        </svg>
+                        <div>
+                            <strong><span data-global-resubmission-summary>0 of {{ $studentResubmissionDocuments->count() }}</span> files selected for replacement</strong>
+                            <span>Please review your files before submitting.</span>
+                        </div>
+                    </div>
+                    <div class="global-resubmission-actions">
+                        <button type="button" class="global-resubmission-cancel" onclick="closeGlobalResubmissionModal()">Cancel</button>
+                        <button type="submit" class="global-resubmission-submit" data-global-resubmission-submit disabled>Submit Replacement Files</button>
+                    </div>
                 </div>
+                <p class="global-resubmission-secure">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5A2.25 2.25 0 0 0 19.5 19.5v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                    </svg>
+                    Your files are secure and will only be used for verification purposes.
+                </p>
             </form>
         </div>
     </div>
@@ -3276,26 +3372,52 @@
             background: rgba(15, 23, 42, .58);
             backdrop-filter: blur(7px);
         }
+        .global-resubmission-modal.is-closed {
+            display: none !important;
+        }
         .global-resubmission-card {
             position: relative;
-            width: min(860px, 96vw);
+            width: min(920px, 96vw);
             max-height: 90vh;
-            overflow-y: auto;
+            overflow: hidden;
             border-radius: 22px;
             background: #ffffff;
-            border-top: 3px solid #facc15;
             border-bottom: 3px solid #facc15;
             box-shadow: 0 28px 80px rgba(15, 23, 42, .32);
+            display: flex;
+            flex-direction: column;
         }
         .global-resubmission-head {
-            padding: 28px 32px 22px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 24px 76px 22px 32px;
             background: linear-gradient(135deg, #991b1b 0%, #7f1d2d 100%);
             color: #ffffff;
+            flex: 0 0 auto;
+            position: relative;
+            z-index: 3;
+        }
+        .global-resubmission-head-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            color: #ffffff;
+            background: rgba(255, 255, 255, .12);
+            border: 1px solid rgba(255, 255, 255, .18);
+        }
+        .global-resubmission-head-icon svg {
+            width: 28px;
+            height: 28px;
         }
         .global-resubmission-head h2 {
             margin: 0 0 8px;
             color: #ffffff;
-            font-size: 25px;
+            font-size: 23px;
             font-weight: 900;
         }
         .global-resubmission-head p {
@@ -3309,7 +3431,7 @@
             position: absolute;
             top: 18px;
             right: 18px;
-            z-index: 2;
+            z-index: 5;
             width: 42px;
             height: 42px;
             border-radius: 999px;
@@ -3343,130 +3465,375 @@
         .global-resubmission-close:focus-visible::before {
             transform: translateX(0);
         }
-        .global-resubmission-note {
-            margin: 20px 24px 0;
-            padding: 13px 16px;
-            border-radius: 12px;
-            border: 1px solid #fbbf24;
-            background: #fffbeb;
-            color: #7c2d12;
-            font-size: 13px;
-            font-weight: 800;
-        }
         .global-resubmission-form {
             padding: 20px 24px 24px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+        .global-resubmission-progress-card {
+            display: grid;
+            grid-template-columns: auto auto minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 18px;
+            padding: 14px 18px;
+            margin-bottom: 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(112, 19, 27, .12);
+            background: #ffffff;
+            box-shadow: 0 12px 26px rgba(15, 23, 42, .06);
+        }
+        .global-resubmission-progress-icon,
+        .global-resubmission-note-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+        .global-resubmission-progress-icon {
+            color: #be123c;
+            background: #fff1f2;
+        }
+        .global-resubmission-progress-icon svg,
+        .global-resubmission-note-icon svg,
+        .global-resubmission-doc-icon svg,
+        .global-resubmission-remove svg {
+            width: 20px;
+            height: 20px;
+        }
+        .global-resubmission-progress-label {
+            display: block;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 900;
+        }
+        .global-resubmission-progress-count,
+        .global-resubmission-progress-percent {
+            display: block;
+            color: #70131b;
+            font-size: 13px;
+            font-weight: 950;
+        }
+        .global-resubmission-progress-percent {
+            min-width: 44px;
+            font-size: 15px;
+            text-align: right;
+        }
+        .global-resubmission-progress-track {
+            height: 8px;
+            border-radius: 999px;
+            background: #f9dce0;
+            overflow: hidden;
+        }
+        .global-resubmission-progress-fill {
+            display: block;
+            height: 100%;
+            width: 0%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #70131b, #a2162b);
+            transition: width .24s ease;
+        }
+        .global-resubmission-note {
+            position: relative;
+            display: flex;
+            gap: 14px;
+            margin-bottom: 22px;
+            padding: 16px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(250, 204, 21, .55);
+            background: linear-gradient(135deg, #fff8dd, #ffffff);
+            overflow: hidden;
+        }
+        .global-resubmission-note::after {
+            content: "";
+            position: absolute;
+            right: 18px;
+            bottom: -12px;
+            width: 84px;
+            height: 70px;
+            border: 3px solid rgba(250, 204, 21, .18);
+            border-radius: 18px;
+        }
+        .global-resubmission-note-icon {
+            color: #f59e0b;
+            background: #ffffff;
+            border: 1px solid rgba(250, 204, 21, .45);
+        }
+        .global-resubmission-note strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #70131b;
+            font-size: 13px;
+            font-weight: 950;
+        }
+        .global-resubmission-note p {
+            margin: 0;
+            color: #4b5563;
+            font-size: 12px;
+            font-weight: 750;
+            line-height: 1.55;
+            max-width: 680px;
         }
         .global-resubmission-docs {
             display: grid;
-            gap: 12px;
+            gap: 14px;
         }
         .global-resubmission-doc {
             display: grid;
-            gap: 8px;
+            grid-template-columns: minmax(0, 1fr) minmax(250px, .9fr);
+            align-items: stretch;
+            gap: 20px;
             padding: 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(112, 19, 27, .12);
+            background: #ffffff;
+            box-shadow: 0 12px 26px rgba(15, 23, 42, .06);
+        }
+        .global-resubmission-doc-info {
+            display: grid;
+            grid-template-columns: 58px minmax(0, 1fr);
+            gap: 16px;
+            align-items: start;
+            min-width: 0;
+            padding-right: 8px;
+            border-right: 1px solid rgba(112, 19, 27, .12);
+        }
+        .global-resubmission-doc-icon {
+            width: 54px;
+            height: 54px;
             border-radius: 14px;
-            border: 1px solid #f0c9ce;
-            background: #fffafa;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff1f2;
+            color: #be123c;
+            box-shadow: 0 10px 20px rgba(112, 19, 27, .08);
         }
         .global-resubmission-doc-title {
+            display: block;
+            margin-bottom: 6px;
             color: #7f1d2d;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 900;
-            text-transform: uppercase;
         }
+        .global-resubmission-needed {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            width: fit-content;
+            margin-bottom: 10px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #ffe4e6;
+            color: #be123c;
+            font-size: 10px;
+            font-weight: 950;
+        }
+        .global-resubmission-needed::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: currentColor;
+        }
+        .global-resubmission-doc-reason,
         .global-resubmission-doc-hint {
+            display: block;
             color: #64748b;
             font-size: 12px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: .04em;
+            font-weight: 750;
+            line-height: 1.45;
         }
-        .global-resubmission-doc input[type="file"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #cbd5e1;
+        .global-resubmission-doc-hint {
+            margin-top: 10px;
+            font-size: 11px;
+            font-weight: 850;
+        }
+        .global-resubmission-upload-zone {
+            position: relative;
+            min-height: 112px;
+            border: 1px dashed rgba(190, 18, 60, .36);
             border-radius: 10px;
-            background: #ffffff;
-            color: #111827;
-            font-size: 13px;
-            font-weight: 800;
+            background: linear-gradient(180deg, #fffafa, #ffffff);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            color: #70131b;
+            text-align: center;
             cursor: pointer;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 8px 18px rgba(15, 23, 42, .05);
-            transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+            transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
         }
-        .global-resubmission-doc input[type="file"]:hover,
-        .global-resubmission-doc input[type="file"]:focus {
+        .global-resubmission-upload-zone:hover,
+        .global-resubmission-upload-zone:focus-within,
+        .global-resubmission-doc.has-file .global-resubmission-upload-zone {
             border-color: #facc15;
             background: #fffdf2;
-            box-shadow: 0 0 0 4px rgba(250, 204, 21, .14), 0 10px 22px rgba(112, 19, 27, .08);
-            outline: none;
+            box-shadow: 0 0 0 4px rgba(250, 204, 21, .12);
         }
-        .global-resubmission-doc input[type="file"]::file-selector-button {
-            margin-right: 12px;
-            padding: 10px 16px;
-            border: 1px solid #7f1d2d;
-            border-radius: 10px;
+        .global-resubmission-doc.has-file .global-resubmission-upload-zone > svg,
+        .global-resubmission-doc.has-file .global-resubmission-upload-copy,
+        .global-resubmission-doc.has-file .global-resubmission-upload-or,
+        .global-resubmission-doc.has-file .global-resubmission-choose {
+            display: none;
+        }
+        .global-resubmission-upload-zone svg {
+            width: 24px;
+            height: 24px;
+        }
+        .global-resubmission-upload-copy {
+            color: #70131b;
+            font-size: 11px;
+            font-weight: 850;
+        }
+        .global-resubmission-upload-or {
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 850;
+        }
+        .global-resubmission-upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .global-resubmission-choose {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 92px;
+            min-height: 28px;
+            padding: 7px 12px;
+            border-radius: 6px;
             background: #7f1d2d;
             color: #ffffff;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 900;
-            cursor: pointer;
-            transition: background .2s ease, color .2s ease, border-color .2s ease;
-        }
-        .global-resubmission-doc input[type="file"]:hover::file-selector-button,
-        .global-resubmission-doc input[type="file"]:focus::file-selector-button {
-            border-color: #facc15;
-            background: #facc15;
-            color: #7f1d2d;
         }
         .global-resubmission-preview {
             display: none;
+            width: 100%;
+            height: 100%;
+            min-height: 96px;
+            grid-template-columns: 54px minmax(0, 1fr) auto auto;
             align-items: center;
             gap: 10px;
-            min-height: 58px;
             padding: 10px;
-            border: 1px dashed rgba(112, 19, 27, .22);
-            border-radius: 12px;
-            background: #ffffff;
             color: #475569;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 800;
+            text-align: left;
+            pointer-events: none;
         }
         .global-resubmission-preview.is-visible {
-            display: flex;
+            display: grid;
         }
-        .global-resubmission-preview img {
+        .global-resubmission-thumb {
             width: 54px;
             height: 54px;
             border-radius: 10px;
-            object-fit: cover;
             border: 1px solid #f0c9ce;
-        }
-        .global-resubmission-preview-file {
-            display: inline-flex;
-            width: 54px;
-            height: 54px;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
             background: #fff7ed;
             color: #7f1d2d;
-            border: 1px solid #f0c9ce;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
             font-size: 11px;
-            font-weight: 900;
+            font-weight: 950;
             text-transform: uppercase;
+        }
+        .global-resubmission-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .global-resubmission-file-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #0f172a;
+            font-weight: 900;
+        }
+        .global-resubmission-ready {
+            color: #16a34a;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+        .global-resubmission-remove {
+            width: 26px;
+            height: 26px;
+            border: 0;
+            border-radius: 8px;
+            background: #fff1f2;
+            color: #be123c;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: background .18s ease, color .18s ease, transform .18s ease;
+        }
+        .global-resubmission-remove:hover {
+            background: #be123c;
+            color: #ffffff;
+            transform: translateY(-1px);
         }
         .global-resubmission-error {
             color: #dc2626;
             font-size: 12px;
             font-weight: 800;
         }
+        .global-resubmission-footer {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 18px;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(112, 19, 27, .12);
+        }
+        .global-resubmission-summary {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(112, 19, 27, .12);
+            background: #fff7f7;
+        }
+        .global-resubmission-summary svg {
+            width: 24px;
+            height: 24px;
+            color: #be123c;
+            flex: 0 0 auto;
+        }
+        .global-resubmission-summary strong,
+        .global-resubmission-summary span {
+            display: block;
+        }
+        .global-resubmission-summary strong {
+            color: #70131b;
+            font-size: 12px;
+            font-weight: 950;
+        }
+        .global-resubmission-summary span {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 750;
+        }
         .global-resubmission-actions {
             display: flex;
             justify-content: flex-end;
             gap: 12px;
-            margin-top: 18px;
         }
+        .global-resubmission-cancel,
         .global-resubmission-submit {
             min-height: 46px;
             padding: 0 22px;
@@ -3474,6 +3841,11 @@
             font-size: 14px;
             font-weight: 900;
             cursor: pointer;
+        }
+        .global-resubmission-cancel {
+            border: 1px solid rgba(112, 19, 27, .24);
+            background: #ffffff;
+            color: #70131b;
         }
         .global-resubmission-submit {
             position: relative;
@@ -3483,6 +3855,17 @@
             background: #7f1d2d;
             color: #ffffff;
             transition: color .22s ease, border-color .22s ease;
+        }
+        .global-resubmission-submit:disabled {
+            cursor: not-allowed;
+            opacity: .58;
+        }
+        .global-resubmission-cancel:hover,
+        .global-resubmission-cancel:focus-visible {
+            border-color: #facc15;
+            background: #facc15;
+            color: #70131b;
+            outline: none;
         }
         .global-resubmission-submit::before {
             position: absolute;
@@ -3499,9 +3882,27 @@
             color: #7f1d2d;
             outline: none;
         }
+        .global-resubmission-submit:disabled:hover::before,
+        .global-resubmission-submit:disabled:focus-visible::before {
+            transform: translateX(-102%);
+        }
         .global-resubmission-submit:hover::before,
         .global-resubmission-submit:focus-visible::before {
             transform: translateX(0);
+        }
+        .global-resubmission-secure {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            margin: 16px 0 0;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 750;
+        }
+        .global-resubmission-secure svg {
+            width: 14px;
+            height: 14px;
         }
         @media (max-width: 640px) {
             .global-resubmission-modal {
@@ -3509,11 +3910,26 @@
                 padding: 14px;
             }
             .global-resubmission-head {
-                padding: 24px 24px 20px;
+                padding: 22px 64px 20px 20px;
+            }
+            .global-resubmission-progress-card,
+            .global-resubmission-doc,
+            .global-resubmission-footer {
+                grid-template-columns: 1fr;
+            }
+            .global-resubmission-progress-percent {
+                text-align: left;
+            }
+            .global-resubmission-doc-info {
+                border-right: 0;
+                border-bottom: 1px solid rgba(112, 19, 27, .12);
+                padding-right: 0;
+                padding-bottom: 14px;
             }
             .global-resubmission-actions {
                 flex-direction: column;
             }
+            .global-resubmission-cancel,
             .global-resubmission-submit {
                 width: 100%;
             }
@@ -3525,9 +3941,21 @@
             if (!modal) {
                 return;
             }
-            modal.style.display = 'none';
+            modal.classList.add('is-closed');
+            modal.setAttribute('aria-hidden', 'true');
+            modal.style.setProperty('display', 'none', 'important');
             document.body.style.overflow = '';
         }
+        window.openGlobalResubmissionModal = function () {
+            const modal = document.getElementById('globalResubmissionModal');
+            if (!modal) {
+                return;
+            }
+            modal.classList.remove('is-closed');
+            modal.setAttribute('aria-hidden', 'false');
+            modal.style.setProperty('display', 'flex', 'important');
+            document.body.style.overflow = 'hidden';
+        };
 
         document.addEventListener('DOMContentLoaded', function () {
             const modal = document.getElementById('globalResubmissionModal');
@@ -3535,18 +3963,58 @@
                 return;
             }
             document.body.style.overflow = 'hidden';
+            modal.querySelector('.global-resubmission-close')?.addEventListener('click', closeGlobalResubmissionModal);
 
-            modal.querySelectorAll('[data-resubmission-preview-input]').forEach(function (input) {
-                input.addEventListener('change', function () {
-                    const preview = input.closest('.global-resubmission-doc')?.querySelector('[data-resubmission-preview]');
+            function updateGlobalResubmissionProgress() {
+                const cards = Array.from(modal.querySelectorAll('[data-global-resubmission-card]'));
+                const selected = cards.filter(function (card) {
+                    const input = card.querySelector('[data-global-resubmission-input]');
+                    return input && input.files && input.files.length > 0;
+                }).length;
+                const total = cards.length;
+                const percent = total > 0 ? Math.round((selected / total) * 100) : 0;
+
+                modal.querySelectorAll('[data-global-resubmission-selected]').forEach(function (target) {
+                    target.textContent = selected;
+                });
+                modal.querySelectorAll('[data-global-resubmission-total]').forEach(function (target) {
+                    target.textContent = total;
+                });
+                modal.querySelectorAll('[data-global-resubmission-summary]').forEach(function (target) {
+                    target.textContent = selected + ' of ' + total;
+                });
+                modal.querySelectorAll('[data-global-resubmission-percent]').forEach(function (target) {
+                    target.textContent = percent + '%';
+                });
+                modal.querySelectorAll('[data-global-resubmission-progress-fill]').forEach(function (target) {
+                    target.style.width = percent + '%';
+                });
+                modal.querySelectorAll('[data-global-resubmission-submit]').forEach(function (button) {
+                    button.disabled = selected < total;
+                });
+            }
+
+            modal.querySelectorAll('[data-global-resubmission-input]').forEach(function (input) {
+                const card = input.closest('[data-global-resubmission-card]');
+                const preview = card?.querySelector('[data-global-resubmission-preview]');
+                const thumb = card?.querySelector('[data-global-resubmission-thumb]');
+                const fileName = card?.querySelector('[data-global-resubmission-file-name]');
+                const removeButton = card?.querySelector('[data-global-resubmission-remove]');
+
+                function syncFilePreview() {
                     const file = input.files && input.files[0] ? input.files[0] : null;
-                    if (!preview) return;
+                    if (!preview || !card || !thumb || !fileName) return;
 
-                    preview.innerHTML = '';
                     preview.classList.remove('is-visible');
-                    if (!file) return;
+                    thumb.replaceChildren();
+                    if (!file) {
+                        fileName.textContent = '';
+                        card.classList.remove('has-file');
+                        updateGlobalResubmissionProgress();
+                        return;
+                    }
 
-                    preview.classList.add('is-visible');
+                    fileName.textContent = file.name;
                     if (file.type && file.type.startsWith('image/')) {
                         const image = document.createElement('img');
                         image.alt = '';
@@ -3554,19 +4022,26 @@
                         image.onload = function () {
                             URL.revokeObjectURL(image.src);
                         };
-                        preview.appendChild(image);
+                        thumb.appendChild(image);
                     } else {
-                        const badge = document.createElement('span');
-                        badge.className = 'global-resubmission-preview-file';
-                        badge.textContent = (file.name.split('.').pop() || 'file').slice(0, 4);
-                        preview.appendChild(badge);
+                        thumb.textContent = (file.name.split('.').pop() || 'file').slice(0, 4);
                     }
 
-                    const name = document.createElement('span');
-                    name.textContent = file.name;
-                    preview.appendChild(name);
+                    preview.classList.add('is-visible');
+                    card.classList.add('has-file');
+                    updateGlobalResubmissionProgress();
+                }
+
+                input.addEventListener('change', syncFilePreview);
+                removeButton?.addEventListener('click', function () {
+                    input.value = '';
+                    syncFilePreview();
                 });
+
+                syncFilePreview();
             });
+
+            updateGlobalResubmissionProgress();
         });
     </script>
     @endif

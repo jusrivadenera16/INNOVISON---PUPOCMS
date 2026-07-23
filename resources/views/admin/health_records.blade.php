@@ -5633,6 +5633,7 @@
             <form method="POST" class="verify-approval-review-form verify-resubmission-only-form" id="verifyDocumentResubmissionForm">
                 @csrf
                 <input type="hidden" name="pending_reason" id="verifyDocumentResubmissionReason" value="Document Resubmission">
+                <input type="hidden" name="return_to" value="health_records">
 
                 <p class="verify-resubmission-help-note">Use this only when uploaded files are blurred, unreadable, unsigned, incorrect, or need replacement.</p>
                 <label class="verify-check-row verify-resubmission-toggle-row">
