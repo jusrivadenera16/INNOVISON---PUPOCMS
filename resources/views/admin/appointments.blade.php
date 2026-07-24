@@ -3644,6 +3644,18 @@
                 @forelse($appointments as $appt)
                     @php
                         $appointmentPhotoPath = optional(optional($appt->user)->healthProfile)->student_photo;
+                        $appointmentUser = $appt->user;
+                        $appointmentRoleMarkers = strtolower(trim(implode(' ', array_filter([
+                            (string) optional($appointmentUser)->user_type,
+                            (string) optional($appointmentUser)->user_role,
+                            (string) optional($appointmentUser)->idp_role,
+                        ]))));
+                        $appointmentUsesEmployeeNumber = collect(['faculty', 'admin', 'staff', 'employee', 'dependent'])
+                            ->contains(fn ($needle) => str_contains($appointmentRoleMarkers, $needle));
+                        $appointmentIdNumber = $appointmentUsesEmployeeNumber
+                            ? (optional(optional($appointmentUser)->healthProfileStaff)->employee_number ?: optional($appointmentUser)->employee_number ?: $appt->student_number)
+                            : ($appt->student_number ?: optional(optional($appointmentUser)->healthProfile)->student_number ?: optional($appointmentUser)->student_number);
+                        $appointmentIdLabel = $appointmentUsesEmployeeNumber ? 'Employee Number' : 'Student Number';
                         $currentType = strtolower(trim((string) ($appt->type ?? '')));
                         if ($currentType === '') {
                             $legacyType = strtolower(trim((string) ($appt->user_type ?? '')));
@@ -3665,7 +3677,8 @@
                         data-view-email="{{ $appt->email }}"
                         data-view-status="{{ $appt->status }}"
                         data-view-type="{{ $currentType === 'walkin' ? 'Walk-in' : 'Online' }}"
-                        data-view-student-number="{{ $appt->student_number ?: optional(optional($appt->user)->healthProfile)->student_number ?: optional($appt->user)->student_number ?: '' }}"
+                        data-view-student-number="{{ $appointmentIdNumber ?: '' }}"
+                        data-view-id-number-label="{{ $appointmentIdLabel }}"
                         data-view-contact="{{ optional($appt->user)->contact_no ?: optional(optional($appt->user)->healthProfile)->cellphone ?: '' }}"
                         data-view-program="{{ trim(implode(' ', array_filter([optional($appt->user)->course ?: optional(optional($appt->user)->healthProfile)->course_college, trim(implode('-', array_filter([optional($appt->user)->year, optional($appt->user)->section]))) ]))) }}"
                         data-view-photo-url="{{ $appointmentPhotoPath ? asset('storage/' . $appointmentPhotoPath) : '' }}"
@@ -3679,7 +3692,7 @@
                     >
                         <td>
                             <div style="font-weight: 700;" class="student-name">{{ $appt->name }}</div>
-                            <div style="font-size: 12px; color: #111827;">{{ $appt->student_number ?: optional(optional($appt->user)->healthProfile)->student_number ?: optional($appt->user)->student_number ?: 'N/A' }}</div>
+                            <div style="font-size: 12px; color: #111827;">{{ $appointmentIdNumber ?: 'N/A' }}</div>
                         </td>
                         <td>{{ $appt->apt_id ?: 'N/A' }}</td>
                        <td>
@@ -4298,6 +4311,7 @@
                 id: triggerOrName.dataset.appointmentId || rowData.appointmentId || '',
                 aptId: triggerOrName.dataset.aptId || rowData.viewAptId || '',
                 studentNumber: triggerOrName.dataset.studentNumber || rowData.viewStudentNumber || '',
+                idNumberLabel: triggerOrName.dataset.idNumberLabel || rowData.viewIdNumberLabel || 'ID Number',
                 contact: triggerOrName.dataset.contact || rowData.viewContact || '',
                 program: triggerOrName.dataset.program || rowData.viewProgram || '',
                 photoUrl: triggerOrName.dataset.photoUrl || rowData.viewPhotoUrl || '',
@@ -4329,7 +4343,7 @@
         document.getElementById('mClinicalFindings').innerText = safeOrNA(payload.clinicalFindings);
         document.getElementById('mEmail').innerText = safeOrNA(payload.email);
         document.getElementById('mContact').innerText = safeOrNA(payload.contact);
-        document.getElementById('mStudentId').innerText = 'ID Number: ' + safeOrNA(payload.studentNumber);
+        document.getElementById('mStudentId').innerText = (payload.idNumberLabel || 'ID Number') + ': ' + safeOrNA(payload.studentNumber);
         document.getElementById('mProgram').innerText = 'Program: ' + safeOrNA(payload.program);
         document.getElementById('mCreated').innerText = safeOrNA(payload.created);
         document.getElementById('mUpdated').innerText = safeOrNA(payload.updated);
@@ -4469,6 +4483,7 @@
         const email = safeText(rowData.viewEmail) === '-' ? 'N/A' : rowData.viewEmail;
         const contact = safeText(rowData.viewContact) === '-' ? 'N/A' : rowData.viewContact;
         const studentNumber = safeText(rowData.viewStudentNumber) === '-' ? 'N/A' : rowData.viewStudentNumber;
+        const idNumberLabel = safeText(rowData.viewIdNumberLabel) === '-' ? 'ID Number' : rowData.viewIdNumberLabel;
         const program = safeText(rowData.viewProgram) === '-' ? 'N/A' : rowData.viewProgram;
         const created = safeText(rowData.viewCreated) === '-' ? 'N/A' : rowData.viewCreated;
         const notes = safeText(rowData.viewRemarks) === '-' ? 'N/A' : rowData.viewRemarks;
@@ -4489,7 +4504,7 @@
         document.getElementById('sName').innerText = safeText(name);
         document.getElementById('sEmail').innerText = email;
         document.getElementById('sContact').innerText = contact;
-        document.getElementById('sStudentId').innerText = 'ID Number: ' + studentNumber;
+        document.getElementById('sStudentId').innerText = idNumberLabel + ': ' + studentNumber;
         document.getElementById('sProgram').innerText = 'Program: ' + program;
         document.getElementById('sService').innerText = safeText(service);
         document.getElementById('sDate').innerText = safeText(date ? formatDateLong(date) : '');
@@ -4637,6 +4652,7 @@
         const email = safeText(rowData.viewEmail) === '-' ? 'N/A' : rowData.viewEmail;
         const contact = safeText(rowData.viewContact) === '-' ? 'N/A' : rowData.viewContact;
         const studentNumber = safeText(rowData.viewStudentNumber) === '-' ? 'N/A' : rowData.viewStudentNumber;
+        const idNumberLabel = safeText(rowData.viewIdNumberLabel) === '-' ? 'ID Number' : rowData.viewIdNumberLabel;
         const program = safeText(rowData.viewProgram) === '-' ? 'N/A' : rowData.viewProgram;
         const notes = safeText(rowData.viewRemarks) === '-' ? 'N/A' : rowData.viewRemarks;
         const consultationType = safeText(rowData.viewType) === '-' ? 'Online' : rowData.viewType;
@@ -4645,7 +4661,7 @@
         document.getElementById('rName').innerText = safeText(name);
         document.getElementById('rEmail').innerText = email;
         document.getElementById('rContact').innerText = contact;
-        document.getElementById('rStudentId').innerText = 'ID Number: ' + studentNumber;
+        document.getElementById('rStudentId').innerText = idNumberLabel + ': ' + studentNumber;
         document.getElementById('rProgram').innerText = 'Program: ' + program;
         document.getElementById('rService').innerText = safeText(service);
         document.getElementById('rCurrentDate').innerText = safeText(date ? formatDateLong(date) : '');
@@ -5093,6 +5109,7 @@
                         email: row.dataset.viewEmail || '',
                         status: row.dataset.viewStatus || '',
                         studentNumber: row.dataset.viewStudentNumber || '',
+                        idNumberLabel: row.dataset.viewIdNumberLabel || 'ID Number',
                         contact: row.dataset.viewContact || '',
                         program: row.dataset.viewProgram || '',
                         photoUrl: row.dataset.viewPhotoUrl || '',

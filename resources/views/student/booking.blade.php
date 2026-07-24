@@ -1352,7 +1352,7 @@
                     </div>
 
                     <div class="input-group">
-                        <label class="input-label">Student Number</label>
+                        <label class="input-label">{{ $studentContext['id_number_label'] ?? 'Student Number' }}</label>
                         <div class="input-wrapper">
                            <input type="text" name="student_number" class="form-control" value="{{ $studentContext['student_number'] ?? $user->student_number }}" readonly>
                         </div>

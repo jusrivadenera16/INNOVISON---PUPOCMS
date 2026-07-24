@@ -2826,10 +2826,30 @@
     @auth('student')
     @php
         $studentUser = Auth::guard('student')->user();
-        $studentUser?->loadMissing('healthProfile');
+        $studentUser?->loadMissing('healthProfile', 'healthProfileStaff', 'adminProfile');
+        $studentHealthFormMarkers = strtolower(trim(implode(' ', array_filter([
+            (string) data_get($studentUser, 'user_type', ''),
+            (string) data_get($studentUser, 'user_role', ''),
+            (string) data_get($studentUser, 'idp_role', ''),
+            (string) data_get($studentUser, 'adminProfile.access_level', ''),
+            (string) data_get($studentUser, 'adminProfile.admin_hub_role', ''),
+        ]))));
+        $studentUsesStaffHealthForm = false;
+        foreach (['faculty', 'admin', 'staff', 'employee', 'dependent'] as $studentHealthFormNeedle) {
+            if (str_contains($studentHealthFormMarkers, $studentHealthFormNeedle)) {
+                $studentUsesStaffHealthForm = true;
+                break;
+            }
+        }
+        $studentHealthFormStartRoute = $studentUsesStaffHealthForm
+            ? route('health.form.staff')
+            : route('health.form');
+        $studentHealthFormTitle = $studentUsesStaffHealthForm
+            ? 'Health Examination Record'
+            : 'Health Information Form';
         $showHealthFormModal = $studentUser
             && !(bool) ($studentUser->is_health_profile_completed ?? false)
-            && !$studentUser->healthProfile;
+            && ($studentUsesStaffHealthForm ? !$studentUser->healthProfileStaff : !$studentUser->healthProfile);
         $studentResubmissionDocuments = collect(optional($studentUser?->healthProfile)->resubmission_required_documents ?? [])
             ->filter()
             ->intersect(['student_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])
@@ -2871,7 +2891,7 @@
             </div>
             <div class="health-profile-kicker">
                 <span aria-hidden="true">▣</span>
-                Health Information Form
+                {{ $studentHealthFormTitle }}
             </div>
             <h2 class="health-profile-prompt-title" style="color: #1f2937; font-size: 24px; font-weight: 800; margin: 0 0 16px;">
                 Complete Your Health Profile
@@ -2879,7 +2899,7 @@
             </h2>
             <p class="health-profile-prompt-copy" style="color: #4b5563; font-size: 13px; line-height: 1.45; margin: -8px 0 12px;">
                 Welcome, <strong>{{ $studentUser->first_name ?? 'Student' }}!</strong> 👋<br>
-                Let’s complete your <strong>Health Information Form</strong><br>
+                Let’s complete your <strong>{{ $studentHealthFormTitle }}</strong><br>
                 to complete your clinic record.
             </p>
             <div class="health-profile-prepare">
@@ -2948,7 +2968,7 @@
                 </div>
             </div>
             <div class="health-profile-prompt-actions" style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
-                <a class="health-profile-fill-button" href="{{ route('health.form') }}">
+                <a class="health-profile-fill-button" href="{{ $studentHealthFormStartRoute }}">
                     <span>Get Started</span>
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M5 12h14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>

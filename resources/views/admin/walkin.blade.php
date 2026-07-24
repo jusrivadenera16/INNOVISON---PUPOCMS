@@ -7044,8 +7044,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" />
                         </svg>
                     </span>
-                    <h3 class="intake-option-title">Clinic Reference</h3>
-                    <p class="intake-option-copy">Open local clinic records for faculty, admin-designee, guests, and clinic-managed profiles.</p>
+                    <h3 class="intake-option-title">Staffs</h3>
+                    <p class="intake-option-copy">Enter Staffs ID to lookup clinic records to manage clinic profiles.</p>
                 </div>
             </a>
 
@@ -9403,23 +9403,23 @@
         function applyLookupMode(mode) {
             currentLookupMode = mode === 'clinic' ? 'clinic' : 'applicant';
 
-            if (lookupModalBadge) lookupModalBadge.textContent = isClinicLookupMode() ? 'CR' : 'AP';
-            if (lookupModalTitle) lookupModalTitle.textContent = isClinicLookupMode() ? 'Clinic Reference' : 'Applicants';
+            if (lookupModalBadge) lookupModalBadge.textContent = isClinicLookupMode() ? 'ID' : 'AP';
+            if (lookupModalTitle) lookupModalTitle.textContent = isClinicLookupMode() ? 'Staffs' : 'Applicants';
             if (lookupModalSubtitle) lookupModalSubtitle.textContent = isClinicLookupMode()
-                ? 'Enter the clinic reference number to look up local clinic-managed records.'
+                ? 'Enter an employee number or student number to look up local clinic-managed records.'
                 : "Enter the applicant's reference number to look up the record.";
-            if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isClinicLookupMode() ? 'Clinic Reference Lookup' : 'Reference Lookup';
+            if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isClinicLookupMode() ? 'Staff ID Lookup' : 'Reference Lookup';
             if (lookupModalEntrySubtitle) lookupModalEntrySubtitle.textContent = isClinicLookupMode()
-                ? 'Use the clinic reference number to open the saved local clinic record.'
+                ? 'Use the staff employee number or student number to open the saved local clinic record.'
                 : 'Choose encoding for the first station or final review for approval.';
-            if (lookupModalEntryButtonText) lookupModalEntryButtonText.textContent = isClinicLookupMode() ? 'Input Clinic Reference' : 'Input Reference Number';
+            if (lookupModalEntryButtonText) lookupModalEntryButtonText.textContent = isClinicLookupMode() ? 'Input ID Number' : 'Input Reference Number';
             if (lookupModalHelpCopy) {
                 lookupModalHelpCopy.innerHTML = isClinicLookupMode()
-                    ? 'Find the clinic reference number in the saved <strong>Clinic Health Profile</strong> or local clinic record.'
+                    ? 'Enter the <strong>employee number</strong> or <strong>student number</strong> saved in the clinic record.'
                     : "Find the reference number in the <strong>Admission System</strong> under the applicant's profile or registration form.";
             }
-            if (lookupModalFieldLabel) lookupModalFieldLabel.textContent = isClinicLookupMode() ? 'Clinic Reference Number' : 'Reference Number';
-            if (refInput) refInput.placeholder = isClinicLookupMode() ? 'Enter clinic reference number' : 'Enter reference number';
+            if (lookupModalFieldLabel) lookupModalFieldLabel.textContent = isClinicLookupMode() ? 'ID Number' : 'Reference Number';
+            if (refInput) refInput.placeholder = isClinicLookupMode() ? 'Enter employee number or student number' : 'Enter reference number';
 
             if (workflowChoices) workflowChoices.style.display = isClinicLookupMode() ? 'none' : 'grid';
             if (showEntryBtn) showEntryBtn.style.display = isClinicLookupMode() ? 'inline-flex' : 'none';
@@ -10998,7 +10998,7 @@
         function doLookup() {
             const ref = (refInput ? refInput.value : '').trim();
             if (!ref) {
-                setStatus('error', 'Please enter a reference number first.');
+                setStatus('error', isClinicLookupMode() ? 'Please enter an ID number first.' : 'Please enter a reference number first.');
                 return;
             }
 
@@ -11047,11 +11047,12 @@
 
                     const isLocalHealthProfile = data.lookup_source === 'local_health_profile';
                     const isLocalClinicReference = data.lookup_source === 'local_clinic_reference';
-                    const isLocalOnlyLookup = isLocalHealthProfile || isLocalClinicReference;
+                    const isLocalClinicId = data.lookup_source === 'local_clinic_id';
+                    const isLocalOnlyLookup = isLocalHealthProfile || isLocalClinicReference || isLocalClinicId;
                     const lookupFoundMessage = isLocalHealthProfile
                         ? (data.sync_warning || 'Local health profile found. PUPTAS sync will still depend on a valid Admission reference.')
                         : (isClinicLookupMode()
-                            ? (applicantName ? 'Clinic record found: ' + applicantName + '.' : 'Clinic record found.')
+                            ? (applicantName ? 'Staff record found: ' + applicantName + '.' : 'Staff record found.')
                             : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.'));
 
                     if (isAlreadyApproved) {
@@ -11161,7 +11162,7 @@
                     }
                 } else {
                     setStatus('error', data.message || (isClinicLookupMode()
-                        ? 'No clinic record found with that reference number.'
+                        ? 'No staff record found with that ID number.'
                         : 'No applicant found with that reference number.'));
                 }
             })
@@ -11169,11 +11170,15 @@
         }
 
         refInput?.addEventListener('input', () => {
-            refInput.value = formatApplicantReferenceInput(refInput.value);
+            if (!isClinicLookupMode()) {
+                refInput.value = formatApplicantReferenceInput(refInput.value);
+            }
         });
 
         refInput?.addEventListener('blur', () => {
-            refInput.value = formatApplicantReferenceInput(refInput.value);
+            if (!isClinicLookupMode()) {
+                refInput.value = formatApplicantReferenceInput(refInput.value);
+            }
         });
 
         function saveApplicantEncoding() {

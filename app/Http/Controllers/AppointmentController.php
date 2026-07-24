@@ -9,6 +9,7 @@ use App\Models\AppointmentFeedback;
 use App\Models\Consultation;
 use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
+use App\Models\HealthProfileStaff;
 use App\Models\SystemSetting;
 use App\Models\User;
 use App\Services\GuisisApiService;
@@ -379,10 +380,19 @@ class AppointmentController extends Controller
     {
         return trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([
             trim((string) $firstName),
-            trim((string) $middleName),
+            $this->normalizeOptionalNamePart($middleName) ?? '',
             trim((string) $lastName),
-            trim((string) $suffixName),
+            $this->normalizeOptionalNamePart($suffixName) ?? '',
         ])))) ?: '';
+    }
+
+    private function normalizeOptionalNamePart($value): ?string
+    {
+        $value = trim((string) $value);
+
+        return $value === '' || in_array(strtoupper($value), ['N/A', 'NA', 'NONE'], true)
+            ? null
+            : $value;
     }
 
     private function normalizePuptasApplicantIdentity(?array $applicantData): array
@@ -1571,6 +1581,42 @@ class AppointmentController extends Controller
         return HealthProfile::query()->where('user_id', $user->id)->exists();
     }
 
+    private function shouldUseStaffHealthForm(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        $markers = strtolower(trim(implode(' ', array_filter([
+            (string) ($user->user_type ?? ''),
+            (string) ($user->user_role ?? ''),
+            (string) ($user->idp_role ?? ''),
+            (string) data_get($user, 'adminProfile.access_level', ''),
+            (string) data_get($user, 'adminProfile.admin_hub_role', ''),
+        ]))));
+
+        foreach (['faculty', 'admin', 'staff', 'employee', 'dependent'] as $needle) {
+            if (str_contains($markers, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function hasSubmittedStaffHealthProfile(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        if ($user->relationLoaded('healthProfileStaff')) {
+            return $user->healthProfileStaff !== null;
+        }
+
+        return HealthProfileStaff::query()->where('user_id', $user->id)->exists();
+    }
+
     private function healthProfileNeedsFormCorrection(?HealthProfile $healthProfile): bool
     {
         if (!$healthProfile) {
@@ -1700,16 +1746,36 @@ class AppointmentController extends Controller
             return [
                 'student_id' => '',
                 'student_number' => '',
+                'id_number_label' => 'Student Number',
+                'uses_staff_health_form' => false,
             ];
         }
 
-        $user->loadMissing('healthProfile');
+        $user->loadMissing('healthProfile', 'healthProfileStaff', 'adminProfile');
+        if ($this->shouldUseStaffHealthForm($user)) {
+            $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
+            $employeeNumber = trim((string) (
+                optional($user->healthProfileStaff)->employee_number
+                ?: $user->employee_number
+                ?: optional($linkedAdminProfile)->employee_number
+            ));
+
+            return [
+                'student_id' => trim((string) ($user->student_id ?? '')),
+                'student_number' => $employeeNumber,
+                'id_number_label' => 'Employee Number',
+                'uses_staff_health_form' => true,
+            ];
+        }
+
         $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
         $prefill = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $user->healthProfile);
 
         return [
             'student_id' => trim((string) ($prefill['student_id'] ?? $user->student_id ?? '')),
             'student_number' => trim((string) ($prefill['student_number'] ?? $user->student_number ?? '')),
+            'id_number_label' => 'Student Number',
+            'uses_staff_health_form' => false,
         ];
     }
 
@@ -2045,7 +2111,7 @@ public function account(Request $request)
         return redirect('/login-as-student')->with('error', 'Please login first.');
     }
 
-    $user->load('healthProfile');
+    $user->load(['healthProfile', 'healthProfileStaff', 'adminProfile']);
 
     // 2. Kunin ang appointments ng SPECIFIC user na naka-login
     $appointments = Appointment::where('user_id', $user->id)
@@ -2060,7 +2126,11 @@ public function account(Request $request)
 
     // 4. Notification Logic
     $notifications = collect($this->getStudentNotifications($user));
-    $hasSubmittedHealthProfile = $this->hasSubmittedHealthProfile($user);
+    $studentUsesStaffHealthForm = $this->shouldUseStaffHealthForm($user);
+    $hasSubmittedStaffHealthProfile = $this->hasSubmittedStaffHealthProfile($user);
+    $hasSubmittedHealthProfile = $studentUsesStaffHealthForm
+        ? $hasSubmittedStaffHealthProfile
+        : $this->hasSubmittedHealthProfile($user);
     $pendingHealthFormRequest = HealthFormSubmission::query()
         ->where('user_id', $user->id)
         ->where('status', HealthFormSubmission::STATUS_REQUESTED)
@@ -2076,10 +2146,43 @@ public function account(Request $request)
     // 5. Return view user
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
     $accountProfileData = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $user->healthProfile);
+    if ($studentUsesStaffHealthForm) {
+        $staffProfileData = $this->buildStaffHealthFormPrefill($user, $user->healthProfileStaff);
+        $staffMiddleName = $this->normalizeOptionalNamePart($staffProfileData['middle_name'] ?? null);
+        $staffFirstName = trim((string) ($staffProfileData['first_name'] ?? $user->first_name ?? ''));
+        $staffLastName = trim((string) ($staffProfileData['last_name'] ?? $user->last_name ?? ''));
+        $accountProfileData = array_merge($accountProfileData, [
+            'student_number' => '',
+            'employee_number' => trim((string) ($staffProfileData['employee_number'] ?? $user->employee_number ?? '')),
+            'first_name' => $staffFirstName,
+            'middle_name' => $staffMiddleName ?? '',
+            'last_name' => $staffLastName,
+            'full_name' => $this->formatDisplayNameParts($staffFirstName, $staffMiddleName, $staffLastName),
+            'email' => trim((string) ($staffProfileData['email'] ?? $user->email ?? '')),
+            'course_college' => trim((string) ($staffProfileData['course_college'] ?? '')),
+            'year' => trim((string) ($staffProfileData['school_year'] ?? '')),
+            'section' => '',
+            'contact_number' => trim((string) ($staffProfileData['contact_no'] ?? $user->contact_no ?? '')),
+            'home_address' => trim(implode(', ', array_filter([
+                $staffProfileData['street_address'] ?? '',
+                $staffProfileData['barangay'] ?? '',
+                $staffProfileData['city_municipality'] ?? '',
+                $staffProfileData['province'] ?? '',
+            ]))),
+            'guardian_name' => trim((string) ($staffProfileData['emergency_contact_person'] ?? '')),
+            'cellphone' => trim((string) ($staffProfileData['emergency_contact_no'] ?? '')),
+            'birthday' => trim((string) ($staffProfileData['birthday'] ?? '')),
+            'age' => trim((string) ($staffProfileData['age'] ?? '')),
+            'sex' => trim((string) ($staffProfileData['sex'] ?? '')),
+            'civil_status' => trim((string) ($staffProfileData['civil_status'] ?? '')),
+            'office' => trim((string) ($staffProfileData['office'] ?? '')),
+        ]);
+    }
 
     // These fields belong to the submitted clinic Health Profile for now.
-    $profileBirthday = trim((string) (optional($user->healthProfile)->birthday ?: $user->DOB));
-    $profileAge = optional($user->healthProfile)->age;
+    $profileSource = $studentUsesStaffHealthForm ? $user->healthProfileStaff : $user->healthProfile;
+    $profileBirthday = trim((string) (optional($profileSource)->birthday ?: $user->DOB));
+    $profileAge = optional($profileSource)->age;
     if ($profileAge === null && $profileBirthday !== '') {
         try {
             $profileAge = Carbon::parse($profileBirthday)->age;
@@ -2089,14 +2192,14 @@ public function account(Request $request)
     }
     $accountProfileData['birthday'] = $profileBirthday;
     $accountProfileData['age'] = $profileAge;
-    $accountProfileData['sex'] = trim((string) (optional($user->healthProfile)->sex ?: $user->gender));
-    $accountProfileData['civil_status'] = trim((string) optional($user->healthProfile)->civil_status);
-    $accountProfileData['home_address'] = trim((string) optional($user->healthProfile)->home_address);
-    $accountProfileData['guardian_name'] = trim((string) optional($user->healthProfile)->guardian_name);
-    $accountProfileData['cellphone'] = trim((string) optional($user->healthProfile)->cellphone);
+    $accountProfileData['sex'] = trim((string) (optional($profileSource)->sex ?: $user->gender));
+    $accountProfileData['civil_status'] = trim((string) optional($profileSource)->civil_status);
+    $accountProfileData['home_address'] = trim((string) optional($profileSource)->home_address) ?: ($accountProfileData['home_address'] ?? '');
+    $accountProfileData['guardian_name'] = trim((string) (optional($profileSource)->guardian_name ?? optional($profileSource)->emergency_contact_person)) ?: ($accountProfileData['guardian_name'] ?? '');
+    $accountProfileData['cellphone'] = trim((string) (optional($profileSource)->cellphone ?? optional($profileSource)->emergency_contact_no)) ?: ($accountProfileData['cellphone'] ?? '');
 
     $guisisAccountData = $this->buildGuisisAccountData($user);
-    if ($guisisAccountData['available'] ?? false) {
+    if (!$studentUsesStaffHealthForm && ($guisisAccountData['available'] ?? false)) {
         foreach ([
             'student_number',
             'first_name',
@@ -2145,6 +2248,8 @@ public function account(Request $request)
         'notifications',
         'linkedAdminProfile',
         'hasSubmittedHealthProfile',
+        'hasSubmittedStaffHealthProfile',
+        'studentUsesStaffHealthForm',
         'accountProfileData',
         'guisisAccountData',
         'isEnrolled',
@@ -2252,9 +2357,9 @@ public function account(Request $request)
         $documentRules = [
             'student_photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
             'health_declaration' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
-            'medical_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'chest_xray_result' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'pwd_id_proof' => ['required', 'file', 'mimes:pdf', 'max:2048'],
+            'medical_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
+            'chest_xray_result' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
+            'pwd_id_proof' => ['required', 'file', 'mimes:pdf', 'max:1024'],
         ];
 
         $attributeNames = [
@@ -2759,7 +2864,11 @@ public function showHealthForm()
 
     // Refresh user from database to ensure all fields are populated
     if ($user) {
-        $user = User::find($user->id);
+        $user = User::with('adminProfile')->find($user->id);
+    }
+
+    if ($this->shouldUseStaffHealthForm($user)) {
+        return redirect()->route('health.form.staff');
     }
 
     $existingHealthProfile = $user
@@ -2795,6 +2904,424 @@ public function showHealthForm()
     $prefill = $healthFormPrefill;
 
     return view('student.health_form', compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest'));
+}
+
+public function showStaffHealthForm()
+{
+    /** @var \App\Models\User|null $user */
+    $user = Auth::guard('student')->user() ?: Auth::user();
+    if ($user) {
+        $user = User::with(['adminProfile', 'healthProfileStaff'])->find($user->id);
+    }
+
+    if (!$user) {
+        return redirect('/login')->with('error', 'Please login first.');
+    }
+
+    if (!$this->shouldUseStaffHealthForm($user)) {
+        return redirect()->route('health.form');
+    }
+
+    if ($this->hasSubmittedStaffHealthProfile($user)) {
+        return redirect('/student/account?view=health-record')
+            ->with('info', 'Your health examination record has already been submitted for clinic review.');
+    }
+
+    $staffProfile = $user->healthProfileStaff;
+    $staffPrefill = $this->buildStaffHealthFormPrefill($user, $staffProfile);
+    $displayName = trim((string) ($user->name ?? ''));
+
+    $staffCourseOptions = array_merge([
+        [
+            'code' => 'N/A',
+            'name' => 'Not Applicable',
+            'label' => 'Not Applicable',
+        ],
+    ], $this->healthFormCourseOptions());
+
+    return view('student.health_form_staff', compact('user', 'staffProfile', 'staffPrefill', 'displayName', 'staffCourseOptions'));
+}
+
+private function buildStaffHealthFormPrefill(User $user, ?HealthProfileStaff $staffProfile): array
+{
+    $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
+    $facultyProfile = $this->fetchPuptFlssFacultyProfileForUser($user);
+    $facultyAddress = data_get($facultyProfile, 'profile.address', []);
+    $facultyBirthday = $this->normalizeDateValue(data_get($facultyProfile, 'profile.birthday'));
+    $fallbackBirthday = $this->normalizeDateValue(optional($staffProfile)->birthday ?: $user->DOB ?: optional($linkedAdminProfile)->birthday);
+    $birthday = $facultyBirthday !== '' ? $facultyBirthday : $fallbackBirthday;
+    $age = (string) (optional($staffProfile)->age ?? '');
+    if ($birthday !== '') {
+        try {
+            $age = (string) Carbon::parse($birthday)->age;
+        } catch (\Throwable $exception) {
+            // Leave any existing age untouched if the source date cannot be parsed.
+        }
+    }
+
+    $address = trim((string) (optional($staffProfile)->home_address ?: $this->buildPuptFlssAddress($facultyAddress) ?: optional($linkedAdminProfile)->address));
+    $addressParts = array_map('trim', explode(',', $address));
+
+    return [
+        'first_name' => trim((string) (optional($staffProfile)->first_name ?: data_get($facultyProfile, 'first_name') ?: $user->first_name)),
+        'middle_name' => trim((string) (optional($staffProfile)->middle_name ?: data_get($facultyProfile, 'middle_name') ?: $user->middle_name)),
+        'last_name' => trim((string) (optional($staffProfile)->last_name ?: data_get($facultyProfile, 'last_name') ?: $user->last_name)),
+        'email' => trim((string) (data_get($facultyProfile, 'email') ?: $user->email ?: optional($linkedAdminProfile)->email)),
+        'employee_number' => trim((string) (optional($staffProfile)->employee_number ?: data_get($facultyProfile, 'faculty_code') ?: $user->employee_number ?: data_get($facultyProfile, 'faculty_id') ?: data_get($facultyProfile, 'id'))),
+        'office' => trim((string) (optional($staffProfile)->office ?: data_get($facultyProfile, 'department') ?: optional($linkedAdminProfile)->office)),
+        'birthday' => $birthday,
+        'age' => $age,
+        'civil_status' => trim((string) (optional($staffProfile)->civil_status ?: optional($linkedAdminProfile)->civil_status)),
+        'sex' => $this->normalizeSexValue(trim((string) (optional($staffProfile)->sex ?: data_get($facultyProfile, 'profile.gender') ?: data_get($facultyProfile, 'gender') ?: $user->gender ?: optional($linkedAdminProfile)->gender))),
+        'course_college' => trim((string) (optional($staffProfile)->course_college ?: $user->course)),
+        'school_year' => trim((string) (optional($staffProfile)->school_year ?: $user->year)),
+        'contact_no' => trim((string) (optional($staffProfile)->contact_no ?: $user->contact_no ?: optional($linkedAdminProfile)->contact_no)),
+        'street_address' => $addressParts[0] ?? '',
+        'barangay' => $addressParts[1] ?? '',
+        'city_municipality' => $addressParts[2] ?? '',
+        'province' => $addressParts[3] ?? '',
+        'emergency_contact_person' => trim((string) (optional($staffProfile)->emergency_contact_person ?: optional($linkedAdminProfile)->emergency_contact_person)),
+        'emergency_contact_no' => trim((string) (optional($staffProfile)->emergency_contact_no ?: optional($linkedAdminProfile)->emergency_contact_no)),
+    ];
+}
+
+private function fetchPuptFlssFacultyProfileForUser(User $user): ?array
+{
+    $searchTerms = array_values(array_unique(array_filter(array_map('trim', [
+        (string) ($user->email ?? ''),
+        (string) ($user->employee_number ?? ''),
+        (string) ($user->student_id ?? ''),
+    ]))));
+
+    if ($searchTerms === []) {
+        return null;
+    }
+
+    try {
+        $facultySyncService = app(\App\Services\FacultySyncService::class);
+        foreach ($searchTerms as $searchTerm) {
+            $faculties = $facultySyncService->fetchFaculties($searchTerm);
+            $matchedFaculty = collect($faculties)
+                ->filter(fn ($faculty) => is_array($faculty))
+                ->first(function (array $faculty) use ($user): bool {
+                    $facultyEmail = strtolower(trim((string) ($faculty['email'] ?? '')));
+                    $userEmail = strtolower(trim((string) ($user->email ?? '')));
+                    $facultyIdentifier = strtolower(trim((string) (
+                        $faculty['faculty_code']
+                        ?? $faculty['faculty_id']
+                        ?? $faculty['id']
+                        ?? ''
+                    )));
+                    $userIdentifiers = array_filter(array_map(
+                        fn ($value) => strtolower(trim((string) $value)),
+                        [$user->employee_number ?? '', $user->student_id ?? '']
+                    ));
+
+                    return ($facultyEmail !== '' && $facultyEmail === $userEmail)
+                        || ($facultyIdentifier !== '' && in_array($facultyIdentifier, $userIdentifiers, true));
+                });
+
+            if (is_array($matchedFaculty)) {
+                return $matchedFaculty;
+            }
+        }
+    } catch (\Throwable $exception) {
+        Log::warning('PUPT-FLSS staff health form prefill unavailable', [
+            'user_id' => $user->id,
+            'error' => $exception->getMessage(),
+        ]);
+    }
+
+    return null;
+}
+
+private function buildPuptFlssAddress($address): string
+{
+    if (!is_array($address)) {
+        return '';
+    }
+
+    $houseStreet = trim(implode(' ', array_filter(array_map(
+        fn ($value) => trim((string) $value),
+        [
+            data_get($address, 'house_num'),
+            data_get($address, 'street'),
+        ]
+    ))));
+
+    return trim(implode(', ', array_filter(array_map(
+        fn ($value) => trim((string) $value),
+        [
+            $houseStreet,
+            data_get($address, 'barangay'),
+            data_get($address, 'city'),
+            data_get($address, 'province'),
+        ]
+    ))));
+}
+
+private function normalizeDateValue($value): string
+{
+    $value = trim((string) $value);
+    if ($value === '') {
+        return '';
+    }
+
+    try {
+        return Carbon::parse($value)->format('Y-m-d');
+    } catch (\Throwable $exception) {
+        return '';
+    }
+}
+
+public function storeStaffHealthForm(Request $request)
+{
+    /** @var \App\Models\User|null $user */
+    $user = Auth::guard('student')->user() ?: Auth::user();
+    if ($user) {
+        $user = User::with(['adminProfile', 'healthProfileStaff'])->find($user->id);
+    }
+
+    if (!$user) {
+        return redirect('/login')->with('error', 'Please login first.');
+    }
+
+    if (!$this->shouldUseStaffHealthForm($user)) {
+        return redirect()->route('health.form')
+            ->with('info', 'Please use the student/applicant Health Information Form.');
+    }
+
+    $existingStaffProfile = $user->healthProfileStaff;
+    if ($existingStaffProfile) {
+        return redirect('/student/account?view=health-record')
+            ->with('info', 'Your health examination record has already been submitted for clinic review.');
+    }
+
+    $validated = $request->validate([
+        'employee_number' => ['nullable', 'string', 'max:120'],
+        'first_name' => ['required', 'string', 'max:120'],
+        'middle_name' => ['nullable', 'string', 'max:120'],
+        'last_name' => ['required', 'string', 'max:120'],
+        'street_address' => ['required', 'string', 'max:255'],
+        'barangay' => ['required', 'string', 'max:120'],
+        'city_municipality' => ['required', 'string', 'max:120'],
+        'province' => ['required', 'string', 'max:120'],
+        'contact_no' => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'emergency_contact_person' => ['required', 'string', 'max:255'],
+        'emergency_contact_no' => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'form_date' => ['required', 'date'],
+        'office' => ['required', 'string', 'max:255'],
+        'course_college' => ['nullable', 'string', 'max:160'],
+        'school_year' => ['nullable', 'string', 'max:40'],
+        'age' => ['required', 'numeric', 'min:15', 'max:100'],
+        'sex' => ['required', 'string', 'max:40'],
+        'civil_status' => ['required', 'string', 'max:80'],
+        'birthday' => ['required', 'date'],
+        'past_medical_history' => ['nullable', 'array'],
+        'past_medical_history.*' => ['string', 'max:80'],
+        'past_medical_history_others' => ['nullable', 'string', 'max:255'],
+        'previous_hospitalization' => ['nullable', 'boolean'],
+        'previous_hospitalization_details' => ['nullable', 'string', 'max:1000'],
+        'operation_surgery' => ['nullable', 'boolean'],
+        'operation_surgery_details' => ['nullable', 'string', 'max:1000'],
+        'current_medications' => ['nullable', 'string', 'max:1000'],
+        'allergies' => ['nullable', 'string', 'max:1000'],
+        'family_history' => ['nullable', 'array'],
+        'family_history.*' => ['string', 'max:80'],
+        'family_history_others' => ['nullable', 'string', 'max:255'],
+        'cigarette_smoking' => ['nullable', 'boolean'],
+        'alcohol_drinking' => ['nullable', 'boolean'],
+        'traveled_abroad' => ['nullable', 'boolean'],
+        'has_disability' => ['nullable', 'boolean'],
+        'disability_type' => ['required_if:has_disability,1', 'nullable', 'string', 'max:255'],
+        'student_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
+        'health_declaration' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
+        'medical_certificate' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
+        'chest_xray_document' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
+        'pwd_id_proof' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
+        'vital_signs_distress_status' => ['nullable', 'string', 'max:80'],
+        'height' => ['nullable', 'string', 'max:40'],
+        'weight' => ['nullable', 'string', 'max:40'],
+        'bmi' => ['nullable', 'string', 'max:40'],
+        'bp' => ['nullable', 'string', 'max:40'],
+        'hr' => ['nullable', 'string', 'max:40'],
+        'rr' => ['nullable', 'string', 'max:40'],
+        'temperature' => ['nullable', 'string', 'max:40'],
+        'head_findings' => ['nullable', 'array'],
+        'eyes_findings' => ['nullable', 'array'],
+        'ears_findings' => ['nullable', 'array'],
+        'throat_findings' => ['nullable', 'array'],
+        'chest_lungs_findings' => ['nullable', 'array'],
+        'chest_xray_result' => ['nullable', 'string', 'max:120'],
+        'breast_findings' => ['nullable', 'string', 'max:120'],
+        'heart_murmur' => ['nullable', 'string', 'max:120'],
+        'heart_rhythm' => ['nullable', 'string', 'max:120'],
+        'abdomen_findings' => ['nullable', 'string', 'max:120'],
+        'genito_urinary_date_lmp' => ['nullable', 'date'],
+        'extremities_findings' => ['nullable', 'string', 'max:120'],
+        'vertebral_column_findings' => ['nullable', 'string', 'max:120'],
+        'skin_findings' => ['nullable', 'array'],
+        'working_impression' => ['nullable', 'string', 'max:1000'],
+        'fit_status' => ['nullable', 'string', 'max:120'],
+        'for_work_up' => ['nullable', 'string', 'max:1000'],
+        'referred_to' => ['nullable', 'array'],
+        'referred_to.*' => ['string', 'max:80'],
+        'referred_to_others' => ['nullable', 'string', 'max:255'],
+        'follow_up_on' => ['nullable', 'date'],
+        'physician_signature' => ['nullable', 'string', 'max:255'],
+        'staff_signature_method' => ['required', 'in:draw,upload'],
+        'staff_signature' => ['nullable', 'string'],
+        'uploaded_signature' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
+        'staff_health_profile_certified' => ['accepted'],
+    ]);
+
+    $staffSignatureMethod = (string) $validated['staff_signature_method'];
+    if ($staffSignatureMethod === 'draw' && trim((string) $request->input('staff_signature')) === '') {
+        throw ValidationException::withMessages([
+            'staff_signature' => 'Please draw your signature before submitting.',
+        ]);
+    }
+
+    if ($staffSignatureMethod === 'upload' && !$request->hasFile('uploaded_signature')) {
+        throw ValidationException::withMessages([
+            'uploaded_signature' => 'Please upload your signature file before submitting.',
+        ]);
+    }
+
+    $signaturePath = null;
+    $signatureType = null;
+    if ($staffSignatureMethod === 'upload' && $request->hasFile('uploaded_signature')) {
+        $signaturePath = $request->file('uploaded_signature')->store('health_profile_staffs/signatures', 'public');
+        $signatureType = 'uploaded';
+    } elseif ($staffSignatureMethod === 'draw' && trim((string) $request->input('staff_signature')) !== '') {
+        $signatureType = 'drawn';
+    }
+
+    $validated['middle_name'] = $this->normalizeOptionalNamePart($validated['middle_name'] ?? null);
+    $fullName = $this->formatDisplayNameParts(
+        $validated['first_name'],
+        $validated['middle_name'],
+        $validated['last_name']
+    );
+    $homeAddress = trim(implode(', ', array_filter([
+        $validated['street_address'],
+        $validated['barangay'],
+        $validated['city_municipality'],
+        $validated['province'],
+    ])));
+    $staffRequirementFiles = [
+        'student_photo' => 'health_profile_staffs/photos',
+        'health_declaration' => 'health_profile_staffs/health_declarations',
+        'medical_certificate' => 'health_profile_staffs/medical_certificates',
+        'chest_xray_document' => 'health_profile_staffs/chest_xray_documents',
+        'pwd_id_proof' => 'health_profile_staffs/pwd_id_proofs',
+    ];
+    $staffRequirementPaths = [];
+    foreach ($staffRequirementFiles as $field => $directory) {
+        $staffRequirementPaths[$field] = $request->hasFile($field)
+            ? $request->file($field)->store($directory, 'public')
+            : null;
+    }
+    $profile = HealthProfileStaff::create([
+        'user_id' => $user->id,
+        'employee_number' => $validated['employee_number'] ?? null,
+        'first_name' => $validated['first_name'],
+        'middle_name' => $validated['middle_name'] ?? null,
+        'last_name' => $validated['last_name'],
+        'name' => $fullName,
+        'home_address' => $homeAddress,
+        'contact_no' => $validated['contact_no'],
+        'emergency_contact_person' => $validated['emergency_contact_person'],
+        'emergency_contact_no' => $validated['emergency_contact_no'],
+        'form_date' => $validated['form_date'],
+        'office' => $validated['office'],
+        'course_college' => $validated['course_college'] ?? null,
+        'school_year' => $validated['school_year'] ?? null,
+        'age' => $validated['age'],
+        'sex' => $validated['sex'],
+        'civil_status' => $validated['civil_status'],
+        'birthday' => $validated['birthday'],
+        'past_medical_history' => array_values($request->input('past_medical_history', [])),
+        'past_medical_history_others' => $validated['past_medical_history_others'] ?? null,
+        'previous_hospitalization' => $request->boolean('previous_hospitalization'),
+        'previous_hospitalization_details' => $request->boolean('previous_hospitalization') ? $request->input('previous_hospitalization_details') : null,
+        'operation_surgery' => $request->boolean('operation_surgery'),
+        'operation_surgery_details' => $request->boolean('operation_surgery') ? $request->input('operation_surgery_details') : null,
+        'current_medications' => $validated['current_medications'] ?? null,
+        'allergies' => $validated['allergies'] ?? null,
+        'family_history' => array_values($request->input('family_history', [])),
+        'family_history_others' => $validated['family_history_others'] ?? null,
+        'cigarette_smoking' => $request->boolean('cigarette_smoking'),
+        'alcohol_drinking' => $request->boolean('alcohol_drinking'),
+        'traveled_abroad' => $request->boolean('traveled_abroad'),
+        'has_disability' => $request->boolean('has_disability'),
+        'disability_type' => $request->boolean('has_disability') ? ($validated['disability_type'] ?? null) : null,
+        'student_photo' => $staffRequirementPaths['student_photo'],
+        'health_declaration' => $staffRequirementPaths['health_declaration'],
+        'medical_certificate' => $staffRequirementPaths['medical_certificate'],
+        'chest_xray_document' => $staffRequirementPaths['chest_xray_document'],
+        'pwd_id_proof' => $staffRequirementPaths['pwd_id_proof'],
+        'vital_signs_distress_status' => $validated['vital_signs_distress_status'] ?? null,
+        'height' => $validated['height'] ?? null,
+        'weight' => $validated['weight'] ?? null,
+        'bmi' => $validated['bmi'] ?? null,
+        'bp' => $validated['bp'] ?? null,
+        'hr' => $validated['hr'] ?? null,
+        'rr' => $validated['rr'] ?? null,
+        'temperature' => $validated['temperature'] ?? null,
+        'head_findings' => array_values($request->input('head_findings', [])),
+        'eyes_findings' => array_values($request->input('eyes_findings', [])),
+        'ears_findings' => array_values($request->input('ears_findings', [])),
+        'throat_findings' => array_values($request->input('throat_findings', [])),
+        'chest_lungs_findings' => array_values($request->input('chest_lungs_findings', [])),
+        'chest_xray_result' => $validated['chest_xray_result'] ?? null,
+        'breast_findings' => $validated['breast_findings'] ?? null,
+        'heart_murmur' => $validated['heart_murmur'] ?? null,
+        'heart_rhythm' => $validated['heart_rhythm'] ?? null,
+        'abdomen_findings' => $validated['abdomen_findings'] ?? null,
+        'genito_urinary_date_lmp' => $validated['genito_urinary_date_lmp'] ?? null,
+        'extremities_findings' => $validated['extremities_findings'] ?? null,
+        'vertebral_column_findings' => $validated['vertebral_column_findings'] ?? null,
+        'skin_findings' => array_values($request->input('skin_findings', [])),
+        'working_impression' => $validated['working_impression'] ?? null,
+        'fit_status' => $validated['fit_status'] ?? null,
+        'for_work_up' => $validated['for_work_up'] ?? null,
+        'referred_to' => array_values($request->input('referred_to', [])),
+        'referred_to_others' => $validated['referred_to_others'] ?? null,
+        'follow_up_on' => $validated['follow_up_on'] ?? null,
+        'physician_signature' => $validated['physician_signature'] ?? null,
+        'staff_signature' => $staffSignatureMethod === 'draw' ? $request->input('staff_signature') : null,
+        'uploaded_signature_path' => $signaturePath,
+        'signature_type' => $signatureType,
+        'certified_at' => now(),
+        'submission_status' => 'submitted',
+        'clearance_status' => 'For Verification',
+        'documents_valid' => null,
+    ]);
+
+    $user->contact_no = $validated['contact_no'];
+    $user->DOB = $validated['birthday'];
+    $user->first_name = $validated['first_name'];
+    $user->middle_name = $validated['middle_name'] ?? null;
+    $user->last_name = $validated['last_name'];
+    $user->name = $fullName;
+    $user->gender = $validated['sex'];
+    $user->employee_number = $validated['employee_number'] ?? null;
+    $user->is_health_profile_completed = 0;
+    $user->save();
+
+    \App\Models\ActivityLog::create([
+        'user_id' => $user->id,
+        'user_name' => $user->name,
+        'action' => 'Staff Health Examination Submitted',
+        'description' => 'Faculty/administrative employee/dependent submitted a Health Examination Record.',
+        'ip_address' => $request->ip(),
+        'user_agent' => $request->userAgent(),
+    ]);
+
+    return redirect('/student/account?view=health-record')
+        ->with('success', 'Health Examination Record submitted successfully.')
+        ->with('health_profile_staff_submitted', $profile->id);
 }
 
 public function validateHealthFormReference(Request $request)
@@ -2842,7 +3369,7 @@ public function validateHealthFormReference(Request $request)
             'reference_number' => $clinicReference,
             'message' => $referenceMode === 'student_number'
                 ? 'Student number is ready for this account.'
-                : 'Clinic reference is ready for this account.',
+                : 'ID number is ready for this account.',
         ]);
     }
 
@@ -3002,6 +3529,10 @@ public function storeHealthForm(Request $request)
 {
     /** @var \App\Models\User|null $user */
     $user = Auth::user();
+    if ($this->shouldUseStaffHealthForm($user)) {
+        return redirect()->route('health.form.staff')
+            ->with('info', 'Please use the Faculty, Administrative Employee, and Dependent Health Examination Record.');
+    }
     $existingHealthProfile = $user?->relationLoaded('healthProfile') && $user?->healthProfile
         ? $user->healthProfile
         : \App\Models\HealthProfile::where('user_id', $user?->id)->first();
@@ -3107,33 +3638,37 @@ public function storeHealthForm(Request $request)
         'vaccine_history.booster_2.date' => 'nullable|required_with:vaccine_history.booster_2.brand|date|after_or_equal:2021-03-01|before_or_equal:today',
         'vaccine_history.booster_2.brand' => 'nullable|required_with:vaccine_history.booster_2.date|string|max:100',
 
-        'chest_xray_result' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'chest_xray_result', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'], $applicantDocumentsRequired),
+        'chest_xray_result' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'chest_xray_result', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'], $applicantDocumentsRequired),
         'xray_date'         => $applicantDocumentsRequired ? 'required|date' : 'nullable|date',
         'xray_findings'     => $applicantDocumentsRequired ? 'required|string|in:Normal,With Findings,Not Sure / For Clinic Review' : 'nullable|string|in:Normal,With Findings,Not Sure / For Clinic Review',
         'xray_findings_details' => 'required_if:xray_findings,With Findings|nullable|string|max:1000',
         'has_disability'    => 'required|string',
         'disability_type'   => 'required_if:has_disability,Yes|nullable|string|max:255',
         'pwd_id_proof'      => $isHealthFormCorrectionMode
-            ? $this->healthProfileFileRule(true, $requestedCorrectionDocuments, 'pwd_id_proof', ['file', 'mimes:pdf', 'max:2048'], false)
-            : ['required_if:has_disability,Yes', 'file', 'mimes:pdf', 'max:2048'],
-        'medical_certificate' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'medical_certificate', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'], $applicantDocumentsRequired),
+            ? $this->healthProfileFileRule(true, $requestedCorrectionDocuments, 'pwd_id_proof', ['file', 'mimes:pdf', 'max:1024'], false)
+            : ['required_if:has_disability,Yes', 'file', 'mimes:pdf', 'max:1024'],
+        'medical_certificate' => $this->healthProfileFileRule($isHealthFormCorrectionMode, $requestedCorrectionDocuments, 'medical_certificate', ['file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'], $applicantDocumentsRequired),
         'doctor_name'       => $applicantDocumentsRequired ? 'required|string|max:255' : 'nullable|string|max:255',
         'med_cert_date'     => $applicantDocumentsRequired ? 'required|date' : 'nullable|date',
         'med_cert_findings' => $applicantDocumentsRequired ? 'required|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review' : 'nullable|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review',
         'med_cert_findings_details' => 'required_if:med_cert_findings,With Findings|nullable|string|max:1000',
+        'signature_method' => 'required|in:draw,upload',
         'digital_signature_data' => 'nullable|string',
         'digital_signature_upload' => ['nullable', 'image', 'mimes:png', 'max:1024'],
         'digital_signature_existing' => 'nullable|string|max:255',
         'health_profile_certified' => 'accepted',
     ]);
 
-    if (
-        !$request->hasFile('digital_signature_upload')
-        && trim((string) $request->input('digital_signature_data')) === ''
-        && trim((string) $request->input('digital_signature_existing')) === ''
-    ) {
+    $signatureMethod = (string) $request->input('signature_method', 'draw');
+    if ($signatureMethod === 'draw' && trim((string) $request->input('digital_signature_data')) === '') {
         throw ValidationException::withMessages([
-            'digital_signature_data' => 'Please draw or upload your e-signature.',
+            'digital_signature_data' => 'Please draw your e-signature.',
+        ]);
+    }
+
+    if ($signatureMethod === 'upload' && !$request->hasFile('digital_signature_upload')) {
+        throw ValidationException::withMessages([
+            'digital_signature_upload' => 'Please upload your e-signature file.',
         ]);
     }
 
