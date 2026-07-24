@@ -205,6 +205,26 @@ class WalkInController extends Controller
             ->first();
     }
 
+    private function findUserByClinicIdNumber(string $identifier): ?User
+    {
+        $identifier = trim($identifier);
+        if ($identifier === '') {
+            return null;
+        }
+
+        return User::with('healthProfile')
+            ->where(function ($query) use ($identifier) {
+                if (\Schema::hasColumn('users', 'employee_number')) {
+                    $query->orWhere('employee_number', $identifier);
+                }
+
+                if (\Schema::hasColumn('users', 'student_number')) {
+                    $query->orWhere('student_number', $identifier);
+                }
+            })
+            ->first();
+    }
+
     private function findHealthProfileByReference(string $referenceNumber): ?HealthProfile
     {
         $referenceNumber = trim($referenceNumber);
@@ -1242,11 +1262,12 @@ class WalkInController extends Controller
 
         $student = $this->findUserByIdentifier($lookup);
         $lookupMessage = $lookupScope === 'clinic_local'
-            ? 'No clinic record matched that reference number in local records.'
+            ? 'No staff record matched that ID number in local records.'
             : 'No patient matched that student number in local records or PUPTAS.';
         $lookupStatus = null;
 
         if ($lookupScope === 'clinic_local' && $lookup !== '') {
+            $student = $this->findUserByClinicIdNumber($lookup) ?: $student;
             if (!$student) {
                 $localProfile = $this->findHealthProfileByReference($lookup);
                 if ($localProfile) {
@@ -1255,8 +1276,8 @@ class WalkInController extends Controller
                     $lookupMessage = 'Clinic reference found in local records.';
                 }
             } else {
-                $lookupStatus = 'local_clinic_reference';
-                $lookupMessage = 'Clinic reference found in local records.';
+                $lookupStatus = 'local_clinic_id';
+                $lookupMessage = 'Staff ID number found in local records.';
             }
         } elseif (
             $lookup !== ''

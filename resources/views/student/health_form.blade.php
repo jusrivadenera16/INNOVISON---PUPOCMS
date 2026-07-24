@@ -890,6 +890,9 @@
             grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
             gap: 18px;
             align-items: stretch;
+            max-width: 680px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .esign-card {
@@ -937,13 +940,122 @@
             overflow: hidden;
         }
 
-        #digitalSignaturePad {
+        #digitalSignaturePad,
+        #staffSignaturePad {
             display: block;
             width: 100%;
-            height: 190px;
+            height: 220px;
             background: #fff;
             touch-action: none;
             cursor: crosshair;
+        }
+
+        .esign-method-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            width: min(920px, 100%);
+            margin: 0 auto 16px;
+        }
+
+        .esign-method-card {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 74px;
+            padding: 14px 16px;
+            border: 1px solid rgba(127, 29, 45, 0.16);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.92);
+            color: #334155;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+            transition: all 0.18s ease;
+        }
+
+        .esign-method-radio {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .esign-method-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid #cbd5e1;
+            box-shadow: inset 0 0 0 3px #fff;
+            flex: 0 0 auto;
+        }
+
+        .esign-method-icon {
+            display: grid;
+            place-items: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: #fff7f8;
+            color: var(--clinic-maroon);
+        }
+
+        .esign-method-icon svg {
+            width: 26px;
+            height: 26px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .esign-method-copy strong,
+        .esign-method-copy span {
+            display: block;
+        }
+
+        .esign-method-copy strong {
+            color: var(--clinic-maroon);
+            font-size: 0.84rem;
+            font-weight: 900;
+        }
+
+        .esign-method-copy span {
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 0.72rem;
+            font-weight: 800;
+            line-height: 1.25;
+        }
+
+        .esign-method-badge {
+            display: inline-flex;
+            margin-top: 5px;
+            border-radius: 999px;
+            background: #ffe6e8;
+            color: #b91c1c;
+            padding: 3px 7px;
+            font-size: 0.64rem;
+            font-weight: 900;
+        }
+
+        .esign-method-radio:checked + .esign-method-card {
+            border-color: rgba(127, 29, 45, 0.72);
+            background: linear-gradient(180deg, #fffafb 0%, #fff5f6 100%);
+            box-shadow: 0 10px 24px rgba(127, 29, 45, 0.12);
+        }
+
+        .esign-method-radio:checked + .esign-method-card .esign-method-dot {
+            border-color: var(--clinic-maroon);
+            background: var(--clinic-maroon);
+        }
+
+        .esign-mode-panel.is-hidden {
+            display: none;
+        }
+
+        .esign-mode-panel {
+            grid-template-columns: minmax(0, 1fr);
         }
 
         .esign-actions {
@@ -954,6 +1066,9 @@
         }
 
         .esign-secondary-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
             border: 1px solid rgba(127, 29, 45, 0.2);
             border-radius: 999px;
             background: #fff;
@@ -961,6 +1076,12 @@
             padding: 9px 14px;
             font-weight: 900;
             cursor: pointer;
+        }
+
+        .esign-secondary-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
         }
 
         .esign-upload-input {
@@ -1662,6 +1783,14 @@
             font-size: 0.84rem;
             font-weight: 700;
             cursor: pointer;
+        }
+
+        .choice-card span,
+        .checkbox-card span {
+            color: #70131b;
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.25;
         }
 
         .choice-card input {
@@ -2757,7 +2886,7 @@
                             @elseif($isHealthFormCorrectionMode && $pwdRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new PWD ID Proof.</div>
                             @endif
-                            <small>Required only when PWD. Allowed: PDF only, max 2MB. Compress the file if needed to meet the size requirement.</small>
+                            <small>Required only when PWD. Allowed: PDF only, max 1MB. Compress the file if needed to meet the size requirement.</small>
                         </div>
                         @php
                             $photoRequested = $isDocumentRequested('student_photo');
@@ -2807,7 +2936,7 @@
                                 <strong>Declaration of Medical Information and Data Subject Consent Form @if($applicantDocumentsRequired)<span class="required">*</span>@endif</strong>
                                 <span class="requirement-badge">PDF/IMG</span>
                             </div>
-                            <p class="requirement-guideline">Upload the signed, clear, and readable Declaration of Medical Information and Data Subject Consent Form. Do not upload without signature, blurry, or unreadable copies.</p>
+                            <p class="requirement-guideline">Upload the signed, clear, and readable Declaration of Medical Information and Data Subject Consent Form.</p>
                             <div class="upload-example-grid" aria-label="Declaration of Medical Information and Data Subject Consent Form upload examples">
                                 <div class="upload-example is-wrong">
                                     <div class="upload-example-status"><span aria-hidden="true">&times;</span> Do Not Upload</div>
@@ -2872,7 +3001,7 @@
                             @elseif($isHealthFormCorrectionMode && $medicalCertificateRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new medical certificate.</div>
                             @endif
-                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : '' }}Allowed: PDF, JPG, JPEG, or PNG, max 2MB. Compress the file if needed to meet the size requirement.</small>
+                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : '' }}Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.</small>
                             <div class="requirement-extra">
                                 <div class="form-field span-2">
                                     <label class="form-label" for="doctor_name">Doctor's Full Name @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
@@ -2950,7 +3079,7 @@
                             @elseif($isHealthFormCorrectionMode && $xrayRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new Chest X-ray Result.</div>
                             @endif
-                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : '' }}Allowed: PDF, JPG, JPEG, or PNG, max 2MB. Compress the file if needed to meet the size requirement.</small>
+                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : '' }}Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.</small>
                             <div class="requirement-extra">
                                 <div class="form-field">
                                     <label class="form-label" for="xray_date">Date of Examination @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
@@ -3009,7 +3138,32 @@
                     <p class="step-fill-note">Draw your signature or upload a clear signature image to certify your Health Profile.</p>
                     <input type="text" id="digital_signature_data" name="digital_signature_data" value="{{ old('digital_signature_data') }}" class="visually-hidden" data-signature-field>
                     <input type="hidden" id="digital_signature_existing" name="digital_signature_existing" value="{{ $prefill['digital_signature'] ?? '' }}">
-                    <div class="esign-grid">
+                    <div class="esign-method-grid" aria-label="Choose your signature method">
+                        <input class="esign-method-radio" type="radio" name="signature_method" id="signature_method_draw" value="draw" checked>
+                        <label class="esign-method-card" for="signature_method_draw">
+                            <span class="esign-method-dot" aria-hidden="true"></span>
+                            <span class="esign-method-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M4 20c3.5-7.5 5.5-11.5 7.5-12.5 1.5-.8 3 .4 2.4 2-.8 2.2-3.6 4.1-3.2 5.2.3.8 1.7.7 3.4-.2 1.4-.8 2.4-.3 2.6.7.2.8.8 1.2 1.7.8l1.6-.7"></path><path d="m14.5 4.5 2-2 2.5 2.5-2 2"></path></svg>
+                            </span>
+                            <span class="esign-method-copy">
+                                <strong>Draw Signature</strong>
+                                <span>Draw your signature here</span>
+                                <span class="esign-method-badge">Recommended</span>
+                            </span>
+                        </label>
+                        <input class="esign-method-radio" type="radio" name="signature_method" id="signature_method_upload" value="upload">
+                        <label class="esign-method-card" for="signature_method_upload">
+                            <span class="esign-method-dot" aria-hidden="true"></span>
+                            <span class="esign-method-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M20 16.5a4.5 4.5 0 0 1-4.5 4.5h-7A4.5 4.5 0 0 1 4 16.5"></path></svg>
+                            </span>
+                            <span class="esign-method-copy">
+                                <strong>Upload Signature</strong>
+                                <span>Upload an image file of your signature</span>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="esign-grid esign-mode-panel" id="signatureDrawPanel">
                         <div class="esign-card">
                             <h3>Draw Signature</h3>
                             <p>Use your mouse, touchpad, or finger. You can clear and redraw anytime before saving.</p>
@@ -3017,10 +3171,15 @@
                                 <canvas id="digitalSignaturePad" aria-label="Draw your signature"></canvas>
                             </div>
                             <div class="esign-actions">
-                                <button type="button" class="esign-secondary-btn" id="clearSignatureBtn">Clear Signature</button>
+                                <button type="button" class="esign-secondary-btn" id="clearSignatureBtn">
+                                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.4 2.2 2.2 3.4 6.8 8l-4.6 4.6 1.2 1.2L8 9.2l4.6 4.6 1.2-1.2L9.2 8l4.6-4.6-1.2-1.2L8 6.8 3.4 2.2Z"></path></svg>
+                                    <span>Clear</span>
+                                </button>
                             </div>
                             <div class="esign-status" id="signatureDrawStatus">No drawn signature yet.</div>
                         </div>
+                    </div>
+                    <div class="esign-grid esign-mode-panel is-hidden" id="signatureUploadPanel">
                         <div class="esign-card">
                             <h3>Upload Signature</h3>
                             <input id="digital_signature_upload" type="file" name="digital_signature_upload" class="esign-upload-input" accept=".png,image/png" data-upload-input data-preview-kind="image">
@@ -3028,6 +3187,7 @@
                                 <li>Upload a black PNG signature only.</li>
                                 <li>Use a transparent/no-background signature file.</li>
                                 <li>If the background is not removed yet, use remove.bg first, then upload the PNG file.</li>
+                                <li>Maximum file size is 1MB.</li>
                             </ol>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if(!empty($prefill['digital_signature']))
@@ -3137,6 +3297,9 @@
             const signatureExistingInput = document.getElementById('digital_signature_existing');
             const signatureDrawStatus = document.getElementById('signatureDrawStatus');
             const clearSignatureBtn = document.getElementById('clearSignatureBtn');
+            const signatureMethodRadios = Array.from(document.querySelectorAll('input[name="signature_method"]'));
+            const signatureDrawPanel = document.getElementById('signatureDrawPanel');
+            const signatureUploadPanel = document.getElementById('signatureUploadPanel');
             const healthFormStoreUrl = @json(route('store.health.form'));
             let currentStep = {{ $startStep }};
             let maxVisitedStep = {{ $startStep }};
@@ -3161,22 +3324,47 @@
             syncHomeAddressValue();
 
             function hasSignatureValue() {
-                return Boolean(
-                    (signatureDataInput?.value || '').trim()
-                    || (signatureUploadInput?.files && signatureUploadInput.files.length > 0)
-                    || (signatureExistingInput?.value || '').trim()
-                );
+                const selectedMethod = signatureMethodRadios.find((radio) => radio.checked)?.value || 'draw';
+                if (selectedMethod === 'upload') {
+                    return Boolean(signatureUploadInput?.files && signatureUploadInput.files.length > 0);
+                }
+                return Boolean((signatureDataInput?.value || '').trim());
             }
 
             function syncSignatureValidity() {
                 if (!signatureDataInput) return;
-                const message = hasSignatureValue() ? '' : 'Please draw or upload your e-signature.';
+                const selectedMethod = signatureMethodRadios.find((radio) => radio.checked)?.value || 'draw';
+                const message = hasSignatureValue()
+                    ? ''
+                    : (selectedMethod === 'upload' ? 'Please upload your e-signature file.' : 'Please draw your e-signature.');
                 signatureDataInput.setCustomValidity(message);
                 if (message) {
                     signatureDataInput.dataset.validationMessage = message;
                 } else {
                     delete signatureDataInput.dataset.validationMessage;
                 }
+            }
+
+            function syncSignatureMethod() {
+                const selectedMethod = signatureMethodRadios.find((radio) => radio.checked)?.value || 'draw';
+                const isUpload = selectedMethod === 'upload';
+                signatureDrawPanel?.classList.toggle('is-hidden', isUpload);
+                signatureUploadPanel?.classList.toggle('is-hidden', !isUpload);
+
+                if (isUpload) {
+                    if (signatureDataInput) signatureDataInput.value = '';
+                    const context = signatureCanvas?.getContext('2d');
+                    context?.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+                    if (signatureDrawStatus) signatureDrawStatus.textContent = 'No drawn signature yet.';
+                } else {
+                    if (signatureUploadInput) {
+                        signatureUploadInput.value = '';
+                        renderUploadPreview(signatureUploadInput);
+                    }
+                    window.requestAnimationFrame(() => resizeSignatureCanvas());
+                }
+
+                syncSignatureValidity();
             }
 
             function setupSignaturePad() {
@@ -3293,6 +3481,10 @@
                 });
                 syncSignatureValidity();
             }
+
+            signatureMethodRadios.forEach((radio) => {
+                radio.addEventListener('change', syncSignatureMethod);
+            });
 
             function isReferenceLocked() {
                 return referencePanel?.dataset.referenceLocked === 'true';
@@ -3835,11 +4027,8 @@
                     return;
                 }
 
-                const isOneMbInput = input.name === 'student_photo'
-                    || input.name === 'health_declaration'
-                    || input.name === 'digital_signature_upload';
-                const maxSize = isOneMbInput ? 1 * 1024 * 1024 : 2 * 1024 * 1024;
-                const maxSizeLabel = isOneMbInput ? '1MB' : '2MB';
+                const maxSize = 1 * 1024 * 1024;
+                const maxSizeLabel = '1MB';
 
                 if (file.size > maxSize) {
                     preview.innerHTML = `
@@ -3902,6 +4091,7 @@
 
             birthdayInput?.addEventListener('change', updateAgeFromBirthday);
             setupSignaturePad();
+            syncSignatureMethod();
             form?.addEventListener('input', clearValidationBubble);
             form?.addEventListener('change', clearValidationBubble);
             numericContactInputs.forEach((input) => {

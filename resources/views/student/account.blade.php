@@ -3343,9 +3343,12 @@
     $guisisAccountData = $guisisAccountData ?? ['available' => false, 'status' => 'not_checked'];
     $isEnrolled = (bool) ($isEnrolled ?? false);
     $accountView = in_array(($accountView ?? 'profile'), ['profile', 'health-record', 'notifications'], true) ? $accountView : 'profile';
+    $usesStaffHealthForm = $studentUsesStaffHealthForm ?? false;
     $showOfficeField = in_array($linkedAccessLevel, ['clinic_staff', 'designee', 'admin_designee', 'superadmin', 'super_admin', 'faculty'], true) || str_contains($linkedAccessLevel, 'faculty');
     $hasGuisisAccountData = (bool) ($guisisAccountData['available'] ?? false);
-    $displayStudentNumber = trim((string) ($accountProfileData['student_number'] ?? ''));
+    $displayStudentNumber = $usesStaffHealthForm
+        ? trim((string) ($accountProfileData['employee_number'] ?? $user->employee_number ?? ''))
+        : trim((string) ($accountProfileData['student_number'] ?? ''));
     $looksLikeReferenceNumber = function ($value): bool {
         $value = strtoupper(trim((string) $value));
 
@@ -3357,7 +3360,7 @@
     };
     $referenceMode = trim((string) ($accountProfileData['reference_mode'] ?? 'admission'));
     $referenceHeading = $referenceMode === 'admission' ? 'Admission Reference' : 'Clinic Reference';
-    $idNumberHeading = $referenceMode === 'admission' ? 'Student Number' : 'ID Number';
+    $idNumberHeading = $usesStaffHealthForm ? 'Employee Number' : ($referenceMode === 'admission' ? 'Student Number' : 'ID Number');
     $displayCourse = trim((string) ($accountProfileData['course_college'] ?? ''));
     $displayCourseCode = trim((string) ($accountProfileData['course_code'] ?? ''));
     if ($displayCourseCode === '' && $displayCourse !== '') {
@@ -3367,8 +3370,18 @@
             $displayCourseCode = strtoupper($courseCodeMatch[1]);
         }
     }
+    $cleanNamePart = function ($value): string {
+        $value = trim((string) $value);
+        return in_array(strtoupper($value), ['N/A', 'NA', 'NONE'], true) ? '' : $value;
+    };
     $displayFullName = trim((string) ($accountProfileData['full_name'] ?? ''));
-    $displayFullName = $displayFullName !== '' ? $displayFullName : ($hasGuisisAccountData ? 'Available once enrolled' : ($user->name ?? 'Student'));
+    $cleanFirstName = $cleanNamePart($accountProfileData['first_name'] ?? $user->first_name ?? '');
+    $cleanMiddleName = $cleanNamePart($accountProfileData['middle_name'] ?? $user->middle_name ?? '');
+    $cleanLastName = $cleanNamePart($accountProfileData['last_name'] ?? $user->last_name ?? '');
+    $rebuiltDisplayFullName = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([$cleanFirstName, $cleanMiddleName, $cleanLastName]))));
+    $displayFullName = $rebuiltDisplayFullName !== ''
+        ? $rebuiltDisplayFullName
+        : ($displayFullName !== '' ? $displayFullName : ($hasGuisisAccountData ? 'Available once enrolled' : ($user->name ?? 'Student')));
     $displayNameParts = preg_split('/\s+/', $displayFullName) ?: [];
     $displayFirstName = $displayNameParts[0] ?? $displayFullName;
     $displayRemainingName = trim(implode(' ', array_slice($displayNameParts, 1)));
@@ -3378,7 +3391,7 @@
     $displayYear = trim((string) ($accountProfileData['year'] ?? $user->year ?? ''));
     $displaySection = trim((string) ($accountProfileData['section'] ?? $user->section ?? ''));
     $heroAcademicParts = array_values(array_filter([$displayStudentNumber, $displayCourse], fn ($value) => trim((string) $value) !== ''));
-    $localMiddleName = trim((string) ($accountProfileData['middle_name'] ?? $user->middle_name ?? optional($linkedAdminProfile)->middle_name ?? ''));
+    $localMiddleName = $cleanNamePart($accountProfileData['middle_name'] ?? $user->middle_name ?? optional($linkedAdminProfile)->middle_name ?? '');
     $localMiddleName = $localMiddleName !== '' ? $localMiddleName : 'N/A';
     $localSuffixName = trim((string) ($accountProfileData['suffix_name'] ?? optional($linkedAdminProfile)->suffix_name ?? ''));
     $localSuffixName = $localSuffixName !== '' ? $localSuffixName : 'N/A';
@@ -3804,15 +3817,17 @@ document.addEventListener('DOMContentLoaded', function () {
 </div>
 @elseif($accountView === 'health-record')
     @php
-        $healthProfileRecord = $user->healthProfile;
-        $healthFormSubmitted = $hasSubmittedHealthProfile ?? ($user->healthProfile !== null);
-        $status = $user->healthProfile->clearance_status ?? 'For Verification';
+        $usesStaffHealthForm = $studentUsesStaffHealthForm ?? false;
+        $healthProfileRecord = $usesStaffHealthForm ? $user->healthProfileStaff : $user->healthProfile;
+        $healthFormRoute = $usesStaffHealthForm ? route('health.form.staff') : route('health.form');
+        $healthFormSubmitted = $hasSubmittedHealthProfile ?? ($healthProfileRecord !== null);
+        $status = optional($healthProfileRecord)->clearance_status ?? 'For Verification';
         $statusNormalized = strtolower(trim((string) $status));
         $isIssuedStatus = in_array($statusNormalized, ['issued', 'fully cleared'], true);
         $isRejectedStatus = $statusNormalized === 'rejected';
         $isConditionalStatus = str_contains($statusNormalized, 'pending') || str_contains($statusNormalized, 'conditional');
         $isPendingStatus = !$isIssuedStatus && !$isRejectedStatus;
-        $recordPendingReason = trim((string) optional($user->healthProfile)->pending_reason);
+        $recordPendingReason = trim((string) optional($healthProfileRecord)->pending_reason);
         $recordPendingReasonSearch = strtolower($recordPendingReason);
         $requiresHealthFormCorrection = $isConditionalStatus && collect([
             'health information form',
@@ -3822,7 +3837,11 @@ document.addEventListener('DOMContentLoaded', function () {
             'correct information',
             'correct details',
         ])->contains(fn ($needle) => str_contains($recordPendingReasonSearch, $needle));
-        $resubmissionDocuments = collect(optional($user->healthProfile)->resubmission_required_documents ?? [])->filter()->values();
+        $resubmissionDocuments = collect(
+            optional($healthProfileRecord)->resubmission_required_documents
+                ?? optional($healthProfileRecord)->resubmission_required_fields
+                ?? []
+        )->filter()->values();
         $isResubmissionStatus = $statusNormalized === 'pending resubmission' || $resubmissionDocuments->isNotEmpty();
         $resubmissionDocumentLabels = [
             'student_photo' => '2x2 Student Photo',
@@ -3850,10 +3869,10 @@ document.addEventListener('DOMContentLoaded', function () {
             : ($isConditionalStatus
                 ? 'Please complete the pending requirement before your record can be marked as issued.'
                 : 'Clinic approval is required before your record can be marked as issued.');
-        $puptasSyncStatus = optional($user->healthProfile)->puptas_sync_status;
-        $puptasSyncMessage = trim((string) optional($user->healthProfile)->puptas_sync_message);
-        $puptasSyncedAt = optional(optional($user->healthProfile)->puptas_synced_at)->format('M d, Y g:i A');
-        $recordVerifiedAt = optional(optional($user->healthProfile)->verified_at)->format('M d, Y g:i A');
+        $puptasSyncStatus = $usesStaffHealthForm ? null : optional($healthProfileRecord)->puptas_sync_status;
+        $puptasSyncMessage = $usesStaffHealthForm ? '' : trim((string) optional($healthProfileRecord)->puptas_sync_message);
+        $puptasSyncedAt = $usesStaffHealthForm ? null : optional(optional($healthProfileRecord)->puptas_synced_at)->format('M d, Y g:i A');
+        $recordVerifiedAt = optional(optional($healthProfileRecord)->verified_at)->format('M d, Y g:i A');
         $recordReferenceNumber = trim((string) optional($healthProfileRecord)->reference_number);
         $recordReferenceNumber = $recordReferenceNumber !== '' ? $recordReferenceNumber : trim((string) ($user->reference_number ?? '-'));
         $hasHealthDeclaration = filled(optional($healthProfileRecord)->health_declaration);
@@ -4113,7 +4132,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         View Record Details
                     </button>
                     @if(!empty($pendingHealthFormRequest))
-                        <a href="{{ route('health.form') }}" class="btn-print-form pending">
+                        <a href="{{ $healthFormRoute }}" class="btn-print-form pending">
                             <x-outline-icon name="document-text" />
                             Fill Up New Health Form
                         </a>
@@ -4153,13 +4172,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         View Submitted Record
                     </button>
                     @if(!empty($pendingHealthFormRequest))
-                        <a href="{{ route('health.form') }}" class="btn-print-form pending">
+                        <a href="{{ $healthFormRoute }}" class="btn-print-form pending">
                             <x-outline-icon name="document-text" />
                             Fill Up New Health Form
                         </a>
                     @endif
                     @if($requiresHealthFormCorrection)
-                        <a href="{{ route('health.form') }}" class="btn-print-form pending">
+                        <a href="{{ $healthFormRoute }}" class="btn-print-form pending">
                             <x-outline-icon name="document-text" />
                             Edit Health Form
                         </a>
@@ -4178,7 +4197,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <span class="health-status-state incomplete"><x-outline-icon name="x-mark" /> Not Yet Submitted</span>
                     <p class="health-status-message">Your health profile has not been submitted yet.</p>
                 </div>
-                <a href="{{ route('health.form') }}" class="btn-print-form incomplete">
+                <a href="{{ $healthFormRoute }}" class="btn-print-form incomplete">
                     <x-outline-icon name="document-text" />
                     Complete Form Now
                 </a>

@@ -42,6 +42,7 @@ class User extends Authenticatable
     'name',
     'student_id',
     'student_number',
+    'employee_number',
     'reference_number',
     'DOB',
     'middle_name',
@@ -201,5 +202,10 @@ class User extends Authenticatable
     public function healthProfile()
     {
         return $this->hasOne(HealthProfile::class);
+    }
+
+    public function healthProfileStaff()
+    {
+        return $this->hasOne(HealthProfileStaff::class);
     }
 }
