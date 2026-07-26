@@ -1633,7 +1633,8 @@
                 transform 0.24s ease;
         }
 
-        .sidebar-nav a {
+        .sidebar-nav a,
+        .sidebar-nav .sidebar-nav-toggle {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -1656,13 +1657,15 @@
             position: relative;
         }
 
-        .sidebar-nav a:hover {
+        .sidebar-nav a:hover,
+        .sidebar-nav .sidebar-nav-toggle:hover {
             background: var(--admin-sidebar-hover-bg);
             border-color: var(--admin-sidebar-hover-border);
             transform: translateX(1px);
         }
 
-        .sidebar-nav a.active {
+        .sidebar-nav a.active,
+        .sidebar-nav .sidebar-nav-toggle.active {
             background: var(--admin-sidebar-active-bg);
             border-color: var(--admin-sidebar-active-border);
             color: var(--admin-sidebar-title);
@@ -1671,6 +1674,160 @@
             padding-right: 26px;
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
+        }
+
+        .sidebar-nav-group {
+            margin-bottom: 8px;
+        }
+
+        .sidebar-nav-group > a,
+        .sidebar-nav-group > button {
+            margin-bottom: 0;
+        }
+
+        .sidebar-subnav {
+            display: none;
+            margin: 8px 0 4px 46px;
+            padding: 8px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .sidebar-nav-group.is-open .sidebar-subnav {
+            display: grid;
+            gap: 6px;
+        }
+
+        .sidebar-nav-toggle {
+            width: 100%;
+            font-family: inherit;
+            cursor: pointer;
+            background: transparent;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .sidebar-nav-toggle:focus {
+            outline: none;
+        }
+
+        .sidebar-nav-toggle:focus-visible {
+            outline: 2px solid rgba(250, 204, 21, 0.55);
+            outline-offset: 2px;
+        }
+
+        .sidebar-dropdown-caret {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            flex: 0 0 18px;
+            transition: transform 0.2s ease;
+        }
+
+        .sidebar-dropdown-caret svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2;
+        }
+
+        .sidebar-nav-group.is-open .sidebar-dropdown-caret {
+            transform: rotate(180deg);
+        }
+
+        .sidebar-nav .sidebar-subnav a {
+            min-width: 0;
+            margin: 0;
+            padding: 9px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--admin-sidebar-muted);
+            background: transparent;
+            display: grid;
+            grid-template-columns: 22px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-nav .sidebar-subnav a:hover,
+        .sidebar-nav .sidebar-subnav a.active {
+            color: var(--admin-sidebar-title);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.18);
+            transform: none;
+            margin-right: 0;
+            padding-right: 10px;
+            border-radius: 10px;
+        }
+
+        .sidebar-subnav-icon {
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #9f1239;
+        }
+
+        .sidebar-subnav-icon svg {
+            width: 18px;
+            height: 18px;
+            stroke-width: 1.8;
+        }
+
+        .sidebar-subnav-label {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-subnav-count {
+            min-width: 34px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 900;
+            color: #5a1421;
+            background: rgba(15, 23, 42, 0.08);
+        }
+
+        html[data-theme="dark"] .sidebar-subnav-icon {
+            color: #f8fafc;
+        }
+
+        html[data-theme="dark"] .sidebar-subnav-count {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        html[data-theme="light"] .sidebar-nav .sidebar-subnav a {
+            color: #111827;
+        }
+
+        html[data-theme="light"] .sidebar-nav-toggle,
+        html[data-theme="light"] .sidebar-nav-toggle:hover,
+        html[data-theme="light"] .sidebar-nav-toggle.active,
+        html[data-theme="light"] .sidebar-nav-toggle .sidebar-label,
+        html[data-theme="light"] .sidebar-nav-toggle .sidebar-dropdown-caret {
+            color: #111827;
+        }
+
+        html[data-theme="light"] .sidebar-nav .sidebar-subnav a:hover,
+        html[data-theme="light"] .sidebar-nav .sidebar-subnav a.active {
+            color: #111827;
+            background: rgba(128, 0, 0, 0.08);
+            border-color: rgba(128, 0, 0, 0.16);
+        }
+
+        html[data-theme="dark"] .sidebar-nav .sidebar-subnav a,
+        html[data-theme="dark"] .sidebar-nav .sidebar-subnav a:hover,
+        html[data-theme="dark"] .sidebar-nav .sidebar-subnav a.active {
+            color: #ffffff;
         }
 
         .sidebar-short {
@@ -1698,17 +1855,20 @@
             transition: transform 0.22s ease, filter 0.22s ease;
         }
 
-        .sidebar-nav a.active .sidebar-short {
+        .sidebar-nav a.active .sidebar-short,
+        .sidebar-nav .sidebar-nav-toggle.active .sidebar-short {
             border-color: #111111;
             background: rgba(255, 255, 255, 0.16);
             color: #111111;
         }
 
-        .sidebar-nav a.active .sidebar-short svg {
+        .sidebar-nav a.active .sidebar-short svg,
+        .sidebar-nav .sidebar-nav-toggle.active .sidebar-short svg {
             filter: drop-shadow(0 2px 6px rgba(17, 17, 17, 0.12));
         }
 
-        html[data-theme="dark"] .sidebar-nav a.active .sidebar-short {
+        html[data-theme="dark"] .sidebar-nav a.active .sidebar-short,
+        html[data-theme="dark"] .sidebar-nav .sidebar-nav-toggle.active .sidebar-short {
             border-color: transparent;
             background: transparent;
             color: #ffffff;
@@ -1718,7 +1878,10 @@
 
         html[data-theme="dark"] .sidebar-nav a.active .sidebar-short svg,
         html[data-theme="dark"] .sidebar-nav a.active .sidebar-short::before,
-        html[data-theme="dark"] .sidebar-nav a.active .sidebar-short::after {
+        html[data-theme="dark"] .sidebar-nav a.active .sidebar-short::after,
+        html[data-theme="dark"] .sidebar-nav .sidebar-nav-toggle.active .sidebar-short svg,
+        html[data-theme="dark"] .sidebar-nav .sidebar-nav-toggle.active .sidebar-short::before,
+        html[data-theme="dark"] .sidebar-nav .sidebar-nav-toggle.active .sidebar-short::after {
             color: #ffffff;
             stroke: #ffffff;
             border-color: rgba(255, 255, 255, 0.72);
@@ -1751,7 +1914,8 @@
             transform-origin: 50% 100%;
         }
 
-        .sidebar-nav a.nav-health.active .sidebar-short svg {
+        .sidebar-nav a.nav-health.active .sidebar-short svg,
+        .sidebar-nav .sidebar-nav-toggle.nav-health.active .sidebar-short svg {
             animation: navHealthWrite 1s cubic-bezier(0.37, 0, 0.63, 1) 1;
             transform-origin: 42% 60%;
         }
@@ -1766,7 +1930,8 @@
             transform-origin: 50% 50%;
         }
 
-        .sidebar-nav a.nav-health.active .sidebar-short::after {
+        .sidebar-nav a.nav-health.active .sidebar-short::after,
+        .sidebar-nav .sidebar-nav-toggle.nav-health.active .sidebar-short::after {
             content: "";
             position: absolute;
             left: 8px;
@@ -3176,16 +3341,19 @@
             color: rgba(90, 20, 33, 0.72);
         }
 
-        html[data-theme="light"] .sidebar-nav a {
+        html[data-theme="light"] .sidebar-nav a,
+        html[data-theme="light"] .sidebar-nav .sidebar-nav-toggle {
             color: #5a1421;
         }
 
-        html[data-theme="light"] .sidebar-nav a:hover {
+        html[data-theme="light"] .sidebar-nav a:hover,
+        html[data-theme="light"] .sidebar-nav .sidebar-nav-toggle:hover {
             background: rgba(128, 0, 0, 0.06);
             border-color: rgba(128, 0, 0, 0.14);
         }
 
-        html[data-theme="light"] .sidebar-nav a.active {
+        html[data-theme="light"] .sidebar-nav a.active,
+        html[data-theme="light"] .sidebar-nav .sidebar-nav-toggle.active {
             background: rgba(128, 0, 0, 0.06);
             border-color: rgba(128, 0, 0, 0.14);
             color: #4a0f1a;
@@ -4234,6 +4402,104 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         ? url('/assistant/reports/daily-treatment-record')
         : url('/admin/reports/daily-treatment-record');
     $healthRecordsUrl = route('admin.health_records');
+    $healthRecordsUserType = strtolower(trim((string) request('user_type', '')));
+    $healthRecordsHasHealthProfiles = \Illuminate\Support\Facades\Schema::hasTable('health_profiles');
+    $healthRecordsHasStaffProfiles = \Illuminate\Support\Facades\Schema::hasTable('health_profile_emp');
+    $healthRecordsCountRealStudents = function () use ($healthRecordsHasHealthProfiles) {
+        if (!$healthRecordsHasHealthProfiles) {
+            return 0;
+        }
+
+        return \App\Models\HealthProfile::query()
+            ->where(function ($builder) {
+                $builder->where(function ($numberQuery) {
+                    $numberQuery->whereNotNull('student_number')
+                        ->where('student_number', '!=', '')
+                        ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
+                        ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
+                        ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%']);
+                })
+                    ->orWhereHas('user', function ($userQuery) {
+                        $userQuery->whereNotNull('student_number')
+                            ->where('student_number', '!=', '')
+                            ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
+                            ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
+                            ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%']);
+                    });
+            })
+            ->count();
+    };
+    $healthRecordsCountApplicants = function () use ($healthRecordsHasHealthProfiles) {
+        if (!$healthRecordsHasHealthProfiles) {
+            return 0;
+        }
+
+        return \App\Models\HealthProfile::query()
+            ->where(function ($builder) {
+                $builder->where(function ($missingNumberQuery) {
+                    $missingNumberQuery->where(function ($profileNumberQuery) {
+                        $profileNumberQuery->whereNull('student_number')
+                            ->orWhere('student_number', '')
+                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
+                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
+                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%']);
+                    })
+                        ->whereDoesntHave('user', function ($userQuery) {
+                            $userQuery->whereNotNull('student_number')
+                                ->where('student_number', '!=', '')
+                                ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
+                                ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
+                                ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%']);
+                        });
+                })
+                    ->orWhereHas('user', function ($userQuery) {
+                        $userQuery->whereRaw("LOWER(COALESCE(user_type, user_role, '')) LIKE ?", ['%applicant%']);
+                    });
+            })
+            ->count();
+    };
+    $healthRecordsCountRole = function (array $aliases) use ($healthRecordsHasHealthProfiles, $healthRecordsHasStaffProfiles) {
+        $applyRoleAliases = function ($query) use ($aliases) {
+            $query->whereHas('user', function ($userQuery) use ($aliases) {
+                $userQuery->where(function ($builder) use ($aliases) {
+                    foreach ($aliases as $index => $alias) {
+                        $method = $index === 0 ? 'whereRaw' : 'orWhereRaw';
+                        $builder->{$method}("LOWER(COALESCE(user_type, user_role, idp_role, '')) LIKE ?", ['%' . $alias . '%']);
+                    }
+                });
+            });
+        };
+
+        $count = 0;
+        if ($healthRecordsHasHealthProfiles) {
+            $query = \App\Models\HealthProfile::query();
+            $applyRoleAliases($query);
+            $count += $query->count();
+        }
+        if ($healthRecordsHasStaffProfiles) {
+            $query = \App\Models\HealthProfileStaff::query();
+            $applyRoleAliases($query);
+            $count += $query->count();
+        }
+
+        return $count;
+    };
+    $healthRecordsTypeCounts = [
+        'applicant' => $healthRecordsCountApplicants(),
+        'student' => $healthRecordsCountRealStudents(),
+        'faculty' => $healthRecordsCountRole(['faculty']),
+        'admin' => $healthRecordsCountRole(['admin', 'superadmin', 'super_admin', 'clinic_staff', 'clinic staff', 'nurse']),
+        'dependent' => $healthRecordsCountRole(['dependent', 'dependents']),
+    ];
+    $healthRecordsTypeCounts[''] = array_sum($healthRecordsTypeCounts);
+    $healthRecordsTypeLinks = [
+        '' => ['label' => 'All', 'icon' => 'M4 6.75h16M4 12h16M4 17.25h16'],
+        'applicant' => ['label' => 'Applicants', 'icon' => 'M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.118a7.5 7.5 0 0 1 15 0'],
+        'student' => ['label' => 'Students', 'icon' => 'M4.26 10.147 12 5.25l7.74 4.897L12 15.044 4.26 10.147ZM6.75 12v3.75c1.35 1.05 3.075 1.5 5.25 1.5s3.9-.45 5.25-1.5V12'],
+        'faculty' => ['label' => 'Faculty', 'icon' => 'M9 6.75V5.25A2.25 2.25 0 0 1 11.25 3h1.5A2.25 2.25 0 0 1 15 5.25v1.5M4.5 7.5h15v10.125A2.625 2.625 0 0 1 16.875 20.25h-9.75A2.625 2.625 0 0 1 4.5 17.625V7.5Z'],
+        'admin' => ['label' => 'Admin', 'icon' => 'M12 3.75 5.25 6v5.25c0 4.125 2.7 7.95 6.75 9 4.05-1.05 6.75-4.875 6.75-9V6L12 3.75Z'],
+        'dependent' => ['label' => 'Dependents', 'icon' => 'M15 7.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM4.5 20.25a7.5 7.5 0 0 1 15 0M18.75 8.25a2.25 2.25 0 1 1 0 4.5M20.25 20.25a5.25 5.25 0 0 0-3-4.725'],
+    ];
     $adminNotificationsFeedUrl = $isStudentAssistant
         ? route('assistant.notifications.feed')
         : route('admin.notifications.feed');
@@ -4628,10 +4894,38 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
       <a href="{{ $walkinUrl }}" class="nav-walkin {{ (Request::is('admin/walkin*') || Request::is('assistant/walkin*')) ? 'active' : '' }}">
         <span class="sidebar-short"><x-outline-icon name="user-plus" /></span><span class="sidebar-label">Walk-in</span>
       </a>
-      <a href="{{ route('admin.health_records') }}" class="nav-health {{ (request()->routeIs('admin.health_records') || Request::is('health-records') || Request::is('health-profile/*')) ? 'active' : '' }}">
-    <span class="sidebar-short"><x-outline-icon name="document-text" /></span>
-    <span class="sidebar-label">Health Records</span>
-    </a>
+      <div class="sidebar-nav-group {{ (request()->routeIs('admin.health_records') || Request::is('health-records') || Request::is('health-profile/*')) ? 'is-open' : '' }}" data-sidebar-health-records-group>
+        <button
+          type="button"
+          class="sidebar-nav-toggle nav-health {{ (request()->routeIs('admin.health_records') || Request::is('health-records') || Request::is('health-profile/*')) ? 'active' : '' }}"
+          data-sidebar-health-records-toggle
+          aria-expanded="{{ (request()->routeIs('admin.health_records') || Request::is('health-records') || Request::is('health-profile/*')) ? 'true' : 'false' }}"
+        >
+          <span class="sidebar-short"><x-outline-icon name="document-text" /></span>
+          <span class="sidebar-label">Health Records</span>
+          <span class="sidebar-dropdown-caret" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+            </svg>
+          </span>
+        </button>
+        <div class="sidebar-subnav" aria-label="Health records user type">
+          @foreach($healthRecordsTypeLinks as $healthTypeValue => $healthTypeMeta)
+            <a
+              href="{{ route('admin.health_records', array_filter(['user_type' => $healthTypeValue])) }}"
+              class="{{ $healthRecordsUserType === $healthTypeValue ? 'active' : '' }}"
+            >
+              <span class="sidebar-subnav-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="{{ $healthTypeMeta['icon'] }}" />
+                </svg>
+              </span>
+              <span class="sidebar-subnav-label">{{ $healthTypeMeta['label'] }}</span>
+              <span class="sidebar-subnav-count">{{ number_format($healthRecordsTypeCounts[$healthTypeValue] ?? 0) }}</span>
+            </a>
+          @endforeach
+        </div>
+      </div>
       <a href="{{ route('admin.announcements') }}" class="nav-announcements {{ request()->routeIs('admin.announcements') ? 'active' : '' }}">
         <span class="sidebar-short">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -5039,6 +5333,27 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         updateIndicator();
         window.setTimeout(revealActiveLink, 80);
         window.setTimeout(updateIndicator, 150);
+    }
+
+    function initHealthRecordsSidebarDropdown() {
+        const group = document.querySelector('[data-sidebar-health-records-group]');
+        const toggle = document.querySelector('[data-sidebar-health-records-toggle]');
+
+        if (!group || !toggle) {
+            return;
+        }
+
+        const setOpen = function (isOpen) {
+            group.classList.toggle('is-open', isOpen);
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        };
+
+        setOpen(toggle.getAttribute('aria-expanded') === 'true');
+
+        toggle.addEventListener('click', function (event) {
+            event.preventDefault();
+            setOpen(!group.classList.contains('is-open'));
+        });
     }
 
     function initMedicineAlerts() {
@@ -6105,6 +6420,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         initAssistantUi();
         initThemeToggle();
         initSidebarScrollIndicator();
+        initHealthRecordsSidebarDropdown();
         initHeaderQuickActionsToggle();
         initMedicineAlerts();
         initTreatmentRecordModal();

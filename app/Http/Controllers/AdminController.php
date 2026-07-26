@@ -30,8 +30,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use App\Models\HealthProfile;
+use App\Models\EmployeeHealthProfile;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -126,6 +128,37 @@ class AdminController extends Controller
                     });
             });
         }
+    }
+
+    private function applyStaffHealthProfileUserTypeFilter($query, string $userTypeFilter): void
+    {
+        $userTypeFilter = strtolower(trim($userTypeFilter));
+
+        if ($userTypeFilter === '') {
+            return;
+        }
+
+        if (in_array($userTypeFilter, ['applicant', 'student'], true)) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+
+        $roleAliases = [
+            'faculty' => ['faculty'],
+            'admin' => ['admin', 'superadmin', 'super_admin', 'clinic_staff', 'clinic staff', 'nurse'],
+            'dependent' => ['dependent', 'dependents'],
+        ];
+        $aliases = $roleAliases[$userTypeFilter] ?? [$userTypeFilter];
+
+        $query->whereHas('user', function ($userQuery) use ($aliases) {
+            $userQuery->where(function ($builder) use ($aliases) {
+                foreach ($aliases as $index => $alias) {
+                    $method = $index === 0 ? 'whereRaw' : 'orWhereRaw';
+                    $builder->{$method}("LOWER(COALESCE(user_type, user_role, idp_role, '')) LIKE ?", ['%' . $alias . '%']);
+                }
+            });
+        });
     }
 
     private function recordInventoryMovement(Item $item, string $type, float $quantity, float $stockBefore, float $stockAfter, ?string $notes = null, ?string $movementDate = null, ?string $reason = null): void
@@ -1785,18 +1818,121 @@ class AdminController extends Controller
             });
         }
 
+        $employeeQuery = EmployeeHealthProfile::with('user');
+
+        if ($search !== '') {
+            $employeeQuery->where(function ($builder) use ($search) {
+                $like = '%' . $search . '%';
+
+                $builder->where('employee_number', 'like', $like)
+                    ->orWhere('name', 'like', $like)
+                    ->orWhere('office', 'like', $like)
+                    ->orWhere('course_college', 'like', $like)
+                    ->orWhere('clearance_status', 'like', $like)
+                    ->orWhereHas('user', function ($userQuery) use ($like) {
+                        $userQuery->where('name', 'like', $like)
+                            ->orWhere('first_name', 'like', $like)
+                            ->orWhere('middle_name', 'like', $like)
+                            ->orWhere('last_name', 'like', $like)
+                            ->orWhere('email', 'like', $like)
+                            ->orWhere('employee_number', 'like', $like);
+                    });
+            });
+        }
+
+        if ($courseFilter !== '') {
+            $employeeQuery->where(function ($builder) use ($courseFilter) {
+                $builder->where('course_college', $courseFilter)
+                    ->orWhere('office', $courseFilter)
+                    ->orWhereHas('user', function ($userQuery) use ($courseFilter) {
+                        $userQuery->where('course', $courseFilter);
+                    });
+            });
+        }
+
+        $this->applyStaffHealthProfileUserTypeFilter($employeeQuery, $userTypeFilter);
+
+        if ($monthFilter !== '') {
+            try {
+                $monthDate = Carbon::parse($monthFilter . '-01');
+                $employeeQuery->whereYear('created_at', $monthDate->year)
+                    ->whereMonth('created_at', $monthDate->month);
+            } catch (\Throwable $e) {
+                // Ignore invalid month input and keep the query usable.
+            }
+        }
+
+        if ($yearFilter !== '') {
+            $employeeQuery->where(function ($builder) use ($yearFilter) {
+                $builder->where('school_year', $yearFilter)
+                    ->orWhereHas('user', function ($userQuery) use ($yearFilter) {
+                        $userQuery->where('year', $yearFilter);
+                    });
+            });
+        }
+
+        $decorateHealthRecord = function ($record, string $source) {
+            $record->setAttribute('record_source', $source);
+            $record->setAttribute('record_key', $source . ':' . $record->id);
+
+            if ($source === 'employee') {
+                $record->setAttribute('reference_number', $record->employee_number);
+                $record->setAttribute('student_number', $record->employee_number);
+                $record->setAttribute('student_id', $record->employee_number);
+                $record->setAttribute('medical_history', $record->past_medical_history ?: []);
+                $record->setAttribute('medicine_allergies', filled($record->allergies) ? [$record->allergies] : []);
+                $record->setAttribute('medical_condition_remarks', $record->pending_reason);
+                $record->setAttribute('physical_assessment_status', $record->fit_status ?: 'Not Yet Conducted');
+                $record->setAttribute('chest_xray_result', $record->chest_xray_document);
+                $record->setAttribute('health_declaration', $record->health_declaration);
+                $record->setAttribute('course_code', '');
+            }
+
+            return $record;
+        };
+
         $issuedQuery = (clone $query)
             ->whereIn('clearance_status', ['Issued', 'Fully Cleared'])
             ->reorder()
             ->orderByDesc('verified_at')
             ->orderByDesc('updated_at')
             ->orderByDesc('id');
+        $issuedEmployeeQuery = (clone $employeeQuery)
+            ->whereIn('clearance_status', ['Issued', 'Fully Cleared'])
+            ->reorder()
+            ->orderByDesc('verified_at')
+            ->orderByDesc('updated_at')
+            ->orderByDesc('id');
 
-        $healthProfileSummaryRecords = $issuedQuery
-            ->paginate($issuedPerPage === 'all' ? max(1, (clone $issuedQuery)->count()) : (int) $issuedPerPage, ['*'], 'issued_page')
-            ->withQueryString();
+        $issuedRecords = $issuedQuery->get()
+            ->map(fn ($record) => $decorateHealthRecord($record, 'health'));
+        $issuedEmployeeRecords = $issuedEmployeeQuery->get()
+            ->map(fn ($record) => $decorateHealthRecord($record, 'employee'));
+        $issuedCombinedRecords = $issuedRecords
+            ->merge($issuedEmployeeRecords)
+            ->sortByDesc(fn ($record) => optional($record->verified_at)->timestamp ?: optional($record->updated_at)->timestamp ?: 0)
+            ->values();
+        $issuedPage = max(1, (int) $request->query('issued_page', 1));
+        $issuedPageSize = $issuedPerPage === 'all' ? max(1, $issuedCombinedRecords->count()) : (int) $issuedPerPage;
+        $healthProfileSummaryRecords = new LengthAwarePaginator(
+            $issuedCombinedRecords->forPage($issuedPage, $issuedPageSize)->values(),
+            $issuedCombinedRecords->count(),
+            $issuedPageSize,
+            $issuedPage,
+            [
+                'path' => $request->url(),
+                'pageName' => 'issued_page',
+                'query' => $request->query(),
+            ]
+        );
 
-        $records = $query->get();
+        $records = $query->get()
+            ->map(fn ($record) => $decorateHealthRecord($record, 'health'))
+            ->merge(
+                $employeeQuery->get()->map(fn ($record) => $decorateHealthRecord($record, 'employee'))
+            )
+            ->sortByDesc(fn ($record) => optional($record->updated_at)->timestamp ?: 0)
+            ->values();
 
         $courseOptions = HealthProfile::query()
             ->with('user:id,course')
@@ -1804,6 +1940,14 @@ class AdminController extends Controller
             ->map(function (HealthProfile $profile) {
                 return trim((string) ($profile->course_college ?: optional($profile->user)->course ?: ''));
             })
+            ->merge(
+                EmployeeHealthProfile::query()
+                    ->with('user:id,course')
+                    ->get()
+                    ->map(function (EmployeeHealthProfile $profile) {
+                        return trim((string) ($profile->course_college ?: $profile->office ?: optional($profile->user)->course ?: ''));
+                    })
+            )
             ->filter(fn ($course) => $course !== '')
             ->unique()
             ->sort()
@@ -1914,19 +2058,86 @@ class AdminController extends Controller
             });
         }
 
+        $employeeQuery = EmployeeHealthProfile::with('user');
+
+        if ($search !== '') {
+            $employeeQuery->where(function ($builder) use ($search) {
+                $like = '%' . $search . '%';
+
+                $builder->where('employee_number', 'like', $like)
+                    ->orWhere('name', 'like', $like)
+                    ->orWhere('office', 'like', $like)
+                    ->orWhere('course_college', 'like', $like)
+                    ->orWhere('clearance_status', 'like', $like)
+                    ->orWhereHas('user', function ($userQuery) use ($like) {
+                        $userQuery->where('name', 'like', $like)
+                            ->orWhere('first_name', 'like', $like)
+                            ->orWhere('middle_name', 'like', $like)
+                            ->orWhere('last_name', 'like', $like)
+                            ->orWhere('email', 'like', $like)
+                            ->orWhere('employee_number', 'like', $like);
+                    });
+            });
+        }
+
+        if ($courseFilter !== '') {
+            $employeeQuery->where(function ($builder) use ($courseFilter) {
+                $builder->where('course_college', $courseFilter)
+                    ->orWhere('office', $courseFilter)
+                    ->orWhereHas('user', function ($userQuery) use ($courseFilter) {
+                        $userQuery->where('course', $courseFilter);
+                    });
+            });
+        }
+
+        $this->applyStaffHealthProfileUserTypeFilter($employeeQuery, $userTypeFilter);
+
+        if ($monthFilter !== '') {
+            try {
+                $monthDate = Carbon::parse($monthFilter . '-01');
+                $employeeQuery->whereYear('created_at', $monthDate->year)
+                    ->whereMonth('created_at', $monthDate->month);
+            } catch (\Throwable $e) {
+                // Ignore invalid month input and keep the stats endpoint usable.
+            }
+        }
+
+        if ($yearFilter !== '') {
+            $employeeQuery->where(function ($builder) use ($yearFilter) {
+                $builder->where('school_year', $yearFilter)
+                    ->orWhereHas('user', function ($userQuery) use ($yearFilter) {
+                        $userQuery->where('year', $yearFilter);
+                    });
+            });
+        }
+
         $issuedQuery = (clone $query)
             ->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
+        $issuedEmployeeQuery = (clone $employeeQuery)
+            ->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
 
-        $records = $query->get();
+        $records = $query->get()
+            ->map(function ($record) {
+                $record->setAttribute('record_source', 'health');
+                return $record;
+            })
+            ->merge($employeeQuery->get()->map(function ($record) {
+                $record->setAttribute('record_source', 'employee');
+                $record->setAttribute('chest_xray_result', $record->chest_xray_document);
+                $record->setAttribute('medical_history', $record->past_medical_history ?: []);
+                $record->setAttribute('medicine_allergies', filled($record->allergies) ? [$record->allergies] : []);
+                return $record;
+            }));
         $stats = [
-            'total_approved' => (clone $issuedQuery)->count(),
+            'total_approved' => (clone $issuedQuery)->count() + (clone $issuedEmployeeQuery)->count(),
             'with_conditions' => 0,
             'pending_approval' => 0,
             'pending_conditional' => 0,
         ];
 
         foreach ($records as $summaryRecord) {
-            $summaryHasRequirements = filled($summaryRecord->medical_certificate)
+            $summarySource = (string) ($summaryRecord->record_source ?? 'health');
+            $summaryHasRequirements = in_array($summarySource, ['employee', 'staff'], true) || filled($summaryRecord->medical_certificate)
                 && filled($summaryRecord->chest_xray_result)
                 && filled($summaryRecord->student_photo);
             $summaryStatus = trim((string) ($summaryRecord->clearance_status ?? ''));
@@ -2098,10 +2309,10 @@ class AdminController extends Controller
             || str_starts_with($upperReference, 'LOC-')
             || str_starts_with($upperReference, 'TEST-LOCAL')
         ) {
-            $this->updatePuptasSyncState($profile, 'not_applicable', 'PUPTAS resync skipped because this is a local clinic reference.');
-            $this->logActivity('PUPTAS Resync Skipped', "PUPTAS resync skipped for {$referenceNumber}: local clinic reference.", 'Health Records', 'ACTION');
+            $this->updatePuptasSyncState($profile, 'not_applicable', 'PUPTAS resync skipped because this is a local employee reference.');
+            $this->logActivity('PUPTAS Resync Skipped', "PUPTAS resync skipped for {$referenceNumber}: local employee reference.", 'Health Records', 'ACTION');
 
-            return back()->with('info', 'PUPTAS resync is not applicable for local clinic references.');
+            return back()->with('info', 'PUPTAS resync is not applicable for local employee references.');
         }
 
         $this->updatePuptasSyncState($profile, 'syncing', 'Manual PUPTAS resync is in progress.');

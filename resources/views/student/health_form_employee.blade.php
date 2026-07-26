@@ -941,7 +941,7 @@
         }
 
         #digitalSignaturePad,
-        #staffSignaturePad {
+        #employeeSignaturePad {
             display: block;
             width: 100%;
             height: 220px;
@@ -1732,11 +1732,11 @@
 
         #disabilityTypeWrap.is-hidden,
         #pwdUploadWrap.is-hidden,
-        #staffPastMedicalOthersWrap.is-hidden,
-        #staffHospitalizationDetailsWrap.is-hidden,
-        #staffSurgeryDetailsWrap.is-hidden,
-        #staffDisabilityTypeWrap.is-hidden,
-        #staffPwdRequirementCard.is-hidden,
+        #employeePastMedicalOthersWrap.is-hidden,
+        #employeeHospitalizationDetailsWrap.is-hidden,
+        #employeeSurgeryDetailsWrap.is-hidden,
+        #employeeDisabilityTypeWrap.is-hidden,
+        #employeePwdRequirementCard.is-hidden,
         #medCertFindingsDetailsWrap.is-hidden,
         #xrayFindingsDetailsWrap.is-hidden {
             display: none;
@@ -1765,26 +1765,26 @@
             margin-bottom: 12px;
         }
 
-        .staff-personal-stack {
+        .employee-personal-stack {
             display: grid;
             gap: 12px;
         }
 
-        .staff-personal-row {
+        .employee-personal-row {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 12px;
         }
 
-        .staff-personal-row.three {
+        .employee-personal-row.three {
             grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
-        .staff-personal-row.four {
+        .employee-personal-row.four {
             grid-template-columns: repeat(4, minmax(0, 1fr));
         }
 
-        .staff-personal-row.single {
+        .employee-personal-row.single {
             grid-template-columns: minmax(0, 1fr);
         }
 
@@ -1945,8 +1945,8 @@
             font-weight: 700;
         }
 
-        .staff-personal-stack .form-field .form-control:not([readonly]),
-        .staff-personal-stack .form-field .form-select {
+        .employee-personal-stack .form-field .form-control:not([readonly]),
+        .employee-personal-stack .form-field .form-select {
             border: 1.5px solid rgba(127, 29, 45, 0.52);
             background: linear-gradient(180deg, #fffafb 0%, #fff6f7 100%);
             box-shadow:
@@ -1957,8 +1957,8 @@
             padding: 10px 12px;
         }
 
-        .staff-personal-stack .form-field .form-control:not([readonly]):focus,
-        .staff-personal-stack .form-field .form-select:focus {
+        .employee-personal-stack .form-field .form-control:not([readonly]):focus,
+        .employee-personal-stack .form-field .form-select:focus {
             border: 1.5px solid var(--clinic-maroon);
             background: linear-gradient(180deg, #fffafb 0%, #fff6f7 100%);
             box-shadow:
@@ -1966,22 +1966,22 @@
                 0 10px 22px rgba(127, 29, 45, 0.10);
         }
 
-        .staff-personal-stack .clinic-select-wrap .clinic-select-display {
+        .employee-personal-stack .clinic-select-wrap .clinic-select-display {
             border: 1.5px solid rgba(127, 29, 45, 0.52);
             border-radius: 18px;
             min-height: 50px;
             background: linear-gradient(180deg, #fffafb 0%, #fff6f7 100%);
         }
 
-        .staff-personal-stack .clinic-select-wrap.is-open .clinic-select-display,
-        .staff-personal-stack .clinic-select-wrap .clinic-select-display:focus {
+        .employee-personal-stack .clinic-select-wrap.is-open .clinic-select-display,
+        .employee-personal-stack .clinic-select-wrap .clinic-select-display:focus {
             border-color: var(--clinic-maroon);
             box-shadow:
                 0 0 0 0.18rem rgba(127, 29, 45, 0.12),
                 0 10px 22px rgba(127, 29, 45, 0.10);
         }
 
-        .staff-personal-stack .clinic-select-option.is-selected {
+        .employee-personal-stack .clinic-select-option.is-selected {
             color: #ffffff;
         }
 
@@ -2101,10 +2101,10 @@
             .choice-grid,
             .dose-grid,
             .personal-identity-grid,
-            .staff-personal-row,
-            .staff-personal-row.three,
-            .staff-personal-row.four,
-            .staff-personal-row.single {
+            .employee-personal-row,
+            .employee-personal-row.three,
+            .employee-personal-row.four,
+            .employee-personal-row.single {
                 grid-template-columns: 1fr;
             }
 
@@ -2310,29 +2310,29 @@
 
         <div class="section-body">
             @php
-                $staffValue = fn (string $field, $fallback = '') => old($field, data_get($staffProfile ?? null, $field, data_get($staffPrefill ?? [], $field, $fallback)));
-                $staffCheckedValues = fn (string $field) => collect(old($field, data_get($staffProfile ?? null, $field, [])))->filter()->values()->all();
-                $staffName = trim((string) data_get($staffPrefill ?? [], 'first_name') . ' ' . (string) data_get($staffPrefill ?? [], 'middle_name') . ' ' . (string) data_get($staffPrefill ?? [], 'last_name'));
-                $staffName = trim(preg_replace('/\s+/', ' ', $staffName));
-                if ($staffName === '') {
-                    $staffName = trim((string) ($displayName ?? ''));
+                $employeeValue = fn (string $field, $fallback = '') => old($field, data_get($employeeProfile ?? null, $field, data_get($employeePrefill ?? [], $field, $fallback)));
+                $employeeCheckedValues = fn (string $field) => collect(old($field, data_get($employeeProfile ?? null, $field, [])))->filter()->values()->all();
+                $employeeName = trim((string) data_get($employeePrefill ?? [], 'first_name') . ' ' . (string) data_get($employeePrefill ?? [], 'middle_name') . ' ' . (string) data_get($employeePrefill ?? [], 'last_name'));
+                $employeeName = trim(preg_replace('/\s+/', ' ', $employeeName));
+                if ($employeeName === '') {
+                    $employeeName = trim((string) ($displayName ?? ''));
                 }
-                if ($staffName === '') {
-                    $staffName = trim(implode(' ', array_filter([
+                if ($employeeName === '') {
+                    $employeeName = trim(implode(' ', array_filter([
                         $user->first_name ?? '',
                         $user->middle_name ?? '',
                         $user->last_name ?? '',
                     ])));
                 }
-                $staffErrorGroups = [
+                $employeeErrorGroups = [
                     1 => ['first_name', 'last_name', 'street_address', 'barangay', 'city_municipality', 'province', 'contact_no', 'emergency_contact_person', 'emergency_contact_no', 'form_date', 'office', 'age', 'sex', 'civil_status', 'birthday'],
                     2 => ['past_medical_history', 'past_medical_history_others', 'previous_hospitalization', 'previous_hospitalization_details', 'operation_surgery', 'operation_surgery_details', 'allergies'],
                     3 => ['family_history', 'family_history_others'],
                     4 => ['cigarette_smoking', 'alcohol_drinking', 'traveled_abroad', 'has_disability', 'disability_type'],
                     5 => ['working_impression', 'fit_status'],
-                    6 => ['staff_signature', 'uploaded_signature', 'staff_health_profile_certified'],
+                    6 => ['employee_signature', 'uploaded_signature', 'employee_health_profile_certified'],
                 ];
-                $startStep = collect($staffErrorGroups)
+                $startStep = collect($employeeErrorGroups)
                     ->search(fn ($fields) => collect($fields)->contains(fn ($field) => $errors->has($field)));
                 $startStep = $startStep ?: 1;
                 $healthFormSteps = [
@@ -2343,15 +2343,15 @@
                     5 => 'Requirements',
                     6 => 'E-Signature',
                 ];
-                $selectedStaffCourse = old('course_college', $staffValue('course_college', $user->course ?? ''));
-                $selectedPastMedicalHistory = $staffCheckedValues('past_medical_history');
-                $selectedPreviousHospitalization = old('previous_hospitalization', data_get($staffProfile ?? null, 'previous_hospitalization') ? '1' : '0');
-                $selectedOperationSurgery = old('operation_surgery', data_get($staffProfile ?? null, 'operation_surgery') ? '1' : '0');
-                $selectedCigaretteSmoking = old('cigarette_smoking', data_get($staffProfile ?? null, 'cigarette_smoking') ? '1' : '0');
-                $selectedAlcoholDrinking = old('alcohol_drinking', data_get($staffProfile ?? null, 'alcohol_drinking') ? '1' : '0');
-                $selectedTraveledAbroad = old('traveled_abroad', data_get($staffProfile ?? null, 'traveled_abroad') ? '1' : '0');
-                $selectedStaffPwd = old('has_disability', data_get($staffProfile ?? null, 'has_disability') ? '1' : '0');
-                $staffCourseOptions = collect($staffCourseOptions ?? [])
+                $selectedEmployeeCourse = old('course_college', $employeeValue('course_college', $user->course ?? ''));
+                $selectedPastMedicalHistory = $employeeCheckedValues('past_medical_history');
+                $selectedPreviousHospitalization = old('previous_hospitalization', data_get($employeeProfile ?? null, 'previous_hospitalization') ? '1' : '0');
+                $selectedOperationSurgery = old('operation_surgery', data_get($employeeProfile ?? null, 'operation_surgery') ? '1' : '0');
+                $selectedCigaretteSmoking = old('cigarette_smoking', data_get($employeeProfile ?? null, 'cigarette_smoking') ? '1' : '0');
+                $selectedAlcoholDrinking = old('alcohol_drinking', data_get($employeeProfile ?? null, 'alcohol_drinking') ? '1' : '0');
+                $selectedTraveledAbroad = old('traveled_abroad', data_get($employeeProfile ?? null, 'traveled_abroad') ? '1' : '0');
+                $selectedEmployeePwd = old('has_disability', data_get($employeeProfile ?? null, 'has_disability') ? '1' : '0');
+                $employeeCourseOptions = collect($employeeCourseOptions ?? [])
                     ->filter(fn ($courseOption) => is_array($courseOption))
                     ->values()
                     ->all();
@@ -2379,14 +2379,14 @@
             </div>
             <div class="stepper-spacer"></div>
 
-            <form action="{{ route('store.health.form.staff') }}" method="POST" enctype="multipart/form-data" id="staffHealthForm">
+            <form action="{{ route('store.health.form.employee') }}" method="POST" enctype="multipart/form-data" id="employeeHealthForm">
                 @csrf
 
                 @php
-                    $streetFallback = $staffValue('street_address');
-                    $barangayFallback = $staffValue('barangay');
-                    $cityFallback = $staffValue('city_municipality');
-                    $provinceFallback = $staffValue('province');
+                    $streetFallback = $employeeValue('street_address');
+                    $barangayFallback = $employeeValue('barangay');
+                    $cityFallback = $employeeValue('city_municipality');
+                    $provinceFallback = $employeeValue('province');
                 @endphp
                 <div class="step-panel {{ $startStep === 1 ? '' : 'is-hidden' }}" id="stepPanel1">
                     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;">
@@ -2398,59 +2398,59 @@
                     </div>
                     <p class="step-fill-note">Complete your identity, department, and emergency contact details.</p>
                     <input id="form_date" type="hidden" name="form_date" value="{{ now()->toDateString() }}">
-                    <div class="staff-personal-stack">
-                        <div class="staff-personal-row three">
+                    <div class="employee-personal-stack">
+                        <div class="employee-personal-row three">
                             <div class="form-field">
                                 <label class="form-label" for="first_name">First Name <span class="required">*</span></label>
-                                <input id="first_name" type="text" name="first_name" class="form-control" value="{{ $staffValue('first_name', $user->first_name ?? '') }}" readonly required>
+                                <input id="first_name" type="text" name="first_name" class="form-control" value="{{ $employeeValue('first_name', $user->first_name ?? '') }}" readonly required>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="middle_name">Middle Name</label>
-                                <input id="middle_name" type="text" name="middle_name" class="form-control" value="{{ $staffValue('middle_name', $user->middle_name ?? '') }}" placeholder="N/A if not applicable" readonly>
+                                <input id="middle_name" type="text" name="middle_name" class="form-control" value="{{ $employeeValue('middle_name', $user->middle_name ?? '') }}" placeholder="N/A if not applicable" readonly>
                                 <small class="field-hint"></small>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="last_name">Last Name <span class="required">*</span></label>
-                                <input id="last_name" type="text" name="last_name" class="form-control" value="{{ $staffValue('last_name', $user->last_name ?? '') }}" readonly required>
+                                <input id="last_name" type="text" name="last_name" class="form-control" value="{{ $employeeValue('last_name', $user->last_name ?? '') }}" readonly required>
                             </div>
                         </div>
-                        <div class="staff-personal-row single">
+                        <div class="employee-personal-row single">
                             <div class="form-field">
-                                <label class="form-label" for="staff_email">Email Address</label>
-                                <input id="staff_email" type="email" class="form-control" value="{{ old('staff_email', data_get($staffPrefill ?? [], 'email', $user->email ?? '')) }}" readonly>
+                                <label class="form-label" for="employee_email">Email Address</label>
+                                <input id="employee_email" type="email" class="form-control" value="{{ old('employee_email', data_get($employeePrefill ?? [], 'email', $user->email ?? '')) }}" readonly>
                             </div>
                         </div>
-                        <div class="staff-personal-row">
+                        <div class="employee-personal-row">
                             <div class="form-field">
                                 <label class="form-label" for="employee_number">Employee Number</label>
-                                <input id="employee_number" type="text" name="employee_number" class="form-control" value="{{ $staffValue('employee_number', $user->employee_number ?? '') }}">
+                                <input id="employee_number" type="text" name="employee_number" class="form-control" value="{{ $employeeValue('employee_number', $user->employee_number ?? '') }}">
                                 <small class="field-hint">Example: FA001TG2026</small>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="office">College / Department <span class="required">*</span></label>
-                                <input id="office" type="text" name="office" class="form-control" value="{{ $staffValue('office') }}" required>
+                                <input id="office" type="text" name="office" class="form-control" value="{{ $employeeValue('office') }}" required>
                                 <small class="field-hint">Example: Medical Services Department</small>
                             </div>
                         </div>
-                        <div class="staff-personal-row">
+                        <div class="employee-personal-row">
                             <div class="form-field">
                                 <label class="form-label" for="birthday">Date of Birth <span class="required">*</span></label>
-                                <input id="birthday" type="date" name="birthday" class="form-control" value="{{ $staffValue('birthday', $user->DOB ?? '') }}" required>
+                                <input id="birthday" type="date" name="birthday" class="form-control" value="{{ $employeeValue('birthday', $user->DOB ?? '') }}" required>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="age">Age <span class="required">*</span></label>
-                                <input id="age" type="number" name="age" class="form-control" value="{{ $staffValue('age') }}" min="15" max="100" readonly required>
+                                <input id="age" type="number" name="age" class="form-control" value="{{ $employeeValue('age') }}" min="15" max="100" readonly required>
                                 <small class="field-hint">Automatically calculated from Date of Birth.</small>
                             </div>
                         </div>
-                        <div class="staff-personal-row">
+                        <div class="employee-personal-row">
                             <div class="form-field">
                                 <label class="form-label" for="civil_status">Civil Status <span class="required">*</span></label>
                                 <div class="clinic-select-wrap" data-clinic-select data-select-placeholder="Select civil status">
                                     <select id="civil_status" name="civil_status" class="form-select clinic-select-native" required>
-                                        <option value="" {{ $staffValue('civil_status') === '' ? 'selected' : '' }} disabled>Select civil status</option>
+                                        <option value="" {{ $employeeValue('civil_status') === '' ? 'selected' : '' }} disabled>Select civil status</option>
                                         @foreach(['Single', 'Married', 'Widowed', 'Separated'] as $status)
-                                            <option value="{{ $status }}" {{ $staffValue('civil_status') === $status ? 'selected' : '' }}>{{ $status }}</option>
+                                            <option value="{{ $status }}" {{ $employeeValue('civil_status') === $status ? 'selected' : '' }}>{{ $status }}</option>
                                         @endforeach
                                     </select>
                                     <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select civil status</button>
@@ -2465,9 +2465,9 @@
                                 <label class="form-label" for="sex">Sex <span class="required">*</span></label>
                                 <div class="clinic-select-wrap" data-clinic-select data-select-placeholder="Select sex">
                                     <select id="sex" name="sex" class="form-select clinic-select-native" required>
-                                        <option value="" {{ $staffValue('sex', $user->gender ?? '') === '' ? 'selected' : '' }} disabled>Select sex</option>
+                                        <option value="" {{ $employeeValue('sex', $user->gender ?? '') === '' ? 'selected' : '' }} disabled>Select sex</option>
                                         @foreach(['Male', 'Female'] as $sexOption)
-                                            <option value="{{ $sexOption }}" {{ $staffValue('sex', $user->gender ?? '') === $sexOption ? 'selected' : '' }}>{{ $sexOption }}</option>
+                                            <option value="{{ $sexOption }}" {{ $employeeValue('sex', $user->gender ?? '') === $sexOption ? 'selected' : '' }}>{{ $sexOption }}</option>
                                         @endforeach
                                     </select>
                                     <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select sex</button>
@@ -2479,20 +2479,20 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="staff-personal-row single">
+                        <div class="employee-personal-row single">
                             <div class="form-field">
                                 <label class="form-label" for="course_college">Course / College</label>
                                 <div class="clinic-select-wrap course-select-wrap" data-clinic-select data-select-placeholder="Select course or Not Applicable">
                                     <select id="course_college" name="course_college" class="form-select clinic-select-native">
                                         <option value="">Select course or Not Applicable</option>
-                                        @foreach($staffCourseOptions as $courseOption)
+                                        @foreach($employeeCourseOptions as $courseOption)
                                             @php($courseValue = $courseOption['name'] ?? $courseOption['label'] ?? $courseOption['code'] ?? '')
-                                            <option value="{{ $courseValue }}" {{ $selectedStaffCourse === $courseValue ? 'selected' : '' }}>{{ $courseOption['label'] ?? $courseValue }}</option>
+                                            <option value="{{ $courseValue }}" {{ $selectedEmployeeCourse === $courseValue ? 'selected' : '' }}>{{ $courseOption['label'] ?? $courseValue }}</option>
                                         @endforeach
                                     </select>
                                     <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select course or Not Applicable</button>
                                     <div class="clinic-select-menu" role="listbox" aria-label="Course or college options">
-                                        @foreach($staffCourseOptions as $courseOption)
+                                        @foreach($employeeCourseOptions as $courseOption)
                                             @php($courseValue = $courseOption['name'] ?? $courseOption['label'] ?? $courseOption['code'] ?? '')
                                             <button type="button" class="clinic-select-option" data-select-value="{{ $courseValue }}">{{ $courseOption['label'] ?? $courseValue }}</button>
                                         @endforeach
@@ -2501,19 +2501,19 @@
                                 <small class="field-hint">Example: Bachelor of Science in Information Technology</small>
                             </div>
                         </div>
-                        <div class="staff-personal-row">
+                        <div class="employee-personal-row">
                             <div class="form-field">
                                 <label class="form-label" for="contact_no">Contact Number <span class="required">*</span></label>
-                                <input id="contact_no" type="text" name="contact_no" class="form-control" value="{{ $staffValue('contact_no', $user->contact_no ?? '') }}" maxlength="20" required>
+                                <input id="contact_no" type="text" name="contact_no" class="form-control" value="{{ $employeeValue('contact_no', $user->contact_no ?? '') }}" maxlength="20" required>
                                 <small class="field-hint">Example: 09123456789</small>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="school_year">School Year</label>
-                                <input id="school_year" type="text" name="school_year" class="form-control" value="{{ old('school_year', $staffValue('school_year', $user->year ?? '')) }}">
+                                <input id="school_year" type="text" name="school_year" class="form-control" value="{{ old('school_year', $employeeValue('school_year', $user->year ?? '')) }}">
                                 <small class="field-hint">Example: 2026-2027</small>
                             </div>
                         </div>
-                        <div class="staff-personal-row four">
+                        <div class="employee-personal-row four">
                             <div class="form-field">
                                 <label class="form-label" for="street_address">Street / House No. <span class="required">*</span></label>
                                 <input id="street_address" type="text" name="street_address" class="form-control" value="{{ old('street_address', $streetFallback) }}" required>
@@ -2535,15 +2535,15 @@
                                 <small class="field-hint">Example: Metro Manila</small>
                             </div>
                         </div>
-                        <div class="staff-personal-row">
+                        <div class="employee-personal-row">
                             <div class="form-field">
                                 <label class="form-label" for="emergency_contact_person">Contact Person in Case of Emergency <span class="required">*</span></label>
-                                <input id="emergency_contact_person" type="text" name="emergency_contact_person" class="form-control" value="{{ $staffValue('emergency_contact_person') }}" required>
+                                <input id="emergency_contact_person" type="text" name="emergency_contact_person" class="form-control" value="{{ $employeeValue('emergency_contact_person') }}" required>
                                 <small class="field-hint">Example: Maria Dela Cruz</small>
                             </div>
                             <div class="form-field">
                                 <label class="form-label" for="emergency_contact_no">Contact Person Contact Number <span class="required">*</span></label>
-                                <input id="emergency_contact_no" type="text" name="emergency_contact_no" class="form-control" value="{{ $staffValue('emergency_contact_no') }}" maxlength="20" required>
+                                <input id="emergency_contact_no" type="text" name="emergency_contact_no" class="form-control" value="{{ $employeeValue('emergency_contact_no') }}" maxlength="20" required>
                                 <small class="field-hint">Example: 09123456789</small>
                             </div>
                         </div>
@@ -2564,41 +2564,41 @@
                     <div class="checkbox-grid">
                         @foreach($pastMedicalItems as $item)
                             <label class="checkbox-card">
-                                <input type="checkbox" name="past_medical_history[]" value="{{ $item }}" {{ in_array($item, $selectedPastMedicalHistory, true) ? 'checked' : '' }} @if($item === 'Others') id="staffPastMedicalOthersToggle" @endif>
+                                <input type="checkbox" name="past_medical_history[]" value="{{ $item }}" {{ in_array($item, $selectedPastMedicalHistory, true) ? 'checked' : '' }} @if($item === 'Others') id="employeePastMedicalOthersToggle" @endif>
                                 <span>{{ $item }}</span>
                             </label>
                         @endforeach
                     </div>
-                    <div class="form-field mt-3 {{ in_array('Others', $selectedPastMedicalHistory, true) ? '' : 'is-hidden' }}" id="staffPastMedicalOthersWrap">
+                    <div class="form-field mt-3 {{ in_array('Others', $selectedPastMedicalHistory, true) ? '' : 'is-hidden' }}" id="employeePastMedicalOthersWrap">
                         <label class="form-label" for="past_medical_history_others">Other Childhood Illness <span class="required">*</span></label>
-                        <input id="past_medical_history_others" type="text" name="past_medical_history_others" class="form-control" value="{{ $staffValue('past_medical_history_others') }}">
+                        <input id="past_medical_history_others" type="text" name="past_medical_history_others" class="form-control" value="{{ $employeeValue('past_medical_history_others') }}">
                     </div>
 
                     <div class="form-grid personal-form-grid mt-3">
                         <div class="form-field">
                             <label class="form-label">Previous Hospitalization <span class="required">*</span></label>
                             <div class="pwd-toggle">
-                                <input class="pwd-radio" type="radio" name="previous_hospitalization" id="staff_hospitalization_no" value="0" required {{ (string) $selectedPreviousHospitalization !== '1' ? 'checked' : '' }}>
-                                <label class="pwd-option" for="staff_hospitalization_no">No</label>
-                                <input class="pwd-radio" type="radio" name="previous_hospitalization" id="staff_hospitalization_yes" value="1" {{ (string) $selectedPreviousHospitalization === '1' ? 'checked' : '' }}>
-                                <label class="pwd-option" for="staff_hospitalization_yes">Yes</label>
+                                <input class="pwd-radio" type="radio" name="previous_hospitalization" id="employee_hospitalization_no" value="0" required {{ (string) $selectedPreviousHospitalization !== '1' ? 'checked' : '' }}>
+                                <label class="pwd-option" for="employee_hospitalization_no">No</label>
+                                <input class="pwd-radio" type="radio" name="previous_hospitalization" id="employee_hospitalization_yes" value="1" {{ (string) $selectedPreviousHospitalization === '1' ? 'checked' : '' }}>
+                                <label class="pwd-option" for="employee_hospitalization_yes">Yes</label>
                             </div>
-                            <div class="form-field mt-3 {{ (string) $selectedPreviousHospitalization === '1' ? '' : 'is-hidden' }}" id="staffHospitalizationDetailsWrap">
+                            <div class="form-field mt-3 {{ (string) $selectedPreviousHospitalization === '1' ? '' : 'is-hidden' }}" id="employeeHospitalizationDetailsWrap">
                                 <label class="form-label" for="previous_hospitalization_details">Hospitalization Details <span class="required">*</span></label>
-                                <textarea id="previous_hospitalization_details" name="previous_hospitalization_details" class="form-control" rows="3">{{ $staffValue('previous_hospitalization_details') }}</textarea>
+                                <textarea id="previous_hospitalization_details" name="previous_hospitalization_details" class="form-control" rows="3">{{ $employeeValue('previous_hospitalization_details') }}</textarea>
                             </div>
                         </div>
                         <div class="form-field">
                             <label class="form-label">Operation / Surgery <span class="required">*</span></label>
                             <div class="pwd-toggle">
-                                <input class="pwd-radio" type="radio" name="operation_surgery" id="staff_surgery_no" value="0" required {{ (string) $selectedOperationSurgery !== '1' ? 'checked' : '' }}>
-                                <label class="pwd-option" for="staff_surgery_no">No</label>
-                                <input class="pwd-radio" type="radio" name="operation_surgery" id="staff_surgery_yes" value="1" {{ (string) $selectedOperationSurgery === '1' ? 'checked' : '' }}>
-                                <label class="pwd-option" for="staff_surgery_yes">Yes</label>
+                                <input class="pwd-radio" type="radio" name="operation_surgery" id="employee_surgery_no" value="0" required {{ (string) $selectedOperationSurgery !== '1' ? 'checked' : '' }}>
+                                <label class="pwd-option" for="employee_surgery_no">No</label>
+                                <input class="pwd-radio" type="radio" name="operation_surgery" id="employee_surgery_yes" value="1" {{ (string) $selectedOperationSurgery === '1' ? 'checked' : '' }}>
+                                <label class="pwd-option" for="employee_surgery_yes">Yes</label>
                             </div>
-                            <div class="form-field mt-3 {{ (string) $selectedOperationSurgery === '1' ? '' : 'is-hidden' }}" id="staffSurgeryDetailsWrap">
+                            <div class="form-field mt-3 {{ (string) $selectedOperationSurgery === '1' ? '' : 'is-hidden' }}" id="employeeSurgeryDetailsWrap">
                                 <label class="form-label" for="operation_surgery_details">Operation / Surgery Details <span class="required">*</span></label>
-                                <textarea id="operation_surgery_details" name="operation_surgery_details" class="form-control" rows="3">{{ $staffValue('operation_surgery_details') }}</textarea>
+                                <textarea id="operation_surgery_details" name="operation_surgery_details" class="form-control" rows="3">{{ $employeeValue('operation_surgery_details') }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -2607,7 +2607,7 @@
                     <div class="form-grid personal-form-grid">
                         <div class="form-field">
                             <label class="form-label" for="allergies">Allergies</label>
-                            <textarea id="allergies" name="allergies" class="form-control" rows="3">{{ $staffValue('allergies') }}</textarea>
+                            <textarea id="allergies" name="allergies" class="form-control" rows="3">{{ $employeeValue('allergies') }}</textarea>
                         </div>
                     </div>
                     <div class="btn-row">
@@ -2623,14 +2623,14 @@
                     <div class="checkbox-grid">
                         @foreach($familyHistoryItems as $item)
                             <label class="checkbox-card">
-                                <input type="checkbox" name="family_history[]" value="{{ $item }}" {{ in_array($item, $staffCheckedValues('family_history'), true) ? 'checked' : '' }}>
+                                <input type="checkbox" name="family_history[]" value="{{ $item }}" {{ in_array($item, $employeeCheckedValues('family_history'), true) ? 'checked' : '' }}>
                                 <span>{{ $item }}</span>
                             </label>
                         @endforeach
                     </div>
                     <div class="form-field">
                         <label class="form-label" for="family_history_others">Others</label>
-                        <input id="family_history_others" type="text" name="family_history_others" class="form-control" value="{{ $staffValue('family_history_others') }}">
+                        <input id="family_history_others" type="text" name="family_history_others" class="form-control" value="{{ $employeeValue('family_history_others') }}">
                     </div>
                     <div class="btn-row">
                         <button type="button" class="btn btn-health btn-health-back" data-step-back="2"><span>Back</span></button>
@@ -2640,33 +2640,33 @@
 
                 <div class="step-panel {{ $startStep === 4 ? '' : 'is-hidden' }}" id="stepPanel4">
                     <h2 class="section-title step-page-title" data-title-letter="H">Personal History</h2>
-                    <p class="step-fill-note">Answer the personal history portion of the staff health examination record.</p>
+                    <p class="step-fill-note">Answer the personal history portion of the employee health examination record.</p>
                     <div class="form-grid personal-form-grid">
                         <div class="form-field">
                             <label class="form-label">Cigarette Smoking <span class="required">*</span></label>
                             <div class="pwd-toggle">
-                                <input class="pwd-radio" type="radio" name="cigarette_smoking" id="staff_smoking_no" value="0" required {{ (string) $selectedCigaretteSmoking !== '1' ? 'checked' : '' }}>
-                                <label class="pwd-option" for="staff_smoking_no">No</label>
-                                <input class="pwd-radio" type="radio" name="cigarette_smoking" id="staff_smoking_yes" value="1" {{ (string) $selectedCigaretteSmoking === '1' ? 'checked' : '' }}>
-                                <label class="pwd-option" for="staff_smoking_yes">Yes</label>
+                                <input class="pwd-radio" type="radio" name="cigarette_smoking" id="employee_smoking_no" value="0" required {{ (string) $selectedCigaretteSmoking !== '1' ? 'checked' : '' }}>
+                                <label class="pwd-option" for="employee_smoking_no">No</label>
+                                <input class="pwd-radio" type="radio" name="cigarette_smoking" id="employee_smoking_yes" value="1" {{ (string) $selectedCigaretteSmoking === '1' ? 'checked' : '' }}>
+                                <label class="pwd-option" for="employee_smoking_yes">Yes</label>
                             </div>
                         </div>
                         <div class="form-field">
                             <label class="form-label">Alcohol Drinking <span class="required">*</span></label>
                             <div class="pwd-toggle">
-                                <input class="pwd-radio" type="radio" name="alcohol_drinking" id="staff_alcohol_no" value="0" required {{ (string) $selectedAlcoholDrinking !== '1' ? 'checked' : '' }}>
-                                <label class="pwd-option" for="staff_alcohol_no">No</label>
-                                <input class="pwd-radio" type="radio" name="alcohol_drinking" id="staff_alcohol_yes" value="1" {{ (string) $selectedAlcoholDrinking === '1' ? 'checked' : '' }}>
-                                <label class="pwd-option" for="staff_alcohol_yes">Yes</label>
+                                <input class="pwd-radio" type="radio" name="alcohol_drinking" id="employee_alcohol_no" value="0" required {{ (string) $selectedAlcoholDrinking !== '1' ? 'checked' : '' }}>
+                                <label class="pwd-option" for="employee_alcohol_no">No</label>
+                                <input class="pwd-radio" type="radio" name="alcohol_drinking" id="employee_alcohol_yes" value="1" {{ (string) $selectedAlcoholDrinking === '1' ? 'checked' : '' }}>
+                                <label class="pwd-option" for="employee_alcohol_yes">Yes</label>
                             </div>
                         </div>
                         <div class="form-field">
                             <label class="form-label">Traveled Abroad <span class="required">*</span></label>
                             <div class="pwd-toggle">
-                                <input class="pwd-radio" type="radio" name="traveled_abroad" id="staff_traveled_no" value="0" required {{ (string) $selectedTraveledAbroad !== '1' ? 'checked' : '' }}>
-                                <label class="pwd-option" for="staff_traveled_no">No</label>
-                                <input class="pwd-radio" type="radio" name="traveled_abroad" id="staff_traveled_yes" value="1" {{ (string) $selectedTraveledAbroad === '1' ? 'checked' : '' }}>
-                                <label class="pwd-option" for="staff_traveled_yes">Yes</label>
+                                <input class="pwd-radio" type="radio" name="traveled_abroad" id="employee_traveled_no" value="0" required {{ (string) $selectedTraveledAbroad !== '1' ? 'checked' : '' }}>
+                                <label class="pwd-option" for="employee_traveled_no">No</label>
+                                <input class="pwd-radio" type="radio" name="traveled_abroad" id="employee_traveled_yes" value="1" {{ (string) $selectedTraveledAbroad === '1' ? 'checked' : '' }}>
+                                <label class="pwd-option" for="employee_traveled_yes">Yes</label>
                             </div>
                         </div>
                     </div>
@@ -2675,15 +2675,15 @@
                         <div class="form-field">
                             <label class="form-label">Do you have a disability? <span class="required">*</span></label>
                             <div class="pwd-toggle">
-                                <input class="pwd-radio" type="radio" name="has_disability" id="staff_pwd_no" value="0" required {{ (string) $selectedStaffPwd !== '1' ? 'checked' : '' }}>
-                                <label class="pwd-option" for="staff_pwd_no">No</label>
-                                <input class="pwd-radio" type="radio" name="has_disability" id="staff_pwd_yes" value="1" {{ (string) $selectedStaffPwd === '1' ? 'checked' : '' }}>
-                                <label class="pwd-option" for="staff_pwd_yes">Yes</label>
+                                <input class="pwd-radio" type="radio" name="has_disability" id="employee_pwd_no" value="0" required {{ (string) $selectedEmployeePwd !== '1' ? 'checked' : '' }}>
+                                <label class="pwd-option" for="employee_pwd_no">No</label>
+                                <input class="pwd-radio" type="radio" name="has_disability" id="employee_pwd_yes" value="1" {{ (string) $selectedEmployeePwd === '1' ? 'checked' : '' }}>
+                                <label class="pwd-option" for="employee_pwd_yes">Yes</label>
                             </div>
                         </div>
-                        <div class="form-field {{ (string) $selectedStaffPwd === '1' ? '' : 'is-hidden' }}" id="staffDisabilityTypeWrap">
+                        <div class="form-field {{ (string) $selectedEmployeePwd === '1' ? '' : 'is-hidden' }}" id="employeeDisabilityTypeWrap">
                             <label class="form-label" for="disability_type">Type of Disability <span class="required">*</span></label>
-                            <input id="disability_type" type="text" name="disability_type" class="form-control" value="{{ $staffValue('disability_type') }}">
+                            <input id="disability_type" type="text" name="disability_type" class="form-control" value="{{ $employeeValue('disability_type') }}">
                         </div>
                     </div>
                     <div class="btn-row">
@@ -2736,7 +2736,7 @@
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             <small>Allowed: PDF, JPG, JPEG, or PNG, max 1MB.</small>
                         </div>
-                        <div class="requirement-card {{ (string) $selectedStaffPwd === '1' ? '' : 'is-hidden' }}" id="staffPwdRequirementCard">
+                        <div class="requirement-card {{ (string) $selectedEmployeePwd === '1' ? '' : 'is-hidden' }}" id="employeePwdRequirementCard">
                             <div class="requirement-card-header">
                                 <strong>PWD ID Proof</strong>
                                 <span class="requirement-badge">PDF/IMG</span>
@@ -2756,10 +2756,10 @@
                 <div class="step-panel {{ $startStep === 6 ? '' : 'is-hidden' }}" id="stepPanel6">
                     <h2 class="section-title step-page-title" data-title-letter="E">E-Signature</h2>
                     <p class="step-fill-note">Draw your signature or upload a clear signature image to certify your Health Examination Record.</p>
-                    <input type="hidden" id="staff_signature" name="staff_signature" value="{{ old('staff_signature') }}">
+                    <input type="hidden" id="employee_signature" name="employee_signature" value="{{ old('employee_signature') }}">
                     <div class="esign-method-grid" aria-label="Choose your signature method">
-                        <input class="esign-method-radio" type="radio" name="staff_signature_method" id="staff_signature_method_draw" value="draw" checked>
-                        <label class="esign-method-card" for="staff_signature_method_draw">
+                        <input class="esign-method-radio" type="radio" name="employee_signature_method" id="employee_signature_method_draw" value="draw" checked>
+                        <label class="esign-method-card" for="employee_signature_method_draw">
                             <span class="esign-method-dot" aria-hidden="true"></span>
                             <span class="esign-method-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24"><path d="M4 20c3.5-7.5 5.5-11.5 7.5-12.5 1.5-.8 3 .4 2.4 2-.8 2.2-3.6 4.1-3.2 5.2.3.8 1.7.7 3.4-.2 1.4-.8 2.4-.3 2.6.7.2.8.8 1.2 1.7.8l1.6-.7"></path><path d="m14.5 4.5 2-2 2.5 2.5-2 2"></path></svg>
@@ -2770,8 +2770,8 @@
                                 <span class="esign-method-badge">Recommended</span>
                             </span>
                         </label>
-                        <input class="esign-method-radio" type="radio" name="staff_signature_method" id="staff_signature_method_upload" value="upload">
-                        <label class="esign-method-card" for="staff_signature_method_upload">
+                        <input class="esign-method-radio" type="radio" name="employee_signature_method" id="employee_signature_method_upload" value="upload">
+                        <label class="esign-method-card" for="employee_signature_method_upload">
                             <span class="esign-method-dot" aria-hidden="true"></span>
                             <span class="esign-method-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M20 16.5a4.5 4.5 0 0 1-4.5 4.5h-7A4.5 4.5 0 0 1 4 16.5"></path></svg>
@@ -2782,23 +2782,23 @@
                             </span>
                         </label>
                     </div>
-                    <div class="esign-grid esign-mode-panel" id="staffSignatureDrawPanel">
+                    <div class="esign-grid esign-mode-panel" id="employeeSignatureDrawPanel">
                         <div class="esign-card">
                             <h3>Draw Signature</h3>
                             <p>Use your mouse, touchpad, or finger. You can clear and redraw before saving.</p>
                             <div class="signature-pad-wrap">
-                                <canvas id="staffSignaturePad" aria-label="Draw your signature"></canvas>
+                                <canvas id="employeeSignaturePad" aria-label="Draw your signature"></canvas>
                             </div>
                             <div class="esign-actions">
-                                <button type="button" class="esign-secondary-btn" id="clearStaffSignatureBtn">
+                                <button type="button" class="esign-secondary-btn" id="clearEmployeeSignatureBtn">
                                     <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.4 2.2 2.2 3.4 6.8 8l-4.6 4.6 1.2 1.2L8 9.2l4.6 4.6 1.2-1.2L9.2 8l4.6-4.6-1.2-1.2L8 6.8 3.4 2.2Z"></path></svg>
                                     <span>Clear</span>
                                 </button>
                             </div>
-                            <div class="esign-status" id="staffSignatureStatus">No drawn signature yet.</div>
+                            <div class="esign-status" id="employeeSignatureStatus">No drawn signature yet.</div>
                         </div>
                     </div>
-                    <div class="esign-grid esign-mode-panel is-hidden" id="staffSignatureUploadPanel">
+                    <div class="esign-grid esign-mode-panel is-hidden" id="employeeSignatureUploadPanel">
                         <div class="esign-card">
                             <h3>Upload Signature</h3>
                             <input id="uploaded_signature" type="file" name="uploaded_signature" class="esign-upload-input" accept=".png,.jpg,.jpeg,image/png,image/jpeg" data-upload-input data-preview-kind="image">
@@ -2812,8 +2812,8 @@
                         </div>
                     </div>
                     <div class="certify-row final-certification">
-                        <input id="staff_health_profile_certified" type="checkbox" name="staff_health_profile_certified" value="1" required {{ old('staff_health_profile_certified') ? 'checked' : '' }}>
-                        <label for="staff_health_profile_certified">
+                        <input id="employee_health_profile_certified" type="checkbox" name="employee_health_profile_certified" value="1" required {{ old('employee_health_profile_certified') ? 'checked' : '' }}>
+                        <label for="employee_health_profile_certified">
                             By affixing my signature, I am agreeing to the PUP Data Privacy Policy and giving my consent in the collection and processing of my Personal Information in accordance thereto.
                         </label>
                     </div>
@@ -2842,7 +2842,7 @@
 
     <script>
         (function () {
-            const form = document.getElementById('staffHealthForm');
+            const form = document.getElementById('employeeHealthForm');
             if (!form) return;
 
             const totalSteps = 6;
@@ -2855,29 +2855,29 @@
             const errorModal = document.getElementById('healthErrorModal');
             const errorMessage = document.getElementById('healthErrorMessage');
             const errorContinue = document.getElementById('healthErrorContinue');
-            const signatureCanvas = document.getElementById('staffSignaturePad');
-            const signatureInput = document.getElementById('staff_signature');
-            const signatureStatus = document.getElementById('staffSignatureStatus');
+            const signatureCanvas = document.getElementById('employeeSignaturePad');
+            const signatureInput = document.getElementById('employee_signature');
+            const signatureStatus = document.getElementById('employeeSignatureStatus');
             const signatureUpload = document.getElementById('uploaded_signature');
-            const signatureMethodRadios = Array.from(document.querySelectorAll('input[name="staff_signature_method"]'));
-            const signatureDrawPanel = document.getElementById('staffSignatureDrawPanel');
-            const signatureUploadPanel = document.getElementById('staffSignatureUploadPanel');
+            const signatureMethodRadios = Array.from(document.querySelectorAll('input[name="employee_signature_method"]'));
+            const signatureDrawPanel = document.getElementById('employeeSignatureDrawPanel');
+            const signatureUploadPanel = document.getElementById('employeeSignatureUploadPanel');
             const birthdayInput = document.getElementById('birthday');
             const ageInput = document.getElementById('age');
             const clinicSelects = Array.from(document.querySelectorAll('[data-clinic-select]'));
-            const pastMedicalOthersToggle = document.getElementById('staffPastMedicalOthersToggle');
-            const pastMedicalOthersWrap = document.getElementById('staffPastMedicalOthersWrap');
+            const pastMedicalOthersToggle = document.getElementById('employeePastMedicalOthersToggle');
+            const pastMedicalOthersWrap = document.getElementById('employeePastMedicalOthersWrap');
             const pastMedicalOthersInput = document.getElementById('past_medical_history_others');
             const hospitalizationRadios = Array.from(document.querySelectorAll('input[name="previous_hospitalization"]'));
-            const hospitalizationDetailsWrap = document.getElementById('staffHospitalizationDetailsWrap');
+            const hospitalizationDetailsWrap = document.getElementById('employeeHospitalizationDetailsWrap');
             const hospitalizationDetailsInput = document.getElementById('previous_hospitalization_details');
             const surgeryRadios = Array.from(document.querySelectorAll('input[name="operation_surgery"]'));
-            const surgeryDetailsWrap = document.getElementById('staffSurgeryDetailsWrap');
+            const surgeryDetailsWrap = document.getElementById('employeeSurgeryDetailsWrap');
             const surgeryDetailsInput = document.getElementById('operation_surgery_details');
-            const staffPwdRadios = Array.from(document.querySelectorAll('input[name="has_disability"]'));
-            const staffDisabilityTypeWrap = document.getElementById('staffDisabilityTypeWrap');
-            const staffDisabilityTypeInput = document.getElementById('disability_type');
-            const staffPwdRequirementCard = document.getElementById('staffPwdRequirementCard');
+            const employeePwdRadios = Array.from(document.querySelectorAll('input[name="has_disability"]'));
+            const employeeDisabilityTypeWrap = document.getElementById('employeeDisabilityTypeWrap');
+            const employeeDisabilityTypeInput = document.getElementById('disability_type');
+            const employeePwdRequirementCard = document.getElementById('employeePwdRequirementCard');
             const uploadInputs = Array.from(document.querySelectorAll('[data-upload-input]'));
             let currentStep = {{ (int) $startStep }};
             let maxVisitedStep = currentStep;
@@ -3021,7 +3021,7 @@
                 }
             }
 
-            function syncStaffConditionalDetails(radios, wrap, input) {
+            function syncEmployeeConditionalDetails(radios, wrap, input) {
                 const selected = radios.find((radio) => radio.checked);
                 const show = selected?.value === '1';
                 wrap?.classList.toggle('is-hidden', !show);
@@ -3037,29 +3037,29 @@
 
             pastMedicalOthersToggle?.addEventListener('change', syncPastMedicalOthers);
             hospitalizationRadios.forEach((radio) => {
-                radio.addEventListener('change', () => syncStaffConditionalDetails(hospitalizationRadios, hospitalizationDetailsWrap, hospitalizationDetailsInput));
+                radio.addEventListener('change', () => syncEmployeeConditionalDetails(hospitalizationRadios, hospitalizationDetailsWrap, hospitalizationDetailsInput));
             });
             surgeryRadios.forEach((radio) => {
-                radio.addEventListener('change', () => syncStaffConditionalDetails(surgeryRadios, surgeryDetailsWrap, surgeryDetailsInput));
+                radio.addEventListener('change', () => syncEmployeeConditionalDetails(surgeryRadios, surgeryDetailsWrap, surgeryDetailsInput));
             });
 
-            function syncStaffPwd() {
-                const selected = staffPwdRadios.find((radio) => radio.checked);
+            function syncEmployeePwd() {
+                const selected = employeePwdRadios.find((radio) => radio.checked);
                 const isPwd = selected?.value === '1';
-                staffDisabilityTypeWrap?.classList.toggle('is-hidden', !isPwd);
-                staffPwdRequirementCard?.classList.toggle('is-hidden', !isPwd);
-                if (staffDisabilityTypeInput) {
-                    staffDisabilityTypeInput.required = isPwd;
-                    staffDisabilityTypeInput.disabled = !isPwd;
+                employeeDisabilityTypeWrap?.classList.toggle('is-hidden', !isPwd);
+                employeePwdRequirementCard?.classList.toggle('is-hidden', !isPwd);
+                if (employeeDisabilityTypeInput) {
+                    employeeDisabilityTypeInput.required = isPwd;
+                    employeeDisabilityTypeInput.disabled = !isPwd;
                     if (!isPwd) {
-                        staffDisabilityTypeInput.value = '';
-                        staffDisabilityTypeInput.setCustomValidity('');
+                        employeeDisabilityTypeInput.value = '';
+                        employeeDisabilityTypeInput.setCustomValidity('');
                     }
                 }
             }
 
-            staffPwdRadios.forEach((radio) => {
-                radio.addEventListener('change', syncStaffPwd);
+            employeePwdRadios.forEach((radio) => {
+                radio.addEventListener('change', syncEmployeePwd);
             });
 
             function formatFileSize(bytes) {
@@ -3176,7 +3176,7 @@
                 radio.addEventListener('change', syncSignatureMethod);
             });
 
-            function setupStaffSignaturePad() {
+            function setupEmployeeSignaturePad() {
                 if (!signatureCanvas || !signatureInput) return;
 
                 const context = signatureCanvas.getContext('2d');
@@ -3277,7 +3277,7 @@
                 signatureCanvas.addEventListener('pointerup', stopDrawing);
                 signatureCanvas.addEventListener('pointercancel', stopDrawing);
                 signatureCanvas.addEventListener('pointerleave', stopDrawing);
-                document.getElementById('clearStaffSignatureBtn')?.addEventListener('click', () => clearSignature());
+                document.getElementById('clearEmployeeSignatureBtn')?.addEventListener('click', () => clearSignature());
                 signatureUpload?.addEventListener('change', () => {
                     if (signatureUpload.files && signatureUpload.files.length > 0) {
                         clearSignature(false);
@@ -3319,10 +3319,10 @@
             if (initialMessage) showError(initialMessage);
             clinicSelects.forEach(initializeClinicSelect);
             syncPastMedicalOthers();
-            syncStaffConditionalDetails(hospitalizationRadios, hospitalizationDetailsWrap, hospitalizationDetailsInput);
-            syncStaffConditionalDetails(surgeryRadios, surgeryDetailsWrap, surgeryDetailsInput);
-            syncStaffPwd();
-            setupStaffSignaturePad();
+            syncEmployeeConditionalDetails(hospitalizationRadios, hospitalizationDetailsWrap, hospitalizationDetailsInput);
+            syncEmployeeConditionalDetails(surgeryRadios, surgeryDetailsWrap, surgeryDetailsInput);
+            syncEmployeePwd();
+            setupEmployeeSignaturePad();
             syncSignatureMethod();
             calculateAgeFromBirthday();
             resizeSignatureCanvas();
@@ -3335,3 +3335,4 @@
     @include('partials.system_footer')
 </body>
 </html>
+
