@@ -2818,6 +2818,19 @@
         gap: 10px;
     }
 
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup {
+        width: min(1040px, 100%);
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-modal-body {
+        padding: 18px 18px 14px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-ref-panel {
+        max-width: 100%;
+        gap: 12px;
+    }
+
     .applicant-ref-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -3266,14 +3279,48 @@
     .applicant-final-review-back {
         display: none;
         align-self: flex-start;
-        background: #70131B;
-        color: #facc15 !important;
+        background: #ffffff;
+        color: #70131b !important;
+        border-color: rgba(112, 19, 27, 0.18);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
     }
 
     .applicant-final-review-back.is-visible {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+    }
+
+    .applicant-final-review-action-row {
+        display: none;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        width: 100%;
+        margin: -4px 0 6px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-action-row {
+        position: sticky;
+        top: -18px;
+        z-index: 95;
+        display: flex;
+        flex-wrap: wrap;
+        padding: 10px 0;
+        background: rgba(248, 250, 252, 0.92);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+    }
+
+    .applicant-final-review-action-separator {
+        display: none;
+        width: 1px;
+        height: 34px;
+        background: rgba(112, 19, 27, 0.18);
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-action-row:has(.applicant-documents-trigger.is-visible) .applicant-final-review-action-separator {
+        display: inline-block;
     }
 
     #applicantFinalReviewRows {
@@ -3989,6 +4036,118 @@
         color: #70131b;
     }
 
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-ref-result {
+        position: relative;
+        min-height: 86px;
+        padding: 48px 24px 6px 112px;
+        border-radius: 10px 10px 0 0;
+        border: 1px solid #e5e7eb;
+        border-bottom: 0;
+        background: #ffffff;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+        color: #111827;
+        align-items: flex-start;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-ref-result::before {
+        content: "Employee Information";
+        position: absolute;
+        top: 18px;
+        left: 52px;
+        color: #111827;
+        font-size: 17px;
+        font-weight: 900;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-ref-result::after {
+        content: attr(data-initials);
+        position: absolute;
+        left: 26px;
+        top: 66px;
+        width: 58px;
+        height: 58px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background:
+            radial-gradient(circle at 50% 42%, transparent 0 8px, #fef2f2 9px 100%),
+            linear-gradient(135deg, #fee2e2, #fff7ed);
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        font-size: 20px;
+        font-weight: 900;
+        letter-spacing: 0.03em;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-ref-result strong {
+        margin-top: 5px;
+        color: #111827;
+        font-size: 16px;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-found-copy {
+        color: transparent;
+        line-height: 1.35;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-condition-badge {
+        min-height: 26px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        font-size: 9px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-lookup-details {
+        margin-top: -10px;
+        padding: 0 24px 12px 112px;
+        border-radius: 0 0 10px 10px;
+        border-color: #e5e7eb;
+        border-top: 0;
+        background: #ffffff;
+        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.05);
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-lookup-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-lookup-card {
+        align-items: center;
+        gap: 8px;
+        padding: 9px 8px;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-lookup-card:hover {
+        background: transparent;
+        border-color: transparent;
+        box-shadow: none;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-lookup-icon {
+        display: none;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-lookup-label {
+        margin-bottom: 3px;
+        color: #4b5563;
+        font-size: 12px;
+        letter-spacing: 0.02em;
+        text-transform: none;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-lookup-value {
+        color: #111827;
+        font-size: 14px;
+        font-weight: 800;
+    }
+
     .applicant-ref-result {
         display: none;
         padding: 20px 18px;
@@ -4191,6 +4350,37 @@
         display: block;
     }
 
+    .applicant-health-info-modal {
+        width: min(1040px, calc(100vw - 48px));
+    }
+
+    .applicant-health-info-modal-body {
+        padding: 18px;
+        max-height: calc(100vh - 140px);
+    }
+
+    .applicant-health-info-modal .applicant-information-details {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .applicant-medical-condition-modal {
+        width: min(760px, calc(100vw - 48px));
+    }
+
+    .applicant-medical-condition-modal-body {
+        padding: 18px;
+        max-height: calc(100vh - 140px);
+    }
+
+    .applicant-medical-condition-modal .applicant-medical-condition-details {
+        margin: 0;
+    }
+
     .applicant-medical-condition-details {
         display: none;
         width: 100%;
@@ -4337,6 +4527,48 @@
         width: 100%;
     }
 
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-file-actions {
+        position: sticky;
+        top: -16px;
+        z-index: 70;
+        grid-template-columns: repeat(4, minmax(150px, 1fr));
+        justify-content: start;
+        margin: -12px 0 6px;
+        padding: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.48);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.34);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-file-actions .applicant-file-action {
+        min-height: 42px;
+        padding: 9px 12px;
+        border-color: rgba(112, 19, 27, 0.28);
+        background: rgba(112, 19, 27, 0.92);
+        font-size: 12px;
+        line-height: 1.2;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, 0.16);
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-file-actions .applicant-file-action svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-file-actions .applicant-documents-count {
+        min-width: 18px;
+        height: 18px;
+        padding: 2px 6px;
+        font-size: 10px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnViewSavedAssessment {
+        display: none !important;
+    }
+
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-file-actions {
         position: sticky;
         top: -1px;
@@ -4378,6 +4610,64 @@
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
         pointer-events: none;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-final-review-action-row .applicant-file-actions {
+        position: static;
+        top: auto;
+        z-index: auto;
+        display: flex;
+        flex: 1 1 auto;
+        align-items: center;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        width: auto;
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 8px;
+        border: 0;
+        border-radius: 0;
+        background: transparent !important;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-final-review-action-row .applicant-file-actions::before {
+        display: none;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-final-review-action-row .applicant-file-action {
+        width: auto;
+        min-height: 42px;
+        padding: 9px 12px;
+        border-radius: 8px;
+        border-color: #70131b;
+        background: #70131b;
+        color: #facc15 !important;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, 0.12);
+        font-size: 12px;
+        line-height: 1.2;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-final-review-action-row .applicant-file-action svg {
+        width: 15px;
+        height: 15px;
+        color: currentColor;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-final-review-action-row .applicant-documents-count {
+        min-width: 18px;
+        height: 18px;
+        padding: 2px 6px;
+        font-size: 10px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-final-review-action-row .applicant-file-action:hover,
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-final-review-action-row .applicant-file-action:focus {
+        background: #8a101d;
+        color: #facc15;
+        border-color: #facc15;
     }
 
     .applicant-pending-history-wrap {
@@ -4842,6 +5132,30 @@
         box-shadow: 0 10px 20px rgba(127, 29, 45, 0.08) !important;
     }
 
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-final-review-action-row .applicant-file-action {
+        min-height: 42px !important;
+        padding: 9px 12px !important;
+        border-color: #70131b !important;
+        background: #70131b !important;
+        color: #facc15 !important;
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, 0.12) !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-final-review-action-row .applicant-file-action svg {
+        width: 15px !important;
+        height: 15px !important;
+        color: currentColor !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-final-review-action-row .applicant-file-action:hover,
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-final-review-action-row .applicant-file-action:focus {
+        background: #8a101d !important;
+        color: #facc15 !important;
+        border-color: #facc15 !important;
+    }
+
     .applicant-upload-preview-area {
         width: 100%;
     }
@@ -5071,6 +5385,235 @@
         background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
         border: 1px solid #0284c7;
         border-radius: 12px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-medical-condition-section.show {
+        grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+        gap: 14px;
+        align-items: stretch;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-review-source-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin: 12px 0 16px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-review-source-grid .applicant-lookup-card {
+        min-height: 112px;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 18px;
+        border: 0;
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-review-source-grid .applicant-lookup-icon {
+        display: inline-flex;
+        width: 52px;
+        height: 52px;
+        min-width: 52px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #8b0000, #b91c1c);
+        color: #ffffff;
+        font-size: 18px;
+        box-shadow: 0 10px 18px rgba(127, 29, 29, 0.18);
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-review-source-grid .applicant-lookup-label {
+        color: #111827;
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-review-source-grid .applicant-lookup-value {
+        color: #111827;
+        font-size: 14px;
+        font-weight: 900;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .employee-physical-assessment-panel {
+        align-self: stretch;
+        height: auto;
+        max-height: min(760px, calc(100vh - 190px));
+        overflow-y: auto;
+        padding: 0;
+        border-color: rgba(112, 19, 27, 0.16);
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92)),
+            radial-gradient(circle at 12% 0%, rgba(250, 204, 21, 0.14), transparent 30%);
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.10);
+        scrollbar-color: rgba(112, 19, 27, 0.36) rgba(226, 232, 240, 0.65);
+        scrollbar-width: thin;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .employee-physical-assessment-panel .applicant-screening-panel-title {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        margin: 0;
+        padding: 16px 20px 14px;
+        border-bottom: 1px solid rgba(112, 19, 27, 0.12);
+        background: rgba(255, 255, 255, 0.78);
+        backdrop-filter: blur(14px);
+        color: #70131b;
+        font-size: 14px;
+        letter-spacing: 0.02em;
+    }
+
+    .employee-physical-exam-template {
+        display: none;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template {
+        display: block;
+        padding: 18px 20px 20px;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 650;
+        line-height: 1.55;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template h5 {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        margin: 0 0 16px;
+        padding: 6px 11px;
+        border: 1px solid rgba(112, 19, 27, 0.14);
+        border-radius: 999px;
+        background: rgba(112, 19, 27, 0.06);
+        color: #70131b;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.06em;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template p {
+        margin: 0 0 10px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-section {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding: 12px;
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.88);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-section > strong {
+        color: #70131b;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 16px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options label,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-line {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin: 0;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options label {
+        min-height: 34px;
+        padding: 7px 11px;
+        border: 1px solid rgba(203, 213, 225, 0.92);
+        border-radius: 999px;
+        background: #ffffff;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options label:has(input[type="checkbox"]:checked) {
+        border-color: rgba(112, 19, 27, 0.38);
+        background: rgba(112, 19, 27, 0.08);
+        color: #70131b;
+        box-shadow: 0 6px 14px rgba(112, 19, 27, 0.08);
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options label:has(input[type="radio"]:checked) {
+        border-color: rgba(112, 19, 27, 0.38);
+        background: rgba(112, 19, 27, 0.08);
+        color: #70131b;
+        box-shadow: 0 6px 14px rgba(112, 19, 27, 0.08);
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options input[type="checkbox"],
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options input[type="radio"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #70131b;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template input[type="text"],
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template input[type="date"] {
+        min-width: 110px;
+        width: 150px;
+        height: 32px;
+        padding: 5px 9px;
+        border: 1px solid rgba(148, 163, 184, 0.72);
+        border-radius: 8px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 700;
+        outline: none;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template input[type="text"]:focus,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template input[type="date"]:focus {
+        border-color: rgba(112, 19, 27, 0.55);
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, 0.10);
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px 12px;
+        margin: 0 0 12px;
+        padding: 12px;
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.88);
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col label {
+        display: grid;
+        grid-template-columns: 70px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 7px;
+        margin: 0;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col input[type="text"] {
+        width: 100%;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .applicant-screening-panel-copy,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .applicant-vitals-grid,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .bmi-gauge-card {
+        display: none !important;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-screening-panel {
@@ -6270,6 +6813,11 @@
             grid-template-columns: 1fr;
         }
 
+        #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .employee-physical-assessment-panel {
+            height: auto;
+            max-height: min(70vh, 560px);
+        }
+
         .applicant-file-actions {
             grid-template-columns: 1fr;
         }
@@ -7044,8 +7592,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" />
                         </svg>
                     </span>
-                    <h3 class="intake-option-title">Staffs</h3>
-                    <p class="intake-option-copy">Enter Staffs ID to lookup clinic records to manage clinic profiles.</p>
+                    <h3 class="intake-option-title">Employee's</h3>
+                    <p class="intake-option-copy">Enter Employee's ID to lookup clinic records to manage clinic profiles.</p>
                 </div>
             </a>
 
@@ -7180,7 +7728,10 @@
                 </div>
 
                 <div class="applicant-ref-panel" id="applicantRefEntry">
-                    <button type="button" class="applicant-final-review-back" id="btnBackToFinalReviewList">&larr; Back</button>
+                    <div class="applicant-final-review-action-row" id="applicantFinalReviewActionRow">
+                        <button type="button" class="applicant-final-review-back" id="btnBackToFinalReviewList">&larr; Back</button>
+                        <span class="applicant-final-review-action-separator" aria-hidden="true"></span>
+                    </div>
                     <div class="applicant-ref-lookup-row">
                     <div class="applicant-ref-instruction">
                         <span class="applicant-ref-help-copy" id="lookupModalHelpCopy">Find the reference number in the <strong>Admission System</strong> under the applicant's profile or registration form.</span>
@@ -7189,6 +7740,42 @@
                         <label for="applicantRefInput" id="lookupModalFieldLabel">Reference Number</label>
                         <input type="text" id="applicantRefInput" class="applicant-ref-input" placeholder="Enter reference number">
                     </div>
+                    </div>
+
+                    <div class="applicant-file-actions" id="applicantFileActions">
+                        <button type="button" id="btnViewApplicantInformation" class="applicant-documents-trigger applicant-file-action">
+                            <x-outline-icon name="user-circle" />
+                            <span data-information-button-label>Health Information Form</span>
+                        </button>
+                        <button type="button" id="btnViewMedicalCondition" class="applicant-documents-trigger applicant-file-action">
+                            <x-outline-icon name="clipboard-document-list" />
+                            <span data-condition-button-label>Medical Condition</span>
+                        </button>
+                        <button type="button" id="btnViewApplicantDocuments" class="applicant-documents-trigger applicant-file-action">
+                            <x-outline-icon name="document-text" />
+                            <span>Uploaded Documents</span>
+                            <span class="applicant-documents-count" id="applicantDocumentsCount">0</span>
+                        </button>
+                        <div class="applicant-pending-history-wrap" id="applicantPendingHistoryWrap">
+                            <button type="button" id="btnViewPendingHistory" class="applicant-documents-trigger applicant-file-action">
+                                <x-outline-icon name="clipboard-document-list" />
+                                <span>Pending History</span>
+                            </button>
+                            <div class="applicant-pending-history-bubble" id="applicantPendingHistoryBubble" role="status">
+                                <div>
+                                    <span>Pending Reason</span>
+                                    <strong id="applicantPendingHistoryReason">-</strong>
+                                </div>
+                                <div>
+                                    <span>Other Pending Reason</span>
+                                    <strong id="applicantPendingHistoryOther">-</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" id="btnViewSavedAssessment" class="applicant-documents-trigger applicant-file-action">
+                            <x-outline-icon name="clipboard-document-list" />
+                            <span>View Saved Review</span>
+                        </button>
                     </div>
 
                     <div id="applicantRefStatus" class="ocr-status"></div>
@@ -7257,106 +7844,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div id="applicantInformationDetails" class="applicant-information-details" aria-hidden="true">
-                        <div class="health-info-editor" id="healthInfoEditor">
-                            <aside class="health-info-tabs" id="healthInfoTabs"></aside>
-                            <section class="health-info-content">
-                                <div class="health-info-header">
-                                    <div>
-                                        <p class="health-info-kicker">Health Form</p>
-                                        <h4 id="healthInfoSectionTitle">Health Form Information</h4>
-                                    </div>
-                                    <div class="health-info-actions">
-                                        <button type="button" id="healthInfoEditBtn" class="health-info-edit-btn">
-                                            <x-outline-icon name="pencil-square" />
-                                            <span>Edit</span>
-                                        </button>
-                                        <button type="button" id="healthInfoCancelBtn" class="health-info-cancel-btn" style="display: none;">Cancel</button>
-                                        <button type="button" id="healthInfoSaveBtn" class="health-info-save-btn" style="display: none;">Save</button>
-                                    </div>
-                                </div>
-                                <div class="health-info-fields" id="healthInfoFields"></div>
-                            </section>
-                        </div>
-                    </div>
-
-                    <div id="applicantMedicalConditionDetails" class="applicant-medical-condition-details" aria-hidden="true">
-                        <div class="applicant-lookup-grid">
-                            <div class="applicant-lookup-item">
-                                <div class="applicant-lookup-card">
-                                    <div class="applicant-lookup-icon is-maroon">MC</div>
-                                    <div class="applicant-lookup-content">
-                                        <p class="applicant-lookup-label">Condition</p>
-                                        <p class="applicant-lookup-value" id="applicantViewConditionStatus">No Medical Condition</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="applicant-lookup-item">
-                                <div class="applicant-lookup-card">
-                                    <div class="applicant-lookup-icon is-maroon">DX</div>
-                                    <div class="applicant-lookup-content">
-                                        <p class="applicant-lookup-label">Medical Condition</p>
-                                        <p class="applicant-lookup-value" id="applicantViewMedicalCondition">N/A</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="applicant-lookup-item">
-                                <div class="applicant-lookup-card">
-                                    <div class="applicant-lookup-icon is-maroon">PR</div>
-                                    <div class="applicant-lookup-content">
-                                        <p class="applicant-lookup-label">Pending Reasons</p>
-                                        <p class="applicant-lookup-value" id="applicantViewConditionReasons">N/A</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="applicant-lookup-item">
-                                <div class="applicant-lookup-card">
-                                    <div class="applicant-lookup-icon is-maroon">RM</div>
-                                    <div class="applicant-lookup-content">
-                                        <p class="applicant-lookup-label">Remarks</p>
-                                        <p class="applicant-lookup-value" id="applicantViewConditionRemarks">N/A</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="applicant-file-actions" id="applicantFileActions">
-                        <button type="button" id="btnViewApplicantInformation" class="applicant-documents-trigger applicant-file-action">
-                            <x-outline-icon name="user-circle" />
-                            <span data-information-button-label>Health Form Information</span>
-                        </button>
-                        <button type="button" id="btnViewMedicalCondition" class="applicant-documents-trigger applicant-file-action">
-                            <x-outline-icon name="clipboard-document-list" />
-                            <span data-condition-button-label>Medical Condition</span>
-                        </button>
-                        <button type="button" id="btnViewApplicantDocuments" class="applicant-documents-trigger applicant-file-action">
-                            <x-outline-icon name="document-text" />
-                            <span>Uploaded Documents</span>
-                            <span class="applicant-documents-count" id="applicantDocumentsCount">0</span>
-                        </button>
-                        <div class="applicant-pending-history-wrap" id="applicantPendingHistoryWrap">
-                            <button type="button" id="btnViewPendingHistory" class="applicant-documents-trigger applicant-file-action">
-                                <x-outline-icon name="clipboard-document-list" />
-                                <span>Pending History</span>
-                            </button>
-                            <div class="applicant-pending-history-bubble" id="applicantPendingHistoryBubble" role="status">
-                                <div>
-                                    <span>Pending Reason</span>
-                                    <strong id="applicantPendingHistoryReason">-</strong>
-                                </div>
-                                <div>
-                                    <span>Other Pending Reason</span>
-                                    <strong id="applicantPendingHistoryOther">-</strong>
-                                </div>
-                            </div>
-                        </div>
-                        <button type="button" id="btnViewSavedAssessment" class="applicant-documents-trigger applicant-file-action">
-                            <x-outline-icon name="clipboard-document-list" />
-                            <span>View Saved Review</span>
-                        </button>
                     </div>
 
                     {{-- Medical Condition Section --}}
@@ -7514,9 +8001,152 @@
                             </div>
                         </section>
 
-                        <section class="applicant-screening-panel">
+                        <section class="applicant-screening-panel employee-physical-assessment-panel">
                             <h4 class="applicant-screening-panel-title">Physical Assessment</h4>
                             <p class="applicant-screening-panel-copy">Record the applicant's current vital signs during the nurse review.</p>
+                            <div class="employee-physical-exam-template" aria-label="Physical examination">
+                                <h5>PHYSICAL EXAMINATION</h5>
+                                <div class="employee-exam-section">
+                                    <strong>Vital Signs:</strong>
+                                    <div class="employee-exam-options">
+                                        <label><input type="radio" name="employee_exam_distress" value="not_in_distress"> Not in Distress</label>
+                                        <label><input type="radio" name="employee_exam_distress" value="in_distress"> In Distress</label>
+                                    </div>
+                                    <div class="employee-exam-two-col">
+                                        <label>Ht. <input type="text" name="employee_exam_height" placeholder="e.g., 5'6&quot;"> ft.</label>
+                                        <label>Wt. <input type="text" name="employee_exam_weight" placeholder="e.g., 143"> lbs.</label>
+                                        <label>BMI: <input type="text" name="employee_exam_bmi"></label>
+                                        <label>BP <input type="text" name="employee_exam_bp"></label>
+                                        <label>HR <input type="text" name="employee_exam_hr"> /min</label>
+                                        <label>RR <input type="text" name="employee_exam_rr"> /min</label>
+                                        <label>Temp. <input type="text" name="employee_exam_temperature"></label>
+                                    </div>
+                                </div>
+                                <div class="employee-exam-section">
+                                    <strong>Head:</strong>
+                                    <div class="employee-exam-options">
+                                        <label><input type="checkbox" name="employee_exam_head[]" value="wound"> Wound</label>
+                                        <label><input type="checkbox" name="employee_exam_head[]" value="mass"> Mass</label>
+                                        <label><input type="checkbox" name="employee_exam_head[]" value="alopecia"> Alopecia</label>
+                                        <label><input type="checkbox" name="employee_exam_head[]" value="na"> N/A</label>
+                                    </div>
+                                </div>
+                                <div class="employee-exam-section">
+                                    <strong>Eyes:</strong>
+                                    <div class="employee-exam-options">
+                                        <label><input type="checkbox" name="employee_exam_eyes[]" value="without_glasses"> w/o Glasses</label>
+                                        <label><input type="checkbox" name="employee_exam_eyes[]" value="with_glasses"> w/ Glasses</label>
+                                        <label><input type="checkbox" name="employee_exam_eyes[]" value="anicteric_sclera"> Anicteric Sclera</label>
+                                        <label><input type="checkbox" name="employee_exam_eyes[]" value="pink_palpebral_conjunctiva"> Pink Palpebral Conjunctiva</label>
+                                    </div>
+                                </div>
+                                <div class="employee-exam-section">
+                                    <strong>Ears:</strong>
+                                    <div class="employee-exam-options">
+                                        <label><input type="checkbox" name="employee_exam_ears[]" value="no_gross_deformity"> No Gross Deformity</label>
+                                        <label><input type="checkbox" name="employee_exam_ears[]" value="no_discharge"> No Discharge</label>
+                                    </div>
+                                </div>
+                                <div class="employee-exam-section">
+                                    <strong>Throat:</strong>
+                                    <div class="employee-exam-options">
+                                        <label><input type="checkbox" name="employee_exam_throat[]" value="no_tpc"> No TPC</label>
+                                        <label><input type="checkbox" name="employee_exam_throat[]" value="no_mass"> No Mass</label>
+                                        <label><input type="checkbox" name="employee_exam_throat[]" value="no_lymphadenopathy"> No lymphadenopathy</label>
+                                    </div>
+                                </div>
+                                <div class="employee-exam-section">
+                                    <strong>Chest/Lungs:</strong>
+                                    <div class="employee-exam-options">
+                                        <label><input type="radio" name="employee_exam_chest_lungs" value="normal"> Normal</label>
+                                        <label><input type="radio" name="employee_exam_chest_lungs" value="wheeze"> Wheeze</label>
+                                        <label><input type="radio" name="employee_exam_chest_lungs" value="rales"> Rales</label>
+                                        <label><input type="radio" name="employee_exam_chest_lungs" value="na"> N/A</label>
+                                    </div>
+                                </div>
+                                <div class="employee-exam-section">
+                                    <strong>Chest X-Ray Result:</strong>
+                                    <div class="employee-exam-options">
+                                        <label><input type="radio" name="employee_exam_chest_xray" value="normal"> Normal</label>
+                                        <label><input type="radio" name="employee_exam_chest_xray" value="with_findings"> With findings</label>
+                                        <label><input type="radio" name="employee_exam_chest_xray" value="na"> N/A</label>
+                                    </div>
+                                </div>
+                                <div class="employee-exam-section">
+                                    <strong>Breast:</strong>
+                                    <div class="employee-exam-options">
+                                        <label><input type="checkbox" name="employee_exam_breast[]" value="normal"> Normal</label>
+                                    </div>
+                                </div>
+                                <div class="employee-exam-section">
+                                    <strong>Heart:</strong>
+                                    <div class="employee-exam-options">
+                                        <span>Murmur:</span>
+                                        <label><input type="radio" name="employee_exam_heart_murmur" value="present"> Present</label>
+                                        <label><input type="radio" name="employee_exam_heart_murmur" value="absent"> Absent</label>
+                                        <label><input type="radio" name="employee_exam_heart_murmur" value="na"> N/A</label>
+                                        <span>Rhythm:</span>
+                                        <label><input type="radio" name="employee_exam_heart_rhythm" value="regular"> Regular</label>
+                                        <label><input type="radio" name="employee_exam_heart_rhythm" value="irregular"> Irregular</label>
+                                        <label><input type="radio" name="employee_exam_heart_rhythm" value="na"> N/A</label>
+                                    </div>
+                                </div>
+                                <div class="employee-exam-section">
+                                    <strong>Abdomen:</strong>
+                                    <div class="employee-exam-options">
+                                        <label><input type="checkbox" name="employee_exam_abdomen[]" value="normal"> Normal</label>
+                                    </div>
+                                </div>
+                                <div class="employee-exam-section">
+                                    <strong>Genito-Urinary:</strong>
+                                    <label class="employee-exam-line">1st day of last Menstruation <input type="text" name="employee_exam_last_menstruation"></label>
+                                </div>
+                                <div class="employee-exam-section">
+                                    <strong>Extremities:</strong>
+                                    <div class="employee-exam-options">
+                                        <label><input type="checkbox" name="employee_exam_extremities[]" value="no_deformities"> No Deformities</label>
+                                    </div>
+                                </div>
+                                <div class="employee-exam-section">
+                                    <strong>Vertebral Column:</strong>
+                                    <div class="employee-exam-options">
+                                        <label><input type="radio" name="employee_exam_vertebral_column" value="normal"> Normal</label>
+                                        <label><input type="radio" name="employee_exam_vertebral_column" value="with_deformity"> With Deformity</label>
+                                        <label><input type="radio" name="employee_exam_vertebral_column" value="na"> N/A</label>
+                                    </div>
+                                </div>
+                                <div class="employee-exam-section">
+                                    <strong>Skin:</strong>
+                                    <div class="employee-exam-options">
+                                        <label><input type="checkbox" name="employee_exam_skin[]" value="pallor"> Pallor</label>
+                                        <label><input type="checkbox" name="employee_exam_skin[]" value="rashes"> Rashes</label>
+                                        <label><input type="checkbox" name="employee_exam_skin[]" value="lesions"> Lesions</label>
+                                    </div>
+                                </div>
+                                <div class="employee-exam-section">
+                                    <strong>Scars:</strong>
+                                    <div class="employee-exam-options">
+                                        <label><input type="radio" name="employee_exam_scars" value="absent"> Absent</label>
+                                        <label><input type="radio" name="employee_exam_scars" value="present"> Present</label>
+                                        <label><input type="radio" name="employee_exam_scars" value="na"> N/A</label>
+                                    </div>
+                                </div>
+                                <div class="employee-exam-section">
+                                    <strong>WORKING IMPRESSION:</strong>
+                                    <label class="employee-exam-line"><strong>Fit:</strong> <input type="text" name="employee_exam_fit"></label>
+                                    <label class="employee-exam-line"><strong>For Work-Up:</strong> <input type="text" name="employee_exam_for_work_up"></label>
+                                    <strong>Referred to:</strong>
+                                    <div class="employee-exam-options">
+                                        <label><input type="checkbox" name="employee_exam_referred_to[]" value="cardio"> Cardio</label>
+                                        <label><input type="checkbox" name="employee_exam_referred_to[]" value="derma"> Derma</label>
+                                        <label><input type="checkbox" name="employee_exam_referred_to[]" value="ent"> ENT</label>
+                                        <label><input type="checkbox" name="employee_exam_referred_to[]" value="optha"> Optha</label>
+                                        <label><input type="checkbox" name="employee_exam_referred_to[]" value="pulmo"> Pulmo</label>
+                                        <label class="employee-exam-line">Others: <input type="text" name="employee_exam_referred_to_others"></label>
+                                    </div>
+                                    <label class="employee-exam-line"><strong>Follow up on:</strong> <input type="date" name="employee_exam_follow_up_on"></label>
+                                </div>
+                            </div>
                             <div class="applicant-vitals-grid">
                                 <div class="applicant-condition-field">
                                     <label for="applicantHeight">Height <span style="color:#dc2626;">*</span></label>
@@ -7622,6 +8252,106 @@
         </div>
     </div>
 
+    <div class="applicant-modal-backdrop" id="applicantHealthInfoModal" aria-hidden="true">
+        <div class="applicant-modal-shell applicant-health-info-modal">
+            <div class="applicant-modal-head">
+                <div class="applicant-modal-head-main">
+                    <div class="applicant-modal-head-badge">HF</div>
+                    <div class="applicant-modal-head-copy">
+                        <h3>Health Information Form</h3>
+                        <p>Complete health form information for the selected record.</p>
+                    </div>
+                </div>
+                <button type="button" class="applicant-modal-close" id="closeApplicantHealthInfoModal" aria-label="Close health information form">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </div>
+            <div class="applicant-modal-body applicant-health-info-modal-body">
+                <div id="applicantInformationDetails" class="applicant-information-details is-visible" aria-hidden="false">
+                    <div class="health-info-editor" id="healthInfoEditor">
+                        <aside class="health-info-tabs" id="healthInfoTabs"></aside>
+                        <section class="health-info-content">
+                            <div class="health-info-header">
+                                <div>
+                                    <p class="health-info-kicker">Health Form</p>
+                                    <h4 id="healthInfoSectionTitle">Health Information Form</h4>
+                                </div>
+                                <div class="health-info-actions">
+                                    <button type="button" id="healthInfoEditBtn" class="health-info-edit-btn">
+                                        <x-outline-icon name="pencil-square" />
+                                        <span>Edit</span>
+                                    </button>
+                                    <button type="button" id="healthInfoCancelBtn" class="health-info-cancel-btn" style="display: none;">Cancel</button>
+                                    <button type="button" id="healthInfoSaveBtn" class="health-info-save-btn" style="display: none;">Save</button>
+                                </div>
+                            </div>
+                            <div class="health-info-fields" id="healthInfoFields"></div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="applicant-modal-backdrop" id="applicantMedicalConditionModal" aria-hidden="true">
+        <div class="applicant-modal-shell applicant-medical-condition-modal">
+            <div class="applicant-modal-head">
+                <div class="applicant-modal-head-main">
+                    <div class="applicant-modal-head-badge">MC</div>
+                    <div class="applicant-modal-head-copy">
+                        <h3>Medical Condition</h3>
+                        <p>Condition summary, pending reasons, and remarks for the selected record.</p>
+                    </div>
+                </div>
+                <button type="button" class="applicant-modal-close" id="closeApplicantMedicalConditionModal" aria-label="Close medical condition">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </div>
+            <div class="applicant-modal-body applicant-medical-condition-modal-body">
+                <div id="applicantMedicalConditionDetails" class="applicant-medical-condition-details is-visible" aria-hidden="false">
+                    <div class="applicant-lookup-grid">
+                        <div class="applicant-lookup-item">
+                            <div class="applicant-lookup-card">
+                                <div class="applicant-lookup-icon is-maroon">MC</div>
+                                <div class="applicant-lookup-content">
+                                    <p class="applicant-lookup-label">Condition</p>
+                                    <p class="applicant-lookup-value" id="applicantViewConditionStatus">No Medical Condition</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="applicant-lookup-item">
+                            <div class="applicant-lookup-card">
+                                <div class="applicant-lookup-icon is-maroon">DX</div>
+                                <div class="applicant-lookup-content">
+                                    <p class="applicant-lookup-label">Medical Condition</p>
+                                    <p class="applicant-lookup-value" id="applicantViewMedicalCondition">N/A</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="applicant-lookup-item">
+                            <div class="applicant-lookup-card">
+                                <div class="applicant-lookup-icon is-maroon">PR</div>
+                                <div class="applicant-lookup-content">
+                                    <p class="applicant-lookup-label">Pending Reasons</p>
+                                    <p class="applicant-lookup-value" id="applicantViewConditionReasons">N/A</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="applicant-lookup-item">
+                            <div class="applicant-lookup-card">
+                                <div class="applicant-lookup-icon is-maroon">RM</div>
+                                <div class="applicant-lookup-content">
+                                    <p class="applicant-lookup-label">Remarks</p>
+                                    <p class="applicant-lookup-value" id="applicantViewConditionRemarks">N/A</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="applicant-modal-backdrop" id="savedAssessmentModal" aria-hidden="true">
         <div class="applicant-modal-shell saved-review-modal">
             <div class="applicant-modal-head">
@@ -7697,7 +8427,7 @@
                     <div class="applicant-modal-head-badge">FILE</div>
                     <div class="applicant-modal-head-copy">
                         <h3>Uploaded Documents</h3>
-                        <p>View the applicant's submitted clinic requirements and Health Information Form.</p>
+                        <p id="applicantDocumentsModalSubtitle">View the applicant's submitted clinic requirements and Health Information Form.</p>
                     </div>
                 </div>
                 <button type="button" class="applicant-modal-close" id="closeApplicantDocumentsModal" aria-label="Close uploaded documents">
@@ -7708,7 +8438,7 @@
                 <div class="applicant-documents-workspace">
                     <aside class="applicant-documents-sidebar" aria-label="Uploaded document list">
                         <div class="applicant-documents-grid" id="applicantDocumentsGrid">
-                            <div class="applicant-documents-empty">No uploaded documents are available for this applicant.</div>
+                            <div class="applicant-documents-empty" id="applicantDocumentsInitialEmpty">No uploaded documents are available for this applicant.</div>
                         </div>
                     </aside>
                     <section class="applicant-document-preview-panel" id="applicantDocumentPreviewPanel" aria-live="polite">
@@ -7717,7 +8447,7 @@
                             <a class="applicant-document-preview-close" id="applicantDocumentPreviewOpen" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">Open in New Tab</a>
                         </div>
                         <div class="applicant-document-preview-empty" id="applicantDocumentPreviewEmpty">Select a file from the left to display its full-page preview.</div>
-                        <iframe class="applicant-document-preview-frame" id="applicantDocumentPreviewFrame" title="Applicant document preview" style="display:none;"></iframe>
+                        <iframe class="applicant-document-preview-frame" id="applicantDocumentPreviewFrame" title="Clinic document preview" style="display:none;"></iframe>
                         <img class="applicant-document-preview-image" id="applicantDocumentPreviewImage" src="" alt="">
                     </section>
                 </div>
@@ -9250,6 +9980,7 @@
         const finalReviewPerPage = document.getElementById('applicantFinalReviewPerPage');
         const finalReviewEmpty = document.getElementById('applicantFinalReviewEmpty');
         const finalReviewTotalCount = document.getElementById('applicantFinalReviewTotalCount');
+        const finalReviewActionRow = document.getElementById('applicantFinalReviewActionRow');
         const backToFinalReviewList = document.getElementById('btnBackToFinalReviewList');
         const cancelEntryBtn  = document.getElementById('btnCancelApplicantRef');
         const refInput        = document.getElementById('applicantRefInput');
@@ -9264,6 +9995,8 @@
         const lookupYearSec   = document.getElementById('applicantLookupYearSection');
         const lookupDob       = document.getElementById('applicantLookupDob');
         const lookupEmail     = document.getElementById('applicantLookupEmail');
+        const healthInfoModal = document.getElementById('applicantHealthInfoModal');
+        const closeHealthInfoModalButton = document.getElementById('closeApplicantHealthInfoModal');
         const informationDetails = document.getElementById('applicantInformationDetails');
         const lookupHeight    = document.getElementById('applicantLookupHeight');
         const lookupWeight    = document.getElementById('applicantLookupWeight');
@@ -9279,7 +10012,10 @@
         const nurseReviewPanel = document.getElementById('applicantNurseReviewPanel');
         const informationButton = document.getElementById('btnViewApplicantInformation');
         const medicalConditionButton = document.getElementById('btnViewMedicalCondition');
+        const medicalConditionModal = document.getElementById('applicantMedicalConditionModal');
+        const closeMedicalConditionModalButton = document.getElementById('closeApplicantMedicalConditionModal');
         const medicalConditionDetails = document.getElementById('applicantMedicalConditionDetails');
+        const medicalConditionSection = document.querySelector('#applicantRefModal .applicant-medical-condition-section');
         const viewConditionStatus = document.getElementById('applicantViewConditionStatus');
         const viewMedicalCondition = document.getElementById('applicantViewMedicalCondition');
         const viewConditionReasons = document.getElementById('applicantViewConditionReasons');
@@ -9293,6 +10029,8 @@
         const copyReferenceButton = document.getElementById('copyApplicantReference');
         const documentsCount  = document.getElementById('applicantDocumentsCount');
         const documentsModal  = document.getElementById('applicantDocumentsModal');
+        const documentsModalSubtitle = document.getElementById('applicantDocumentsModalSubtitle');
+        const documentsInitialEmpty = document.getElementById('applicantDocumentsInitialEmpty');
         const documentsGrid   = document.getElementById('applicantDocumentsGrid');
         const closeDocuments  = document.getElementById('closeApplicantDocumentsModal');
         const savedAssessmentModal = document.getElementById('savedAssessmentModal');
@@ -9364,6 +10102,66 @@
             return currentApplicantWorkflow === 'final_review' && !isClinicLookupMode();
         }
 
+        function positionApplicantFileActions() {
+            if (!applicantFileActions || !entryPane) return;
+
+            if (isClinicLookupMode()) {
+                if (refStatus && applicantFileActions.nextElementSibling !== refStatus) {
+                    entryPane.insertBefore(applicantFileActions, refStatus);
+                }
+                return;
+            }
+
+            if (isFinalReviewWorkflow() && finalReviewActionRow) {
+                if (applicantFileActions.parentElement !== finalReviewActionRow) {
+                    finalReviewActionRow.appendChild(applicantFileActions);
+                }
+                return;
+            }
+
+            if (medicalConditionSection && applicantFileActions.nextElementSibling !== medicalConditionSection) {
+                entryPane.insertBefore(applicantFileActions, medicalConditionSection);
+            }
+        }
+
+        function syncDocumentsModalCopy() {
+            const emptyCopy = isClinicLookupMode()
+                ? "No uploaded documents are available for this employee."
+                : "No uploaded documents are available for this applicant.";
+
+            if (documentsModalSubtitle) {
+                documentsModalSubtitle.textContent = isClinicLookupMode()
+                    ? "View the employee's submitted clinic requirements and Health Information Form."
+                    : "View the applicant's submitted clinic requirements and Health Information Form.";
+            }
+            if (documentsInitialEmpty) {
+                documentsInitialEmpty.textContent = emptyCopy;
+            }
+            return emptyCopy;
+        }
+
+        function closeHealthInfoModal() {
+            if (!healthInfoModal) return;
+            healthInfoModal.classList.remove('show');
+            healthInfoModal.setAttribute('aria-hidden', 'true');
+            if (informationButton) {
+                informationButton.setAttribute('aria-expanded', 'false');
+                const label = informationButton.querySelector('[data-information-button-label]');
+                if (label) label.textContent = 'Health Information Form';
+            }
+        }
+
+        function closeMedicalConditionModal() {
+            if (!medicalConditionModal) return;
+            medicalConditionModal.classList.remove('show');
+            medicalConditionModal.setAttribute('aria-hidden', 'true');
+            if (medicalConditionButton) {
+                medicalConditionButton.setAttribute('aria-expanded', 'false');
+                const label = medicalConditionButton.querySelector('[data-condition-button-label]');
+                if (label) label.textContent = 'Medical Condition';
+            }
+        }
+
         function closeClinicSuccessOverlay(overlay, shouldRunAction = true) {
             if (!overlay) return;
             overlay.classList.remove('is-open');
@@ -9402,20 +10200,33 @@
 
         function applyLookupMode(mode) {
             currentLookupMode = mode === 'clinic' ? 'clinic' : 'applicant';
+            if (isClinicLookupMode()) {
+                currentApplicantWorkflow = 'review';
+            }
+
+            if (modalShell) {
+                modalShell.classList.toggle('is-employee-lookup', isClinicLookupMode());
+                modalShell.classList.toggle('is-applicant-lookup', !isClinicLookupMode());
+                if (isClinicLookupMode()) {
+                    modalShell.classList.remove('is-encode-workflow', 'is-final-review-workflow', 'is-final-review-toolbar-stuck');
+                }
+            }
+            positionApplicantFileActions();
+            syncDocumentsModalCopy();
 
             if (lookupModalBadge) lookupModalBadge.textContent = isClinicLookupMode() ? 'ID' : 'AP';
-            if (lookupModalTitle) lookupModalTitle.textContent = isClinicLookupMode() ? 'Staffs' : 'Applicants';
+            if (lookupModalTitle) lookupModalTitle.textContent = isClinicLookupMode() ? "Employee's" : 'Applicants';
             if (lookupModalSubtitle) lookupModalSubtitle.textContent = isClinicLookupMode()
-                ? 'Enter an employee number or student number to look up local clinic-managed records.'
+                ? 'Enter an employee number or student number to look up local employee records.'
                 : "Enter the applicant's reference number to look up the record.";
-            if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isClinicLookupMode() ? 'Staff ID Lookup' : 'Reference Lookup';
+            if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isClinicLookupMode() ? "Employee's ID Lookup" : 'Reference Lookup';
             if (lookupModalEntrySubtitle) lookupModalEntrySubtitle.textContent = isClinicLookupMode()
-                ? 'Use the staff employee number or student number to open the saved local clinic record.'
+                ? 'Use the employee number or student number to open the saved local employee record.'
                 : 'Choose encoding for the first station or final review for approval.';
             if (lookupModalEntryButtonText) lookupModalEntryButtonText.textContent = isClinicLookupMode() ? 'Input ID Number' : 'Input Reference Number';
             if (lookupModalHelpCopy) {
                 lookupModalHelpCopy.innerHTML = isClinicLookupMode()
-                    ? 'Enter the <strong>employee number</strong> or <strong>student number</strong> saved in the clinic record.'
+                    ? 'Enter the <strong>employee number</strong> or <strong>student number</strong> saved in the employee record.'
                     : "Find the reference number in the <strong>Admission System</strong> under the applicant's profile or registration form.";
             }
             if (lookupModalFieldLabel) lookupModalFieldLabel.textContent = isClinicLookupMode() ? 'ID Number' : 'Reference Number';
@@ -9448,6 +10259,7 @@
             if (lookupModalHelpCopy) lookupModalHelpCopy.innerHTML = isEncode
                 ? 'Encode only the physical assessment here. Final approval and PUPTAS sync remain in <strong>Final Review</strong>.'
                 : "Find the reference number in the <strong>Admission System</strong> under the applicant's profile or registration form.";
+            positionApplicantFileActions();
         }
 
         function resetLookupButtonToFind() {
@@ -9535,7 +10347,7 @@
             if (!currentDocuments.length) {
                 const empty = document.createElement('div');
                 empty.className = 'applicant-documents-empty';
-                empty.textContent = 'No uploaded documents are available for this applicant.';
+                empty.textContent = syncDocumentsModalCopy();
                 documentsGrid.appendChild(empty);
                 return;
             }
@@ -9610,7 +10422,14 @@
 
         function resetLookupState() {
             if (modalShell) modalShell.classList.remove('has-lookup-result');
+            if (modalShell && !isClinicLookupMode()) {
+                modalShell.classList.remove('is-employee-lookup');
+                modalShell.classList.add('is-applicant-lookup');
+            }
+            positionApplicantFileActions();
             renderDocuments([]);
+            closeHealthInfoModal();
+            closeMedicalConditionModal();
             closeDocumentsModal();
             if (refStatus) { refStatus.className = 'ocr-status'; refStatus.textContent = ''; }
             if (foundCard) {
@@ -9631,7 +10450,7 @@
             if (informationButton) {
                 informationButton.classList.remove('is-visible');
                 const label = informationButton.querySelector('[data-information-button-label]');
-                if (label) label.textContent = 'Health Form Information';
+                if (label) label.textContent = 'Health Information Form';
                 informationButton.setAttribute('aria-expanded', 'false');
             }
             if (medicalConditionButton) {
@@ -9672,7 +10491,6 @@
             if (finalReviewList) finalReviewList.classList.remove('is-visible');
             if (showEntryBtn) showEntryBtn.style.display = isClinicLookupMode() ? 'inline-flex' : 'none';
             if (backToFinalReviewList) backToFinalReviewList.classList.remove('is-visible');
-            const medicalConditionSection = document.querySelector('.applicant-medical-condition-section');
             if (medicalConditionSection) {
                 medicalConditionSection.classList.remove('show');
                 medicalConditionSection.style.removeProperty('display');
@@ -9778,6 +10596,8 @@
 
         function closeApplicantsModal() {
             if (backdrop) backdrop.classList.remove('show');
+            closeHealthInfoModal();
+            closeMedicalConditionModal();
             setEntryMode(false);
             if (refInput) refInput.value = '';
         }
@@ -9900,7 +10720,7 @@
             }
             if (pendingHistoryWrap) pendingHistoryWrap.classList.remove('is-open');
             if (pendingHistoryButton) {
-                pendingHistoryButton.classList.toggle('is-visible', hasHistory && isFinalReviewWorkflow());
+                pendingHistoryButton.classList.toggle('is-visible', hasHistory && (isFinalReviewWorkflow() || isClinicLookupMode()));
                 pendingHistoryButton.setAttribute('aria-expanded', 'false');
             }
         }
@@ -10391,6 +11211,10 @@
             }
         ];
 
+        function activeHealthInfoSections() {
+            return healthInfoSections;
+        }
+
         function getHealthInfoFieldValue(sectionKey, fieldKey, sourceType) {
             if (sourceType === 'root') {
                 return currentHealthInfoData?.[fieldKey] ?? '';
@@ -10603,7 +11427,8 @@
 
         function refreshHealthInfoConditionalVisibility() {
             if (!healthInfoFields) return;
-            const section = healthInfoSections.find(item => item.key === currentHealthInfoSection) || healthInfoSections[0];
+            const sections = activeHealthInfoSections();
+            const section = sections.find(item => item.key === currentHealthInfoSection) || sections[0];
             section.fields.forEach(function (fieldConfig) {
                 const [fieldKey] = fieldConfig;
                 const wrapper = healthInfoFields.querySelector(`[data-health-field-wrap="${fieldKey}"]`);
@@ -10614,8 +11439,11 @@
 
         function renderHealthInfoTabs() {
             if (!healthInfoTabs) return;
+            const sections = activeHealthInfoSections();
 
-            healthInfoTabs.innerHTML = healthInfoSections.map(function (section) {
+            healthInfoTabs.style.display = '';
+
+            healthInfoTabs.innerHTML = sections.map(function (section) {
                 const activeClass = section.key === currentHealthInfoSection ? ' is-active' : '';
                 return `
                     <button type="button" class="health-info-tab${activeClass}" data-health-info-section="${escapeApplicantHtml(section.key)}">
@@ -10629,7 +11457,8 @@
         function renderHealthInfoFields() {
             if (!healthInfoFields) return;
 
-            const section = healthInfoSections.find(item => item.key === currentHealthInfoSection) || healthInfoSections[0];
+            const sections = activeHealthInfoSections();
+            const section = sections.find(item => item.key === currentHealthInfoSection) || sections[0];
             if (healthInfoSectionTitle) healthInfoSectionTitle.textContent = section.title;
 
             healthInfoFields.innerHTML = section.fields.map(function ([fieldKey, label, type, sourceType, config]) {
@@ -10680,18 +11509,25 @@
 
         function renderHealthInfoEditor(data) {
             currentHealthInfoData = data && typeof data === 'object' ? data : {};
-            if (!healthInfoSections.some(section => section.key === currentHealthInfoSection)) {
+            const sections = activeHealthInfoSections();
+            if (!sections.some(section => section.key === currentHealthInfoSection)) {
                 currentHealthInfoSection = 'personal_information';
             }
             renderHealthInfoTabs();
             renderHealthInfoFields();
+            syncHealthInfoActions();
+        }
+
+        function syncHealthInfoActions() {
+            const hideActions = false;
+            if (healthInfoEditBtn) healthInfoEditBtn.style.display = hideActions || isHealthInfoEditing ? 'none' : 'inline-flex';
+            if (healthInfoCancelBtn) healthInfoCancelBtn.style.display = !hideActions && isHealthInfoEditing ? 'inline-flex' : 'none';
+            if (healthInfoSaveBtn) healthInfoSaveBtn.style.display = !hideActions && isHealthInfoEditing ? 'inline-flex' : 'none';
         }
 
         function setHealthInfoEditing(editing) {
             isHealthInfoEditing = Boolean(editing);
-            if (healthInfoEditBtn) healthInfoEditBtn.style.display = isHealthInfoEditing ? 'none' : 'inline-flex';
-            if (healthInfoCancelBtn) healthInfoCancelBtn.style.display = isHealthInfoEditing ? 'inline-flex' : 'none';
-            if (healthInfoSaveBtn) healthInfoSaveBtn.style.display = isHealthInfoEditing ? 'inline-flex' : 'none';
+            syncHealthInfoActions();
             renderHealthInfoFields();
         }
 
@@ -10899,7 +11735,7 @@
                 informationButton.classList.add('is-visible');
                 informationButton.setAttribute('aria-expanded', 'false');
                 const label = informationButton.querySelector('[data-information-button-label]');
-                if (label) label.textContent = 'Health Form Information';
+                if (label) label.textContent = 'Health Information Form';
             }
             renderHealthInfoEditor(data.health_form_information || {});
             if (medicalConditionButton) {
@@ -10941,7 +11777,6 @@
             }
             renderPendingHistory(currentAssessmentReview);
 
-            const medicalConditionSection = document.querySelector('.applicant-medical-condition-section');
             if (medicalConditionSection) {
                 const shouldShowAssessment = isEncodeWorkflow() || isFinalReviewWorkflow() || !hasSavedReview;
                 medicalConditionSection.classList.toggle('show', shouldShowAssessment);
@@ -11003,11 +11838,11 @@
             }
 
             if (!isClinicLookupMode() && ref.toUpperCase().startsWith('CLN-')) {
-                setStatus('error', 'This is a Clinic Reference, not an Applicant Reference. Please use the Clinic Reference lookup.');
+                setStatus('error', 'This is an Employee Reference, not an Applicant Reference. Please use the Employee lookup.');
                 return;
             }
 
-            setStatus('info', isClinicLookupMode() ? 'Looking up clinic record...' : 'Looking up applicant...');
+            setStatus('info', isClinicLookupMode() ? 'Looking up employee record...' : 'Looking up applicant...');
             if (foundCard) foundCard.style.display = 'none';
             if (documentsButton) documentsButton.classList.remove('is-visible');
             if (savedAssessmentButton) savedAssessmentButton.classList.remove('is-visible');
@@ -11016,7 +11851,7 @@
             lookupUrl.searchParams.set('student_id', ref);
             lookupUrl.searchParams.set('preview_only', 'true');
             if (isClinicLookupMode()) {
-                lookupUrl.searchParams.set('lookup_scope', 'clinic_local');
+                lookupUrl.searchParams.set('lookup_scope', 'employee_local');
             }
 
             fetch(lookupUrl.toString(), {
@@ -11046,17 +11881,19 @@
                         || data.approved === 1;
 
                     const isLocalHealthProfile = data.lookup_source === 'local_health_profile';
-                    const isLocalClinicReference = data.lookup_source === 'local_clinic_reference';
-                    const isLocalClinicId = data.lookup_source === 'local_clinic_id';
-                    const isLocalOnlyLookup = isLocalHealthProfile || isLocalClinicReference || isLocalClinicId;
+                    const isLocalEmployeeReference = ['local_employee_reference', 'local_clinic_reference'].includes(data.lookup_source);
+                    const isLocalEmployeeId = ['local_employee_id', 'local_clinic_id'].includes(data.lookup_source);
+                    const isLocalOnlyLookup = isLocalHealthProfile || isLocalEmployeeReference || isLocalEmployeeId;
                     const lookupFoundMessage = isLocalHealthProfile
                         ? (data.sync_warning || 'Local health profile found. PUPTAS sync will still depend on a valid Admission reference.')
                         : (isClinicLookupMode()
-                            ? (applicantName ? 'Staff record found: ' + applicantName + '.' : 'Staff record found.')
+                            ? (applicantName ? "Employee's record found: " + applicantName + '.' : "Employee's record found.")
                             : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.'));
 
                     if (isAlreadyApproved) {
-                        setStatus('approved', 'Applicant Already Approved. This health profile has already been cleared by the clinic.');
+                        setStatus('approved', isClinicLookupMode()
+                            ? "Employee's record is already cleared."
+                            : 'Applicant Already Approved. This health profile has already been cleared by the clinic.');
                         if (foundCard && foundName) {
                             foundName.textContent = (applicantName || ref) + ' ✓';
                             foundCard.dataset.initials = getApplicantInitials(applicantName || ref);
@@ -11162,7 +11999,7 @@
                     }
                 } else {
                     setStatus('error', data.message || (isClinicLookupMode()
-                        ? 'No staff record found with that ID number.'
+                        ? "No employee's record found with that ID number."
                         : 'No applicant found with that reference number.'));
                 }
             })
@@ -11352,7 +12189,7 @@
 
             const approvalData = {
                 reference_number: currentLookupRef,
-                lookup_scope: isClinicLookupMode() ? 'clinic_local' : 'default',
+                lookup_scope: isClinicLookupMode() ? 'employee_local' : 'default',
                 findings_status: findingsStatusInput.value,
                 clearance_decision: clearanceDecisionInput.value,
                 height: heightInput.value,
@@ -12008,35 +12845,32 @@
         if (openClinicBtn) openClinicBtn.addEventListener('click', function (e) { e.preventDefault(); openClinicLookupModal(); });
         if (closeBtn) closeBtn.addEventListener('click', closeApplicantsModal);
         if (backdrop) backdrop.addEventListener('click', function (e) { if (e.target === backdrop) closeApplicantsModal(); });
+        if (closeHealthInfoModalButton) closeHealthInfoModalButton.addEventListener('click', closeHealthInfoModal);
+        if (healthInfoModal) healthInfoModal.addEventListener('click', function (event) {
+            if (event.target === healthInfoModal) closeHealthInfoModal();
+        });
+        if (closeMedicalConditionModalButton) closeMedicalConditionModalButton.addEventListener('click', closeMedicalConditionModal);
+        if (medicalConditionModal) medicalConditionModal.addEventListener('click', function (event) {
+            if (event.target === medicalConditionModal) closeMedicalConditionModal();
+        });
         if (informationButton) informationButton.addEventListener('click', function () {
-            if (!informationDetails) return;
+            if (!healthInfoModal || !informationDetails) return;
 
-            const willShow = !informationDetails.classList.contains('is-visible');
-            informationDetails.classList.toggle('is-visible', willShow);
-            informationDetails.setAttribute('aria-hidden', willShow ? 'false' : 'true');
-            informationButton.setAttribute('aria-expanded', willShow ? 'true' : 'false');
-
-            const label = informationButton.querySelector('[data-information-button-label]');
-            if (label) label.textContent = willShow ? 'Hide Health Form Information' : 'Health Form Information';
-
-            if (willShow) {
-                informationDetails.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
+            informationDetails.classList.add('is-visible');
+            informationDetails.setAttribute('aria-hidden', 'false');
+            renderHealthInfoEditor(currentHealthInfoData);
+            healthInfoModal.classList.add('show');
+            healthInfoModal.setAttribute('aria-hidden', 'false');
+            informationButton.setAttribute('aria-expanded', 'true');
         });
         if (medicalConditionButton) medicalConditionButton.addEventListener('click', function () {
-            if (!medicalConditionDetails) return;
+            if (!medicalConditionModal || !medicalConditionDetails) return;
 
-            const willShow = !medicalConditionDetails.classList.contains('is-visible');
-            medicalConditionDetails.classList.toggle('is-visible', willShow);
-            medicalConditionDetails.setAttribute('aria-hidden', willShow ? 'false' : 'true');
-            medicalConditionButton.setAttribute('aria-expanded', willShow ? 'true' : 'false');
-
-            const label = medicalConditionButton.querySelector('[data-condition-button-label]');
-            if (label) label.textContent = willShow ? 'Hide Medical Condition' : 'Medical Condition';
-
-            if (willShow) {
-                medicalConditionDetails.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
+            medicalConditionDetails.classList.add('is-visible');
+            medicalConditionDetails.setAttribute('aria-hidden', 'false');
+            medicalConditionModal.classList.add('show');
+            medicalConditionModal.setAttribute('aria-hidden', 'false');
+            medicalConditionButton.setAttribute('aria-expanded', 'true');
         });
         if (documentsButton) documentsButton.addEventListener('click', function () {
             if (documentsModal) documentsModal.classList.add('show');

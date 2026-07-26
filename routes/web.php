@@ -159,9 +159,11 @@ Route::middleware(['auth:student', 'idp.session', 'audit'])->group(function () {
 
         // 1. Route para ipakita ang blankong form
         Route::get('/student/health-form', [AppointmentController::class, 'showHealthForm'])->name('health.form');
+        Route::get('/student/health-form/employee', [AppointmentController::class, 'showEmployeeHealthForm'])->name('health.form.employee');
         Route::get('/student/health-form/staff', [AppointmentController::class, 'showStaffHealthForm'])->name('health.form.staff');
         Route::post('/student/health-form', [AppointmentController::class, 'storeHealthForm'])
             ->name('store.health.form.fallback');
+        Route::post('/student/health-form/employee', [AppointmentController::class, 'storeEmployeeHealthForm'])->name('store.health.form.employee');
         Route::post('/student/health-form/staff', [AppointmentController::class, 'storeStaffHealthForm'])->name('store.health.form.staff');
         Route::get('/student/health-form/reference/validate', [AppointmentController::class, 'validateHealthFormReference'])
             ->middleware('throttle:15,1')
@@ -187,8 +189,12 @@ Route::middleware(['auth:student', 'idp.session', 'audit'])->group(function () {
             ->name('student.health_record.document');
         Route::post('/student/health-record/resubmit', [AppointmentController::class, 'resubmitHealthRecordRequirements'])
             ->name('student.health_record.resubmit');
+        Route::post('/student/health-record/documents', [AppointmentController::class, 'uploadHealthRecordDocuments'])
+            ->name('student.health_record.documents');
         Route::post('/student/health-record/health-declaration', [AppointmentController::class, 'uploadHealthDeclaration'])
             ->name('student.health_record.health_declaration');
+        Route::post('/student/health-record/e-sign', [AppointmentController::class, 'uploadHealthRecordSignature'])
+            ->name('student.health_record.e_signature');
 
         Route::get('/student/account', [AppointmentController::class, 'account']);
         Route::get('/student/history', [AppointmentController::class, 'history']);
@@ -288,6 +294,10 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::get('/admin/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->name('walkin.form');
         Route::get('/admin/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->name('walkin.healthForm');
         Route::get('/admin/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->name('walkin.document');
+        Route::get('/admin/walkin/employee-health-form/{employeeProfile}', [WalkInController::class, 'showEmployeeHealthForm'])->name('walkin.employeeHealthForm');
+        Route::get('/admin/walkin/employee-document/{employeeProfile}/{document}', [WalkInController::class, 'showEmployeeDocument'])->name('walkin.employeeDocument');
+        Route::get('/admin/walkin/staff-health-form/{staffProfile}', [WalkInController::class, 'showStaffHealthForm'])->name('walkin.staffHealthForm');
+        Route::get('/admin/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->name('walkin.staffDocument');
         Route::post('/admin/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->name('walkin.health-profile-information.update');
         Route::post('/admin/walkin/store', [WalkInController::class, 'store'])->name('walkin.store');
         Route::post('/admin/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->name('admin.walkin.applicant_encoding');
@@ -406,6 +416,10 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::get('/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->name('walkin.form');
         Route::get('/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->name('walkin.healthForm');
         Route::get('/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->name('walkin.document');
+        Route::get('/walkin/employee-health-form/{employeeProfile}', [WalkInController::class, 'showEmployeeHealthForm'])->name('walkin.employeeHealthForm');
+        Route::get('/walkin/employee-document/{employeeProfile}/{document}', [WalkInController::class, 'showEmployeeDocument'])->name('walkin.employeeDocument');
+        Route::get('/walkin/staff-health-form/{staffProfile}', [WalkInController::class, 'showStaffHealthForm'])->name('walkin.staffHealthForm');
+        Route::get('/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->name('walkin.staffDocument');
         Route::post('/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->name('walkin.health-profile-information.update');
         Route::post('/walkin/store', [WalkInController::class, 'store'])->name('walkin.store');
         Route::post('/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->name('walkin.applicant_encoding');

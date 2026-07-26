@@ -2826,7 +2826,7 @@
     @auth('student')
     @php
         $studentUser = Auth::guard('student')->user();
-        $studentUser?->loadMissing('healthProfile', 'healthProfileStaff', 'adminProfile');
+        $studentUser?->loadMissing('healthProfile', 'employeeHealthProfile', 'adminProfile');
         $studentHealthFormMarkers = strtolower(trim(implode(' ', array_filter([
             (string) data_get($studentUser, 'user_type', ''),
             (string) data_get($studentUser, 'user_role', ''),
@@ -2834,22 +2834,22 @@
             (string) data_get($studentUser, 'adminProfile.access_level', ''),
             (string) data_get($studentUser, 'adminProfile.admin_hub_role', ''),
         ]))));
-        $studentUsesStaffHealthForm = false;
+        $studentUsesEmployeeHealthForm = false;
         foreach (['faculty', 'admin', 'staff', 'employee', 'dependent'] as $studentHealthFormNeedle) {
             if (str_contains($studentHealthFormMarkers, $studentHealthFormNeedle)) {
-                $studentUsesStaffHealthForm = true;
+                $studentUsesEmployeeHealthForm = true;
                 break;
             }
         }
-        $studentHealthFormStartRoute = $studentUsesStaffHealthForm
-            ? route('health.form.staff')
+        $studentHealthFormStartRoute = $studentUsesEmployeeHealthForm
+            ? route('health.form.employee')
             : route('health.form');
-        $studentHealthFormTitle = $studentUsesStaffHealthForm
+        $studentHealthFormTitle = $studentUsesEmployeeHealthForm
             ? 'Health Examination Record'
             : 'Health Information Form';
         $showHealthFormModal = $studentUser
             && !(bool) ($studentUser->is_health_profile_completed ?? false)
-            && ($studentUsesStaffHealthForm ? !$studentUser->healthProfileStaff : !$studentUser->healthProfile);
+            && ($studentUsesEmployeeHealthForm ? !$studentUser->employeeHealthProfile : !$studentUser->healthProfile);
         $studentResubmissionDocuments = collect(optional($studentUser?->healthProfile)->resubmission_required_documents ?? [])
             ->filter()
             ->intersect(['student_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])

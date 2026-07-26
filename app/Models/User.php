@@ -208,4 +208,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(HealthProfileStaff::class);
     }
+
+    public function employeeHealthProfile()
+    {
+        return $this->hasOne(EmployeeHealthProfile::class, 'user_id');
+    }
 }

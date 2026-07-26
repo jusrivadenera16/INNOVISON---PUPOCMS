@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\Appointment;
 use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
+use App\Models\EmployeeHealthProfile;
+use App\Models\HealthProfileStaff;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\ActivityLog;
@@ -205,7 +207,7 @@ class WalkInController extends Controller
             ->first();
     }
 
-    private function findUserByClinicIdNumber(string $identifier): ?User
+    private function findUserByEmployeeIdNumber(string $identifier): ?User
     {
         $identifier = trim($identifier);
         if ($identifier === '') {
@@ -223,6 +225,11 @@ class WalkInController extends Controller
                 }
             })
             ->first();
+    }
+
+    private function findUserByClinicIdNumber(string $identifier): ?User
+    {
+        return $this->findUserByEmployeeIdNumber($identifier);
     }
 
     private function findHealthProfileByReference(string $referenceNumber): ?HealthProfile
@@ -990,6 +997,91 @@ class WalkInController extends Controller
         ]);
     }
 
+    public function showEmployeeHealthForm(Request $request, EmployeeHealthProfile $employeeProfile)
+    {
+        $employeeProfile->loadMissing('user');
+        abort_unless($employeeProfile->user, 404);
+
+        $snapshotPath = ltrim((string) $employeeProfile->staff_health_form_pdf_path, '/');
+        $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
+        if ($snapshotPath !== '' && Storage::disk('public')->exists($snapshotPath)) {
+            return response()->file(Storage::disk('public')->path($snapshotPath), [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($snapshotPath)) . '"',
+                'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control' => 'private, max-age=300',
+            ]);
+        }
+
+        return response()->view('student.health_form_employee', [
+            'user' => $employeeProfile->user,
+            'employeeProfile' => $employeeProfile,
+            'employeePrefill' => [
+                'employee_number' => $employeeProfile->employee_number,
+                'first_name' => $employeeProfile->first_name,
+                'middle_name' => $employeeProfile->middle_name,
+                'last_name' => $employeeProfile->last_name,
+                'email' => optional($employeeProfile->user)->email,
+                'contact_no' => $employeeProfile->contact_no,
+                'office' => $employeeProfile->office,
+                'course_college' => $employeeProfile->course_college,
+                'school_year' => $employeeProfile->school_year,
+                'birthday' => optional($employeeProfile->birthday)->format('Y-m-d'),
+                'age' => $employeeProfile->age,
+                'sex' => $employeeProfile->sex,
+                'civil_status' => $employeeProfile->civil_status,
+            ],
+            'displayName' => $employeeProfile->name ?: optional($employeeProfile->user)->name,
+            'employeeCourseOptions' => collect([$employeeProfile->course_college])->filter()->values(),
+            'adminViewer' => true,
+        ]);
+    }
+
+    public function showStaffHealthForm(Request $request, HealthProfileStaff $staffProfile)
+    {
+        $employeeProfile = EmployeeHealthProfile::query()->findOrFail($staffProfile->getKey());
+
+        return $this->showEmployeeHealthForm($request, $employeeProfile);
+    }
+
+    public function showEmployeeDocument(EmployeeHealthProfile $employeeProfile, string $document)
+    {
+        $documentMap = [
+            'student_photo' => 'student_photo',
+            'health_declaration' => 'health_declaration',
+            'medical_certificate' => 'medical_certificate',
+            'chest_xray_result' => 'chest_xray_document',
+            'chest_xray_document' => 'chest_xray_document',
+            'pwd_id_proof' => 'pwd_id_proof',
+            'uploaded_signature' => 'uploaded_signature_path',
+        ];
+
+        abort_unless(isset($documentMap[$document]), 404);
+
+        $path = ltrim((string) $employeeProfile->{$documentMap[$document]}, '/');
+        $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+
+        abort_if($path === '' || !Storage::disk('public')->exists($path), 404, 'Uploaded document not found.');
+
+        $disk = Storage::disk('public');
+        $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
+        $filename = basename($path);
+
+        return response()->file($disk->path($path), [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . str_replace('"', '', $filename) . '"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, max-age=300',
+        ]);
+    }
+
+    public function showStaffDocument(HealthProfileStaff $staffProfile, string $document)
+    {
+        $employeeProfile = EmployeeHealthProfile::query()->findOrFail($staffProfile->getKey());
+
+        return $this->showEmployeeDocument($employeeProfile, $document);
+    }
+
     private function formatQuantityNumber(float $value): string
     {
         $rounded = round($value, 2);
@@ -1253,31 +1345,32 @@ class WalkInController extends Controller
         $previewOnly = $request->boolean('preview_only');
         $intakeTarget = strtolower(trim((string) $request->query('intake_target', 'consultation')));
         $lookupScope = strtolower(trim((string) $request->query('lookup_scope', 'default')));
-        if ($lookup !== '' && $lookupScope !== 'clinic_local' && Str::startsWith(strtoupper($lookup), 'CLN-')) {
+        $isEmployeeLookupScope = in_array($lookupScope, ['employee_local', 'clinic_local'], true);
+        if ($lookup !== '' && !$isEmployeeLookupScope && Str::startsWith(strtoupper($lookup), 'CLN-')) {
             return response()->json([
                 'status' => 'not_found',
-                'message' => 'This is a Clinic Reference, not an Applicant Reference. Please use the Clinic Reference lookup.',
+                'message' => 'This is an Employee Reference, not an Applicant Reference. Please use the Employee lookup.',
             ], 422);
         }
 
         $student = $this->findUserByIdentifier($lookup);
-        $lookupMessage = $lookupScope === 'clinic_local'
-            ? 'No staff record matched that ID number in local records.'
+        $lookupMessage = $isEmployeeLookupScope
+            ? 'No employee record matched that ID number in local records.'
             : 'No patient matched that student number in local records or PUPTAS.';
         $lookupStatus = null;
 
-        if ($lookupScope === 'clinic_local' && $lookup !== '') {
-            $student = $this->findUserByClinicIdNumber($lookup) ?: $student;
+        if ($isEmployeeLookupScope && $lookup !== '') {
+            $student = $this->findUserByEmployeeIdNumber($lookup) ?: $student;
             if (!$student) {
                 $localProfile = $this->findHealthProfileByReference($lookup);
                 if ($localProfile) {
                     $student = $this->ensureLocalUserFromHealthProfile($localProfile, $lookup);
-                    $lookupStatus = 'local_clinic_reference';
-                    $lookupMessage = 'Clinic reference found in local records.';
+                    $lookupStatus = 'local_employee_reference';
+                    $lookupMessage = 'Employee reference found in local records.';
                 }
             } else {
-                $lookupStatus = 'local_clinic_id';
-                $lookupMessage = 'Staff ID number found in local records.';
+                $lookupStatus = 'local_employee_id';
+                $lookupMessage = 'Employee ID number found in local records.';
             }
         } elseif (
             $lookup !== ''
@@ -1441,7 +1534,7 @@ class WalkInController extends Controller
                     'documents' => $this->healthProfileDocuments($request, $healthProfile),
                     'name_matches' => $lookupName !== '' ? $this->namesRoughlyMatch($lookupName, $student) : null,
                     'lookup_status' => $lookupStatus,
-                    'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_clinic_reference'], true)
+                    'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_employee_reference', 'local_clinic_reference'], true)
                         ? $lookupStatus
                         : 'puptas_or_local_user',
                     'sync_warning' => $lookupStatus === 'local_health_profile'
@@ -1495,7 +1588,7 @@ class WalkInController extends Controller
                 'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
                 'documents' => $this->healthProfileDocuments($request, $healthProfile),
                 'lookup_status' => $lookupStatus,
-                'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_clinic_reference'], true)
+                'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_employee_reference', 'local_clinic_reference'], true)
                     ? $lookupStatus
                     : 'puptas_or_local_user',
                 'sync_warning' => $lookupStatus === 'local_health_profile'
@@ -2298,7 +2391,7 @@ PROMPT;
             ]);
             $referenceNumber = trim((string) $validated['reference_number']);
             $lookupScope = strtolower(trim((string) ($validated['lookup_scope'] ?? 'default')));
-            $forceLocalClinicApproval = $lookupScope === 'clinic_local';
+            $forceLocalEmployeeApproval = in_array($lookupScope, ['employee_local', 'clinic_local'], true);
             $findingsStatus = (string) $validated['findings_status'];
             $clearanceDecision = (string) $validated['clearance_decision'];
             $hasPendingFinding = $clearanceDecision === 'pending';
@@ -2375,11 +2468,11 @@ PROMPT;
             }
 
             // Fetch applicant details to get student ID
-            $applicantData = $forceLocalClinicApproval
+            $applicantData = $forceLocalEmployeeApproval
                 ? null
                 : $webhookService->fetchApplicantByStudentNumber($referenceNumber);
             $localOnlyProfile = null;
-            $isLocalOnlyApproval = $forceLocalClinicApproval;
+            $isLocalOnlyApproval = $forceLocalEmployeeApproval;
 
             if (!$applicantData) {
                 $localOnlyProfile = $this->findHealthProfileByReference($referenceNumber);
@@ -2419,7 +2512,7 @@ PROMPT;
                 ? [
                     'success' => false,
                     'skipped' => true,
-                    'message' => 'Local clinic reference decision saved without PUPTAS sync.',
+                    'message' => 'Local employee record decision saved without PUPTAS sync.',
                 ]
                 : $webhookService->sendMedicalClearance(
                     $referenceNumber,
@@ -2618,7 +2711,7 @@ PROMPT;
                     'pending_reasons' => $pendingReasons,
                     'webhook_status' => ($webhookResult['success'] ?? false) ? 'success' : 'failed',
                     'webhook_message' => $webhookResult['message'] ?? null,
-                    'lookup_source' => $isLocalOnlyApproval ? 'local_clinic_reference' : 'puptas',
+                    'lookup_source' => $isLocalOnlyApproval ? 'local_employee_reference' : 'puptas',
                 ],
                 'ip_address' => $request->ip(),
                 'user_agent' => substr((string) $request->userAgent(), 0, 255),
@@ -2639,7 +2732,7 @@ PROMPT;
                         : 'Applicant approved locally. PUPTAS sync still needs attention.'),
                 'redirect_url' => $redirectUrl,
                 'webhook_synced' => (bool) ($webhookResult['success'] ?? false),
-                'lookup_source' => $isLocalOnlyApproval ? 'local_clinic_reference' : 'puptas',
+                'lookup_source' => $isLocalOnlyApproval ? 'local_employee_reference' : 'puptas',
             ]);
         } catch (\Exception $e) {
             Log::error('Applicant approval exception', [

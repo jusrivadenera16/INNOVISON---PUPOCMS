@@ -233,6 +233,9 @@ personal and health information for the purpose/s of health assessment/ treatmen
 for the improvement of healthcare services.
     </div>
 
+    @php
+        $showStoredSignature = ($pdfMode ?? false) || empty($studentPrintCopy);
+    @endphp
     <div class="signature-physician-block">
         <table class="signature-table">
             <tr>
@@ -242,7 +245,7 @@ for the improvement of healthcare services.
                     <div class="signature-caption">(Signature of parent/guardian for<br>students below 18 years old)</div>
                 </td>
                 <td>
-                    @if(empty($studentPrintCopy) && $profile->digital_signature)
+                    @if($showStoredSignature && $profile->digital_signature)
                         <img src="{{ asset('storage/' . $profile->digital_signature) }}" class="sig-image" style="height: 40px; width: auto;">
                     @else
                         <div class="signature-space"></div>

@@ -1677,6 +1677,47 @@
         padding: 18px;
         text-align: center;
     }
+    .missing-inline-upload-form {
+        width: 100%;
+        display: grid;
+        gap: 10px;
+        text-align: left;
+    }
+    .missing-inline-upload-form + .missing-inline-upload-form,
+    .missing-inline-upload-form + .missing-requirements-upload-btn {
+        margin-top: 10px;
+    }
+    .missing-inline-upload-form strong {
+        color: #70131B;
+        font-size: 12px;
+        font-weight: 950;
+    }
+    .missing-inline-upload-field {
+        display: grid;
+        gap: 5px;
+        border: 1px solid rgba(112, 19, 27, .12);
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 10px;
+        color: #111827;
+        font-size: 12px;
+        font-weight: 850;
+    }
+    .missing-inline-upload-field input {
+        width: 100%;
+        font-size: 11px;
+    }
+    .missing-inline-upload-field small {
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 750;
+    }
+    .missing-inline-upload-field em {
+        color: #dc2626;
+        font-size: 10px;
+        font-style: normal;
+        font-weight: 850;
+    }
     .missing-requirements-upload-icon {
         color: #8B0000;
     }
@@ -2791,6 +2832,116 @@
     .missing-requirements-hidden-input {
         display: none;
     }
+    .missing-esign-modal {
+        width: min(760px, 100%);
+        border-top: 0;
+        border-bottom: 4px solid #facc15;
+    }
+    .missing-esign-body {
+        padding: 24px;
+    }
+    .missing-esign-card {
+        border: 1px solid rgba(112, 19, 27, .12);
+        border-radius: 12px;
+        background: #ffffff;
+        padding: 14px;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, .06);
+    }
+    .missing-esign-label {
+        display: block;
+        margin-bottom: 8px;
+        color: #70131B;
+        font-size: 12px;
+        font-weight: 950;
+    }
+    .missing-esign-upload {
+        width: 100%;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #f8fafc;
+        padding: 10px;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 700;
+    }
+    .missing-esign-hint {
+        margin: 7px 0 0;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 750;
+    }
+    .missing-esign-methods {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+    .missing-esign-methods input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .missing-esign-methods label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        border: 1px solid rgba(112, 19, 27, .16);
+        border-radius: 12px;
+        background: #fff;
+        color: #70131B;
+        font-size: 13px;
+        font-weight: 950;
+        cursor: pointer;
+    }
+    .missing-esign-methods input:checked + label {
+        background: #8B0000;
+        border-color: #8B0000;
+        color: #facc15;
+        box-shadow: 0 14px 28px rgba(139, 0, 0, .18);
+    }
+    .missing-esign-pad-wrap {
+        border: 1px dashed #fca5a5;
+        border-radius: 12px;
+        background: #fffafa;
+        padding: 10px;
+    }
+    #missingESignPad {
+        width: 100%;
+        height: 180px;
+        display: block;
+        border-radius: 8px;
+        background: #ffffff;
+        touch-action: none;
+    }
+    .missing-esign-panel.is-hidden {
+        display: none;
+    }
+    .missing-esign-actions,
+    .missing-upload-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 18px;
+    }
+    .missing-esign-secondary,
+    .missing-esign-submit {
+        border-radius: 10px;
+        padding: 11px 16px;
+        font-size: 13px;
+        font-weight: 950;
+        cursor: pointer;
+    }
+    .missing-esign-secondary {
+        border: 1px solid rgba(112, 19, 27, .16);
+        background: #ffffff;
+        color: #70131B;
+    }
+    .missing-esign-submit {
+        border: 1px solid #8B0000;
+        background: #8B0000;
+        color: #facc15;
+    }
     .resubmission-upload-modal .record-modal-head {
         min-height: 108px;
         padding: 24px 72px 22px 30px;
@@ -3343,10 +3494,10 @@
     $guisisAccountData = $guisisAccountData ?? ['available' => false, 'status' => 'not_checked'];
     $isEnrolled = (bool) ($isEnrolled ?? false);
     $accountView = in_array(($accountView ?? 'profile'), ['profile', 'health-record', 'notifications'], true) ? $accountView : 'profile';
-    $usesStaffHealthForm = $studentUsesStaffHealthForm ?? false;
+    $usesEmployeeHealthForm = $studentUsesEmployeeHealthForm ?? false;
     $showOfficeField = in_array($linkedAccessLevel, ['clinic_staff', 'designee', 'admin_designee', 'superadmin', 'super_admin', 'faculty'], true) || str_contains($linkedAccessLevel, 'faculty');
     $hasGuisisAccountData = (bool) ($guisisAccountData['available'] ?? false);
-    $displayStudentNumber = $usesStaffHealthForm
+    $displayStudentNumber = $usesEmployeeHealthForm
         ? trim((string) ($accountProfileData['employee_number'] ?? $user->employee_number ?? ''))
         : trim((string) ($accountProfileData['student_number'] ?? ''));
     $looksLikeReferenceNumber = function ($value): bool {
@@ -3359,8 +3510,10 @@
             || (bool) preg_match('/^\d{4}-[A-Z]+-\d+/', $value);
     };
     $referenceMode = trim((string) ($accountProfileData['reference_mode'] ?? 'admission'));
-    $referenceHeading = $referenceMode === 'admission' ? 'Admission Reference' : 'Clinic Reference';
-    $idNumberHeading = $usesStaffHealthForm ? 'Employee Number' : ($referenceMode === 'admission' ? 'Student Number' : 'ID Number');
+    $referenceHeading = $usesEmployeeHealthForm
+        ? 'Employee Reference'
+        : ($referenceMode === 'admission' ? 'Admission Reference' : 'Clinic Reference');
+    $idNumberHeading = $usesEmployeeHealthForm ? 'Employee Number' : ($referenceMode === 'admission' ? 'Student Number' : 'ID Number');
     $displayCourse = trim((string) ($accountProfileData['course_college'] ?? ''));
     $displayCourseCode = trim((string) ($accountProfileData['course_code'] ?? ''));
     if ($displayCourseCode === '' && $displayCourse !== '') {
@@ -3817,9 +3970,9 @@ document.addEventListener('DOMContentLoaded', function () {
 </div>
 @elseif($accountView === 'health-record')
     @php
-        $usesStaffHealthForm = $studentUsesStaffHealthForm ?? false;
-        $healthProfileRecord = $usesStaffHealthForm ? $user->healthProfileStaff : $user->healthProfile;
-        $healthFormRoute = $usesStaffHealthForm ? route('health.form.staff') : route('health.form');
+        $usesEmployeeHealthForm = $studentUsesEmployeeHealthForm ?? false;
+        $healthProfileRecord = $usesEmployeeHealthForm ? $user->employeeHealthProfile : $user->healthProfile;
+        $healthFormRoute = $usesEmployeeHealthForm ? route('health.form.employee') : route('health.form');
         $healthFormSubmitted = $hasSubmittedHealthProfile ?? ($healthProfileRecord !== null);
         $status = optional($healthProfileRecord)->clearance_status ?? 'For Verification';
         $statusNormalized = strtolower(trim((string) $status));
@@ -3857,7 +4010,40 @@ document.addEventListener('DOMContentLoaded', function () {
             'chest_xray_result' => ['accept' => '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png', 'hint' => 'PDF, JPG, or PNG, up to 2 MB'],
             'pwd_id_proof' => ['accept' => '.pdf,application/pdf', 'hint' => 'PDF only, up to 2 MB'],
         ];
-        $hasResubmissionUploadErrors = $resubmissionDocuments->contains(fn ($documentKey) => $errors->has($documentKey));
+        $healthRecordDocumentFields = $usesEmployeeHealthForm
+            ? [
+                'student_photo' => 'student_photo',
+                'health_declaration' => 'health_declaration',
+                'medical_certificate' => 'medical_certificate',
+                'chest_xray_result' => 'chest_xray_document',
+                'pwd_id_proof' => 'pwd_id_proof',
+            ]
+            : [
+                'student_photo' => 'student_photo',
+                'health_declaration' => 'health_declaration',
+                'medical_certificate' => 'medical_certificate',
+                'chest_xray_result' => 'chest_xray_result',
+                'pwd_id_proof' => 'pwd_id_proof',
+            ];
+        $healthRecordMissingDocumentKeys = collect(array_keys($resubmissionDocumentLabels))
+            ->filter(fn ($documentKey) => $healthFormSubmitted && $healthProfileRecord && blank(data_get($healthProfileRecord, $healthRecordDocumentFields[$documentKey] ?? $documentKey)))
+            ->values();
+        $clinicResubmissionUploadKeys = $resubmissionDocuments
+            ->filter(fn ($documentKey) => isset($resubmissionDocumentLabels[$documentKey]))
+            ->unique()
+            ->values();
+        $missingDocumentUploadKeys = $healthRecordMissingDocumentKeys
+            ->diff($clinicResubmissionUploadKeys)
+            ->filter(fn ($documentKey) => isset($resubmissionDocumentLabels[$documentKey]))
+            ->values();
+        $hasResubmissionUploadErrors = $clinicResubmissionUploadKeys->contains(fn ($documentKey) => $errors->has($documentKey));
+        $hasDocumentUploadErrors = $missingDocumentUploadKeys->contains(fn ($documentKey) => $errors->has($documentKey));
+        $requiresMissingESign = $healthFormSubmitted && $healthProfileRecord && (
+            $usesEmployeeHealthForm
+                ? blank(optional($healthProfileRecord)->staff_signature) && blank(optional($healthProfileRecord)->uploaded_signature_path)
+                : blank(optional($healthProfileRecord)->digital_signature)
+        );
+        $hasMissingESignErrors = $errors->has('digital_signature_data') || $errors->has('digital_signature_upload') || $errors->has('signature_method');
         $recordSubmissionStatus = $isResubmissionStatus ? 'Pending Resubmission' : ($isConditionalStatus ? 'Pending Compliance' : 'Waiting for clinic review');
         $recordStatusMessage = $isResubmissionStatus
             ? 'The clinic requested replacement files for your health profile. Upload only the selected requirement/s below.'
@@ -3869,21 +4055,22 @@ document.addEventListener('DOMContentLoaded', function () {
             : ($isConditionalStatus
                 ? 'Please complete the pending requirement before your record can be marked as issued.'
                 : 'Clinic approval is required before your record can be marked as issued.');
-        $puptasSyncStatus = $usesStaffHealthForm ? null : optional($healthProfileRecord)->puptas_sync_status;
-        $puptasSyncMessage = $usesStaffHealthForm ? '' : trim((string) optional($healthProfileRecord)->puptas_sync_message);
-        $puptasSyncedAt = $usesStaffHealthForm ? null : optional(optional($healthProfileRecord)->puptas_synced_at)->format('M d, Y g:i A');
+        $puptasSyncStatus = $usesEmployeeHealthForm ? null : optional($healthProfileRecord)->puptas_sync_status;
+        $puptasSyncMessage = $usesEmployeeHealthForm ? '' : trim((string) optional($healthProfileRecord)->puptas_sync_message);
+        $puptasSyncedAt = $usesEmployeeHealthForm ? null : optional(optional($healthProfileRecord)->puptas_synced_at)->format('M d, Y g:i A');
         $recordVerifiedAt = optional(optional($healthProfileRecord)->verified_at)->format('M d, Y g:i A');
         $recordReferenceNumber = trim((string) optional($healthProfileRecord)->reference_number);
         $recordReferenceNumber = $recordReferenceNumber !== '' ? $recordReferenceNumber : trim((string) ($user->reference_number ?? '-'));
         $hasHealthDeclaration = filled(optional($healthProfileRecord)->health_declaration);
         $healthDeclarationUploadError = $errors->has('health_declaration');
         $healthRecordMissingRequirements = collect();
-        if ($healthFormSubmitted && $healthProfileRecord && !$hasHealthDeclaration) {
-            $healthRecordMissingRequirements->push([
-                'key' => 'health_declaration',
-                'title' => 'Declaration of Medical Information and Data Subject Consent Form',
-            ]);
-        }
+        $healthRecordMissingDocumentKeys
+            ->each(function ($documentKey) use ($healthRecordMissingRequirements, $resubmissionDocumentLabels) {
+                $healthRecordMissingRequirements->push([
+                    'key' => $documentKey,
+                    'title' => $resubmissionDocumentLabels[$documentKey],
+                ]);
+            });
         $resubmissionDocuments
             ->filter(fn ($documentKey) => isset($resubmissionDocumentLabels[$documentKey]))
             ->each(function ($documentKey) use ($healthRecordMissingRequirements, $resubmissionDocumentLabels) {
@@ -3894,6 +4081,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     ]);
                 }
             });
+        if ($requiresMissingESign && !$healthRecordMissingRequirements->contains('key', 'digital_signature')) {
+            $healthRecordMissingRequirements->push([
+                'key' => 'digital_signature',
+                'title' => 'Missing E-signature',
+            ]);
+        }
         $recordStudentNumber = trim((string) (
             optional($healthProfileRecord)->student_number
             ?: ($accountProfileData['student_number'] ?? $user->student_number ?? '')
@@ -3957,8 +4150,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         <x-outline-icon name="exclamation-triangle" />
                     </span>
                     <div>
-                        <h2 class="missing-requirements-title">Missing Requirements ({{ $healthRecordMissingRequirements->count() }})</h2>
-                        <p class="missing-requirements-copy">Please upload the following required documents to continue verification.</p>
+                        <h2 class="missing-requirements-title">Missing Documents / E-sign ({{ $healthRecordMissingRequirements->count() }})</h2>
+                        <p class="missing-requirements-copy">Some files are not attached yet. Upload available documents here when your program or office asks for them.</p>
                     </div>
                 </div>
 
@@ -3974,35 +4167,68 @@ document.addEventListener('DOMContentLoaded', function () {
                     @endforeach
                 </div>
 
-                @if($isResubmissionStatus && $resubmissionDocuments->isNotEmpty())
+                @if($clinicResubmissionUploadKeys->isNotEmpty() || $missingDocumentUploadKeys->isNotEmpty())
                     <div class="missing-requirements-upload-card">
                         <span class="missing-requirements-upload-icon" aria-hidden="true">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 2.25 2.25M12 9.75 9.75 12M4.5 15.75a4.5 4.5 0 0 1 4.5-4.5h.75A5.25 5.25 0 0 1 20.25 12 3.75 3.75 0 0 1 16.5 15.75H4.5Z" />
                             </svg>
                         </span>
-                        <button type="button" class="missing-requirements-upload-btn" onclick="window.openGlobalResubmissionModal ? window.openGlobalResubmissionModal() : null">
-                            Upload Missing Files
-                        </button>
-                        <p class="missing-requirements-upload-help">PDF, JPG, or PNG only<br>Max file size: 1MB</p>
+                        @if($clinicResubmissionUploadKeys->isNotEmpty())
+                            <form class="missing-inline-upload-form" method="POST" action="{{ route('student.health_record.resubmit') }}" enctype="multipart/form-data">
+                                @csrf
+                                <strong>Clinic-requested replacement files</strong>
+                                @foreach($clinicResubmissionUploadKeys as $documentKey)
+                                    @php($documentMeta = $resubmissionDocumentMeta[$documentKey] ?? ['accept' => '.pdf,.jpg,.jpeg,.png', 'hint' => 'PDF, JPG, or PNG'])
+                                    <label class="missing-inline-upload-field" for="clinic_missing_{{ $documentKey }}">
+                                        <span>{{ $resubmissionDocumentLabels[$documentKey] }}</span>
+                                        <input id="clinic_missing_{{ $documentKey }}" type="file" name="{{ $documentKey }}" accept="{{ $documentMeta['accept'] }}" required>
+                                        <small>{{ $documentMeta['hint'] }}</small>
+                                        @if($errors->has($documentKey))
+                                            <em>{{ $errors->first($documentKey) }}</em>
+                                        @endif
+                                    </label>
+                                @endforeach
+                                <button type="submit" class="missing-requirements-upload-btn">Submit Replacement Files</button>
+                            </form>
+                        @endif
+                        @if($missingDocumentUploadKeys->isNotEmpty())
+                            <form class="missing-inline-upload-form" method="POST" action="{{ route('student.health_record.documents') }}" enctype="multipart/form-data">
+                                @csrf
+                                <strong>Available document uploads</strong>
+                                @foreach($missingDocumentUploadKeys as $documentKey)
+                                    @php($documentMeta = $resubmissionDocumentMeta[$documentKey] ?? ['accept' => '.pdf,.jpg,.jpeg,.png', 'hint' => 'PDF, JPG, or PNG'])
+                                    <label class="missing-inline-upload-field" for="optional_missing_{{ $documentKey }}">
+                                        <span>{{ $resubmissionDocumentLabels[$documentKey] }}</span>
+                                        <input id="optional_missing_{{ $documentKey }}" type="file" name="{{ $documentKey }}" accept="{{ $documentMeta['accept'] }}">
+                                        <small>{{ $documentMeta['hint'] }}</small>
+                                        @if($errors->has($documentKey))
+                                            <em>{{ $errors->first($documentKey) }}</em>
+                                        @endif
+                                    </label>
+                                @endforeach
+                                <button type="submit" class="missing-requirements-upload-btn">Upload Selected Files</button>
+                            </form>
+                        @endif
+                        @if($requiresMissingESign)
+                            <button type="button" class="missing-requirements-upload-btn" onclick="openMissingESignModal()">
+                                Add E-sign
+                            </button>
+                        @endif
+                        <p class="missing-requirements-upload-help">Optional uploads do not change your review status. Clinic-requested replacements still follow clinic review.</p>
                     </div>
-                @elseif($healthFormSubmitted && $healthProfileRecord && !$hasHealthDeclaration)
-                    <form class="missing-requirements-upload-card" method="POST" action="{{ route('student.health_record.health_declaration') }}" enctype="multipart/form-data">
-                        @csrf
+                @elseif($requiresMissingESign)
+                    <div class="missing-requirements-upload-card">
                         <span class="missing-requirements-upload-icon" aria-hidden="true">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 2.25 2.25M12 9.75 9.75 12M4.5 15.75a4.5 4.5 0 0 1 4.5-4.5h.75A5.25 5.25 0 0 1 20.25 12 3.75 3.75 0 0 1 16.5 15.75H4.5Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
                             </svg>
                         </span>
-                        <label class="missing-requirements-upload-btn">
-                            Upload Missing Files
-                            <input class="missing-requirements-hidden-input" type="file" name="health_declaration" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required onchange="this.form.submit()">
-                        </label>
-                        <p class="missing-requirements-upload-help">PDF, JPG, or PNG only<br>Max file size: 1MB</p>
-                        @if($healthDeclarationUploadError)
-                            <div class="field-error-message">{{ $errors->first('health_declaration') }}</div>
-                        @endif
-                    </form>
+                        <button type="button" class="missing-requirements-upload-btn" onclick="openMissingESignModal()">
+                            Add E-sign
+                        </button>
+                        <p class="missing-requirements-upload-help">Draw or upload PNG<br>Attached to your Health Form PDF</p>
+                    </div>
                 @endif
             </div>
 
@@ -4308,7 +4534,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                         'key' => 'health_form',
                                         'title' => 'Health Information Form',
                                         'meta' => 'Saved PDF Snapshot',
-                                        'path' => 'saved-health-form.pdf',
+                                        'path' => $usesEmployeeHealthForm ? optional($healthProfileRecord)->staff_health_form_pdf_path : 'saved-health-form.pdf',
                                         'is_image' => false,
                                     ],
                                     [
@@ -4336,7 +4562,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                         'key' => 'chest_xray_result',
                                         'title' => 'Chest X-ray Result',
                                         'meta' => 'PDF or Image Upload',
-                                        'path' => optional($healthProfileRecord)->chest_xray_result,
+                                        'path' => $usesEmployeeHealthForm ? optional($healthProfileRecord)->chest_xray_document : optional($healthProfileRecord)->chest_xray_result,
                                         'is_image' => false,
                                     ],
                                     [
@@ -4410,6 +4636,60 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                     <div class="record-modal-body-fade" aria-hidden="true"></div>
                 </div>
+            </div>
+        </div>
+    @endif
+    @if($requiresMissingESign)
+        <div class="record-modal-overlay" id="missingESignModal" aria-hidden="true">
+            <div class="record-modal missing-esign-modal" role="dialog" aria-modal="true" aria-labelledby="missingESignTitle">
+                <div class="record-modal-head">
+                    <button type="button" class="record-modal-close" aria-label="Close missing e-sign modal" onclick="closeMissingESignModal()">
+                        <x-outline-icon name="x-mark" />
+                    </button>
+                    <div class="record-modal-head-main">
+                        <h2 class="record-modal-title" id="missingESignTitle">Missing E-sign</h2>
+                        <p class="record-modal-subtitle">Add your signature so it can be attached to your Health Information Form PDF.</p>
+                    </div>
+                </div>
+                <form class="missing-esign-body" method="POST" action="{{ route('student.health_record.e_signature') }}" enctype="multipart/form-data" id="missingESignForm">
+                    @csrf
+                    <input type="hidden" name="digital_signature_data" id="missingESignData" value="{{ old('digital_signature_data') }}">
+                    <div class="missing-esign-methods">
+                        <input type="radio" name="signature_method" id="missing_signature_draw" value="draw" {{ old('signature_method', 'draw') === 'draw' ? 'checked' : '' }}>
+                        <label for="missing_signature_draw">Draw Signature</label>
+                        <input type="radio" name="signature_method" id="missing_signature_upload" value="upload" {{ old('signature_method') === 'upload' ? 'checked' : '' }}>
+                        <label for="missing_signature_upload">Upload PNG</label>
+                    </div>
+                    <div class="missing-esign-panel" id="missingESignDrawPanel">
+                        <div class="missing-esign-card">
+                            <span class="missing-esign-label">Draw your e-signature</span>
+                            <div class="missing-esign-pad-wrap">
+                                <canvas id="missingESignPad" aria-label="Draw your e-signature"></canvas>
+                            </div>
+                            <p class="missing-esign-hint" id="missingESignStatus">No drawn signature yet.</p>
+                            @if($errors->has('digital_signature_data'))
+                                <div class="field-error-message">{{ $errors->first('digital_signature_data') }}</div>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="missing-esign-panel is-hidden" id="missingESignUploadPanel">
+                        <div class="missing-esign-card">
+                            <label class="missing-esign-label" for="missingESignUpload">Upload signature image</label>
+                            <input class="missing-esign-upload" id="missingESignUpload" type="file" name="digital_signature_upload" accept=".png,image/png">
+                            <p class="missing-esign-hint">PNG only, preferably black ink on transparent or white background. Max file size: 1 MB.</p>
+                            @if($errors->has('digital_signature_upload'))
+                                <div class="field-error-message">{{ $errors->first('digital_signature_upload') }}</div>
+                            @endif
+                        </div>
+                    </div>
+                    @if($errors->has('signature_method'))
+                        <div class="field-error-message">{{ $errors->first('signature_method') }}</div>
+                    @endif
+                    <div class="missing-esign-actions">
+                        <button type="button" class="missing-esign-secondary" id="clearMissingESignBtn">Clear</button>
+                        <button type="submit" class="missing-esign-submit">Attach E-sign</button>
+                    </div>
+                </form>
             </div>
         </div>
     @endif
@@ -4501,6 +4781,29 @@ function closeHealthRecordModal() {
     document.body.style.overflow = '';
 }
 
+function openMissingESignModal() {
+    const modal = document.getElementById('missingESignModal');
+    if (!modal) {
+        return;
+    }
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    window.setTimeout(function () {
+        window.resizeMissingESignPad && window.resizeMissingESignPad();
+    }, 60);
+}
+
+function closeMissingESignModal() {
+    const modal = document.getElementById('missingESignModal');
+    if (!modal) {
+        return;
+    }
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+}
+
 function initializeHealthDeclarationPreview(root = document) {
     root.querySelectorAll('[data-health-declaration-input]').forEach(function (input) {
         if (input.dataset.previewBound === 'true') {
@@ -4571,7 +4874,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const profilePhotoToggle = document.getElementById('profilePhotoToggle');
     const modal = document.getElementById('healthRecordModal');
     const modalCard = modal?.querySelector('.record-modal');
-    const shouldOpenResubmissionModal = @json($hasResubmissionUploadErrors ?? false);
+    const missingESignModal = document.getElementById('missingESignModal');
+    const missingESignCanvas = document.getElementById('missingESignPad');
+    const missingESignData = document.getElementById('missingESignData');
+    const missingESignStatus = document.getElementById('missingESignStatus');
+    const missingESignForm = document.getElementById('missingESignForm');
+    const missingESignUpload = document.getElementById('missingESignUpload');
+    const missingESignRadios = Array.from(document.querySelectorAll('input[name="signature_method"]'));
+    const missingESignDrawPanel = document.getElementById('missingESignDrawPanel');
+    const missingESignUploadPanel = document.getElementById('missingESignUploadPanel');
+    const clearMissingESignBtn = document.getElementById('clearMissingESignBtn');
+    const shouldOpenMissingESignModal = @json($hasMissingESignErrors ?? false);
 
     profilePhotoToggle?.addEventListener('click', function () {
         const isExpanded = profileHeroCard?.classList.toggle('is-photo-expanded') ?? false;
@@ -4582,8 +4895,8 @@ document.addEventListener('DOMContentLoaded', function () {
     modalCard?.addEventListener('scroll', updateHealthRecordModalIndicator);
     initializeHealthDeclarationPreview(document);
 
-    if (shouldOpenResubmissionModal) {
-        window.openGlobalResubmissionModal && window.openGlobalResubmissionModal();
+    if (shouldOpenMissingESignModal) {
+        openMissingESignModal();
     }
 
     modal?.addEventListener('click', function (event) {
@@ -4591,12 +4904,136 @@ document.addEventListener('DOMContentLoaded', function () {
             closeHealthRecordModal();
         }
     });
-
-    document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && modal?.classList.contains('is-open')) {
-            closeHealthRecordModal();
+    missingESignModal?.addEventListener('click', function (event) {
+        if (event.target === missingESignModal) {
+            closeMissingESignModal();
         }
     });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') {
+            return;
+        }
+        if (modal?.classList.contains('is-open')) {
+            return closeHealthRecordModal();
+        }
+        if (missingESignModal?.classList.contains('is-open')) {
+            return closeMissingESignModal();
+        }
+    });
+
+    if (missingESignCanvas && missingESignData) {
+        const context = missingESignCanvas.getContext('2d');
+        let drawing = false;
+        let hasDrawing = false;
+
+        window.resizeMissingESignPad = function () {
+            const rect = missingESignCanvas.getBoundingClientRect();
+            const ratio = window.devicePixelRatio || 1;
+            const previous = hasDrawing ? missingESignCanvas.toDataURL('image/png') : '';
+            missingESignCanvas.width = Math.max(1, Math.floor(rect.width * ratio));
+            missingESignCanvas.height = Math.max(1, Math.floor(rect.height * ratio));
+            context.setTransform(ratio, 0, 0, ratio, 0, 0);
+            context.lineCap = 'round';
+            context.lineJoin = 'round';
+            context.lineWidth = 2.4;
+            context.strokeStyle = '#111827';
+            if (previous) {
+                const image = new Image();
+                image.onload = function () {
+                    context.drawImage(image, 0, 0, rect.width, rect.height);
+                    missingESignData.value = missingESignCanvas.toDataURL('image/png');
+                };
+                image.src = previous;
+            }
+        };
+
+        const pointerPosition = function (event) {
+            const rect = missingESignCanvas.getBoundingClientRect();
+            return {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top,
+            };
+        };
+
+        const startDrawing = function (event) {
+            drawing = true;
+            hasDrawing = true;
+            missingESignCanvas.setPointerCapture?.(event.pointerId);
+            const position = pointerPosition(event);
+            context.beginPath();
+            context.moveTo(position.x, position.y);
+            event.preventDefault();
+        };
+
+        const draw = function (event) {
+            if (!drawing) {
+                return;
+            }
+            const position = pointerPosition(event);
+            context.lineTo(position.x, position.y);
+            context.stroke();
+            missingESignData.value = missingESignCanvas.toDataURL('image/png');
+            if (missingESignStatus) {
+                missingESignStatus.textContent = 'Drawn signature ready.';
+            }
+            event.preventDefault();
+        };
+
+        const stopDrawing = function () {
+            drawing = false;
+            if (hasDrawing) {
+                missingESignData.value = missingESignCanvas.toDataURL('image/png');
+            }
+        };
+
+        missingESignCanvas.addEventListener('pointerdown', startDrawing);
+        missingESignCanvas.addEventListener('pointermove', draw);
+        missingESignCanvas.addEventListener('pointerup', stopDrawing);
+        missingESignCanvas.addEventListener('pointercancel', stopDrawing);
+        missingESignCanvas.addEventListener('pointerleave', stopDrawing);
+        window.addEventListener('resize', window.resizeMissingESignPad);
+        window.resizeMissingESignPad();
+
+        clearMissingESignBtn?.addEventListener('click', function () {
+            context.clearRect(0, 0, missingESignCanvas.width, missingESignCanvas.height);
+            hasDrawing = false;
+            missingESignData.value = '';
+            if (missingESignUpload) {
+                missingESignUpload.value = '';
+            }
+            if (missingESignStatus) {
+                missingESignStatus.textContent = 'No drawn signature yet.';
+            }
+        });
+
+        const syncMissingESignMode = function () {
+            const selected = missingESignRadios.find((radio) => radio.checked)?.value || 'draw';
+            const isUpload = selected === 'upload';
+            missingESignDrawPanel?.classList.toggle('is-hidden', isUpload);
+            missingESignUploadPanel?.classList.toggle('is-hidden', !isUpload);
+            if (isUpload) {
+                missingESignData.value = '';
+            } else if (missingESignUpload) {
+                missingESignUpload.value = '';
+            }
+        };
+
+        missingESignRadios.forEach(function (radio) {
+            radio.addEventListener('change', syncMissingESignMode);
+        });
+        syncMissingESignMode();
+
+        missingESignForm?.addEventListener('submit', function (event) {
+            const selected = missingESignRadios.find((radio) => radio.checked)?.value || 'draw';
+            if (selected === 'draw' && !missingESignData.value.trim()) {
+                event.preventDefault();
+                missingESignData.setCustomValidity('Please draw your e-signature.');
+                missingESignData.reportValidity();
+                missingESignData.setCustomValidity('');
+            }
+        });
+    }
 });
 </script>
 @endsection
