@@ -4179,7 +4179,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                 @csrf
                                 <strong>Clinic-requested replacement files</strong>
                                 @foreach($clinicResubmissionUploadKeys as $documentKey)
-                                    @php($documentMeta = $resubmissionDocumentMeta[$documentKey] ?? ['accept' => '.pdf,.jpg,.jpeg,.png', 'hint' => 'PDF, JPG, or PNG'])
+                                    @php
+                                        $documentMeta = $resubmissionDocumentMeta[$documentKey] ?? ['accept' => '.pdf,.jpg,.jpeg,.png', 'hint' => 'PDF, JPG, or PNG'];
+                                    @endphp
                                     <label class="missing-inline-upload-field" for="clinic_missing_{{ $documentKey }}">
                                         <span>{{ $resubmissionDocumentLabels[$documentKey] }}</span>
                                         <input id="clinic_missing_{{ $documentKey }}" type="file" name="{{ $documentKey }}" accept="{{ $documentMeta['accept'] }}" required>
@@ -4197,7 +4199,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                 @csrf
                                 <strong>Available document uploads</strong>
                                 @foreach($missingDocumentUploadKeys as $documentKey)
-                                    @php($documentMeta = $resubmissionDocumentMeta[$documentKey] ?? ['accept' => '.pdf,.jpg,.jpeg,.png', 'hint' => 'PDF, JPG, or PNG'])
+                                    @php
+                                        $documentMeta = $resubmissionDocumentMeta[$documentKey] ?? ['accept' => '.pdf,.jpg,.jpeg,.png', 'hint' => 'PDF, JPG, or PNG'];
+                                    @endphp
                                     <label class="missing-inline-upload-field" for="optional_missing_{{ $documentKey }}">
                                         <span>{{ $resubmissionDocumentLabels[$documentKey] }}</span>
                                         <input id="optional_missing_{{ $documentKey }}" type="file" name="{{ $documentKey }}" accept="{{ $documentMeta['accept'] }}">
