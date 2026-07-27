@@ -3182,7 +3182,7 @@
                     <div class="esign-grid esign-mode-panel is-hidden" id="signatureUploadPanel">
                         <div class="esign-card">
                             <h3>Upload Signature</h3>
-                            <input id="digital_signature_upload" type="file" name="digital_signature_upload" class="esign-upload-input" accept=".png,image/png" data-upload-input data-preview-kind="image">
+                            <input id="digital_signature_upload" type="file" name="digital_signature_upload" class="esign-upload-input" accept=".png,.jpg,.jpeg,image/png,image/jpeg" data-upload-input data-preview-kind="image">
                             <ol class="esign-upload-instructions">
                                 <li>Upload a black PNG signature only.</li>
                                 <li>Use a transparent/no-background signature file.</li>
@@ -3385,10 +3385,22 @@
                     context.fillStyle = '#000000';
                 }
 
+                function signatureDataUrl() {
+                    const exportCanvas = document.createElement('canvas');
+                    exportCanvas.width = signatureCanvas.width;
+                    exportCanvas.height = signatureCanvas.height;
+                    const exportContext = exportCanvas.getContext('2d');
+                    exportContext.fillStyle = '#ffffff';
+                    exportContext.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+                    exportContext.drawImage(signatureCanvas, 0, 0);
+
+                    return exportCanvas.toDataURL('image/jpeg', 0.92);
+                }
+
                 function resizeCanvas() {
                     const ratio = Math.max(window.devicePixelRatio || 1, 1);
                     const rect = signatureCanvas.getBoundingClientRect();
-                    const previousData = hasDrawing ? signatureCanvas.toDataURL('image/png') : '';
+                    const previousData = hasDrawing ? signatureDataUrl() : '';
                     signatureCanvas.width = Math.max(1, Math.floor(rect.width * ratio));
                     signatureCanvas.height = Math.max(1, Math.floor(rect.height * ratio));
                     context.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -3421,7 +3433,7 @@
                     context.beginPath();
                     context.moveTo(point.x, point.y);
                     hasDrawing = true;
-                    signatureDataInput.value = signatureCanvas.toDataURL('image/png');
+                    signatureDataInput.value = signatureDataUrl();
                     if (signatureDrawStatus) signatureDrawStatus.textContent = 'Drawn signature ready.';
                     if (signatureUploadInput) signatureUploadInput.value = '';
                     syncSignatureValidity();
@@ -3434,7 +3446,7 @@
                     context.lineTo(point.x, point.y);
                     context.stroke();
                     hasDrawing = true;
-                    signatureDataInput.value = signatureCanvas.toDataURL('image/png');
+                    signatureDataInput.value = signatureDataUrl();
                     if (signatureDrawStatus) signatureDrawStatus.textContent = 'Drawn signature ready.';
                     if (signatureUploadInput) signatureUploadInput.value = '';
                     syncSignatureValidity();

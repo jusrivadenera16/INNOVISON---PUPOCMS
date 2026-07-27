@@ -72,6 +72,7 @@ class EmployeeHealthProfile extends Model
         'extremities_findings',
         'vertebral_column_findings',
         'skin_findings',
+        'scars_findings',
         'working_impression',
         'fit_status',
         'for_work_up',
@@ -93,6 +94,7 @@ class EmployeeHealthProfile extends Model
         'resubmission_requested_at',
         'resubmitted_at',
         'staff_health_form_pdf_path',
+        'draft_data',
     ];
 
     protected $casts = [
@@ -119,6 +121,7 @@ class EmployeeHealthProfile extends Model
         'resubmission_required_fields' => 'array',
         'resubmission_requested_at' => 'datetime',
         'resubmitted_at' => 'datetime',
+        'draft_data' => 'array',
     ];
 
     public function user()

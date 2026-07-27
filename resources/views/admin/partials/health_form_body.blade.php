@@ -235,6 +235,13 @@ for the improvement of healthcare services.
 
     @php
         $showStoredSignature = ($pdfMode ?? false) || empty($studentPrintCopy);
+        $studentSignatureSrc = '';
+        if ($showStoredSignature && $profile->digital_signature) {
+            $studentSignaturePath = ltrim($profile->digital_signature, '/');
+            $studentSignatureSrc = ($pdfMode ?? false)
+                ? public_path('storage/' . $studentSignaturePath)
+                : asset('storage/' . $studentSignaturePath);
+        }
     @endphp
     <div class="signature-physician-block">
         <table class="signature-table">
@@ -245,8 +252,8 @@ for the improvement of healthcare services.
                     <div class="signature-caption">(Signature of parent/guardian for<br>students below 18 years old)</div>
                 </td>
                 <td>
-                    @if($showStoredSignature && $profile->digital_signature)
-                        <img src="{{ asset('storage/' . $profile->digital_signature) }}" class="sig-image" style="height: 40px; width: auto;">
+                    @if($studentSignatureSrc)
+                        <img src="{{ $studentSignatureSrc }}" class="sig-image" style="height: 40px; width: auto;">
                     @else
                         <div class="signature-space"></div>
                     @endif

@@ -12,19 +12,38 @@ class HealthFormPdfSnapshotService
 {
     public function recordSubmittedWithoutPdf(HealthProfile $profile, User $user, ?string $category = null, ?string $remarks = null): HealthFormSubmission
     {
+        $profile->loadMissing('user');
         $submission = $this->submissionForUpdate($profile, $user);
+        $resolvedCategory = trim((string) ($submission->category ?: $category)) ?: 'General';
+        $timestamp = now();
+        $filePath = $this->buildSnapshotPath($profile, $user, $resolvedCategory, $timestamp);
+
+        $pdf = Pdf::loadView('student.print_health_form', [
+            'profile' => $profile->fresh('user') ?: $profile,
+            'pdfMode' => true,
+            'healthFormIdentity' => [],
+        ]);
+        $pdf->setPaper([0, 0, 612, 936]);
+        Storage::disk('public')->put($filePath, $pdf->output());
+
+        $oldPath = $this->normalizeStoragePath((string) $submission->pdf_path);
 
         $submission->fill([
             'user_id' => $user->id,
             'health_profile_id' => $profile->id,
-            'category' => $submission->category ?: (trim((string) $category) ?: 'General'),
+            'category' => $resolvedCategory,
             'school_year' => trim((string) ($profile->school_year ?? '')) ?: $submission->school_year,
             'status' => HealthFormSubmission::STATUS_SUBMITTED,
+            'pdf_path' => $filePath,
             'submitted_at' => now(),
             'approved_at' => null,
             'remarks' => trim((string) ($submission->remarks ?? $remarks)) ?: null,
         ]);
         $submission->save();
+
+        if ($oldPath !== '' && $oldPath !== $filePath && Storage::disk('public')->exists($oldPath)) {
+            Storage::disk('public')->delete($oldPath);
+        }
 
         return $submission;
     }

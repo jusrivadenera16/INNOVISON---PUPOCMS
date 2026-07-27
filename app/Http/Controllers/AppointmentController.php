@@ -10,6 +10,7 @@ use App\Models\Consultation;
 use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
 use App\Models\EmployeeHealthProfile;
+use App\Models\Faq;
 use App\Models\SystemSetting;
 use App\Models\User;
 use App\Services\GuisisApiService;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -1714,7 +1716,7 @@ class AppointmentController extends Controller
 
         $signatureData = trim((string) $request->input('digital_signature_data'));
         if ($signatureData !== '') {
-            if (!preg_match('/^data:image\/png;base64,/', $signatureData)) {
+            if (!preg_match('/^data:image\/(png|jpe?g);base64,/', $signatureData, $signatureMatches)) {
                 throw ValidationException::withMessages([
                     'digital_signature_data' => 'Drawn e-signature is invalid. Please clear it and draw again.',
                 ]);
@@ -1731,7 +1733,8 @@ class AppointmentController extends Controller
                 $oldPaths['digital_signature'] = ltrim($existingPath, '/');
             }
 
-            $path = 'health_profiles/signatures/signature_' . uniqid('', true) . '.png';
+            $signatureExtension = str_starts_with(strtolower($signatureMatches[1]), 'jp') ? 'jpg' : 'png';
+            $path = 'health_profiles/signatures/signature_' . uniqid('', true) . '.' . $signatureExtension;
             Storage::disk('public')->put($path, $decodedSignature);
 
             return $path;
@@ -2289,13 +2292,31 @@ public function account(Request $request)
                 $path = ltrim((string) $employeeProfile->staff_health_form_pdf_path, '/');
                 $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
 
-                abort_if($path === '' || !Storage::disk('public')->exists($path), 404, 'Health form PDF not found yet.');
+                if ($path !== '' && Storage::disk('public')->exists($path)) {
+                    return response()->file(Storage::disk('public')->path($path), [
+                        'Content-Type' => 'application/pdf',
+                        'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
+                        'X-Content-Type-Options' => 'nosniff',
+                        'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                        'Pragma' => 'no-cache',
+                        'Expires' => '0',
+                    ]);
+                }
 
-                return response()->file(Storage::disk('public')->path($path), [
-                    'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
-                    'X-Content-Type-Options' => 'nosniff',
-                    'Cache-Control' => 'private, max-age=300',
+                $employeeProfile->loadMissing('user');
+                $pdf = Pdf::loadView('student.print_employee_health_form', [
+                    'user' => $employeeProfile->user,
+                    'employeeProfile' => $employeeProfile,
+                    'pdfMode' => true,
+                ])->setPaper([0, 0, 612, 936]);
+
+                $identifier = trim((string) ($employeeProfile->employee_number ?: $employeeProfile->user?->employee_number ?: $employeeProfile->id));
+                $fileName = 'health-examination-record-' . (preg_replace('/[^A-Za-z0-9\-_]+/', '-', $identifier) ?: $employeeProfile->id) . '.pdf';
+
+                return $pdf->stream($fileName, [
+                    'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                    'Pragma' => 'no-cache',
+                    'Expires' => '0',
                 ]);
             }
 
@@ -2333,6 +2354,21 @@ public function account(Request $request)
             $path = ltrim((string) ($submission?->pdf_path ?? ''), '/');
             $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
 
+            $healthProfileStatus = strtolower(trim((string) $healthProfile->clearance_status));
+            $canCreateApprovedFallback = in_array($healthProfileStatus, ['approved', 'issued', 'fully cleared'], true);
+            if (($path === '' || !Storage::disk('public')->exists($path)) && $healthProfile->user && $canCreateApprovedFallback) {
+                try {
+                    $submission = app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($healthProfile->fresh('user'));
+                    $path = ltrim((string) ($submission?->pdf_path ?? ''), '/');
+                    $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+                } catch (\Throwable $exception) {
+                    \Log::warning('Unable to create fallback Health Form PDF snapshot for student health record.', [
+                        'health_profile_id' => $healthProfile->id,
+                        'error' => $exception->getMessage(),
+                    ]);
+                }
+            }
+
             if ($path !== '' && Storage::disk('public')->exists($path)) {
                 return response()->file(Storage::disk('public')->path($path), [
                     'Content-Type' => 'application/pdf',
@@ -2358,6 +2394,44 @@ public function account(Request $request)
             'Content-Type' => $mimeType,
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', $filename) . '"',
             'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, max-age=300',
+        ]);
+    }
+
+    public function showStudentHealthRecordSignature()
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::guard('student')->user() ?: Auth::user();
+        abort_unless($user, 403);
+
+        $usesEmployeeHealthForm = $this->shouldUseEmployeeHealthForm($user);
+        $profile = $usesEmployeeHealthForm
+            ? EmployeeHealthProfile::query()->where('user_id', $user->id)->firstOrFail()
+            : HealthProfile::query()->where('user_id', $user->id)->firstOrFail();
+        $signatureValue = $usesEmployeeHealthForm
+            ? trim((string) ($profile->uploaded_signature_path ?: $profile->staff_signature))
+            : trim((string) $profile->digital_signature);
+
+        if (str_starts_with($signatureValue, 'data:image/')) {
+            if (!preg_match('/^data:image\/(png|jpe?g);base64,(.+)$/s', $signatureValue, $matches)) {
+                abort(404);
+            }
+            $decodedSignature = base64_decode($matches[2], true);
+            abort_if($decodedSignature === false || $decodedSignature === '', 404);
+            $mimeType = strtolower($matches[1]) === 'png' ? 'image/png' : 'image/jpeg';
+
+            return response($decodedSignature, 200, [
+                'Content-Type' => $mimeType,
+                'Cache-Control' => 'private, max-age=300',
+            ]);
+        }
+
+        $path = preg_replace('#^(?:public/)?storage/#', '', ltrim($signatureValue, '/')) ?? $signatureValue;
+        abort_if($path === '' || !Storage::disk('public')->exists($path), 404);
+
+        return response()->file(Storage::disk('public')->path($path), [
+            'Content-Type' => Storage::disk('public')->mimeType($path) ?: 'image/png',
+            'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
             'Cache-Control' => 'private, max-age=300',
         ]);
     }
@@ -2718,7 +2792,7 @@ public function account(Request $request)
             ? filled($healthProfile->staff_signature) || filled($healthProfile->uploaded_signature_path)
             : filled($healthProfile->digital_signature);
 
-        if ($hasExistingSignature) {
+        if ($hasExistingSignature && !$request->boolean('replace_existing')) {
             return redirect('/student/account?view=health-record')
                 ->with('info', 'Your e-signature is already attached to your health record.');
         }
@@ -2726,7 +2800,8 @@ public function account(Request $request)
         $request->validate([
             'signature_method' => ['required', 'in:draw,upload'],
             'digital_signature_data' => ['nullable', 'string'],
-            'digital_signature_upload' => ['nullable', 'image', 'mimes:png', 'max:1024'],
+            'digital_signature_upload' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
+            'replace_existing' => ['nullable', 'boolean'],
         ]);
 
         $signatureMethod = (string) $request->input('signature_method', 'draw');
@@ -2746,30 +2821,55 @@ public function account(Request $request)
 
         try {
             if ($usesEmployeeHealthForm) {
+                $oldPaths[] = trim((string) ($healthProfile->uploaded_signature_path ?: $healthProfile->staff_signature));
                 if ($signatureMethod === 'upload') {
                     $healthProfile->uploaded_signature_path = $request->file('digital_signature_upload')->store('health_profile_employees/signatures', 'public');
                     $healthProfile->staff_signature = null;
                     $healthProfile->signature_type = 'uploaded';
                 } else {
                     $signatureData = trim((string) $request->input('digital_signature_data'));
-                    if (!preg_match('/^data:image\/png;base64,/', $signatureData)) {
+                    if (!preg_match('/^data:image\/(png|jpe?g);base64,(.+)$/s', $signatureData, $signatureMatches)) {
                         throw ValidationException::withMessages([
                             'digital_signature_data' => 'Drawn e-signature is invalid. Please clear it and draw again.',
                         ]);
                     }
 
-                    $healthProfile->staff_signature = $signatureData;
-                    $healthProfile->uploaded_signature_path = null;
+                    $decodedSignature = base64_decode($signatureMatches[2], true);
+                    if ($decodedSignature === false || $decodedSignature === '') {
+                        throw ValidationException::withMessages([
+                            'digital_signature_data' => 'Drawn e-signature is empty. Please draw your signature again.',
+                        ]);
+                    }
+                    $signatureExtension = strtolower($signatureMatches[1]) === 'png' ? 'png' : 'jpg';
+                    $healthProfile->uploaded_signature_path = 'health_profile_employees/signatures/signature_' . uniqid('', true) . '.' . $signatureExtension;
+                    Storage::disk('public')->put($healthProfile->uploaded_signature_path, $decodedSignature);
+                    $healthProfile->staff_signature = null;
                     $healthProfile->signature_type = 'drawn';
                 }
             } else {
+                $oldPaths[] = trim((string) $healthProfile->digital_signature);
                 $healthProfile->digital_signature = $this->storeDigitalSignatureOrKeep($request, $healthProfile, $oldPaths);
             }
             $healthProfile->save();
 
+            foreach ($oldPaths as $oldPath) {
+                if ($oldPath === '' || str_starts_with($oldPath, 'data:image/')) {
+                    continue;
+                }
+                $oldPath = preg_replace('#^(?:public/)?storage/#', '', ltrim($oldPath, '/')) ?? $oldPath;
+                if (Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+            }
+
             if (!$usesEmployeeHealthForm && in_array(strtolower(trim((string) $healthProfile->clearance_status)), ['issued', 'fully cleared'], true)) {
                 $snapshotProfile = $healthProfile->fresh('user') ?: $healthProfile->load('user');
                 app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($snapshotProfile);
+            }
+            if ($usesEmployeeHealthForm && in_array(strtolower(trim((string) $healthProfile->clearance_status)), ['approved', 'issued', 'fully cleared'], true)) {
+                $healthProfile = $healthProfile->fresh('user') ?: $healthProfile->load('user');
+                $healthProfile->staff_health_form_pdf_path = $this->generateEmployeeHealthFormPdf($healthProfile);
+                $healthProfile->save();
             }
 
             \App\Models\ActivityLog::create([
@@ -2782,6 +2882,7 @@ public function account(Request $request)
             ]);
 
             return redirect('/student/account?view=health-record')
+                ->with('signature_attached', true)
                 ->with('success', 'E-signature attached successfully.');
         } catch (ValidationException $exception) {
             throw $exception;
@@ -2795,6 +2896,55 @@ public function account(Request $request)
             return back()->withInput()
                 ->with('error', 'Unable to attach your e-signature right now. Please try again.');
         }
+    }
+
+    public function removeHealthRecordSignature(Request $request)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::guard('student')->user() ?: Auth::user();
+        if (!$user) {
+            return redirect('/login-as-student')->with('error', 'Please login first.');
+        }
+
+        $usesEmployeeHealthForm = $this->shouldUseEmployeeHealthForm($user);
+        $healthProfile = $usesEmployeeHealthForm
+            ? EmployeeHealthProfile::query()->where('user_id', $user->id)->first()
+            : HealthProfile::query()->where('user_id', $user->id)->first();
+
+        if (!$healthProfile) {
+            return redirect('/student/account?view=health-record');
+        }
+
+        $paths = $usesEmployeeHealthForm
+            ? [
+                trim((string) $healthProfile->uploaded_signature_path),
+                trim((string) $healthProfile->staff_signature),
+            ]
+            : [trim((string) $healthProfile->digital_signature)];
+
+        foreach ($paths as $path) {
+            if ($path === '' || str_starts_with($path, 'data:image/')) {
+                continue;
+            }
+            $path = preg_replace('#^(?:public/)?storage/#', '', ltrim($path, '/')) ?? $path;
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+        }
+
+        if ($usesEmployeeHealthForm) {
+            $healthProfile->uploaded_signature_path = null;
+            $healthProfile->staff_signature = null;
+            $healthProfile->signature_type = null;
+            $healthProfile->staff_health_form_pdf_path = null;
+        } else {
+            $healthProfile->digital_signature = null;
+        }
+        $healthProfile->save();
+
+        return redirect('/student/account?view=health-record')
+            ->with('signature_removed', true)
+            ->with('success', 'E-signature removed.');
     }
 
     public function openNotification(string $notificationId)
@@ -2945,7 +3095,9 @@ public function account(Request $request)
             $cancelledCount = $appointments->where('status', 'Cancelled')->count();
         }
 
-        return view('student.faq', compact('user', 'pendingCount', 'upcomingCount', 'completedCount', 'cancelledCount'));
+        $faqs = Faq::query()->where('is_active', true)->latest()->get();
+
+        return view('student.faq', compact('user', 'pendingCount', 'upcomingCount', 'completedCount', 'cancelledCount', 'faqs'));
     }
 
     //-------------------------------
@@ -3228,6 +3380,34 @@ public function showEmployeeHealthForm()
     return view('student.health_form_employee', compact('user', 'employeeProfile', 'employeePrefill', 'displayName', 'employeeCourseOptions'));
 }
 
+private function generateEmployeeHealthFormPdf(EmployeeHealthProfile $profile): string
+{
+    $profile->loadMissing('user');
+    $profile->refresh();
+    $profile->loadMissing('user');
+
+    $identifier = trim((string) ($profile->employee_number ?: $profile->user?->employee_number ?: $profile->id));
+    $safeIdentifier = preg_replace('/[^A-Za-z0-9\-_]+/', '-', $identifier) ?: 'employee-' . $profile->id;
+    $path = 'health_profile_employees/health_forms/health-form-' . $safeIdentifier . '-' . now()->format('YmdHis') . '.pdf';
+
+    $previousPath = ltrim((string) $profile->staff_health_form_pdf_path, '/');
+    $previousPath = preg_replace('#^(?:public/)?storage/#', '', $previousPath) ?? $previousPath;
+    if (str_starts_with($previousPath, 'health_profile_employees/health_forms/') && Storage::disk('public')->exists($previousPath)) {
+        Storage::disk('public')->delete($previousPath);
+    }
+
+    $pdf = Pdf::loadView('student.print_employee_health_form', [
+        'user' => $profile->user,
+        'employeeProfile' => $profile,
+        'adminViewer' => true,
+        'pdfMode' => true,
+    ])->setPaper([0, 0, 612, 936]);
+
+    Storage::disk('public')->put($path, $pdf->output());
+
+    return $path;
+}
+
 public function showStaffHealthForm()
 {
     return $this->showEmployeeHealthForm();
@@ -3257,7 +3437,7 @@ private function buildEmployeeHealthFormPrefill(User $user, ?EmployeeHealthProfi
         'first_name' => trim((string) (optional($employeeProfile)->first_name ?: data_get($facultyProfile, 'first_name') ?: $user->first_name)),
         'middle_name' => trim((string) (optional($employeeProfile)->middle_name ?: data_get($facultyProfile, 'middle_name') ?: $user->middle_name)),
         'last_name' => trim((string) (optional($employeeProfile)->last_name ?: data_get($facultyProfile, 'last_name') ?: $user->last_name)),
-        'email' => trim((string) (data_get($facultyProfile, 'email') ?: $user->email ?: optional($linkedAdminProfile)->email)),
+        'email' => trim((string) ($user->email ?: data_get($facultyProfile, 'email') ?: optional($linkedAdminProfile)->email)),
         'employee_number' => trim((string) (optional($employeeProfile)->employee_number ?: data_get($facultyProfile, 'faculty_code') ?: $user->employee_number ?: data_get($facultyProfile, 'faculty_id') ?: data_get($facultyProfile, 'id'))),
         'office' => trim((string) (optional($employeeProfile)->office ?: data_get($facultyProfile, 'department') ?: optional($linkedAdminProfile)->office)),
         'birthday' => $birthday,
@@ -3389,7 +3569,13 @@ public function storeEmployeeHealthForm(Request $request)
     }
 
     $validated = $request->validate([
-        'employee_number' => ['nullable', 'string', 'max:120'],
+        'employee_number' => [
+            'nullable',
+            'string',
+            'max:120',
+            Rule::unique('health_profile_emp', 'employee_number')
+                ->where(fn ($query) => $query->whereNull('deleted_at')),
+        ],
         'first_name' => ['required', 'string', 'max:120'],
         'middle_name' => ['nullable', 'string', 'max:120'],
         'last_name' => ['required', 'string', 'max:120'],
@@ -3464,6 +3650,8 @@ public function storeEmployeeHealthForm(Request $request)
         'employee_signature' => ['nullable', 'string'],
         'uploaded_signature' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
         'employee_health_profile_certified' => ['accepted'],
+    ], [
+        'employee_number.unique' => 'This employee number is already registered. Please use the correct employee number for this account.',
     ]);
 
     $employeeSignatureMethod = (string) $validated['employee_signature_method'];
@@ -3485,6 +3673,21 @@ public function storeEmployeeHealthForm(Request $request)
         $signaturePath = $request->file('uploaded_signature')->store('health_profile_employees/signatures', 'public');
         $signatureType = 'uploaded';
     } elseif ($employeeSignatureMethod === 'draw' && trim((string) $request->input('employee_signature')) !== '') {
+        $signatureData = trim((string) $request->input('employee_signature'));
+        if (!preg_match('/^data:image\/(png|jpe?g);base64,(.+)$/s', $signatureData, $signatureMatches)) {
+            throw ValidationException::withMessages([
+                'employee_signature' => 'Drawn e-signature is invalid. Please clear it and draw again.',
+            ]);
+        }
+        $decodedSignature = base64_decode($signatureMatches[2], true);
+        if ($decodedSignature === false || $decodedSignature === '') {
+            throw ValidationException::withMessages([
+                'employee_signature' => 'Drawn e-signature is empty. Please draw your signature again.',
+            ]);
+        }
+        $signatureExtension = strtolower($signatureMatches[1]) === 'png' ? 'png' : 'jpg';
+        $signaturePath = 'health_profile_employees/signatures/signature_' . uniqid('', true) . '.' . $signatureExtension;
+        Storage::disk('public')->put($signaturePath, $decodedSignature);
         $signatureType = 'drawn';
     }
 
@@ -3581,7 +3784,7 @@ public function storeEmployeeHealthForm(Request $request)
         'referred_to_others' => $validated['referred_to_others'] ?? null,
         'follow_up_on' => $validated['follow_up_on'] ?? null,
         'physician_signature' => $validated['physician_signature'] ?? null,
-        'staff_signature' => $employeeSignatureMethod === 'draw' ? $request->input('employee_signature') : null,
+        'staff_signature' => null,
         'uploaded_signature_path' => $signaturePath,
         'signature_type' => $signatureType,
         'certified_at' => now(),
@@ -3950,7 +4153,7 @@ public function storeHealthForm(Request $request)
         'med_cert_findings_details' => 'required_if:med_cert_findings,With Findings|nullable|string|max:1000',
         'signature_method' => 'required|in:draw,upload',
         'digital_signature_data' => 'nullable|string',
-        'digital_signature_upload' => ['nullable', 'image', 'mimes:png', 'max:1024'],
+        'digital_signature_upload' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
         'digital_signature_existing' => 'nullable|string|max:255',
         'health_profile_certified' => 'accepted',
     ]);
@@ -4239,6 +4442,23 @@ public function printHealthForm()
         return redirect('/login-as-student')->with('error', 'Please login first.');
     }
 
+    if ($this->shouldUseEmployeeHealthForm($user)) {
+        $employeeProfile = EmployeeHealthProfile::query()
+            ->where('user_id', $user->id)
+            ->first();
+
+        $snapshotPath = ltrim((string) ($employeeProfile?->staff_health_form_pdf_path ?? ''), '/');
+        $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
+        if ($snapshotPath !== '' && Storage::disk('public')->exists($snapshotPath)) {
+            return Storage::disk('public')->download($snapshotPath, basename($snapshotPath), [
+                'Content-Type' => 'application/pdf',
+            ]);
+        }
+
+        return redirect('/student/account?view=health-record')
+            ->with('error', 'Approved Employee Health Examination PDF is not available yet.');
+    }
+
     $profile = HealthProfile::query()
         ->with('user')
         ->where('user_id', $user->id)
@@ -4257,7 +4477,9 @@ public function printHealthForm()
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($snapshotPath)) . '"',
             'X-Content-Type-Options' => 'nosniff',
-            'Cache-Control' => 'private, max-age=300',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
         ]);
     }
 
@@ -4292,6 +4514,20 @@ public function downloadHealthForm()
     $submission = $this->latestHealthFormSubmissionForProfile($profile);
     $snapshotPath = ltrim((string) ($submission?->pdf_path ?? ''), '/');
     $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
+    $profileStatus = strtolower(trim((string) $profile->clearance_status));
+    $canCreateApprovedFallback = in_array($profileStatus, ['approved', 'issued', 'fully cleared'], true);
+    if (($snapshotPath === '' || !Storage::disk('public')->exists($snapshotPath)) && $canCreateApprovedFallback) {
+        try {
+            $submission = app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($profile->fresh('user'));
+            $snapshotPath = ltrim((string) ($submission?->pdf_path ?? ''), '/');
+            $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
+        } catch (\Throwable $exception) {
+            \Log::warning('Unable to create fallback Health Form PDF snapshot for download.', [
+                'health_profile_id' => $profile->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
     if ($snapshotPath !== '' && Storage::disk('public')->exists($snapshotPath)) {
         return Storage::disk('public')->download($snapshotPath, basename($snapshotPath), [
             'Content-Type' => 'application/pdf',
