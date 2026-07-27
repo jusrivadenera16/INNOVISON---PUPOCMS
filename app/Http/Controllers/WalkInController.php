@@ -248,6 +248,94 @@ class WalkInController extends Controller
             ->first();
     }
 
+    private function findEmployeeHealthProfileByReference(string $referenceNumber): ?EmployeeHealthProfile
+    {
+        $referenceNumber = trim($referenceNumber);
+        if ($referenceNumber === '' || !\Schema::hasTable('health_profile_emp')) {
+            return null;
+        }
+
+        return EmployeeHealthProfile::query()
+            ->with('user')
+            ->where(function ($query) use ($referenceNumber) {
+                $query->where('employee_number', $referenceNumber);
+
+                if (ctype_digit($referenceNumber)) {
+                    $query->orWhere('id', (int) $referenceNumber);
+                }
+
+                $query->orWhereHas('user', function ($userQuery) use ($referenceNumber) {
+                    if (\Schema::hasColumn('users', 'employee_number')) {
+                        $userQuery->orWhere('employee_number', $referenceNumber);
+                    }
+                    if (\Schema::hasColumn('users', 'student_number')) {
+                        $userQuery->orWhere('student_number', $referenceNumber);
+                    }
+                    if (\Schema::hasColumn('users', 'reference_number')) {
+                        $userQuery->orWhere('reference_number', $referenceNumber);
+                    }
+
+                    $userQuery->orWhere('student_id', $referenceNumber)
+                        ->orWhere('barcode', $referenceNumber);
+                });
+            })
+            ->latest()
+            ->first();
+    }
+
+    private function formatEmployeeExamValue(?string $value): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        $normalized = strtolower($value);
+        $mapped = [
+            'not_in_distress' => 'Not in Distress',
+            'in_distress' => 'In Distress',
+            'without_glasses' => 'w/o Glasses',
+            'with_glasses' => 'w/ Glasses',
+            'anicteric_sclera' => 'Anicteric Sclera',
+            'pink_palpebral_conjunctiva' => 'Pink Palpebral Conjunctiva',
+            'no_gross_deformity' => 'No Gross Deformity',
+            'no_discharge' => 'No Discharge',
+            'no_tpc' => 'No TPC',
+            'no_mass' => 'No Mass',
+            'no_lymphadenopathy' => 'No lymphadenopathy',
+            'with_findings' => 'With Findings',
+            'no_deformities' => 'No Deformities',
+            'with_deformity' => 'With Deformity',
+            'na' => 'N/A',
+        ];
+
+        if (isset($mapped[$normalized])) {
+            return $mapped[$normalized];
+        }
+
+        return Str::of($value)
+            ->replace('_', ' ')
+            ->lower()
+            ->title()
+            ->replace('Na', 'N/A')
+            ->replace('Tpc', 'TPC')
+            ->replace('W/O', 'w/o')
+            ->replace('W/ ', 'w/ ')
+            ->toString();
+    }
+
+    private function formatEmployeeExamArray($value): ?array
+    {
+        $items = is_array($value) ? $value : [$value];
+        $items = collect($items)
+            ->map(fn ($item) => $this->formatEmployeeExamValue($item))
+            ->filter()
+            ->values()
+            ->all();
+
+        return $items === [] ? null : $items;
+    }
+
     private function ensureLocalUserFromHealthProfile(HealthProfile $profile, string $referenceNumber): ?User
     {
         $profile->loadMissing('user');
@@ -967,6 +1055,34 @@ class WalkInController extends Controller
         return $path;
     }
 
+    private function generateEmployeeHealthFormPdf(EmployeeHealthProfile $profile): string
+    {
+        $profile->loadMissing('user');
+        $profile->refresh();
+        $profile->loadMissing('user');
+
+        $identifier = trim((string) ($profile->employee_number ?: $profile->user?->employee_number ?: $profile->id));
+        $safeIdentifier = Str::slug($identifier !== '' ? $identifier : 'employee-' . $profile->id);
+        $path = 'health_profile_employees/health_forms/health-form-' . $safeIdentifier . '-' . now()->format('YmdHis') . '.pdf';
+
+        $previousPath = ltrim((string) $profile->staff_health_form_pdf_path, '/');
+        $previousPath = preg_replace('#^(?:public/)?storage/#', '', $previousPath) ?? $previousPath;
+        if (Str::startsWith($previousPath, 'health_profile_employees/health_forms/') && Storage::disk('public')->exists($previousPath)) {
+            Storage::disk('public')->delete($previousPath);
+        }
+
+        $pdf = Pdf::loadView('student.print_employee_health_form', [
+            'user' => $profile->user,
+            'employeeProfile' => $profile,
+            'adminViewer' => true,
+            'pdfMode' => true,
+        ])->setPaper([0, 0, 612, 936]);
+
+        Storage::disk('public')->put($path, $pdf->output());
+
+        return $path;
+    }
+
     public function showApplicantDocument(HealthProfile $healthProfile, string $document)
     {
         $allowedDocuments = [
@@ -1002,38 +1118,34 @@ class WalkInController extends Controller
         $employeeProfile->loadMissing('user');
         abort_unless($employeeProfile->user, 404);
 
+        $showFreshTemplate = $request->boolean('fresh');
         $snapshotPath = ltrim((string) $employeeProfile->staff_health_form_pdf_path, '/');
         $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
-        if ($snapshotPath !== '' && Storage::disk('public')->exists($snapshotPath)) {
+        if (!$showFreshTemplate && $snapshotPath !== '' && Storage::disk('public')->exists($snapshotPath)) {
             return response()->file(Storage::disk('public')->path($snapshotPath), [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($snapshotPath)) . '"',
                 'X-Content-Type-Options' => 'nosniff',
-                'Cache-Control' => 'private, max-age=300',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
             ]);
         }
 
-        return response()->view('student.health_form_employee', [
+        $pdf = Pdf::loadView('student.print_employee_health_form', [
             'user' => $employeeProfile->user,
             'employeeProfile' => $employeeProfile,
-            'employeePrefill' => [
-                'employee_number' => $employeeProfile->employee_number,
-                'first_name' => $employeeProfile->first_name,
-                'middle_name' => $employeeProfile->middle_name,
-                'last_name' => $employeeProfile->last_name,
-                'email' => optional($employeeProfile->user)->email,
-                'contact_no' => $employeeProfile->contact_no,
-                'office' => $employeeProfile->office,
-                'course_college' => $employeeProfile->course_college,
-                'school_year' => $employeeProfile->school_year,
-                'birthday' => optional($employeeProfile->birthday)->format('Y-m-d'),
-                'age' => $employeeProfile->age,
-                'sex' => $employeeProfile->sex,
-                'civil_status' => $employeeProfile->civil_status,
-            ],
-            'displayName' => $employeeProfile->name ?: optional($employeeProfile->user)->name,
-            'employeeCourseOptions' => collect([$employeeProfile->course_college])->filter()->values(),
             'adminViewer' => true,
+            'pdfMode' => true,
+        ])->setPaper([0, 0, 612, 936]);
+
+        $identifier = trim((string) ($employeeProfile->employee_number ?: $employeeProfile->user?->employee_number ?: $employeeProfile->id));
+        $fileName = 'health-examination-record-' . (preg_replace('/[^A-Za-z0-9\-_]+/', '-', $identifier) ?: $employeeProfile->id) . '.pdf';
+
+        return $pdf->stream($fileName, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
         ]);
     }
 
@@ -1442,6 +1554,9 @@ class WalkInController extends Controller
         if ($student) {
             $resolvedName = trim((string) ($student->name ?: trim(($student->first_name ?? '') . ' ' . ($student->last_name ?? ''))));
             $healthProfile = HealthProfile::where('user_id', $student->id)->first();
+            $employeeProfile = $isEmployeeLookupScope
+                ? EmployeeHealthProfile::where('user_id', $student->id)->latest()->first()
+                : null;
             $resolvedReferenceNumber = trim((string) (
                 ($lookup !== '' && !$this->looksLikeUuid($lookup) ? $lookup : null)
                 ?: $student->reference_number
@@ -1531,6 +1646,7 @@ class WalkInController extends Controller
                     'medical_condition_summary' => $medicalConditionSummary['items'],
                     'health_form_information' => $this->healthProfileInformationPayload($healthProfile, $student),
                     'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
+                    'employee_draft_data' => $employeeProfile?->draft_data ?: [],
                     'documents' => $this->healthProfileDocuments($request, $healthProfile),
                     'name_matches' => $lookupName !== '' ? $this->namesRoughlyMatch($lookupName, $student) : null,
                     'lookup_status' => $lookupStatus,
@@ -1586,6 +1702,7 @@ class WalkInController extends Controller
                 'medical_condition_summary' => $medicalConditionSummary['items'],
                 'health_form_information' => $this->healthProfileInformationPayload($healthProfile, $student),
                 'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
+                'employee_draft_data' => $employeeProfile?->draft_data ?: [],
                 'documents' => $this->healthProfileDocuments($request, $healthProfile),
                 'lookup_status' => $lookupStatus,
                 'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_employee_reference', 'local_clinic_reference'], true)
@@ -1674,9 +1791,27 @@ class WalkInController extends Controller
             ]);
         }
 
-        return view('student.print_health_form', [
+        $pdf = Pdf::loadView('student.print_health_form', [
             'profile' => $healthProfile,
             'adminViewer' => true,
+            'pdfMode' => true,
+            'healthFormIdentity' => [],
+        ])->setPaper([0, 0, 612, 936]);
+
+        $identifier = trim((string) (
+            $healthProfile->reference_number
+            ?: $healthProfile->student_number
+            ?: $healthProfile->student_id
+            ?: $healthProfile->user?->student_number
+            ?: $healthProfile->user?->student_id
+            ?: $healthProfile->id
+        ));
+        $fileName = 'health-information-form-' . (preg_replace('/[^A-Za-z0-9\-_]+/', '-', $identifier) ?: $healthProfile->id) . '.pdf';
+
+        return $pdf->stream($fileName, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
         ]);
     }
 
@@ -2361,6 +2496,196 @@ PROMPT;
         }
     }
 
+    public function saveEmployeeDraft(Request $request)
+    {
+        $validated = $request->validate([
+            'reference_number' => ['required', 'string', 'max:120'],
+            'lookup_scope' => ['required', 'in:employee_local,clinic_local'],
+        ]);
+
+        $employeeProfile = $this->findEmployeeHealthProfileByReference($validated['reference_number']);
+        if (!$employeeProfile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee record was not found in local health profiles.',
+            ], 404);
+        }
+
+        $draftData = $request->except(['_token', 'reference_number', 'lookup_scope']);
+        $employeeProfile->draft_data = $draftData;
+        if (!in_array(strtolower(trim((string) $employeeProfile->submission_status)), ['approved', 'completed'], true)) {
+            $employeeProfile->submission_status = 'draft';
+            $employeeProfile->clearance_status = 'Draft';
+        }
+        $employeeProfile->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Employee draft saved successfully.',
+            'saved_at' => now()->toIso8601String(),
+        ]);
+    }
+
+    private function approveEmployeeHealthProfile(
+        Request $request,
+        array $validated,
+        string $referenceNumber,
+        string $clearanceStatus,
+        bool $hasPendingFinding,
+        bool $hasIncompleteRequirements,
+        array $resubmissionRequiredDocuments,
+        array $pendingReasons,
+        string $findingsStatus,
+        string $medicalCondition,
+        string $conditionRemarks,
+        string $medAssessmentRemarks
+    ) {
+        $employeeProfile = $this->findEmployeeHealthProfileByReference($referenceNumber);
+        if (!$employeeProfile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee record was not found in local employee health profiles.',
+            ], 404);
+        }
+
+        $employeeProfile->loadMissing('user');
+        $employeeProfile = DB::transaction(function () use (
+            $request,
+            $validated,
+            $employeeProfile,
+            $referenceNumber,
+            $clearanceStatus,
+            $hasPendingFinding,
+            $hasIncompleteRequirements,
+            $resubmissionRequiredDocuments,
+            $pendingReasons,
+            $findingsStatus,
+            $medicalCondition,
+            $conditionRemarks,
+            $medAssessmentRemarks
+        ) {
+            $height = trim((string) $request->input('employee_exam_height', $validated['height'] ?? ''));
+            $weight = trim((string) $request->input('employee_exam_weight', $validated['weight'] ?? ''));
+            $bp = trim((string) $request->input('employee_exam_bp', $validated['blood_pressure'] ?? ''));
+            $hr = trim((string) $request->input('employee_exam_hr', $validated['pulse_rate'] ?? ''));
+            $rr = trim((string) $request->input('employee_exam_rr', $validated['respiratory_rate'] ?? ''));
+            $temperature = trim((string) $request->input('employee_exam_temperature', $validated['temperature'] ?? ''));
+
+            $employeeProfile->employee_number = trim((string) ($employeeProfile->employee_number ?: $referenceNumber));
+            $employeeProfile->vital_signs_distress_status = $this->formatEmployeeExamValue($request->input('employee_exam_distress')) ?: $employeeProfile->vital_signs_distress_status;
+            $employeeProfile->height = $height !== '' ? $height : $employeeProfile->height;
+            $employeeProfile->weight = $weight !== '' ? $weight : $employeeProfile->weight;
+            $employeeProfile->bmi = trim((string) $request->input('employee_exam_bmi', $employeeProfile->bmi));
+            $employeeProfile->bp = $bp !== '' ? preg_replace('/\s+/', '', $bp) : $employeeProfile->bp;
+            $employeeProfile->hr = $hr !== '' ? $hr : $employeeProfile->hr;
+            $employeeProfile->rr = $rr !== '' ? $rr : $employeeProfile->rr;
+            $employeeProfile->temperature = $temperature !== '' ? $temperature : $employeeProfile->temperature;
+            $employeeProfile->head_findings = $this->formatEmployeeExamArray($request->input('employee_exam_head', $employeeProfile->head_findings));
+            $employeeProfile->eyes_findings = $this->formatEmployeeExamArray($request->input('employee_exam_eyes', $employeeProfile->eyes_findings));
+            $employeeProfile->ears_findings = $this->formatEmployeeExamArray($request->input('employee_exam_ears', $employeeProfile->ears_findings));
+            $employeeProfile->throat_findings = $this->formatEmployeeExamArray($request->input('employee_exam_throat', $employeeProfile->throat_findings));
+            $employeeProfile->chest_lungs_findings = $this->formatEmployeeExamArray($request->input('employee_exam_chest_lungs', $employeeProfile->chest_lungs_findings));
+            $employeeProfile->chest_xray_result = $this->formatEmployeeExamValue($request->input('employee_exam_chest_xray')) ?: ($findingsStatus === 'With Findings' ? 'With Findings' : $employeeProfile->chest_xray_result);
+            $employeeProfile->breast_findings = $this->formatEmployeeExamValue(collect($request->input('employee_exam_breast', []))->first()) ?: $employeeProfile->breast_findings;
+            $employeeProfile->heart_murmur = $this->formatEmployeeExamValue($request->input('employee_exam_heart_murmur')) ?: $employeeProfile->heart_murmur;
+            $employeeProfile->heart_rhythm = $this->formatEmployeeExamValue($request->input('employee_exam_heart_rhythm')) ?: $employeeProfile->heart_rhythm;
+            $employeeProfile->abdomen_findings = $this->formatEmployeeExamValue(collect($request->input('employee_exam_abdomen', []))->first()) ?: $employeeProfile->abdomen_findings;
+            $employeeProfile->genito_urinary_date_lmp = $request->input('employee_exam_last_menstruation') ?: $employeeProfile->genito_urinary_date_lmp;
+            $employeeProfile->extremities_findings = $this->formatEmployeeExamValue(collect($request->input('employee_exam_extremities', []))->first()) ?: $employeeProfile->extremities_findings;
+            $employeeProfile->vertebral_column_findings = $this->formatEmployeeExamValue($request->input('employee_exam_vertebral_column')) ?: $employeeProfile->vertebral_column_findings;
+            $employeeProfile->skin_findings = $this->formatEmployeeExamArray($request->input('employee_exam_skin', $employeeProfile->skin_findings));
+            if (\Schema::hasColumn('health_profile_emp', 'scars_findings')) {
+                $employeeProfile->scars_findings = $this->formatEmployeeExamValue($request->input('employee_exam_scars')) ?: $employeeProfile->scars_findings;
+            }
+            $employeeProfile->working_impression = trim((string) $request->input('employee_exam_working_impression', $employeeProfile->working_impression));
+            $fitStatus = trim((string) $request->input('employee_exam_fit', $employeeProfile->fit_status));
+            $fitOther = trim((string) $request->input('employee_exam_fit_other', ''));
+            if ($fitStatus === 'Others' && $fitOther !== '') {
+                $fitStatus = 'Others: ' . $fitOther;
+            }
+            $employeeProfile->fit_status = $fitStatus;
+            $employeeProfile->for_work_up = trim((string) $request->input('employee_exam_for_work_up', $employeeProfile->for_work_up));
+            $employeeProfile->referred_to = $this->formatEmployeeExamArray($request->input('employee_exam_referred_to', $employeeProfile->referred_to));
+            $employeeProfile->referred_to_others = trim((string) $request->input('employee_exam_referred_to_others', $employeeProfile->referred_to_others));
+            $employeeProfile->follow_up_on = $request->input('employee_exam_follow_up_on') ?: $employeeProfile->follow_up_on;
+            $employeeProfile->clearance_status = $clearanceStatus;
+            $employeeProfile->submission_status = $hasPendingFinding ? 'pending' : 'approved';
+            $employeeProfile->documents_valid = !$hasPendingFinding;
+            $employeeProfile->pending_reason = $hasPendingFinding
+                ? trim(implode('; ', $pendingReasons)
+                    . ($conditionRemarks !== '' ? "\n" . $conditionRemarks : '')
+                    . ($medicalCondition !== '' ? "\nMedical condition: " . $medicalCondition : ''))
+                : null;
+            $employeeProfile->resubmission_required_fields = $hasIncompleteRequirements
+                ? $resubmissionRequiredDocuments
+                : null;
+            $employeeProfile->resubmission_requested_at = $hasIncompleteRequirements ? now() : null;
+            $employeeProfile->verified_at = $hasPendingFinding ? null : now();
+            $employeeProfile->approved_by_user_id = $hasPendingFinding ? null : auth()->id();
+            $employeeProfile->certified_at = $hasPendingFinding ? $employeeProfile->certified_at : ($employeeProfile->certified_at ?: now());
+
+            if (!$hasPendingFinding && trim((string) $employeeProfile->fit_status) === '') {
+                $employeeProfile->fit_status = 'Fit';
+            }
+            if (!$hasPendingFinding && trim((string) $employeeProfile->working_impression) === '') {
+                $employeeProfile->working_impression = $medAssessmentRemarks !== '' ? $medAssessmentRemarks : 'Fit to proceed';
+            }
+
+            $employeeProfile->save();
+
+            if (!$hasPendingFinding) {
+                $employeeProfile->staff_health_form_pdf_path = $this->generateEmployeeHealthFormPdf($employeeProfile);
+                $employeeProfile->save();
+            }
+
+            if ($employeeProfile->user) {
+                $employeeProfile->user->is_health_profile_completed = $hasPendingFinding ? 0 : 1;
+                $employeeProfile->user->save();
+            }
+
+            return $employeeProfile->fresh('user');
+        });
+
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_name' => auth()->user()?->name ?? auth()->user()?->email ?? 'System',
+            'user_role' => strtolower((string) (auth()->user()?->user_role ?? '')),
+            'action' => $hasPendingFinding ? 'Employee Pending Compliance' : 'Employee Approval',
+            'module' => 'Patient Intake',
+            'event_type' => $hasPendingFinding ? 'employee_pending_compliance' : 'employee_approval',
+            'description' => $hasPendingFinding
+                ? "Employee set to pending compliance: {$referenceNumber}"
+                : "Employee approved and Health Examination PDF saved: {$referenceNumber}",
+            'route_name' => optional($request->route())->getName(),
+            'http_method' => 'POST',
+            'request_path' => '/' . ltrim((string) $request->path(), '/'),
+            'status_code' => 200,
+            'subject_type' => EmployeeHealthProfile::class,
+            'subject_id' => (string) $employeeProfile->id,
+            'metadata' => [
+                'reference_number' => $referenceNumber,
+                'employee_profile_id' => $employeeProfile->id,
+                'clearance_status' => $clearanceStatus,
+                'findings_status' => $findingsStatus,
+                'pending_reasons' => $pendingReasons,
+                'pdf_path' => $employeeProfile->staff_health_form_pdf_path,
+                'lookup_source' => 'local_employee_reference',
+            ],
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 255),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'status' => $clearanceStatus,
+            'message' => $hasPendingFinding
+                ? 'Employee saved under Pending Compliance.'
+                : 'Employee approved and Health Examination Record PDF saved.',
+            'lookup_source' => 'local_employee_reference',
+            'pdf_path' => $employeeProfile->staff_health_form_pdf_path,
+        ]);
+    }
+
     public function approveApplicant(Request $request, PuptasWebhookService $webhookService)
     {
         try {
@@ -2506,6 +2831,23 @@ PROMPT;
             $clearanceStatus = $hasPendingFinding
                 ? ($hasIncompleteRequirements ? 'Pending Resubmission' : 'Pending/Conditional')
                 : 'Fully Cleared';
+
+            if ($forceLocalEmployeeApproval) {
+                return $this->approveEmployeeHealthProfile(
+                    $request,
+                    $validated,
+                    $referenceNumber,
+                    $clearanceStatus,
+                    $hasPendingFinding,
+                    $hasIncompleteRequirements,
+                    $resubmissionRequiredDocuments,
+                    $pendingReasons,
+                    $findingsStatus,
+                    $medicalCondition,
+                    $conditionRemarks,
+                    $medAssessmentRemarks
+                );
+            }
 
             // Conditional applicants remain uncleared in PUPTAS until compliance is resolved.
             $webhookResult = $isLocalOnlyApproval

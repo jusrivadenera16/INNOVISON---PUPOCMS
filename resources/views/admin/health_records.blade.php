@@ -4881,6 +4881,7 @@
                                 'title' => 'Health Information Form',
                                 'url' => $recordIsEmployee ? route('walkin.employeeHealthForm', [
                                     'employeeProfile' => $record->id,
+                                    'fresh' => 1,
                                 ]) : route('walkin.healthForm', [
                                     'healthProfile' => $record->id,
                                 ]),
@@ -4989,7 +4990,7 @@
                     <td style="text-align: center;">
                         <div class="d-flex justify-content-center">
                             @if($recordIsEmployee)
-                                <a href="{{ route('walkin.employeeHealthForm', $record->id) }}" class="btn-action btn-view" target="_blank" rel="noopener noreferrer">
+                                <a href="{{ route('walkin.employeeHealthForm', ['employeeProfile' => $record->id, 'fresh' => 1]) }}" class="btn-action btn-view" target="_blank" rel="noopener noreferrer">
                                     <x-outline-icon name="eye" />
                                     View
                                 </a>
@@ -5098,7 +5099,7 @@
                         $readonlySource = (string) ($readonlyRecord->record_source ?? 'health');
                         $readonlyIsEmployee = in_array($readonlySource, ['employee', 'staff'], true);
                         $readonlyHealthFormUrl = $readonlyIsEmployee
-                            ? route('walkin.employeeHealthForm', ['employeeProfile' => $readonlyRecord->id])
+                            ? route('walkin.employeeHealthForm', ['employeeProfile' => $readonlyRecord->id, 'fresh' => 1])
                             : route('walkin.healthForm', ['healthProfile' => $readonlyRecord->id]);
                         $readonlyDocumentUrl = function ($documentKey) use ($readonlyIsEmployee, $readonlyRecord) {
                             return $readonlyIsEmployee

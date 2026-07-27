@@ -2212,6 +2212,15 @@
                 <p class="settings-hub-copy">Open account access, admin hub profiles, roles, and user permissions.</p>
             </div>
         </a>
+
+        <a href="{{ route('admin.settings.faqs') }}" class="settings-hub-card">
+            <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="settings-hub-card-icon" aria-hidden="true"><x-outline-icon name="question-mark-circle" /></span>
+            <div>
+                <h3>FAQs</h3>
+                <p class="settings-hub-copy">View frequently asked questions about clinic appointments, records, and services.</p>
+            </div>
+        </a>
     </div>
 
     <div id="workflowSettingsModal" class="modal-overlay">

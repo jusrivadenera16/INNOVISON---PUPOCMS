@@ -1579,7 +1579,6 @@
     }
     .missing-requirements-main {
         display: grid;
-        grid-template-columns: minmax(180px, .85fr) minmax(260px, 1fr) minmax(170px, .55fr);
         gap: 18px;
         align-items: stretch;
     }
@@ -1619,6 +1618,13 @@
         font-size: 18px;
         font-weight: 950;
         line-height: 1.2;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .missing-requirements-title svg {
+        width: 19px;
+        height: 19px;
     }
     .missing-requirements-copy {
         margin: 8px 0 0;
@@ -1629,19 +1635,14 @@
     }
     .missing-requirements-list {
         margin: 0;
-        padding: 16px 18px;
+        padding: 14px 18px 14px 38px;
         border-radius: 12px;
         border: 1px solid rgba(112, 19, 27, .10);
         background: #ffffff;
         box-shadow: 0 12px 26px rgba(15, 23, 42, .06);
-        display: grid;
-        gap: 12px;
     }
     .missing-requirement-item {
-        display: grid;
-        grid-template-columns: 28px 24px minmax(0, 1fr);
-        align-items: center;
-        gap: 10px;
+        padding: 6px 0;
         color: #111827;
         font-size: 13px;
         font-weight: 900;
@@ -1652,17 +1653,33 @@
         height: 24px;
         color: #dc2626;
     }
-    .missing-requirement-number {
-        width: 22px;
-        height: 22px;
-        border-radius: 999px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: #fff1f2;
-        color: #dc2626;
-        font-size: 10px;
+    .missing-requirements-footer {
+        display: flex;
+        justify-content: flex-end;
+    }
+    .missing-requirement-action {
+        border: 1px solid #8B0000;
+        border-radius: 10px;
+        background: #8B0000;
+        color: #facc15;
+        padding: 9px 16px;
+        font-size: 12px;
         font-weight: 950;
+        cursor: pointer;
+        transition: background .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+    }
+    .missing-requirement-action:hover,
+    .missing-requirement-action:focus-visible {
+        background: #facc15;
+        color: #70131B;
+        border-color: #facc15;
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .missing-requirement-action:disabled {
+        opacity: .55;
+        cursor: not-allowed;
+        transform: none;
     }
     .missing-requirements-upload-card {
         min-height: 136px;
@@ -2143,6 +2160,35 @@
         outline: none;
     }
     @media (max-width: 640px) {
+        .missing-document-modal {
+            width: calc(100vw - 24px);
+            max-height: calc(100vh - 24px);
+        }
+        .missing-document-body {
+            padding: 16px 16px 0;
+        }
+        .missing-document-progress,
+        .missing-document-row,
+        .missing-document-esign-row,
+        .missing-document-footer {
+            grid-template-columns: 1fr;
+        }
+        .missing-document-esign-action {
+            width: 100%;
+        }
+        .missing-document-stat {
+            padding-left: 0;
+            border-left: 0;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 10px;
+        }
+        .missing-upload-actions {
+            flex-direction: column;
+        }
+        .missing-esign-submit,
+        .missing-esign-secondary {
+            width: 100%;
+        }
         .missing-requirements-panel {
             padding: 16px;
         }
@@ -2837,6 +2883,490 @@
         border-top: 0;
         border-bottom: 4px solid #facc15;
     }
+    .missing-document-modal {
+        width: min(915px, calc(100vw - 48px));
+        height: min(820px, calc(100vh - 36px));
+        max-height: min(820px, calc(100vh - 36px));
+        border-top: 0;
+        border-bottom: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+    }
+    .missing-document-modal .record-modal-head {
+        min-height: 108px;
+        padding: 22px 74px 22px 28px;
+        background: linear-gradient(135deg, #8B0000 0%, #70131B 100%);
+        border-radius: 16px 16px 0 0;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+    }
+    .missing-document-head-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.22);
+        background: rgba(255,255,255,.08);
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+    .missing-document-head-icon svg {
+        width: 28px;
+        height: 28px;
+    }
+    .missing-document-modal .record-modal-head-main {
+        display: block;
+    }
+    .missing-document-modal .record-modal-title {
+        color: #ffffff;
+        font-size: 24px;
+        line-height: 1.1;
+    }
+    .missing-document-modal .record-modal-subtitle {
+        color: rgba(255,255,255,.92);
+        max-width: 420px;
+        font-size: 13px;
+        line-height: 1.35;
+    }
+    .missing-document-modal .record-modal-close {
+        display: inline-flex;
+        background: rgba(112, 19, 27, .45);
+        border-color: rgba(255,255,255,.18);
+        color: #ffffff;
+        transition: background-color .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .missing-document-modal .record-modal-close:hover,
+    .missing-document-modal .record-modal-close:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131b;
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .missing-document-modal .record-modal-close:active {
+        transform: translateY(0) scale(.96);
+    }
+    .missing-document-body {
+        min-height: 0;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        padding: 22px 28px 0;
+        background: #ffffff;
+    }
+    .missing-document-progress {
+        display: grid;
+        grid-template-columns: minmax(250px, 1.3fr) repeat(3, minmax(130px, .65fr));
+        gap: 18px;
+        align-items: center;
+        padding: 12px 18px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .04);
+    }
+    .missing-document-progress-title {
+        margin: 0;
+        color: #111827;
+        font-size: 12px;
+        font-weight: 950;
+    }
+    .missing-document-progress-track {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 14px;
+        align-items: center;
+        margin-top: 8px;
+    }
+    .missing-document-progress-bar {
+        height: 8px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        overflow: hidden;
+    }
+    .missing-document-progress-fill {
+        display: block;
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: #8B0000;
+        transition: width .2s ease;
+    }
+    .missing-document-progress-count {
+        color: #8B0000;
+        font-size: 12px;
+        font-weight: 950;
+        white-space: nowrap;
+    }
+    .missing-document-stat {
+        display: grid;
+        grid-template-columns: 38px minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+        padding-left: 18px;
+        border-left: 1px solid #e5e7eb;
+    }
+    .missing-document-stat-icon,
+    .missing-document-row-icon,
+    .missing-document-secure-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #8B0000;
+        background: #fff1f2;
+    }
+    .missing-document-stat-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+    }
+    .missing-document-stat-icon svg,
+    .missing-document-row-icon svg,
+    .missing-document-secure-icon svg,
+    .missing-document-drop-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+    .missing-document-stat strong {
+        display: block;
+        color: #111827;
+        font-size: 12px;
+        font-weight: 950;
+        line-height: 1.15;
+    }
+    .missing-document-stat span {
+        display: block;
+        margin-top: 2px;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 750;
+    }
+    .missing-document-scroll {
+        min-height: 0;
+        overflow-y: auto;
+        display: grid;
+        gap: 10px;
+        padding: 20px 0;
+    }
+    .missing-document-row {
+        display: grid;
+        grid-template-columns: 72px minmax(220px, 1fr) minmax(280px, .9fr);
+        gap: 18px;
+        align-items: center;
+        padding: 14px 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #ffffff;
+    }
+    .missing-document-esign-row {
+        display: grid;
+        grid-template-columns: 72px minmax(220px, 1fr) auto;
+        gap: 18px;
+        align-items: center;
+        padding: 14px 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #ffffff;
+    }
+    .missing-document-esign-action {
+        min-width: 130px;
+        min-height: 38px;
+        border: 1px solid #8B0000;
+        border-radius: 7px;
+        background: #8B0000;
+        color: #facc15;
+        padding: 8px 14px;
+        font-size: 11px;
+        font-weight: 950;
+        cursor: pointer;
+        transition: background-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .missing-document-esign-action:hover,
+    .missing-document-esign-action:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        box-shadow: 0 6px 14px rgba(250, 204, 21, .28);
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .missing-document-esign-action:active {
+        background: #facc15;
+        color: #70131b;
+        transform: translateY(0) scale(.98);
+    }
+    .missing-document-row-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
+    }
+    .missing-document-row-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 950;
+        line-height: 1.2;
+    }
+    .missing-document-required {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #fff1f2;
+        color: #b91c1c;
+        padding: 3px 7px;
+        font-size: 8px;
+        font-weight: 950;
+        text-transform: uppercase;
+    }
+    .missing-document-description {
+        margin: 8px 0 0;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 750;
+        line-height: 1.35;
+    }
+    .missing-document-meta {
+        margin: 8px 0 0;
+        color: #475569;
+        font-size: 10px;
+        font-weight: 850;
+    }
+    .missing-document-upload-box {
+        position: relative;
+        display: grid;
+        place-items: center;
+        min-height: 92px;
+        border: 1.5px dashed #f3b4b4;
+        border-radius: 10px;
+        background: #fffafa;
+        color: #111827;
+        text-align: center;
+        cursor: pointer;
+    }
+    .missing-document-upload-box.is-selected {
+        place-items: stretch;
+        padding: 12px;
+        text-align: left;
+        cursor: default;
+    }
+    .missing-document-upload-box.is-dragging {
+        border-color: #8B0000;
+        background: #fff1f2;
+    }
+    .missing-document-upload-box input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .missing-document-drop-icon {
+        display: inline-flex;
+        color: #8B0000;
+        margin-bottom: 6px;
+    }
+    .missing-document-upload-title,
+    .missing-document-file-name {
+        display: block;
+        color: #111827;
+        font-size: 10px;
+        font-weight: 850;
+    }
+    .missing-document-upload-or {
+        display: block;
+        margin: 3px 0;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 750;
+    }
+    .missing-document-choose {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 110px;
+        min-height: 26px;
+        border-radius: 6px;
+        background: #8B0000;
+        color: #ffffff;
+        padding: 5px 14px;
+        font-size: 10px;
+        font-weight: 950;
+        transition: background-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .missing-document-choose:hover,
+    .missing-document-choose:focus-visible {
+        background: #facc15;
+        color: #70131b;
+        box-shadow: 0 6px 14px rgba(250, 204, 21, .28);
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .missing-document-choose:active {
+        background: #facc15;
+        color: #70131b;
+        transform: translateY(0) scale(.98);
+    }
+    .missing-document-file-name {
+        margin-top: 6px;
+        color: #8B0000;
+    }
+    .missing-document-preview {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        height: 100%;
+    }
+    .missing-document-upload-box.is-selected .missing-document-preview {
+        display: flex;
+    }
+    .missing-document-upload-box.is-selected > span:not(.missing-document-preview) {
+        display: none;
+    }
+    .missing-document-preview-thumb {
+        width: 54px;
+        height: 54px;
+        flex: 0 0 54px;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        border-radius: 8px;
+        background: #fff1f2;
+        color: #8B0000;
+        font-size: 11px;
+        font-weight: 950;
+        text-transform: uppercase;
+    }
+    .missing-document-preview-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .missing-document-preview-copy {
+        min-width: 0;
+        flex: 1;
+    }
+    .missing-document-preview-copy strong,
+    .missing-document-preview-copy span {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .missing-document-preview-copy strong {
+        color: #111827;
+        font-size: 11px;
+        font-weight: 950;
+    }
+    .missing-document-preview-copy span {
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 750;
+    }
+    .missing-document-preview-actions {
+        display: flex;
+        flex: 0 0 auto;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .missing-document-preview-actions label,
+    .missing-document-preview-actions button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 66px;
+        min-height: 24px;
+        border: 1px solid #8B0000;
+        border-radius: 5px;
+        background: #8B0000;
+        color: #facc15;
+        padding: 4px 8px;
+        font-size: 9px;
+        font-weight: 950;
+        cursor: pointer;
+        transition: background-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .missing-document-preview-actions button {
+        background: #ffffff;
+        color: #8B0000;
+    }
+    .missing-document-preview-actions label:hover,
+    .missing-document-preview-actions label:focus-visible,
+    .missing-document-preview-actions button:hover,
+    .missing-document-preview-actions button:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        box-shadow: 0 5px 12px rgba(250, 204, 21, .28);
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .missing-document-preview-actions label:active,
+    .missing-document-preview-actions button:active {
+        background: #facc15;
+        color: #70131b;
+        transform: translateY(0) scale(.98);
+    }
+    .missing-document-footer {
+        position: relative;
+        bottom: 0;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) auto;
+        gap: 18px;
+        align-items: center;
+        padding: 16px 0 20px;
+        border-top: 1px solid #f1f5f9;
+        background: #ffffff;
+    }
+    .missing-document-secure {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+        max-width: 330px;
+        border-radius: 10px;
+        background: #fff7f7;
+        padding: 14px 16px;
+    }
+    .missing-document-secure-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        background: #ffffff;
+    }
+    .missing-document-secure strong {
+        display: block;
+        color: #111827;
+        font-size: 12px;
+        font-weight: 950;
+    }
+    .missing-document-secure span {
+        display: block;
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 750;
+        line-height: 1.35;
+    }
+    .missing-document-field {
+        width: 100%;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #f8fafc;
+        padding: 10px;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 700;
+    }
     .missing-esign-body {
         padding: 24px;
     }
@@ -2913,6 +3443,7 @@
         border-radius: 8px;
         background: #ffffff;
         touch-action: none;
+        cursor: crosshair;
     }
     .missing-esign-panel.is-hidden {
         display: none;
@@ -2941,6 +3472,89 @@
         border: 1px solid #8B0000;
         background: #8B0000;
         color: #facc15;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 230px;
+        transition: background-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .missing-document-footer .missing-esign-submit:hover,
+    .missing-document-footer .missing-esign-submit:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        box-shadow: 0 6px 14px rgba(250, 204, 21, .28);
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .missing-document-footer .missing-esign-submit:active {
+        background: #facc15;
+        color: #70131b;
+        transform: translateY(0) scale(.98);
+    }
+    .missing-esign-submit svg {
+        width: 17px;
+        height: 17px;
+    }
+    .missing-esign-modal .record-modal-close {
+        transition: background-color .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .missing-esign-modal .record-modal-close:hover,
+    .missing-esign-modal .record-modal-close:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131b;
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .missing-esign-modal .record-modal-close:active {
+        transform: translateY(0) scale(.96);
+    }
+    .missing-esign-modal .missing-esign-submit:hover,
+    .missing-esign-modal .missing-esign-submit:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        box-shadow: 0 6px 14px rgba(250, 204, 21, .28);
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .missing-esign-modal .missing-esign-submit:active {
+        background: #facc15;
+        color: #70131b;
+        transform: translateY(0) scale(.98);
+    }
+    @media (max-width: 640px) {
+        .missing-document-modal {
+            width: calc(100vw - 24px);
+            height: calc(100vh - 24px);
+            max-height: calc(100vh - 24px);
+        }
+        .missing-document-progress,
+        .missing-document-row,
+        .missing-document-esign-row,
+        .missing-document-footer {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+        .missing-document-row,
+        .missing-document-esign-row {
+            min-width: 0;
+        }
+        .missing-document-upload-box {
+            width: 100%;
+            min-width: 0;
+        }
+        .missing-upload-actions {
+            width: 100%;
+            flex-direction: column !important;
+            align-items: stretch;
+        }
+        .missing-upload-actions .missing-esign-secondary,
+        .missing-upload-actions .missing-esign-submit {
+            width: 100%;
+            min-width: 0;
+        }
     }
     .resubmission-upload-modal .record-modal-head {
         min-height: 108px;
@@ -3527,6 +4141,7 @@
         $value = trim((string) $value);
         return in_array(strtoupper($value), ['N/A', 'NA', 'NONE'], true) ? '' : $value;
     };
+    $displayOffice = $cleanNamePart($accountProfileData['office'] ?? '');
     $displayFullName = trim((string) ($accountProfileData['full_name'] ?? ''));
     $cleanFirstName = $cleanNamePart($accountProfileData['first_name'] ?? $user->first_name ?? '');
     $cleanMiddleName = $cleanNamePart($accountProfileData['middle_name'] ?? $user->middle_name ?? '');
@@ -3541,7 +4156,7 @@
     if ($looksLikeReferenceNumber($displayStudentNumber)) {
         $displayStudentNumber = '';
     }
-    $displayYear = trim((string) ($accountProfileData['year'] ?? $user->year ?? ''));
+    $displayYear = $cleanNamePart($accountProfileData['year'] ?? $user->year ?? '');
     $displaySection = trim((string) ($accountProfileData['section'] ?? $user->section ?? ''));
     $heroAcademicParts = array_values(array_filter([$displayStudentNumber, $displayCourse], fn ($value) => trim((string) $value) !== ''));
     $localMiddleName = $cleanNamePart($accountProfileData['middle_name'] ?? $user->middle_name ?? optional($linkedAdminProfile)->middle_name ?? '');
@@ -3600,10 +4215,12 @@
     <div class="profile-hero" id="profileHeroCard">
         <button type="button" class="hero-avatar" id="profilePhotoToggle" aria-label="Expand profile photo" aria-expanded="false">
             @php
-                $healthProfile = \App\Models\HealthProfile::where('user_id', $user->id)->first();
+                $profilePhotoRecord = $usesEmployeeHealthForm
+                    ? ($user->employeeHealthProfile ?? \App\Models\EmployeeHealthProfile::where('user_id', $user->id)->first())
+                    : ($user->healthProfile ?? \App\Models\HealthProfile::where('user_id', $user->id)->first());
             @endphp
-            @if(!empty($healthProfile?->student_photo))
-                <img src="{{ route('student.health_record.document', ['document' => 'student_photo']) }}" alt="Student 2x2 Picture">
+            @if(!empty($profilePhotoRecord?->student_photo))
+                <img src="{{ route('student.health_record.document', ['document' => 'student_photo']) }}" alt="Uploaded 2x2 Picture">
             @else
                 {{ strtoupper(substr($displayFullName, 0, 1)) }}
             @endif
@@ -3724,7 +4341,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="profile-sections-grid">
                 <div class="profile-column-stack">
                     <section class="profile-form-section accent-gold">
-                        <h3 class="profile-form-section-title"><x-outline-icon name="information-circle" />Personal Details</h3>
+                        <h3 class="profile-form-section-title"><x-outline-icon name="user-circle" />Personal Details</h3>
                         <div class="profile-grid-3">
                             <div>
                                 <label class="input-label">First Name</label>
@@ -3780,7 +4397,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <div class="profile-column-stack">
                     <section class="profile-form-section accent-maroon profile-frame-equal">
-                        <h3 class="profile-form-section-title"><x-outline-icon name="document-text" />Academic Information</h3>
+                        <h3 class="profile-form-section-title"><x-outline-icon name="document-text" />{{ $usesEmployeeHealthForm ? 'Employment Information' : 'Academic Information' }}</h3>
                         <div class="profile-grid-3">
                             @if($displayStudentNumber !== '')
                                 <div>
@@ -3788,15 +4405,21 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <div class="form-control profile-static-field">{{ $displayStudentNumber }}</div>
                                 </div>
                             @endif
-                            @if($displayCourse !== '')
+                            @if(!$usesEmployeeHealthForm && $displayCourse !== '')
                                 <div>
                                     <label class="input-label">Course</label>
                                     <div class="form-control profile-course-field profile-static-field">{{ $displayCourse }}</div>
                                 </div>
                             @endif
+                            @if($usesEmployeeHealthForm && $displayOffice !== '')
+                                <div>
+                                    <label class="input-label">Office / Department</label>
+                                    <div class="form-control profile-static-field">{{ $displayOffice }}</div>
+                                </div>
+                            @endif
                             @if($displayYear !== '')
                                 <div>
-                                    <label class="input-label">Year</label>
+                                    <label class="input-label">{{ $usesEmployeeHealthForm ? 'School Year' : 'Year' }}</label>
                                     <input type="text" name="year" class="form-control" value="{{ $displayYear }}" readonly>
                                 </div>
                             @endif
@@ -4025,8 +4648,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 'chest_xray_result' => 'chest_xray_result',
                 'pwd_id_proof' => 'pwd_id_proof',
             ];
+        $hasStoredHealthRecordDocument = function ($documentPath): bool {
+            $documentPath = trim((string) $documentPath);
+            if ($documentPath === '') {
+                return false;
+            }
+
+            if (filter_var($documentPath, FILTER_VALIDATE_URL)) {
+                return true;
+            }
+
+            $documentPath = preg_replace('#^(?:public/)?storage/#', '', ltrim($documentPath, '/')) ?? $documentPath;
+            return \Illuminate\Support\Facades\Storage::disk('public')->exists($documentPath);
+        };
         $healthRecordMissingDocumentKeys = collect(array_keys($resubmissionDocumentLabels))
-            ->filter(fn ($documentKey) => $healthFormSubmitted && $healthProfileRecord && blank(data_get($healthProfileRecord, $healthRecordDocumentFields[$documentKey] ?? $documentKey)))
+            ->filter(fn ($documentKey) => $healthFormSubmitted
+                && $healthProfileRecord
+                && !$hasStoredHealthRecordDocument(data_get($healthProfileRecord, $healthRecordDocumentFields[$documentKey] ?? $documentKey)))
             ->values();
         $clinicResubmissionUploadKeys = $resubmissionDocuments
             ->filter(fn ($documentKey) => isset($resubmissionDocumentLabels[$documentKey]))
@@ -4043,6 +4681,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 ? blank(optional($healthProfileRecord)->staff_signature) && blank(optional($healthProfileRecord)->uploaded_signature_path)
                 : blank(optional($healthProfileRecord)->digital_signature)
         );
+        $hasExistingESign = $healthFormSubmitted && $healthProfileRecord && (
+            $usesEmployeeHealthForm
+                ? filled(optional($healthProfileRecord)->staff_signature) || filled(optional($healthProfileRecord)->uploaded_signature_path)
+                : filled(optional($healthProfileRecord)->digital_signature)
+        );
+        $existingESignValue = $usesEmployeeHealthForm
+            ? trim((string) (optional($healthProfileRecord)->uploaded_signature_path ?: optional($healthProfileRecord)->staff_signature))
+            : trim((string) optional($healthProfileRecord)->digital_signature);
+        $existingESignPreviewSrc = '';
+        if ($hasExistingESign && $existingESignValue !== '') {
+            $existingESignPreviewSrc = str_starts_with($existingESignValue, 'data:image/')
+                ? $existingESignValue
+                : route('student.health_record.signature');
+        }
         $hasMissingESignErrors = $errors->has('digital_signature_data') || $errors->has('digital_signature_upload') || $errors->has('signature_method');
         $recordSubmissionStatus = $isResubmissionStatus ? 'Pending Resubmission' : ($isConditionalStatus ? 'Pending Compliance' : 'Waiting for clinic review');
         $recordStatusMessage = $isResubmissionStatus
@@ -4087,6 +4739,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 'title' => 'Missing E-signature',
             ]);
         }
+        $healthRecordMissingHasDocuments = $healthRecordMissingRequirements->contains(fn ($requirement) => ($requirement['key'] ?? '') !== 'digital_signature');
+        $healthRecordMissingHasESign = $healthRecordMissingRequirements->contains('key', 'digital_signature');
+        $healthRecordMissingTitle = match (true) {
+            $healthRecordMissingHasDocuments && $healthRecordMissingHasESign => 'Missing Documents / E-sign',
+            $healthRecordMissingHasESign => 'Missing E-sign',
+            default => 'Missing Documents',
+        };
+        $documentUploadKeysForModal = $healthRecordMissingDocumentKeys
+            ->merge($clinicResubmissionUploadKeys)
+            ->filter(fn ($documentKey) => isset($resubmissionDocumentLabels[$documentKey]))
+            ->unique()
+            ->values();
+        $documentModalUsesClinicReplacement = $missingDocumentUploadKeys->isEmpty() && $clinicResubmissionUploadKeys->isNotEmpty();
         $recordStudentNumber = trim((string) (
             optional($healthProfileRecord)->student_number
             ?: ($accountProfileData['student_number'] ?? $user->student_number ?? '')
@@ -4150,90 +4815,31 @@ document.addEventListener('DOMContentLoaded', function () {
                         <x-outline-icon name="exclamation-triangle" />
                     </span>
                     <div>
-                        <h2 class="missing-requirements-title">Missing Documents / E-sign ({{ $healthRecordMissingRequirements->count() }})</h2>
+                        <h2 class="missing-requirements-title">
+                            <x-outline-icon name="document-text" />
+                            {{ $healthRecordMissingTitle }} ({{ $healthRecordMissingRequirements->count() }})
+                        </h2>
                         <p class="missing-requirements-copy">Some files are not attached yet. Upload available documents here when your program or office asks for them.</p>
                     </div>
                 </div>
 
-                <div class="missing-requirements-list">
+                <ol class="missing-requirements-list">
                     @foreach($healthRecordMissingRequirements as $missingIndex => $missingRequirement)
-                        <div class="missing-requirement-item">
-                            <span class="missing-requirements-doc-icon" aria-hidden="true">
-                                <x-outline-icon name="document-text" />
-                            </span>
-                            <span class="missing-requirement-number">{{ $missingIndex + 1 }}</span>
-                            <span>{{ $missingRequirement['title'] }}</span>
-                        </div>
+                        <li class="missing-requirement-item">{{ $missingRequirement['title'] }}</li>
                     @endforeach
+                </ol>
+                <div class="missing-requirements-footer">
+                    @if($documentUploadKeysForModal->isNotEmpty())
+                        <button
+                            type="button"
+                            class="missing-requirement-action"
+                            data-missing-document-open
+                            data-action="{{ $documentModalUsesClinicReplacement ? route('student.health_record.resubmit') : route('student.health_record.documents') }}"
+                        >View</button>
+                    @elseif($requiresMissingESign)
+                        <button type="button" class="missing-requirement-action" onclick="openMissingESignModal()">View</button>
+                    @endif
                 </div>
-
-                @if($clinicResubmissionUploadKeys->isNotEmpty() || $missingDocumentUploadKeys->isNotEmpty())
-                    <div class="missing-requirements-upload-card">
-                        <span class="missing-requirements-upload-icon" aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 2.25 2.25M12 9.75 9.75 12M4.5 15.75a4.5 4.5 0 0 1 4.5-4.5h.75A5.25 5.25 0 0 1 20.25 12 3.75 3.75 0 0 1 16.5 15.75H4.5Z" />
-                            </svg>
-                        </span>
-                        @if($clinicResubmissionUploadKeys->isNotEmpty())
-                            <form class="missing-inline-upload-form" method="POST" action="{{ route('student.health_record.resubmit') }}" enctype="multipart/form-data">
-                                @csrf
-                                <strong>Clinic-requested replacement files</strong>
-                                @foreach($clinicResubmissionUploadKeys as $documentKey)
-                                    @php
-                                        $documentMeta = $resubmissionDocumentMeta[$documentKey] ?? ['accept' => '.pdf,.jpg,.jpeg,.png', 'hint' => 'PDF, JPG, or PNG'];
-                                    @endphp
-                                    <label class="missing-inline-upload-field" for="clinic_missing_{{ $documentKey }}">
-                                        <span>{{ $resubmissionDocumentLabels[$documentKey] }}</span>
-                                        <input id="clinic_missing_{{ $documentKey }}" type="file" name="{{ $documentKey }}" accept="{{ $documentMeta['accept'] }}" required>
-                                        <small>{{ $documentMeta['hint'] }}</small>
-                                        @if($errors->has($documentKey))
-                                            <em>{{ $errors->first($documentKey) }}</em>
-                                        @endif
-                                    </label>
-                                @endforeach
-                                <button type="submit" class="missing-requirements-upload-btn">Submit Replacement Files</button>
-                            </form>
-                        @endif
-                        @if($missingDocumentUploadKeys->isNotEmpty())
-                            <form class="missing-inline-upload-form" method="POST" action="{{ route('student.health_record.documents') }}" enctype="multipart/form-data">
-                                @csrf
-                                <strong>Available document uploads</strong>
-                                @foreach($missingDocumentUploadKeys as $documentKey)
-                                    @php
-                                        $documentMeta = $resubmissionDocumentMeta[$documentKey] ?? ['accept' => '.pdf,.jpg,.jpeg,.png', 'hint' => 'PDF, JPG, or PNG'];
-                                    @endphp
-                                    <label class="missing-inline-upload-field" for="optional_missing_{{ $documentKey }}">
-                                        <span>{{ $resubmissionDocumentLabels[$documentKey] }}</span>
-                                        <input id="optional_missing_{{ $documentKey }}" type="file" name="{{ $documentKey }}" accept="{{ $documentMeta['accept'] }}">
-                                        <small>{{ $documentMeta['hint'] }}</small>
-                                        @if($errors->has($documentKey))
-                                            <em>{{ $errors->first($documentKey) }}</em>
-                                        @endif
-                                    </label>
-                                @endforeach
-                                <button type="submit" class="missing-requirements-upload-btn">Upload Selected Files</button>
-                            </form>
-                        @endif
-                        @if($requiresMissingESign)
-                            <button type="button" class="missing-requirements-upload-btn" onclick="openMissingESignModal()">
-                                Add E-sign
-                            </button>
-                        @endif
-                        <p class="missing-requirements-upload-help">Optional uploads do not change your review status. Clinic-requested replacements still follow clinic review.</p>
-                    </div>
-                @elseif($requiresMissingESign)
-                    <div class="missing-requirements-upload-card">
-                        <span class="missing-requirements-upload-icon" aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
-                            </svg>
-                        </span>
-                        <button type="button" class="missing-requirements-upload-btn" onclick="openMissingESignModal()">
-                            Add E-sign
-                        </button>
-                        <p class="missing-requirements-upload-help">Draw or upload PNG<br>Attached to your Health Form PDF</p>
-                    </div>
-                @endif
             </div>
 
             <div class="missing-requirements-reminder">
@@ -4643,7 +5249,206 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         </div>
     @endif
-    @if($requiresMissingESign)
+    @if($clinicResubmissionUploadKeys->isNotEmpty() || $missingDocumentUploadKeys->isNotEmpty() || session('signature_attached') || session('signature_removed'))
+        <div class="record-modal-overlay" id="missingDocumentModal" aria-hidden="true">
+            <div class="record-modal missing-document-modal" role="dialog" aria-modal="true" aria-labelledby="missingDocumentTitle">
+                <div class="record-modal-head">
+                    <span class="missing-document-head-icon" aria-hidden="true">
+                        <x-outline-icon name="exclamation-triangle" />
+                    </span>
+                    <button type="button" class="record-modal-close" aria-label="Close missing document modal" onclick="closeMissingDocumentModal()">
+                        <x-outline-icon name="x-mark" />
+                    </button>
+                    <div class="record-modal-head-main">
+                        <h2 class="record-modal-title" id="missingDocumentTitle">Missing Documents</h2>
+                        <p class="record-modal-subtitle">Upload the missing requirement files for your health record.</p>
+                    </div>
+                </div>
+                <form class="missing-document-body" method="POST" action="{{ $documentModalUsesClinicReplacement ? route('student.health_record.resubmit') : route('student.health_record.documents') }}" enctype="multipart/form-data" id="missingDocumentForm">
+                    @csrf
+                    @php
+                        $missingDocumentDescriptions = [
+                            'student_photo' => 'Upload a clear 2x2 ID picture with white background.',
+                            'health_declaration' => 'Upload the accomplished and signed declaration form.',
+                            'medical_certificate' => 'Upload a valid medical certificate from a licensed physician.',
+                            'chest_xray_result' => 'Upload the chest x-ray result. Clear and readable file.',
+                            'pwd_id_proof' => 'Upload your valid PWD ID proof document.',
+                        ];
+                        $missingDocumentCount = $documentUploadKeysForModal->count();
+                    @endphp
+                    <div class="missing-document-progress">
+                        <div>
+                            <p class="missing-document-progress-title">Requirements Progress</p>
+                            <div class="missing-document-progress-track">
+                                <span class="missing-document-progress-bar">
+                                    <span class="missing-document-progress-fill" data-missing-document-progress-fill></span>
+                                </span>
+                                <span class="missing-document-progress-count"><span data-missing-document-uploaded-count>0</span> of {{ $missingDocumentCount }} Uploaded</span>
+                            </div>
+                        </div>
+                        <div class="missing-document-stat">
+                            <span class="missing-document-stat-icon" aria-hidden="true">
+                                <x-outline-icon name="document-text" />
+                            </span>
+                            <div>
+                                <strong>{{ $missingDocumentCount }} Documents</strong>
+                                <span>Required</span>
+                            </div>
+                        </div>
+                        <div class="missing-document-stat">
+                            <span class="missing-document-stat-icon" aria-hidden="true">
+                                <x-outline-icon name="check" />
+                            </span>
+                            <div>
+                                <strong>PDF, JPG, PNG</strong>
+                                <span>Accepted</span>
+                            </div>
+                        </div>
+                        <div class="missing-document-stat">
+                            <span class="missing-document-stat-icon" aria-hidden="true">
+                                <x-outline-icon name="clipboard-document-list" />
+                            </span>
+                            <div>
+                                <strong>2 MB</strong>
+                                <span>Max size</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="missing-document-scroll">
+                        @foreach($documentUploadKeysForModal as $documentKey)
+                            @php
+                                $documentMeta = $resubmissionDocumentMeta[$documentKey] ?? ['accept' => '.pdf,.jpg,.jpeg,.png', 'hint' => 'PDF, JPG, or PNG'];
+                                $isPhotoRequirement = $documentKey === 'student_photo';
+                                $isDeclarationRequirement = $documentKey === 'health_declaration';
+                                $isMedicalRequirement = $documentKey === 'medical_certificate';
+                                $isXrayRequirement = $documentKey === 'chest_xray_result';
+                            @endphp
+                            <div class="missing-document-row">
+                                <span class="missing-document-row-icon" aria-hidden="true">
+                                    @if($isPhotoRequirement)
+                                        <x-outline-icon name="user-circle" />
+                                    @elseif($isMedicalRequirement)
+                                        <x-outline-icon name="heart-pulse" />
+                                    @elseif($isXrayRequirement)
+                                        <x-outline-icon name="clipboard-document-list" />
+                                    @else
+                                        <x-outline-icon name="document-text" />
+                                    @endif
+                                </span>
+                                <div>
+                                    <h3 class="missing-document-row-title">
+                                        {{ $resubmissionDocumentLabels[$documentKey] }}
+                                        <span class="missing-document-required">Required</span>
+                                    </h3>
+                                    <p class="missing-document-description">{{ $missingDocumentDescriptions[$documentKey] ?? 'Upload the required document file.' }}</p>
+                                    <p class="missing-document-meta">Accepted: {{ $isPhotoRequirement ? 'JPG, PNG' : 'PDF, JPG, PNG' }} &nbsp;•&nbsp; Max size: {{ in_array($documentKey, ['medical_certificate', 'chest_xray_result', 'pwd_id_proof'], true) ? '2 MB' : '1 MB' }}</p>
+                                    @if($errors->has($documentKey))
+                                        <em class="field-error-message">{{ $errors->first($documentKey) }}</em>
+                                    @endif
+                                </div>
+                                <div class="missing-document-upload-box" data-missing-document-box>
+                                    <input
+                                        id="missing_document_{{ $documentKey }}"
+                                        type="file"
+                                        name="{{ $documentKey }}"
+                                        accept="{{ $documentMeta['accept'] }}"
+                                        data-missing-document-input
+                                        {{ $documentModalUsesClinicReplacement ? 'required' : '' }}
+                                    >
+                                    <span>
+                                        <span class="missing-document-drop-icon" aria-hidden="true">
+                                            <x-outline-icon name="document-text" />
+                                        </span>
+                                        <span class="missing-document-upload-title">Drag & drop file here</span>
+                                        <span class="missing-document-upload-or">or</span>
+                                        <label class="missing-document-choose" for="missing_document_{{ $documentKey }}">Choose File</label>
+                                        <span class="missing-document-file-name" data-missing-document-file-name>No file chosen</span>
+                                    </span>
+                                    <span class="missing-document-preview" data-missing-document-preview>
+                                        <span class="missing-document-preview-thumb" data-missing-document-preview-thumb>FILE</span>
+                                        <span class="missing-document-preview-copy">
+                                            <strong data-missing-document-preview-name>Selected file</strong>
+                                            <span data-missing-document-preview-size>Ready to upload</span>
+                                        </span>
+                                        <span class="missing-document-preview-actions">
+                                            <label for="missing_document_{{ $documentKey }}">Replace</label>
+                                            <button type="button" data-missing-document-remove>Remove</button>
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+                        @endforeach
+                        @if($requiresMissingESign || $hasExistingESign)
+                            <div class="missing-document-esign-row">
+                                <span class="missing-document-row-icon" aria-hidden="true">
+                                    <x-outline-icon name="pencil-square" />
+                                </span>
+                                <div>
+                                    <h3 class="missing-document-row-title">
+                                        E-signature
+                                        <span class="missing-document-required">{{ $requiresMissingESign ? 'Required' : 'Attached' }}</span>
+                                    </h3>
+                                    @if($hasExistingESign)
+                                        <p class="missing-document-description">Your e-signature is attached to your Health Information Form PDF.</p>
+                                        <p class="missing-document-meta">Signature preview ready</p>
+                                    @else
+                                        <p class="missing-document-description">Add your drawn or uploaded signature so it can be attached to your Health Information Form PDF.</p>
+                                        <p class="missing-document-meta">Draw or upload PNG, JPG &nbsp;•&nbsp; Max size: 1 MB</p>
+                                    @endif
+                                </div>
+                                @if($hasExistingESign)
+                                    <div class="missing-document-upload-box is-selected">
+                                        <span class="missing-document-preview">
+                                            <span class="missing-document-preview-thumb">
+                                                <img src="{{ $existingESignPreviewSrc }}" alt="E-signature preview">
+                                            </span>
+                                            <span class="missing-document-preview-copy">
+                                                <strong>E-signature attached</strong>
+                                                <span>Ready for PDF use</span>
+                                            </span>
+                                            <span class="missing-document-preview-actions">
+                                                <button type="button" onclick="closeMissingDocumentModal(); openMissingESignModal()">Replace</button>
+                                                <button type="submit" form="removeESignForm">Remove</button>
+                                            </span>
+                                        </span>
+                                    </div>
+                                @else
+                                    <button type="button" class="missing-document-esign-action" onclick="closeMissingDocumentModal(); openMissingESignModal()">Add E-sign</button>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+                    <div class="missing-document-footer">
+                        <div class="missing-document-secure">
+                            <span class="missing-document-secure-icon" aria-hidden="true">
+                                <x-outline-icon name="check" />
+                            </span>
+                            <div>
+                                <strong>Your files are secure</strong>
+                                <span>Your documents are encrypted and will only be used for verification purposes.</span>
+                            </div>
+                        </div>
+                        <div class="missing-upload-actions">
+                            <button type="button" class="missing-esign-secondary" onclick="closeMissingDocumentModal()">Cancel</button>
+                            <button type="submit" class="missing-esign-submit">
+                                <x-outline-icon name="document-text" />
+                                Submit Missing Documents
+                            </button>
+                        </div>
+                    </div>
+                        @if($hasDocumentUploadErrors || $hasResubmissionUploadErrors)
+                            <div class="field-error-message">Please check the selected file and upload again.</div>
+                        @endif
+                </form>
+                @if($hasExistingESign)
+                    <form method="POST" action="{{ route('student.health_record.e_signature.remove') }}" id="removeESignForm">
+                        @csrf
+                    </form>
+                @endif
+            </div>
+        </div>
+    @endif
+    @if($requiresMissingESign || $hasExistingESign)
         <div class="record-modal-overlay" id="missingESignModal" aria-hidden="true">
             <div class="record-modal missing-esign-modal" role="dialog" aria-modal="true" aria-labelledby="missingESignTitle">
                 <div class="record-modal-head">
@@ -4657,6 +5462,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <form class="missing-esign-body" method="POST" action="{{ route('student.health_record.e_signature') }}" enctype="multipart/form-data" id="missingESignForm">
                     @csrf
+                    <input type="hidden" name="replace_existing" value="{{ $hasExistingESign ? '1' : '0' }}">
                     <input type="hidden" name="digital_signature_data" id="missingESignData" value="{{ old('digital_signature_data') }}">
                     <div class="missing-esign-methods">
                         <input type="radio" name="signature_method" id="missing_signature_draw" value="draw" {{ old('signature_method', 'draw') === 'draw' ? 'checked' : '' }}>
@@ -4679,7 +5485,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="missing-esign-panel is-hidden" id="missingESignUploadPanel">
                         <div class="missing-esign-card">
                             <label class="missing-esign-label" for="missingESignUpload">Upload signature image</label>
-                            <input class="missing-esign-upload" id="missingESignUpload" type="file" name="digital_signature_upload" accept=".png,image/png">
+                            <input class="missing-esign-upload" id="missingESignUpload" type="file" name="digital_signature_upload" accept=".png,.jpg,.jpeg,image/png,image/jpeg">
                             <p class="missing-esign-hint">PNG only, preferably black ink on transparent or white background. Max file size: 1 MB.</p>
                             @if($errors->has('digital_signature_upload'))
                                 <div class="field-error-message">{{ $errors->first('digital_signature_upload') }}</div>
@@ -4808,6 +5614,31 @@ function closeMissingESignModal() {
     document.body.style.overflow = '';
 }
 
+function openMissingDocumentModal(button = null) {
+    const modal = document.getElementById('missingDocumentModal');
+    const form = document.getElementById('missingDocumentForm');
+    if (!modal || !form) {
+        return;
+    }
+
+    if (button?.dataset?.action) {
+        form.action = button.dataset.action;
+    }
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMissingDocumentModal() {
+    const modal = document.getElementById('missingDocumentModal');
+    if (!modal) {
+        return;
+    }
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+}
+
 function initializeHealthDeclarationPreview(root = document) {
     root.querySelectorAll('[data-health-declaration-input]').forEach(function (input) {
         if (input.dataset.previewBound === 'true') {
@@ -4878,6 +5709,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const profilePhotoToggle = document.getElementById('profilePhotoToggle');
     const modal = document.getElementById('healthRecordModal');
     const modalCard = modal?.querySelector('.record-modal');
+    const missingDocumentModal = document.getElementById('missingDocumentModal');
     const missingESignModal = document.getElementById('missingESignModal');
     const missingESignCanvas = document.getElementById('missingESignPad');
     const missingESignData = document.getElementById('missingESignData');
@@ -4889,6 +5721,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const missingESignUploadPanel = document.getElementById('missingESignUploadPanel');
     const clearMissingESignBtn = document.getElementById('clearMissingESignBtn');
     const shouldOpenMissingESignModal = @json($hasMissingESignErrors ?? false);
+    const shouldOpenMissingDocumentModal = @json(($hasDocumentUploadErrors ?? false) || ($hasResubmissionUploadErrors ?? false) || session('signature_attached') || session('signature_removed'));
 
     profilePhotoToggle?.addEventListener('click', function () {
         const isExpanded = profileHeroCard?.classList.toggle('is-photo-expanded') ?? false;
@@ -4896,11 +5729,19 @@ document.addEventListener('DOMContentLoaded', function () {
         profilePhotoToggle.setAttribute('aria-label', isExpanded ? 'Collapse profile photo' : 'Expand profile photo');
     });
 
-    modalCard?.addEventListener('scroll', updateHealthRecordModalIndicator);
+    if (typeof updateHealthRecordModalIndicator === 'function') {
+        modalCard?.addEventListener('scroll', updateHealthRecordModalIndicator);
+    }
     initializeHealthDeclarationPreview(document);
 
     if (shouldOpenMissingESignModal) {
         openMissingESignModal();
+    }
+    if (shouldOpenMissingDocumentModal) {
+        const missingDocumentButton = document.querySelector('[data-missing-document-open]');
+        if (missingDocumentButton) {
+            openMissingDocumentModal(missingDocumentButton);
+        }
     }
 
     modal?.addEventListener('click', function (event) {
@@ -4913,6 +5754,103 @@ document.addEventListener('DOMContentLoaded', function () {
             closeMissingESignModal();
         }
     });
+    missingDocumentModal?.addEventListener('click', function (event) {
+        if (event.target === missingDocumentModal) {
+            closeMissingDocumentModal();
+        }
+    });
+    document.querySelectorAll('[data-missing-document-open]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            openMissingDocumentModal(button);
+        });
+    });
+    const syncMissingDocumentProgress = function () {
+        const inputs = Array.from(document.querySelectorAll('[data-missing-document-input]'));
+        const uploadedCount = inputs.filter(function (input) {
+            return input.files && input.files.length > 0;
+        }).length;
+        const countNode = document.querySelector('[data-missing-document-uploaded-count]');
+        const fillNode = document.querySelector('[data-missing-document-progress-fill]');
+        if (countNode) {
+            countNode.textContent = uploadedCount;
+        }
+        if (fillNode) {
+            fillNode.style.width = inputs.length ? `${Math.round((uploadedCount / inputs.length) * 100)}%` : '0%';
+        }
+    };
+    document.querySelectorAll('[data-missing-document-input]').forEach(function (input) {
+        input.addEventListener('change', function () {
+            const box = input.closest('[data-missing-document-box]');
+            const file = input.files && input.files[0] ? input.files[0] : null;
+            const nameNode = box?.querySelector('[data-missing-document-file-name]');
+            const previewName = box?.querySelector('[data-missing-document-preview-name]');
+            const previewSize = box?.querySelector('[data-missing-document-preview-size]');
+            const previewThumb = box?.querySelector('[data-missing-document-preview-thumb]');
+            if (nameNode) {
+                nameNode.textContent = file ? file.name : 'No file chosen';
+            }
+            if (previewName) {
+                previewName.textContent = file ? file.name : 'Selected file';
+            }
+            if (previewSize) {
+                previewSize.textContent = file
+                    ? `${(file.size / 1024 / 1024).toFixed(2)} MB / upload ready`
+                    : 'Ready to upload';
+            }
+            if (previewThumb) {
+                previewThumb.replaceChildren();
+                if (file && file.type.startsWith('image/')) {
+                    const image = document.createElement('img');
+                    image.alt = '';
+                    image.src = URL.createObjectURL(file);
+                    image.onload = function () {
+                        URL.revokeObjectURL(image.src);
+                    };
+                    previewThumb.appendChild(image);
+                } else {
+                    previewThumb.textContent = file ? (file.name.split('.').pop() || 'FILE').slice(0, 4).toUpperCase() : 'FILE';
+                }
+            }
+            if (box) {
+                box.classList.toggle('is-selected', Boolean(file));
+            }
+            syncMissingDocumentProgress();
+        });
+    });
+    document.querySelectorAll('[data-missing-document-remove]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const box = button.closest('[data-missing-document-box]');
+            const input = box?.querySelector('[data-missing-document-input]');
+            if (!box || !input) {
+                return;
+            }
+            input.value = '';
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    });
+    document.querySelectorAll('[data-missing-document-box]').forEach(function (box) {
+        box.addEventListener('dragover', function (event) {
+            event.preventDefault();
+            box.classList.add('is-dragging');
+        });
+        box.addEventListener('dragleave', function () {
+            box.classList.remove('is-dragging');
+        });
+        box.addEventListener('drop', function (event) {
+            event.preventDefault();
+            box.classList.remove('is-dragging');
+            const input = box.querySelector('[data-missing-document-input]');
+            const file = event.dataTransfer?.files?.[0];
+            if (!input || !file || typeof DataTransfer === 'undefined') {
+                return;
+            }
+            const transfer = new DataTransfer();
+            transfer.items.add(file);
+            input.files = transfer.files;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    });
+    syncMissingDocumentProgress();
 
     document.addEventListener('keydown', function (event) {
         if (event.key !== 'Escape') {
@@ -4924,6 +5862,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (missingESignModal?.classList.contains('is-open')) {
             return closeMissingESignModal();
         }
+        if (missingDocumentModal?.classList.contains('is-open')) {
+            return closeMissingDocumentModal();
+        }
     });
 
     if (missingESignCanvas && missingESignData) {
@@ -4931,10 +5872,22 @@ document.addEventListener('DOMContentLoaded', function () {
         let drawing = false;
         let hasDrawing = false;
 
+        const missingESignDataUrl = function () {
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = missingESignCanvas.width;
+            exportCanvas.height = missingESignCanvas.height;
+            const exportContext = exportCanvas.getContext('2d');
+            exportContext.fillStyle = '#ffffff';
+            exportContext.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+            exportContext.drawImage(missingESignCanvas, 0, 0);
+
+            return exportCanvas.toDataURL('image/jpeg', 0.92);
+        };
+
         window.resizeMissingESignPad = function () {
             const rect = missingESignCanvas.getBoundingClientRect();
             const ratio = window.devicePixelRatio || 1;
-            const previous = hasDrawing ? missingESignCanvas.toDataURL('image/png') : '';
+            const previous = hasDrawing ? missingESignDataUrl() : '';
             missingESignCanvas.width = Math.max(1, Math.floor(rect.width * ratio));
             missingESignCanvas.height = Math.max(1, Math.floor(rect.height * ratio));
             context.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -4946,7 +5899,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const image = new Image();
                 image.onload = function () {
                     context.drawImage(image, 0, 0, rect.width, rect.height);
-                    missingESignData.value = missingESignCanvas.toDataURL('image/png');
+                    missingESignData.value = missingESignDataUrl();
                 };
                 image.src = previous;
             }
@@ -4977,7 +5930,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const position = pointerPosition(event);
             context.lineTo(position.x, position.y);
             context.stroke();
-            missingESignData.value = missingESignCanvas.toDataURL('image/png');
+            missingESignData.value = missingESignDataUrl();
             if (missingESignStatus) {
                 missingESignStatus.textContent = 'Drawn signature ready.';
             }
@@ -4987,7 +5940,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const stopDrawing = function () {
             drawing = false;
             if (hasDrawing) {
-                missingESignData.value = missingESignCanvas.toDataURL('image/png');
+                missingESignData.value = missingESignDataUrl();
             }
         };
 

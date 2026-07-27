@@ -187,6 +187,8 @@ Route::middleware(['auth:student', 'idp.session', 'audit'])->group(function () {
         Route::get('/student/health-form/submissions/{submission}', [AppointmentController::class, 'showHealthFormSubmissionPdf'])->name('student.health_form.submission');
         Route::get('/student/health-record/document/{document}', [AppointmentController::class, 'showStudentHealthRecordDocument'])
             ->name('student.health_record.document');
+        Route::get('/student/health-record/signature', [AppointmentController::class, 'showStudentHealthRecordSignature'])
+            ->name('student.health_record.signature');
         Route::post('/student/health-record/resubmit', [AppointmentController::class, 'resubmitHealthRecordRequirements'])
             ->name('student.health_record.resubmit');
         Route::post('/student/health-record/documents', [AppointmentController::class, 'uploadHealthRecordDocuments'])
@@ -195,6 +197,8 @@ Route::middleware(['auth:student', 'idp.session', 'audit'])->group(function () {
             ->name('student.health_record.health_declaration');
         Route::post('/student/health-record/e-sign', [AppointmentController::class, 'uploadHealthRecordSignature'])
             ->name('student.health_record.e_signature');
+        Route::post('/student/health-record/e-sign/remove', [AppointmentController::class, 'removeHealthRecordSignature'])
+            ->name('student.health_record.e_signature.remove');
 
         Route::get('/student/account', [AppointmentController::class, 'account']);
         Route::get('/student/history', [AppointmentController::class, 'history']);
@@ -303,6 +307,7 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::post('/admin/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->name('admin.walkin.applicant_encoding');
         Route::post('/admin/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->name('admin.walkin.final_review.time_in');
         Route::post('/admin/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->name('admin.walkin.approve_applicant');
+        Route::post('/admin/walkin/employee-draft', [WalkInController::class, 'saveEmployeeDraft'])->name('admin.walkin.employee_draft');
 
         Route::get('/admin/reports', [AdminController::class, 'reports'])->name('admin.reports');
         Route::get('/admin/reports/digital-logbook', [ReportsController::class, 'digitalLogbook'])->name('reports.digital-logbook');
@@ -369,6 +374,9 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::get('/admin/settings/clinic-information', [AdminController::class, 'settingsClinic'])->name('admin.settings.clinic');
         Route::get('/admin/settings/system-preferences', [AdminController::class, 'settingsPreferences'])->name('admin.settings.preferences');
         Route::get('/admin/settings/medical-configuration', [AdminController::class, 'settingsMedicalConfiguration'])->name('admin.settings.medical');
+        Route::get('/admin/settings/faqs', [AdminController::class, 'settingsFaqs'])->name('admin.settings.faqs');
+        Route::post('/admin/settings/faqs', [AdminController::class, 'storeFaq'])->name('admin.settings.faqs.store');
+        Route::delete('/admin/settings/faqs/{faq}', [AdminController::class, 'destroyFaq'])->name('admin.settings.faqs.destroy');
         Route::put('/admin/settings/update', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
         Route::put('/admin/profile/update', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
         Route::put('/admin/api-testing/database/{table}/{id}', [AdminController::class, 'updateApiTestingDatabaseRecord'])->name('admin.api-testing.database.update');

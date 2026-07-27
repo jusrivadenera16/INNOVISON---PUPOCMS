@@ -4,171 +4,945 @@
 
 @push('styles')
 <style>
-    /* ... (Keep Hero Section Styles as is) ... */
+    :root {
+        --faq-maroon: #940515;
+        --faq-maroon-dark: #65000d;
+        --faq-ink: #242735;
+        --faq-muted: #697182;
+        --faq-line: #eceef3;
+        --faq-soft: #fff5f5;
+        --faq-shell: #fffafa;
+        --faq-gold: #f5b642;
+    }
+
+    .faq-page {
+        position: relative;
+        isolation: isolate;
+        min-height: calc(100vh - 120px);
+        background:
+            radial-gradient(circle at 7% 9%, rgba(148, 5, 21, 0.07) 0 2px, transparent 2px 10px),
+            radial-gradient(circle at 94% 16%, rgba(148, 5, 21, 0.05), transparent 130px),
+            linear-gradient(180deg, rgba(255, 248, 248, 0.92) 0%, rgba(255, 255, 255, 0.88) 38%, rgba(255, 253, 253, 0.92) 100%);
+        color: var(--faq-ink);
+        overflow: hidden;
+    }
+
+    .faq-page::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        background: url('{{ asset('images/student-bg.png') }}') center top / cover no-repeat;
+        pointer-events: none;
+    }
+
     .faq-hero {
-        background: linear-gradient(135deg, #8B0000 0%, #4a0a10 100%);
-        padding: 60px 20px;
+        position: relative;
+        padding: 46px 20px 18px;
         text-align: center;
-        color: white;
-        margin-bottom: 40px;
-        background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
-        background-size: 20px 20px;
+        isolation: isolate;
     }
-    
-    .faq-title { font-size: 36px; font-weight: 800; margin: 0 0 10px 0; letter-spacing: -0.5px; }
-    
+
+    .faq-hero::before,
+    .faq-hero::after {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        pointer-events: none;
+        opacity: 0.42;
+    }
+
+    .faq-hero::before {
+        left: -80px;
+        bottom: 4px;
+        width: 420px;
+        height: 150px;
+        border-top: 1px solid rgba(148, 5, 21, 0.14);
+        border-radius: 50%;
+        transform: rotate(8deg);
+        box-shadow:
+            0 -14px 0 -13px rgba(148, 5, 21, 0.16),
+            0 -28px 0 -27px rgba(148, 5, 21, 0.13),
+            0 -42px 0 -41px rgba(148, 5, 21, 0.1);
+    }
+
+    .faq-hero::after {
+        right: 50px;
+        top: 34px;
+        width: 210px;
+        height: 116px;
+        border-right: 5px solid rgba(148, 5, 21, 0.07);
+        border-top: 5px solid rgba(148, 5, 21, 0.05);
+        border-radius: 28px 0 0 0;
+    }
+
+    .faq-hero-art {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        color: rgba(148, 5, 21, 0.09);
+    }
+
+    .faq-plus {
+        position: absolute;
+        width: 22px;
+        height: 22px;
+    }
+
+    .faq-plus::before,
+    .faq-plus::after {
+        content: "";
+        position: absolute;
+        background: currentColor;
+        border-radius: 4px;
+    }
+
+    .faq-plus::before {
+        left: 8px;
+        top: 0;
+        width: 6px;
+        height: 22px;
+    }
+
+    .faq-plus::after {
+        left: 0;
+        top: 8px;
+        width: 22px;
+        height: 6px;
+    }
+
+    .faq-plus.is-one { left: 25%; top: 26px; }
+    .faq-plus.is-two { left: 14%; top: 76px; transform: scale(0.8); }
+    .faq-plus.is-three { right: 22%; top: 34px; transform: scale(0.65); }
+
+    .faq-ecg {
+        position: absolute;
+        right: 115px;
+        top: 78px;
+        width: 160px;
+        height: 50px;
+    }
+
+    .faq-title {
+        margin: 0 0 10px;
+        color: #4f0711;
+        font-size: clamp(30px, 4vw, 44px);
+        font-weight: 950;
+        line-height: 1;
+        letter-spacing: 0;
+    }
+
     .faq-subtitle {
-        font-size: 16px;
-        color: #8e8e8e; 
-        font-weight: 500;
-        max-width: 600px;
-        margin: 0 auto 30px auto;
-        line-height: 1.6;
+        max-width: 520px;
+        margin: 0 auto 24px;
+        color: #6a6f7d;
+        font-size: 14px;
+        font-weight: 650;
+        line-height: 1.55;
     }
 
-    .hero-search-wrapper { position: relative; max-width: 500px; margin: 0 auto; }
-    
-    /* UPDATED: Removed icon padding, text starts left */
-    .hero-search-input {
-        width: 100%; 
-        padding: 16px 20px; /* Removed the 50px left padding */
-        border-radius: 50px; 
-        border: none; 
-        font-size: 16px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
-        outline: none; 
-        transition: transform 0.2s;
+    .faq-search-shell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: min(590px, 100%);
+        min-height: 60px;
+        margin: 0 auto;
+        padding: 0 10px 0 24px;
+        border: 1px solid rgba(148, 5, 21, 0.08);
+        border-radius: 999px;
+        background: #ffffff;
+        box-shadow: 0 16px 34px rgba(62, 24, 29, 0.12);
     }
-    .hero-search-input:focus { transform: scale(1.02); }
 
-    /* --- LAYOUT GRID --- */
+    .faq-search-shell svg {
+        width: 21px;
+        height: 21px;
+        flex: 0 0 auto;
+        color: #8f3440;
+    }
+
+    .faq-search-input {
+        width: 100%;
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--faq-ink);
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .faq-search-input::placeholder {
+        color: #8c8790;
+        opacity: 1;
+    }
+
+    .faq-voice-btn {
+        width: 44px;
+        height: 44px;
+        border: 0;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #e16a77, #c84b5a);
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        box-shadow: 0 10px 18px rgba(148, 5, 21, 0.2);
+        cursor: pointer;
+    }
+
+    .faq-voice-btn svg {
+        width: 18px;
+        height: 18px;
+        color: currentColor;
+    }
+
+    .faq-categories {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 13px;
+        max-width: 900px;
+        margin: 24px auto 0;
+        padding: 0 20px;
+    }
+
+    .faq-filter {
+        min-height: 42px;
+        padding: 0 18px;
+        border: 1px solid rgba(148, 5, 21, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.92);
+        color: #343746;
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 13px;
+        font-weight: 850;
+        cursor: pointer;
+        box-shadow: 0 9px 18px rgba(62, 24, 29, 0.08);
+        transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
+    }
+
+    .faq-filter:hover,
+    .faq-filter.is-active {
+        border-color: rgba(148, 5, 21, 0.26);
+        background: #fff3f4;
+        color: var(--faq-maroon);
+        transform: translateY(-1px);
+    }
+
+    .faq-filter-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 7px;
+        color: var(--faq-maroon);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .faq-filter-icon svg {
+        width: 17px;
+        height: 17px;
+        stroke-width: 2;
+    }
+
     .faq-layout {
         display: grid;
-        grid-template-columns: 2.5fr 1fr;
-        gap: 30px;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px 60px 20px;
+        grid-template-columns: minmax(0, 1fr) minmax(264px, 304px);
+        gap: 28px;
+        width: min(1150px, calc(100% - 40px));
+        margin: 34px auto 70px;
+        align-items: start;
     }
 
-    /* --- CATEGORY CARDS --- */
-    .category-card {
-        background: #fff; border-radius: 16px; padding: 30px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 30px; border-top: 5px solid #8B0000; 
+    .faq-content-column {
+        min-width: 0;
+        display: grid;
+        gap: 24px;
+        position: relative;
+        z-index: 1;
     }
-    
-    /* Removed gap since icon is gone */
-    .category-header { margin-bottom: 24px; padding-bottom: 15px; border-bottom: 1px solid #f1f5f9; }
-    .category-title { font-size: 20px; font-weight: 800; color: #20343a; margin: 0; }
 
-    details { margin-bottom: 12px; border: 1px solid #f1f5f9; border-radius: 8px; overflow: hidden; transition: all 0.3s; }
-    details[open] { border-color: #cbd5e1; background: #fcfcfc; }
-    summary { padding: 16px 20px; cursor: pointer; font-weight: 600; color: #334155; list-style: none; position: relative; padding-right: 40px; transition: color 0.2s; }
-    summary::-webkit-details-marker { display: none; }
-    summary::after { content: '+'; position: absolute; right: 20px; font-weight: 800; color: #8B0000; font-size: 18px; }
-    details[open] summary::after { content: '-'; }
-    details[open] summary { color: #8B0000; } 
-    .faq-answer { padding: 0 20px 20px 20px; color: #64748b; line-height: 1.6; font-size: 14px; }
+    .faq-main-card,
+    .sidebar-widget {
+        border: 1px solid rgba(148, 5, 21, 0.1);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 16px 34px rgba(44, 23, 25, 0.08);
+    }
 
-    /* --- RIGHT SIDEBAR WRAPPER --- */
+    .faq-main-card {
+        padding: 26px 28px 24px;
+    }
+
+    .faq-card-header {
+        display: flex;
+        align-items: center;
+        gap: 17px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--faq-line);
+    }
+
+    .faq-card-icon,
+    .portal-icon,
+    .question-icon,
+    .reminder-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        color: var(--faq-maroon);
+        background: #fff0f1;
+    }
+
+    .faq-card-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+    }
+
+    .faq-card-icon svg {
+        width: 31px;
+        height: 31px;
+        stroke-width: 1.8;
+    }
+
+    .faq-card-title {
+        margin: 0;
+        color: #1f2430;
+        font-size: 22px;
+        font-weight: 950;
+        letter-spacing: 0;
+    }
+
+    .faq-card-title::after {
+        content: "";
+        display: block;
+        width: 56px;
+        height: 3px;
+        margin-top: 10px;
+        border-radius: 999px;
+        background: var(--faq-maroon);
+    }
+
+    .faq-popular {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 24px 0 14px;
+        color: var(--faq-maroon);
+        font-size: 12px;
+        font-weight: 950;
+    }
+
+    .faq-popular svg {
+        width: 14px;
+        height: 14px;
+        fill: currentColor;
+    }
+
+    .faq-list {
+        display: grid;
+        gap: 13px;
+    }
+
+    .faq-group {
+        display: contents;
+    }
+
+    .faq-question {
+        border: 1px solid #e9eaf0;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 7px 16px rgba(42, 31, 32, 0.05);
+        overflow: hidden;
+    }
+
+    .faq-question[open] {
+        border-color: rgba(148, 5, 21, 0.22);
+        box-shadow: 0 12px 20px rgba(148, 5, 21, 0.08);
+    }
+
+    .faq-question summary {
+        min-height: 55px;
+        padding: 9px 52px 9px 14px;
+        display: flex;
+        align-items: center;
+        gap: 17px;
+        position: relative;
+        color: #343746;
+        font-size: 14px;
+        font-weight: 900;
+        list-style: none;
+        cursor: pointer;
+    }
+
+    .faq-question summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .faq-question summary::after {
+        content: "+";
+        position: absolute;
+        right: 22px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--faq-maroon);
+        font-size: 22px;
+        font-weight: 500;
+        line-height: 1;
+    }
+
+    .faq-question[open] summary::after {
+        content: "-";
+        margin-top: -2px;
+    }
+
+    .question-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+    }
+
+    .question-icon svg {
+        width: 20px;
+        height: 20px;
+        stroke-width: 1.9;
+    }
+
+    .faq-answer {
+        padding: 0 24px 20px 67px;
+        color: #677081;
+        font-size: 13px;
+        font-weight: 650;
+        line-height: 1.65;
+    }
+
+    .faq-view-all {
+        margin-top: 20px;
+        border: 0;
+        background: transparent;
+        color: var(--faq-maroon);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0;
+        font-size: 13px;
+        font-weight: 950;
+        cursor: pointer;
+    }
+
+    .faq-view-all svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .faq-empty {
+        margin: 0;
+        padding: 26px 6px 4px;
+        color: var(--faq-muted);
+        font-size: 14px;
+        font-weight: 700;
+    }
+
     .sticky-sidebar {
-        position: -webkit-sticky; 
         position: sticky;
-        top: 30px; 
-        height: fit-content; 
-        z-index: 10;
+        top: 30px;
+        width: 100%;
+        max-width: 304px;
+        height: fit-content;
+        justify-self: end;
+        z-index: 2;
     }
 
     .sidebar-widget {
-        background: #fff; border-radius: 16px; padding: 24px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 20px;
+        width: 100%;
+        max-width: 100%;
+        padding: 24px;
+        margin-bottom: 20px;
+        overflow-wrap: anywhere;
     }
-    .widget-title { font-size: 16px; font-weight: 800; color: #20343a; margin: 0 0 15px 0; }
-    .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #e2e8f0; font-size: 14px; color: #475569; }
-    .stat-row:last-child { border-bottom: none; }
-    .stat-val { font-weight: 700; color: #1e293b; }
 
-    .btn-action { position: relative; overflow: hidden; display: block; width: 100%; text-align: center; background: #8B0000; color: white; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 700; margin-top: 20px; transition: background .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease; box-shadow: 0 4px 6px rgba(139, 0, 0, 0.2); }
-    .btn-action::after { content: ""; position: absolute; inset: 0; background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.18) 28%, rgba(255,255,255,.58) 50%, rgba(255,255,255,.18) 72%, transparent 100%); transform: translateX(-135%); transition: transform .72s ease; pointer-events: none; }
-    .btn-action:hover { background: #facc15; color: #8B0000; transform: translateY(-2px); box-shadow: 0 10px 22px rgba(139, 0, 0, 0.18); }
-    .btn-action:hover::after { transform: translateX(135%); }
+    .portal-head {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 14px;
+    }
 
-    @media (max-width: 900px) {
-        .faq-layout { grid-template-columns: 1fr; }
-        .sticky-sidebar { position: static; }
+    .portal-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+    }
+
+    .portal-icon svg {
+        width: 21px;
+        height: 21px;
+    }
+
+    .widget-title {
+        margin: 0;
+        color: #242735;
+        font-size: 17px;
+        font-weight: 950;
+    }
+
+    .portal-copy {
+        margin: 0 0 18px;
+        color: #687180;
+        font-size: 13px;
+        font-weight: 650;
+        line-height: 1.55;
+    }
+
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 46px;
+        padding: 0 18px;
+        border-radius: 6px;
+        background: var(--faq-maroon);
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 950;
+        box-shadow: 0 11px 18px rgba(148, 5, 21, 0.18);
+        transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    }
+
+    .btn-action:hover {
+        background: var(--faq-gold);
+        color: var(--faq-maroon-dark);
+        transform: translateY(-1px);
+    }
+
+    .btn-action svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .portal-links {
+        display: grid;
+        gap: 0;
+        margin-top: 20px;
+        padding-top: 12px;
+        border-top: 1px solid #eeeef3;
+    }
+
+    .portal-link {
+        min-height: 43px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #646b77;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .portal-link svg {
+        width: 17px;
+        height: 17px;
+        color: #9c424c;
+        flex: 0 0 auto;
+    }
+
+    .portal-link span {
+        flex: 1;
+    }
+
+    .portal-link::after {
+        content: ">";
+        color: #8b3c46;
+        font-size: 17px;
+        line-height: 1;
+    }
+
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        padding: 10px 0;
+        border-bottom: 1px solid #eeeef3;
+        color: #646b77;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .stat-row:last-of-type {
+        border-bottom: 0;
+    }
+
+    .stat-val {
+        color: #202331;
+        font-weight: 950;
+    }
+
+    .reminder-widget {
+        border-color: rgba(245, 182, 66, 0.52);
+        background: linear-gradient(135deg, #fff8e8, #ffffff);
+    }
+
+    .reminder-content {
+        display: flex;
+        gap: 13px;
+        align-items: flex-start;
+    }
+
+    .reminder-icon {
+        width: 39px;
+        height: 39px;
+        border-radius: 999px;
+        background: #fff2cf;
+        color: #b97815;
+    }
+
+    .reminder-icon svg {
+        width: 21px;
+        height: 21px;
+    }
+
+    .reminder-title {
+        margin: 0 0 6px;
+        color: #9b5e0b;
+        font-size: 13px;
+        font-weight: 950;
+    }
+
+    .reminder-text {
+        margin: 0;
+        color: #667085;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 1100px) {
+        .faq-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .faq-sidebar {
+            width: 100%;
+            max-width: none;
+            position: relative;
+            z-index: 1;
+        }
+
+        .sticky-sidebar {
+            position: static;
+            width: 100%;
+            max-width: none;
+            justify-self: stretch;
+            z-index: auto;
+        }
+
+        .sidebar-widget {
+            width: 100%;
+            max-width: none;
+        }
+    }
+
+    .faq-page.is-mobile-layout .faq-layout {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 18px;
+    }
+
+    .faq-page.is-mobile-layout .faq-content-column {
+        order: 1;
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+    }
+
+    .faq-page.is-mobile-layout .faq-sidebar {
+        order: 2;
+        width: 100%;
+        max-width: none;
+        position: relative;
+        z-index: 1;
+    }
+
+    .faq-page.is-mobile-layout .sticky-sidebar {
+        position: static !important;
+        width: 100%;
+        max-width: none;
+        justify-self: stretch;
+        z-index: auto;
+    }
+
+    .faq-page.is-mobile-layout .sidebar-widget {
+        width: 100%;
+        max-width: none;
+    }
+
+    @media (max-width: 640px) {
+        .faq-page {
+            overflow: visible;
+        }
+
+        .faq-hero {
+            padding-top: 34px;
+        }
+
+        .faq-search-shell {
+            min-height: 54px;
+            padding-left: 18px;
+        }
+
+        .faq-categories {
+            justify-content: flex-start;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .faq-filter {
+            flex: 0 0 auto;
+        }
+
+        .faq-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            width: min(100% - 28px, 1090px);
+            margin-top: 18px;
+        }
+
+        .faq-content-column,
+        .faq-sidebar,
+        .sticky-sidebar {
+            width: 100%;
+            max-width: none;
+            min-width: 0;
+        }
+
+        .faq-sidebar {
+            order: 2;
+        }
+
+        .faq-content-column {
+            order: 1;
+        }
+
+        .faq-main-card,
+        .sidebar-widget {
+            border-radius: 9px;
+        }
+
+        .faq-main-card {
+            padding: 20px 16px;
+        }
+
+        .faq-card-header {
+            gap: 12px;
+        }
+
+        .faq-card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+        }
+
+        .faq-card-title {
+            font-size: 18px;
+        }
+
+        .faq-question summary {
+            padding-right: 42px;
+            gap: 12px;
+        }
+
+        .faq-answer {
+            padding-left: 61px;
+        }
     }
 </style>
 @endpush
 
 @section('content')
+@php
+    $faqGroups = $faqs->groupBy(fn ($faq) => $faq->category ?: 'General');
+    $iconMap = [
+        'appointment' => 'calendar-days',
+        'appointments' => 'calendar-days',
+        'medical clearance' => 'document-text',
+        'clearance' => 'document-text',
+        'operating hours' => 'clock',
+        'hours' => 'clock',
+        'health forms' => 'clipboard-document-list',
+        'forms' => 'clipboard-document-list',
+        'contact' => 'map-pin',
+        'general' => 'heart-pulse',
+    ];
 
-    <div class="faq-hero">
-        <h1 class="faq-title">How can we help you?</h1>
-        <p class="faq-subtitle">Find answers to common questions about clinic appointments, medical records, and health services.</p>
-        
-        <div class="hero-search-wrapper">
-            <input type="text" class="hero-search-input" placeholder="Search for a question..." id="faqSearch">
-        </div>
-    </div>
+    $iconFor = function ($label) use ($iconMap) {
+        $normalized = strtolower(trim($label));
+        foreach ($iconMap as $needle => $icon) {
+            if (str_contains($normalized, $needle)) {
+                return $icon;
+            }
+        }
 
+        return 'clipboard-document-list';
+    };
+@endphp
+
+<div class="faq-page" id="faqApp">
     <div class="faq-layout">
-        
-        <div>
-            <div class="category-card">
-                <div class="category-header">
-                    <h3 class="category-title">Clinic Status & Services</h3>
+        <div class="faq-content-column">
+            <section class="faq-hero" aria-labelledby="faqTitle">
+                <div class="faq-hero-art" aria-hidden="true">
+                    <span class="faq-plus is-one"></span>
+                    <span class="faq-plus is-two"></span>
+                    <span class="faq-plus is-three"></span>
+                    <svg class="faq-ecg" viewBox="0 0 160 50" fill="none">
+                        <path d="M2 29H35L44 17L54 41L66 8L80 29H98L108 22L119 29H158" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                 </div>
-                <details>
-                    <summary>What medical services are available?</summary>
-                    <div class="faq-answer">We offer General Consultations, Dental Checkups, Blood Pressure Monitoring, and issuance of Medical Certificates.</div>
-                </details>
-                <details>
-                    <summary>What are the clinic operating hours?</summary>
-                    <div class="faq-answer">The PUP Taguig Clinic is open from <strong>8:00 AM to 5:00 PM</strong>, Mondays to Fridays.</div>
-                </details>
-                <details>
-                    <summary>Do I need an appointment for emergency cases?</summary>
-                    <div class="faq-answer">No. Emergency cases are prioritized and do not require an online appointment.</div>
-                </details>
-            </div>
 
-            <div class="category-card">
-                <div class="category-header">
-                    <h3 class="category-title">Appointments & Requests</h3>
-                </div>
-                <details><summary>How do I book an appointment?</summary><div class="faq-answer">Go to the "Appointments" tab and fill out the form.</div></details>
-                <details><summary>Can I cancel or reschedule?</summary><div class="faq-answer">Yes, via the My Account page.</div></details>
-            </div>
+                <h1 class="faq-title" id="faqTitle">Need help?</h1>
+                <p class="faq-subtitle">Find answers to common questions about clinic appointments, medical records, and health services.</p>
 
-            <div class="category-card">
-                <div class="category-header">
-                    <h3 class="category-title">Medical Documents</h3>
+                <label class="faq-search-shell" for="faqSearch">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="m21 21-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <input type="search" class="faq-search-input" placeholder="Search clinic questions..." id="faqSearch" autocomplete="off">
+                    <button class="faq-voice-btn" type="button" aria-label="Voice search">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3ZM19 11a7 7 0 0 1-14 0M12 18v3M8 21h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </label>
+
+                <div class="faq-categories" aria-label="FAQ categories">
+                    @foreach($faqGroups as $category => $categoryFaqs)
+                        @php($categoryIcon = $iconFor($category))
+                        <button class="faq-filter" type="button" data-faq-filter="{{ Str::slug($category) }}">
+                            <span class="faq-filter-icon" aria-hidden="true">
+                                <x-outline-icon :name="$categoryIcon" />
+                            </span>
+                            <span>{{ $category }}</span>
+                        </button>
+                    @endforeach
+                    <button class="faq-filter" type="button" data-faq-filter="contact">
+                        <span class="faq-filter-icon" aria-hidden="true">
+                            <x-outline-icon name="map-pin" />
+                        </span>
+                        <span>Contact</span>
+                    </button>
                 </div>
-                <details><summary>How do I get a Medical Certificate?</summary><div class="faq-answer">Book a checkup first.</div></details>
-                <details><summary>Where can I see my records?</summary><div class="faq-answer">In the My Account history tab.</div></details>
-            </div>
+            </section>
+
+            <main class="faq-main-card">
+                <div class="faq-card-header">
+                    <span class="faq-card-icon" aria-hidden="true">
+                        <x-outline-icon name="heart-pulse" />
+                    </span>
+                    <h2 class="faq-card-title">Clinic Services &amp; Information</h2>
+                </div>
+
+                @if($faqGroups->isNotEmpty())
+                    <div class="faq-popular">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M13.5 2.7c.2 2.8 1.6 4.6 3.2 6.3 1.7 1.8 3.3 3.8 3.3 6.7A8 8 0 0 1 4 15.8c0-2.7 1.3-4.7 3-6.8.7 1.9 1.8 2.9 3 3.4-.6-3.4.2-6.8 3.5-9.7Z"/>
+                        </svg>
+                        Popular Questions
+                    </div>
+
+                    <div class="faq-list" id="faqList">
+                        @foreach($faqGroups as $category => $categoryFaqs)
+                            @php($categoryIcon = $iconFor($category))
+                            <div class="faq-group" data-faq-category="{{ Str::slug($category) }}">
+                                @foreach($categoryFaqs as $faq)
+                                    <details class="faq-question" data-question="{{ Str::lower($faq->question . ' ' . $faq->answer . ' ' . $category) }}">
+                                        <summary>
+                                            <span class="question-icon" aria-hidden="true">
+                                                <x-outline-icon :name="$categoryIcon" />
+                                            </span>
+                                            <span>{{ $faq->question }}</span>
+                                        </summary>
+                                        <div class="faq-answer">{{ $faq->answer }}</div>
+                                    </details>
+                                @endforeach
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <button class="faq-view-all" type="button" id="faqViewAll">
+                        View all questions
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                @else
+                    <p class="faq-empty">No FAQs are available yet.</p>
+                @endif
+            </main>
         </div>
 
-        <div>
+        <aside class="faq-sidebar">
             <div class="sticky-sidebar">
-                
                 @auth('student')
                 <div class="sidebar-widget">
-                    <h4 class="widget-title">My Activity</h4>
+                    <div class="portal-head">
+                        <span class="portal-icon" aria-hidden="true"><x-outline-icon name="user-circle" /></span>
+                        <h4 class="widget-title">Student Portal</h4>
+                    </div>
                     <div class="stat-row"><span>Pending Requests</span><span class="stat-val" style="color:#b45309;">{{ $pendingCount ?? 0 }}</span></div>
                     <div class="stat-row"><span>Upcoming</span><span class="stat-val" style="color:#15803d;">{{ $upcomingCount ?? 0 }}</span></div>
                     <div class="stat-row"><span>Completed</span><span class="stat-val">{{ $completedCount ?? 0 }}</span></div>
                     <div class="stat-row"><span>Cancelled</span><span class="stat-val" style="color:#b91c1c;">{{ $cancelledCount ?? 0 }}</span></div>
-                    <a href="{{ url('/student/history') }}" class="btn-action">View Full History ➜</a>
+                    <a href="{{ url('/student/history') }}" class="btn-action">
+                        View Full History
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </a>
                 </div>
-
                 @else
                 <div class="sidebar-widget">
-                    <h4 class="widget-title">Student Portal</h4>
-                    <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin: 0;">
-                        Log in through One Portal to view your appointments, history, and health record.
+                    <div class="portal-head">
+                        <span class="portal-icon" aria-hidden="true"><x-outline-icon name="user-circle" /></span>
+                        <h4 class="widget-title">Student Portal</h4>
+                    </div>
+                    <p class="portal-copy">
+                        Log in through One Portal to access your appointments, history, and health record.
                     </p>
-                    <a href="{{ route('login.portal') }}" class="btn-action">Log In via One Portal</a>
+                    <a href="{{ route('login.portal') }}" class="btn-action">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M10 17l5-5-5-5M15 12H3M21 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Log In via One Portal
+                    </a>
+                    <div class="portal-links">
+                        <a href="{{ url('/student/booking') }}" class="portal-link">
+                            <x-outline-icon name="calendar-days" />
+                            <span>View Appointments</span>
+                        </a>
+                        <a href="{{ url('/student/account') }}" class="portal-link">
+                            <x-outline-icon name="briefcase" />
+                            <span>Health Records</span>
+                        </a>
+                        <a href="{{ url('/student/health-form') }}" class="portal-link">
+                            <x-outline-icon name="clipboard-document-list" />
+                            <span>Medical Certificates</span>
+                        </a>
+                    </div>
                 </div>
                 @endauth
 
@@ -177,28 +951,83 @@
                     <p style="font-size: 13px; opacity: 0.8; margin-bottom: 15px;">Need urgent help?</p>
                     <div style="font-size: 14px; font-weight: 600;">(02) 8837-5858<br>puptclinic@gmail.com</div>
                 </div>
-
             </div>
-        </div>
-
+        </aside>
     </div>
-
+</div>
 @endsection
 
 @push('scripts')
 <script>
-    document.getElementById('faqSearch').addEventListener('keyup', function() {
-        let filter = this.value.toLowerCase();
-        let details = document.querySelectorAll('details');
-        details.forEach(detail => {
-            let question = detail.querySelector('summary').innerText.toLowerCase();
-            let answer = detail.querySelector('.faq-answer').innerText.toLowerCase();
-            if (question.includes(filter) || answer.includes(filter)) {
-                detail.style.display = "";
-            } else {
-                detail.style.display = "none";
+    document.addEventListener('DOMContentLoaded', function () {
+        const page = document.getElementById('faqApp');
+        const search = document.getElementById('faqSearch');
+        const groups = Array.from(document.querySelectorAll('[data-faq-category]'));
+        const filters = Array.from(document.querySelectorAll('[data-faq-filter]'));
+        const viewAll = document.getElementById('faqViewAll');
+        let activeCategory = '';
+
+        function syncFaqLayoutMode() {
+            if (!page) {
+                return;
             }
+
+            const visualWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+            const layoutWidth = window.innerWidth || visualWidth;
+            page.classList.toggle('is-mobile-layout', Math.min(visualWidth, layoutWidth) <= 1100);
+        }
+
+        function applyFaqFilters() {
+            const term = (search?.value || '').trim().toLowerCase();
+
+            groups.forEach(function (group) {
+                const categoryMatches = !activeCategory || group.dataset.faqCategory === activeCategory;
+                let visibleInGroup = false;
+
+                group.querySelectorAll('.faq-question').forEach(function (item) {
+                    const textMatches = !term || (item.dataset.question || '').includes(term);
+                    const shouldShow = categoryMatches && textMatches;
+                    item.style.display = shouldShow ? '' : 'none';
+                    if (shouldShow) {
+                        visibleInGroup = true;
+                    } else {
+                        item.open = false;
+                    }
+                });
+
+                group.style.display = visibleInGroup ? 'contents' : 'none';
+            });
+
+            filters.forEach(function (button) {
+                button.classList.toggle('is-active', button.dataset.faqFilter === activeCategory);
+            });
+        }
+
+        search?.addEventListener('input', applyFaqFilters);
+
+        filters.forEach(function (button) {
+            button.addEventListener('click', function () {
+                const nextCategory = button.dataset.faqFilter;
+                activeCategory = activeCategory === nextCategory ? '' : nextCategory;
+                applyFaqFilters();
+            });
         });
+
+        viewAll?.addEventListener('click', function () {
+            activeCategory = '';
+            if (search) {
+                search.value = '';
+            }
+            applyFaqFilters();
+        });
+
+        applyFaqFilters();
+        syncFaqLayoutMode();
+
+        window.addEventListener('resize', syncFaqLayoutMode);
+        window.addEventListener('orientationchange', syncFaqLayoutMode);
+        window.addEventListener('pageshow', syncFaqLayoutMode);
+        window.visualViewport?.addEventListener('resize', syncFaqLayoutMode);
     });
 </script>
 @endpush

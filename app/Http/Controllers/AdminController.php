@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Announcement;
+use App\Models\Faq;
 use App\Models\Appointment;
 use App\Models\ActivityLog;
 use App\Models\Consultation;
@@ -2380,7 +2381,17 @@ class AdminController extends Controller
             ? Carbon::parse($profile->user->DOB)->age
             : null;
 
-        return view('admin.show_health_pdf', compact('profile', 'calculatedAge'));
+        $pdf = Pdf::loadView('admin.show_health_pdf', compact('profile', 'calculatedAge'));
+        $pdf->setPaper([0, 0, 612, 936]);
+
+        $studentNumber = trim((string) ($profile->user->student_number ?: $profile->user->student_id ?: $profile->id));
+        $fileName = 'health-form-' . preg_replace('/[^A-Za-z0-9\-_]+/', '-', $studentNumber) . '.pdf';
+
+        return $pdf->stream($fileName, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
     }
 
 // 1. Para lumabas 'yung page (GET)
@@ -2952,6 +2963,48 @@ public function updateClearance(Request $request, $id)
         $cmsProfile = $admin ? $this->buildCmsAdminProfile($admin) : [];
 
         return view('admin.settings-medical-configuration', compact('admin', 'settings', 'cmsProfile'));
+    }
+
+    public function settingsFaqs()
+    {
+        $admin = Auth::user();
+        $faqs = Faq::query()->latest()->get();
+
+        return view('admin.settings-faqs', compact('admin', 'faqs'));
+    }
+
+    public function storeFaq(Request $request)
+    {
+        $validated = $request->validate([
+            'category' => ['required', 'string', 'max:120'],
+            'category_new' => ['nullable', 'string', 'max:120'],
+            'question' => ['required', 'string', 'max:500'],
+            'answer' => ['required', 'string', 'max:10000'],
+        ]);
+
+        $category = trim($validated['category'] === '__new__'
+            ? (string) ($validated['category_new'] ?? '')
+            : $validated['category']);
+        if ($category === '') {
+            return back()->withErrors(['category_new' => 'Enter a category name.'])->withInput();
+        }
+
+        Faq::create([
+            'category' => $category,
+            'question' => trim($validated['question']),
+            'answer' => trim($validated['answer']),
+            'is_active' => true,
+            'created_by' => Auth::id(),
+        ]);
+
+        return redirect()->route('admin.settings.faqs')->with('success', 'FAQ added successfully.');
+    }
+
+    public function destroyFaq(Faq $faq)
+    {
+        $faq->delete();
+
+        return redirect()->route('admin.settings.faqs')->with('success', 'FAQ removed successfully.');
     }
 
     public function notificationsFeed(Request $request)

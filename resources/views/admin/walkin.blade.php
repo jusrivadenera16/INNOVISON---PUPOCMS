@@ -3838,6 +3838,27 @@
         transform: translateX(135%);
     }
 
+    .applicant-ref-draft-btn {
+        display: none;
+        background: #ffffff;
+        color: #70131b;
+        border-color: #70131b;
+    }
+
+    .applicant-ref-draft-btn:hover,
+    .applicant-ref-draft-btn:focus {
+        background: #facc15;
+        color: #70131b;
+        border-color: #facc15;
+        outline: none;
+    }
+
+    .applicant-ref-draft-btn svg {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+    }
+
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-actions {
         display: flex;
         justify-content: flex-end;
@@ -5614,6 +5635,104 @@
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .applicant-vitals-grid,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .bmi-gauge-card {
         display: none !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col {
+        gap: 9px 10px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col label {
+        grid-template-columns: minmax(64px, auto) minmax(0, 128px) auto minmax(48px, auto);
+        gap: 6px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col input[type="text"],
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col input[type="date"],
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col select {
+        width: 128px;
+        min-width: 0;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col input[readonly] {
+        background: #f1f5f9;
+        color: #475569;
+        cursor: not-allowed;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-validation,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-bmi-category {
+        min-width: 48px;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-validation.is-valid,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-bmi-category.is-normal {
+        color: #15803d;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-validation.is-invalid,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-bmi-category.is-underweight,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-bmi-category.is-overweight,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-bmi-category.is-obese {
+        color: #b91c1c;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options > span {
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options select,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-line select {
+        width: 180px;
+        min-width: 0;
+        height: 32px;
+        padding: 5px 9px;
+        border: 1px solid rgba(148, 163, 184, 0.72);
+        border-radius: 8px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    /* Keep the vital-sign rows on one shared alignment grid. */
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col label {
+        grid-template-columns: 125px minmax(90px, 128px) auto 60px;
+        font-size: 12px;
+        line-height: 1.35;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col input[type="text"],
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col input[type="date"],
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col select {
+        width: 100%;
+        max-width: 100%;
+        font-size: 12px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-validation,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-bmi-category {
+        min-width: 0;
+        font-size: 12px !important;
+        line-height: 1.2;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col label > span {
+        font-size: 12px !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel {
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-section,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .bmi-gauge-card {
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.72);
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-screening-panel {
@@ -7498,6 +7617,123 @@
         stroke: currentColor !important;
     }
 
+    /* Employee lookup modal dark-theme surfaces */
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-modal-body,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-panel {
+        background: #0f172a;
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-file-actions {
+        background: rgba(30, 41, 59, .94);
+        border-color: rgba(226, 232, 240, .24);
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-result,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-lookup-card {
+        background: #111827;
+        border-color: rgba(148, 163, 184, .25);
+        color: #f8fafc;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, .22);
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-found-copy,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-found-copy strong,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-lookup-value,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-lookup-label {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-lookup-label {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-lookup-card:hover {
+        background: #1e293b;
+        border-color: rgba(250, 204, 21, .36);
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-screening-panel {
+        background: linear-gradient(135deg, #102a43, #0f2438);
+        border-color: #0284c7;
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-screening-panel-title {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel {
+        background: linear-gradient(180deg, #111827, #0f172a);
+        border-color: rgba(250, 204, 21, .28);
+        scrollbar-color: rgba(250, 204, 21, .42) rgba(30, 41, 59, .8);
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .applicant-screening-panel-title {
+        background: rgba(17, 24, 39, .88);
+        border-bottom-color: rgba(250, 204, 21, .22);
+        color: #facc15;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template {
+        color: #e2e8f0;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template h5 {
+        background: rgba(250, 204, 21, .12);
+        border-color: rgba(250, 204, 21, .34);
+        color: #facc15;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-section,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col {
+        background: rgba(30, 41, 59, .86);
+        border-color: rgba(148, 163, 184, .25);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel {
+        box-shadow: 0 12px 28px rgba(0, 0, 0, .28);
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-section,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .bmi-gauge-card {
+        box-shadow: 0 6px 16px rgba(0, 0, 0, .24), inset 0 1px 0 rgba(255, 255, 255, .04);
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-section > strong {
+        color: #facc15;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options label,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-line {
+        color: #e2e8f0;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options label {
+        background: #0f172a;
+        border-color: rgba(148, 163, 184, .34);
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options label:has(input:checked) {
+        background: rgba(250, 204, 21, .14);
+        border-color: rgba(250, 204, 21, .55);
+        color: #fde68a;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template input[type="text"],
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template input[type="date"] {
+        background: #0f172a;
+        border-color: rgba(148, 163, 184, .38);
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template input::placeholder {
+        color: #94a3b8;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col input[readonly],
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options select,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-line select {
+        background: #1e293b;
+        color: #f8fafc;
+        border-color: rgba(148, 163, 184, .38);
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .bmi-gauge-card {
+        display: block !important;
+        margin-top: 12px;
+    }
+
+    /* Do not reserve space for an empty lookup status under the employee ID field. */
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus:empty {
+        display: none !important;
+        min-height: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+    }
+
 </style>
 @endpush
 
@@ -8002,10 +8238,8 @@
                         </section>
 
                         <section class="applicant-screening-panel employee-physical-assessment-panel">
-                            <h4 class="applicant-screening-panel-title">Physical Assessment</h4>
-                            <p class="applicant-screening-panel-copy">Record the applicant's current vital signs during the nurse review.</p>
+                            <h4 class="applicant-screening-panel-title">PHYSICAL EXAMINATION</h4>
                             <div class="employee-physical-exam-template" aria-label="Physical examination">
-                                <h5>PHYSICAL EXAMINATION</h5>
                                 <div class="employee-exam-section">
                                     <strong>Vital Signs:</strong>
                                     <div class="employee-exam-options">
@@ -8013,13 +8247,13 @@
                                         <label><input type="radio" name="employee_exam_distress" value="in_distress"> In Distress</label>
                                     </div>
                                     <div class="employee-exam-two-col">
-                                        <label>Ht. <input type="text" name="employee_exam_height" placeholder="e.g., 5'6&quot;"> ft.</label>
-                                        <label>Wt. <input type="text" name="employee_exam_weight" placeholder="e.g., 143"> lbs.</label>
-                                        <label>BMI: <input type="text" name="employee_exam_bmi"></label>
-                                        <label>BP <input type="text" name="employee_exam_bp"></label>
-                                        <label>HR <input type="text" name="employee_exam_hr"> /min</label>
-                                        <label>RR <input type="text" name="employee_exam_rr"> /min</label>
-                                        <label>Temp. <input type="text" name="employee_exam_temperature"></label>
+                                        <label><span>Height</span><input type="text" name="employee_exam_height" placeholder="e.g., 5'6&quot;"><span>ft.</span><span class="employee-exam-validation" id="employeeHeightValidation">Pending</span></label>
+                                        <label><span>Weight</span><input type="text" name="employee_exam_weight" placeholder="e.g., 143"><span>lbs.</span><span class="employee-exam-validation" id="employeeWeightValidation">Pending</span></label>
+                                        <label><span>BMI</span><input type="text" name="employee_exam_bmi" readonly aria-readonly="true"><span class="employee-bmi-category" id="employeeBmiCategory">Pending</span></label>
+                                        <label><span>Blood Pressure</span><input type="text" name="employee_exam_bp" placeholder="e.g., 120/80"><span class="employee-exam-validation" id="employeeBpValidation">Pending</span></label>
+                                        <label><span>Heart Rate</span><input type="text" name="employee_exam_hr" placeholder="e.g., 72"><span>/min</span><span class="employee-exam-validation" id="employeeHrValidation">Pending</span></label>
+                                        <label><span>Respiratory Rate</span><input type="text" name="employee_exam_rr" placeholder="e.g., 18"><span>/min</span><span class="employee-exam-validation" id="employeeRrValidation">Pending</span></label>
+                                        <label><span>Temperature</span><input type="text" name="employee_exam_temperature" placeholder="e.g., 36.5"><span>°C</span><span class="employee-exam-validation" id="employeeTemperatureValidation">Pending</span></label>
                                     </div>
                                 </div>
                                 <div class="employee-exam-section">
@@ -8028,7 +8262,6 @@
                                         <label><input type="checkbox" name="employee_exam_head[]" value="wound"> Wound</label>
                                         <label><input type="checkbox" name="employee_exam_head[]" value="mass"> Mass</label>
                                         <label><input type="checkbox" name="employee_exam_head[]" value="alopecia"> Alopecia</label>
-                                        <label><input type="checkbox" name="employee_exam_head[]" value="na"> N/A</label>
                                     </div>
                                 </div>
                                 <div class="employee-exam-section">
@@ -8061,7 +8294,6 @@
                                         <label><input type="radio" name="employee_exam_chest_lungs" value="normal"> Normal</label>
                                         <label><input type="radio" name="employee_exam_chest_lungs" value="wheeze"> Wheeze</label>
                                         <label><input type="radio" name="employee_exam_chest_lungs" value="rales"> Rales</label>
-                                        <label><input type="radio" name="employee_exam_chest_lungs" value="na"> N/A</label>
                                     </div>
                                 </div>
                                 <div class="employee-exam-section">
@@ -8099,7 +8331,7 @@
                                 </div>
                                 <div class="employee-exam-section">
                                     <strong>Genito-Urinary:</strong>
-                                    <label class="employee-exam-line">1st day of last Menstruation <input type="text" name="employee_exam_last_menstruation"></label>
+                                    <label class="employee-exam-line">1st day of last Menstruation <input type="date" name="employee_exam_last_menstruation"></label>
                                 </div>
                                 <div class="employee-exam-section">
                                     <strong>Extremities:</strong>
@@ -8112,7 +8344,6 @@
                                     <div class="employee-exam-options">
                                         <label><input type="radio" name="employee_exam_vertebral_column" value="normal"> Normal</label>
                                         <label><input type="radio" name="employee_exam_vertebral_column" value="with_deformity"> With Deformity</label>
-                                        <label><input type="radio" name="employee_exam_vertebral_column" value="na"> N/A</label>
                                     </div>
                                 </div>
                                 <div class="employee-exam-section">
@@ -8121,19 +8352,26 @@
                                         <label><input type="checkbox" name="employee_exam_skin[]" value="pallor"> Pallor</label>
                                         <label><input type="checkbox" name="employee_exam_skin[]" value="rashes"> Rashes</label>
                                         <label><input type="checkbox" name="employee_exam_skin[]" value="lesions"> Lesions</label>
-                                    </div>
-                                </div>
-                                <div class="employee-exam-section">
                                     <strong>Scars:</strong>
-                                    <div class="employee-exam-options">
                                         <label><input type="radio" name="employee_exam_scars" value="absent"> Absent</label>
                                         <label><input type="radio" name="employee_exam_scars" value="present"> Present</label>
-                                        <label><input type="radio" name="employee_exam_scars" value="na"> N/A</label>
                                     </div>
                                 </div>
                                 <div class="employee-exam-section">
                                     <strong>WORKING IMPRESSION:</strong>
-                                    <label class="employee-exam-line"><strong>Fit:</strong> <input type="text" name="employee_exam_fit"></label>
+                                    <label class="employee-exam-line"><strong>Working Impression:</strong> <input type="text" name="employee_exam_working_impression"></label>
+                                    <label class="employee-exam-line"><strong>Fit:</strong>
+                                        <select name="employee_exam_fit" id="employeeExamFit">
+                                            <option value="">Select fit status</option>
+                                            <option value="Fit for Work">Fit for Work</option>
+                                            <option value="Fit for School">Fit for School</option>
+                                            <option value="Fit for Duty">Fit for Duty</option>
+                                            <option value="Fit for Internship">Fit for Internship</option>
+                                            <option value="Fit for Clinic Duty">Fit for Clinic Duty</option>
+                                            <option value="Others">Others</option>
+                                        </select>
+                                    </label>
+                                    <label class="employee-exam-line" id="employeeExamFitOtherWrap" style="display:none;">Other Fit Status: <input type="text" name="employee_exam_fit_other" id="employeeExamFitOther"></label>
                                     <label class="employee-exam-line"><strong>For Work-Up:</strong> <input type="text" name="employee_exam_for_work_up"></label>
                                     <strong>Referred to:</strong>
                                     <div class="employee-exam-options">
@@ -8245,6 +8483,12 @@
 
                     <div class="applicant-ref-actions">
                         <button type="button" id="btnCancelApplicantRef" class="applicant-ref-action-btn applicant-ref-cancel-btn">Cancel</button>
+                        <button type="button" id="btnSaveEmployeeDraft" class="applicant-ref-action-btn applicant-ref-draft-btn" aria-label="Save employee draft">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                            </svg>
+                            <span>Draft</span>
+                        </button>
                         <button type="button" id="btnFindApplicant" class="applicant-ref-action-btn applicant-ref-find-btn">Find</button>
                     </div>
                 </div>
@@ -9986,6 +10230,7 @@
         const refInput        = document.getElementById('applicantRefInput');
         const refStatus       = document.getElementById('applicantRefStatus');
         const findBtn         = document.getElementById('btnFindApplicant');
+        const employeeDraftBtn = document.getElementById('btnSaveEmployeeDraft');
         const foundCard       = document.getElementById('applicantFoundCard');
         const foundName       = document.getElementById('applicantFoundName');
         const lookupDetails   = document.getElementById('applicantLookupDetails');
@@ -10264,6 +10509,8 @@
 
         function resetLookupButtonToFind() {
             if (!findBtn) return;
+
+            if (employeeDraftBtn) employeeDraftBtn.style.display = 'none';
 
             findBtn.textContent = 'Find';
             findBtn.disabled = false;
@@ -10699,6 +10946,45 @@
             }
         }
 
+        function employeeDraftStorageKey(reference) {
+            return 'employee-health-draft:' + String(reference || '').trim().toUpperCase();
+        }
+
+        function readLocalEmployeeDraft(reference) {
+            try {
+                const saved = localStorage.getItem(employeeDraftStorageKey(reference));
+                return saved ? JSON.parse(saved) : {};
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function populateEmployeeDraft(draft) {
+            if (!isClinicLookupMode()) return;
+            const serverDraft = draft && typeof draft === 'object' ? draft : {};
+            const savedDraft = Object.keys(serverDraft).length ? serverDraft : readLocalEmployeeDraft(currentLookupRef);
+            if (!Object.keys(savedDraft).length) return;
+
+            document.querySelectorAll('#applicantRefModal [name]').forEach(function (field) {
+                const baseName = field.name.endsWith('[]') ? field.name.slice(0, -2) : field.name;
+                if (!Object.prototype.hasOwnProperty.call(savedDraft, baseName)) return;
+
+                const savedValue = savedDraft[baseName];
+                if (field.type === 'checkbox' || field.type === 'radio') {
+                    const values = Array.isArray(savedValue) ? savedValue.map(String) : [String(savedValue ?? '')];
+                    field.checked = values.includes(String(field.value));
+                } else if (field.tagName === 'SELECT' || field.type !== 'file') {
+                    field.value = Array.isArray(savedValue) ? (savedValue[0] ?? '') : (savedValue ?? '');
+                }
+            });
+
+            document.getElementById('employeeExamFit')?.dispatchEvent(new Event('change', { bubbles: true }));
+            syncFindingsReviewFields();
+            syncCovidPositiveFields();
+            updateEmployeeBmi();
+            updateEmployeeExamValidation();
+        }
+
         function renderPendingHistory(review) {
             const savedReview = review && typeof review === 'object' ? review : {};
             const pendingReasons = [];
@@ -10979,6 +11265,56 @@
             } else {
                 setVitalStatus('covidStatus', 'Positive', 'danger');
             }
+        }
+
+        function updateEmployeeBmi() {
+            const heightInput = document.querySelector('[name="employee_exam_height"]');
+            const weightInput = document.querySelector('[name="employee_exam_weight"]');
+            const bmiInput = document.querySelector('[name="employee_exam_bmi"]');
+            if (!heightInput || !weightInput || !bmiInput) return;
+
+            const heightFeet = parseHeightFeet(heightInput.value);
+            const weightPounds = Number(weightInput.value);
+            const bmiStatus = classifyBmi(heightFeet, weightPounds);
+
+            bmiInput.value = bmiStatus ? bmiStatus.bmi : '';
+            const bmiCategory = document.getElementById('employeeBmiCategory');
+            if (bmiCategory) {
+                bmiCategory.textContent = bmiStatus ? bmiStatus.category : 'Pending';
+                bmiCategory.className = 'employee-bmi-category' + (bmiStatus ? ' is-' + bmiStatus.categoryKey : '');
+            }
+            updateBmiGauge(heightFeet, weightPounds, bmiStatus);
+            updateEmployeeExamValidation();
+        }
+
+        function setEmployeeExamValidation(id, text, isValid) {
+            const status = document.getElementById(id);
+            if (!status) return;
+            status.textContent = text;
+            status.className = 'employee-exam-validation ' + (isValid === null ? '' : (isValid ? 'is-valid' : 'is-invalid'));
+        }
+
+        function updateEmployeeExamValidation() {
+            const value = (name) => document.querySelector('[name="' + name + '"]')?.value?.trim() || '';
+            const height = value('employee_exam_height');
+            const heightFeet = parseHeightFeet(height);
+            setEmployeeExamValidation('employeeHeightValidation', !height ? 'Pending' : (heightFeet !== null && heightFeet >= 1 && heightFeet <= 10 ? 'Valid' : 'Invalid'), !height ? null : (heightFeet !== null && heightFeet >= 1 && heightFeet <= 10));
+
+            const weight = Number(value('employee_exam_weight'));
+            setEmployeeExamValidation('employeeWeightValidation', !value('employee_exam_weight') ? 'Pending' : (Number.isFinite(weight) && weight > 0 && weight <= 1100 ? 'Valid' : 'Invalid'), !value('employee_exam_weight') ? null : (Number.isFinite(weight) && weight > 0 && weight <= 1100));
+
+            const bp = value('employee_exam_bp');
+            const bpStatus = bp ? classifyBloodPressure(bp) : null;
+            setEmployeeExamValidation('employeeBpValidation', !bp ? 'Pending' : (bpStatus ? 'Valid' : 'Invalid'), !bp ? null : Boolean(bpStatus));
+
+            const hr = Number(value('employee_exam_hr'));
+            setEmployeeExamValidation('employeeHrValidation', !value('employee_exam_hr') ? 'Pending' : (Number.isFinite(hr) && hr >= 1 && hr <= 300 ? 'Valid' : 'Invalid'), !value('employee_exam_hr') ? null : (Number.isFinite(hr) && hr >= 1 && hr <= 300));
+
+            const rr = Number(value('employee_exam_rr'));
+            setEmployeeExamValidation('employeeRrValidation', !value('employee_exam_rr') ? 'Pending' : (Number.isFinite(rr) && rr >= 1 && rr <= 120 ? 'Valid' : 'Invalid'), !value('employee_exam_rr') ? null : (Number.isFinite(rr) && rr >= 1 && rr <= 120));
+
+            const temperature = Number(value('employee_exam_temperature'));
+            setEmployeeExamValidation('employeeTemperatureValidation', !value('employee_exam_temperature') ? 'Pending' : (Number.isFinite(temperature) && temperature >= 30 && temperature <= 45 ? 'Valid' : 'Invalid'), !value('employee_exam_temperature') ? null : (Number.isFinite(temperature) && temperature >= 30 && temperature <= 45));
         }
 
         function getConditionSummary(review, lookupData) {
@@ -11900,6 +12236,7 @@
                             foundCard.style.display = 'flex';
                         }
                         showLookupDetails(data, ref);
+                        populateEmployeeDraft(data.employee_draft_data || {});
                         if (foundCard) {
                             foundCard.style.display = 'none';
                             foundCard.dataset.initials = 'AP';
@@ -11931,6 +12268,7 @@
                         if (lookupRow) lookupRow.style.display = 'none';
 
                         isApprovalMode = false;
+                        if (employeeDraftBtn) employeeDraftBtn.style.display = 'none';
                         if (findBtn) {
                             findBtn.removeEventListener('click', doLookup);
                             findBtn.removeEventListener('click', doApprove);
@@ -11958,6 +12296,7 @@
                             foundCard.style.display = 'flex';
                         }
                         const hasSavedReview = showLookupDetails(data, ref);
+                        populateEmployeeDraft(data.employee_draft_data || {});
                         const alreadyEncodedForReview = isEncodeWorkflow() && isEncodedForFinalReview(currentAssessmentReview, data);
                         if (alreadyEncodedForReview) {
                             setStatus('encoded', 'This applicant is already encoded and is ready for Final Review / Approval.');
@@ -11994,6 +12333,9 @@
                             } else {
                                 findBtn.addEventListener('click', hasSavedReview ? enterSavedReviewEditMode : doApprove);
                             }
+                        }
+                        if (employeeDraftBtn) {
+                            employeeDraftBtn.style.display = isClinicLookupMode() ? 'inline-flex' : 'none';
                         }
                         if (!hasSavedReview) syncFindingsReviewFields();
                     }
@@ -12205,6 +12547,46 @@
                     : (normalRemarksInput?.value.trim() || '')
             };
 
+            if (isClinicLookupMode()) {
+                const checkedValues = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`))
+                    .map(input => input.value);
+                const checkedValue = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value || '';
+                const fieldValue = (name) => document.querySelector(`[name="${name}"]`)?.value?.trim() || '';
+
+                Object.assign(approvalData, {
+                    employee_exam_distress: checkedValue('employee_exam_distress'),
+                    employee_exam_height: fieldValue('employee_exam_height') || heightInput.value,
+                    employee_exam_weight: fieldValue('employee_exam_weight') || weightInput.value,
+                    employee_exam_bmi: fieldValue('employee_exam_bmi'),
+                    employee_exam_bp: fieldValue('employee_exam_bp') || bloodPressureInput.value.trim(),
+                    employee_exam_hr: fieldValue('employee_exam_hr') || pulseRateInput.value,
+                    employee_exam_rr: fieldValue('employee_exam_rr') || respiratoryRateInput.value,
+                    employee_exam_temperature: fieldValue('employee_exam_temperature') || temperatureInput.value,
+                    employee_exam_head: checkedValues('employee_exam_head[]'),
+                    employee_exam_eyes: checkedValues('employee_exam_eyes[]'),
+                    employee_exam_ears: checkedValues('employee_exam_ears[]'),
+                    employee_exam_throat: checkedValues('employee_exam_throat[]'),
+                    employee_exam_chest_lungs: checkedValue('employee_exam_chest_lungs'),
+                    employee_exam_chest_xray: checkedValue('employee_exam_chest_xray'),
+                    employee_exam_breast: checkedValues('employee_exam_breast[]'),
+                    employee_exam_heart_murmur: checkedValue('employee_exam_heart_murmur'),
+                    employee_exam_heart_rhythm: checkedValue('employee_exam_heart_rhythm'),
+                    employee_exam_abdomen: checkedValues('employee_exam_abdomen[]'),
+                    employee_exam_last_menstruation: fieldValue('employee_exam_last_menstruation'),
+                    employee_exam_extremities: checkedValues('employee_exam_extremities[]'),
+                    employee_exam_vertebral_column: checkedValue('employee_exam_vertebral_column'),
+                    employee_exam_skin: checkedValues('employee_exam_skin[]'),
+                    employee_exam_scars: checkedValue('employee_exam_scars'),
+                    employee_exam_working_impression: fieldValue('employee_exam_working_impression'),
+                    employee_exam_fit: fieldValue('employee_exam_fit'),
+                    employee_exam_fit_other: fieldValue('employee_exam_fit_other'),
+                    employee_exam_for_work_up: fieldValue('employee_exam_for_work_up'),
+                    employee_exam_referred_to: checkedValues('employee_exam_referred_to[]'),
+                    employee_exam_referred_to_others: fieldValue('employee_exam_referred_to_others'),
+                    employee_exam_follow_up_on: fieldValue('employee_exam_follow_up_on')
+                });
+            }
+
             if (hasFindings || isPendingDecision) {
                 approvalData.has_medical_condition = hasMedicalCondition;
                 approvalData.incomplete_requirements = isPendingDecision && hasIncompleteRequirements;
@@ -12262,6 +12644,72 @@
             })
             .catch(() => setStatus('error', 'Unable to save the applicant decision right now. Please try again.'));
         }
+
+        function collectEmployeeDraftData() {
+            const draft = {
+                reference_number: currentLookupRef,
+                lookup_scope: 'employee_local'
+            };
+
+            document.querySelectorAll('#applicantRefModal [name]').forEach(function (field) {
+                if (field.disabled || field.type === 'file') return;
+                const name = field.name;
+                const key = name.endsWith('[]') ? name.slice(0, -2) : name;
+                if (field.type === 'checkbox' || field.type === 'radio') {
+                    if (!field.checked) return;
+                    if (name.endsWith('[]')) {
+                        if (!Array.isArray(draft[key])) draft[key] = [];
+                        draft[key].push(field.value);
+                    } else {
+                        draft[key] = field.value;
+                    }
+                    return;
+                }
+                draft[key] = field.value;
+            });
+
+            return draft;
+        }
+
+        function saveEmployeeDraft() {
+            if (!currentLookupRef || !isClinicLookupMode()) {
+                setStatus('error', 'Open an employee record before saving a draft.');
+                return;
+            }
+
+            setStatus('info', 'Saving employee draft...');
+            if (employeeDraftBtn) employeeDraftBtn.disabled = true;
+
+            fetch("{{ route('admin.walkin.employee_draft') }}", {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(collectEmployeeDraftData())
+            })
+            .then(response => response.json())
+            .then(data => setStatus(data.success ? 'success' : 'error', data.message || 'Unable to save employee draft.'))
+            .catch(() => setStatus('error', 'Unable to save employee draft right now.'))
+            .finally(() => { if (employeeDraftBtn) employeeDraftBtn.disabled = false; });
+        }
+
+        employeeDraftBtn?.addEventListener('click', saveEmployeeDraft);
+
+        document.querySelectorAll('#applicantRefModal [name]').forEach(function (field) {
+            const cacheDraft = function () {
+                if (!isClinicLookupMode() || !currentLookupRef) return;
+                try {
+                    localStorage.setItem(employeeDraftStorageKey(currentLookupRef), JSON.stringify(collectEmployeeDraftData()));
+                } catch (error) {
+                    // Local backup is best effort; the server Draft action remains available.
+                }
+            };
+            field.addEventListener('input', cacheDraft);
+            field.addEventListener('change', cacheDraft);
+        });
 
         const findingsInputs = document.querySelectorAll('input[name="applicant_findings_status"]');
         const clearanceDecisionInputs = document.querySelectorAll('input[name="applicant_clearance_decision"]');
@@ -12563,6 +13011,25 @@
             input.addEventListener('blur', validateVitals);
         });
 
+        document.querySelectorAll('[name="employee_exam_height"], [name="employee_exam_weight"]').forEach(function (input) {
+            input.addEventListener('input', updateEmployeeBmi);
+            input.addEventListener('blur', updateEmployeeBmi);
+        });
+
+        document.querySelectorAll('[name="employee_exam_bp"], [name="employee_exam_hr"], [name="employee_exam_rr"], [name="employee_exam_temperature"]').forEach(function (input) {
+            input.addEventListener('input', updateEmployeeExamValidation);
+            input.addEventListener('blur', updateEmployeeExamValidation);
+        });
+
+        const employeeExamFit = document.getElementById('employeeExamFit');
+        const employeeExamFitOtherWrap = document.getElementById('employeeExamFitOtherWrap');
+        const syncEmployeeExamFitOther = function () {
+            const showOther = employeeExamFit?.value === 'Others';
+            if (employeeExamFitOtherWrap) employeeExamFitOtherWrap.style.display = showOther ? 'inline-flex' : 'none';
+        };
+        employeeExamFit?.addEventListener('change', syncEmployeeExamFitOther);
+        syncEmployeeExamFitOther();
+
         // Add event listener for COVID positive date validation
         const covidDateInput = document.getElementById('applicantCovidPositiveDate');
         if (covidDateInput) {
@@ -12571,6 +13038,7 @@
         }
 
         syncCovidPositiveFields();
+        updateEmployeeBmi();
         restrictCovidDateInput();
         if (applicantModalBody) {
             applicantModalBody.addEventListener('scroll', syncFinalReviewToolbarState, { passive: true });
