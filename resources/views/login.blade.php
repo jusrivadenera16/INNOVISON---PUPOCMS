@@ -356,15 +356,6 @@
             stroke-width: 2.4;
             fill: none;
         }
-        .idp-fallback-footnote {
-            margin-top: 18px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(148, 163, 184, 0.22);
-            color: #7a8494;
-            font-size: 13px;
-            font-weight: 650;
-        }
-
         .dev-login-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -709,22 +700,24 @@
             $idpUnavailable = ($idpUnavailable ?? false) || request()->boolean('idp_error') || $errors->has('idp');
         @endphp
 
-        <div class="login-hero">
-            <div class="login-hero-top">
-                <div class="login-hero-badge"><span></span> Clinic Access</div>
-                <div class="login-chip">
-                    {{ $idpUnavailable ? 'Sign-In Notice' : (config('services.idp.enabled') ? 'Centralized Sign In' : ($localLoginEnabled ? 'Local Sign In' : 'Restricted Sign In')) }}
+        @unless($idpUnavailable)
+            <div class="login-hero">
+                <div class="login-hero-top">
+                    <div class="login-hero-badge"><span></span> Clinic Access</div>
+                    <div class="login-chip">
+                        {{ config('services.idp.enabled') ? 'Centralized Sign In' : ($localLoginEnabled ? 'Local Sign In' : 'Restricted Sign In') }}
+                    </div>
+                </div>
+                <h2>Clinic Portal</h2>
+                <p class="login-hero-copy">Login to your account to continue. The same system keeps student and clinic access in one place.</p>
+                <div class="login-subline">
+                    <span class="login-chip">IdP Ready</span>
+                    @if($localLoginEnabled)
+                        <span class="login-chip">Local Fallback</span>
+                    @endif
                 </div>
             </div>
-            <h2>Clinic Portal</h2>
-            <p class="login-hero-copy">Login to your account to continue. The same system keeps student and clinic access in one place.</p>
-            <div class="login-subline">
-                <span class="login-chip">IdP Ready</span>
-                @if($localLoginEnabled)
-                    <span class="login-chip">Local Fallback</span>
-                @endif
-            </div>
-        </div>
+        @endunless
 
         @if ($errors->any() && ! $idpUnavailable)
             <div class="alert-error">
@@ -749,7 +742,7 @@
                 <h3 id="idpFallbackTitle">Identity Provider Temporarily Unavailable</h3>
                 <div class="idp-fallback-divider"></div>
                 <p>
-                    We cannot connect to the campus sign-in service right now. Please try again later or contact the system administrator for urgent access.
+                    We’re having trouble connecting to the IdP sign-in service. Please try again in a few minutes.
                 </p>
                 <a href="{{ $portalLoginUrl }}" class="idp-fallback-action">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -758,7 +751,6 @@
                     </svg>
                     Try Again
                 </a>
-                <div class="idp-fallback-footnote">No local login is shown on live.</div>
             </section>
         @elseif(config('services.idp.enabled'))
             <div class="idp-login-wrap">

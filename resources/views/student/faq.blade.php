@@ -24,7 +24,7 @@
             radial-gradient(circle at 94% 16%, rgba(148, 5, 21, 0.05), transparent 130px),
             linear-gradient(180deg, rgba(255, 248, 248, 0.92) 0%, rgba(255, 255, 255, 0.88) 38%, rgba(255, 253, 253, 0.92) 100%);
         color: var(--faq-ink);
-        overflow: hidden;
+        overflow: visible;
     }
 
     .faq-page::before {
@@ -200,6 +200,11 @@
         color: currentColor;
     }
 
+    .faq-voice-btn.is-active {
+        background: linear-gradient(180deg, #facc15, #f5b642);
+        color: var(--faq-maroon-dark);
+    }
+
     .faq-categories {
         display: flex;
         justify-content: center;
@@ -266,6 +271,19 @@
         gap: 24px;
         position: relative;
         z-index: 1;
+        grid-column: 1;
+    }
+
+    .faq-sidebar {
+        grid-column: 2;
+        min-width: 0;
+    }
+
+    .sticky-sidebar {
+        display: grid;
+        gap: 20px;
+        width: 100%;
+        position: static;
     }
 
     .faq-main-card,
@@ -352,7 +370,36 @@
     }
 
     .faq-group {
-        display: contents;
+        display: grid;
+        gap: 13px;
+    }
+
+    .faq-group-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 8px 0 0;
+        color: #4f0711;
+        font-size: 15px;
+        font-weight: 950;
+    }
+
+    .faq-group-title-icon {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        border-radius: 8px;
+        background: #fff0f1;
+        color: var(--faq-maroon);
+    }
+
+    .faq-group-title-icon svg {
+        width: 18px;
+        height: 18px;
+        stroke-width: 2;
     }
 
     .faq-question {
@@ -444,15 +491,134 @@
 
     .faq-empty {
         margin: 0;
+        display: grid;
+        gap: 8px;
         padding: 26px 6px 4px;
         color: var(--faq-muted);
         font-size: 14px;
         font-weight: 700;
+        line-height: 1.6;
+    }
+
+    .faq-empty strong {
+        color: var(--faq-ink);
+        font-size: 15px;
+        font-weight: 900;
+    }
+
+    .faq-empty span {
+        display: block;
+        max-width: 620px;
+    }
+
+    html[data-theme="dark"] .faq-page {
+        --faq-ink: #f5f7fb;
+        --faq-muted: #cbd5e1;
+        --faq-line: rgba(148, 163, 184, 0.24);
+        background:
+            radial-gradient(circle at 7% 9%, rgba(148, 5, 21, 0.16) 0 2px, transparent 2px 10px),
+            radial-gradient(circle at 94% 16%, rgba(250, 204, 21, 0.08), transparent 150px),
+            linear-gradient(180deg, rgba(4, 9, 18, 0.94) 0%, rgba(10, 16, 28, 0.95) 42%, rgba(4, 9, 18, 0.97) 100%);
+        color: #f5f7fb;
+    }
+
+    html[data-theme="dark"] .faq-page::before {
+        filter: grayscale(0.2) brightness(0.35) contrast(1.06);
+        opacity: 0.36;
+    }
+
+    html[data-theme="dark"] .faq-hero::before,
+    html[data-theme="dark"] .faq-hero::after,
+    html[data-theme="dark"] .faq-hero-art {
+        opacity: 0.18;
+    }
+
+    html[data-theme="dark"] .faq-title,
+    html[data-theme="dark"] .faq-card-title,
+    html[data-theme="dark"] .faq-group-title,
+    html[data-theme="dark"] .faq-empty strong {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] .faq-subtitle,
+    html[data-theme="dark"] .faq-empty,
+    html[data-theme="dark"] .faq-empty span {
+        color: #cbd5e1 !important;
+    }
+
+    html[data-theme="dark"] .faq-search-shell,
+    html[data-theme="dark"] .faq-main-card,
+    html[data-theme="dark"] .sidebar-widget {
+        background: rgba(15, 23, 42, 0.92);
+        border-color: rgba(148, 163, 184, 0.24);
+        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+    }
+
+    html[data-theme="dark"] .faq-search-input {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .faq-search-input::placeholder {
+        color: #94a3b8;
+    }
+
+    html[data-theme="dark"] .faq-filter {
+        background: rgba(15, 23, 42, 0.88);
+        border-color: rgba(148, 163, 184, 0.24);
+        color: #e5e7eb;
+    }
+
+    html[data-theme="dark"] .faq-filter:hover,
+    html[data-theme="dark"] .faq-filter.is-active {
+        background: rgba(148, 5, 21, 0.28);
+        border-color: rgba(248, 113, 113, 0.42);
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .faq-card-icon,
+    html[data-theme="dark"] .faq-filter-icon,
+    html[data-theme="dark"] .faq-group-title-icon,
+    html[data-theme="dark"] .portal-icon,
+    html[data-theme="dark"] .question-icon,
+    html[data-theme="dark"] .reminder-icon {
+        background: rgba(148, 5, 21, 0.22);
+        color: #fecdd3;
+    }
+
+    html[data-theme="dark"] .faq-card-header,
+    html[data-theme="dark"] .portal-links {
+        border-color: rgba(148, 163, 184, 0.22);
+    }
+
+    html[data-theme="dark"] .faq-question {
+        background: rgba(2, 6, 23, 0.62);
+        border-color: rgba(148, 163, 184, 0.22);
+        box-shadow: none;
+    }
+
+    html[data-theme="dark"] .faq-question[open] {
+        border-color: rgba(248, 113, 113, 0.38);
+        box-shadow: 0 16px 28px rgba(0, 0, 0, 0.22);
+    }
+
+    html[data-theme="dark"] .faq-question summary {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .faq-answer,
+    html[data-theme="dark"] .portal-copy,
+    html[data-theme="dark"] .portal-link {
+        color: #cbd5e1 !important;
+    }
+
+    html[data-theme="dark"] .faq-popular,
+    html[data-theme="dark"] .faq-view-all,
+    html[data-theme="dark"] .portal-link svg {
+        color: #fda4af;
     }
 
     .sticky-sidebar {
-        position: sticky;
-        top: 30px;
+        position: static;
         width: 100%;
         max-width: 304px;
         height: fit-content;
@@ -627,22 +793,48 @@
         line-height: 1.5;
     }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 980px) {
+        .faq-page {
+            height: auto;
+            min-height: calc(100vh - 120px);
+            overflow: visible;
+        }
+
         .faq-layout {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 1fr;
+            height: auto;
+            overflow: visible;
             gap: 22px;
         }
 
         .faq-sidebar {
+            order: 2 !important;
             width: 100%;
             max-width: none;
             position: relative;
             z-index: 1;
+            grid-column: auto;
+            grid-row: 2;
+        }
+
+        .faq-content-column {
+            order: 1 !important;
+            height: auto;
+            overflow: visible;
+            padding-right: 0;
+            width: 100%;
+            max-width: none;
+            min-width: 0;
+            grid-column: auto;
+            grid-row: 1;
         }
 
         .sticky-sidebar {
             position: static;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
             width: 100%;
             max-width: none;
             justify-self: stretch;
@@ -652,41 +844,8 @@
         .sidebar-widget {
             width: 100%;
             max-width: none;
+            margin-bottom: 0;
         }
-    }
-
-    .faq-page.is-mobile-layout .faq-layout {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 18px;
-    }
-
-    .faq-page.is-mobile-layout .faq-content-column {
-        order: 1;
-        width: 100%;
-        max-width: none;
-        min-width: 0;
-    }
-
-    .faq-page.is-mobile-layout .faq-sidebar {
-        order: 2;
-        width: 100%;
-        max-width: none;
-        position: relative;
-        z-index: 1;
-    }
-
-    .faq-page.is-mobile-layout .sticky-sidebar {
-        position: static !important;
-        width: 100%;
-        max-width: none;
-        justify-self: stretch;
-        z-index: auto;
-    }
-
-    .faq-page.is-mobile-layout .sidebar-widget {
-        width: 100%;
-        max-width: none;
     }
 
     @media (max-width: 640px) {
@@ -715,8 +874,8 @@
         }
 
         .faq-layout {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 1fr;
             gap: 18px;
             width: min(100% - 28px, 1090px);
             margin-top: 18px;
@@ -730,12 +889,17 @@
             min-width: 0;
         }
 
-        .faq-sidebar {
-            order: 2;
+        .faq-content-column {
+            order: 1 !important;
         }
 
-        .faq-content-column {
-            order: 1;
+        .faq-sidebar {
+            order: 2 !important;
+        }
+
+        .sticky-sidebar {
+            grid-template-columns: 1fr;
+            gap: 16px;
         }
 
         .faq-main-card,
@@ -822,41 +986,48 @@
                         <path d="m21 21-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
                     <input type="search" class="faq-search-input" placeholder="Search clinic questions..." id="faqSearch" autocomplete="off">
-                    <button class="faq-voice-btn" type="button" aria-label="Voice search">
+                    <button class="faq-voice-btn" type="button" aria-label="Voice search" aria-pressed="false">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3ZM19 11a7 7 0 0 1-14 0M12 18v3M8 21h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         </svg>
                     </button>
                 </label>
 
-                <div class="faq-categories" aria-label="FAQ categories">
-                    @foreach($faqGroups as $category => $categoryFaqs)
-                        @php($categoryIcon = $iconFor($category))
-                        <button class="faq-filter" type="button" data-faq-filter="{{ Str::slug($category) }}">
+                @if($faqGroups->isNotEmpty())
+                    <div class="faq-categories" aria-label="FAQ categories">
+                        @foreach($faqGroups as $category => $categoryFaqs)
+                            @php
+                                $categoryIcon = $iconFor($category);
+                            @endphp
+                            <button class="faq-filter" type="button" data-faq-filter="{{ Str::slug($category) }}">
+                                <span class="faq-filter-icon" aria-hidden="true">
+                                    <x-outline-icon :name="$categoryIcon" />
+                                </span>
+                                <span>{{ $category }}</span>
+                            </button>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="faq-categories" aria-label="FAQ support">
+                        <a class="faq-filter" href="#contact">
                             <span class="faq-filter-icon" aria-hidden="true">
-                                <x-outline-icon :name="$categoryIcon" />
+                                <x-outline-icon name="map-pin" />
                             </span>
-                            <span>{{ $category }}</span>
-                        </button>
-                    @endforeach
-                    <button class="faq-filter" type="button" data-faq-filter="contact">
-                        <span class="faq-filter-icon" aria-hidden="true">
-                            <x-outline-icon name="map-pin" />
-                        </span>
-                        <span>Contact</span>
-                    </button>
-                </div>
+                            <span>Contact</span>
+                        </a>
+                    </div>
+                @endif
             </section>
 
-            <main class="faq-main-card">
-                <div class="faq-card-header">
-                    <span class="faq-card-icon" aria-hidden="true">
-                        <x-outline-icon name="heart-pulse" />
-                    </span>
-                    <h2 class="faq-card-title">Clinic Services &amp; Information</h2>
-                </div>
-
+            <main class="faq-main-card" id="publishedFaqs">
                 @if($faqGroups->isNotEmpty())
+                    <div class="faq-card-header">
+                        <span class="faq-card-icon" aria-hidden="true">
+                            <x-outline-icon :name="$iconFor($faqGroups->keys()->first())" />
+                        </span>
+                        <h2 class="faq-card-title">{{ $faqGroups->count() === 1 ? $faqGroups->keys()->first() : 'Published FAQs' }}</h2>
+                    </div>
+
                     <div class="faq-popular">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M13.5 2.7c.2 2.8 1.6 4.6 3.2 6.3 1.7 1.8 3.3 3.8 3.3 6.7A8 8 0 0 1 4 15.8c0-2.7 1.3-4.7 3-6.8.7 1.9 1.8 2.9 3 3.4-.6-3.4.2-6.8 3.5-9.7Z"/>
@@ -866,8 +1037,16 @@
 
                     <div class="faq-list" id="faqList">
                         @foreach($faqGroups as $category => $categoryFaqs)
-                            @php($categoryIcon = $iconFor($category))
+                            @php
+                                $categoryIcon = $iconFor($category);
+                            @endphp
                             <div class="faq-group" data-faq-category="{{ Str::slug($category) }}">
+                                <h3 class="faq-group-title">
+                                    <span class="faq-group-title-icon" aria-hidden="true">
+                                        <x-outline-icon :name="$categoryIcon" />
+                                    </span>
+                                    <span>{{ $category }}</span>
+                                </h3>
                                 @foreach($categoryFaqs as $faq)
                                     <details class="faq-question" data-question="{{ Str::lower($faq->question . ' ' . $faq->answer . ' ' . $category) }}">
                                         <summary>
@@ -890,7 +1069,10 @@
                         </svg>
                     </button>
                 @else
-                    <p class="faq-empty">No FAQs are available yet.</p>
+                    <div class="faq-empty">
+                        <strong>No FAQs are available yet.</strong>
+                        <span>Published clinic questions will appear here once the administrator adds FAQ categories and answers.</span>
+                    </div>
                 @endif
             </main>
         </div>
@@ -946,7 +1128,7 @@
                 </div>
                 @endauth
 
-                <div class="sidebar-widget" style="background: #20343a; color: white; border: none;">
+                <div class="sidebar-widget" id="contact" style="background: #20343a; color: white; border: none;">
                     <h4 class="widget-title" style="color: white;">Contact Us</h4>
                     <p style="font-size: 13px; opacity: 0.8; margin-bottom: 15px;">Need urgent help?</p>
                     <div style="font-size: 14px; font-weight: 600;">(02) 8837-5858<br>puptclinic@gmail.com</div>
@@ -960,21 +1142,20 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const page = document.getElementById('faqApp');
         const search = document.getElementById('faqSearch');
         const groups = Array.from(document.querySelectorAll('[data-faq-category]'));
         const filters = Array.from(document.querySelectorAll('[data-faq-filter]'));
         const viewAll = document.getElementById('faqViewAll');
+        const publishedFaqs = document.getElementById('publishedFaqs');
+        const voiceButton = document.querySelector('.faq-voice-btn');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
         let activeCategory = '';
 
-        function syncFaqLayoutMode() {
-            if (!page) {
-                return;
-            }
-
-            const visualWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
-            const layoutWidth = window.innerWidth || visualWidth;
-            page.classList.toggle('is-mobile-layout', Math.min(visualWidth, layoutWidth) <= 1100);
+        if (recognition) {
+            recognition.lang = 'en-US';
+            recognition.interimResults = true;
+            recognition.continuous = false;
         }
 
         function applyFaqFilters() {
@@ -1010,6 +1191,7 @@
                 const nextCategory = button.dataset.faqFilter;
                 activeCategory = activeCategory === nextCategory ? '' : nextCategory;
                 applyFaqFilters();
+                publishedFaqs?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
         });
 
@@ -1019,15 +1201,57 @@
                 search.value = '';
             }
             applyFaqFilters();
+            publishedFaqs?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        voiceButton?.addEventListener('click', function () {
+            if (!recognition) {
+                voiceButton.title = 'Voice search is not supported in this browser.';
+                voiceButton.classList.remove('is-active');
+                voiceButton.setAttribute('aria-pressed', 'false');
+                return;
+            }
+
+            if (voiceButton.classList.contains('is-active')) {
+                recognition.stop();
+                return;
+            }
+
+            try {
+                recognition.start();
+            } catch (error) {
+                recognition.stop();
+            }
+        });
+
+        recognition?.addEventListener('start', function () {
+            voiceButton?.classList.add('is-active');
+            voiceButton?.setAttribute('aria-pressed', 'true');
+        });
+
+        recognition?.addEventListener('result', function (event) {
+            const transcript = Array.from(event.results)
+                .map((result) => result[0]?.transcript || '')
+                .join(' ')
+                .trim();
+
+            if (search && transcript !== '') {
+                search.value = transcript;
+                applyFaqFilters();
+            }
+        });
+
+        recognition?.addEventListener('end', function () {
+            voiceButton?.classList.remove('is-active');
+            voiceButton?.setAttribute('aria-pressed', 'false');
+        });
+
+        recognition?.addEventListener('error', function () {
+            voiceButton?.classList.remove('is-active');
+            voiceButton?.setAttribute('aria-pressed', 'false');
         });
 
         applyFaqFilters();
-        syncFaqLayoutMode();
-
-        window.addEventListener('resize', syncFaqLayoutMode);
-        window.addEventListener('orientationchange', syncFaqLayoutMode);
-        window.addEventListener('pageshow', syncFaqLayoutMode);
-        window.visualViewport?.addEventListener('resize', syncFaqLayoutMode);
     });
 </script>
 @endpush

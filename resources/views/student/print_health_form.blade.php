@@ -124,12 +124,13 @@
         .cert-text { margin-top: 8px; font-size: 11px; font-style: italic; line-height: 1.22; text-align: justify; }
         .cert-text-first { margin-top: 16px; }
         .signature-table { width: 92%; margin: 25px auto 0; border-collapse: separate; border-spacing: 20px 0; table-layout: fixed; page-break-inside: avoid; }
-        .signature-table td { width: 33.333%; padding: 0; border: 0; vertical-align: bottom; text-align: center; }
-        .sig-image { width: 120px; height: auto; margin-bottom: -10px; }
+        .signature-table td { padding: 0; border: 0; vertical-align: bottom; text-align: center; }
+        .sig-image { display: block; width: 190px; max-width: 100%; height: auto; max-height: 64px; margin: 0 auto -10px; }
         .signature-space { height: 18px; }
         .signature-date-space { display: flex; align-items: flex-end; justify-content: center; padding-bottom: 3px; font-weight: bold; }
         .sig-line { min-height: 11px; margin-bottom: 2px; border-bottom: 1px solid #000; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .signature-caption { min-height: 17px; font-size: 12.5px; font-weight: 700; line-height: 1.1; text-align: center; }
+        .student-signature-name { overflow: hidden; line-height: 11px; white-space: nowrap; }
+        .signature-caption { position: relative; top: -2px; min-height: 17px; font-size: 12.5px; font-weight: 700; line-height: 1.1; text-align: center; }
         .physician-section { width: 100%; clear: both; margin-top: 25px !important; padding: 22px 24px 0 !important; border: 0 !important; border-top: 1px dotted #000 !important; break-inside: avoid; page-break-inside: avoid; }
         .signature-physician-block { margin-top: 10px; }
         .physician-section,

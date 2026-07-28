@@ -13,9 +13,10 @@ class RefreshHealthFormPdfs extends Command
 {
     protected $signature = 'health-forms:refresh-pdfs
         {--type=all : Records to refresh: all, students, or employees}
+        {--include-unsigned : Include student/applicant PDFs that do not have an e-signature}
         {--dry-run : List affected records without replacing any PDFs}';
 
-    protected $description = 'Rebuild saved Health Form PDFs so stored e-signatures use the current PDF template.';
+    protected $description = 'Rebuild saved Health Form PDFs using the current PDF templates.';
 
     public function handle(
         HealthFormPdfSnapshotService $studentPdfs,
@@ -29,6 +30,7 @@ class RefreshHealthFormPdfs extends Command
         }
 
         $dryRun = (bool) $this->option('dry-run');
+        $includeUnsigned = (bool) $this->option('include-unsigned');
         $refreshStudents = in_array($type, ['all', 'student', 'students', 'applicant', 'applicants'], true);
         $refreshEmployees = in_array($type, ['all', 'employee', 'employees'], true);
         $refreshed = 0;
@@ -37,8 +39,6 @@ class RefreshHealthFormPdfs extends Command
         if ($refreshStudents) {
             $query = HealthProfile::query()
                 ->with('user')
-                ->whereNotNull('digital_signature')
-                ->where('digital_signature', '!=', '')
                 ->whereHas('healthFormSubmissions', function ($query) {
                     $query->whereNotNull('pdf_path')
                         ->whereIn('status', [
@@ -48,7 +48,13 @@ class RefreshHealthFormPdfs extends Command
                         ]);
                 });
 
-            $this->info(($dryRun ? 'Dry run: ' : '') . $query->count() . ' signed student/applicant PDF(s) found.');
+            if (!$includeUnsigned) {
+                $query->whereNotNull('digital_signature')
+                    ->where('digital_signature', '!=', '');
+            }
+
+            $studentLabel = $includeUnsigned ? 'student/applicant' : 'signed student/applicant';
+            $this->info(($dryRun ? 'Dry run: ' : '') . $query->count() . ' ' . $studentLabel . ' PDF(s) found.');
 
             $query->orderBy('id')->chunkById(50, function ($profiles) use (
                 $studentPdfs,

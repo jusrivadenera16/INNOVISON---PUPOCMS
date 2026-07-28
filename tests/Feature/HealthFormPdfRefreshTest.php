@@ -193,7 +193,7 @@ class HealthFormPdfRefreshTest extends TestCase
     public function test_student_form_prints_the_name_and_submission_date_without_a_signature(): void
     {
         $user = User::forceCreate([
-            'name' => 'Test Student',
+            'name' => 'Marcella Mae Igcasenza Pada',
             'student_number' => '2026-0001',
         ]);
         $profile = HealthProfile::forceCreate([
@@ -208,7 +208,9 @@ class HealthFormPdfRefreshTest extends TestCase
             'healthFormSubmittedAt' => Carbon::parse('2026-07-20 09:00:00'),
         ])->render();
 
-        $this->assertStringContainsString('TEST STUDENT', $html);
+        $this->assertStringContainsString('MARCELLA MAE IGCASENZA PADA', $html);
         $this->assertStringContainsString('07/20/2026', $html);
+        $this->assertStringContainsString('white-space: nowrap', $html);
+        $this->assertStringContainsString('width: 190px', $html);
     }
 }

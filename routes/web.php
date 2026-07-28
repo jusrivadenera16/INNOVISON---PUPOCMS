@@ -377,6 +377,8 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::get('/admin/settings/medical-configuration', [AdminController::class, 'settingsMedicalConfiguration'])->name('admin.settings.medical');
         Route::get('/admin/settings/faqs', [AdminController::class, 'settingsFaqs'])->name('admin.settings.faqs');
         Route::post('/admin/settings/faqs', [AdminController::class, 'storeFaq'])->name('admin.settings.faqs.store');
+        Route::post('/admin/settings/faqs/category/rename', [AdminController::class, 'renameFaqCategory'])->name('admin.settings.faqs.category.rename');
+        Route::put('/admin/settings/faqs/{faq}', [AdminController::class, 'updateFaq'])->name('admin.settings.faqs.update');
         Route::delete('/admin/settings/faqs/{faq}', [AdminController::class, 'destroyFaq'])->name('admin.settings.faqs.destroy');
         Route::put('/admin/settings/update', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
         Route::put('/admin/profile/update', [AdminController::class, 'updateProfile'])->name('admin.profile.update');

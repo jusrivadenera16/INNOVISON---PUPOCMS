@@ -51,6 +51,24 @@
     }
 
     /* --- WELCOME SECTION --- */
+    .student-home-info-bg {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        background:
+            linear-gradient(180deg, rgba(255, 250, 250, 0.70), rgba(255, 255, 255, 0.58) 42%, rgba(245, 248, 247, 0.72) 100%),
+            url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat;
+    }
+    .student-home-info-bg::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background:
+            radial-gradient(circle at 12% 18%, rgba(139, 0, 0, 0.12), transparent 170px),
+            radial-gradient(circle at 92% 8%, rgba(250, 204, 21, 0.12), transparent 140px);
+        pointer-events: none;
+    }
     .welcome { padding:64px 0; background:#fff; }
     .welcome-inner { display:flex; gap:40px; align-items:center; }
     .welcome-text { flex:1; }
@@ -81,6 +99,20 @@
     .welcome-art { width:320px; flex:0 0 320px; }
 
     /* --- TESTIMONIALS / COMMENTS --- */
+    .student-home-info-bg .welcome,
+    .student-home-info-bg .comments-section {
+        background: transparent;
+    }
+    html[data-theme="dark"] .student-home-info-bg {
+        background:
+            linear-gradient(180deg, rgba(2, 6, 23, 0.82), rgba(15, 23, 42, 0.74) 42%, rgba(2, 6, 23, 0.84) 100%),
+            url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat;
+    }
+    html[data-theme="dark"] .student-home-info-bg::before {
+        background:
+            radial-gradient(circle at 12% 18%, rgba(250, 204, 21, 0.10), transparent 170px),
+            radial-gradient(circle at 92% 8%, rgba(139, 0, 0, 0.22), transparent 140px);
+    }
     .comments-section { padding:56px 0; background:#f3f6f5; }
     .comments-section .section-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:22px; }
     .comments-section h3 { margin:0; font-size:22px; color: #2d3748; }
@@ -294,6 +326,7 @@
       </div>
     </section>
 
+    <div class="student-home-info-bg" id="homeAboutArea">
     <section id="about" class="container" style="padding: 60px 20px; text-align: center; max-width: 800px; margin: 0 auto; scroll-margin-top: 100px;">
         <h2 style="color: #20343a; font-weight: 800; margin-bottom: 16px;">Welcome to the Official PUPT Clinic</h2>
         <p style="color: #64748b; line-height: 1.8; margin-bottom: 24px;">
@@ -362,6 +395,7 @@
         </div>
       </div>
     </section>
+    </div>
 
     <footer class="site-footer">
       <div class="footer-top">
@@ -487,6 +521,41 @@
               setLearnMoreOpen(false);
             }
           });
+        }
+
+        const homeNavLink = document.querySelector('[data-student-nav="home"]');
+        const aboutNavLink = document.querySelector('[data-student-nav="about"]');
+        const aboutArea = document.getElementById('homeAboutArea');
+
+        function setHomeNavState(isAboutActive) {
+          if (!homeNavLink || !aboutNavLink) return;
+          homeNavLink.classList.toggle('active', !isAboutActive);
+          aboutNavLink.classList.toggle('active', isAboutActive);
+        }
+
+        if (aboutArea && homeNavLink && aboutNavLink) {
+          if ('IntersectionObserver' in window) {
+            const aboutObserver = new IntersectionObserver(function (entries) {
+              const entry = entries[0];
+              setHomeNavState(entry.isIntersecting && entry.intersectionRatio > 0.18);
+            }, {
+              root: null,
+              threshold: [0, 0.18, 0.4],
+              rootMargin: '-96px 0px -45% 0px'
+            });
+
+            aboutObserver.observe(aboutArea);
+          } else {
+            const syncHomeNav = function () {
+              const rect = aboutArea.getBoundingClientRect();
+              const viewportTrigger = window.innerHeight * 0.55;
+              setHomeNavState(rect.top < viewportTrigger && rect.bottom > 120);
+            };
+
+            syncHomeNav();
+            window.addEventListener('scroll', syncHomeNav, { passive: true });
+            window.addEventListener('resize', syncHomeNav);
+          }
         }
       });
     </script>

@@ -5,6 +5,31 @@
 @push('styles')
 <style>
     /* --- PAGE LAYOUT --- */
+    .booking-page-shell {
+        position: relative;
+        isolation: isolate;
+        min-height: calc(100vh - 72px);
+        padding: 8px 0 40px;
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.90) 0%, rgba(255, 248, 249, 0.82) 44%, rgba(255, 255, 255, 0.94) 100%),
+            url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat;
+        overflow: hidden;
+    }
+    .booking-page-shell::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background:
+            radial-gradient(circle at 14% 8%, rgba(139, 0, 0, 0.10), transparent 24%),
+            radial-gradient(circle at 86% 18%, rgba(250, 204, 21, 0.12), transparent 28%);
+        pointer-events: none;
+    }
+    .booking-page-container {
+        position: relative;
+        z-index: 1;
+        padding: 8px 20px 40px;
+    }
     .page-header {
         position: relative;
         margin-bottom: 22px;
@@ -1025,6 +1050,16 @@
         border-top-color: #facc15 !important;
         border-bottom-color: #facc15 !important;
     }
+    html[data-theme="dark"] .booking-page-shell {
+        background:
+            linear-gradient(180deg, rgba(2, 6, 23, 0.92) 0%, rgba(15, 23, 42, 0.88) 48%, rgba(2, 6, 23, 0.94) 100%),
+            url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat;
+    }
+    html[data-theme="dark"] .booking-page-shell::before {
+        background:
+            radial-gradient(circle at 16% 8%, rgba(250, 204, 21, 0.08), transparent 26%),
+            radial-gradient(circle at 86% 16%, rgba(139, 0, 0, 0.22), transparent 28%);
+    }
 
     html[data-theme="dark"] .page-kicker,
     html[data-theme="dark"] .page-step,
@@ -1273,7 +1308,8 @@
 @endpush
 
 @section('content')
-<div class="container" style="padding: 8px 20px 40px;">
+<div class="booking-page-shell">
+<div class="container booking-page-container">
     
     <div class="page-header">
         <div class="page-header-icon" aria-hidden="true">
@@ -1532,9 +1568,12 @@
         </div>
     </div>
 </div>
+</div>
 
 @if(session('appointment_confirmation'))
-    @php($confirmation = session('appointment_confirmation'))
+    @php
+        $confirmation = session('appointment_confirmation');
+    @endphp
     <div class="confirmation-overlay" id="appointmentConfirmationOverlay">
         <div class="confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="appointmentConfirmationTitle">
             <button type="button" class="confirmation-close" id="appointmentConfirmationClose" aria-label="Close confirmation">x</button>

@@ -3000,6 +3000,55 @@ public function updateClearance(Request $request, $id)
         return redirect()->route('admin.settings.faqs')->with('success', 'FAQ added successfully.');
     }
 
+    public function updateFaq(Request $request, Faq $faq)
+    {
+        $validated = $request->validate([
+            'category' => ['required', 'string', 'max:120'],
+            'category_new' => ['nullable', 'string', 'max:120'],
+            'question' => ['required', 'string', 'max:500'],
+            'answer' => ['required', 'string', 'max:10000'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $category = trim($validated['category'] === '__new__'
+            ? (string) ($validated['category_new'] ?? '')
+            : $validated['category']);
+
+        if ($category === '') {
+            return back()->withErrors(['category_new' => 'Enter a category name.'])->withInput();
+        }
+
+        $faq->update([
+            'category' => $category,
+            'question' => trim($validated['question']),
+            'answer' => trim($validated['answer']),
+            'is_active' => $request->boolean('is_active'),
+        ]);
+
+        return redirect()->route('admin.settings.faqs')->with('success', 'FAQ updated successfully.');
+    }
+
+    public function renameFaqCategory(Request $request)
+    {
+        $validated = $request->validate([
+            'current_category' => ['required', 'string', 'max:120'],
+            'category_name' => ['required', 'string', 'max:120'],
+        ]);
+
+        $currentCategory = trim($validated['current_category']);
+        $categoryName = trim($validated['category_name']);
+
+        if ($currentCategory === '' || $categoryName === '') {
+            return back()->withErrors(['category_name' => 'Enter a category name.'])->withInput();
+        }
+
+        Faq::query()
+            ->where('category', $currentCategory)
+            ->update(['category' => $categoryName]);
+
+        return redirect()->route('admin.settings.faqs')->with('success', 'FAQ category updated successfully.');
+    }
+
     public function destroyFaq(Faq $faq)
     {
         $faq->delete();

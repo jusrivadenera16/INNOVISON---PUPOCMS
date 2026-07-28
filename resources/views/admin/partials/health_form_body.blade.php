@@ -245,9 +245,21 @@ for the improvement of healthcare services.
         $printedStudentSignatureDate = $studentSignatureDate
             ? \Carbon\Carbon::parse($studentSignatureDate)->format('m/d/Y')
             : '';
+        $studentSignatureNameLength = strlen($printedStudentName);
+        $studentSignatureNameFontSize = match (true) {
+            $studentSignatureNameLength >= 45 => 6,
+            $studentSignatureNameLength >= 36 => 7,
+            $studentSignatureNameLength >= 28 => 8,
+            default => 9,
+        };
     @endphp
     <div class="signature-physician-block">
         <table class="signature-table">
+            <colgroup>
+                <col style="width: 28%;">
+                <col style="width: 44%;">
+                <col style="width: 28%;">
+            </colgroup>
             <tr>
                 <td>
                     <div class="signature-space"></div>
@@ -256,11 +268,11 @@ for the improvement of healthcare services.
                 </td>
                 <td>
                     @if($studentSignatureSrc)
-                        <img src="{{ $studentSignatureSrc }}" class="sig-image" style="height: 40px; width: auto;">
+                        <img src="{{ $studentSignatureSrc }}" class="sig-image">
                     @else
                         <div class="signature-space"></div>
                     @endif
-                    <div class="sig-line">{{ strtoupper($printedStudentName) }}</div>
+                    <div class="sig-line student-signature-name" style="font-size: {{ $studentSignatureNameFontSize }}px !important;">{{ strtoupper($printedStudentName) }}</div>
                     <div class="signature-caption">(Printed name and signature of student)</div>
                 </td>
                 <td>
