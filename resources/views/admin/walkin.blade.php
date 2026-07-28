@@ -3784,6 +3784,10 @@
         gap: 10px;
     }
 
+    .applicant-ref-actions.has-draft-action {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
     .applicant-ref-cancel-btn {
         background: #f1f5f9;
         color: #334155;
@@ -3840,16 +3844,24 @@
 
     .applicant-ref-draft-btn {
         display: none;
-        background: #ffffff;
+        position: relative;
+        overflow: hidden;
+        justify-content: center;
+        text-align: center;
+        background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
         color: #70131b;
-        border-color: #70131b;
+        border-color: rgba(112, 19, 27, 0.36);
+        box-shadow: 0 10px 22px rgba(112, 19, 27, 0.08);
+        isolation: isolate;
     }
 
     .applicant-ref-draft-btn:hover,
     .applicant-ref-draft-btn:focus {
-        background: #facc15;
+        background: linear-gradient(180deg, #facc15 0%, #f59e0b 100%);
         color: #70131b;
         border-color: #facc15;
+        box-shadow: 0 14px 26px rgba(180, 83, 9, 0.22);
+        transform: translateY(-1px);
         outline: none;
     }
 
@@ -3857,37 +3869,44 @@
         width: 18px;
         height: 18px;
         flex: 0 0 auto;
+        padding: 2px;
+        border-radius: 6px;
+        background: rgba(112, 19, 27, 0.08);
+        box-sizing: content-box;
+    }
+
+    .applicant-ref-draft-btn:hover svg,
+    .applicant-ref-draft-btn:focus svg {
+        background: rgba(112, 19, 27, 0.14);
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-actions {
-        display: flex;
-        justify-content: flex-end;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         align-items: center;
-        flex-wrap: wrap;
         margin-top: 0;
         padding-top: 0;
         gap: 12px;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-action-btn {
-        width: auto;
-        min-width: 180px;
+        width: 100%;
+        min-width: 0;
         min-height: 46px;
         border-radius: 8px;
         font-size: 14px;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-actions {
-        display: flex;
-        justify-content: flex-end;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         align-items: center;
-        flex-wrap: wrap;
         gap: 12px;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-action-btn {
-        width: auto;
-        min-width: 180px;
+        width: 100%;
+        min-width: 0;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-cancel-btn {
@@ -7734,6 +7753,29 @@
         border: 0;
     }
 
+    #applicantRefModal .applicant-ref-actions.has-draft-action {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        align-items: center;
+    }
+
+    #applicantRefModal .applicant-ref-actions.has-draft-action .applicant-ref-cancel-btn {
+        grid-column: 2;
+    }
+
+    #applicantRefModal .applicant-ref-actions.has-draft-action .applicant-ref-draft-btn {
+        grid-column: 3;
+    }
+
+    #applicantRefModal .applicant-ref-actions.has-draft-action .applicant-ref-find-btn {
+        grid-column: 4;
+    }
+
+    #applicantRefModal .applicant-ref-actions.has-draft-action .applicant-ref-action-btn {
+        width: 100%;
+        min-width: 0;
+    }
+
 </style>
 @endpush
 
@@ -10231,6 +10273,7 @@
         const refStatus       = document.getElementById('applicantRefStatus');
         const findBtn         = document.getElementById('btnFindApplicant');
         const employeeDraftBtn = document.getElementById('btnSaveEmployeeDraft');
+        const applicantRefActions = employeeDraftBtn?.closest('.applicant-ref-actions');
         const foundCard       = document.getElementById('applicantFoundCard');
         const foundName       = document.getElementById('applicantFoundName');
         const lookupDetails   = document.getElementById('applicantLookupDetails');
@@ -10310,6 +10353,14 @@
         const approvalOverlay = document.getElementById('applicantApprovalOverlay');
         const approvalOverlayTitle = document.getElementById('applicantApprovalOverlayTitle');
         const approvalOverlayMessage = document.getElementById('applicantApprovalOverlayMessage');
+
+        function setEmployeeDraftButtonVisible(visible) {
+            if (employeeDraftBtn) {
+                employeeDraftBtn.style.display = visible ? 'inline-flex' : 'none';
+            }
+
+            applicantRefActions?.classList.toggle('has-draft-action', Boolean(visible));
+        }
         const encodeOverlay   = document.getElementById('applicantEncodeOverlay');
         let activeSuccessAction = null;
         let activeSuccessTimer = null;
@@ -10510,7 +10561,7 @@
         function resetLookupButtonToFind() {
             if (!findBtn) return;
 
-            if (employeeDraftBtn) employeeDraftBtn.style.display = 'none';
+            setEmployeeDraftButtonVisible(false);
 
             findBtn.textContent = 'Find';
             findBtn.disabled = false;
@@ -12268,7 +12319,7 @@
                         if (lookupRow) lookupRow.style.display = 'none';
 
                         isApprovalMode = false;
-                        if (employeeDraftBtn) employeeDraftBtn.style.display = 'none';
+                        setEmployeeDraftButtonVisible(false);
                         if (findBtn) {
                             findBtn.removeEventListener('click', doLookup);
                             findBtn.removeEventListener('click', doApprove);
@@ -12334,9 +12385,7 @@
                                 findBtn.addEventListener('click', hasSavedReview ? enterSavedReviewEditMode : doApprove);
                             }
                         }
-                        if (employeeDraftBtn) {
-                            employeeDraftBtn.style.display = isClinicLookupMode() ? 'inline-flex' : 'none';
-                        }
+                        setEmployeeDraftButtonVisible(isClinicLookupMode());
                         if (!hasSavedReview) syncFindingsReviewFields();
                     }
                 } else {
@@ -12652,7 +12701,7 @@
             };
 
             document.querySelectorAll('#applicantRefModal [name]').forEach(function (field) {
-                if (field.disabled || field.type === 'file') return;
+                if (field.type === 'file') return;
                 const name = field.name;
                 const key = name.endsWith('[]') ? name.slice(0, -2) : name;
                 if (field.type === 'checkbox' || field.type === 'radio') {
@@ -12671,6 +12720,15 @@
             return draft;
         }
 
+        function cacheCurrentEmployeeDraft() {
+            if (!isClinicLookupMode() || !currentLookupRef) return;
+            try {
+                localStorage.setItem(employeeDraftStorageKey(currentLookupRef), JSON.stringify(collectEmployeeDraftData()));
+            } catch (error) {
+                // Local backup is best effort; the server Draft action remains available.
+            }
+        }
+
         function saveEmployeeDraft() {
             if (!currentLookupRef || !isClinicLookupMode()) {
                 setStatus('error', 'Open an employee record before saving a draft.');
@@ -12679,6 +12737,7 @@
 
             setStatus('info', 'Saving employee draft...');
             if (employeeDraftBtn) employeeDraftBtn.disabled = true;
+            cacheCurrentEmployeeDraft();
 
             fetch("{{ route('admin.walkin.employee_draft') }}", {
                 method: 'POST',
@@ -12691,7 +12750,15 @@
                 body: JSON.stringify(collectEmployeeDraftData())
             })
             .then(response => response.json())
-            .then(data => setStatus(data.success ? 'success' : 'error', data.message || 'Unable to save employee draft.'))
+            .then(data => {
+                if (data.success) {
+                    setStatus('success', data.message || 'Employee draft saved successfully.');
+                    closeApplicantsModal();
+                    return;
+                }
+
+                setStatus('error', data.message || 'Unable to save employee draft.');
+            })
             .catch(() => setStatus('error', 'Unable to save employee draft right now.'))
             .finally(() => { if (employeeDraftBtn) employeeDraftBtn.disabled = false; });
         }
@@ -12699,16 +12766,8 @@
         employeeDraftBtn?.addEventListener('click', saveEmployeeDraft);
 
         document.querySelectorAll('#applicantRefModal [name]').forEach(function (field) {
-            const cacheDraft = function () {
-                if (!isClinicLookupMode() || !currentLookupRef) return;
-                try {
-                    localStorage.setItem(employeeDraftStorageKey(currentLookupRef), JSON.stringify(collectEmployeeDraftData()));
-                } catch (error) {
-                    // Local backup is best effort; the server Draft action remains available.
-                }
-            };
-            field.addEventListener('input', cacheDraft);
-            field.addEventListener('change', cacheDraft);
+            field.addEventListener('input', cacheCurrentEmployeeDraft);
+            field.addEventListener('change', cacheCurrentEmployeeDraft);
         });
 
         const findingsInputs = document.querySelectorAll('input[name="applicant_findings_status"]');
