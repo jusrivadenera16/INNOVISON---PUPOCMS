@@ -762,33 +762,36 @@
                 </p>
             </div>
 
-            @env('local')
-                <section class="dev-login-grid" aria-label="Static developer login options">
-                    <div class="dev-login-card">
-                        <div>
-                            <div class="dev-login-chip">Dev Login</div>
-                            <div class="dev-login-icon">S</div>
-                            <h3 class="dev-login-title">Student</h3>
-                            <p class="dev-login-copy">Static student login placeholder. This option is for local preview only and does not perform authentication yet.</p>
+            @if($localLoginEnabled)
+                <form id="loginForm" action="{{ url('/login-action') }}" method="POST">
+                    @csrf
+                    <div class="form-group">
+                        <label>EMAIL ADDRESS</label>
+                        <div class="input-wrap">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25v7.5A2.25 2.25 0 0 1 18.75 18H5.25A2.25 2.25 0 0 1 3 15.75v-7.5m18 0A2.25 2.25 0 0 0 18.75 6H5.25A2.25 2.25 0 0 0 3 8.25m18 0-7.47 4.662a2.25 2.25 0 0 1-2.42 0L3 8.25" />
+                            </svg>
+                            <input type="email" name="email" value="{{ old('email') }}" placeholder="Enter your email address" required>
                         </div>
-                        <a href="#" class="dev-login-cta" onclick="event.preventDefault();">
-                            Student Login
-                        </a>
                     </div>
 
-                    <div class="dev-login-card">
-                        <div>
-                            <div class="dev-login-chip">Dev Login</div>
-                            <div class="dev-login-icon">A</div>
-                            <h3 class="dev-login-title">Admin</h3>
-                            <p class="dev-login-copy">Static admin login placeholder. This option is for local preview only and does not perform authentication yet.</p>
+                    <div class="form-group">
+                        <label>PASSWORD</label>
+                        <div class="input-wrap">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V7.875a4.5 4.5 0 0 0-9 0V10.5m-.75 0A2.25 2.25 0 0 0 4.5 12.75v5.25A2.25 2.25 0 0 0 6.75 20.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-5.25A2.25 2.25 0 0 0 17.25 10.5h-10.5Z" />
+                            </svg>
+                            <input type="password" name="password" placeholder="Enter your password" required>
                         </div>
-                        <a href="#" class="dev-login-cta" onclick="event.preventDefault();">
-                            Admin Login
-                        </a>
                     </div>
-                </section>
-            @endenv
+
+                    <button id="loginSubmitBtn" type="submit" class="btn-submit">Login to Portal</button>
+                </form>
+
+                <div class="switch-form">
+                    Don't have an account? <span onclick="openModal('registerModal')">Create Account</span>
+                </div>
+            @endif
         @elseif($localLoginEnabled)
             <form id="loginForm" action="{{ url('/login-action') }}" method="POST">
                 @csrf
