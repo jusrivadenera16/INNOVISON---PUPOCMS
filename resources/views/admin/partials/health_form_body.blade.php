@@ -235,14 +235,9 @@ for the improvement of healthcare services.
 
     @php
         $showStoredSignature = ($pdfMode ?? false) || empty($studentPrintCopy);
-        $studentSignatureSrc = '';
-        if ($showStoredSignature && $profile->digital_signature) {
-            $studentSignaturePath = ltrim((string) $profile->digital_signature, '/');
-            $studentSignaturePath = preg_replace('#^(?:public/)?storage/#', '', $studentSignaturePath) ?? $studentSignaturePath;
-            $studentSignatureSrc = ($pdfMode ?? false)
-                ? \Illuminate\Support\Facades\Storage::disk('public')->path($studentSignaturePath)
-                : asset('storage/' . $studentSignaturePath);
-        }
+        $studentSignatureSrc = $showStoredSignature
+            ? app(\App\Services\StoredImageDataUri::class)->fromPublicDisk($profile->digital_signature)
+            : '';
     @endphp
     <div class="signature-physician-block">
         <table class="signature-table">

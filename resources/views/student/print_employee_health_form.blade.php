@@ -130,29 +130,12 @@
         return false;
     };
     $mark = fn ($condition) => $condition ? '(/)' : '( )';
-    $signatureStoragePath = function ($path) {
-        $path = ltrim((string) $path, '/');
-        return preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
-    };
-    $signatureSourceFromPath = function ($path) use ($pdfMode, $signatureStoragePath) {
-        $path = $signatureStoragePath($path);
-        if ($path === '') {
-            return '';
-        }
-
-        return ($pdfMode ?? false)
-            ? \Illuminate\Support\Facades\Storage::disk('public')->path($path)
-            : asset('storage/' . $path);
-    };
+    $imageDataUri = app(\App\Services\StoredImageDataUri::class);
     $signatureSrc = '';
     if ($profile->uploaded_signature_path) {
-        $signatureSrc = $signatureSourceFromPath($profile->uploaded_signature_path);
+        $signatureSrc = $imageDataUri->fromPublicDisk($profile->uploaded_signature_path);
     } elseif ($profile->staff_signature) {
-        if (str_starts_with((string) $profile->staff_signature, 'data:image/')) {
-            $signatureSrc = $profile->staff_signature;
-        } else {
-            $signatureSrc = $signatureSourceFromPath($profile->staff_signature);
-        }
+        $signatureSrc = $imageDataUri->fromPublicDisk($profile->staff_signature);
     }
 @endphp
 <div class="print-container">
