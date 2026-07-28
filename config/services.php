@@ -53,7 +53,7 @@ return [
         'enabled' => filter_var(env('LOCAL_LOGIN_ENABLED', false), FILTER_VALIDATE_BOOL),
         'allowed_hosts' => array_values(array_filter(array_map(
             'trim',
-            explode(',', (string) env('LOCAL_LOGIN_ALLOWED_HOSTS', 'staging.clinic-ms.inaebsit2027.com'))
+            explode(',', (string) env('LOCAL_LOGIN_ALLOWED_HOSTS', 'localhost,127.0.0.1,::1'))
         ))),
     ],
 

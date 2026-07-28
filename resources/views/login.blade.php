@@ -273,6 +273,98 @@
             margin: 0 auto;
         }
 
+        .idp-fallback-card {
+            margin-top: 18px;
+            padding: 26px 24px;
+            border-radius: 24px;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(139, 0, 0, 0.08), transparent 42%),
+                linear-gradient(180deg, #ffffff, #fbfbfc);
+            border: 1px solid rgba(139, 0, 0, 0.12);
+            box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+            color: var(--text-dark);
+        }
+        .idp-fallback-icon {
+            width: 92px;
+            height: 92px;
+            margin: 0 auto 18px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: #fff0f0;
+            color: #bd3030;
+            border: 1px solid rgba(189, 48, 48, 0.12);
+        }
+        .idp-fallback-icon svg {
+            width: 52px;
+            height: 52px;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            fill: none;
+        }
+        .idp-fallback-card h3 {
+            margin: 0 auto 14px;
+            max-width: 360px;
+            color: #2b0f14;
+            font-size: 25px;
+            font-weight: 950;
+            line-height: 1.16;
+        }
+        .idp-fallback-divider {
+            width: 100%;
+            height: 1px;
+            margin: 18px 0;
+            background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.42), transparent);
+        }
+        .idp-fallback-card p {
+            max-width: 360px;
+            margin: 0 auto;
+            color: #5f6877;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .idp-fallback-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            min-height: 52px;
+            margin-top: 22px;
+            padding: 14px 18px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #5e0000, #8b0000 60%, #a61b1b);
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 950;
+            box-shadow: 0 16px 26px rgba(91,0,0,0.24);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
+        }
+        .idp-fallback-action:hover,
+        .idp-fallback-action:focus {
+            background: var(--accent-gold);
+            color: var(--accent);
+            transform: translateY(-1px);
+            box-shadow: 0 20px 32px rgba(91,0,0,0.28);
+            outline: none;
+        }
+        .idp-fallback-action svg {
+            width: 19px;
+            height: 19px;
+            stroke: currentColor;
+            stroke-width: 2.4;
+            fill: none;
+        }
+        .idp-fallback-footnote {
+            margin-top: 18px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(148, 163, 184, 0.22);
+            color: #7a8494;
+            font-size: 13px;
+            font-weight: 650;
+        }
+
         .dev-login-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -612,15 +704,16 @@
   <main class="lp-container">
     <div class="login-box">
         @php
-            $portalLoginUrl = route('login');
+            $portalLoginUrl = route('login.portal');
             $localLoginEnabled = $localLoginEnabled ?? false;
+            $idpUnavailable = ($idpUnavailable ?? false) || request()->boolean('idp_error') || $errors->has('idp');
         @endphp
 
         <div class="login-hero">
             <div class="login-hero-top">
                 <div class="login-hero-badge"><span></span> Clinic Access</div>
                 <div class="login-chip">
-                    {{ config('services.idp.enabled') ? 'Centralized Sign In' : ($localLoginEnabled ? 'Local Sign In' : 'Restricted Sign In') }}
+                    {{ $idpUnavailable ? 'Sign-In Notice' : (config('services.idp.enabled') ? 'Centralized Sign In' : ($localLoginEnabled ? 'Local Sign In' : 'Restricted Sign In')) }}
                 </div>
             </div>
             <h2>Clinic Portal</h2>
@@ -633,7 +726,7 @@
             </div>
         </div>
 
-        @if ($errors->any())
+        @if ($errors->any() && ! $idpUnavailable)
             <div class="alert-error">
                 <ul>
                     @foreach ($errors->all() as $error)
@@ -643,7 +736,31 @@
             </div>
         @endif
 
-        @if(config('services.idp.enabled'))
+        @if($idpUnavailable)
+            <section class="idp-fallback-card" aria-labelledby="idpFallbackTitle">
+                <div class="idp-fallback-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M17.5 17H8.25a4.75 4.75 0 0 1-.58-9.46 6 6 0 0 1 10.88 2.35A3.75 3.75 0 0 1 17.5 17Z" />
+                        <path d="m4 4 16 16" />
+                        <path d="M12 8v4" />
+                        <path d="M12 15h.01" />
+                    </svg>
+                </div>
+                <h3 id="idpFallbackTitle">Identity Provider Temporarily Unavailable</h3>
+                <div class="idp-fallback-divider"></div>
+                <p>
+                    We cannot connect to the campus sign-in service right now. Please try again later or contact the system administrator for urgent access.
+                </p>
+                <a href="{{ $portalLoginUrl }}" class="idp-fallback-action">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+                        <path d="M20 4v6h-6" />
+                    </svg>
+                    Try Again
+                </a>
+                <div class="idp-fallback-footnote">No local login is shown on live.</div>
+            </section>
+        @elseif(config('services.idp.enabled'))
             <div class="idp-login-wrap">
                 <a href="{{ $portalLoginUrl }}" class="btn-submit" style="display:block; text-decoration:none; text-align:center;">
                     Login through Identity Provider

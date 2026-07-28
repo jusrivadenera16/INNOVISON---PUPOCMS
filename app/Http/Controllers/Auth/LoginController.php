@@ -2131,6 +2131,7 @@ class LoginController extends Controller
 
         return view('login', [
             'localLoginEnabled' => $this->localLoginEnabled($request),
+            'idpUnavailable' => $request->boolean('idp_error'),
         ]);
     }
 
@@ -2160,7 +2161,7 @@ class LoginController extends Controller
                 'has_base_url' => $baseUrl !== '',
             ]);
 
-            return redirect()->route('landing')->withErrors([
+            return redirect('/login?idp_error=1')->withErrors([
                 'idp' => 'Identity provider login is not configured.',
             ]);
         }
