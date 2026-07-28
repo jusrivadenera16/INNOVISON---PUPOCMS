@@ -251,8 +251,16 @@
 <body>
 @php
     $logoPath = public_path('images/pup_logo.png');
-    $studentPhotoPath = $profile->student_photo ? public_path('storage/' . $profile->student_photo) : null;
-    $studentSignaturePath = $profile->digital_signature ? public_path('storage/' . $profile->digital_signature) : null;
+    $pdfStoragePath = function ($path) {
+        $path = ltrim((string) $path, '/');
+        $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+
+        return $path !== ''
+            ? \Illuminate\Support\Facades\Storage::disk('public')->path($path)
+            : null;
+    };
+    $studentPhotoPath = $profile->student_photo ? $pdfStoragePath($profile->student_photo) : null;
+    $studentSignaturePath = $profile->digital_signature ? $pdfStoragePath($profile->digital_signature) : null;
 @endphp
 
 <div class="no-print" style="text-align: right; padding: 10px; max-width: 8.5in; margin: 0 auto; display: flex; justify-content: flex-end; gap: 10px;">

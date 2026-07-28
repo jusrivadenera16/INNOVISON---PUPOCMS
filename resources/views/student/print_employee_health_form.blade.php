@@ -130,20 +130,28 @@
         return false;
     };
     $mark = fn ($condition) => $condition ? '(/)' : '( )';
+    $signatureStoragePath = function ($path) {
+        $path = ltrim((string) $path, '/');
+        return preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+    };
+    $signatureSourceFromPath = function ($path) use ($pdfMode, $signatureStoragePath) {
+        $path = $signatureStoragePath($path);
+        if ($path === '') {
+            return '';
+        }
+
+        return ($pdfMode ?? false)
+            ? \Illuminate\Support\Facades\Storage::disk('public')->path($path)
+            : asset('storage/' . $path);
+    };
     $signatureSrc = '';
     if ($profile->uploaded_signature_path) {
-        $signaturePath = ltrim($profile->uploaded_signature_path, '/');
-        $signatureSrc = ($pdfMode ?? false)
-            ? public_path('storage/' . $signaturePath)
-            : asset('storage/' . $signaturePath);
+        $signatureSrc = $signatureSourceFromPath($profile->uploaded_signature_path);
     } elseif ($profile->staff_signature) {
         if (str_starts_with((string) $profile->staff_signature, 'data:image/')) {
             $signatureSrc = $profile->staff_signature;
         } else {
-            $signaturePath = ltrim((string) $profile->staff_signature, '/');
-            $signatureSrc = ($pdfMode ?? false)
-                ? public_path('storage/' . $signaturePath)
-                : asset('storage/' . $signaturePath);
+            $signatureSrc = $signatureSourceFromPath($profile->staff_signature);
         }
     }
 @endphp
