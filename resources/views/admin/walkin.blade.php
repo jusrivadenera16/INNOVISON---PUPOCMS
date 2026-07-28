@@ -3846,8 +3846,12 @@
         display: none;
         position: relative;
         overflow: hidden;
+        align-items: center;
         justify-content: center;
+        gap: 6px;
+        padding: 0 16px;
         text-align: center;
+        line-height: 1;
         background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
         color: #70131b;
         border-color: rgba(112, 19, 27, 0.36);
@@ -3857,27 +3861,26 @@
 
     .applicant-ref-draft-btn:hover,
     .applicant-ref-draft-btn:focus {
-        background: linear-gradient(180deg, #facc15 0%, #f59e0b 100%);
+        background: #facc15;
         color: #70131b;
         border-color: #facc15;
-        box-shadow: 0 14px 26px rgba(180, 83, 9, 0.22);
-        transform: translateY(-1px);
+        box-shadow: none;
+        transform: none;
         outline: none;
     }
 
     .applicant-ref-draft-btn svg {
-        width: 18px;
-        height: 18px;
+        display: block;
+        width: 17px;
+        height: 17px;
         flex: 0 0 auto;
-        padding: 2px;
-        border-radius: 6px;
-        background: rgba(112, 19, 27, 0.08);
-        box-sizing: content-box;
+        padding: 0;
+        background: transparent;
     }
 
-    .applicant-ref-draft-btn:hover svg,
-    .applicant-ref-draft-btn:focus svg {
-        background: rgba(112, 19, 27, 0.14);
+    .applicant-ref-draft-btn span {
+        display: block;
+        line-height: 1;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-actions {
@@ -12922,14 +12925,11 @@
             if (!source) return;
 
             const value = String(source.value || '');
-            if (value.trim() === '') return;
 
             ['applicantNormalRemarks', 'applicantFindingRemarks', 'applicantConditionRemarks'].forEach(function (id) {
                 const field = document.getElementById(id);
                 if (!field || field === source) return;
-                if (String(field.value || '').trim() === '') {
-                    field.value = value;
-                }
+                field.value = value;
             });
         }
 
