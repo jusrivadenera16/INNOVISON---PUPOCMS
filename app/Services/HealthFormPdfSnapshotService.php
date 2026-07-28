@@ -92,6 +92,69 @@ class HealthFormPdfSnapshotService
         return $submission;
     }
 
+    public function refreshExistingSnapshot(HealthProfile $profile): ?HealthFormSubmission
+    {
+        $profile->loadMissing('user');
+        $user = $profile->user;
+
+        if (!$user instanceof User) {
+            throw new \RuntimeException('Cannot refresh a Health Form PDF snapshot without a linked user.');
+        }
+
+        $submission = HealthFormSubmission::query()
+            ->where(function ($query) use ($profile, $user) {
+                $query->where('health_profile_id', $profile->id)
+                    ->orWhere('user_id', $user->id);
+            })
+            ->whereNotNull('pdf_path')
+            ->whereIn('status', [
+                HealthFormSubmission::STATUS_SUBMITTED,
+                HealthFormSubmission::STATUS_APPROVED,
+                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+            ])
+            ->latest('submitted_at')
+            ->latest('approved_at')
+            ->latest('id')
+            ->first();
+
+        if (!$submission) {
+            return null;
+        }
+
+        $timestamp = now();
+        $resolvedCategory = trim((string) $submission->category) ?: 'General';
+        $filePath = $this->buildSnapshotPath($profile, $user, $resolvedCategory, $timestamp);
+        $oldPath = $this->normalizeStoragePath((string) $submission->pdf_path);
+
+        $pdf = Pdf::loadView('student.print_health_form', [
+            'profile' => $profile->fresh('user') ?: $profile,
+            'pdfMode' => true,
+            'healthFormIdentity' => [],
+        ]);
+        $pdf->setPaper([0, 0, 612, 936]);
+
+        if (!Storage::disk('public')->put($filePath, $pdf->output())) {
+            throw new \RuntimeException('Unable to write the refreshed Health Form PDF snapshot.');
+        }
+
+        try {
+            $submission->pdf_path = $filePath;
+            $submission->save();
+        } catch (\Throwable $exception) {
+            if ($filePath !== $oldPath) {
+                Storage::disk('public')->delete($filePath);
+            }
+
+            throw $exception;
+        }
+
+        if ($oldPath !== '' && $oldPath !== $filePath && Storage::disk('public')->exists($oldPath)) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        return $submission->fresh();
+    }
+
     private function submissionForUpdate(HealthProfile $profile, User $user): HealthFormSubmission
     {
         $pendingRequest = HealthFormSubmission::query()
