@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Services\GuisisApiService;
 use App\Services\PuptasWebhookService;
 use App\Services\ClinicWorkflowService;
+use App\Services\EmployeeHealthFormPdfService;
 use App\Services\HealthFormPdfSnapshotService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -2862,14 +2863,12 @@ public function account(Request $request)
                 }
             }
 
-            if (!$usesEmployeeHealthForm && in_array(strtolower(trim((string) $healthProfile->clearance_status)), ['issued', 'fully cleared'], true)) {
+            if (!$usesEmployeeHealthForm) {
                 $snapshotProfile = $healthProfile->fresh('user') ?: $healthProfile->load('user');
-                app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($snapshotProfile);
-            }
-            if ($usesEmployeeHealthForm && in_array(strtolower(trim((string) $healthProfile->clearance_status)), ['approved', 'issued', 'fully cleared'], true)) {
+                app(HealthFormPdfSnapshotService::class)->refreshExistingSnapshot($snapshotProfile);
+            } else {
                 $healthProfile = $healthProfile->fresh('user') ?: $healthProfile->load('user');
-                $healthProfile->staff_health_form_pdf_path = $this->generateEmployeeHealthFormPdf($healthProfile);
-                $healthProfile->save();
+                $this->generateEmployeeHealthFormPdf($healthProfile);
             }
 
             \App\Models\ActivityLog::create([
@@ -3382,30 +3381,7 @@ public function showEmployeeHealthForm()
 
 private function generateEmployeeHealthFormPdf(EmployeeHealthProfile $profile): string
 {
-    $profile->loadMissing('user');
-    $profile->refresh();
-    $profile->loadMissing('user');
-
-    $identifier = trim((string) ($profile->employee_number ?: $profile->user?->employee_number ?: $profile->id));
-    $safeIdentifier = preg_replace('/[^A-Za-z0-9\-_]+/', '-', $identifier) ?: 'employee-' . $profile->id;
-    $path = 'health_profile_employees/health_forms/health-form-' . $safeIdentifier . '-' . now()->format('YmdHis') . '.pdf';
-
-    $previousPath = ltrim((string) $profile->staff_health_form_pdf_path, '/');
-    $previousPath = preg_replace('#^(?:public/)?storage/#', '', $previousPath) ?? $previousPath;
-    if (str_starts_with($previousPath, 'health_profile_employees/health_forms/') && Storage::disk('public')->exists($previousPath)) {
-        Storage::disk('public')->delete($previousPath);
-    }
-
-    $pdf = Pdf::loadView('student.print_employee_health_form', [
-        'user' => $profile->user,
-        'employeeProfile' => $profile,
-        'adminViewer' => true,
-        'pdfMode' => true,
-    ])->setPaper([0, 0, 612, 936]);
-
-    Storage::disk('public')->put($path, $pdf->output());
-
-    return $path;
+    return app(EmployeeHealthFormPdfService::class)->generate($profile);
 }
 
 public function showStaffHealthForm()

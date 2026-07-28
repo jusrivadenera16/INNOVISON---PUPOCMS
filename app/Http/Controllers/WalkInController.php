@@ -14,6 +14,7 @@ use App\Models\Item;
 use App\Models\ActivityLog;
 use App\Models\Consultation;
 use App\Services\PuptasWebhookService;
+use App\Services\EmployeeHealthFormPdfService;
 use App\Services\HealthFormPdfSnapshotService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Hash;
@@ -1057,30 +1058,7 @@ class WalkInController extends Controller
 
     private function generateEmployeeHealthFormPdf(EmployeeHealthProfile $profile): string
     {
-        $profile->loadMissing('user');
-        $profile->refresh();
-        $profile->loadMissing('user');
-
-        $identifier = trim((string) ($profile->employee_number ?: $profile->user?->employee_number ?: $profile->id));
-        $safeIdentifier = Str::slug($identifier !== '' ? $identifier : 'employee-' . $profile->id);
-        $path = 'health_profile_employees/health_forms/health-form-' . $safeIdentifier . '-' . now()->format('YmdHis') . '.pdf';
-
-        $previousPath = ltrim((string) $profile->staff_health_form_pdf_path, '/');
-        $previousPath = preg_replace('#^(?:public/)?storage/#', '', $previousPath) ?? $previousPath;
-        if (Str::startsWith($previousPath, 'health_profile_employees/health_forms/') && Storage::disk('public')->exists($previousPath)) {
-            Storage::disk('public')->delete($previousPath);
-        }
-
-        $pdf = Pdf::loadView('student.print_employee_health_form', [
-            'user' => $profile->user,
-            'employeeProfile' => $profile,
-            'adminViewer' => true,
-            'pdfMode' => true,
-        ])->setPaper([0, 0, 612, 936]);
-
-        Storage::disk('public')->put($path, $pdf->output());
-
-        return $path;
+        return app(EmployeeHealthFormPdfService::class)->generate($profile);
     }
 
     public function showApplicantDocument(HealthProfile $healthProfile, string $document)
@@ -2634,8 +2612,7 @@ PROMPT;
             $employeeProfile->save();
 
             if (!$hasPendingFinding) {
-                $employeeProfile->staff_health_form_pdf_path = $this->generateEmployeeHealthFormPdf($employeeProfile);
-                $employeeProfile->save();
+                $this->generateEmployeeHealthFormPdf($employeeProfile);
             }
 
             if ($employeeProfile->user) {
