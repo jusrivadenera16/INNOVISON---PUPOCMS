@@ -3670,6 +3670,8 @@
         .announcement-modal-content {
             display: flex;
             flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
         }
 
         body.landing-theme-light .announcement-modal-content {
@@ -3732,12 +3734,35 @@
             font-size: 12px;
         }
 
+        .announcement-overview-grid,
+        .announcement-tools,
+        .announcement-section-head {
+            flex: 0 0 auto;
+        }
+
         .landing-announcement-list {
             flex: 1 1 auto;
             min-height: 0;
+            max-height: 100%;
             overflow-y: auto;
             padding-right: 2px;
             align-content: start;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(250, 204, 21, 0.62) rgba(255, 255, 255, 0.08);
+        }
+
+        .landing-announcement-list::-webkit-scrollbar {
+            width: 7px;
+        }
+
+        .landing-announcement-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+        }
+
+        .landing-announcement-list::-webkit-scrollbar-thumb {
+            border-radius: 999px;
+            background: rgba(250, 204, 21, 0.62);
         }
 
         .landing-announcement-card {
@@ -3756,6 +3781,29 @@
             display: block;
             -webkit-line-clamp: unset;
             overflow: visible;
+        }
+
+        .landing-announcement-message p,
+        .landing-announcement-message ul {
+            margin: 0 0 8px;
+        }
+
+        .landing-announcement-message p:last-child,
+        .landing-announcement-message ul:last-child {
+            margin-bottom: 0;
+        }
+
+        .landing-announcement-message ul {
+            padding-left: 18px;
+        }
+
+        .landing-announcement-message strong {
+            color: #ffffff;
+            font-weight: 950;
+        }
+
+        .landing-announcement-message em {
+            font-style: italic;
         }
 
         .landing-announcement-card.is-hidden-by-limit {
@@ -3782,6 +3830,10 @@
 
         body.landing-theme-light .landing-announcement-message {
             color: #475569;
+        }
+
+        body.landing-theme-light .landing-announcement-message strong {
+            color: #111827;
         }
 
         body.landing-theme-light .landing-announcement-meta,
@@ -5261,6 +5313,61 @@
                 </div>
                 <div class="announcement-modal-content">
                     @php
+                        $renderLandingAnnouncementMessage = function ($message) {
+                            $formatInline = function ($line) {
+                                $line = e($line);
+                                $line = preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $line);
+                                $line = preg_replace('/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/s', '<em>$1</em>', $line);
+
+                                return $line;
+                            };
+                            $lines = preg_split('/\r\n|\r|\n/', trim((string) $message));
+                            $html = '';
+                            $paragraph = [];
+                            $inList = false;
+                            $flushParagraph = function () use (&$html, &$paragraph, $formatInline) {
+                                if ($paragraph === []) {
+                                    return;
+                                }
+
+                                $html .= '<p>' . implode('<br>', array_map($formatInline, $paragraph)) . '</p>';
+                                $paragraph = [];
+                            };
+
+                            foreach ($lines as $line) {
+                                if (trim($line) === '') {
+                                    $flushParagraph();
+                                    if ($inList) {
+                                        $html .= '</ul>';
+                                        $inList = false;
+                                    }
+                                    continue;
+                                }
+
+                                if (preg_match('/^\s*[-*]\s+(.+)$/', $line, $matches)) {
+                                    $flushParagraph();
+                                    if (! $inList) {
+                                        $html .= '<ul>';
+                                        $inList = true;
+                                    }
+                                    $html .= '<li>' . $formatInline($matches[1]) . '</li>';
+                                    continue;
+                                }
+
+                                if ($inList) {
+                                    $html .= '</ul>';
+                                    $inList = false;
+                                }
+                                $paragraph[] = $line;
+                            }
+
+                            $flushParagraph();
+                            if ($inList) {
+                                $html .= '</ul>';
+                            }
+
+                            return $html;
+                        };
                         $landingAnnouncementItems = ($landingAnnouncements ?? collect())
                             ->sortByDesc(fn ($announcement) => $announcement->created_at ?? $announcement->id)
                             ->values();
@@ -5335,7 +5442,7 @@
                                             <span class="landing-announcement-meta-right">{{ $announcement->created_at?->format('M j, Y · g:i A') ?? 'Just now' }}</span>
                                         </div>
                                         <h3 class="landing-announcement-title">{{ $announcement->title }}</h3>
-                                        <p class="landing-announcement-message">{{ $announcement->message }}</p>
+                                        <div class="landing-announcement-message">{!! $renderLandingAnnouncementMessage($announcement->message) !!}</div>
                                         <div class="landing-announcement-foot">
                                             <span>Target: {{ strtoupper($announcement->target_audience ?? 'All Users') }}</span>
                                             <button type="button" class="landing-announcement-read" data-announcement-read>Read More →</button>

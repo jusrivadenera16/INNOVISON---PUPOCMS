@@ -587,6 +587,25 @@
         line-height: 1.55;
     }
 
+    .announcement-message p,
+    .announcement-message ul {
+        margin: 0 0 8px;
+    }
+
+    .announcement-message p:last-child,
+    .announcement-message ul:last-child {
+        margin-bottom: 0;
+    }
+
+    .announcement-message ul {
+        padding-left: 18px;
+    }
+
+    .announcement-message strong {
+        color: #111827;
+        font-weight: 950;
+    }
+
     .announcement-meta-row {
         flex-wrap: wrap;
         color: #64748b;
@@ -952,6 +971,62 @@
         ? \Carbon\Carbon::parse($lastUpdatedAnnouncement)
         : now();
 
+    $renderAnnouncementMessage = function ($message) {
+        $formatInline = function ($line) {
+            $line = e($line);
+            $line = preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $line);
+            $line = preg_replace('/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/s', '<em>$1</em>', $line);
+
+            return $line;
+        };
+        $lines = preg_split('/\r\n|\r|\n/', trim((string) $message));
+        $html = '';
+        $paragraph = [];
+        $inList = false;
+        $flushParagraph = function () use (&$html, &$paragraph, $formatInline) {
+            if ($paragraph === []) {
+                return;
+            }
+
+            $html .= '<p>' . implode('<br>', array_map($formatInline, $paragraph)) . '</p>';
+            $paragraph = [];
+        };
+
+        foreach ($lines as $line) {
+            if (trim($line) === '') {
+                $flushParagraph();
+                if ($inList) {
+                    $html .= '</ul>';
+                    $inList = false;
+                }
+                continue;
+            }
+
+            if (preg_match('/^\s*[-*]\s+(.+)$/', $line, $matches)) {
+                $flushParagraph();
+                if (! $inList) {
+                    $html .= '<ul>';
+                    $inList = true;
+                }
+                $html .= '<li>' . $formatInline($matches[1]) . '</li>';
+                continue;
+            }
+
+            if ($inList) {
+                $html .= '</ul>';
+                $inList = false;
+            }
+            $paragraph[] = $line;
+        }
+
+        $flushParagraph();
+        if ($inList) {
+            $html .= '</ul>';
+        }
+
+        return $html;
+    };
+
     $archivedAnnouncements = $announcements->where('status', \App\Models\Announcement::STATUS_ARCHIVED);
     $activeBulletins = $announcements->reject(fn ($announcement) => $announcement->status === \App\Models\Announcement::STATUS_ARCHIVED);
 @endphp
@@ -1064,8 +1139,7 @@
                         <div class="announcement-toolbar" aria-label="Message formatting tools">
                             <button type="button" class="announcement-tool" data-wrap-before="**" data-wrap-after="**" title="Bold">B</button>
                             <button type="button" class="announcement-tool" data-wrap-before="*" data-wrap-after="*" title="Italic"><em>I</em></button>
-                            <button type="button" class="announcement-tool" data-prefix="- " title="Bulleted line">=</button>
-                            <button type="button" class="announcement-tool" data-prefix="# " title="Heading line">#</button>
+                            <button type="button" class="announcement-tool" data-prefix="- " title="Bulleted line">&bull;</button>
                         </div>
                         <textarea class="announcement-textarea" name="message" maxlength="2000" placeholder="Write the details of the update here..." required data-announcement-message>{{ old('message') }}</textarea>
                     </div>
@@ -1136,7 +1210,7 @@
                         </div>
 
                         <h3>{{ $announcement->title }}</h3>
-                        <p class="announcement-message">"{{ \Illuminate\Support\Str::limit($announcement->message, 145) }}"</p>
+                        <div class="announcement-message">{!! $renderAnnouncementMessage(\Illuminate\Support\Str::limit($announcement->message, 145)) !!}</div>
 
                         <div class="announcement-meta-row">
                             <span>Expires: {{ $announcement->expires_at ? $announcement->expires_at->format('M j, Y') : 'Never' }}</span>
@@ -1200,7 +1274,7 @@
                                     <span class="announcement-status is-archived">Archived</span>
                                 </div>
                                 <h4>{{ $announcement->title }}</h4>
-                                <p>"{{ \Illuminate\Support\Str::limit($announcement->message, 190) }}"</p>
+                                <div class="announcement-message">{!! $renderAnnouncementMessage(\Illuminate\Support\Str::limit($announcement->message, 190)) !!}</div>
                                 <div class="announcement-archive-meta">
                                     <span>Published: {{ $announcement->created_at ? $announcement->created_at->format('M j, Y') : 'N/A' }}</span>
                                     <span>Expires: {{ $announcement->expires_at ? $announcement->expires_at->format('M j, Y') : 'Never' }}</span>
@@ -1293,9 +1367,18 @@
 
             if (prefix) {
                 const lineStart = value.lastIndexOf('\n', Math.max(0, start - 1)) + 1;
-                nextValue = value.slice(0, lineStart) + prefix + value.slice(lineStart);
-                nextStart = start + prefix.length;
-                nextEnd = end + prefix.length;
+                const selectionEnd = end > start && value.charAt(end - 1) === '\n' ? end - 1 : end;
+                const lineEnd = value.indexOf('\n', selectionEnd);
+                const blockEnd = lineEnd === -1 ? value.length : lineEnd;
+                const block = value.slice(lineStart, blockEnd);
+                const formattedBlock = block
+                    .split('\n')
+                    .map((line) => line.trim() === '' || line.startsWith(prefix) ? line : `${prefix}${line}`)
+                    .join('\n');
+                nextValue = value.slice(0, lineStart) + formattedBlock + value.slice(blockEnd);
+                const addedLength = formattedBlock.length - block.length;
+                nextStart = start + (start === lineStart ? prefix.length : 0);
+                nextEnd = end + addedLength;
             } else {
                 nextValue = value.slice(0, start) + before + selected + after + value.slice(end);
                 nextStart = start + before.length;
