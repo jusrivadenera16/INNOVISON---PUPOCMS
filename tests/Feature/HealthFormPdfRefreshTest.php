@@ -190,14 +190,8 @@ class HealthFormPdfRefreshTest extends TestCase
         $this->assertSame('data:image/png;base64,' . base64_encode($contents), $source);
     }
 
-    public function test_signed_student_form_prints_the_name_and_submission_date(): void
+    public function test_student_form_prints_the_name_and_submission_date_without_a_signature(): void
     {
-        $path = 'health_profiles/signatures/test.png';
-        Storage::disk('public')->put($path, base64_decode(
-            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
-            true
-        ));
-
         $user = User::forceCreate([
             'name' => 'Test Student',
             'student_number' => '2026-0001',
@@ -205,7 +199,6 @@ class HealthFormPdfRefreshTest extends TestCase
         $profile = HealthProfile::forceCreate([
             'user_id' => $user->id,
             'student_number' => '2026-0001',
-            'digital_signature' => $path,
         ])->load('user');
 
         $html = view('student.print_health_form', [

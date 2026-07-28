@@ -8528,7 +8528,7 @@
 
                     <div class="applicant-ref-actions">
                         <button type="button" id="btnCancelApplicantRef" class="applicant-ref-action-btn applicant-ref-cancel-btn">Cancel</button>
-                        <button type="button" id="btnSaveEmployeeDraft" class="applicant-ref-action-btn applicant-ref-draft-btn" aria-label="Save employee draft">
+                        <button type="button" id="btnSaveReviewDraft" class="applicant-ref-action-btn applicant-ref-draft-btn" aria-label="Save review draft">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                             </svg>
@@ -10275,8 +10275,8 @@
         const refInput        = document.getElementById('applicantRefInput');
         const refStatus       = document.getElementById('applicantRefStatus');
         const findBtn         = document.getElementById('btnFindApplicant');
-        const employeeDraftBtn = document.getElementById('btnSaveEmployeeDraft');
-        const applicantRefActions = employeeDraftBtn?.closest('.applicant-ref-actions');
+        const reviewDraftBtn = document.getElementById('btnSaveReviewDraft');
+        const applicantRefActions = reviewDraftBtn?.closest('.applicant-ref-actions');
         const foundCard       = document.getElementById('applicantFoundCard');
         const foundName       = document.getElementById('applicantFoundName');
         const lookupDetails   = document.getElementById('applicantLookupDetails');
@@ -10357,9 +10357,9 @@
         const approvalOverlayTitle = document.getElementById('applicantApprovalOverlayTitle');
         const approvalOverlayMessage = document.getElementById('applicantApprovalOverlayMessage');
 
-        function setEmployeeDraftButtonVisible(visible) {
-            if (employeeDraftBtn) {
-                employeeDraftBtn.style.display = visible ? 'inline-flex' : 'none';
+        function setReviewDraftButtonVisible(visible) {
+            if (reviewDraftBtn) {
+                reviewDraftBtn.style.display = visible ? 'inline-flex' : 'none';
             }
 
             applicantRefActions?.classList.toggle('has-draft-action', Boolean(visible));
@@ -10378,6 +10378,7 @@
         const finalReviewApplicantsUrl = '{{ url($basePrefix . '/walkin/final-review-applicants') }}';
         const finalReviewTimeInUrl = '{{ url($basePrefix . '/walkin/final-review/time-in') }}';
         const saveEncodingUrl = '{{ url($basePrefix . '/walkin/applicant-encoding') }}';
+        const applicantFinalReviewDraftUrl = '{{ url($basePrefix . '/walkin/applicant-final-review-draft') }}';
         const healthInfoUpdateBaseUrl = '{{ url($basePrefix . '/walkin/health-profile-information') }}';
         const healthInfoTabs = document.getElementById('healthInfoTabs');
         const healthInfoFields = document.getElementById('healthInfoFields');
@@ -10564,7 +10565,7 @@
         function resetLookupButtonToFind() {
             if (!findBtn) return;
 
-            setEmployeeDraftButtonVisible(false);
+            setReviewDraftButtonVisible(false);
 
             findBtn.textContent = 'Find';
             findBtn.disabled = false;
@@ -11013,10 +11014,28 @@
             }
         }
 
-        function populateEmployeeDraft(draft) {
-            if (!isClinicLookupMode()) return;
-            const serverDraft = draft && typeof draft === 'object' ? draft : {};
-            const savedDraft = Object.keys(serverDraft).length ? serverDraft : readLocalEmployeeDraft(currentLookupRef);
+        function applicantFinalReviewDraftStorageKey(reference) {
+            return 'applicant-final-review-draft:' + String(reference || '').trim().toUpperCase();
+        }
+
+        function readLocalApplicantFinalReviewDraft(reference) {
+            try {
+                const saved = localStorage.getItem(applicantFinalReviewDraftStorageKey(reference));
+                return saved ? JSON.parse(saved) : {};
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function clearLocalApplicantFinalReviewDraft(reference) {
+            try {
+                localStorage.removeItem(applicantFinalReviewDraftStorageKey(reference));
+            } catch (error) {
+                // The server draft is already cleared when the decision is finalized.
+            }
+        }
+
+        function applyReviewDraftFields(savedDraft) {
             if (!Object.keys(savedDraft).length) return;
 
             document.querySelectorAll('#applicantRefModal [name]').forEach(function (field) {
@@ -11032,11 +11051,30 @@
                 }
             });
 
-            document.getElementById('employeeExamFit')?.dispatchEvent(new Event('change', { bubbles: true }));
             syncFindingsReviewFields();
             syncCovidPositiveFields();
+            validateVitals();
+        }
+
+        function populateEmployeeDraft(draft) {
+            if (!isClinicLookupMode()) return;
+            const serverDraft = draft && typeof draft === 'object' ? draft : {};
+            const savedDraft = Object.keys(serverDraft).length ? serverDraft : readLocalEmployeeDraft(currentLookupRef);
+            applyReviewDraftFields(savedDraft);
+
+            document.getElementById('employeeExamFit')?.dispatchEvent(new Event('change', { bubbles: true }));
             updateEmployeeBmi();
             updateEmployeeExamValidation();
+        }
+
+        function populateApplicantFinalReviewDraft(draft) {
+            if (!isFinalReviewWorkflow()) return;
+            const serverDraft = draft && typeof draft === 'object' ? draft : {};
+            const savedDraft = Object.keys(serverDraft).length
+                ? serverDraft
+                : readLocalApplicantFinalReviewDraft(currentLookupRef);
+            applyReviewDraftFields(savedDraft);
+            setFinalReviewPhysicalReadonly(true);
         }
 
         function renderPendingHistory(review) {
@@ -12291,6 +12329,7 @@
                         }
                         showLookupDetails(data, ref);
                         populateEmployeeDraft(data.employee_draft_data || {});
+                        populateApplicantFinalReviewDraft(data.applicant_final_review_draft_data || {});
                         if (foundCard) {
                             foundCard.style.display = 'none';
                             foundCard.dataset.initials = 'AP';
@@ -12322,7 +12361,7 @@
                         if (lookupRow) lookupRow.style.display = 'none';
 
                         isApprovalMode = false;
-                        setEmployeeDraftButtonVisible(false);
+                        setReviewDraftButtonVisible(false);
                         if (findBtn) {
                             findBtn.removeEventListener('click', doLookup);
                             findBtn.removeEventListener('click', doApprove);
@@ -12351,6 +12390,7 @@
                         }
                         const hasSavedReview = showLookupDetails(data, ref);
                         populateEmployeeDraft(data.employee_draft_data || {});
+                        populateApplicantFinalReviewDraft(data.applicant_final_review_draft_data || {});
                         const alreadyEncodedForReview = isEncodeWorkflow() && isEncodedForFinalReview(currentAssessmentReview, data);
                         if (alreadyEncodedForReview) {
                             setStatus('encoded', 'This applicant is already encoded and is ready for Final Review / Approval.');
@@ -12388,7 +12428,7 @@
                                 findBtn.addEventListener('click', hasSavedReview ? enterSavedReviewEditMode : doApprove);
                             }
                         }
-                        setEmployeeDraftButtonVisible(isClinicLookupMode());
+                        setReviewDraftButtonVisible(isClinicLookupMode() || isFinalReviewWorkflow());
                         if (!hasSavedReview) syncFindingsReviewFields();
                     }
                 } else {
@@ -12666,6 +12706,9 @@
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
+                    if (isFinalReviewWorkflow()) {
+                        clearLocalApplicantFinalReviewDraft(currentLookupRef);
+                    }
                     setStatus('success', data.message || 'Applicant decision saved successfully.');
                     showClinicSuccessOverlay(approvalOverlay, {
                         title: isPendingDecision ? 'Marked Pending' : 'Medical Clearance Issued',
@@ -12697,10 +12740,10 @@
             .catch(() => setStatus('error', 'Unable to save the applicant decision right now. Please try again.'));
         }
 
-        function collectEmployeeDraftData() {
+        function collectReviewDraftData(lookupScope) {
             const draft = {
                 reference_number: currentLookupRef,
-                lookup_scope: 'employee_local'
+                lookup_scope: lookupScope
             };
 
             document.querySelectorAll('#applicantRefModal [name]').forEach(function (field) {
@@ -12708,12 +12751,15 @@
                 const name = field.name;
                 const key = name.endsWith('[]') ? name.slice(0, -2) : name;
                 if (field.type === 'checkbox' || field.type === 'radio') {
-                    if (!field.checked) return;
                     if (name.endsWith('[]')) {
                         if (!Array.isArray(draft[key])) draft[key] = [];
-                        draft[key].push(field.value);
+                        if (field.checked) draft[key].push(field.value);
+                    } else if (field.type === 'checkbox') {
+                        if (!Object.prototype.hasOwnProperty.call(draft, key)) draft[key] = false;
+                        if (field.checked) draft[key] = field.value;
                     } else {
-                        draft[key] = field.value;
+                        if (!Object.prototype.hasOwnProperty.call(draft, key)) draft[key] = '';
+                        if (field.checked) draft[key] = field.value;
                     }
                     return;
                 }
@@ -12723,10 +12769,30 @@
             return draft;
         }
 
+        function collectEmployeeDraftData() {
+            return collectReviewDraftData('employee_local');
+        }
+
+        function collectApplicantFinalReviewDraftData() {
+            return collectReviewDraftData('final_review');
+        }
+
         function cacheCurrentEmployeeDraft() {
             if (!isClinicLookupMode() || !currentLookupRef) return;
             try {
                 localStorage.setItem(employeeDraftStorageKey(currentLookupRef), JSON.stringify(collectEmployeeDraftData()));
+            } catch (error) {
+                // Local backup is best effort; the server Draft action remains available.
+            }
+        }
+
+        function cacheCurrentApplicantFinalReviewDraft() {
+            if (!isFinalReviewWorkflow() || !currentLookupRef) return;
+            try {
+                localStorage.setItem(
+                    applicantFinalReviewDraftStorageKey(currentLookupRef),
+                    JSON.stringify(collectApplicantFinalReviewDraftData())
+                );
             } catch (error) {
                 // Local backup is best effort; the server Draft action remains available.
             }
@@ -12739,7 +12805,7 @@
             }
 
             setStatus('info', 'Saving employee draft...');
-            if (employeeDraftBtn) employeeDraftBtn.disabled = true;
+            if (reviewDraftBtn) reviewDraftBtn.disabled = true;
             cacheCurrentEmployeeDraft();
 
             fetch("{{ route('admin.walkin.employee_draft') }}", {
@@ -12763,14 +12829,61 @@
                 setStatus('error', data.message || 'Unable to save employee draft.');
             })
             .catch(() => setStatus('error', 'Unable to save employee draft right now.'))
-            .finally(() => { if (employeeDraftBtn) employeeDraftBtn.disabled = false; });
+            .finally(() => { if (reviewDraftBtn) reviewDraftBtn.disabled = false; });
         }
 
-        employeeDraftBtn?.addEventListener('click', saveEmployeeDraft);
+        function saveApplicantFinalReviewDraft() {
+            if (!currentLookupRef || !isFinalReviewWorkflow()) {
+                setStatus('error', 'Open an applicant in Final Review before saving a draft.');
+                return;
+            }
+
+            setStatus('info', 'Saving applicant final review draft...');
+            if (reviewDraftBtn) reviewDraftBtn.disabled = true;
+            cacheCurrentApplicantFinalReviewDraft();
+
+            fetch(applicantFinalReviewDraftUrl, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(collectApplicantFinalReviewDraftData())
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    setStatus('success', data.message || 'Applicant final review draft saved successfully.');
+                    closeApplicantsModal();
+                    return;
+                }
+
+                setStatus('error', data.message || 'Unable to save applicant final review draft.');
+            })
+            .catch(() => setStatus('error', 'Unable to save applicant final review draft right now.'))
+            .finally(() => { if (reviewDraftBtn) reviewDraftBtn.disabled = false; });
+        }
+
+        reviewDraftBtn?.addEventListener('click', function () {
+            if (isFinalReviewWorkflow()) {
+                saveApplicantFinalReviewDraft();
+                return;
+            }
+
+            saveEmployeeDraft();
+        });
 
         document.querySelectorAll('#applicantRefModal [name]').forEach(function (field) {
-            field.addEventListener('input', cacheCurrentEmployeeDraft);
-            field.addEventListener('change', cacheCurrentEmployeeDraft);
+            field.addEventListener('input', function () {
+                cacheCurrentEmployeeDraft();
+                cacheCurrentApplicantFinalReviewDraft();
+            });
+            field.addEventListener('change', function () {
+                cacheCurrentEmployeeDraft();
+                cacheCurrentApplicantFinalReviewDraft();
+            });
         });
 
         const findingsInputs = document.querySelectorAll('input[name="applicant_findings_status"]');

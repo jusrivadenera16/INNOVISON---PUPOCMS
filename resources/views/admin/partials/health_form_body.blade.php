@@ -242,7 +242,7 @@ for the improvement of healthcare services.
             ?? $profile->resubmitted_at
             ?? $profile->created_at
             ?? null;
-        $printedStudentSignatureDate = $studentSignatureSrc && $studentSignatureDate
+        $printedStudentSignatureDate = $studentSignatureDate
             ? \Carbon\Carbon::parse($studentSignatureDate)->format('m/d/Y')
             : '';
     @endphp
@@ -260,7 +260,7 @@ for the improvement of healthcare services.
                     @else
                         <div class="signature-space"></div>
                     @endif
-                    <div class="sig-line">{{ $studentSignatureSrc ? strtoupper($printedStudentName) : '' }}</div>
+                    <div class="sig-line">{{ strtoupper($printedStudentName) }}</div>
                     <div class="signature-caption">(Printed name and signature of student)</div>
                 </td>
                 <td>

@@ -52,6 +52,7 @@ class HealthProfile extends Model
         'puptas_sync_status',
         'puptas_synced_at',
         'puptas_sync_message',
+        'final_review_draft_data',
 
     ];
 
@@ -73,6 +74,7 @@ class HealthProfile extends Model
         'resubmitted_at' => 'datetime',
         'review_started_at' => 'datetime',
         'verified_at' => 'datetime',
+        'final_review_draft_data' => 'array',
 
     ];
 

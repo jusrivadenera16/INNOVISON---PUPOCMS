@@ -307,6 +307,7 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::post('/admin/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->name('admin.walkin.applicant_encoding');
         Route::post('/admin/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->name('admin.walkin.final_review.time_in');
         Route::post('/admin/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->name('admin.walkin.approve_applicant');
+        Route::post('/admin/walkin/applicant-final-review-draft', [WalkInController::class, 'saveApplicantFinalReviewDraft'])->name('admin.walkin.applicant_final_review_draft');
         Route::post('/admin/walkin/employee-draft', [WalkInController::class, 'saveEmployeeDraft'])->name('admin.walkin.employee_draft');
 
         Route::get('/admin/reports', [AdminController::class, 'reports'])->name('admin.reports');
@@ -433,6 +434,7 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::post('/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->name('walkin.applicant_encoding');
         Route::post('/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->name('walkin.final_review.time_in');
         Route::post('/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->name('walkin.approve_applicant');
+        Route::post('/walkin/applicant-final-review-draft', [WalkInController::class, 'saveApplicantFinalReviewDraft'])->name('walkin.applicant_final_review_draft');
 
         Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
         Route::get('/reports/digital-logbook', [ReportsController::class, 'digitalLogbook'])->name('reports.digital-logbook');

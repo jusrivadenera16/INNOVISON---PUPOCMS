@@ -1624,6 +1624,7 @@ class WalkInController extends Controller
                     'medical_condition_summary' => $medicalConditionSummary['items'],
                     'health_form_information' => $this->healthProfileInformationPayload($healthProfile, $student),
                     'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
+                    'applicant_final_review_draft_data' => $healthProfile?->final_review_draft_data ?: [],
                     'employee_draft_data' => $employeeProfile?->draft_data ?: [],
                     'documents' => $this->healthProfileDocuments($request, $healthProfile),
                     'name_matches' => $lookupName !== '' ? $this->namesRoughlyMatch($lookupName, $student) : null,
@@ -1680,6 +1681,7 @@ class WalkInController extends Controller
                 'medical_condition_summary' => $medicalConditionSummary['items'],
                 'health_form_information' => $this->healthProfileInformationPayload($healthProfile, $student),
                 'assessment_review' => $this->healthProfileAssessmentReview($healthProfile),
+                'applicant_final_review_draft_data' => $healthProfile?->final_review_draft_data ?: [],
                 'employee_draft_data' => $employeeProfile?->draft_data ?: [],
                 'documents' => $this->healthProfileDocuments($request, $healthProfile),
                 'lookup_status' => $lookupStatus,
@@ -2507,6 +2509,42 @@ PROMPT;
         ]);
     }
 
+    public function saveApplicantFinalReviewDraft(Request $request)
+    {
+        $validated = $request->validate([
+            'reference_number' => ['required', 'string', 'max:120'],
+            'lookup_scope' => ['nullable', 'in:default,final_review'],
+        ]);
+
+        $profile = $this->findHealthProfileByReference($validated['reference_number']);
+        if (!$profile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Applicant health profile was not found.',
+            ], 404);
+        }
+
+        if (strcasecmp(trim((string) $profile->clearance_status), 'For Final Review') !== 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only applicants waiting for final review can save a draft.',
+            ], 422);
+        }
+
+        $profile->final_review_draft_data = $request->except([
+            '_token',
+            'reference_number',
+            'lookup_scope',
+        ]);
+        $profile->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Applicant final review draft saved successfully.',
+            'saved_at' => now()->toIso8601String(),
+        ]);
+    }
+
     private function approveEmployeeHealthProfile(
         Request $request,
         array $validated,
@@ -2944,6 +2982,7 @@ PROMPT;
                         ? now()
                         : null;
                 $profile->puptas_sync_message = $webhookResult['message'] ?? null;
+                $profile->final_review_draft_data = null;
                 if ($isLocalOnlyApproval && !($webhookResult['success'] ?? false) && !($webhookResult['skipped'] ?? false)) {
                     $profile->puptas_sync_message = trim((string) ($profile->puptas_sync_message ?? ''))
                         ?: 'Local approval saved. PUPTAS sync still needs a matching Admission reference.';
