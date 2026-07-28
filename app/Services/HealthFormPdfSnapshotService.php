@@ -22,6 +22,7 @@ class HealthFormPdfSnapshotService
             'profile' => $profile->fresh('user') ?: $profile,
             'pdfMode' => true,
             'healthFormIdentity' => [],
+            'healthFormSubmittedAt' => $timestamp,
         ]);
         $pdf->setPaper([0, 0, 612, 936]);
         Storage::disk('public')->put($filePath, $pdf->output());
@@ -35,7 +36,7 @@ class HealthFormPdfSnapshotService
             'school_year' => trim((string) ($profile->school_year ?? '')) ?: $submission->school_year,
             'status' => HealthFormSubmission::STATUS_SUBMITTED,
             'pdf_path' => $filePath,
-            'submitted_at' => now(),
+            'submitted_at' => $timestamp,
             'approved_at' => null,
             'remarks' => trim((string) ($submission->remarks ?? $remarks)) ?: null,
         ]);
@@ -60,12 +61,14 @@ class HealthFormPdfSnapshotService
         $submission = $this->submissionForUpdate($profile, $user);
         $resolvedCategory = trim((string) ($submission->category ?: $category)) ?: 'General';
         $timestamp = now();
+        $submittedAt = $submission->submitted_at ?: $profile->resubmitted_at ?: $profile->created_at ?: $timestamp;
         $filePath = $this->buildSnapshotPath($profile, $user, $resolvedCategory, $timestamp);
 
         $pdf = Pdf::loadView('student.print_health_form', [
             'profile' => $profile->fresh('user') ?: $profile,
             'pdfMode' => true,
             'healthFormIdentity' => [],
+            'healthFormSubmittedAt' => $submittedAt,
         ]);
         $pdf->setPaper([0, 0, 612, 936]);
         Storage::disk('public')->put($filePath, $pdf->output());
@@ -79,7 +82,7 @@ class HealthFormPdfSnapshotService
             'school_year' => trim((string) ($profile->school_year ?? '')) ?: $submission->school_year,
             'status' => HealthFormSubmission::STATUS_APPROVED,
             'pdf_path' => $filePath,
-            'submitted_at' => $submission->submitted_at ?: $timestamp,
+            'submitted_at' => $submittedAt,
             'approved_at' => $timestamp,
             'remarks' => trim((string) ($submission->remarks ?? $remarks)) ?: null,
         ]);
@@ -130,6 +133,7 @@ class HealthFormPdfSnapshotService
             'profile' => $profile->fresh('user') ?: $profile,
             'pdfMode' => true,
             'healthFormIdentity' => [],
+            'healthFormSubmittedAt' => $submission->submitted_at ?: $profile->resubmitted_at ?: $profile->created_at,
         ]);
         $pdf->setPaper([0, 0, 612, 936]);
 

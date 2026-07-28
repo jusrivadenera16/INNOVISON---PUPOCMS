@@ -4618,6 +4618,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 ?? optional($healthProfileRecord)->resubmission_required_fields
                 ?? []
         )->filter()->values();
+        $hasDisabilityValue = optional($healthProfileRecord)->has_disability;
+        $requiresPwdIdProof = is_bool($hasDisabilityValue)
+            ? $hasDisabilityValue
+            : in_array(strtolower(trim((string) $hasDisabilityValue)), ['1', 'yes', 'true'], true);
+        $resubmissionDocuments = $resubmissionDocuments
+            ->filter(fn ($documentKey) => $documentKey !== 'pwd_id_proof' || $requiresPwdIdProof)
+            ->values();
         $isResubmissionStatus = $statusNormalized === 'pending resubmission' || $resubmissionDocuments->isNotEmpty();
         $resubmissionDocumentLabels = [
             'student_photo' => '2x2 Student Photo',
@@ -4662,7 +4669,8 @@ document.addEventListener('DOMContentLoaded', function () {
             return \Illuminate\Support\Facades\Storage::disk('public')->exists($documentPath);
         };
         $healthRecordMissingDocumentKeys = collect(array_keys($resubmissionDocumentLabels))
-            ->filter(fn ($documentKey) => $healthFormSubmitted
+            ->filter(fn ($documentKey) => ($documentKey !== 'pwd_id_proof' || $requiresPwdIdProof)
+                && $healthFormSubmitted
                 && $healthProfileRecord
                 && !$hasStoredHealthRecordDocument(data_get($healthProfileRecord, $healthRecordDocumentFields[$documentKey] ?? $documentKey)))
             ->values();

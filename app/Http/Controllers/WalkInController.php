@@ -1774,6 +1774,9 @@ class WalkInController extends Controller
             'adminViewer' => true,
             'pdfMode' => true,
             'healthFormIdentity' => [],
+            'healthFormSubmittedAt' => $submission?->submitted_at
+                ?: $healthProfile->resubmitted_at
+                ?: $healthProfile->created_at,
         ])->setPaper([0, 0, 612, 936]);
 
         $identifier = trim((string) (

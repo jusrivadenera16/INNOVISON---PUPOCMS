@@ -2375,7 +2375,9 @@ public function account(Request $request)
                     'Content-Type' => 'application/pdf',
                     'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
                     'X-Content-Type-Options' => 'nosniff',
-                    'Cache-Control' => 'private, max-age=300',
+                    'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                    'Pragma' => 'no-cache',
+                    'Expires' => '0',
                 ]);
             }
 
@@ -4530,7 +4532,9 @@ public function showHealthFormSubmissionPdf(HealthFormSubmission $submission)
         'Content-Type' => 'application/pdf',
         'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
         'X-Content-Type-Options' => 'nosniff',
-        'Cache-Control' => 'private, max-age=300',
+        'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma' => 'no-cache',
+        'Expires' => '0',
     ]);
 }
 
@@ -4547,11 +4551,15 @@ private function buildStudentHealthFormPdf(HealthProfile $profile)
         $profile
     );
     $profile->load('user');
+    $submission = $this->latestHealthFormSubmissionForProfile($profile);
 
     $pdf = Pdf::loadView('student.print_health_form', [
         'profile' => $profile,
         'pdfMode' => true,
         'healthFormIdentity' => $healthFormIdentity,
+        'healthFormSubmittedAt' => $submission?->submitted_at
+            ?: $profile->resubmitted_at
+            ?: $profile->created_at,
     ]);
     $pdf->setPaper([0, 0, 612, 936]);
 

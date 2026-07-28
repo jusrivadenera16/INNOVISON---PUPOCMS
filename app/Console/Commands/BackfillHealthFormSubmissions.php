@@ -55,6 +55,7 @@ class BackfillHealthFormSubmissions extends Command
                 $pdf = Pdf::loadView('student.print_health_form', [
                     'profile' => $profile,
                     'pdfMode' => true,
+                    'healthFormSubmittedAt' => $profile->created_at ?: $timestamp,
                 ]);
                 $pdf->setPaper([0, 0, 612, 936]);
                 Storage::disk('public')->put($filePath, $pdf->output());

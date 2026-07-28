@@ -120,9 +120,10 @@ class HealthFormPdfRefreshTest extends TestCase
         $dompdf->shouldReceive('output')->once()->andReturn('new-pdf');
         Pdf::shouldReceive('loadView')
             ->once()
-            ->with('student.print_health_form', Mockery::on(function (array $data) use ($profile) {
+            ->with('student.print_health_form', Mockery::on(function (array $data) use ($profile, $submittedAt) {
                 return (int) $data['profile']->id === (int) $profile->id
-                    && $data['pdfMode'] === true;
+                    && $data['pdfMode'] === true
+                    && $submittedAt->equalTo($data['healthFormSubmittedAt']);
             }))
             ->andReturn($dompdf);
 
@@ -187,5 +188,34 @@ class HealthFormPdfRefreshTest extends TestCase
         $source = app(StoredImageDataUri::class)->fromPublicDisk('storage/' . $path);
 
         $this->assertSame('data:image/png;base64,' . base64_encode($contents), $source);
+    }
+
+    public function test_signed_student_form_prints_the_name_and_submission_date(): void
+    {
+        $path = 'health_profiles/signatures/test.png';
+        Storage::disk('public')->put($path, base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+            true
+        ));
+
+        $user = User::forceCreate([
+            'name' => 'Test Student',
+            'student_number' => '2026-0001',
+        ]);
+        $profile = HealthProfile::forceCreate([
+            'user_id' => $user->id,
+            'student_number' => '2026-0001',
+            'digital_signature' => $path,
+        ])->load('user');
+
+        $html = view('student.print_health_form', [
+            'profile' => $profile,
+            'pdfMode' => true,
+            'healthFormIdentity' => [],
+            'healthFormSubmittedAt' => Carbon::parse('2026-07-20 09:00:00'),
+        ])->render();
+
+        $this->assertStringContainsString('TEST STUDENT', $html);
+        $this->assertStringContainsString('07/20/2026', $html);
     }
 }

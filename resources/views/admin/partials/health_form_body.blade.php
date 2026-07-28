@@ -238,6 +238,13 @@ for the improvement of healthcare services.
         $studentSignatureSrc = $showStoredSignature
             ? app(\App\Services\StoredImageDataUri::class)->fromPublicDisk($profile->digital_signature)
             : '';
+        $studentSignatureDate = $healthFormSubmittedAt
+            ?? $profile->resubmitted_at
+            ?? $profile->created_at
+            ?? null;
+        $printedStudentSignatureDate = $studentSignatureSrc && $studentSignatureDate
+            ? \Carbon\Carbon::parse($studentSignatureDate)->format('m/d/Y')
+            : '';
     @endphp
     <div class="signature-physician-block">
         <table class="signature-table">
@@ -253,13 +260,13 @@ for the improvement of healthcare services.
                     @else
                         <div class="signature-space"></div>
                     @endif
-                    <div class="sig-line">{{ empty($studentPrintCopy) ? strtoupper($printedStudentName) : '' }}</div>
+                    <div class="sig-line">{{ $studentSignatureSrc ? strtoupper($printedStudentName) : '' }}</div>
                     <div class="signature-caption">(Printed name and signature of student)</div>
                 </td>
                 <td>
                     <div class="signature-space signature-date-space">
                     </div>
-                    <div class="sig-line"></div>
+                    <div class="sig-line">{{ $printedStudentSignatureDate }}</div>
                     <div class="signature-caption">Date</div>
                 </td>
             </tr>
