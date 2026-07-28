@@ -1,3 +1,10 @@
+@php
+    $healthFormStudentPhotoSrc = trim((string) ($healthFormStudentPhotoSrc ?? ''));
+    if ($healthFormStudentPhotoSrc === '') {
+        $healthFormStudentPhotoSrc = app(\App\Services\StoredImageDataUri::class)
+            ->fromPublicDisk($profile->student_photo ?? null);
+    }
+@endphp
 <div class="print-container">
     <div class="print-page">
     <div class="document-code">
@@ -17,7 +24,13 @@
                 <p class="dept-name">MEDICAL SERVICES DEPARTMENT</p>
             </td>
             <td class="official-photo-cell">
-                <div class="photo-box">2x2 or passport-sized<br>current colored ID photo</div>
+                <div class="photo-box">
+                    @if($healthFormStudentPhotoSrc !== '')
+                        <img src="{{ $healthFormStudentPhotoSrc }}" alt="2x2 Student Photo" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;">
+                    @else
+                        2x2 or passport-sized<br>current colored ID photo
+                    @endif
+                </div>
             </td>
         </tr>
     </table>
