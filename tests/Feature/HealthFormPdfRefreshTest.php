@@ -8,6 +8,7 @@ use App\Models\HealthProfile;
 use App\Models\User;
 use App\Services\EmployeeHealthFormPdfService;
 use App\Services\HealthFormPdfSnapshotService;
+use App\Services\StoredImageDataUri;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Carbon;
@@ -172,5 +173,19 @@ class HealthFormPdfRefreshTest extends TestCase
         $this->assertNotSame($oldPath, $newPath);
         Storage::disk('public')->assertMissing($oldPath);
         $this->assertSame('new-employee-pdf', Storage::disk('public')->get($newPath));
+    }
+
+    public function test_stored_signature_is_converted_to_an_embedded_image_data_uri(): void
+    {
+        $path = 'health_profiles/signatures/test.png';
+        $contents = base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+            true
+        );
+        Storage::disk('public')->put($path, $contents);
+
+        $source = app(StoredImageDataUri::class)->fromPublicDisk('storage/' . $path);
+
+        $this->assertSame('data:image/png;base64,' . base64_encode($contents), $source);
     }
 }
