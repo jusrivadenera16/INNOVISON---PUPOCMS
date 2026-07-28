@@ -157,9 +157,15 @@ class LoginController extends Controller
         return (bool) config('services.idp.enabled', false);
     }
 
-    private function localLoginEnabled(): bool
+    private function localLoginEnabled(?Request $request = null): bool
     {
-        return app()->environment('local') || (bool) config('services.local_login.enabled', false);
+        $host = strtolower(trim((string) optional($request)->getHost()));
+        $allowedHosts = array_map(
+            fn ($allowedHost) => strtolower(trim((string) $allowedHost)),
+            (array) config('services.local_login.allowed_hosts', [])
+        );
+
+        return $host !== '' && in_array($host, $allowedHosts, true);
     }
 
     private function redirectPathByRole(string $role): string
@@ -1790,6 +1796,12 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
+        if (! $this->localLoginEnabled($request)) {
+            return redirect('/login')->withErrors([
+                'login' => 'Local login is not available on this site.',
+            ]);
+        }
+
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -2117,7 +2129,9 @@ class LoginController extends Controller
             return redirect($this->resolveRedirectPathForUser($authenticatedUser));
         }
 
-        return view('login');
+        return view('login', [
+            'localLoginEnabled' => $this->localLoginEnabled($request),
+        ]);
     }
 
     public function redirectToIdpPortal(Request $request): RedirectResponse

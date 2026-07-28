@@ -3555,6 +3555,8 @@
         }
 
         .landing-announcement-list {
+            display: flex;
+            flex-direction: column;
             gap: 9px;
         }
 
@@ -3585,7 +3587,9 @@
         .landing-announcement-body {
             min-width: 0;
             display: grid;
+            grid-template-rows: auto auto auto;
             gap: 9px;
+            align-content: start;
         }
 
         .landing-announcement-meta {
@@ -3745,6 +3749,7 @@
             min-height: 0;
             max-height: 100%;
             overflow-y: auto;
+            overscroll-behavior: contain;
             padding-right: 2px;
             align-content: start;
             scrollbar-width: thin;
@@ -3767,13 +3772,15 @@
 
         .landing-announcement-card {
             flex-shrink: 0;
+            height: auto;
             min-height: 124px;
             padding: 10px;
             gap: 10px;
         }
 
         .landing-announcement-card.is-expanded {
-            overflow: visible;
+            min-height: max-content;
+            overflow: hidden;
         }
 
         body.landing-theme-light .landing-announcement-card {
@@ -3783,6 +3790,8 @@
 
         .landing-announcement-card.is-expanded .landing-announcement-message {
             display: block !important;
+            height: auto;
+            max-height: none;
             -webkit-line-clamp: unset;
             line-clamp: unset;
             overflow: visible !important;
@@ -3870,6 +3879,7 @@
         }
 
         .announcement-modal.is-view-all .landing-announcement-list {
+            display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 12px;
         }
@@ -5123,12 +5133,14 @@
 
         .landing-announcement-card.is-expanded {
             height: auto;
-            min-height: 0;
-            overflow: visible;
+            min-height: max-content;
+            overflow: hidden;
         }
 
         .landing-announcement-card.is-expanded .landing-announcement-message {
             display: block !important;
+            height: auto;
+            max-height: none;
             -webkit-line-clamp: unset;
             line-clamp: unset;
             overflow: visible !important;

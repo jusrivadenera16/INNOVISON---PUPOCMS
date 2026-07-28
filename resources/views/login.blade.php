@@ -611,16 +611,25 @@
 
   <main class="lp-container">
     <div class="login-box">
+        @php
+            $portalLoginUrl = route('login');
+            $localLoginEnabled = $localLoginEnabled ?? false;
+        @endphp
+
         <div class="login-hero">
             <div class="login-hero-top">
                 <div class="login-hero-badge"><span></span> Clinic Access</div>
-                <div class="login-chip">{{ config('services.idp.enabled') ? 'Centralized Sign In' : 'Local Sign In' }}</div>
+                <div class="login-chip">
+                    {{ config('services.idp.enabled') ? 'Centralized Sign In' : ($localLoginEnabled ? 'Local Sign In' : 'Restricted Sign In') }}
+                </div>
             </div>
             <h2>Clinic Portal</h2>
             <p class="login-hero-copy">Login to your account to continue. The same system keeps student and clinic access in one place.</p>
             <div class="login-subline">
                 <span class="login-chip">IdP Ready</span>
-                <span class="login-chip">Local Fallback</span>
+                @if($localLoginEnabled)
+                    <span class="login-chip">Local Fallback</span>
+                @endif
             </div>
         </div>
 
@@ -633,10 +642,6 @@
                 </ul>
             </div>
         @endif
-
-        @php
-            $portalLoginUrl = route('login');
-        @endphp
 
         @if(config('services.idp.enabled'))
             <div class="idp-login-wrap">
@@ -675,7 +680,7 @@
                     </div>
                 </section>
             @endenv
-        @else
+        @elseif($localLoginEnabled)
             <form id="loginForm" action="{{ url('/login-action') }}" method="POST">
                 @csrf
                 <div class="form-group">
@@ -704,11 +709,17 @@
             <div class="switch-form">
                 Don't have an account? <span onclick="openModal('registerModal')">Create Account</span>
             </div>
+        @else
+            <div class="idp-login-wrap">
+                <p class="idp-login-note">
+                    Local login is only available on the staging clinic site.
+                </p>
+            </div>
         @endif
     </div>
   </main>
 
-  @unless(config('services.idp.enabled'))
+  @if(! config('services.idp.enabled') && $localLoginEnabled)
       <div id="registerModal" class="modal-overlay">
           <div class="modal-content">
               <span class="modal-close" onclick="closeModal('registerModal')">&times;</span>
@@ -788,7 +799,7 @@
               </form>
           </div>
       </div>
-  @endunless
+  @endif
 
   <div id="loginLoadingOverlay" class="login-loading-overlay" aria-hidden="true">
       <div class="login-loading-card">
