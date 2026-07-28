@@ -237,9 +237,10 @@ for the improvement of healthcare services.
         $showStoredSignature = ($pdfMode ?? false) || empty($studentPrintCopy);
         $studentSignatureSrc = '';
         if ($showStoredSignature && $profile->digital_signature) {
-            $studentSignaturePath = ltrim($profile->digital_signature, '/');
+            $studentSignaturePath = ltrim((string) $profile->digital_signature, '/');
+            $studentSignaturePath = preg_replace('#^(?:public/)?storage/#', '', $studentSignaturePath) ?? $studentSignaturePath;
             $studentSignatureSrc = ($pdfMode ?? false)
-                ? public_path('storage/' . $studentSignaturePath)
+                ? \Illuminate\Support\Facades\Storage::disk('public')->path($studentSignaturePath)
                 : asset('storage/' . $studentSignaturePath);
         }
     @endphp
