@@ -3772,15 +3772,20 @@
             gap: 10px;
         }
 
+        .landing-announcement-card.is-expanded {
+            overflow: visible;
+        }
+
         body.landing-theme-light .landing-announcement-card {
             background: rgba(255, 255, 255, .96);
             border-color: rgba(112, 19, 27, .12);
         }
 
         .landing-announcement-card.is-expanded .landing-announcement-message {
-            display: block;
+            display: block !important;
             -webkit-line-clamp: unset;
-            overflow: visible;
+            line-clamp: unset;
+            overflow: visible !important;
         }
 
         .landing-announcement-message p,
@@ -5114,6 +5119,19 @@
         .landing-announcement-message {
             font-size: 14px;
             line-height: 1.5;
+        }
+
+        .landing-announcement-card.is-expanded {
+            height: auto;
+            min-height: 0;
+            overflow: visible;
+        }
+
+        .landing-announcement-card.is-expanded .landing-announcement-message {
+            display: block !important;
+            -webkit-line-clamp: unset;
+            line-clamp: unset;
+            overflow: visible !important;
         }
 
         .landing-announcement-read,
@@ -6557,6 +6575,11 @@
             button?.addEventListener('click', function () {
                 card.classList.toggle('is-expanded');
                 syncAnnouncementReadButtons();
+                if (card.classList.contains('is-expanded')) {
+                    window.setTimeout(function () {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 40);
+                }
             });
         });
 
