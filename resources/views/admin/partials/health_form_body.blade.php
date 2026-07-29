@@ -260,9 +260,9 @@ for the improvement of healthcare services.
             : '';
         $studentSignatureNameLength = strlen($printedStudentName);
         $studentSignatureNameFontSize = match (true) {
-            $studentSignatureNameLength >= 45 => 6,
-            $studentSignatureNameLength >= 36 => 7,
-            $studentSignatureNameLength >= 28 => 8,
+            $studentSignatureNameLength >= 45 => 7,
+            $studentSignatureNameLength >= 36 => 8,
+            $studentSignatureNameLength >= 28 => 9,
             default => 9,
         };
     @endphp

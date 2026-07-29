@@ -131,7 +131,7 @@
         .sig-line { min-height: 11px; margin-bottom: 2px; border-bottom: 1px solid #000; font-size: 11px; font-weight: bold; text-transform: uppercase; }
         .student-signature-name { overflow: hidden; line-height: 11px; white-space: nowrap; }
         .signature-caption { position: relative; top: -2px; min-height: 17px; font-size: 12.5px; font-weight: 700; line-height: 1.1; text-align: center; }
-        .physician-section { width: 100%; clear: both; margin-top: 25px !important; padding: 22px 24px 0 !important; border: 0 !important; border-top: 1px dotted #000 !important; break-inside: avoid; page-break-inside: avoid; }
+        .physician-section { width: 100%; clear: both; margin-top: 14px !important; padding: 12px 24px 0 !important; border: 0 !important; border-top: 1px dotted #000 !important; break-inside: avoid; page-break-before: avoid; page-break-inside: avoid; }
         .signature-physician-block { margin-top: 10px; }
         .physician-section,
         .physician-section * { font-family: Arial, Helvetica, sans-serif; }
