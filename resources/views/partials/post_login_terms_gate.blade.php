@@ -2,7 +2,7 @@
     .post-login-loader {
         position: fixed;
         inset: 0;
-        z-index: 5100;
+        z-index: 1000002;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -51,7 +51,7 @@
     .terms-gate-overlay {
         position: fixed;
         inset: 0;
-        z-index: 5000;
+        z-index: 1000001;
         background: rgba(15, 23, 42, 0.62);
         display: flex;
         align-items: center;
@@ -271,6 +271,15 @@
                 if (!agreeInput.checked) {
                     return;
                 }
+                fetch('{{ route('post-login-terms.acknowledge') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                }).catch(function () {});
                 overlay.remove();
                 document.body.classList.remove('terms-gate-lock');
             });
