@@ -1561,6 +1561,9 @@ class AppointmentController extends Controller
                         'student_number' => $studentNumber,
                         'status' => $personalResult['status'] ?? null,
                         'message' => $personalResult['message'] ?? null,
+                        'endpoint' => $personalResult['endpoint'] ?? null,
+                        'attempted_paths' => $personalResult['attempted_paths'] ?? null,
+                        'attempted_urls' => $personalResult['attempted_urls'] ?? null,
                     ]);
                 }
 
@@ -1739,6 +1742,22 @@ class AppointmentController extends Controller
                     'emergencyContactNumber',
                 ]),
             ];
+
+            if ($addressInfo !== [] && trim((string) ($data['zipcode'] ?? '')) === '') {
+                $cityPayload = data_get($addressInfo, 'city');
+                $provincePayload = data_get($addressInfo, 'province');
+
+                Log::info('GUISIS My Account address did not include zipcode', [
+                    'user_id' => $user->id,
+                    'student_number' => $resolvedStudentNumber,
+                    'address_type' => data_get($addressInfo, 'addressType'),
+                    'top_level_keys' => array_keys($addressInfo),
+                    'city_keys' => is_array($cityPayload) ? array_keys($cityPayload) : null,
+                    'city_zip_code' => data_get($addressInfo, 'city.zipCode'),
+                    'city_postal_code' => data_get($addressInfo, 'city.postalCode'),
+                    'province_keys' => is_array($provincePayload) ? array_keys($provincePayload) : null,
+                ]);
+            }
 
             $shouldSave = false;
             foreach ([
