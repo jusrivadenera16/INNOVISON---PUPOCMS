@@ -1132,6 +1132,7 @@ class AppointmentController extends Controller
         $applicantIdentity = $this->normalizePuptasApplicantIdentity($applicantData);
         $this->persistPuptasApplicantIdentity($user, $applicantIdentity);
         $usePuptasApplicantPrefill = $referenceMode === 'admission' && is_array($applicantData) && !empty($applicantData);
+        $useGuisisStudentPrefill = $referenceMode === 'student_number' && (bool) ($guisisAccountData['available'] ?? false);
 
         $calculatedAge = null;
         if (!empty($user->DOB)) {
@@ -1145,7 +1146,11 @@ class AppointmentController extends Controller
         $resolvedSex = $this->normalizeSexValue(
             $usePuptasApplicantPrefill
                 ? (data_get($applicantData, 'sex') ?: optional($healthProfile)->sex)
-                : (optional($healthProfile)->sex ?? $user->gender ?? optional($linkedAdminProfile)->gender ?? '')
+                : (optional($healthProfile)->sex
+                    ?? ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'sex') : null)
+                    ?? $user->gender
+                    ?? optional($linkedAdminProfile)->gender
+                    ?? '')
         );
 
         $resolvedCivilStatus = trim((string) (optional($healthProfile)->civil_status ?? optional($linkedAdminProfile)->civil_status ?? ''));
@@ -1154,6 +1159,7 @@ class AppointmentController extends Controller
         $resolvedBirthday = (string) (
             optional($healthProfile)->birthday
             ?: ($usePuptasApplicantPrefill ? data_get($applicantData, 'birthday') : null)
+            ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'birthday') : null)
             ?: $user->DOB
             ?: optional($linkedAdminProfile)->birthday
             ?: ''
@@ -1182,6 +1188,9 @@ class AppointmentController extends Controller
             data_get($applicantData, 'city'),
             data_get($applicantData, 'province'),
         ]))) : '';
+        if ($resolvedAddress === '' && $useGuisisStudentPrefill) {
+            $resolvedAddress = trim((string) data_get($guisisAccountData, 'home_address'));
+        }
         $resolvedCourse = $this->resolveHealthFormCourse($user, $healthProfile, $applicantData);
 
         $applicantFirstName = trim((string) $applicantIdentity['first_name']);
@@ -1245,13 +1254,20 @@ class AppointmentController extends Controller
             'course_applicable' => $this->isHealthCourseApplicable($user),
             'course_code' => $resolvedCourse['code'],
             'course_college' => $resolvedCourse['name'],
+            'year_level' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'year') : ($user->year ?? ''))),
+            'section' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'section') : ($user->section ?? ''))),
             'home_address' => trim((string) (
                 optional($healthProfile)->home_address
                 ?: ($resolvedAddress !== '' ? $resolvedAddress : trim((string) (optional($linkedAdminProfile)->address ?? '')))
             )),
+            'home_address_street' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_street') : '')),
+            'home_address_barangay' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_barangay') : '')),
+            'home_address_city_municipality' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_city_municipality') : '')),
+            'home_address_province' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_province') : '')),
             'zipcode' => trim((string) (
                 optional($healthProfile)->zipcode
                 ?: ($usePuptasApplicantPrefill ? data_get($applicantData, 'postal_code') : '')
+                ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'zipcode') : '')
             )),
             'school_year' => (string) (optional($healthProfile)->school_year ?? $this->resolveSchoolYear($applicantData, $user)),
             'height' => (string) ($this->extractMeasurementNumber(optional($healthProfile)->height ?? $user->height ?? '') ?? ''),
@@ -1263,6 +1279,7 @@ class AppointmentController extends Controller
             'blood_type' => (string) (optional($healthProfile)->blood_type ?? 'Not Known'),
             'contact_number' => trim((string) (
                 ($usePuptasApplicantPrefill ? data_get($applicantData, 'contactnumber') : null)
+                ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'contact_number') : null)
                 ?: $user->contact_no
                 ?: ''
             )),
@@ -1324,6 +1341,36 @@ class AppointmentController extends Controller
         return array_is_list($payload) ? [] : $payload;
     }
 
+    private function unwrapGuisisAddressPayload($payload): array
+    {
+        if (!is_array($payload)) {
+            return [];
+        }
+
+        $addresses = data_get($payload, 'data', $payload);
+        if (!is_array($addresses)) {
+            return [];
+        }
+
+        if (!array_is_list($addresses)) {
+            return $addresses;
+        }
+
+        $preferredTypes = ['current', 'present', 'home', 'permanent'];
+        foreach ($preferredTypes as $type) {
+            $match = collect($addresses)->first(function ($address) use ($type) {
+                return is_array($address)
+                    && str_contains(strtolower(trim((string) data_get($address, 'addressType'))), $type);
+            });
+
+            if (is_array($match)) {
+                return $match;
+            }
+        }
+
+        return is_array($addresses[0] ?? null) ? $addresses[0] : [];
+    }
+
     private function firstGuisisValue(array $sources, array $paths): string
     {
         foreach ($sources as $source) {
@@ -1362,11 +1409,11 @@ class AppointmentController extends Controller
 
         $parts = [];
         foreach ([
-            ['house_number', 'houseNumber', 'street_address', 'streetAddress', 'street'],
-            ['barangay', 'brgy'],
-            ['city', 'municipality'],
-            ['province'],
-            ['postal_code', 'postalCode', 'zip_code', 'zipCode'],
+            ['streetDetail.string', 'house_number', 'houseNumber', 'street_address', 'streetAddress', 'street'],
+            ['barangay.name', 'barangay', 'brgy'],
+            ['city.name', 'city', 'municipality'],
+            ['province.name.string', 'province.name', 'province'],
+            ['city.zipCode.string', 'city.zipCode', 'postal_code', 'postalCode', 'zip_code', 'zipCode'],
         ] as $aliases) {
             $part = $this->firstGuisisValue($sources, $aliases);
             if ($part !== '') {
@@ -1413,6 +1460,7 @@ class AppointmentController extends Controller
 
             $studentProfile = [];
             $personalInfo = [];
+            $addressInfo = [];
             if ($studentNumber !== '') {
                 $studentResult = $service->getStudentByStudentNumberDetailed($studentNumber);
                 if ($studentResult['ok'] ?? false) {
@@ -1423,9 +1471,15 @@ class AppointmentController extends Controller
                 if ($personalResult['ok'] ?? false) {
                     $personalInfo = $this->unwrapGuisisPayload($personalResult['data'] ?? []);
                 }
+
+                $addressResult = $service->getStudentAddressesDetailed($studentNumber);
+                if ($addressResult['ok'] ?? false) {
+                    $addressInfo = $this->unwrapGuisisAddressPayload($addressResult['data'] ?? []);
+                }
             }
 
             $sources = [$personalInfo, $studentProfile, $emailProfile];
+            $addressSources = [$addressInfo];
             $firstName = $this->firstGuisisValue($sources, ['first_name', 'firstName', 'firstname', 'given_name', 'givenName']);
             $middleName = $this->firstGuisisValue($sources, [
                 'middleName.string',
@@ -1519,7 +1573,39 @@ class AppointmentController extends Controller
                     'phoneNumber',
                     'cellphone',
                 ]),
-                'home_address' => $this->buildGuisisAddress($sources),
+                'home_address' => $this->buildGuisisAddress(array_merge($addressSources, $sources)),
+                'home_address_street' => $this->firstGuisisValue($addressSources, [
+                    'streetDetail.string',
+                    'street_detail',
+                    'streetDetail',
+                    'street_address',
+                    'streetAddress',
+                ]),
+                'home_address_barangay' => $this->firstGuisisValue($addressSources, [
+                    'barangay.name',
+                    'barangay',
+                    'brgy',
+                ]),
+                'home_address_city_municipality' => $this->firstGuisisValue($addressSources, [
+                    'city.name',
+                    'city',
+                    'municipality',
+                ]),
+                'home_address_province' => $this->firstGuisisValue($addressSources, [
+                    'province.name.string',
+                    'province.name',
+                    'province',
+                ]),
+                'zipcode' => $this->firstGuisisValue($addressSources, [
+                    'city.zipCode.string',
+                    'city.zipCode',
+                    'zipCode.string',
+                    'zipCode',
+                    'postal_code',
+                    'postalCode',
+                    'zip_code',
+                    'zipCode',
+                ]),
                 'guardian_name' => $this->firstGuisisValue($sources, [
                     'guardian_name',
                     'guardianName',

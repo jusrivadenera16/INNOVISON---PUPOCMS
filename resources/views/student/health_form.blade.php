@@ -2475,6 +2475,28 @@
                                 {{ !empty($prefill['school_year_from_puptas']) ? 'readonly' : '' }}
                             >
                         </div>
+                        @if(!empty($prefill['year_level']))
+                            <div class="form-field">
+                                <label class="form-label" for="year_level_display">Year Level</label>
+                                <input
+                                    id="year_level_display"
+                                    class="form-control field-maroon identity-readonly"
+                                    value="{{ $prefill['year_level'] }}"
+                                    readonly
+                                >
+                            </div>
+                        @endif
+                        @if(!empty($prefill['section']))
+                            <div class="form-field">
+                                <label class="form-label" for="section_display">Section</label>
+                                <input
+                                    id="section_display"
+                                    class="form-control field-maroon identity-readonly"
+                                    value="{{ $prefill['section'] }}"
+                                    readonly
+                                >
+                            </div>
+                        @endif
                         <div class="form-field">
                             <label class="form-label" for="birthday">Birthday <span class="required">*</span></label>
                             <input id="birthday" type="date" class="form-control field-maroon" name="birthday" value="{{ old('birthday', $prefill['birthday'] ?? '') }}" required>
@@ -2551,6 +2573,16 @@
                                 $addressBarangay = $oldAddressBarangay ?? '';
                                 $addressCity = $oldAddressCity ?? '';
                                 $addressProvince = $oldAddressProvince ?? '';
+                            } elseif (
+                                !empty($prefill['home_address_street'])
+                                || !empty($prefill['home_address_barangay'])
+                                || !empty($prefill['home_address_city_municipality'])
+                                || !empty($prefill['home_address_province'])
+                            ) {
+                                $addressStreet = $prefill['home_address_street'] ?? '';
+                                $addressBarangay = $prefill['home_address_barangay'] ?? '';
+                                $addressCity = $prefill['home_address_city_municipality'] ?? '';
+                                $addressProvince = $prefill['home_address_province'] ?? '';
                             } else {
                                 $addressParts = array_values(array_filter(array_map('trim', explode(',', (string) $combinedHomeAddress)), fn ($part) => $part !== ''));
 
