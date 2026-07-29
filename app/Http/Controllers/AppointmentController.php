@@ -1555,11 +1555,25 @@ class AppointmentController extends Controller
                 $personalResult = $service->getStudentPersonalInfoDetailed($studentNumber);
                 if ($personalResult['ok'] ?? false) {
                     $personalInfo = $this->unwrapGuisisPayload($personalResult['data'] ?? []);
+                } else {
+                    Log::warning('GUISIS My Account personal info lookup failed', [
+                        'user_id' => $user->id,
+                        'student_number' => $studentNumber,
+                        'status' => $personalResult['status'] ?? null,
+                        'message' => $personalResult['message'] ?? null,
+                    ]);
                 }
 
                 $addressResult = $service->getStudentAddressesDetailed($studentNumber);
                 if ($addressResult['ok'] ?? false) {
                     $addressInfo = $this->unwrapGuisisAddressPayload($addressResult['data'] ?? []);
+                } else {
+                    Log::warning('GUISIS My Account address lookup failed', [
+                        'user_id' => $user->id,
+                        'student_number' => $studentNumber,
+                        'status' => $addressResult['status'] ?? null,
+                        'message' => $addressResult['message'] ?? null,
+                    ]);
                 }
             }
 
@@ -1688,10 +1702,15 @@ class AppointmentController extends Controller
                     'provinceName',
                     'provinceName.string',
                     'province',
+                    'region.name',
                 ]),
                 'zipcode' => $this->firstGuisisValue($addressSources, [
                     'city.zipCode.string',
                     'city.zipCode',
+                    'city.postalCode.string',
+                    'city.postalCode',
+                    'city.postal_code.string',
+                    'city.postal_code',
                     'city.zip_code.string',
                     'city.zip_code',
                     'city.zipcode.string',
