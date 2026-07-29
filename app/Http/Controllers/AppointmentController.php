@@ -406,6 +406,7 @@ class AppointmentController extends Controller
                 'first_name' => '',
                 'middle_name' => '',
                 'last_name' => '',
+                'suffix_name' => '',
                 'full_name' => '',
                 'reference_number' => '',
                 'email' => '',
@@ -434,6 +435,19 @@ class AppointmentController extends Controller
             ?: data_get($applicantData, 'family_name')
             ?: data_get($applicantData, 'surname')
         ));
+        $suffixName = trim((string) (
+            data_get($applicantData, 'user.suffix_name')
+            ?: data_get($applicantData, 'user.suffixName')
+            ?: data_get($applicantData, 'user.extension_name')
+            ?: data_get($applicantData, 'user.extensionName')
+            ?: data_get($applicantData, 'user.suffix')
+            ?: data_get($applicantData, 'suffix_name')
+            ?: data_get($applicantData, 'suffixName')
+            ?: data_get($applicantData, 'extension_name')
+            ?: data_get($applicantData, 'extensionName')
+            ?: data_get($applicantData, 'suffix')
+            ?: data_get($applicantData, 'name_suffix')
+        ));
         $referenceNumber = trim((string) (
             data_get($applicantData, 'user.reference_number')
             ?: data_get($applicantData, 'reference_number')
@@ -457,7 +471,8 @@ class AppointmentController extends Controller
             'first_name' => $firstName,
             'middle_name' => $middleName,
             'last_name' => $lastName,
-            'full_name' => $this->formatDisplayNameParts($firstName, $middleName, $lastName),
+            'suffix_name' => $suffixName,
+            'full_name' => $this->formatDisplayNameParts($firstName, $middleName, $lastName, $suffixName),
             'reference_number' => $referenceNumber,
             'email' => $email,
             'school_year' => $schoolYear,
@@ -473,6 +488,7 @@ class AppointmentController extends Controller
         $firstName = trim((string) ($identity['first_name'] ?? ''));
         $middleName = trim((string) ($identity['middle_name'] ?? ''));
         $lastName = trim((string) ($identity['last_name'] ?? ''));
+        $suffixName = trim((string) ($identity['suffix_name'] ?? ''));
         $referenceNumber = trim((string) ($identity['reference_number'] ?? ''));
         $shouldSave = false;
 
@@ -492,6 +508,14 @@ class AppointmentController extends Controller
         if ($lastName !== '' && trim((string) $user->last_name) !== $lastName) {
             $user->last_name = $lastName;
             $shouldSave = true;
+        }
+
+        if (\Schema::hasColumn('users', 'suffix_name')) {
+            $resolvedSuffixName = $suffixName !== '' ? $suffixName : null;
+            if (($user->suffix_name ?: null) !== $resolvedSuffixName) {
+                $user->suffix_name = $resolvedSuffixName;
+                $shouldSave = true;
+            }
         }
 
         if (
@@ -707,8 +731,8 @@ class AppointmentController extends Controller
         $value = strtolower(trim((string) $value));
 
         return match ($value) {
-            'male' => 'Male',
-            'female' => 'Female',
+            'male', 'm', 'man', 'boy', '1' => 'Male',
+            'female', 'f', 'woman', 'girl', '2' => 'Female',
             default => '',
         };
     }
@@ -1132,6 +1156,7 @@ class AppointmentController extends Controller
         $applicantIdentity = $this->normalizePuptasApplicantIdentity($applicantData);
         $this->persistPuptasApplicantIdentity($user, $applicantIdentity);
         $usePuptasApplicantPrefill = $referenceMode === 'admission' && is_array($applicantData) && !empty($applicantData);
+        $useGuisisStudentPrefill = $referenceMode === 'student_number' && (bool) ($guisisAccountData['available'] ?? false);
 
         $calculatedAge = null;
         if (!empty($user->DOB)) {
@@ -1145,23 +1170,33 @@ class AppointmentController extends Controller
         $resolvedSex = $this->normalizeSexValue(
             $usePuptasApplicantPrefill
                 ? (data_get($applicantData, 'sex') ?: optional($healthProfile)->sex)
-                : (optional($healthProfile)->sex ?? $user->gender ?? optional($linkedAdminProfile)->gender ?? '')
+                : (optional($healthProfile)->sex
+                    ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'sex') : null)
+                    ?: $user->gender
+                    ?: optional($linkedAdminProfile)->gender
+                    ?: '')
         );
 
         $resolvedCivilStatus = trim((string) (optional($healthProfile)->civil_status ?? optional($linkedAdminProfile)->civil_status ?? ''));
         $resolvedCivilStatus = in_array($resolvedCivilStatus, ['Single', 'Married'], true) ? $resolvedCivilStatus : 'Single';
 
-        $resolvedBirthday = (string) (
-            optional($healthProfile)->birthday
-            ?: ($usePuptasApplicantPrefill ? data_get($applicantData, 'birthday') : null)
-            ?: $user->DOB
-            ?: optional($linkedAdminProfile)->birthday
-            ?: ''
-        );
+        $birthdayCandidates = [
+            optional($healthProfile)->birthday,
+            $usePuptasApplicantPrefill ? data_get($applicantData, 'birthday') : null,
+            $useGuisisStudentPrefill ? data_get($guisisAccountData, 'birthday') : null,
+            $user->DOB,
+            optional($linkedAdminProfile)->birthday,
+        ];
+        $resolvedBirthday = '';
+        foreach ($birthdayCandidates as $birthdayCandidate) {
+            $birthdayCandidate = trim((string) $birthdayCandidate);
+            if ($birthdayCandidate === '') {
+                continue;
+            }
 
-        if ($resolvedBirthday !== '') {
             try {
-                $resolvedBirthday = \Carbon\Carbon::parse($resolvedBirthday)->format('Y-m-d');
+                $resolvedBirthday = \Carbon\Carbon::parse($birthdayCandidate)->format('Y-m-d');
+                break;
             } catch (\Throwable $exception) {
                 $resolvedBirthday = '';
             }
@@ -1182,11 +1217,27 @@ class AppointmentController extends Controller
             data_get($applicantData, 'city'),
             data_get($applicantData, 'province'),
         ]))) : '';
+        if ($resolvedAddress === '' && $useGuisisStudentPrefill) {
+            $resolvedAddress = trim((string) data_get($guisisAccountData, 'home_address'));
+        }
+        $resolvedZipcode = '';
+        foreach ([
+            optional($healthProfile)->zipcode,
+            $usePuptasApplicantPrefill ? data_get($applicantData, 'postal_code') : null,
+            $useGuisisStudentPrefill ? data_get($guisisAccountData, 'zipcode') : null,
+        ] as $zipcodeCandidate) {
+            $zipcodeCandidate = trim((string) $zipcodeCandidate);
+            if ($zipcodeCandidate !== '') {
+                $resolvedZipcode = $zipcodeCandidate;
+                break;
+            }
+        }
         $resolvedCourse = $this->resolveHealthFormCourse($user, $healthProfile, $applicantData);
 
         $applicantFirstName = trim((string) $applicantIdentity['first_name']);
         $applicantMiddleName = trim((string) $applicantIdentity['middle_name']);
         $applicantLastName = trim((string) $applicantIdentity['last_name']);
+        $applicantSuffixName = trim((string) $applicantIdentity['suffix_name']);
         $applicantStructuredName = trim((string) $applicantIdentity['full_name']);
         $hasOfficialApplicantIdentity = (bool) $applicantIdentity['available'];
         $resolvedReferenceNumber = match ($referenceMode) {
@@ -1222,6 +1273,7 @@ class AppointmentController extends Controller
             'puptas_first_name' => $applicantFirstName,
             'puptas_middle_name' => $applicantMiddleName,
             'puptas_last_name' => $applicantLastName,
+            'puptas_suffix_name' => $applicantSuffixName,
             'full_name' => $applicantStructuredName
                 ?: trim((string) (data_get($applicantData, 'full_name') ?: data_get($applicantData, 'name') ?: $user->name)),
             'first_name' => $applicantFirstName
@@ -1231,7 +1283,13 @@ class AppointmentController extends Controller
                 : trim((string) ($user->middle_name ?? optional($linkedAdminProfile)->middle_name ?? '')),
             'last_name' => $applicantLastName
                 ?: trim((string) (optional($linkedAdminProfile)->last_name ?? $user->last_name ?? '')),
-            'suffix_name' => trim((string) (optional($linkedAdminProfile)->suffix_name ?? '')),
+            'suffix_name' => trim((string) (
+                optional($healthProfile)->suffix_name
+                ?: $applicantSuffixName
+                ?: ($useGuisisStudentPrefill
+                    ? data_get($guisisAccountData, 'suffix_name')
+                    : (optional($linkedAdminProfile)->suffix_name ?? ($user->suffix_name ?? '')))
+            )),
             'student_id' => (string) (optional($healthProfile)->student_id ?? $user->student_id ?? ''),
             'reference_number' => $resolvedReferenceNumber,
             'student_number' => $this->resolveStudentNumber($user, $healthProfile, $applicantData),
@@ -1245,14 +1303,17 @@ class AppointmentController extends Controller
             'course_applicable' => $this->isHealthCourseApplicable($user),
             'course_code' => $resolvedCourse['code'],
             'course_college' => $resolvedCourse['name'],
+            'year_level' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'year') : '')),
+            'section' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'section') : '')),
             'home_address' => trim((string) (
                 optional($healthProfile)->home_address
                 ?: ($resolvedAddress !== '' ? $resolvedAddress : trim((string) (optional($linkedAdminProfile)->address ?? '')))
             )),
-            'zipcode' => trim((string) (
-                optional($healthProfile)->zipcode
-                ?: ($usePuptasApplicantPrefill ? data_get($applicantData, 'postal_code') : '')
-            )),
+            'home_address_street' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_street') : '')),
+            'home_address_barangay' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_barangay') : '')),
+            'home_address_city_municipality' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_city_municipality') : '')),
+            'home_address_province' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_province') : '')),
+            'zipcode' => $resolvedZipcode,
             'school_year' => (string) (optional($healthProfile)->school_year ?? $this->resolveSchoolYear($applicantData, $user)),
             'height' => (string) ($this->extractMeasurementNumber(optional($healthProfile)->height ?? $user->height ?? '') ?? ''),
             'weight' => (string) ($this->extractMeasurementNumber(optional($healthProfile)->weight ?? $user->weight ?? '') ?? ''),
@@ -1263,6 +1324,7 @@ class AppointmentController extends Controller
             'blood_type' => (string) (optional($healthProfile)->blood_type ?? 'Not Known'),
             'contact_number' => trim((string) (
                 ($usePuptasApplicantPrefill ? data_get($applicantData, 'contactnumber') : null)
+                ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'contact_number') : null)
                 ?: $user->contact_no
                 ?: ''
             )),
@@ -1324,6 +1386,75 @@ class AppointmentController extends Controller
         return array_is_list($payload) ? [] : $payload;
     }
 
+    private function unwrapGuisisAddressPayload($payload): array
+    {
+        if (!is_array($payload)) {
+            return [];
+        }
+
+        $addresses = data_get($payload, 'data', $payload);
+        if (!is_array($addresses)) {
+            return [];
+        }
+
+        if (!array_is_list($addresses)) {
+            return $addresses;
+        }
+
+        $ranked = collect($addresses)
+            ->filter(fn ($address) => is_array($address))
+            ->sortByDesc(fn ($address) => $this->guisisAddressCompletenessScore($address))
+            ->values();
+
+        return $ranked->first() ?: (is_array($addresses[0] ?? null) ? $addresses[0] : []);
+    }
+
+    private function guisisAddressRows($payload): array
+    {
+        if (!is_array($payload)) {
+            return [];
+        }
+
+        $addresses = data_get($payload, 'data', $payload);
+        if (!is_array($addresses)) {
+            return [];
+        }
+
+        if (!array_is_list($addresses)) {
+            return [$addresses];
+        }
+
+        return collect($addresses)
+            ->filter(fn ($address) => is_array($address))
+            ->values()
+            ->all();
+    }
+
+    private function guisisAddressCompletenessScore(array $address): int
+    {
+        $score = 0;
+        foreach ([
+            ['streetDetail.string'],
+            ['barangay.name'],
+            ['city.name'],
+            ['province.name.string'],
+            ['city.zipCode.string'],
+        ] as $paths) {
+            if ($this->firstGuisisValue([$address], $paths) !== '') {
+                $score++;
+            }
+        }
+
+        $addressType = strtolower(trim((string) $this->firstGuisisValue([$address], ['addressType'])));
+        if (str_contains($addressType, 'current') || str_contains($addressType, 'present') || str_contains($addressType, 'home')) {
+            $score += 2;
+        } elseif (str_contains($addressType, 'permanent')) {
+            $score++;
+        }
+
+        return $score;
+    }
+
     private function firstGuisisValue(array $sources, array $paths): string
     {
         foreach ($sources as $source) {
@@ -1335,6 +1466,28 @@ class AppointmentController extends Controller
                 $value = data_get($source, $path);
                 if (is_scalar($value) && trim((string) $value) !== '') {
                     return trim((string) $value);
+                }
+
+                if (is_array($value)) {
+                    $wrappedValue = data_get($value, 'string');
+                    if (is_scalar($wrappedValue) && trim((string) $wrappedValue) !== '') {
+                        return trim((string) $wrappedValue);
+                    }
+
+                    $namedValue = data_get($value, 'name');
+                    if (is_scalar($namedValue) && trim((string) $namedValue) !== '') {
+                        return trim((string) $namedValue);
+                    }
+
+                    $nestedNameValue = data_get($value, 'name.string');
+                    if (is_scalar($nestedNameValue) && trim((string) $nestedNameValue) !== '') {
+                        return trim((string) $nestedNameValue);
+                    }
+
+                    $zipValue = data_get($value, 'zipCode.string');
+                    if (is_scalar($zipValue) && trim((string) $zipValue) !== '') {
+                        return trim((string) $zipValue);
+                    }
                 }
             }
         }
@@ -1362,11 +1515,11 @@ class AppointmentController extends Controller
 
         $parts = [];
         foreach ([
-            ['house_number', 'houseNumber', 'street_address', 'streetAddress', 'street'],
-            ['barangay', 'brgy'],
-            ['city', 'municipality'],
-            ['province'],
-            ['postal_code', 'postalCode', 'zip_code', 'zipCode'],
+            ['streetDetail.string', 'house_number', 'houseNumber', 'street_address', 'streetAddress', 'street'],
+            ['barangay.name', 'barangay', 'brgy'],
+            ['city.name', 'city', 'municipality'],
+            ['province.name.string', 'province.name', 'province'],
+            ['city.zipCode.string', 'city.zipCode', 'postal_code', 'postalCode', 'zip_code', 'zipCode'],
         ] as $aliases) {
             $part = $this->firstGuisisValue($sources, $aliases);
             if ($part !== '') {
@@ -1413,6 +1566,7 @@ class AppointmentController extends Controller
 
             $studentProfile = [];
             $personalInfo = [];
+            $addressInfo = [];
             if ($studentNumber !== '') {
                 $studentResult = $service->getStudentByStudentNumberDetailed($studentNumber);
                 if ($studentResult['ok'] ?? false) {
@@ -1422,10 +1576,33 @@ class AppointmentController extends Controller
                 $personalResult = $service->getStudentPersonalInfoDetailed($studentNumber);
                 if ($personalResult['ok'] ?? false) {
                     $personalInfo = $this->unwrapGuisisPayload($personalResult['data'] ?? []);
+                } else {
+                    Log::warning('GUISIS My Account personal info lookup failed', [
+                        'user_id' => $user->id,
+                        'student_number' => $studentNumber,
+                        'status' => $personalResult['status'] ?? null,
+                        'message' => $personalResult['message'] ?? null,
+                        'endpoint' => $personalResult['endpoint'] ?? null,
+                        'attempted_paths' => $personalResult['attempted_paths'] ?? null,
+                        'attempted_urls' => $personalResult['attempted_urls'] ?? null,
+                    ]);
+                }
+
+                $addressResult = $service->getStudentAddressesDetailed($studentNumber);
+                if ($addressResult['ok'] ?? false) {
+                    $addressInfo = $this->unwrapGuisisAddressPayload($addressResult['data'] ?? []);
+                } else {
+                    Log::warning('GUISIS My Account address lookup failed', [
+                        'user_id' => $user->id,
+                        'student_number' => $studentNumber,
+                        'status' => $addressResult['status'] ?? null,
+                        'message' => $addressResult['message'] ?? null,
+                    ]);
                 }
             }
 
             $sources = [$personalInfo, $studentProfile, $emailProfile];
+            $addressSources = [$addressInfo];
             $firstName = $this->firstGuisisValue($sources, ['first_name', 'firstName', 'firstname', 'given_name', 'givenName']);
             $middleName = $this->firstGuisisValue($sources, [
                 'middleName.string',
@@ -1462,11 +1639,17 @@ class AppointmentController extends Controller
 
             $birthday = $this->firstGuisisValue($sources, [
                 'dateOfBirth',
+                'dateOfBirth.string',
                 'date_of_birth',
+                'date_of_birth.string',
                 'birthDate',
+                'birthDate.string',
                 'birth_date',
+                'birth_date.string',
                 'birthday',
+                'birthday.string',
                 'dob',
+                'dob.string',
             ]);
             if ($birthday !== '') {
                 try {
@@ -1503,9 +1686,14 @@ class AppointmentController extends Controller
                 'section' => $this->firstGuisisValue($sources, ['section', 'section_name', 'sectionName']),
                 'sex' => $this->normalizeSexValue($this->firstGuisisValue($sources, [
                     'gender.name',
+                    'gender.string',
                     'genderName',
                     'sex',
+                    'sex.name',
+                    'sex.string',
                     'gender',
+                    'gender.id',
+                    'sex.id',
                 ])),
                 'birthday' => $birthday,
                 'age' => $age,
@@ -1519,7 +1707,54 @@ class AppointmentController extends Controller
                     'phoneNumber',
                     'cellphone',
                 ]),
-                'home_address' => $this->buildGuisisAddress($sources),
+                'home_address' => $this->buildGuisisAddress(array_merge($addressSources, $sources)),
+                'home_address_street' => $this->firstGuisisValue($addressSources, [
+                    'streetDetail.string',
+                    'street_detail',
+                    'streetDetail',
+                    'street_address',
+                    'streetAddress',
+                ]),
+                'home_address_barangay' => $this->firstGuisisValue($addressSources, [
+                    'barangay.name',
+                    'barangay',
+                    'brgy',
+                ]),
+                'home_address_city_municipality' => $this->firstGuisisValue($addressSources, [
+                    'city.name',
+                    'city',
+                    'municipality',
+                ]),
+                'home_address_province' => $this->firstGuisisValue($addressSources, [
+                    'province.name.string',
+                    'province.name',
+                    'provinceName',
+                    'provinceName.string',
+                    'province',
+                    'region.name',
+                ]),
+                'zipcode' => $this->firstGuisisValue($addressSources, [
+                    'city.zipCode.string',
+                    'city.zipCode',
+                    'city.zip_code',
+                    'city.zipcode',
+                    'city.postalCode.string',
+                    'city.postalCode',
+                    'city.postal_code.string',
+                    'city.postal_code',
+                    'city.zip_code.string',
+                    'city.zip_code',
+                    'city.zipcode.string',
+                    'city.zipcode',
+                    'zipCode.string',
+                    'zipCode',
+                    'zip_code.string',
+                    'postal_code',
+                    'postal_code.string',
+                    'postalCode',
+                    'postalCode.string',
+                    'zip_code',
+                ]),
                 'guardian_name' => $this->firstGuisisValue($sources, [
                     'guardian_name',
                     'guardianName',
@@ -1536,6 +1771,22 @@ class AppointmentController extends Controller
                 ]),
             ];
 
+            if ($addressInfo !== [] && trim((string) ($data['zipcode'] ?? '')) === '') {
+                $cityPayload = data_get($addressInfo, 'city');
+                $provincePayload = data_get($addressInfo, 'province');
+
+                Log::info('GUISIS My Account address did not include zipcode', [
+                    'user_id' => $user->id,
+                    'student_number' => $resolvedStudentNumber,
+                    'address_type' => data_get($addressInfo, 'addressType'),
+                    'top_level_keys' => array_keys($addressInfo),
+                    'city_keys' => is_array($cityPayload) ? array_keys($cityPayload) : null,
+                    'city_zip_code' => data_get($addressInfo, 'city.zipCode'),
+                    'city_postal_code' => data_get($addressInfo, 'city.postalCode'),
+                    'province_keys' => is_array($provincePayload) ? array_keys($provincePayload) : null,
+                ]);
+            }
+
             $shouldSave = false;
             foreach ([
                 'student_number' => 'student_number',
@@ -1548,6 +1799,13 @@ class AppointmentController extends Controller
             ] as $sourceKey => $userColumn) {
                 if (($data[$sourceKey] ?? '') !== '' && trim((string) ($user->{$userColumn} ?? '')) === '') {
                     $user->{$userColumn} = $data[$sourceKey];
+                    $shouldSave = true;
+                }
+            }
+
+            if (\Schema::hasColumn('users', 'suffix_name') && ($data['suffix_name'] ?? '') !== '') {
+                if (trim((string) ($user->suffix_name ?? '')) === '') {
+                    $user->suffix_name = $data['suffix_name'];
                     $shouldSave = true;
                 }
             }
@@ -2161,7 +2419,13 @@ public function account(Request $request)
             'first_name' => $employeeFirstName,
             'middle_name' => $employeeMiddleName ?? '',
             'last_name' => $employeeLastName,
-            'full_name' => $this->formatDisplayNameParts($employeeFirstName, $employeeMiddleName, $employeeLastName),
+            'suffix_name' => trim((string) ($employeeProfileData['suffix_name'] ?? $user->suffix_name ?? '')),
+            'full_name' => $this->formatDisplayNameParts(
+                $employeeFirstName,
+                $employeeMiddleName,
+                $employeeLastName,
+                trim((string) ($employeeProfileData['suffix_name'] ?? $user->suffix_name ?? ''))
+            ),
             'email' => trim((string) ($employeeProfileData['email'] ?? $user->email ?? '')),
             'course_college' => trim((string) ($employeeProfileData['course_college'] ?? '')),
             'year' => trim((string) ($employeeProfileData['school_year'] ?? '')),
@@ -3415,6 +3679,7 @@ private function buildEmployeeHealthFormPrefill(User $user, ?EmployeeHealthProfi
         'first_name' => trim((string) (optional($employeeProfile)->first_name ?: data_get($facultyProfile, 'first_name') ?: $user->first_name)),
         'middle_name' => trim((string) (optional($employeeProfile)->middle_name ?: data_get($facultyProfile, 'middle_name') ?: $user->middle_name)),
         'last_name' => trim((string) (optional($employeeProfile)->last_name ?: data_get($facultyProfile, 'last_name') ?: $user->last_name)),
+        'suffix_name' => trim((string) (optional($employeeProfile)->suffix_name ?: data_get($facultyProfile, 'suffix_name') ?: data_get($facultyProfile, 'suffixName') ?: $user->suffix_name)),
         'email' => trim((string) ($user->email ?: data_get($facultyProfile, 'email') ?: optional($linkedAdminProfile)->email)),
         'employee_number' => trim((string) (optional($employeeProfile)->employee_number ?: data_get($facultyProfile, 'faculty_code') ?: $user->employee_number ?: data_get($facultyProfile, 'faculty_id') ?: data_get($facultyProfile, 'id'))),
         'office' => trim((string) (optional($employeeProfile)->office ?: data_get($facultyProfile, 'department') ?: optional($linkedAdminProfile)->office)),
@@ -3557,6 +3822,7 @@ public function storeEmployeeHealthForm(Request $request)
         'first_name' => ['required', 'string', 'max:120'],
         'middle_name' => ['nullable', 'string', 'max:120'],
         'last_name' => ['required', 'string', 'max:120'],
+        'suffix_name' => ['nullable', 'string', 'max:120'],
         'street_address' => ['required', 'string', 'max:255'],
         'barangay' => ['required', 'string', 'max:120'],
         'city_municipality' => ['required', 'string', 'max:120'],
@@ -3670,10 +3936,12 @@ public function storeEmployeeHealthForm(Request $request)
     }
 
     $validated['middle_name'] = $this->normalizeOptionalNamePart($validated['middle_name'] ?? null);
+    $validated['suffix_name'] = $this->normalizeOptionalNamePart($validated['suffix_name'] ?? null);
     $fullName = $this->formatDisplayNameParts(
         $validated['first_name'],
         $validated['middle_name'],
-        $validated['last_name']
+        $validated['last_name'],
+        $validated['suffix_name']
     );
     $homeAddress = trim(implode(', ', array_filter([
         $validated['street_address'],
@@ -3700,6 +3968,7 @@ public function storeEmployeeHealthForm(Request $request)
         'first_name' => $validated['first_name'],
         'middle_name' => $validated['middle_name'] ?? null,
         'last_name' => $validated['last_name'],
+        'suffix_name' => $validated['suffix_name'] ?? null,
         'name' => $fullName,
         'home_address' => $homeAddress,
         'contact_no' => $validated['contact_no'],
@@ -3776,6 +4045,9 @@ public function storeEmployeeHealthForm(Request $request)
     $user->first_name = $validated['first_name'];
     $user->middle_name = $validated['middle_name'] ?? null;
     $user->last_name = $validated['last_name'];
+    if (\Schema::hasColumn('users', 'suffix_name')) {
+        $user->suffix_name = $validated['suffix_name'] ?? null;
+    }
     $user->name = $fullName;
     $user->gender = $validated['sex'];
     $user->employee_number = $validated['employee_number'] ?? null;
@@ -4086,6 +4358,7 @@ public function storeHealthForm(Request $request)
         'age'               => 'required|numeric|min:15|max:100',
         'sex'               => 'required|string',
         'civil_status'      => 'required|string',
+        'suffix_name'        => 'nullable|string|max:120',
         'course_code'       => 'nullable|string|max:30',
         'course_college'    => 'nullable|string|max:255',
         'blood_type'        => 'required|string|max:20',
@@ -4274,6 +4547,9 @@ public function storeHealthForm(Request $request)
     if ($resolvedGender !== '') {
         $user->gender = $resolvedGender;
     }
+    if (\Schema::hasColumn('users', 'suffix_name')) {
+        $user->suffix_name = $this->normalizeOptionalNamePart($request->input('suffix_name'));
+    }
     $user->reference_number = $officialReference;
     $user->save();
 
@@ -4287,9 +4563,7 @@ public function storeHealthForm(Request $request)
         $healthDeclarationPath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'health_declaration', 'health_profiles/health_declarations', $oldPaths);
         $digitalSignaturePath = $this->storeDigitalSignatureOrKeep($request, $existingHealthProfile, $oldPaths);
 
-        $healthProfile = \App\Models\HealthProfile::updateOrCreate(
-            ['user_id' => $user->id],
-            [
+        $healthProfileData = [
                 'student_id'         => $request->student_id,
                 'reference_number'   => $officialReference,
                 'school_year'        => $request->school_year,
@@ -4349,7 +4623,15 @@ public function storeHealthForm(Request $request)
                 'resubmission_requested_at' => null,
                 'resubmitted_at'      => $isHealthFormCorrectionMode ? now() : optional($existingHealthProfile)->resubmitted_at,
                 'verified_at'        => null,
-            ]
+            ];
+
+        if (\Schema::hasColumn('health_profiles', 'suffix_name')) {
+            $healthProfileData['suffix_name'] = $this->normalizeOptionalNamePart($request->input('suffix_name'));
+        }
+
+        $healthProfile = \App\Models\HealthProfile::updateOrCreate(
+            ['user_id' => $user->id],
+            $healthProfileData
         );
 
         foreach ($oldPaths as $oldPath) {

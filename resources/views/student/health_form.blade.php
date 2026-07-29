@@ -2204,6 +2204,10 @@
                     ($prefill['puptas_last_name'] ?? '')
                     ?: ($prefill['last_name'] ?? '')
                 ));
+                $displaySuffixName = trim((string) (
+                    ($prefill['puptas_suffix_name'] ?? '')
+                    ?: ($prefill['suffix_name'] ?? '')
+                ));
 
                 $displayReferenceNumber = trim((string) ($prefill['reference_number'] ?? ''));
                 $referenceMode = trim((string) ($prefill['reference_mode'] ?? 'admission'));
@@ -2229,6 +2233,10 @@
                 $courseApplicable = (bool) ($prefill['course_applicable'] ?? false);
                 $selectedCourseCode = old('course_code', $prefill['course_code'] ?? '');
                 $selectedCourseName = old('course_college', $prefill['course_college'] ?? '');
+                $prefillOrOld = function (string $field, $fallback = '') use ($prefill) {
+                    $oldValue = old($field);
+                    return trim((string) $oldValue) !== '' ? $oldValue : ($prefill[$field] ?? $fallback);
+                };
 
                 if ($displayReferenceNumber === '' && ($referenceRequiresValidation || $referenceVerificationUnavailable)) {
                     $startStep = 1;
@@ -2424,6 +2432,11 @@
                             <label class="form-label" for="profile_last_name">Last Name</label>
                             <input id="profile_last_name" class="form-control identity-readonly" value="{{ $displayLastName !== '' ? $displayLastName : 'N/A' }}" readonly>
                         </div>
+                        <div class="form-field">
+                            <label class="form-label" for="profile_suffix_name">Suffix Name</label>
+                            <input id="profile_suffix_name" class="form-control identity-readonly" value="{{ $displaySuffixName }}" readonly>
+                            <input type="hidden" name="suffix_name" value="{{ $displaySuffixName }}">
+                        </div>
                     </div>
                     <div class="form-field personal-email-field">
                         <label class="form-label" for="profile_email">Email Address</label>
@@ -2475,13 +2488,35 @@
                                 {{ !empty($prefill['school_year_from_puptas']) ? 'readonly' : '' }}
                             >
                         </div>
+                        @if(!empty($prefill['year_level']))
+                            <div class="form-field">
+                                <label class="form-label" for="year_level_display">Year Level</label>
+                                <input
+                                    id="year_level_display"
+                                    class="form-control field-maroon identity-readonly"
+                                    value="{{ $prefill['year_level'] }}"
+                                    readonly
+                                >
+                            </div>
+                        @endif
+                        @if(!empty($prefill['section']))
+                            <div class="form-field">
+                                <label class="form-label" for="section_display">Section</label>
+                                <input
+                                    id="section_display"
+                                    class="form-control field-maroon identity-readonly"
+                                    value="{{ $prefill['section'] }}"
+                                    readonly
+                                >
+                            </div>
+                        @endif
                         <div class="form-field">
                             <label class="form-label" for="birthday">Birthday <span class="required">*</span></label>
-                            <input id="birthday" type="date" class="form-control field-maroon" name="birthday" value="{{ old('birthday', $prefill['birthday'] ?? '') }}" required>
+                            <input id="birthday" type="date" class="form-control field-maroon" name="birthday" value="{{ $prefillOrOld('birthday') }}" required>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="age">Age <span class="required">*</span></label>
-                            <input id="age" type="number" class="form-control field-maroon" name="age" value="{{ old('age', $prefill['age'] ?? '') }}" min="15" max="100" required readonly>
+                            <input id="age" type="number" class="form-control field-maroon" name="age" value="{{ $prefillOrOld('age') }}" min="15" max="100" required readonly>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="sex">Sex <span class="required">*</span></label>
@@ -2489,7 +2524,7 @@
                                 <select id="sex" class="form-select clinic-select-native field-maroon" name="sex" required>
                                     <option value="">Select sex</option>
                                     @foreach(['Male', 'Female'] as $option)
-                                        <option value="{{ $option }}" {{ old('sex', $prefill['sex'] ?? '') === $option ? 'selected' : '' }}>{{ $option }}</option>
+                                        <option value="{{ $option }}" {{ $prefillOrOld('sex') === $option ? 'selected' : '' }}>{{ $option }}</option>
                                     @endforeach
                                 </select>
                                 <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select sex</button>
@@ -2532,7 +2567,7 @@
                             </div>
                         </div>
                         @php
-                            $combinedHomeAddress = old('home_address', $prefill['home_address'] ?? '');
+                            $combinedHomeAddress = $prefillOrOld('home_address');
                             $oldAddressStreet = old('home_address_street');
                             $oldAddressBarangay = old('home_address_barangay');
                             $oldAddressCity = old('home_address_city_municipality');
@@ -2547,10 +2582,28 @@
                             $addressProvince = '';
 
                             if ($hasSplitAddressOldInput) {
-                                $addressStreet = $oldAddressStreet ?? '';
-                                $addressBarangay = $oldAddressBarangay ?? '';
-                                $addressCity = $oldAddressCity ?? '';
-                                $addressProvince = $oldAddressProvince ?? '';
+                                $addressStreet = trim((string) $oldAddressStreet) !== ''
+                                    ? $oldAddressStreet
+                                    : ($prefill['home_address_street'] ?? '');
+                                $addressBarangay = trim((string) $oldAddressBarangay) !== ''
+                                    ? $oldAddressBarangay
+                                    : ($prefill['home_address_barangay'] ?? '');
+                                $addressCity = trim((string) $oldAddressCity) !== ''
+                                    ? $oldAddressCity
+                                    : ($prefill['home_address_city_municipality'] ?? '');
+                                $addressProvince = trim((string) $oldAddressProvince) !== ''
+                                    ? $oldAddressProvince
+                                    : ($prefill['home_address_province'] ?? '');
+                            } elseif (
+                                !empty($prefill['home_address_street'])
+                                || !empty($prefill['home_address_barangay'])
+                                || !empty($prefill['home_address_city_municipality'])
+                                || !empty($prefill['home_address_province'])
+                            ) {
+                                $addressStreet = $prefill['home_address_street'] ?? '';
+                                $addressBarangay = $prefill['home_address_barangay'] ?? '';
+                                $addressCity = $prefill['home_address_city_municipality'] ?? '';
+                                $addressProvince = $prefill['home_address_province'] ?? '';
                             } else {
                                 $addressParts = array_values(array_filter(array_map('trim', explode(',', (string) $combinedHomeAddress)), fn ($part) => $part !== ''));
 
@@ -2621,7 +2674,7 @@
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="zipcode">ZIP Code <span class="required">*</span></label>
-                            <input id="zipcode" class="form-control field-maroon" name="zipcode" value="{{ old('zipcode', $prefill['zipcode'] ?? '') }}" required>
+                            <input id="zipcode" class="form-control field-maroon" name="zipcode" value="{{ $prefillOrOld('zipcode') }}" required>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="contact_no">Student Contact Number <span class="required">*</span></label>

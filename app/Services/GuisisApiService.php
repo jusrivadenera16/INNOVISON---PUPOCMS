@@ -43,7 +43,37 @@ class GuisisApiService
 
     public function getStudentPersonalInfoDetailed(string $studentNumber): array
     {
-        return $this->get('/integrations/students/' . rawurlencode(trim($studentNumber)) . '/personalInfo');
+        $encodedStudentNumber = rawurlencode(trim($studentNumber));
+        $paths = [
+            "/integrations/students/{$encodedStudentNumber}/personalInfo",
+            "/integrations/students/{$encodedStudentNumber}/personal-info",
+            "/integrations/students/{$encodedStudentNumber}/personal_info",
+            "/integrations/students/{$encodedStudentNumber}/personal-information",
+            "/integrations/students/{$encodedStudentNumber}/personal",
+        ];
+
+        $lastResult = null;
+        foreach ($paths as $path) {
+            $result = $this->get($path);
+            $result['attempted_paths'] = $paths;
+            $result['attempted_urls'] = array_map(fn (string $attemptedPath): string => $this->baseUrl . $attemptedPath, $paths);
+
+            if (($result['ok'] ?? false) || (int) ($result['status'] ?? 0) !== 404) {
+                return $result;
+            }
+
+            $lastResult = $result;
+        }
+
+        return $lastResult ?? [
+            'status' => 404,
+            'ok' => false,
+            'message' => 'GuiSIS personal information endpoint was not found.',
+            'body' => '',
+            'data' => null,
+            'attempted_paths' => $paths,
+            'attempted_urls' => array_map(fn (string $path): string => $this->baseUrl . $path, $paths),
+        ];
     }
 
     public function configuredBaseUrl(): string
@@ -70,10 +100,12 @@ class GuisisApiService
 
         try {
             $tokenMeta = $this->accessToken();
+            $url = $this->baseUrl . $path;
             $response = Http::timeout($this->timeout)
                 ->acceptJson()
+                ->withHeaders(['Content-Type' => 'application/json'])
                 ->withToken($tokenMeta['token'])
-                ->get($this->baseUrl . $path, $query);
+                ->get($url, $query);
 
             $payload = $response->json();
 
@@ -86,6 +118,7 @@ class GuisisApiService
                 'body' => $response->body(),
                 'data' => $payload,
                 'auth' => $tokenMeta['auth'],
+                'endpoint' => $url,
             ];
         } catch (RequestException $exception) {
             $response = $exception->response;

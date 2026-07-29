@@ -7873,8 +7873,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" />
                         </svg>
                     </span>
-                    <h3 class="intake-option-title">Employee's</h3>
-                    <p class="intake-option-copy">Enter Employee's ID to lookup clinic records to manage clinic profiles.</p>
+                    <h3 class="intake-option-title">Employee's / Student</h3>
+                    <p class="intake-option-copy">Enter Employee's / Student ID to lookup clinic records to manage clinic profiles.</p>
                 </div>
             </a>
 
@@ -10519,7 +10519,7 @@
             if (lookupModalSubtitle) lookupModalSubtitle.textContent = isClinicLookupMode()
                 ? 'Enter an employee number or student number to look up local employee records.'
                 : "Enter the applicant's reference number to look up the record.";
-            if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isClinicLookupMode() ? "Employee's ID Lookup" : 'Reference Lookup';
+            if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isClinicLookupMode() ? "Employee's / Student ID Lookup" : 'Reference Lookup';
             if (lookupModalEntrySubtitle) lookupModalEntrySubtitle.textContent = isClinicLookupMode()
                 ? 'Use the employee number or student number to open the saved local employee record.'
                 : 'Choose encoding for the first station or final review for approval.';
