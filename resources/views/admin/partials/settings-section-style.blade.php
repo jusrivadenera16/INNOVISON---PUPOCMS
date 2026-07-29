@@ -362,6 +362,86 @@
         background: #fee2e2;
         border: 1px solid #fecaca;
     }
+    html[data-theme="dark"] .settings-section-page {
+        --stg-text: #f8fafc;
+        --stg-muted: #cbd5e1;
+        --stg-border: rgba(255, 255, 255, 0.12);
+    }
+    html[data-theme="dark"] .settings-section-page::before {
+        background:
+            radial-gradient(circle at top left, rgba(250, 204, 21, 0.08), transparent 25%),
+            radial-gradient(circle at bottom right, rgba(185, 28, 28, 0.18), transparent 28%),
+            linear-gradient(180deg, rgba(24, 11, 18, 0.98), rgba(15, 23, 42, 0.94));
+    }
+    html[data-theme="dark"] .settings-section-hero,
+    html[data-theme="dark"] .settings-panel,
+    html[data-theme="dark"] .settings-option-card,
+    html[data-theme="dark"] .settings-static-row {
+        background: rgba(17, 24, 39, 0.92);
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+    }
+    html[data-theme="dark"] .settings-panel-head {
+        background: linear-gradient(180deg, rgba(127, 0, 0, 0.22), rgba(17, 24, 39, 0));
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+    html[data-theme="dark"] .settings-section-title,
+    html[data-theme="dark"] .settings-panel-head h3,
+    html[data-theme="dark"] .settings-option-card h4,
+    html[data-theme="dark"] .settings-static-value {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .settings-section-hero p,
+    html[data-theme="dark"] .settings-panel-head p,
+    html[data-theme="dark"] .settings-option-card p,
+    html[data-theme="dark"] .settings-field label,
+    html[data-theme="dark"] .settings-static-label {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .settings-section-title > svg,
+    html[data-theme="dark"] .settings-option-icon {
+        color: #facc15;
+        background: rgba(127, 0, 0, 0.42);
+        border: 1px solid rgba(250, 204, 21, 0.18);
+    }
+    html[data-theme="dark"] .settings-back-link,
+    html[data-theme="dark"] .settings-section-page .settings-edit-btn {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(255, 255, 255, 0.16);
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .settings-field input,
+    html[data-theme="dark"] .settings-field select,
+    html[data-theme="dark"] .settings-field textarea {
+        background: rgba(15, 23, 42, 0.88);
+        border-color: rgba(255, 255, 255, 0.14);
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .settings-field input:disabled,
+    html[data-theme="dark"] .settings-field select:disabled,
+    html[data-theme="dark"] .settings-field textarea:disabled {
+        background: rgba(30, 41, 59, 0.72);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #e2e8f0;
+    }
+    html[data-theme="dark"] .settings-field input::placeholder,
+    html[data-theme="dark"] .settings-field textarea::placeholder {
+        color: #94a3b8;
+    }
+    html[data-theme="dark"] .settings-section-page .settings-cancel-btn {
+        background-color: rgba(148, 163, 184, 0.18) !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .alert-success {
+        color: #bbf7d0;
+        background: rgba(22, 101, 52, 0.2);
+        border-color: rgba(74, 222, 128, 0.32);
+    }
+    html[data-theme="dark"] .alert-error {
+        color: #fecaca;
+        background: rgba(127, 29, 29, 0.28);
+        border-color: rgba(248, 113, 113, 0.32);
+    }
     @media (max-width: 900px) {
         .settings-section-hero,
         .settings-panel-head,

@@ -1731,6 +1731,7 @@
             height: 18px;
             flex: 0 0 18px;
             transition: transform 0.2s ease;
+            cursor: pointer;
         }
 
         .sidebar-dropdown-caret svg {
@@ -4431,6 +4432,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         ? url('/assistant/reports/daily-treatment-record')
         : url('/admin/reports/daily-treatment-record');
     $healthRecordsUrl = route('admin.health_records');
+    $healthRecordsIsActive = request()->routeIs('admin.health_records') || Request::is('health-records') || Request::is('health-profile/*');
     $healthRecordsUserType = strtolower(trim((string) request('user_type', '')));
     $healthRecordsHasHealthProfiles = \Illuminate\Support\Facades\Schema::hasTable('health_profiles');
     $healthRecordsHasStaffProfiles = \Illuminate\Support\Facades\Schema::hasTable('health_profile_emp');
@@ -4935,12 +4937,11 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         <a
           href="{{ $reportsUrl }}"
           class="nav-reports {{ $reportsIsActive ? 'active' : '' }}"
-          data-sidebar-dropdown-toggle
           aria-expanded="{{ $reportsIsActive ? 'true' : 'false' }}"
         >
           <span class="sidebar-short"><x-outline-icon name="chart-bar" /></span>
           <span class="sidebar-label">Reports</span>
-          <span class="sidebar-dropdown-caret" aria-hidden="true">
+          <span class="sidebar-dropdown-caret" data-sidebar-dropdown-toggle role="button" tabindex="0" aria-expanded="{{ $reportsIsActive ? 'true' : 'false' }}" aria-label="Toggle Reports dropdown">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>
@@ -4961,16 +4962,15 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
       <a href="{{ $walkinUrl }}" class="nav-walkin {{ (Request::is('admin/walkin*') || Request::is('assistant/walkin*')) ? 'active' : '' }}">
         <span class="sidebar-short"><x-outline-icon name="user-plus" /></span><span class="sidebar-label">Walk-in</span>
       </a>
-      <div class="sidebar-nav-group {{ (request()->routeIs('admin.health_records') || Request::is('health-records') || Request::is('health-profile/*')) ? 'is-open' : '' }}" data-sidebar-dropdown-group>
+      <div class="sidebar-nav-group {{ $healthRecordsIsActive ? 'is-open' : '' }}" data-sidebar-dropdown-group>
         <a
           href="{{ $healthRecordsUrl }}"
-          class="sidebar-nav-toggle nav-health {{ (request()->routeIs('admin.health_records') || Request::is('health-records') || Request::is('health-profile/*')) ? 'active' : '' }}"
-          data-sidebar-dropdown-toggle
-          aria-expanded="{{ (request()->routeIs('admin.health_records') || Request::is('health-records') || Request::is('health-profile/*')) ? 'true' : 'false' }}"
+          class="sidebar-nav-toggle nav-health {{ $healthRecordsIsActive ? 'active' : '' }}"
+          aria-expanded="{{ $healthRecordsIsActive ? 'true' : 'false' }}"
         >
           <span class="sidebar-short"><x-outline-icon name="document-text" /></span>
           <span class="sidebar-label">Health Records</span>
-          <span class="sidebar-dropdown-caret" aria-hidden="true">
+          <span class="sidebar-dropdown-caret" data-sidebar-dropdown-toggle role="button" tabindex="0" aria-expanded="{{ $healthRecordsIsActive ? 'true' : 'false' }}" aria-label="Toggle Health Records dropdown">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>
@@ -4980,7 +4980,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
           @foreach($healthRecordsTypeLinks as $healthTypeValue => $healthTypeMeta)
             <a
               href="{{ route('admin.health_records', array_filter(['user_type' => $healthTypeValue])) }}"
-              class="{{ ($healthTypeValue === '' ? $healthRecordsUserType === '' : $healthRecordsUserType === $healthTypeValue) ? 'active' : '' }}"
+              class="{{ ($healthRecordsIsActive && ($healthTypeValue === '' ? $healthRecordsUserType === '' : $healthRecordsUserType === $healthTypeValue)) ? 'active' : '' }}"
             >
               <span class="sidebar-subnav-icon" aria-hidden="true">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -5008,12 +5008,11 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             <a
               href="{{ $settingsUrl }}"
               class="nav-settings {{ $settingsIsActive ? 'active' : '' }}"
-              data-sidebar-dropdown-toggle
               aria-expanded="{{ $settingsIsActive ? 'true' : 'false' }}"
             >
               <span class="sidebar-short"><x-outline-icon name="cog-6-tooth" /></span>
               <span class="sidebar-label">Settings</span>
-              <span class="sidebar-dropdown-caret" aria-hidden="true">
+              <span class="sidebar-dropdown-caret" data-sidebar-dropdown-toggle role="button" tabindex="0" aria-expanded="{{ $settingsIsActive ? 'true' : 'false' }}" aria-label="Toggle Settings dropdown">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                 </svg>
@@ -5425,24 +5424,50 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         window.setTimeout(updateIndicator, 150);
     }
 
-    function initHealthRecordsSidebarDropdown() {
-        const group = document.querySelector('[data-sidebar-health-records-group]');
-        const toggle = document.querySelector('[data-sidebar-health-records-toggle]');
+    function initSidebarDropdowns() {
+        document.querySelectorAll('[data-sidebar-dropdown-group]').forEach(function (group) {
+            const toggle = group.querySelector('[data-sidebar-dropdown-toggle]');
+            const parentLink = group.querySelector(':scope > a, :scope > button');
 
-        if (!group || !toggle) {
-            return;
-        }
+            if (!toggle) {
+                return;
+            }
 
-        const setOpen = function (isOpen) {
-            group.classList.toggle('is-open', isOpen);
-            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        };
+            const setOpen = function (isOpen) {
+                group.classList.toggle('is-open', isOpen);
+                toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                if (parentLink) {
+                    parentLink.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                }
+            };
 
-        setOpen(toggle.getAttribute('aria-expanded') === 'true');
+            setOpen(toggle.getAttribute('aria-expanded') === 'true');
 
-        toggle.addEventListener('click', function (event) {
-            event.preventDefault();
-            setOpen(!group.classList.contains('is-open'));
+            const toggleDropdown = function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                setOpen(!group.classList.contains('is-open'));
+            };
+
+            toggle.addEventListener('click', toggleDropdown);
+            toggle.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    toggleDropdown(event);
+                }
+            });
+
+            if (parentLink) {
+                parentLink.addEventListener('click', function (event) {
+                    if (toggle.contains(event.target)) {
+                        return;
+                    }
+
+                    if (parentLink.classList.contains('active')) {
+                        event.preventDefault();
+                        setOpen(!group.classList.contains('is-open'));
+                    }
+                });
+            }
         });
     }
 
@@ -6510,7 +6535,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         initAssistantUi();
         initThemeToggle();
         initSidebarScrollIndicator();
-        initHealthRecordsSidebarDropdown();
+        initSidebarDropdowns();
         initHeaderQuickActionsToggle();
         initMedicineAlerts();
         initTreatmentRecordModal();

@@ -142,8 +142,24 @@
         border-color: rgba(112, 19, 27, .24);
     }
     html[data-theme="dark"] .medical-config-row {
-        background: #ffffff;
-        border-color: rgba(112, 19, 27, .14);
+        background: rgba(17, 24, 39, 0.92);
+        border-color: rgba(255, 255, 255, .12);
+        color: #f8fafc;
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
+    }
+    html[data-theme="dark"] .medical-config-copy h4 {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .medical-config-copy p {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .medical-config-icon {
+        color: #facc15;
+        background: rgba(127, 0, 0, .36);
+        border-color: rgba(250, 204, 21, .18);
+    }
+    html[data-theme="dark"] .medical-config-arrow {
+        color: #f8fafc;
     }
     html[data-theme="dark"] .medical-config-row:hover,
     html[data-theme="dark"] .medical-config-row:focus-visible {
