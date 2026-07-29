@@ -1708,6 +1708,11 @@
             -webkit-appearance: none;
         }
 
+        .sidebar-nav-group > a.active,
+        .sidebar-nav-group > .sidebar-nav-toggle.active {
+            width: calc(100% + 14px);
+        }
+
         .sidebar-nav-toggle:focus {
             outline: none;
         }
@@ -4398,6 +4403,30 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     $appointmentsUrl = $isStudentAssistant ? url('/assistant/appointments') : url('/admin/appointments');
     $inventoryUrl = $isStudentAssistant ? url('/assistant/inventory') : url('/admin/inventory');
     $reportsUrl = $isStudentAssistant ? url('/assistant/reports') : url('/admin/reports');
+    $reportsIsActive = (
+        request()->routeIs('admin.reports')
+        || request()->routeIs('reports.*')
+        || request()->routeIs('assistant.reports*')
+        || Request::is('admin/reports*')
+        || Request::is('assistant/reports*')
+    ) && !(
+        request()->routeIs('admin.reports.manage-mar')
+        || request()->routeIs('admin.reports.manage-medicine-types')
+        || request()->routeIs('admin.reports.manage-health-form-categories')
+    );
+    $reportNavUrl = fn (string $path = '') => $isStudentAssistant
+        ? url('/assistant/reports' . ($path !== '' ? '/' . ltrim($path, '/') : ''))
+        : url('/admin/reports' . ($path !== '' ? '/' . ltrim($path, '/') : ''));
+    $reportNavLinks = [
+        ['label' => 'MAR', 'url' => $reportNavUrl('mar'), 'active' => request()->routeIs('reports.mar'), 'icon' => 'clipboard-document-list'],
+        ['label' => 'Inventory Summary', 'url' => $reportNavUrl('inventory-summary'), 'active' => request()->routeIs('reports.inventory-summary'), 'icon' => 'cube'],
+        ['label' => 'Health Forms', 'url' => $reportNavUrl('health-forms'), 'active' => request()->routeIs('reports.health-forms') || request()->routeIs('reports.health-forms.applicants-list'), 'icon' => 'document-text'],
+        ['label' => 'Appointment Statistics', 'url' => $reportNavUrl('appointment-statistics'), 'active' => request()->routeIs('reports.appointment-statistics'), 'icon' => 'calendar-days'],
+        ['label' => 'Digital Logbook', 'url' => $reportNavUrl('digital-logbook'), 'active' => request()->routeIs('reports.digital-logbook'), 'icon' => 'clipboard-document-list'],
+        ['label' => 'Feedbacks', 'url' => $reportNavUrl('feedbacks'), 'active' => request()->routeIs('reports.feedbacks'), 'icon' => 'megaphone'],
+        ['label' => 'Export Reports', 'url' => $reportNavUrl('export-hub'), 'active' => request()->routeIs('reports.exportHub*'), 'icon' => 'arrow-down-tray'],
+        ['label' => 'Audit Trail', 'url' => $isStudentAssistant ? url('/assistant/logs') : url('/admin/activity-logs'), 'active' => request()->routeIs('admin.logs') || Request::is('admin/activity-logs') || Request::is('assistant/logs'), 'icon' => 'clock'],
+    ];
     $dailyTreatmentRecordUrl = $isStudentAssistant
         ? url('/assistant/reports/daily-treatment-record')
         : url('/admin/reports/daily-treatment-record');
@@ -4509,6 +4538,21 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     $developerToolsUrl = $isStudentAssistant ? url('/assistant/developer-tools') : url('/admin/developer-tools');
     $canSeeDeveloperTools = strtolower(trim((string) optional($authUser)->email)) === 'pupocms2027@gmail.com';
     $settingsUrl = url('/admin/settings');
+    $settingsIsActive = request()->routeIs('admin.settings*')
+        || Request::is('admin/settings*')
+        || request()->routeIs('admin.reports.manage-mar')
+        || request()->routeIs('admin.reports.manage-medicine-types')
+        || request()->routeIs('admin.reports.manage-health-form-categories')
+        || request()->routeIs('admin.user-management*')
+        || Request::is('admin/user-management*');
+    $settingsNavLinks = [
+        ['label' => 'Personal Information', 'url' => route('admin.settings.personal'), 'active' => request()->routeIs('admin.settings.personal'), 'icon' => 'user-circle'],
+        ['label' => 'Clinic Information', 'url' => route('admin.settings.clinic'), 'active' => request()->routeIs('admin.settings.clinic'), 'icon' => 'home'],
+        ['label' => 'System Preferences', 'url' => route('admin.settings.preferences'), 'active' => request()->routeIs('admin.settings.preferences'), 'icon' => 'code-bracket-square'],
+        ['label' => 'Medical Configuration', 'url' => route('admin.settings.medical') ?: route('admin.reports.manage-mar'), 'active' => request()->routeIs('admin.settings.medical') || request()->routeIs('admin.reports.manage-mar') || request()->routeIs('admin.reports.manage-medicine-types') || request()->routeIs('admin.reports.manage-health-form-categories'), 'icon' => 'clipboard-document-list'],
+        ['label' => 'Users Management', 'url' => route('admin.user-management'), 'active' => request()->routeIs('admin.user-management*'), 'icon' => 'users'],
+        ['label' => 'FAQs', 'url' => route('admin.settings.faqs'), 'active' => request()->routeIs('admin.settings.faqs'), 'icon' => 'question-mark-circle'],
+    ];
     $walkinUrl = $isStudentAssistant ? url('/assistant/walkin') : url('/admin/walkin');
     $assistantEndpoint = $isStudentAssistant ? route('assistant.intent') : route('admin.assistant.intent');
     $displayName = optional($authUser)->name ?? 'Clinic User';
@@ -4887,18 +4931,41 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
       <a href="{{ $inventoryUrl }}" class="nav-inventory {{ (request()->routeIs('admin.inventory*') || request()->routeIs('assistant.inventory*')) ? 'active' : '' }}">
         <span class="sidebar-short"><x-outline-icon name="cube" /></span><span class="sidebar-label">Inventory</span>
       </a>
-      <a href="{{ $reportsUrl }}" class="nav-reports {{ ((request()->routeIs('admin.reports*') || request()->routeIs('assistant.reports*') || Request::is('admin/reports*') || Request::is('assistant/reports*')) && !(request()->routeIs('admin.reports.manage-mar') || request()->routeIs('admin.reports.manage-medicine-types'))) ? 'active' : '' }}">
-        <span class="sidebar-short"><x-outline-icon name="chart-bar" /></span><span class="sidebar-label">Reports</span>
-      </a>
+      <div class="sidebar-nav-group {{ $reportsIsActive ? 'is-open' : '' }}" data-sidebar-dropdown-group>
+        <a
+          href="{{ $reportsUrl }}"
+          class="nav-reports {{ $reportsIsActive ? 'active' : '' }}"
+          data-sidebar-dropdown-toggle
+          aria-expanded="{{ $reportsIsActive ? 'true' : 'false' }}"
+        >
+          <span class="sidebar-short"><x-outline-icon name="chart-bar" /></span>
+          <span class="sidebar-label">Reports</span>
+          <span class="sidebar-dropdown-caret" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+            </svg>
+          </span>
+        </a>
+        <div class="sidebar-subnav" aria-label="Reports">
+          @foreach($reportNavLinks as $reportNavLink)
+            <a href="{{ $reportNavLink['url'] }}" class="{{ $reportNavLink['active'] ? 'active' : '' }}">
+              <span class="sidebar-subnav-icon" aria-hidden="true">
+                <x-outline-icon :name="$reportNavLink['icon']" />
+              </span>
+              <span class="sidebar-subnav-label">{{ $reportNavLink['label'] }}</span>
+            </a>
+          @endforeach
+        </div>
+      </div>
      
       <a href="{{ $walkinUrl }}" class="nav-walkin {{ (Request::is('admin/walkin*') || Request::is('assistant/walkin*')) ? 'active' : '' }}">
         <span class="sidebar-short"><x-outline-icon name="user-plus" /></span><span class="sidebar-label">Walk-in</span>
       </a>
-      <div class="sidebar-nav-group {{ (request()->routeIs('admin.health_records') || Request::is('health-records') || Request::is('health-profile/*')) ? 'is-open' : '' }}" data-sidebar-health-records-group>
-        <button
-          type="button"
+      <div class="sidebar-nav-group {{ (request()->routeIs('admin.health_records') || Request::is('health-records') || Request::is('health-profile/*')) ? 'is-open' : '' }}" data-sidebar-dropdown-group>
+        <a
+          href="{{ $healthRecordsUrl }}"
           class="sidebar-nav-toggle nav-health {{ (request()->routeIs('admin.health_records') || Request::is('health-records') || Request::is('health-profile/*')) ? 'active' : '' }}"
-          data-sidebar-health-records-toggle
+          data-sidebar-dropdown-toggle
           aria-expanded="{{ (request()->routeIs('admin.health_records') || Request::is('health-records') || Request::is('health-profile/*')) ? 'true' : 'false' }}"
         >
           <span class="sidebar-short"><x-outline-icon name="document-text" /></span>
@@ -4908,12 +4975,12 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
               <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>
           </span>
-        </button>
+        </a>
         <div class="sidebar-subnav" aria-label="Health records user type">
           @foreach($healthRecordsTypeLinks as $healthTypeValue => $healthTypeMeta)
             <a
               href="{{ route('admin.health_records', array_filter(['user_type' => $healthTypeValue])) }}"
-              class="{{ $healthRecordsUserType === $healthTypeValue ? 'active' : '' }}"
+              class="{{ ($healthTypeValue === '' ? $healthRecordsUserType === '' : $healthRecordsUserType === $healthTypeValue) ? 'active' : '' }}"
             >
               <span class="sidebar-subnav-icon" aria-hidden="true">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -4937,9 +5004,32 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
           <a href="{{ route('admin.logs') }}" class="nav-audit {{ (request()->routeIs('admin.logs') || Request::is('admin/activity-logs*')) ? 'active' : '' }}">
             <span class="sidebar-short"><x-outline-icon name="clipboard-document-list" /></span><span class="sidebar-label">Audit Trail</span>
           </a>
-          <a href="{{ $settingsUrl }}" class="nav-settings {{ (request()->routeIs('admin.settings*') || Request::is('admin/settings*') || request()->routeIs('admin.reports.manage-mar') || request()->routeIs('admin.reports.manage-medicine-types')) ? 'active' : '' }}">
-            <span class="sidebar-short"><x-outline-icon name="cog-6-tooth" /></span><span class="sidebar-label">Settings</span>
-          </a>
+          <div class="sidebar-nav-group {{ $settingsIsActive ? 'is-open' : '' }}" data-sidebar-dropdown-group>
+            <a
+              href="{{ $settingsUrl }}"
+              class="nav-settings {{ $settingsIsActive ? 'active' : '' }}"
+              data-sidebar-dropdown-toggle
+              aria-expanded="{{ $settingsIsActive ? 'true' : 'false' }}"
+            >
+              <span class="sidebar-short"><x-outline-icon name="cog-6-tooth" /></span>
+              <span class="sidebar-label">Settings</span>
+              <span class="sidebar-dropdown-caret" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
+              </span>
+            </a>
+            <div class="sidebar-subnav" aria-label="Settings">
+              @foreach($settingsNavLinks as $settingsNavLink)
+                <a href="{{ $settingsNavLink['url'] }}" class="{{ $settingsNavLink['active'] ? 'active' : '' }}">
+                  <span class="sidebar-subnav-icon" aria-hidden="true">
+                    <x-outline-icon :name="$settingsNavLink['icon']" />
+                  </span>
+                  <span class="sidebar-subnav-label">{{ $settingsNavLink['label'] }}</span>
+                </a>
+              @endforeach
+            </div>
+          </div>
       @endif
       @if($canSeeDeveloperTools)
         <a href="{{ $developerToolsUrl }}" class="{{ (Request::is('admin/developer-tools*') || Request::is('assistant/developer-tools*') || Request::is('admin/api-testing*') || Request::is('assistant/api-testing*')) ? 'active' : '' }}">
