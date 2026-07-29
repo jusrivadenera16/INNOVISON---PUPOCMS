@@ -192,8 +192,14 @@ class WalkInController extends Controller
             return null;
         }
 
+        $normalizedIdentifier = strtoupper($identifier);
+
         return User::with('healthProfile')
             ->where(function ($query) use ($identifier) {
+                if (\Schema::hasColumn('users', 'employee_number')) {
+                    $query->orWhere('employee_number', $identifier);
+                }
+
                 if (\Schema::hasColumn('users', 'student_number')) {
                     $query->orWhere('student_number', $identifier);
                 }
@@ -205,6 +211,15 @@ class WalkInController extends Controller
                 $query->orWhere('barcode', $identifier)
                     ->orWhere('student_id', $identifier);
             })
+            ->orWhere(function ($query) use ($normalizedIdentifier) {
+                if (\Schema::hasColumn('users', 'employee_number')) {
+                    $query->orWhereRaw('UPPER(TRIM(employee_number)) = ?', [$normalizedIdentifier]);
+                }
+
+                if (\Schema::hasColumn('users', 'student_number')) {
+                    $query->orWhereRaw('UPPER(TRIM(student_number)) = ?', [$normalizedIdentifier]);
+                }
+            })
             ->first();
     }
 
@@ -215,6 +230,8 @@ class WalkInController extends Controller
             return null;
         }
 
+        $normalizedIdentifier = strtoupper($identifier);
+
         return User::with('healthProfile')
             ->where(function ($query) use ($identifier) {
                 if (\Schema::hasColumn('users', 'employee_number')) {
@@ -223,6 +240,15 @@ class WalkInController extends Controller
 
                 if (\Schema::hasColumn('users', 'student_number')) {
                     $query->orWhere('student_number', $identifier);
+                }
+            })
+            ->orWhere(function ($query) use ($normalizedIdentifier) {
+                if (\Schema::hasColumn('users', 'employee_number')) {
+                    $query->orWhereRaw('UPPER(TRIM(employee_number)) = ?', [$normalizedIdentifier]);
+                }
+
+                if (\Schema::hasColumn('users', 'student_number')) {
+                    $query->orWhereRaw('UPPER(TRIM(student_number)) = ?', [$normalizedIdentifier]);
                 }
             })
             ->first();
@@ -1443,24 +1469,17 @@ class WalkInController extends Controller
             ], 422);
         }
 
-        $student = $this->findUserByIdentifier($lookup);
+        $student = $isEmployeeLookupScope ? null : $this->findUserByIdentifier($lookup);
         $lookupMessage = $isEmployeeLookupScope
-            ? 'No employee record matched that ID number in local records.'
+            ? 'No employee or student record matched that ID number in local records.'
             : 'No patient matched that student number in local records or PUPTAS.';
         $lookupStatus = null;
 
         if ($isEmployeeLookupScope && $lookup !== '') {
             $student = $this->findUserByEmployeeIdNumber($lookup) ?: $student;
-            if (!$student) {
-                $localProfile = $this->findHealthProfileByReference($lookup);
-                if ($localProfile) {
-                    $student = $this->ensureLocalUserFromHealthProfile($localProfile, $lookup);
-                    $lookupStatus = 'local_employee_reference';
-                    $lookupMessage = 'Employee reference found in local records.';
-                }
-            } else {
+            if ($student) {
                 $lookupStatus = 'local_employee_id';
-                $lookupMessage = 'Employee ID number found in local records.';
+                $lookupMessage = 'Employee or student ID number found in local records.';
             }
         } elseif (
             $lookup !== ''
@@ -1567,7 +1586,7 @@ class WalkInController extends Controller
                 ?: ($student->contact_no ?? '')
             ));
             $walkinLookupIdentifier = (string) (
-                $student->student_number
+                ($isEmployeeLookupScope ? ($student->employee_number ?: $student->student_number) : $student->student_number)
                 ?: $resolvedReferenceNumber
                 ?: $student->student_id
                 ?: $student->id

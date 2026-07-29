@@ -8774,7 +8774,7 @@
                     <div id="scanForm" style="display: contents;">
                         <div id="scanStage" class="scan-stage">
                             <div id="scanner-container-scan" class="scan-surface" style="position:relative;">
-                                <p id="scanInlineNote" class="scan-inline-note">OCR mode is active. Align the physical ID inside the frame and continue once student number and name are matched.</p>
+                                <p id="scanInlineNote" class="scan-inline-note">OCR mode is active. Align the physical ID inside the frame and continue once the ID number and name are matched locally.</p>
                                 <div id="barcodeScanPanel">
                                     <div id="scan-loading">
                                         <div class="spinner"></div>
@@ -8831,7 +8831,7 @@
                             </div>
                             <div id="ocrStatus" class="ocr-status info" style="display:block;">AI verification could not finish right now.</div>
                             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                                <div id="ocrConfidenceText" class="ocr-meta">Student no. confidence: 10%</div>
+                                <div id="ocrConfidenceText" class="ocr-meta">ID number confidence: 10%</div>
                                 <div id="ocrLockBadge" class="ocr-lock-badge" style="display:none;">Locked on ID</div>
                             </div>
                             <div class="ocr-actions" style="margin-top:14px;">
@@ -8840,11 +8840,11 @@
                             </div>
                             <div class="manual-input-stack">
                                 <p class="manual-toggle-label">Alternative Lookup</p>
-                                <h4 class="manual-lookup-title">Student Number Lookup</h4>
-                                <p class="manual-lookup-copy">Use the student number when OCR cannot read the physical ID clearly.</p>
+                                <h4 class="manual-lookup-title">Employee's / Student Number Lookup</h4>
+                                <p class="manual-lookup-copy">Use the employee number or student number saved in local clinic records when OCR cannot read the physical ID clearly.</p>
                                 <form id="walkinFormManual" class="manual-lookup-form">
-                                    <input type="text" id="student_id_manual" placeholder="Enter student number" class="form-control" required>
-                                    <button type="submit" id="manualFindBtn" class="manual-find-btn" disabled>Find Student</button>
+                                    <input type="text" id="student_id_manual" placeholder="Enter employee or student number" class="form-control" required>
+                                    <button type="submit" id="manualFindBtn" class="manual-find-btn" disabled>Find Record</button>
                                 </form>
                                 <div id="manualLookupStatus" class="manual-lookup-status" role="status" aria-live="polite"></div>
                             </div>
@@ -8981,8 +8981,8 @@
 
             <div id="manualInputArea" style="display:none;" class="mt-3">
                 <form id="walkinFormManual" class="d-flex gap-2">
-                    <input type="text" id="student_id_manual" placeholder="Enter student number" class="form-control" style="margin-bottom:0;" required>
-                    <button type="submit" id="manualFindBtn" class="manual-find-btn" disabled>Find Student</button>
+                    <input type="text" id="student_id_manual" placeholder="Enter employee or student number" class="form-control" style="margin-bottom:0;" required>
+                    <button type="submit" id="manualFindBtn" class="manual-find-btn" disabled>Find Record</button>
                 </form>
                 <div id="manualLookupStatus" class="manual-lookup-status" role="status" aria-live="polite"></div>
             </div>
@@ -9510,7 +9510,7 @@
                 ocrNameLocked = true;
             }
 
-            $('#ocrConfidenceText').text(confidence ? `Student no. confidence: ${confidence}%` : 'Student number confidence will appear here after analysis.');
+            $('#ocrConfidenceText').text(confidence ? `ID number confidence: ${confidence}%` : 'ID number confidence will appear here after analysis.');
             $('#ocrResultPanel').show();
             $('#btnConfirmOcr').prop('disabled', !($('#ocr_student_number').val().trim() && $('#ocr_student_name').val().trim()));
             $('#ocrLockBadge').toggle(isLocked);
@@ -9760,12 +9760,12 @@
                     if (signature !== lastOcrSignature || !isAutoPass) {
                         buildStatus(
                             isLocked
-                                ? 'Live OCR locked onto the card. Please review the extracted student number and name before continuing.'
+                                ? 'Live OCR locked onto the card. Please review the extracted ID number and name before continuing.'
                                 : allowNameAutofill
                                     ? 'Live OCR found a stable student number and a usable name guess. Please review the extracted fields below.'
                                     : 'Live OCR found a stable student number. The system is matching the saved name now.',
                             'success',
-                            `Student no. confidence ${confidence}%`
+                            `ID number confidence ${confidence}%`
                         );
                         lastOcrSignature = signature;
                     }
@@ -9774,7 +9774,7 @@
                         buildStatus(
                             'The name is stable now. Keep the ID steady and we will keep reading the student number.',
                             'info',
-                            `Student no. confidence ${confidence}%`
+                            `ID number confidence ${confidence}%`
                         );
                         lastOcrSignature = signature;
                     }
@@ -9785,7 +9785,7 @@
                     }, 7000);
                     verifyWithAi(true);
                 } else if (!isAutoPass) {
-                    buildStatus('OCR could not confidently read the student number yet. You can keep the card steady, use AI student-number reading, or type it manually.', 'error', `Student no. confidence ${confidence}%`);
+                    buildStatus('OCR could not confidently read the ID number yet. You can keep the card steady, use AI ID-number reading, or type it manually.', 'error', `ID number confidence ${confidence}%`);
                 }
             } catch (error) {
                 if (!isAutoPass) {
@@ -9885,37 +9885,62 @@
             status.appendChild(copy);
         }
 
+        function isSupportedClinicIdNumber(value) {
+            const normalized = String(value || '').trim().toUpperCase();
+            if (!normalized) return false;
+
+            const studentNumberPattern = /^\d{4}-\d{5}-[A-Z]{2}-\d+$/;
+            const employeeNumberPattern = /^[A-Z0-9-]{3,40}$/;
+
+            return studentNumberPattern.test(normalized) || employeeNumberPattern.test(normalized);
+        }
+
         function verifyUser(id, studentName = '', autoProceed = false, verificationSource = 'ocr') {
             const isManualLookup = verificationSource === 'manual';
             const normalizedId = String(id || '').trim();
 
+            if (!isSupportedClinicIdNumber(normalizedId)) {
+                const invalidMessage = 'Enter a valid employee number or student number from local clinic records.';
+                if (isManualLookup) {
+                    setManualLookupStatus('error', invalidMessage);
+                    $('#manualFindBtn').prop('disabled', false).text('Find Record');
+                } else {
+                    buildStatus(invalidMessage, 'error');
+                }
+                return;
+            }
+
             if (isManualLookup) {
-                setManualLookupStatus('loading', 'Verifying student number...');
+                setManualLookupStatus('loading', 'Checking local clinic records...');
                 $('#manualFindBtn').prop('disabled', true).text('Verifying...');
             } else {
                 $('#scan-loading').css('display', 'flex');
             }
             $('#notification').html('');
-            $.get("{{ url($basePrefix . '/walkin/get-student') }}", { student_id: normalizedId, student_name: studentName, intake_target: intakeTarget }, function(res) {
+            $.get("{{ url($basePrefix . '/walkin/get-student') }}", {
+                student_id: normalizedId,
+                student_name: studentName,
+                intake_target: intakeTarget,
+                lookup_scope: 'clinic_local'
+            }, function(res) {
                 if (!isManualLookup) $('#scan-loading').hide();
                 autoProceedInFlight = false;
                 if (res.status === 'found') {
-                    if (isManualLookup) setManualLookupStatus('success', 'Student found. Opening the student record...');
+                    if (isManualLookup) setManualLookupStatus('success', 'Record found. Opening the local clinic record...');
                     window.location.href = res.redirect_url;
                 } else if (res.status === 'name_mismatch') {
                     const candidateName = res.candidate && res.candidate.name ? res.candidate.name : 'Saved patient name';
                     const candidateNumber = res.candidate && res.candidate.student_number ? res.candidate.student_number : normalizedId;
                     if (isManualLookup) {
-                        setManualLookupStatus('error', `Student ${candidateNumber} was found, but the supplied name does not match ${candidateName}.`);
+                        setManualLookupStatus('error', `Record ${candidateNumber} was found, but the supplied name does not match ${candidateName}.`);
                     } else {
                         buildStatus(`We found ${candidateNumber}, but the extracted name did not match the saved record (${candidateName}). Please review the OCR result before continuing.`, 'error');
                         $('#ocrResultPanel').show();
                     }
                 } else {
-                    const statusText = res.lookup_status ? ` (PUPTAS status ${res.lookup_status})` : '';
                     const failureMessage = res.message
-                        ? `${res.message}${statusText}`
-                        : `No user found for student number ${normalizedId}${statusText}. Please check the number and try again.`;
+                        ? res.message
+                        : `No local employee or student record found for ID number ${normalizedId}. Please check the number and try again.`;
 
                     if (isManualLookup) {
                         setManualLookupStatus('error', failureMessage);
@@ -9942,14 +9967,14 @@
                 }
             }).fail(() => {
                 if (isManualLookup) {
-                    setManualLookupStatus('error', 'Unable to verify the student number right now. Please try again.');
+                    setManualLookupStatus('error', 'Unable to check local clinic records right now. Please try again.');
                 } else {
                     $('#scan-loading').hide();
                 }
                 autoProceedInFlight = false;
             }).always(() => {
                 if (isManualLookup) {
-                    $('#manualFindBtn').prop('disabled', normalizedId === '').text('Find Student');
+                    $('#manualFindBtn').prop('disabled', normalizedId === '').text('Find Record');
                 }
             });
         }
@@ -9971,8 +9996,8 @@
             $('#scanMethodTitle').text('OCR ID Scan');
             $('#scanMethodNote').text(
                 isApplicantFlow
-                        ? 'Use the live camera feed to extract the applicant student number from the ID card, then review the applicant record.'
-                        : 'Use the live camera feed to extract the printed student number from the physical ID card, then fill the saved name from records.'
+                        ? 'Use the live camera feed to extract the printed ID number from the physical ID card, then review the saved local record.'
+                        : 'Use the live camera feed to extract the printed ID number from the physical ID card, then fill the saved name from records.'
             );
             $('#scanMethodBadge').text('OCR Active');
             $('#btnSwitchScanMode').hide();
@@ -9980,14 +10005,14 @@
             $('#headerTitle').text('OCR Ready');
             $('#headerSubtitle').text(
                 isApplicantFlow
-                        ? 'Choose OCR ID scanning or manual ID entry to identify the applicant record.'
+                        ? 'Choose OCR ID scanning or manual ID entry to identify the saved local clinic record.'
                         : ''
             );
             $('#headerIcon').text(isApplicantFlow ? 'AP' : 'SB');
             $('#scanInlineNote').text(
                 isApplicantFlow
-                        ? 'OCR mode is active. Align the physical ID inside the frame and continue once student number and name are matched.'
-                        : 'OCR mode is active. Align the physical ID inside the frame and the system will keep reading the student number live, then match the saved name automatically.'
+                        ? 'OCR mode is active. Align the physical ID inside the frame and continue once the ID number and name are matched locally.'
+                        : 'OCR mode is active. Align the physical ID inside the frame and the system will keep reading the ID number live, then match the saved name automatically.'
             );
             $('#barcodeScanPanel').show();
             $('#btnShowManual').show();
@@ -10108,7 +10133,8 @@
         });
 
         $('#student_id_manual').on('input', function() {
-            $('#manualFindBtn').prop('disabled', $(this).val().trim() === '');
+            const value = $(this).val().trim();
+            $('#manualFindBtn').prop('disabled', value === '');
             const manualStatus = document.getElementById('manualLookupStatus');
             if (manualStatus) {
                 manualStatus.className = 'manual-lookup-status';
@@ -10515,7 +10541,7 @@
             syncDocumentsModalCopy();
 
             if (lookupModalBadge) lookupModalBadge.textContent = isClinicLookupMode() ? 'ID' : 'AP';
-            if (lookupModalTitle) lookupModalTitle.textContent = isClinicLookupMode() ? "Employee's" : 'Applicants';
+            if (lookupModalTitle) lookupModalTitle.textContent = isClinicLookupMode() ? "Employee's / Students" : 'Applicants';
             if (lookupModalSubtitle) lookupModalSubtitle.textContent = isClinicLookupMode()
                 ? 'Enter an employee number or student number to look up local employee records.'
                 : "Enter the applicant's reference number to look up the record.";
