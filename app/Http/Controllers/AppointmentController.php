@@ -1254,8 +1254,8 @@ class AppointmentController extends Controller
             'course_applicable' => $this->isHealthCourseApplicable($user),
             'course_code' => $resolvedCourse['code'],
             'course_college' => $resolvedCourse['name'],
-            'year_level' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'year') : ($user->year ?? ''))),
-            'section' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'section') : ($user->section ?? ''))),
+            'year_level' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'year') : '')),
+            'section' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'section') : '')),
             'home_address' => trim((string) (
                 optional($healthProfile)->home_address
                 ?: ($resolvedAddress !== '' ? $resolvedAddress : trim((string) (optional($linkedAdminProfile)->address ?? '')))
@@ -1360,7 +1360,8 @@ class AppointmentController extends Controller
         foreach ($preferredTypes as $type) {
             $match = collect($addresses)->first(function ($address) use ($type) {
                 return is_array($address)
-                    && str_contains(strtolower(trim((string) data_get($address, 'addressType'))), $type);
+                    && str_contains(strtolower(trim((string) data_get($address, 'addressType'))), $type)
+                    && $this->guisisAddressHasUsableValues($address);
             });
 
             if (is_array($match)) {
@@ -1368,7 +1369,22 @@ class AppointmentController extends Controller
             }
         }
 
-        return is_array($addresses[0] ?? null) ? $addresses[0] : [];
+        $withValues = collect($addresses)->first(
+            fn ($address) => is_array($address) && $this->guisisAddressHasUsableValues($address)
+        );
+
+        return is_array($withValues) ? $withValues : (is_array($addresses[0] ?? null) ? $addresses[0] : []);
+    }
+
+    private function guisisAddressHasUsableValues(array $address): bool
+    {
+        return $this->firstGuisisValue([$address], [
+            'streetDetail.string',
+            'barangay.name',
+            'city.name',
+            'province.name.string',
+            'city.zipCode.string',
+        ]) !== '';
     }
 
     private function firstGuisisValue(array $sources, array $paths): string
@@ -1382,6 +1398,28 @@ class AppointmentController extends Controller
                 $value = data_get($source, $path);
                 if (is_scalar($value) && trim((string) $value) !== '') {
                     return trim((string) $value);
+                }
+
+                if (is_array($value)) {
+                    $wrappedValue = data_get($value, 'string');
+                    if (is_scalar($wrappedValue) && trim((string) $wrappedValue) !== '') {
+                        return trim((string) $wrappedValue);
+                    }
+
+                    $namedValue = data_get($value, 'name');
+                    if (is_scalar($namedValue) && trim((string) $namedValue) !== '') {
+                        return trim((string) $namedValue);
+                    }
+
+                    $nestedNameValue = data_get($value, 'name.string');
+                    if (is_scalar($nestedNameValue) && trim((string) $nestedNameValue) !== '') {
+                        return trim((string) $nestedNameValue);
+                    }
+
+                    $zipValue = data_get($value, 'zipCode.string');
+                    if (is_scalar($zipValue) && trim((string) $zipValue) !== '') {
+                        return trim((string) $zipValue);
+                    }
                 }
             }
         }
@@ -1516,11 +1554,17 @@ class AppointmentController extends Controller
 
             $birthday = $this->firstGuisisValue($sources, [
                 'dateOfBirth',
+                'dateOfBirth.string',
                 'date_of_birth',
+                'date_of_birth.string',
                 'birthDate',
+                'birthDate.string',
                 'birth_date',
+                'birth_date.string',
                 'birthday',
+                'birthday.string',
                 'dob',
+                'dob.string',
             ]);
             if ($birthday !== '') {
                 try {
@@ -1594,17 +1638,25 @@ class AppointmentController extends Controller
                 'home_address_province' => $this->firstGuisisValue($addressSources, [
                     'province.name.string',
                     'province.name',
+                    'provinceName',
+                    'provinceName.string',
                     'province',
                 ]),
                 'zipcode' => $this->firstGuisisValue($addressSources, [
                     'city.zipCode.string',
                     'city.zipCode',
+                    'city.zip_code.string',
+                    'city.zip_code',
+                    'city.zipcode.string',
+                    'city.zipcode',
                     'zipCode.string',
                     'zipCode',
+                    'zip_code.string',
                     'postal_code',
+                    'postal_code.string',
                     'postalCode',
+                    'postalCode.string',
                     'zip_code',
-                    'zipCode',
                 ]),
                 'guardian_name' => $this->firstGuisisValue($sources, [
                     'guardian_name',
