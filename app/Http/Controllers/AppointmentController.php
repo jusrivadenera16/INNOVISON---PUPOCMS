@@ -1156,18 +1156,23 @@ class AppointmentController extends Controller
         $resolvedCivilStatus = trim((string) (optional($healthProfile)->civil_status ?? optional($linkedAdminProfile)->civil_status ?? ''));
         $resolvedCivilStatus = in_array($resolvedCivilStatus, ['Single', 'Married'], true) ? $resolvedCivilStatus : 'Single';
 
-        $resolvedBirthday = (string) (
-            optional($healthProfile)->birthday
-            ?: ($usePuptasApplicantPrefill ? data_get($applicantData, 'birthday') : null)
-            ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'birthday') : null)
-            ?: $user->DOB
-            ?: optional($linkedAdminProfile)->birthday
-            ?: ''
-        );
+        $birthdayCandidates = [
+            optional($healthProfile)->birthday,
+            $usePuptasApplicantPrefill ? data_get($applicantData, 'birthday') : null,
+            $useGuisisStudentPrefill ? data_get($guisisAccountData, 'birthday') : null,
+            $user->DOB,
+            optional($linkedAdminProfile)->birthday,
+        ];
+        $resolvedBirthday = '';
+        foreach ($birthdayCandidates as $birthdayCandidate) {
+            $birthdayCandidate = trim((string) $birthdayCandidate);
+            if ($birthdayCandidate === '') {
+                continue;
+            }
 
-        if ($resolvedBirthday !== '') {
             try {
-                $resolvedBirthday = \Carbon\Carbon::parse($resolvedBirthday)->format('Y-m-d');
+                $resolvedBirthday = \Carbon\Carbon::parse($birthdayCandidate)->format('Y-m-d');
+                break;
             } catch (\Throwable $exception) {
                 $resolvedBirthday = '';
             }
@@ -1190,6 +1195,18 @@ class AppointmentController extends Controller
         ]))) : '';
         if ($resolvedAddress === '' && $useGuisisStudentPrefill) {
             $resolvedAddress = trim((string) data_get($guisisAccountData, 'home_address'));
+        }
+        $resolvedZipcode = '';
+        foreach ([
+            optional($healthProfile)->zipcode,
+            $usePuptasApplicantPrefill ? data_get($applicantData, 'postal_code') : null,
+            $useGuisisStudentPrefill ? data_get($guisisAccountData, 'zipcode') : null,
+        ] as $zipcodeCandidate) {
+            $zipcodeCandidate = trim((string) $zipcodeCandidate);
+            if ($zipcodeCandidate !== '') {
+                $resolvedZipcode = $zipcodeCandidate;
+                break;
+            }
         }
         $resolvedCourse = $this->resolveHealthFormCourse($user, $healthProfile, $applicantData);
 
@@ -1240,7 +1257,11 @@ class AppointmentController extends Controller
                 : trim((string) ($user->middle_name ?? optional($linkedAdminProfile)->middle_name ?? '')),
             'last_name' => $applicantLastName
                 ?: trim((string) (optional($linkedAdminProfile)->last_name ?? $user->last_name ?? '')),
-            'suffix_name' => trim((string) (optional($linkedAdminProfile)->suffix_name ?? '')),
+            'suffix_name' => trim((string) (
+                $useGuisisStudentPrefill
+                    ? data_get($guisisAccountData, 'suffix_name')
+                    : optional($linkedAdminProfile)->suffix_name
+            )),
             'student_id' => (string) (optional($healthProfile)->student_id ?? $user->student_id ?? ''),
             'reference_number' => $resolvedReferenceNumber,
             'student_number' => $this->resolveStudentNumber($user, $healthProfile, $applicantData),
@@ -1264,11 +1285,7 @@ class AppointmentController extends Controller
             'home_address_barangay' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_barangay') : '')),
             'home_address_city_municipality' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_city_municipality') : '')),
             'home_address_province' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_province') : '')),
-            'zipcode' => trim((string) (
-                optional($healthProfile)->zipcode
-                ?: ($usePuptasApplicantPrefill ? data_get($applicantData, 'postal_code') : '')
-                ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'zipcode') : '')
-            )),
+            'zipcode' => $resolvedZipcode,
             'school_year' => (string) (optional($healthProfile)->school_year ?? $this->resolveSchoolYear($applicantData, $user)),
             'height' => (string) ($this->extractMeasurementNumber(optional($healthProfile)->height ?? $user->height ?? '') ?? ''),
             'weight' => (string) ($this->extractMeasurementNumber(optional($healthProfile)->weight ?? $user->weight ?? '') ?? ''),
@@ -1356,35 +1373,37 @@ class AppointmentController extends Controller
             return $addresses;
         }
 
-        $preferredTypes = ['current', 'present', 'home', 'permanent'];
-        foreach ($preferredTypes as $type) {
-            $match = collect($addresses)->first(function ($address) use ($type) {
-                return is_array($address)
-                    && str_contains(strtolower(trim((string) data_get($address, 'addressType'))), $type)
-                    && $this->guisisAddressHasUsableValues($address);
-            });
+        $ranked = collect($addresses)
+            ->filter(fn ($address) => is_array($address))
+            ->sortByDesc(fn ($address) => $this->guisisAddressCompletenessScore($address))
+            ->values();
 
-            if (is_array($match)) {
-                return $match;
+        return $ranked->first() ?: (is_array($addresses[0] ?? null) ? $addresses[0] : []);
+    }
+
+    private function guisisAddressCompletenessScore(array $address): int
+    {
+        $score = 0;
+        foreach ([
+            ['streetDetail.string'],
+            ['barangay.name'],
+            ['city.name'],
+            ['province.name.string'],
+            ['city.zipCode.string'],
+        ] as $paths) {
+            if ($this->firstGuisisValue([$address], $paths) !== '') {
+                $score++;
             }
         }
 
-        $withValues = collect($addresses)->first(
-            fn ($address) => is_array($address) && $this->guisisAddressHasUsableValues($address)
-        );
+        $addressType = strtolower(trim((string) $this->firstGuisisValue([$address], ['addressType'])));
+        if (str_contains($addressType, 'current') || str_contains($addressType, 'present') || str_contains($addressType, 'home')) {
+            $score += 2;
+        } elseif (str_contains($addressType, 'permanent')) {
+            $score++;
+        }
 
-        return is_array($withValues) ? $withValues : (is_array($addresses[0] ?? null) ? $addresses[0] : []);
-    }
-
-    private function guisisAddressHasUsableValues(array $address): bool
-    {
-        return $this->firstGuisisValue([$address], [
-            'streetDetail.string',
-            'barangay.name',
-            'city.name',
-            'province.name.string',
-            'city.zipCode.string',
-        ]) !== '';
+        return $score;
     }
 
     private function firstGuisisValue(array $sources, array $paths): string

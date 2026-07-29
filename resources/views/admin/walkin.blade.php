@@ -7873,8 +7873,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" />
                         </svg>
                     </span>
-                    <h3 class="intake-option-title">Employee's</h3>
-                    <p class="intake-option-copy">Enter Employee's ID to lookup clinic records to manage clinic profiles.</p>
+                    <h3 class="intake-option-title">Employee's / Student</h3>
+                    <p class="intake-option-copy">Enter Employee's / Student ID to lookup clinic records to manage clinic profiles.</p>
                 </div>
             </a>
 
