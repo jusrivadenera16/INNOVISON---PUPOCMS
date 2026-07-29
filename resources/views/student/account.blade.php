@@ -4146,7 +4146,8 @@
     $cleanFirstName = $cleanNamePart($accountProfileData['first_name'] ?? $user->first_name ?? '');
     $cleanMiddleName = $cleanNamePart($accountProfileData['middle_name'] ?? $user->middle_name ?? '');
     $cleanLastName = $cleanNamePart($accountProfileData['last_name'] ?? $user->last_name ?? '');
-    $rebuiltDisplayFullName = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([$cleanFirstName, $cleanMiddleName, $cleanLastName]))));
+    $cleanSuffixName = $cleanNamePart($accountProfileData['suffix_name'] ?? $user->suffix_name ?? optional($linkedAdminProfile)->suffix_name ?? '');
+    $rebuiltDisplayFullName = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([$cleanFirstName, $cleanMiddleName, $cleanLastName, $cleanSuffixName]))));
     $displayFullName = $rebuiltDisplayFullName !== ''
         ? $rebuiltDisplayFullName
         : ($displayFullName !== '' ? $displayFullName : ($hasGuisisAccountData ? 'Available once enrolled' : ($user->name ?? 'Student')));
@@ -4161,7 +4162,7 @@
     $heroAcademicParts = array_values(array_filter([$displayStudentNumber, $displayCourse], fn ($value) => trim((string) $value) !== ''));
     $localMiddleName = $cleanNamePart($accountProfileData['middle_name'] ?? $user->middle_name ?? optional($linkedAdminProfile)->middle_name ?? '');
     $localMiddleName = $localMiddleName !== '' ? $localMiddleName : 'N/A';
-    $localSuffixName = trim((string) ($accountProfileData['suffix_name'] ?? optional($linkedAdminProfile)->suffix_name ?? ''));
+    $localSuffixName = trim((string) ($accountProfileData['suffix_name'] ?? $user->suffix_name ?? optional($linkedAdminProfile)->suffix_name ?? ''));
     $localSuffixName = $localSuffixName !== '' ? $localSuffixName : 'N/A';
     $guisisPendingText = 'Available once enrolled';
     $guisisValue = fn ($value) => trim((string) $value) !== '' ? trim((string) $value) : $guisisPendingText;
@@ -4354,6 +4355,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div>
                                 <label class="input-label">Last Name</label>
                                 <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['last_name'] ?? '') }}" value="{{ $guisisValue($accountProfileData['last_name'] ?? '') }}" readonly>
+                            </div>
+                            <div>
+                                <label class="input-label">Suffix Name</label>
+                                <input type="text" class="form-control" value="{{ $localSuffixName }}" readonly>
                             </div>
                         </div>
                         <div class="profile-grid-2">

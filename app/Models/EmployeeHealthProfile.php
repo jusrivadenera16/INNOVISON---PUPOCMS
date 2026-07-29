@@ -17,6 +17,7 @@ class EmployeeHealthProfile extends Model
         'first_name',
         'middle_name',
         'last_name',
+        'suffix_name',
         'name',
         'home_address',
         'contact_no',

@@ -39,6 +39,7 @@ class User extends Authenticatable
     protected $fillable = [
      'first_name',
     'last_name',
+    'suffix_name',
     'name',
     'student_id',
     'student_number',
@@ -100,6 +101,8 @@ class User extends Authenticatable
             $firstName = trim((string) ($user->first_name ?? ''));
             $middleName = trim((string) ($user->middle_name ?? ''));
             $lastName = trim((string) ($user->last_name ?? ''));
+            $hasSuffixNameColumn = \Illuminate\Support\Facades\Schema::hasColumn('users', 'suffix_name');
+            $suffixName = $hasSuffixNameColumn ? trim((string) ($user->suffix_name ?? '')) : '';
             $name = trim((string) ($user->name ?? ''));
 
             if ($firstName === '' && $name !== '') {
@@ -120,11 +123,15 @@ class User extends Authenticatable
                 $firstName,
                 $middleName,
                 $lastName,
+                $suffixName,
             ])));
 
             $user->first_name = $firstName;
             $user->middle_name = $middleName !== '' ? $middleName : null;
             $user->last_name = $lastName;
+            if ($hasSuffixNameColumn) {
+                $user->suffix_name = $suffixName !== '' ? $suffixName : null;
+            }
             $user->name = $name;
 
             if (trim((string) ($user->email ?? '')) === '') {
@@ -145,6 +152,7 @@ class User extends Authenticatable
                 $this->first_name,
                 $this->middle_name,
                 $this->last_name,
+                $this->suffix_name,
             ])));
         }
         return $value;

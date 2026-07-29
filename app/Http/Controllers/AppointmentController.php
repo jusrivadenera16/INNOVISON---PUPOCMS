@@ -406,6 +406,7 @@ class AppointmentController extends Controller
                 'first_name' => '',
                 'middle_name' => '',
                 'last_name' => '',
+                'suffix_name' => '',
                 'full_name' => '',
                 'reference_number' => '',
                 'email' => '',
@@ -434,6 +435,19 @@ class AppointmentController extends Controller
             ?: data_get($applicantData, 'family_name')
             ?: data_get($applicantData, 'surname')
         ));
+        $suffixName = trim((string) (
+            data_get($applicantData, 'user.suffix_name')
+            ?: data_get($applicantData, 'user.suffixName')
+            ?: data_get($applicantData, 'user.extension_name')
+            ?: data_get($applicantData, 'user.extensionName')
+            ?: data_get($applicantData, 'user.suffix')
+            ?: data_get($applicantData, 'suffix_name')
+            ?: data_get($applicantData, 'suffixName')
+            ?: data_get($applicantData, 'extension_name')
+            ?: data_get($applicantData, 'extensionName')
+            ?: data_get($applicantData, 'suffix')
+            ?: data_get($applicantData, 'name_suffix')
+        ));
         $referenceNumber = trim((string) (
             data_get($applicantData, 'user.reference_number')
             ?: data_get($applicantData, 'reference_number')
@@ -457,7 +471,8 @@ class AppointmentController extends Controller
             'first_name' => $firstName,
             'middle_name' => $middleName,
             'last_name' => $lastName,
-            'full_name' => $this->formatDisplayNameParts($firstName, $middleName, $lastName),
+            'suffix_name' => $suffixName,
+            'full_name' => $this->formatDisplayNameParts($firstName, $middleName, $lastName, $suffixName),
             'reference_number' => $referenceNumber,
             'email' => $email,
             'school_year' => $schoolYear,
@@ -473,6 +488,7 @@ class AppointmentController extends Controller
         $firstName = trim((string) ($identity['first_name'] ?? ''));
         $middleName = trim((string) ($identity['middle_name'] ?? ''));
         $lastName = trim((string) ($identity['last_name'] ?? ''));
+        $suffixName = trim((string) ($identity['suffix_name'] ?? ''));
         $referenceNumber = trim((string) ($identity['reference_number'] ?? ''));
         $shouldSave = false;
 
@@ -492,6 +508,14 @@ class AppointmentController extends Controller
         if ($lastName !== '' && trim((string) $user->last_name) !== $lastName) {
             $user->last_name = $lastName;
             $shouldSave = true;
+        }
+
+        if (\Schema::hasColumn('users', 'suffix_name')) {
+            $resolvedSuffixName = $suffixName !== '' ? $suffixName : null;
+            if (($user->suffix_name ?: null) !== $resolvedSuffixName) {
+                $user->suffix_name = $resolvedSuffixName;
+                $shouldSave = true;
+            }
         }
 
         if (
@@ -1213,6 +1237,7 @@ class AppointmentController extends Controller
         $applicantFirstName = trim((string) $applicantIdentity['first_name']);
         $applicantMiddleName = trim((string) $applicantIdentity['middle_name']);
         $applicantLastName = trim((string) $applicantIdentity['last_name']);
+        $applicantSuffixName = trim((string) $applicantIdentity['suffix_name']);
         $applicantStructuredName = trim((string) $applicantIdentity['full_name']);
         $hasOfficialApplicantIdentity = (bool) $applicantIdentity['available'];
         $resolvedReferenceNumber = match ($referenceMode) {
@@ -1248,6 +1273,7 @@ class AppointmentController extends Controller
             'puptas_first_name' => $applicantFirstName,
             'puptas_middle_name' => $applicantMiddleName,
             'puptas_last_name' => $applicantLastName,
+            'puptas_suffix_name' => $applicantSuffixName,
             'full_name' => $applicantStructuredName
                 ?: trim((string) (data_get($applicantData, 'full_name') ?: data_get($applicantData, 'name') ?: $user->name)),
             'first_name' => $applicantFirstName
@@ -1258,9 +1284,11 @@ class AppointmentController extends Controller
             'last_name' => $applicantLastName
                 ?: trim((string) (optional($linkedAdminProfile)->last_name ?? $user->last_name ?? '')),
             'suffix_name' => trim((string) (
-                $useGuisisStudentPrefill
+                optional($healthProfile)->suffix_name
+                ?: $applicantSuffixName
+                ?: ($useGuisisStudentPrefill
                     ? data_get($guisisAccountData, 'suffix_name')
-                    : optional($linkedAdminProfile)->suffix_name
+                    : (optional($linkedAdminProfile)->suffix_name ?? ($user->suffix_name ?? '')))
             )),
             'student_id' => (string) (optional($healthProfile)->student_id ?? $user->student_id ?? ''),
             'reference_number' => $resolvedReferenceNumber,
@@ -1705,6 +1733,13 @@ class AppointmentController extends Controller
             ] as $sourceKey => $userColumn) {
                 if (($data[$sourceKey] ?? '') !== '' && trim((string) ($user->{$userColumn} ?? '')) === '') {
                     $user->{$userColumn} = $data[$sourceKey];
+                    $shouldSave = true;
+                }
+            }
+
+            if (\Schema::hasColumn('users', 'suffix_name') && ($data['suffix_name'] ?? '') !== '') {
+                if (trim((string) ($user->suffix_name ?? '')) === '') {
+                    $user->suffix_name = $data['suffix_name'];
                     $shouldSave = true;
                 }
             }
@@ -2318,7 +2353,13 @@ public function account(Request $request)
             'first_name' => $employeeFirstName,
             'middle_name' => $employeeMiddleName ?? '',
             'last_name' => $employeeLastName,
-            'full_name' => $this->formatDisplayNameParts($employeeFirstName, $employeeMiddleName, $employeeLastName),
+            'suffix_name' => trim((string) ($employeeProfileData['suffix_name'] ?? $user->suffix_name ?? '')),
+            'full_name' => $this->formatDisplayNameParts(
+                $employeeFirstName,
+                $employeeMiddleName,
+                $employeeLastName,
+                trim((string) ($employeeProfileData['suffix_name'] ?? $user->suffix_name ?? ''))
+            ),
             'email' => trim((string) ($employeeProfileData['email'] ?? $user->email ?? '')),
             'course_college' => trim((string) ($employeeProfileData['course_college'] ?? '')),
             'year' => trim((string) ($employeeProfileData['school_year'] ?? '')),
@@ -3572,6 +3613,7 @@ private function buildEmployeeHealthFormPrefill(User $user, ?EmployeeHealthProfi
         'first_name' => trim((string) (optional($employeeProfile)->first_name ?: data_get($facultyProfile, 'first_name') ?: $user->first_name)),
         'middle_name' => trim((string) (optional($employeeProfile)->middle_name ?: data_get($facultyProfile, 'middle_name') ?: $user->middle_name)),
         'last_name' => trim((string) (optional($employeeProfile)->last_name ?: data_get($facultyProfile, 'last_name') ?: $user->last_name)),
+        'suffix_name' => trim((string) (optional($employeeProfile)->suffix_name ?: data_get($facultyProfile, 'suffix_name') ?: data_get($facultyProfile, 'suffixName') ?: $user->suffix_name)),
         'email' => trim((string) ($user->email ?: data_get($facultyProfile, 'email') ?: optional($linkedAdminProfile)->email)),
         'employee_number' => trim((string) (optional($employeeProfile)->employee_number ?: data_get($facultyProfile, 'faculty_code') ?: $user->employee_number ?: data_get($facultyProfile, 'faculty_id') ?: data_get($facultyProfile, 'id'))),
         'office' => trim((string) (optional($employeeProfile)->office ?: data_get($facultyProfile, 'department') ?: optional($linkedAdminProfile)->office)),
@@ -3714,6 +3756,7 @@ public function storeEmployeeHealthForm(Request $request)
         'first_name' => ['required', 'string', 'max:120'],
         'middle_name' => ['nullable', 'string', 'max:120'],
         'last_name' => ['required', 'string', 'max:120'],
+        'suffix_name' => ['nullable', 'string', 'max:120'],
         'street_address' => ['required', 'string', 'max:255'],
         'barangay' => ['required', 'string', 'max:120'],
         'city_municipality' => ['required', 'string', 'max:120'],
@@ -3827,10 +3870,12 @@ public function storeEmployeeHealthForm(Request $request)
     }
 
     $validated['middle_name'] = $this->normalizeOptionalNamePart($validated['middle_name'] ?? null);
+    $validated['suffix_name'] = $this->normalizeOptionalNamePart($validated['suffix_name'] ?? null);
     $fullName = $this->formatDisplayNameParts(
         $validated['first_name'],
         $validated['middle_name'],
-        $validated['last_name']
+        $validated['last_name'],
+        $validated['suffix_name']
     );
     $homeAddress = trim(implode(', ', array_filter([
         $validated['street_address'],
@@ -3857,6 +3902,7 @@ public function storeEmployeeHealthForm(Request $request)
         'first_name' => $validated['first_name'],
         'middle_name' => $validated['middle_name'] ?? null,
         'last_name' => $validated['last_name'],
+        'suffix_name' => $validated['suffix_name'] ?? null,
         'name' => $fullName,
         'home_address' => $homeAddress,
         'contact_no' => $validated['contact_no'],
@@ -3933,6 +3979,9 @@ public function storeEmployeeHealthForm(Request $request)
     $user->first_name = $validated['first_name'];
     $user->middle_name = $validated['middle_name'] ?? null;
     $user->last_name = $validated['last_name'];
+    if (\Schema::hasColumn('users', 'suffix_name')) {
+        $user->suffix_name = $validated['suffix_name'] ?? null;
+    }
     $user->name = $fullName;
     $user->gender = $validated['sex'];
     $user->employee_number = $validated['employee_number'] ?? null;
@@ -4243,6 +4292,7 @@ public function storeHealthForm(Request $request)
         'age'               => 'required|numeric|min:15|max:100',
         'sex'               => 'required|string',
         'civil_status'      => 'required|string',
+        'suffix_name'        => 'nullable|string|max:120',
         'course_code'       => 'nullable|string|max:30',
         'course_college'    => 'nullable|string|max:255',
         'blood_type'        => 'required|string|max:20',
@@ -4431,6 +4481,9 @@ public function storeHealthForm(Request $request)
     if ($resolvedGender !== '') {
         $user->gender = $resolvedGender;
     }
+    if (\Schema::hasColumn('users', 'suffix_name')) {
+        $user->suffix_name = $this->normalizeOptionalNamePart($request->input('suffix_name'));
+    }
     $user->reference_number = $officialReference;
     $user->save();
 
@@ -4444,9 +4497,7 @@ public function storeHealthForm(Request $request)
         $healthDeclarationPath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'health_declaration', 'health_profiles/health_declarations', $oldPaths);
         $digitalSignaturePath = $this->storeDigitalSignatureOrKeep($request, $existingHealthProfile, $oldPaths);
 
-        $healthProfile = \App\Models\HealthProfile::updateOrCreate(
-            ['user_id' => $user->id],
-            [
+        $healthProfileData = [
                 'student_id'         => $request->student_id,
                 'reference_number'   => $officialReference,
                 'school_year'        => $request->school_year,
@@ -4506,7 +4557,15 @@ public function storeHealthForm(Request $request)
                 'resubmission_requested_at' => null,
                 'resubmitted_at'      => $isHealthFormCorrectionMode ? now() : optional($existingHealthProfile)->resubmitted_at,
                 'verified_at'        => null,
-            ]
+            ];
+
+        if (\Schema::hasColumn('health_profiles', 'suffix_name')) {
+            $healthProfileData['suffix_name'] = $this->normalizeOptionalNamePart($request->input('suffix_name'));
+        }
+
+        $healthProfile = \App\Models\HealthProfile::updateOrCreate(
+            ['user_id' => $user->id],
+            $healthProfileData
         );
 
         foreach ($oldPaths as $oldPath) {

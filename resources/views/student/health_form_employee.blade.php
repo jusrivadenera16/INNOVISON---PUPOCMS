@@ -2312,7 +2312,7 @@
             @php
                 $employeeValue = fn (string $field, $fallback = '') => old($field, data_get($employeeProfile ?? null, $field, data_get($employeePrefill ?? [], $field, $fallback)));
                 $employeeCheckedValues = fn (string $field) => collect(old($field, data_get($employeeProfile ?? null, $field, [])))->filter()->values()->all();
-                $employeeName = trim((string) data_get($employeePrefill ?? [], 'first_name') . ' ' . (string) data_get($employeePrefill ?? [], 'middle_name') . ' ' . (string) data_get($employeePrefill ?? [], 'last_name'));
+                $employeeName = trim((string) data_get($employeePrefill ?? [], 'first_name') . ' ' . (string) data_get($employeePrefill ?? [], 'middle_name') . ' ' . (string) data_get($employeePrefill ?? [], 'last_name') . ' ' . (string) data_get($employeePrefill ?? [], 'suffix_name'));
                 $employeeName = trim(preg_replace('/\s+/', ' ', $employeeName));
                 if ($employeeName === '') {
                     $employeeName = trim((string) ($displayName ?? ''));
@@ -2322,6 +2322,7 @@
                         $user->first_name ?? '',
                         $user->middle_name ?? '',
                         $user->last_name ?? '',
+                        $user->suffix_name ?? '',
                     ])));
                 }
                 $employeeErrorGroups = [
@@ -2399,7 +2400,7 @@
                     <p class="step-fill-note">Complete your identity, department, and emergency contact details.</p>
                     <input id="form_date" type="hidden" name="form_date" value="{{ now()->toDateString() }}">
                     <div class="employee-personal-stack">
-                        <div class="employee-personal-row three">
+                        <div class="employee-personal-row four">
                             <div class="form-field">
                                 <label class="form-label" for="first_name">First Name <span class="required">*</span></label>
                                 <input id="first_name" type="text" name="first_name" class="form-control" value="{{ $employeeValue('first_name', $user->first_name ?? '') }}" readonly required>
@@ -2412,6 +2413,10 @@
                             <div class="form-field">
                                 <label class="form-label" for="last_name">Last Name <span class="required">*</span></label>
                                 <input id="last_name" type="text" name="last_name" class="form-control" value="{{ $employeeValue('last_name', $user->last_name ?? '') }}" readonly required>
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="suffix_name">Suffix Name</label>
+                                <input id="suffix_name" type="text" name="suffix_name" class="form-control" value="{{ $employeeValue('suffix_name', $user->suffix_name ?? '') }}" readonly>
                             </div>
                         </div>
                         <div class="employee-personal-row single">

@@ -2204,6 +2204,10 @@
                     ($prefill['puptas_last_name'] ?? '')
                     ?: ($prefill['last_name'] ?? '')
                 ));
+                $displaySuffixName = trim((string) (
+                    ($prefill['puptas_suffix_name'] ?? '')
+                    ?: ($prefill['suffix_name'] ?? '')
+                ));
 
                 $displayReferenceNumber = trim((string) ($prefill['reference_number'] ?? ''));
                 $referenceMode = trim((string) ($prefill['reference_mode'] ?? 'admission'));
@@ -2423,6 +2427,11 @@
                         <div class="form-field">
                             <label class="form-label" for="profile_last_name">Last Name</label>
                             <input id="profile_last_name" class="form-control identity-readonly" value="{{ $displayLastName !== '' ? $displayLastName : 'N/A' }}" readonly>
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="profile_suffix_name">Suffix Name</label>
+                            <input id="profile_suffix_name" class="form-control identity-readonly" value="{{ $displaySuffixName }}" readonly>
+                            <input type="hidden" name="suffix_name" value="{{ $displaySuffixName }}">
                         </div>
                     </div>
                     <div class="form-field personal-email-field">

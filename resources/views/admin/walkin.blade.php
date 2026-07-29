@@ -10519,7 +10519,7 @@
             if (lookupModalSubtitle) lookupModalSubtitle.textContent = isClinicLookupMode()
                 ? 'Enter an employee number or student number to look up local employee records.'
                 : "Enter the applicant's reference number to look up the record.";
-            if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isClinicLookupMode() ? "Employee's ID Lookup" : 'Reference Lookup';
+            if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isClinicLookupMode() ? "Employee's / Student ID Lookup" : 'Reference Lookup';
             if (lookupModalEntrySubtitle) lookupModalEntrySubtitle.textContent = isClinicLookupMode()
                 ? 'Use the employee number or student number to open the saved local employee record.'
                 : 'Choose encoding for the first station or final review for approval.';
