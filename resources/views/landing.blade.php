@@ -5750,15 +5750,13 @@
 
                         @guest('student')
                             @guest('admin')
-                                @env('local')
-                                    <a class="local-login-link" href="{{ route('login') }}">
-                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor"/>
-                                            <path d="M8 8h8M8 12h5M8 16h3" stroke="currentColor" stroke-linecap="round"/>
-                                        </svg>
-                                        <span>Local Login</span>
-                                    </a>
-                                @endenv
+                                <a class="local-login-link" href="{{ route('login') }}">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor"/>
+                                        <path d="M8 8h8M8 12h5M8 16h3" stroke="currentColor" stroke-linecap="round"/>
+                                    </svg>
+                                    <span>Local Login</span>
+                                </a>
                             @endguest
                         @endguest
                     </div>
@@ -5853,15 +5851,13 @@
 
                                 @guest('student')
                                     @guest('admin')
-                                        @env('local')
-                                            <a class="local-login-link" href="{{ route('login') }}">
-                                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                    <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor"/>
-                                                    <path d="M8 8h8M8 12h5M8 16h3" stroke="currentColor" stroke-linecap="round"/>
-                                                </svg>
-                                                <span>Local Login</span>
-                                            </a>
-                                        @endenv
+                                        <a class="local-login-link" href="{{ route('login') }}">
+                                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor"/>
+                                                <path d="M8 8h8M8 12h5M8 16h3" stroke="currentColor" stroke-linecap="round"/>
+                                            </svg>
+                                            <span>Local Login</span>
+                                        </a>
                                     @endguest
                                 @endguest
                             </div>
