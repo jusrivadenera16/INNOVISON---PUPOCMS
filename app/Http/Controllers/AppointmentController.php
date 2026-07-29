@@ -1409,6 +1409,27 @@ class AppointmentController extends Controller
         return $ranked->first() ?: (is_array($addresses[0] ?? null) ? $addresses[0] : []);
     }
 
+    private function guisisAddressRows($payload): array
+    {
+        if (!is_array($payload)) {
+            return [];
+        }
+
+        $addresses = data_get($payload, 'data', $payload);
+        if (!is_array($addresses)) {
+            return [];
+        }
+
+        if (!array_is_list($addresses)) {
+            return [$addresses];
+        }
+
+        return collect($addresses)
+            ->filter(fn ($address) => is_array($address))
+            ->values()
+            ->all();
+    }
+
     private function guisisAddressCompletenessScore(array $address): int
     {
         $score = 0;
@@ -1425,11 +1446,9 @@ class AppointmentController extends Controller
         }
 
         $addressType = strtolower(trim((string) $this->firstGuisisValue([$address], ['addressType'])));
-        if (str_contains($addressType, 'permanent') && !str_contains($addressType, 'provincial')) {
-            $score += 6;
-        } elseif (str_contains($addressType, 'current') || str_contains($addressType, 'present') || str_contains($addressType, 'home')) {
-            $score += 3;
-        } elseif (str_contains($addressType, 'provincial')) {
+        if (str_contains($addressType, 'current') || str_contains($addressType, 'present') || str_contains($addressType, 'home')) {
+            $score += 2;
+        } elseif (str_contains($addressType, 'permanent')) {
             $score++;
         }
 
