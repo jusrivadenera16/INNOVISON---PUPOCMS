@@ -19,6 +19,9 @@ SVG,
         'arrow-long-right' => <<<'SVG'
 <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
 SVG,
+        'arrow-down-tray' => <<<'SVG'
+<path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75v10.5m0 0 3.75-3.75M12 14.25 8.25 10.5M5.25 15.75v2.25A2.25 2.25 0 0 0 7.5 20.25h9A2.25 2.25 0 0 0 18.75 18v-2.25" />
+SVG,
         'bars-3' => <<<'SVG'
 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
 SVG,

@@ -11,19 +11,12 @@
         min-height: calc(100vh - 72px);
         padding: 8px 0 40px;
         background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.90) 0%, rgba(255, 248, 249, 0.82) 44%, rgba(255, 255, 255, 0.94) 100%),
+            linear-gradient(180deg, rgba(255, 250, 250, 0.70), rgba(255, 255, 255, 0.58) 42%, rgba(245, 248, 247, 0.72) 100%),
             url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat;
         overflow: hidden;
     }
     .booking-page-shell::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-        background:
-            radial-gradient(circle at 14% 8%, rgba(139, 0, 0, 0.10), transparent 24%),
-            radial-gradient(circle at 86% 18%, rgba(250, 204, 21, 0.12), transparent 28%);
-        pointer-events: none;
+        content: none;
     }
     .booking-page-container {
         position: relative;
@@ -1052,13 +1045,11 @@
     }
     html[data-theme="dark"] .booking-page-shell {
         background:
-            linear-gradient(180deg, rgba(2, 6, 23, 0.92) 0%, rgba(15, 23, 42, 0.88) 48%, rgba(2, 6, 23, 0.94) 100%),
+            linear-gradient(180deg, rgba(2, 6, 23, 0.82), rgba(15, 23, 42, 0.74) 42%, rgba(2, 6, 23, 0.84) 100%),
             url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat;
     }
     html[data-theme="dark"] .booking-page-shell::before {
-        background:
-            radial-gradient(circle at 16% 8%, rgba(250, 204, 21, 0.08), transparent 26%),
-            radial-gradient(circle at 86% 16%, rgba(139, 0, 0, 0.22), transparent 28%);
+        content: none;
     }
 
     html[data-theme="dark"] .page-kicker,

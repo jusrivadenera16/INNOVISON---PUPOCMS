@@ -20,20 +20,14 @@
         isolation: isolate;
         min-height: calc(100vh - 120px);
         background:
-            radial-gradient(circle at 7% 9%, rgba(148, 5, 21, 0.07) 0 2px, transparent 2px 10px),
-            radial-gradient(circle at 94% 16%, rgba(148, 5, 21, 0.05), transparent 130px),
-            linear-gradient(180deg, rgba(255, 248, 248, 0.92) 0%, rgba(255, 255, 255, 0.88) 38%, rgba(255, 253, 253, 0.92) 100%);
+            linear-gradient(180deg, rgba(255, 250, 250, 0.70), rgba(255, 255, 255, 0.58) 42%, rgba(245, 248, 247, 0.72) 100%),
+            url('{{ asset('images/student-bg.png') }}') center top / cover no-repeat;
         color: var(--faq-ink);
         overflow: visible;
     }
 
     .faq-page::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        z-index: -2;
-        background: url('{{ asset('images/student-bg.png') }}') center top / cover no-repeat;
-        pointer-events: none;
+        content: none;
     }
 
     .faq-hero {
@@ -45,11 +39,7 @@
 
     .faq-hero::before,
     .faq-hero::after {
-        content: "";
-        position: absolute;
-        z-index: -1;
-        pointer-events: none;
-        opacity: 0.42;
+        content: none;
     }
 
     .faq-hero::before {
@@ -77,11 +67,7 @@
     }
 
     .faq-hero-art {
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-        pointer-events: none;
-        color: rgba(148, 5, 21, 0.09);
+        display: none;
     }
 
     .faq-plus {
@@ -516,15 +502,13 @@
         --faq-muted: #cbd5e1;
         --faq-line: rgba(148, 163, 184, 0.24);
         background:
-            radial-gradient(circle at 7% 9%, rgba(148, 5, 21, 0.16) 0 2px, transparent 2px 10px),
-            radial-gradient(circle at 94% 16%, rgba(250, 204, 21, 0.08), transparent 150px),
-            linear-gradient(180deg, rgba(4, 9, 18, 0.94) 0%, rgba(10, 16, 28, 0.95) 42%, rgba(4, 9, 18, 0.97) 100%);
+            linear-gradient(180deg, rgba(2, 6, 23, 0.82), rgba(15, 23, 42, 0.74) 42%, rgba(2, 6, 23, 0.84) 100%),
+            url('{{ asset('images/student-bg.png') }}') center top / cover no-repeat;
         color: #f5f7fb;
     }
 
     html[data-theme="dark"] .faq-page::before {
-        filter: grayscale(0.2) brightness(0.35) contrast(1.06);
-        opacity: 0.36;
+        content: none;
     }
 
     html[data-theme="dark"] .faq-hero::before,

@@ -1295,7 +1295,7 @@
 
         <a href="{{ $exportHubUrl }}" class="report-card">
             <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
-            <span class="report-card-icon"><x-outline-icon name="arrow-long-right" /></span>
+            <span class="report-card-icon"><x-outline-icon name="arrow-down-tray" /></span>
             <div>
                 <div class="report-main-title">Export Reports</div>
                 <p class="report-card-copy">Open the export hub for printable and downloadable clinic reports.</p>
