@@ -1425,9 +1425,11 @@ class AppointmentController extends Controller
         }
 
         $addressType = strtolower(trim((string) $this->firstGuisisValue([$address], ['addressType'])));
-        if (str_contains($addressType, 'current') || str_contains($addressType, 'present') || str_contains($addressType, 'home')) {
-            $score += 2;
-        } elseif (str_contains($addressType, 'permanent')) {
+        if (str_contains($addressType, 'permanent') && !str_contains($addressType, 'provincial')) {
+            $score += 6;
+        } elseif (str_contains($addressType, 'current') || str_contains($addressType, 'present') || str_contains($addressType, 'home')) {
+            $score += 3;
+        } elseif (str_contains($addressType, 'provincial')) {
             $score++;
         }
 
