@@ -731,8 +731,8 @@ class AppointmentController extends Controller
         $value = strtolower(trim((string) $value));
 
         return match ($value) {
-            'male' => 'Male',
-            'female' => 'Female',
+            'male', 'm', 'man', 'boy', '1' => 'Male',
+            'female', 'f', 'woman', 'girl', '2' => 'Female',
             default => '',
         };
     }
@@ -1171,10 +1171,10 @@ class AppointmentController extends Controller
             $usePuptasApplicantPrefill
                 ? (data_get($applicantData, 'sex') ?: optional($healthProfile)->sex)
                 : (optional($healthProfile)->sex
-                    ?? ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'sex') : null)
-                    ?? $user->gender
-                    ?? optional($linkedAdminProfile)->gender
-                    ?? '')
+                    ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'sex') : null)
+                    ?: $user->gender
+                    ?: optional($linkedAdminProfile)->gender
+                    ?: '')
         );
 
         $resolvedCivilStatus = trim((string) (optional($healthProfile)->civil_status ?? optional($linkedAdminProfile)->civil_status ?? ''));
@@ -1665,9 +1665,14 @@ class AppointmentController extends Controller
                 'section' => $this->firstGuisisValue($sources, ['section', 'section_name', 'sectionName']),
                 'sex' => $this->normalizeSexValue($this->firstGuisisValue($sources, [
                     'gender.name',
+                    'gender.string',
                     'genderName',
                     'sex',
+                    'sex.name',
+                    'sex.string',
                     'gender',
+                    'gender.id',
+                    'sex.id',
                 ])),
                 'birthday' => $birthday,
                 'age' => $age,
@@ -1710,6 +1715,8 @@ class AppointmentController extends Controller
                 'zipcode' => $this->firstGuisisValue($addressSources, [
                     'city.zipCode.string',
                     'city.zipCode',
+                    'city.zip_code',
+                    'city.zipcode',
                     'city.postalCode.string',
                     'city.postalCode',
                     'city.postal_code.string',
