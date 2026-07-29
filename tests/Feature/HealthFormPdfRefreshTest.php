@@ -212,5 +212,31 @@ class HealthFormPdfRefreshTest extends TestCase
         $this->assertStringContainsString('07/20/2026', $html);
         $this->assertStringContainsString('white-space: nowrap', $html);
         $this->assertStringContainsString('width: 190px', $html);
+        $this->assertStringContainsString('font-size: 11px !important', $html);
+    }
+
+    public function test_very_long_student_name_automatically_uses_a_smaller_single_line_font(): void
+    {
+        $user = User::forceCreate([
+            'name' => 'Alexandria Cassandra Maximiliana De Los Santos Evangelista',
+            'student_number' => '2026-0002',
+        ]);
+        $profile = HealthProfile::forceCreate([
+            'user_id' => $user->id,
+            'student_number' => '2026-0002',
+        ])->load('user');
+
+        $html = view('student.print_health_form', [
+            'profile' => $profile,
+            'pdfMode' => true,
+            'healthFormIdentity' => [],
+            'healthFormSubmittedAt' => Carbon::parse('2026-07-20 09:00:00'),
+        ])->render();
+
+        $this->assertMatchesRegularExpression(
+            '/student-signature-name" style="font-size: (?:[4-9](?:\.\d+)?)px !important/',
+            $html
+        );
+        $this->assertStringContainsString('white-space: nowrap', $html);
     }
 }

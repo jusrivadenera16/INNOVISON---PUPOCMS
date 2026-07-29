@@ -1823,7 +1823,7 @@ class LoginController extends Controller
         if (Auth::guard($guard)->attempt(['email' => $request->email, 'password' => $request->password])) {
             Auth::shouldUse($guard);
             $request->session()->regenerate();
-            $request->session()->flash('show_terms_modal', true);
+            $request->session()->put('show_terms_modal', true);
             $request->session()->save();
 
             /** @var \App\Models\User $authenticatedUser */
@@ -2032,7 +2032,7 @@ class LoginController extends Controller
         Auth::shouldUse($guard);
         $request->session()->regenerate();
         $request->session()->put('idp_last_validated_at', now()->timestamp);
-        $request->session()->flash('show_terms_modal', true);
+        $request->session()->put('show_terms_modal', true);
         // CRITICAL: Explicitly save the session BEFORE redirect to ensure the
         // laravel_session cookie is included in the response headers. Without this,
         // the browser never receives the session cookie during the redirect.
@@ -2043,6 +2043,13 @@ class LoginController extends Controller
         $this->queueHealthProfilePrompt($request, $user, $redirectPath);
         $redirectResponse = redirect($redirectPath);
         return $this->attachIdpCookies($redirectResponse, $accessToken, $refreshToken);
+    }
+
+    public function acknowledgePostLoginTerms(Request $request)
+    {
+        $request->session()->forget('show_terms_modal');
+
+        return response()->json(['status' => 'ok']);
     }
 
     public function logout(Request $request)

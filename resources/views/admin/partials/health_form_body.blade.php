@@ -258,13 +258,11 @@ for the improvement of healthcare services.
         $printedStudentSignatureDate = $studentSignatureDate
             ? \Carbon\Carbon::parse($studentSignatureDate)->format('m/d/Y')
             : '';
-        $studentSignatureNameLength = strlen($printedStudentName);
-        $studentSignatureNameFontSize = match (true) {
-            $studentSignatureNameLength >= 45 => 7,
-            $studentSignatureNameLength >= 36 => 8,
-            $studentSignatureNameLength >= 28 => 9,
-            default => 9,
-        };
+        $studentSignatureNameLength = max(1, strlen($printedStudentName));
+        $studentSignatureNameFontSize = min(
+            11,
+            max(4.5, floor((330 / $studentSignatureNameLength) * 2) / 2)
+        );
     @endphp
     <div class="signature-physician-block">
         <table class="signature-table">
