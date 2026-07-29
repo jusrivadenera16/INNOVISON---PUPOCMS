@@ -381,6 +381,71 @@
         width: 16px;
         height: 16px;
     }
+    html[data-theme="dark"] .feedback-report-title {
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .feedback-report-copy {
+        color: #cbd5e1 !important;
+    }
+    html[data-theme="dark"] .feedback-stat-card,
+    html[data-theme="dark"] .feedback-panel,
+    html[data-theme="dark"] .feedback-card,
+    html[data-theme="dark"] .feedback-empty {
+        background: #111827 !important;
+        border: 1px solid rgba(250, 204, 21, .16) !important;
+        color: #f8fafc !important;
+        box-shadow: none !important;
+    }
+    html[data-theme="dark"] .feedback-panel h3,
+    html[data-theme="dark"] .feedback-stat-card strong,
+    html[data-theme="dark"] .feedback-card-name,
+    html[data-theme="dark"] .feedback-message,
+    html[data-theme="dark"] .feedback-rating {
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .feedback-stat-card span,
+    html[data-theme="dark"] .feedback-card-meta,
+    html[data-theme="dark"] .feedback-rating-sub,
+    html[data-theme="dark"] .feedback-field label,
+    html[data-theme="dark"] .feedback-empty {
+        color: #cbd5e1 !important;
+    }
+    html[data-theme="dark"] .feedback-field input,
+    html[data-theme="dark"] .feedback-field select {
+        background: #0f172a !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+        color: #f8fafc !important;
+        color-scheme: dark;
+    }
+    html[data-theme="dark"] .feedback-field input::placeholder {
+        color: #94a3b8 !important;
+    }
+    html[data-theme="dark"] .feedback-chip {
+        background: rgba(250, 204, 21, .12) !important;
+        border: 1px solid rgba(250, 204, 21, .18);
+        color: #fde68a !important;
+    }
+    html[data-theme="dark"] .feedback-btn.secondary {
+        background: #0f172a !important;
+        border-color: rgba(250, 204, 21, .22) !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .feedback-pagination nav,
+    html[data-theme="dark"] .feedback-pagination nav > div,
+    html[data-theme="dark"] .feedback-pagination p {
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .feedback-pagination a,
+    html[data-theme="dark"] .feedback-pagination span {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, .16) !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .feedback-pagination span[aria-current] span {
+        background: #7f0010 !important;
+        border-color: #facc15 !important;
+        color: #ffffff !important;
+    }
     @media (max-width: 1100px) {
         .feedback-layout {
             grid-template-columns: 1fr;

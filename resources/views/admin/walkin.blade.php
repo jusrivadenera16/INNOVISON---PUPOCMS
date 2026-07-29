@@ -630,6 +630,62 @@
         line-height: 1.5;
     }
 
+    html[data-theme="dark"] .applicant-modal-shell .scan-surface {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, 0.18) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 16px 34px rgba(0, 0, 0, 0.26) !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] .applicant-modal-shell .scan-inline-note {
+        background: rgba(112, 19, 27, 0.34) !important;
+        border-color: rgba(250, 204, 21, 0.24) !important;
+        color: #fde68a !important;
+    }
+
+    html[data-theme="dark"] .applicant-modal-shell .ocr-camera-shell,
+    html[data-theme="dark"] .applicant-modal-shell .scanner-box {
+        background: #0f172a !important;
+        border-color: rgba(250, 204, 21, 0.14) !important;
+    }
+
+    html[data-theme="dark"] .applicant-modal-shell .ocr-camera-idle {
+        background: #0f172a !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] .applicant-modal-shell .ocr-result-panel,
+    html[data-theme="dark"] .applicant-modal-shell .ocr-meta,
+    html[data-theme="dark"] .applicant-modal-shell .ocr-lock-badge {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, 0.18) !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] .applicant-modal-shell .ocr-result-label,
+    html[data-theme="dark"] .applicant-modal-shell .ocr-result-help {
+        color: #cbd5e1 !important;
+    }
+
+    html[data-theme="dark"] .applicant-modal-shell .ocr-status.info {
+        background: rgba(59, 130, 246, 0.16) !important;
+        border-color: rgba(96, 165, 250, 0.28) !important;
+        color: #bfdbfe !important;
+    }
+
+    html[data-theme="dark"] .applicant-modal-shell .ocr-status.success,
+    html[data-theme="dark"] .applicant-modal-shell .ocr-status.approved {
+        background: rgba(16, 185, 129, 0.14) !important;
+        border-color: rgba(52, 211, 153, 0.30) !important;
+        color: #bbf7d0 !important;
+    }
+
+    html[data-theme="dark"] .applicant-modal-shell .ocr-status.error {
+        background: rgba(127, 29, 29, 0.34) !important;
+        border-color: rgba(248, 113, 113, 0.34) !important;
+        color: #fecaca !important;
+    }
+
     .ocr-guide {
         position: absolute;
         inset: 14px;
@@ -7754,6 +7810,63 @@
         margin: 0;
         padding: 0;
         border: 0;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-modal-body,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-panel {
+        background: #0f172a !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-help,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-label,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-copy,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup label,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup p {
+        color: #cbd5e1 !important;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup h3,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup h4,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup strong {
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-input,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup input[type="text"],
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup input[type="search"] {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, .22) !important;
+        color: #f8fafc !important;
+        -webkit-text-fill-color: #f8fafc !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04) !important;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-input::placeholder,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup input::placeholder {
+        color: #94a3b8 !important;
+        -webkit-text-fill-color: #94a3b8 !important;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-notice,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-result,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-lookup-card,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus:not(:empty) {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.is-error,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .manual-lookup-status.is-error {
+        background: rgba(127, 29, 29, .34) !important;
+        border-color: rgba(248, 113, 113, .34) !important;
+        color: #fecaca !important;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.is-loading,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .manual-lookup-status.is-loading {
+        background: rgba(250, 204, 21, .12) !important;
+        border-color: rgba(250, 204, 21, .34) !important;
+        color: #fde68a !important;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-cancel-btn {
+        background: #e2e8f0 !important;
+        color: #0f172a !important;
     }
 
     #applicantRefModal .applicant-ref-actions.has-draft-action {

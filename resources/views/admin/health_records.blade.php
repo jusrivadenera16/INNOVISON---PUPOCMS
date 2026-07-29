@@ -4569,6 +4569,138 @@
         padding-bottom: 13px !important;
     }
 
+    html[data-theme="dark"] .readonly-record-card,
+    html[data-theme="dark"] .pending-approval-card,
+    html[data-theme="dark"] .pending-approval-empty {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+        color: #f8fafc !important;
+        box-shadow: none !important;
+    }
+    html[data-theme="dark"] .readonly-record-card:hover,
+    html[data-theme="dark"] .pending-approval-card:hover {
+        background: #1e293b !important;
+        border-color: rgba(250, 204, 21, .34) !important;
+    }
+    html[data-theme="dark"] .readonly-record-head {
+        border-bottom-color: rgba(250, 204, 21, .14) !important;
+    }
+    html[data-theme="dark"] .readonly-reference-value,
+    html[data-theme="dark"] .readonly-reference-value span,
+    html[data-theme="dark"] .readonly-record-pill strong,
+    html[data-theme="dark"] .readonly-field strong {
+        color: #f8fafc !important;
+        -webkit-text-fill-color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .readonly-record-pill span,
+    html[data-theme="dark"] .readonly-field span,
+    html[data-theme="dark"] .readonly-doc-preview-btn small,
+    html[data-theme="dark"] .readonly-doc-preview-btn span {
+        color: #cbd5e1 !important;
+        -webkit-text-fill-color: #cbd5e1 !important;
+    }
+    html[data-theme="dark"] .readonly-record-pill,
+    html[data-theme="dark"] .readonly-field,
+    html[data-theme="dark"] .readonly-doc-preview-btn,
+    html[data-theme="dark"] .readonly-doc-preview-empty,
+    html[data-theme="dark"] .readonly-doc-preview-thumb {
+        background: #0f172a !important;
+        border-color: rgba(250, 204, 21, .16) !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .readonly-record-pill.condition-pill,
+    html[data-theme="dark"] .readonly-record-pill.condition-pill.has-condition {
+        background: rgba(127, 29, 45, .34) !important;
+        border-color: rgba(248, 113, 113, .34) !important;
+        box-shadow: none !important;
+    }
+    html[data-theme="dark"] .readonly-record-pill.condition-pill span,
+    html[data-theme="dark"] .readonly-record-pill.condition-pill strong,
+    html[data-theme="dark"] .readonly-record-pill.condition-pill.has-condition span,
+    html[data-theme="dark"] .readonly-record-pill.condition-pill.has-condition strong {
+        color: #fecaca !important;
+        -webkit-text-fill-color: #fecaca !important;
+    }
+    html[data-theme="dark"] .readonly-copy-btn {
+        background: #1e293b !important;
+        border-color: rgba(250, 204, 21, .34) !important;
+        color: #facc15 !important;
+    }
+    html[data-theme="dark"] .readonly-copy-btn:hover {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+    }
+    html[data-theme="dark"] .readonly-modal-pagination {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+        box-shadow: none !important;
+    }
+    html[data-theme="dark"] .readonly-pagination-summary {
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .readonly-pagination-btn,
+    html[data-theme="dark"] .readonly-pagination-per-page-select,
+    html[data-theme="dark"] .premium-select-button,
+    html[data-theme="dark"] .premium-select-menu,
+    html[data-theme="dark"] .premium-select-option {
+        background-color: #0f172a !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .readonly-pagination-btn.is-active,
+    html[data-theme="dark"] .readonly-pagination-btn.is-active:hover:not(:disabled) {
+        background: #7f0010 !important;
+        border-color: #facc15 !important;
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] .readonly-pagination-btn:hover:not(:disabled) {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+    }
+    html[data-theme="dark"] .verify-approval-body {
+        background: #0f172a !important;
+    }
+    html[data-theme="dark"] .verify-approval-student,
+    html[data-theme="dark"] .verify-approval-doc-wrap,
+    html[data-theme="dark"] .verify-condition-wrap,
+    html[data-theme="dark"] .verify-approval-review-form,
+    html[data-theme="dark"] .verify-resubmission-panel {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, .16) !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .verify-approval-meta,
+    html[data-theme="dark"] .verify-condition-item,
+    html[data-theme="dark"] .verification-doc-card,
+    html[data-theme="dark"] .verify-resubmission-option,
+    html[data-theme="dark"] .verify-check-row,
+    html[data-theme="dark"] .verify-select-field select,
+    html[data-theme="dark"] .verify-text-field input,
+    html[data-theme="dark"] .verify-textarea-field textarea {
+        background: #0f172a !important;
+        border-color: rgba(250, 204, 21, .16) !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .verify-resubmission-help-note,
+    html[data-theme="dark"] .verify-resubmission-title,
+    html[data-theme="dark"] .verify-select-field,
+    html[data-theme="dark"] .verify-text-field,
+    html[data-theme="dark"] .verify-textarea-field,
+    html[data-theme="dark"] .verify-check-row {
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .verify-resubmission-option span,
+    html[data-theme="dark"] .verify-check-row span,
+    html[data-theme="dark"] .verify-approval-meta-k {
+        color: #cbd5e1 !important;
+    }
+    html[data-theme="dark"] .verify-resubmission-option input,
+    html[data-theme="dark"] .verify-check-row input {
+        accent-color: #facc15;
+    }
+
 </style>
 @endpush
 

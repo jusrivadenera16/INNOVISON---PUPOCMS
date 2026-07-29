@@ -325,13 +325,14 @@
     html[data-theme="dark"] .form-group textarea,
     html[data-theme="dark"] .form-group select {
         background: rgba(18, 18, 18, 0.55) !important;
-        color: #000000 !important;
+        color: #f8fafc !important;
         border-color: rgba(255, 255, 255, 0.12) !important;
     }
 
     html[data-theme="dark"] input[type="date"],
     html[data-theme="dark"] input[type="datetime-local"] {
-        color: #000000 !important;
+        color: #f8fafc !important;
+        color-scheme: dark;
     }
 
     html[data-theme="dark"] .form-group input::placeholder,
@@ -379,6 +380,63 @@
 
     html[data-theme="dark"] table tbody tr[style*="background-color: #f8f9fa"]:hover {
         background-color: rgba(45, 22, 32, 0.98) !important;
+    }
+
+    html[data-theme="dark"] .card {
+        background: rgba(15, 23, 42, 0.96) !important;
+        border-color: rgba(250, 204, 21, 0.16) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.24) !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .mar-header-bar h2,
+    html[data-theme="dark"] h2,
+    html[data-theme="dark"] h3 {
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .mar-filter-bar {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, 0.18) !important;
+        box-shadow: none !important;
+    }
+    html[data-theme="dark"] .mar-filter-title,
+    html[data-theme="dark"] .mar-date-field label {
+        color: #facc15 !important;
+    }
+    html[data-theme="dark"] .mar-filter-subtitle {
+        color: #cbd5e1 !important;
+    }
+    html[data-theme="dark"] .mar-date-input {
+        background: #0f172a !important;
+        border-color: rgba(250, 204, 21, 0.18) !important;
+        color: #f8fafc !important;
+        color-scheme: dark;
+    }
+    html[data-theme="dark"] .mar-table,
+    html[data-theme="dark"] .gad-table {
+        background: #0f172a !important;
+    }
+    html[data-theme="dark"] .mar-table th,
+    html[data-theme="dark"] .gad-table th {
+        background: #111827 !important;
+        color: #f8fafc !important;
+        border-bottom-color: rgba(250, 204, 21, 0.18) !important;
+    }
+    html[data-theme="dark"] .mar-table td,
+    html[data-theme="dark"] .gad-table td {
+        background: #0f172a !important;
+        color: #f8fafc !important;
+        border-bottom-color: rgba(148, 163, 184, 0.14) !important;
+    }
+    html[data-theme="dark"] .detail-row td,
+    html[data-theme="dark"] .mar-table tbody tr[style*="background-color: #f8f9fa"] td,
+    html[data-theme="dark"] .gad-table tbody tr[style*="background-color: #f8f9fa"] td {
+        background: #1e293b !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .section-row td,
+    html[data-theme="dark"] .subsection-row td,
+    html[data-theme="dark"] .gad-section-row td {
+        color: #ffffff !important;
     }
 
     /* Back to Reports Button */
