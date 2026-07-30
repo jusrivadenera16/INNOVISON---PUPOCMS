@@ -133,9 +133,9 @@
     $imageDataUri = app(\App\Services\StoredImageDataUri::class);
     $signatureSrc = '';
     if ($profile->uploaded_signature_path) {
-        $signatureSrc = $imageDataUri->fromPublicDisk($profile->uploaded_signature_path);
+        $signatureSrc = $imageDataUri->fromStorage($profile->uploaded_signature_path);
     } elseif ($profile->staff_signature) {
-        $signatureSrc = $imageDataUri->fromPublicDisk($profile->staff_signature);
+        $signatureSrc = $imageDataUri->fromStorage($profile->staff_signature);
     }
 @endphp
 <div class="print-container">

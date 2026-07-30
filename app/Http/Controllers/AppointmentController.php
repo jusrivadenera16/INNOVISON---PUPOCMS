@@ -17,12 +17,12 @@ use App\Services\GuisisApiService;
 use App\Services\PuptasWebhookService;
 use App\Services\ClinicWorkflowService;
 use App\Services\EmployeeHealthFormPdfService;
+use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -30,6 +30,11 @@ use Carbon\Carbon;
 
 class AppointmentController extends Controller
 {
+    private function healthFiles(): HealthFileStorage
+    {
+        return app(HealthFileStorage::class);
+    }
+
     private function promoteDesigneeAdminToStudentGuard(): ?User
     {
         /** @var \App\Models\User|null $studentUser */
@@ -1958,7 +1963,7 @@ class AppointmentController extends Controller
             $oldPaths[$document] = ltrim($existingPath, '/');
         }
 
-        return $request->file($document)->store($folder, 'public');
+        return $this->healthFiles()->store($request->file($document), $folder);
     }
 
     private function storeDigitalSignatureOrKeep(Request $request, ?HealthProfile $existingHealthProfile, array &$oldPaths): ?string
@@ -1970,7 +1975,10 @@ class AppointmentController extends Controller
                 $oldPaths['digital_signature'] = ltrim($existingPath, '/');
             }
 
-            return $request->file('digital_signature_upload')->store('health_profiles/signatures', 'public');
+            return $this->healthFiles()->store(
+                $request->file('digital_signature_upload'),
+                'health_profiles/signatures'
+            );
         }
 
         $signatureData = trim((string) $request->input('digital_signature_data'));
@@ -1994,7 +2002,7 @@ class AppointmentController extends Controller
 
             $signatureExtension = str_starts_with(strtolower($signatureMatches[1]), 'jp') ? 'jpg' : 'png';
             $path = 'health_profiles/signatures/signature_' . uniqid('', true) . '.' . $signatureExtension;
-            Storage::disk('public')->put($path, $decodedSignature);
+            $this->healthFiles()->put($path, $decodedSignature);
 
             return $path;
         }
@@ -2557,8 +2565,8 @@ public function account(Request $request)
                 $path = ltrim((string) $employeeProfile->staff_health_form_pdf_path, '/');
                 $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
 
-                if ($path !== '' && Storage::disk('public')->exists($path)) {
-                    return response()->file(Storage::disk('public')->path($path), [
+                if ($path !== '' && $this->healthFiles()->exists($path)) {
+                    return response()->file($this->healthFiles()->path($path), [
                         'Content-Type' => 'application/pdf',
                         'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
                         'X-Content-Type-Options' => 'nosniff',
@@ -2598,9 +2606,9 @@ public function account(Request $request)
             $path = ltrim((string) $employeeProfile->{$employeeDocumentMap[$document]}, '/');
             $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
 
-            abort_if($path === '' || !Storage::disk('public')->exists($path), 404, 'Uploaded document not found.');
+            abort_if($path === '' || !$this->healthFiles()->exists($path), 404, 'Uploaded document not found.');
 
-            $disk = Storage::disk('public');
+            $disk = $this->healthFiles();
             $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
             $filename = basename($path);
 
@@ -2608,7 +2616,8 @@ public function account(Request $request)
                 'Content-Type' => $mimeType,
                 'Content-Disposition' => 'inline; filename="' . str_replace('"', '', $filename) . '"',
                 'X-Content-Type-Options' => 'nosniff',
-                'Cache-Control' => 'private, max-age=300',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
             ]);
         }
 
@@ -2621,7 +2630,7 @@ public function account(Request $request)
 
             $healthProfileStatus = strtolower(trim((string) $healthProfile->clearance_status));
             $canCreateApprovedFallback = in_array($healthProfileStatus, ['approved', 'issued', 'fully cleared'], true);
-            if (($path === '' || !Storage::disk('public')->exists($path)) && $healthProfile->user && $canCreateApprovedFallback) {
+            if (($path === '' || !$this->healthFiles()->exists($path)) && $healthProfile->user && $canCreateApprovedFallback) {
                 try {
                     $submission = app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($healthProfile->fresh('user'));
                     $path = ltrim((string) ($submission?->pdf_path ?? ''), '/');
@@ -2634,8 +2643,8 @@ public function account(Request $request)
                 }
             }
 
-            if ($path !== '' && Storage::disk('public')->exists($path)) {
-                return response()->file(Storage::disk('public')->path($path), [
+            if ($path !== '' && $this->healthFiles()->exists($path)) {
+                return response()->file($this->healthFiles()->path($path), [
                     'Content-Type' => 'application/pdf',
                     'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
                     'X-Content-Type-Options' => 'nosniff',
@@ -2651,9 +2660,9 @@ public function account(Request $request)
         $path = ltrim((string) $healthProfile->{$document}, '/');
         $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
 
-        abort_if($path === '' || !Storage::disk('public')->exists($path), 404, 'Uploaded document not found.');
+        abort_if($path === '' || !$this->healthFiles()->exists($path), 404, 'Uploaded document not found.');
 
-        $disk = Storage::disk('public');
+        $disk = $this->healthFiles();
         $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
         $filename = basename($path);
 
@@ -2661,7 +2670,8 @@ public function account(Request $request)
             'Content-Type' => $mimeType,
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', $filename) . '"',
             'X-Content-Type-Options' => 'nosniff',
-            'Cache-Control' => 'private, max-age=300',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
         ]);
     }
 
@@ -2689,17 +2699,19 @@ public function account(Request $request)
 
             return response($decodedSignature, 200, [
                 'Content-Type' => $mimeType,
-                'Cache-Control' => 'private, max-age=300',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
             ]);
         }
 
         $path = preg_replace('#^(?:public/)?storage/#', '', ltrim($signatureValue, '/')) ?? $signatureValue;
-        abort_if($path === '' || !Storage::disk('public')->exists($path), 404);
+        abort_if($path === '' || !$this->healthFiles()->exists($path), 404);
 
-        return response()->file(Storage::disk('public')->path($path), [
-            'Content-Type' => Storage::disk('public')->mimeType($path) ?: 'image/png',
+        return response()->file($this->healthFiles()->path($path), [
+            'Content-Type' => $this->healthFiles()->mimeType($path) ?: 'image/png',
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
-            'Cache-Control' => 'private, max-age=300',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
         ]);
     }
 
@@ -2784,7 +2796,10 @@ public function account(Request $request)
                 }
 
                 $oldPaths[$document] = ltrim((string) $healthProfile->{$document}, '/');
-                $storedPaths[$document] = $request->file($document)->store($storageFolders[$document], 'public');
+                $storedPaths[$document] = $this->healthFiles()->store(
+                    $request->file($document),
+                    $storageFolders[$document]
+                );
             }
 
             foreach ($storedPaths as $document => $path) {
@@ -2808,8 +2823,8 @@ public function account(Request $request)
 
             foreach ($oldPaths as $oldPath) {
                 $oldPath = preg_replace('#^(?:public/)?storage/#', '', $oldPath) ?? $oldPath;
-                if ($oldPath !== '' && Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->delete($oldPath);
+                if ($oldPath !== '' && $this->healthFiles()->exists($oldPath)) {
+                    $this->healthFiles()->delete($oldPath);
                 }
             }
 
@@ -2830,8 +2845,8 @@ public function account(Request $request)
                 ->with('success', $successMessage);
         } catch (\Throwable $e) {
             foreach ($storedPaths as $path) {
-                if ($path && Storage::disk('public')->exists($path)) {
-                    Storage::disk('public')->delete($path);
+                if ($path && $this->healthFiles()->exists($path)) {
+                    $this->healthFiles()->delete($path);
                 }
             }
 
@@ -2934,7 +2949,10 @@ public function account(Request $request)
             foreach ($uploadedDocuments as $document) {
                 $field = $fieldMap[$document];
                 $oldPaths[$field] = ltrim((string) $healthProfile->{$field}, '/');
-                $storedPaths[$field] = $request->file($document)->store($storageFolders[$document], 'public');
+                $storedPaths[$field] = $this->healthFiles()->store(
+                    $request->file($document),
+                    $storageFolders[$document]
+                );
             }
 
             foreach ($storedPaths as $field => $path) {
@@ -2944,8 +2962,8 @@ public function account(Request $request)
 
             foreach ($oldPaths as $oldPath) {
                 $oldPath = preg_replace('#^(?:public/)?storage/#', '', $oldPath) ?? $oldPath;
-                if ($oldPath !== '' && Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->delete($oldPath);
+                if ($oldPath !== '' && $this->healthFiles()->exists($oldPath)) {
+                    $this->healthFiles()->delete($oldPath);
                 }
             }
 
@@ -2962,8 +2980,8 @@ public function account(Request $request)
                 ->with('success', 'Health record document files uploaded successfully.');
         } catch (\Throwable $e) {
             foreach ($storedPaths as $path) {
-                if ($path && Storage::disk('public')->exists($path)) {
-                    Storage::disk('public')->delete($path);
+                if ($path && $this->healthFiles()->exists($path)) {
+                    $this->healthFiles()->delete($path);
                 }
             }
 
@@ -3002,13 +3020,16 @@ public function account(Request $request)
         $oldPath = ltrim((string) $healthProfile->health_declaration, '/');
 
         try {
-            $newPath = $request->file('health_declaration')->store('health_profiles/health_declarations', 'public');
+            $newPath = $this->healthFiles()->store(
+                $request->file('health_declaration'),
+                'health_profiles/health_declarations'
+            );
             $healthProfile->health_declaration = $newPath;
             $healthProfile->save();
 
             $oldPath = preg_replace('#^(?:public/)?storage/#', '', $oldPath) ?? $oldPath;
-            if ($oldPath !== '' && Storage::disk('public')->exists($oldPath)) {
-                Storage::disk('public')->delete($oldPath);
+            if ($oldPath !== '' && $this->healthFiles()->exists($oldPath)) {
+                $this->healthFiles()->delete($oldPath);
             }
 
             \App\Models\ActivityLog::create([
@@ -3090,7 +3111,10 @@ public function account(Request $request)
             if ($usesEmployeeHealthForm) {
                 $oldPaths[] = trim((string) ($healthProfile->uploaded_signature_path ?: $healthProfile->staff_signature));
                 if ($signatureMethod === 'upload') {
-                    $healthProfile->uploaded_signature_path = $request->file('digital_signature_upload')->store('health_profile_employees/signatures', 'public');
+                    $healthProfile->uploaded_signature_path = $this->healthFiles()->store(
+                        $request->file('digital_signature_upload'),
+                        'health_profile_employees/signatures'
+                    );
                     $healthProfile->staff_signature = null;
                     $healthProfile->signature_type = 'uploaded';
                 } else {
@@ -3109,7 +3133,7 @@ public function account(Request $request)
                     }
                     $signatureExtension = strtolower($signatureMatches[1]) === 'png' ? 'png' : 'jpg';
                     $healthProfile->uploaded_signature_path = 'health_profile_employees/signatures/signature_' . uniqid('', true) . '.' . $signatureExtension;
-                    Storage::disk('public')->put($healthProfile->uploaded_signature_path, $decodedSignature);
+                    $this->healthFiles()->put($healthProfile->uploaded_signature_path, $decodedSignature);
                     $healthProfile->staff_signature = null;
                     $healthProfile->signature_type = 'drawn';
                 }
@@ -3124,8 +3148,8 @@ public function account(Request $request)
                     continue;
                 }
                 $oldPath = preg_replace('#^(?:public/)?storage/#', '', ltrim($oldPath, '/')) ?? $oldPath;
-                if (Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->delete($oldPath);
+                if ($this->healthFiles()->exists($oldPath)) {
+                    $this->healthFiles()->delete($oldPath);
                 }
             }
 
@@ -3192,8 +3216,8 @@ public function account(Request $request)
                 continue;
             }
             $path = preg_replace('#^(?:public/)?storage/#', '', ltrim($path, '/')) ?? $path;
-            if (Storage::disk('public')->exists($path)) {
-                Storage::disk('public')->delete($path);
+            if ($this->healthFiles()->exists($path)) {
+                $this->healthFiles()->delete($path);
             }
         }
 
@@ -3914,7 +3938,10 @@ public function storeEmployeeHealthForm(Request $request)
     $signaturePath = null;
     $signatureType = null;
     if ($employeeSignatureMethod === 'upload' && $request->hasFile('uploaded_signature')) {
-        $signaturePath = $request->file('uploaded_signature')->store('health_profile_employees/signatures', 'public');
+        $signaturePath = $this->healthFiles()->store(
+            $request->file('uploaded_signature'),
+            'health_profile_employees/signatures'
+        );
         $signatureType = 'uploaded';
     } elseif ($employeeSignatureMethod === 'draw' && trim((string) $request->input('employee_signature')) !== '') {
         $signatureData = trim((string) $request->input('employee_signature'));
@@ -3931,7 +3958,7 @@ public function storeEmployeeHealthForm(Request $request)
         }
         $signatureExtension = strtolower($signatureMatches[1]) === 'png' ? 'png' : 'jpg';
         $signaturePath = 'health_profile_employees/signatures/signature_' . uniqid('', true) . '.' . $signatureExtension;
-        Storage::disk('public')->put($signaturePath, $decodedSignature);
+        $this->healthFiles()->put($signaturePath, $decodedSignature);
         $signatureType = 'drawn';
     }
 
@@ -3959,7 +3986,7 @@ public function storeEmployeeHealthForm(Request $request)
     $employeeRequirementPaths = [];
     foreach ($employeeRequirementFiles as $field => $directory) {
         $employeeRequirementPaths[$field] = $request->hasFile($field)
-            ? $request->file($field)->store($directory, 'public')
+            ? $this->healthFiles()->store($request->file($field), $directory)
             : null;
     }
     $profile = EmployeeHealthProfile::create([
@@ -4636,8 +4663,8 @@ public function storeHealthForm(Request $request)
 
         foreach ($oldPaths as $oldPath) {
             $oldPath = preg_replace('#^(?:public/)?storage/#', '', $oldPath) ?? $oldPath;
-            if ($oldPath !== '' && Storage::disk('public')->exists($oldPath)) {
-                Storage::disk('public')->delete($oldPath);
+            if ($oldPath !== '' && $this->healthFiles()->exists($oldPath)) {
+                $this->healthFiles()->delete($oldPath);
             }
         }
 
@@ -4709,8 +4736,8 @@ public function printHealthForm()
 
         $snapshotPath = ltrim((string) ($employeeProfile?->staff_health_form_pdf_path ?? ''), '/');
         $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
-        if ($snapshotPath !== '' && Storage::disk('public')->exists($snapshotPath)) {
-            return Storage::disk('public')->download($snapshotPath, basename($snapshotPath), [
+        if ($snapshotPath !== '' && $this->healthFiles()->exists($snapshotPath)) {
+            return $this->healthFiles()->download($snapshotPath, basename($snapshotPath), [
                 'Content-Type' => 'application/pdf',
             ]);
         }
@@ -4732,8 +4759,8 @@ public function printHealthForm()
     $submission = $this->latestHealthFormSubmissionForProfile($profile);
     $snapshotPath = ltrim((string) ($submission?->pdf_path ?? ''), '/');
     $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
-    if ($snapshotPath !== '' && Storage::disk('public')->exists($snapshotPath)) {
-        return response()->file(Storage::disk('public')->path($snapshotPath), [
+    if ($snapshotPath !== '' && $this->healthFiles()->exists($snapshotPath)) {
+        return response()->file($this->healthFiles()->path($snapshotPath), [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($snapshotPath)) . '"',
             'X-Content-Type-Options' => 'nosniff',
@@ -4776,7 +4803,7 @@ public function downloadHealthForm()
     $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
     $profileStatus = strtolower(trim((string) $profile->clearance_status));
     $canCreateApprovedFallback = in_array($profileStatus, ['approved', 'issued', 'fully cleared'], true);
-    if (($snapshotPath === '' || !Storage::disk('public')->exists($snapshotPath)) && $canCreateApprovedFallback) {
+    if (($snapshotPath === '' || !$this->healthFiles()->exists($snapshotPath)) && $canCreateApprovedFallback) {
         try {
             $submission = app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($profile->fresh('user'));
             $snapshotPath = ltrim((string) ($submission?->pdf_path ?? ''), '/');
@@ -4788,8 +4815,8 @@ public function downloadHealthForm()
             ]);
         }
     }
-    if ($snapshotPath !== '' && Storage::disk('public')->exists($snapshotPath)) {
-        return Storage::disk('public')->download($snapshotPath, basename($snapshotPath), [
+    if ($snapshotPath !== '' && $this->healthFiles()->exists($snapshotPath)) {
+        return $this->healthFiles()->download($snapshotPath, basename($snapshotPath), [
             'Content-Type' => 'application/pdf',
         ]);
     }
@@ -4808,9 +4835,9 @@ public function showHealthFormSubmissionPdf(HealthFormSubmission $submission)
 
     $path = ltrim((string) $submission->pdf_path, '/');
     $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
-    abort_if($path === '' || !Storage::disk('public')->exists($path), 404, 'Saved Health Form PDF not found.');
+    abort_if($path === '' || !$this->healthFiles()->exists($path), 404, 'Saved Health Form PDF not found.');
 
-    return response()->file(Storage::disk('public')->path($path), [
+    return response()->file($this->healthFiles()->path($path), [
         'Content-Type' => 'application/pdf',
         'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
         'X-Content-Type-Options' => 'nosniff',

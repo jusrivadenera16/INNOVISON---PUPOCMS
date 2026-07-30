@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Storage;
-
 class StoredImageDataUri
 {
     private const ALLOWED_MIME_TYPES = [
@@ -13,7 +11,11 @@ class StoredImageDataUri
         'image/webp',
     ];
 
-    public function fromPublicDisk(?string $value): string
+    public function __construct(private HealthFileStorage $healthFiles)
+    {
+    }
+
+    public function fromStorage(?string $value): string
     {
         $value = trim((string) $value);
         if ($value === '') {
@@ -26,13 +28,12 @@ class StoredImageDataUri
                 : '';
         }
 
-        $path = $this->normalizeStoragePath($value);
-        $disk = Storage::disk('public');
-        if ($path === '' || !$disk->exists($path)) {
+        $path = $this->healthFiles->normalizePath($value);
+        if ($path === '' || !$this->healthFiles->exists($path)) {
             return '';
         }
 
-        $contents = $disk->get($path);
+        $contents = $this->healthFiles->get($path);
         if ($contents === '') {
             return '';
         }
@@ -46,10 +47,8 @@ class StoredImageDataUri
         return 'data:' . $mimeType . ';base64,' . base64_encode($contents);
     }
 
-    private function normalizeStoragePath(string $path): string
+    public function fromPublicDisk(?string $value): string
     {
-        $path = ltrim($path, '/');
-
-        return preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+        return $this->fromStorage($value);
     }
 }

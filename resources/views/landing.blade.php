@@ -6650,7 +6650,11 @@
         const ciciRobotFallback = @json(asset('images/clinic-robot.png'));
         const ciciAuthUserKey = @json($landingStudentUser ? 'student-' . $landingStudentUser->getAuthIdentifier() : ($landingAdminUser ? 'admin-' . $landingAdminUser->getAuthIdentifier() : null));
         const ciciUserLetter = @json(strtoupper(substr(trim((string) ($landingStudentUser?->first_name ?? $landingStudentUser?->name ?? $landingAdminUser?->name ?? 'Guest')), 0, 1)) ?: 'G');
-        const ciciUserPhotoUrl = @json(($landingStudentUser && filled(optional($landingStudentUser?->healthProfile)->student_photo)) ? asset('storage/' . ltrim(optional($landingStudentUser?->healthProfile)->student_photo, '/')) : null);
+        const ciciUserPhotoUrl = @json(
+            ($landingStudentUser && filled(optional($landingStudentUser?->healthProfile)->student_photo))
+                ? route('student.health_record.document', ['document' => 'student_photo'])
+                : null
+        );
         let ciciSelectedFiles = [];
 
         function getCiciVisitorKey() {

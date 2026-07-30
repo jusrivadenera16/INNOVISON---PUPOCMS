@@ -899,7 +899,8 @@ class AdminUserController extends Controller
                     ])));
                 }
 
-                $studentPhoto = $user->healthProfile?->student_photo;
+                $studentPhotoProfile = $user->healthProfile;
+                $studentPhoto = $studentPhotoProfile?->student_photo;
                 $studentNumber = trim((string) ($user->student_number ?? ''));
                 $studentId = trim((string) ($user->student_id ?? ''));
                 $resolvedIdentifier = $this->resolveUserDisplayIdentifier($user, $linkedAdmin);
@@ -918,7 +919,12 @@ class AdminUserController extends Controller
                     'raw_role' => $rawRole,
                     'normalized_role' => $role,
                     'status' => $status === 'inactive' ? 'inactive' : 'active',
-                    'avatar_url' => $studentPhoto ? asset('storage/' . $studentPhoto) : null,
+                    'avatar_url' => $studentPhoto && $studentPhotoProfile
+                        ? route('walkin.document', [
+                            'healthProfile' => $studentPhotoProfile->id,
+                            'document' => 'student_photo',
+                        ])
+                        : null,
                     'avatar_letter' => strtoupper(substr($displayName !== '' ? $displayName : ($user->email ?? 'U'), 0, 1)),
                     'can_edit' => true,
                     'is_external' => false,

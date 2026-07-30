@@ -4,10 +4,13 @@ namespace App\Services;
 
 use App\Models\EmployeeHealthProfile;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Storage;
 
 class EmployeeHealthFormPdfService
 {
+    public function __construct(private HealthFileStorage $healthFiles)
+    {
+    }
+
     public function generate(EmployeeHealthProfile $profile): string
     {
         $profile->refresh();
@@ -32,7 +35,7 @@ class EmployeeHealthFormPdfService
             'pdfMode' => true,
         ])->setPaper([0, 0, 612, 936]);
 
-        if (!Storage::disk('public')->put($path, $pdf->output())) {
+        if (!$this->healthFiles->put($path, $pdf->output())) {
             throw new \RuntimeException('Unable to write the Employee Health Form PDF.');
         }
 
@@ -41,7 +44,7 @@ class EmployeeHealthFormPdfService
             $profile->save();
         } catch (\Throwable $exception) {
             if ($path !== $previousPath) {
-                Storage::disk('public')->delete($path);
+                $this->healthFiles->delete($path);
             }
 
             throw $exception;
@@ -51,9 +54,9 @@ class EmployeeHealthFormPdfService
             $previousPath !== ''
             && $previousPath !== $path
             && str_starts_with($previousPath, 'health_profile_employees/health_forms/')
-            && Storage::disk('public')->exists($previousPath)
+            && $this->healthFiles->exists($previousPath)
         ) {
-            Storage::disk('public')->delete($previousPath);
+            $this->healthFiles->delete($previousPath);
         }
 
         return $path;

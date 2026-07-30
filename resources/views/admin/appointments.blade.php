@@ -3660,7 +3660,17 @@
             <tbody>
                 @forelse($appointments as $appt)
                     @php
-                        $appointmentPhotoPath = optional(optional($appt->user)->healthProfile)->student_photo;
+                        $appointmentPhotoProfile = optional($appt->user)->healthProfile;
+                        $appointmentPhotoPath = optional($appointmentPhotoProfile)->student_photo;
+                        $appointmentDocumentRoute = request()->routeIs('assistant.*')
+                            ? 'assistant.walkin.document'
+                            : 'walkin.document';
+                        $appointmentPhotoUrl = $appointmentPhotoPath && $appointmentPhotoProfile
+                            ? route($appointmentDocumentRoute, [
+                                'healthProfile' => $appointmentPhotoProfile->id,
+                                'document' => 'student_photo',
+                            ])
+                            : '';
                         $appointmentUser = $appt->user;
                         $appointmentRoleMarkers = strtolower(trim(implode(' ', array_filter([
                             (string) optional($appointmentUser)->user_type,
@@ -3698,7 +3708,7 @@
                         data-view-id-number-label="{{ $appointmentIdLabel }}"
                         data-view-contact="{{ optional($appt->user)->contact_no ?: optional(optional($appt->user)->healthProfile)->cellphone ?: '' }}"
                         data-view-program="{{ trim(implode(' ', array_filter([optional($appt->user)->course ?: optional(optional($appt->user)->healthProfile)->course_college, trim(implode('-', array_filter([optional($appt->user)->year, optional($appt->user)->section]))) ]))) }}"
-                        data-view-photo-url="{{ $appointmentPhotoPath ? asset('storage/' . $appointmentPhotoPath) : '' }}"
+                        data-view-photo-url="{{ $appointmentPhotoUrl }}"
                         data-view-created="{{ optional($appt->created_at)->format('M d, Y g:i A') }}"
                         data-view-updated="{{ optional($appt->updated_at)->format('M d, Y g:i A') }}"
                         title="{{ $appt->status === 'Completed' ? 'Click to view' : '' }}"
