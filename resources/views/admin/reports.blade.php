@@ -1214,6 +1214,127 @@
         stroke: #facc15 !important;
     }
 
+    /* Match Developer Tools card treatment in dark mode */
+    html[data-theme="dark"] .report-card,
+    html[data-theme="dark"] .report-card.report-card-primary,
+    html[data-theme="dark"] .report-card.report-card-audit,
+    html[data-theme="dark"] .report-grid .report-card,
+    html[data-theme="dark"] .report-grid a.report-card {
+        background: transparent !important;
+        background-image: none !important;
+        border-color: rgba(250, 204, 21, 0.18) !important;
+        box-shadow: none !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .report-card::before,
+    html[data-theme="dark"] .report-card.report-card-primary::before,
+    html[data-theme="dark"] .report-card.report-card-audit::before {
+        background: transparent !important;
+    }
+
+    html[data-theme="dark"] .report-card .report-main-title,
+    html[data-theme="dark"] .report-card .report-card-copy,
+    html[data-theme="dark"] .report-card .report-card-footer,
+    html[data-theme="dark"] .report-card .report-badge,
+    html[data-theme="dark"] .report-card .report-label {
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .report-card:hover,
+    html[data-theme="dark"] .report-card:focus-visible,
+    html[data-theme="dark"] .report-card.report-card-primary:hover,
+    html[data-theme="dark"] .report-card.report-card-primary:focus-visible,
+    html[data-theme="dark"] .report-card.report-card-audit:hover,
+    html[data-theme="dark"] .report-card.report-card-audit:focus-visible {
+        background: #facc15 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+    }
+
+    html[data-theme="dark"] .report-card:hover .report-main-title,
+    html[data-theme="dark"] .report-card:focus-visible .report-main-title,
+    html[data-theme="dark"] .report-card:hover .report-card-copy,
+    html[data-theme="dark"] .report-card:focus-visible .report-card-copy,
+    html[data-theme="dark"] .report-card:hover .report-card-footer,
+    html[data-theme="dark"] .report-card:focus-visible .report-card-footer,
+    html[data-theme="dark"] .report-card:hover .report-badge,
+    html[data-theme="dark"] .report-card:focus-visible .report-badge,
+    html[data-theme="dark"] .report-card:hover .report-label,
+    html[data-theme="dark"] .report-card:focus-visible .report-label {
+        color: #70131B !important;
+    }
+
+    html[data-theme="dark"] .report-card::after,
+    html[data-theme="dark"] .report-card.report-card-primary::after,
+    html[data-theme="dark"] .report-card.report-card-audit::after {
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.12) 42%, rgba(255, 255, 255, 0.44) 50%, rgba(255, 255, 255, 0.12) 58%, rgba(255, 255, 255, 0) 100%) !important;
+    }
+
+    /* Final card surface pass: subtle border only, no thick yellow bottom edge */
+    .reports-frame .report-grid > .report-card,
+    .reports-frame .report-grid > a.report-card,
+    .reports-frame .report-grid > .report-card.report-card-primary,
+    .reports-frame .report-grid > .report-card.report-card-audit {
+        background: #70131B !important;
+        background-image: none !important;
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        box-shadow: 0 10px 24px rgba(112, 19, 27, 0.18) !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .reports-frame .report-grid > .report-card,
+    html[data-theme="dark"] .reports-frame .report-grid > a.report-card,
+    html[data-theme="dark"] .reports-frame .report-grid > .report-card.report-card-primary,
+    html[data-theme="dark"] .reports-frame .report-grid > .report-card.report-card-audit {
+        background: transparent !important;
+        background-image: none !important;
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.22) !important;
+        color: #ffffff !important;
+    }
+
+    .reports-frame .report-grid > .report-card:hover,
+    .reports-frame .report-grid > .report-card:focus-visible,
+    .reports-frame .report-grid > a.report-card:hover,
+    .reports-frame .report-grid > a.report-card:focus-visible,
+    html[data-theme="dark"] .reports-frame .report-grid > .report-card:hover,
+    html[data-theme="dark"] .reports-frame .report-grid > .report-card:focus-visible,
+    html[data-theme="dark"] .reports-frame .report-grid > a.report-card:hover,
+    html[data-theme="dark"] .reports-frame .report-grid > a.report-card:focus-visible {
+        background: #facc15 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.12), 0 20px 30px rgba(139, 0, 0, 0.22) !important;
+        color: #70131B !important;
+    }
+
+    html[data-theme="dark"] .reports-frame {
+        background: transparent !important;
+        background-image: none !important;
+        border-color: rgba(250, 204, 21, 0.20) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.18) !important;
+    }
+
+    html[data-theme="dark"] .reports-frame::before {
+        background: #facc15 !important;
+    }
+
+    /* Final light-mode surface pass */
+    html:not([data-theme="dark"]) .reports-frame {
+        border: 1px solid rgba(250, 204, 21, 0.20) !important;
+        box-shadow: 0 18px 34px rgba(112, 19, 27, 0.08) !important;
+    }
+
+    html:not([data-theme="dark"]) .reports-frame .report-grid > .report-card,
+    html:not([data-theme="dark"]) .reports-frame .report-grid > a.report-card,
+    html:not([data-theme="dark"]) .reports-frame .report-grid > .report-card.report-card-primary,
+    html:not([data-theme="dark"]) .reports-frame .report-grid > .report-card.report-card-audit {
+        border: 1px solid rgba(250, 204, 21, 0.22) !important;
+        box-shadow: 0 14px 28px rgba(112, 19, 27, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+    }
+
 </style>
 @endpush
 

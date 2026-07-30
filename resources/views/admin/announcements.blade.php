@@ -954,6 +954,27 @@
             flex-direction: column;
         }
     }
+
+    /* Final light-mode surface pass */
+    html:not([data-theme="dark"]) .announcement-stat-card,
+    html:not([data-theme="dark"]) .announcement-card,
+    html:not([data-theme="dark"]) .announcement-archive-shell,
+    html:not([data-theme="dark"]) .announcement-archive-item {
+        border: 1px solid rgba(250, 204, 21, 0.22) !important;
+        box-shadow: 0 14px 28px rgba(112, 19, 27, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    html:not([data-theme="dark"]) .announcement-delete,
+    html:not([data-theme="dark"]) .announcement-archive,
+    html:not([data-theme="dark"]) .announcement-archive-close,
+    html:not([data-theme="dark"]) .announcement-submit,
+    html:not([data-theme="dark"]) .announcement-form-submit,
+    html:not([data-theme="dark"]) .announcement-publish,
+    html:not([data-theme="dark"]) .announcement-notification,
+    html:not([data-theme="dark"]) .send-notification {
+        border: 1px solid rgba(250, 204, 21, 0.22) !important;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, 0.10), 0 3px 10px rgba(15, 23, 42, 0.05) !important;
+    }
 </style>
 @endpush
 

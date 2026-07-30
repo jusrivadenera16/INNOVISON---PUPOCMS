@@ -534,7 +534,7 @@
         background: linear-gradient(180deg, #ffffff 0%, #fffdf6 100%);
     }
     .profile-form-section::before {
-        content: "";
+        content: none;
         position: absolute;
         top: 0;
         left: 0;

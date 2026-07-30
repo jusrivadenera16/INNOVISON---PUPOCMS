@@ -19,9 +19,7 @@
         position: relative;
         isolation: isolate;
         min-height: calc(100vh - 120px);
-        background:
-            linear-gradient(180deg, rgba(255, 250, 250, 0.70), rgba(255, 255, 255, 0.58) 42%, rgba(245, 248, 247, 0.72) 100%),
-            url('{{ asset('images/student-bg.png') }}') center top / cover no-repeat;
+        background: transparent;
         color: var(--faq-ink);
         overflow: visible;
     }
@@ -30,9 +28,15 @@
         content: none;
     }
 
+    body:has(.faq-page) {
+        background:
+            linear-gradient(180deg, rgba(255, 250, 250, 0.70), rgba(255, 255, 255, 0.58) 42%, rgba(245, 248, 247, 0.72) 100%),
+            url('{{ asset('images/student-bg.png') }}') center top / cover no-repeat fixed !important;
+    }
+
     .faq-hero {
         position: relative;
-        padding: 46px 20px 18px;
+        padding: 22px 20px 14px;
         text-align: center;
         isolation: isolate;
     }
@@ -501,10 +505,13 @@
         --faq-ink: #f5f7fb;
         --faq-muted: #cbd5e1;
         --faq-line: rgba(148, 163, 184, 0.24);
+        color: #f5f7fb;
+    }
+
+    html[data-theme="dark"] body:has(.faq-page) {
         background:
             linear-gradient(180deg, rgba(2, 6, 23, 0.82), rgba(15, 23, 42, 0.74) 42%, rgba(2, 6, 23, 0.84) 100%),
-            url('{{ asset('images/student-bg.png') }}') center top / cover no-repeat;
-        color: #f5f7fb;
+            url('{{ asset('images/student-bg.png') }}') center top / cover no-repeat fixed !important;
     }
 
     html[data-theme="dark"] .faq-page::before {
@@ -838,7 +845,7 @@
         }
 
         .faq-hero {
-            padding-top: 34px;
+            padding-top: 22px;
         }
 
         .faq-search-shell {
@@ -917,6 +924,26 @@
         .faq-answer {
             padding-left: 61px;
         }
+    }
+
+    .faq-page {
+        min-height: calc(100vh - 72px);
+        overflow: visible !important;
+    }
+
+    .faq-layout {
+        margin-top: 20px;
+        margin-bottom: 70px;
+        height: auto;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .faq-content-column,
+    .faq-sidebar {
+        min-height: 0;
+        overflow: visible;
+        padding-bottom: 0;
     }
 </style>
 @endpush

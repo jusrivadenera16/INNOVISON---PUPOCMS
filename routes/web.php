@@ -356,6 +356,7 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::post('/admin/integration-pin/reset', [AdminController::class, 'resetIntegrationPin'])->name('admin.integration-pin.reset');
         Route::get('/admin/integration-pin/status', [AdminController::class, 'integrationPinStatus'])->name('admin.integration-pin.status');
         Route::post('/admin/integration-pin/verify', [AdminController::class, 'verifyIntegrationPin'])->name('admin.integration-pin.verify');
+        Route::post('/admin/reset-key/verify', [AdminController::class, 'verifyResetKey'])->name('admin.reset-key.verify');
         Route::put('/admin/emergency-credentials', [AdminController::class, 'updateEmergencyCredentials'])->name('admin.emergency-credentials.update');
         Route::put('/admin/maintenance-policy', [AdminController::class, 'updateMaintenancePolicy'])->name('admin.maintenance-policy.update');
         Route::get('/admin/integration-tokens', [AdminController::class, 'integrationTokens'])->name('admin.integration-tokens');

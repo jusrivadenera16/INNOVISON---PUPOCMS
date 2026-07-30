@@ -89,6 +89,8 @@
     button.dev-card {
         font: inherit;
         cursor: pointer;
+        appearance: none;
+        display: block;
     }
 
     .dev-card::before {
@@ -246,9 +248,31 @@
 
     .dev-panel-head h2 {
         margin: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
         font-size: 1.22rem;
         font-weight: 900;
         color: #ffffff !important;
+    }
+
+    .dev-panel-title-icon {
+        width: 44px;
+        height: 44px;
+        flex: 0 0 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, .14);
+        border: 1px solid rgba(255, 255, 255, .22);
+        color: #ffffff;
+    }
+
+    .dev-panel-title-icon svg {
+        width: 22px;
+        height: 22px;
+        stroke: currentColor;
     }
 
     .dev-panel-head p {
@@ -483,6 +507,47 @@
         font-size: .84rem;
         font-weight: 800;
         outline: none;
+    }
+
+    .dev-password-input-wrap {
+        position: relative;
+    }
+
+    .dev-password-input-wrap input {
+        padding-right: 48px;
+    }
+
+    .dev-password-toggle {
+        position: absolute;
+        top: 50%;
+        right: 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 1px solid rgba(112, 19, 27, .16);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, .86);
+        color: #70131b;
+        cursor: pointer;
+        transform: translateY(-50%);
+        transition: background .18s ease, color .18s ease, border-color .18s ease;
+    }
+
+    .dev-password-toggle:hover,
+    .dev-password-toggle:focus-visible {
+        background: #70131b;
+        border-color: #70131b;
+        color: #ffffff;
+        outline: none;
+    }
+
+    .dev-password-toggle svg {
+        width: 17px;
+        height: 17px;
+        stroke-width: 1.9;
     }
 
     .dev-password-select {
@@ -1132,6 +1197,56 @@
         justify-content: center;
     }
 
+    .dev-key-validation {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        min-height: 20px;
+        margin-top: 8px;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 850;
+    }
+
+    .dev-key-validation.is-visible {
+        display: flex;
+    }
+
+    .dev-key-validation.is-valid {
+        color: #15803d;
+    }
+
+    .dev-key-validation.is-invalid {
+        color: #b91c1c;
+    }
+
+    .dev-key-validation-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+    }
+
+    .dev-key-validation-icon svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .dev-key-validation-spinner {
+        width: 15px;
+        height: 15px;
+        border-radius: 999px;
+        border: 2px solid rgba(100, 116, 139, .24);
+        border-top-color: currentColor;
+        animation: devKeySpin .74s linear infinite;
+    }
+
+    @keyframes devKeySpin {
+        to { transform: rotate(360deg); }
+    }
+
     .dev-reset-pin-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -1354,8 +1469,9 @@
     }
 
     html[data-theme="dark"] .dev-hero {
-        background: linear-gradient(135deg, rgba(35,17,25,.96), rgba(24,11,18,.94));
-        border-color: rgba(250,204,21,.18);
+        background: transparent !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
     }
 
     html[data-theme="dark"] .dev-hero h1,
@@ -1368,7 +1484,12 @@
         color: #cbd5e1;
     }
 
-    html[data-theme="dark"] .dev-card,
+    html[data-theme="dark"] .dev-card {
+        background: #050505 !important;
+        border-color: rgba(250,204,21,.76) !important;
+        box-shadow: 0 18px 34px rgba(0,0,0,.34), 0 0 0 1px rgba(250,204,21,.12);
+    }
+
     html[data-theme="dark"] .dev-panel {
         background: linear-gradient(145deg, #5f0012 0%, #7d0b17 45%, #5a0010 100%);
         border-color: rgba(250,204,21,.18);
@@ -1435,6 +1556,19 @@
         background: rgba(255,255,255,.08);
         border-color: rgba(250,204,21,.20);
         color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .dev-password-toggle {
+        background: rgba(15, 23, 42, .86);
+        border-color: rgba(250,204,21,.22);
+        color: #facc15;
+    }
+
+    html[data-theme="dark"] .dev-password-toggle:hover,
+    html[data-theme="dark"] .dev-password-toggle:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131b;
     }
 
     html[data-theme="dark"] .dev-password-field input::placeholder {
@@ -1545,7 +1679,9 @@
     }
 
     .dev-hero h1 {
-        display: block;
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
         margin: 0 0 8px;
         padding: 0;
         border: 0;
@@ -1558,7 +1694,10 @@
     }
 
     .dev-hero h1 svg {
-        display: none;
+        display: block;
+        width: 30px;
+        height: 30px;
+        flex: 0 0 auto;
     }
 
     .dev-hero p {
@@ -1693,9 +1832,9 @@
     }
 
     html[data-theme="dark"] .dev-shell {
-        background: linear-gradient(180deg, rgba(70, 19, 27, 0.92), rgba(46, 13, 19, 0.96));
-        border-color: rgba(255,255,255,.08);
-        box-shadow: 0 20px 38px rgba(0,0,0,.24);
+        background: transparent;
+        border-color: rgba(250, 204, 21, 0.20);
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.18);
     }
 
     html[data-theme="dark"] .dev-shell::before {
@@ -1726,6 +1865,10 @@
     }
     .dev-card,
     button.dev-card {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
         text-align: left;
     }
     .dev-card h2,
@@ -1797,6 +1940,85 @@
             min-height: 314px !important;
         }
     }
+
+    html[data-theme="dark"] .dev-card,
+    html[data-theme="dark"] button.dev-card {
+        background: transparent !important;
+        background-image: none !important;
+        border-color: transparent !important;
+    }
+
+    html[data-theme="dark"] .dev-card::before,
+    html[data-theme="dark"] button.dev-card::before {
+        background: transparent !important;
+    }
+
+    html[data-theme="dark"] .dev-card:hover,
+    html[data-theme="dark"] .dev-card:focus-visible,
+    html[data-theme="dark"] button.dev-card:hover,
+    html[data-theme="dark"] button.dev-card:focus-visible {
+        background: #facc15 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+    }
+
+    html[data-theme="dark"] .dev-card:hover h2,
+    html[data-theme="dark"] .dev-card:focus-visible h2,
+    html[data-theme="dark"] .dev-card:hover p,
+    html[data-theme="dark"] .dev-card:focus-visible p,
+    html[data-theme="dark"] .dev-card:hover .dev-action,
+    html[data-theme="dark"] .dev-card:focus-visible .dev-action,
+    html[data-theme="dark"] button.dev-card:hover h2,
+    html[data-theme="dark"] button.dev-card:focus-visible h2,
+    html[data-theme="dark"] button.dev-card:hover p,
+    html[data-theme="dark"] button.dev-card:focus-visible p,
+    html[data-theme="dark"] button.dev-card:hover .dev-action,
+    html[data-theme="dark"] button.dev-card:focus-visible .dev-action {
+        color: #70131B !important;
+    }
+
+    .dev-card::after,
+    button.dev-card::after {
+        content: "" !important;
+        position: absolute !important;
+        top: -38% !important;
+        bottom: -38% !important;
+        left: -135% !important;
+        width: 34% !important;
+        height: auto !important;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 0;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 246, 184, 0.18) 42%, rgba(255, 246, 184, 0.6) 50%, rgba(255, 246, 184, 0.18) 58%, rgba(255, 255, 255, 0) 100%) !important;
+        transform: translateX(0) skewX(-18deg);
+        transition: none !important;
+    }
+
+    .dev-card:hover::after,
+    .dev-card:focus-visible::after,
+    button.dev-card:hover::after,
+    button.dev-card:focus-visible::after {
+        opacity: 1 !important;
+        animation: devSettingsSweep .92s ease both !important;
+    }
+
+    html[data-theme="dark"] .dev-card::after,
+    html[data-theme="dark"] button.dev-card::after {
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.12) 42%, rgba(255, 255, 255, 0.44) 50%, rgba(255, 255, 255, 0.12) 58%, rgba(255, 255, 255, 0) 100%) !important;
+    }
+
+    /* Final light-mode surface pass */
+    html:not([data-theme="dark"]) .dev-shell {
+        border: 1px solid rgba(250, 204, 21, 0.20) !important;
+        box-shadow: 0 18px 34px rgba(112, 19, 27, 0.08) !important;
+    }
+
+    html:not([data-theme="dark"]) .dev-card,
+    html:not([data-theme="dark"]) button.dev-card {
+        border: 1px solid rgba(250, 204, 21, 0.22) !important;
+        box-shadow: 0 14px 28px rgba(112, 19, 27, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+    }
 </style>
 @endpush
 
@@ -1807,7 +2029,12 @@
 
 <div class="dev-shell">
     <section class="dev-hero">
-        <h1><x-outline-icon name="code-bracket-square" />Developer Tools</h1>
+        <h1>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75 16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
+            </svg>
+            Developer Tools
+        </h1>
         <p>Protected utilities for integration testing and maintenance preparation.</p>
     </section>
 
@@ -1846,7 +2073,14 @@
     <section class="dev-panel" role="dialog" aria-modal="true" aria-labelledby="developerOptionsTitle">
         <div class="dev-panel-head">
             <div>
-                <h2 id="developerOptionsTitle">Developer Options</h2>
+                <h2 id="developerOptionsTitle">
+                    <span class="dev-panel-title-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75 16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
+                        </svg>
+                    </span>
+                    <span>Developer Options</span>
+                </h2>
                 <p>Prepared controls for future maintenance workflows.</p>
             </div>
             <button type="button" class="dev-close" id="closeDeveloperOptionsPanel" aria-label="Close Developer Options">
@@ -1872,9 +2106,6 @@
                         $emergencyRole = $configEmergencyRole;
                         $emergencyConfigured = $configEmergencyHash !== '' || $configEmergencyPassword !== '';
                         $emergencySource = 'Environment';
-                        $emergencyPinRequired = ($devPinUser->api_pin_enabled ?? false)
-                            && ($devPinUser->api_pin_emergency_credentials_enabled ?? false)
-                            && trim((string) ($devPinUser->api_pin ?? '')) !== '';
                     @endphp
                     <div class="dev-mini-summary">
                         <div class="dev-mini-line"><span>One Portal / IdP</span><span class="dev-option-pill">Primary</span></div>
@@ -1882,7 +2113,7 @@
                         <div class="dev-mini-line"><span>Password</span><span class="dev-option-pill">{{ $emergencyConfigured ? 'Configured' : 'Missing' }}</span></div>
                         <div class="dev-mini-line"><span>Source</span><span class="dev-option-pill">{{ $emergencySource }}</span></div>
                     </div>
-                    <form method="POST" action="{{ route('admin.emergency-credentials.update') }}" class="dev-compact-settings" id="devEmergencyCredentialsForm" data-pin-required="{{ $emergencyPinRequired ? '1' : '0' }}">
+                    <form method="POST" action="{{ route('admin.emergency-credentials.update') }}" class="dev-compact-settings" id="devEmergencyCredentialsForm" data-pin-required="0">
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="emergency_action" id="devEmergencyAction" value="update">
@@ -1907,41 +2138,13 @@
                         </div>
 
                         <input type="hidden" name="emergency_role" value="{{ in_array($emergencyRole, ['superadmin', 'super_admin'], true) ? 'superadmin' : 'admin' }}">
-                        <input type="hidden" name="pin" id="devEmergencyCredentialPin">
-
-                        <div class="dev-setting-row">
-                            <div class="dev-setting-row-head">
-                                <div>
-                                    <span class="dev-setting-label">Current Password</span>
-                                    <div class="dev-setting-value" id="devEmergencyPasswordStatus">{{ $emergencyConfigured ? '**********' : 'No password configured' }}</div>
-                                </div>
-                                <button type="button" class="dev-icon-action" id="devViewEmergencyPassword" aria-label="View emergency password status" {{ $emergencyConfigured ? '' : 'disabled' }}>
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <path d="M2.25 12s3.5-6.75 9.75-6.75S21.75 12 21.75 12 18.25 18.75 12 18.75 2.25 12 2.25 12Z"/>
-                                        <path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-
                         <div class="dev-setting-row">
                             <div class="dev-setting-row-head">
                                 <div>
                                     <span class="dev-setting-label">Reset Emergency Password</span>
                                     <div class="dev-setting-subtext">Create a new fallback password when the current one is unknown or rotated.</div>
                                 </div>
-                                <button type="button" class="dev-mini-action" id="devToggleEmergencyReset">Reset</button>
-                            </div>
-                            <div class="dev-collapsible-fields" id="devEmergencyResetFields" {{ $emergencyConfigured ? 'hidden' : '' }}>
-                                <div class="dev-password-field">
-                                    <label for="devNewEmergencyPassword">New Emergency Password</label>
-                                    <input type="password" id="devNewEmergencyPassword" name="new_emergency_password" placeholder="Create emergency password" autocomplete="new-password" {{ $emergencyConfigured ? '' : 'required' }}>
-                                </div>
-                                <div class="dev-password-field">
-                                    <label for="devNewEmergencyPasswordConfirm">Confirm New Password</label>
-                                    <input type="password" id="devNewEmergencyPasswordConfirm" name="new_emergency_password_confirmation" placeholder="Confirm new password" autocomplete="new-password" {{ $emergencyConfigured ? '' : 'required' }}>
-                                </div>
-                                <button type="submit" class="dev-mini-action">Save Password</button>
+                                <button type="button" class="dev-mini-action" id="openEmergencyPasswordReset">Reset</button>
                             </div>
                         </div>
 
@@ -1960,19 +2163,35 @@
                                 </div>
                                 <div class="dev-password-field">
                                     <label for="devAdditionalEmergencyPassword">Password</label>
-                                    <input type="password" id="devAdditionalEmergencyPassword" name="additional_emergency_password" placeholder="Create emergency password" autocomplete="new-password">
+                                    <div class="dev-password-input-wrap">
+                                        <input type="password" id="devAdditionalEmergencyPassword" name="additional_emergency_password" placeholder="Create emergency password" autocomplete="new-password">
+                                        <button type="button" class="dev-password-toggle" data-toggle-password="devAdditionalEmergencyPassword" aria-label="Show additional emergency password">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M2.25 12s3.5-6.75 9.75-6.75S21.75 12 21.75 12 18.25 18.75 12 18.75 2.25 12 2.25 12Z"/>
+                                                <path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z"/>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="dev-password-field">
                                     <label for="devAdditionalEmergencyPasswordConfirm">Confirm Password</label>
-                                    <input type="password" id="devAdditionalEmergencyPasswordConfirm" name="additional_emergency_password_confirmation" placeholder="Confirm emergency password" autocomplete="new-password">
+                                    <div class="dev-password-input-wrap">
+                                        <input type="password" id="devAdditionalEmergencyPasswordConfirm" name="additional_emergency_password_confirmation" placeholder="Confirm emergency password" autocomplete="new-password">
+                                        <button type="button" class="dev-password-toggle" data-toggle-password="devAdditionalEmergencyPasswordConfirm" aria-label="Show confirmed additional emergency password">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M2.25 12s3.5-6.75 9.75-6.75S21.75 12 21.75 12 18.25 18.75 12 18.75 2.25 12 2.25 12Z"/>
+                                                <path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z"/>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                                 <button type="submit" class="dev-mini-action">Save New Email</button>
                             </div>
                         </div>
-                        @error('current_emergency_password')
+                        @error('new_emergency_password')
                             <div class="dev-pin-error">{{ $message }}</div>
                         @enderror
-                        @error('new_emergency_password')
+                        @error('emergency_password_reset_key')
                             <div class="dev-pin-error">{{ $message }}</div>
                         @enderror
                         @error('pin')
@@ -1995,7 +2214,6 @@
                             $pinEnabled = $legacyPinEnabled;
                             $pagePinEnabled = $pinEnabled && (bool) ($devPinUser->api_pin_page_enabled ?? true);
                             $tokenActionPinEnabled = $pinEnabled && (bool) ($devPinUser->api_pin_token_action_enabled ?? true);
-                            $emergencyCredentialsPinEnabled = $pinEnabled && (bool) ($devPinUser->api_pin_emergency_credentials_enabled ?? false);
                             $hasPin = trim((string) ($devPinUser->api_pin ?? '')) !== '';
                             $needsPinSetup = ! $hasPin;
                         @endphp
@@ -2024,24 +2242,32 @@
                                 <input type="checkbox" name="api_pin_token_action_enabled" value="1" class="dev-api-pin-toggle" {{ $tokenActionPinEnabled ? 'checked' : '' }}>
                                 <span class="dev-toggle-track" aria-hidden="true"><span class="dev-toggle-knob"></span></span>
                             </label>
-                            <label class="dev-live-toggle">
-                                <span>
-                                    <strong>Emergency Credentials</strong>
-                                    <span>Require PIN before changing emergency login email, role, or password.</span>
-                                </span>
-                                <input type="checkbox" name="api_pin_emergency_credentials_enabled" value="1" class="dev-api-pin-toggle" id="devEmergencyCredentialsPinToggle" {{ $emergencyCredentialsPinEnabled ? 'checked' : '' }}>
-                                <span class="dev-toggle-track" aria-hidden="true"><span class="dev-toggle-knob"></span></span>
-                            </label>
                         </div>
                         <div class="dev-pin-fields {{ $needsPinSetup ? '' : 'is-hidden' }}" id="devApiPinFields" {{ $pinEnabled ? '' : 'hidden' }}>
                             @if($needsPinSetup)
                                 <div class="dev-password-field">
                                     <label for="devApiPin">4-Digit PIN</label>
-                                    <input type="password" id="devApiPin" name="api_pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="Enter 4-digit PIN">
+                                    <div class="dev-password-input-wrap">
+                                        <input type="password" id="devApiPin" name="api_pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="Enter 4-digit PIN" autocomplete="new-password">
+                                        <button type="button" class="dev-password-toggle" data-toggle-password="devApiPin" aria-label="Show security PIN">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M2.25 12s3.5-6.75 9.75-6.75S21.75 12 21.75 12 18.25 18.75 12 18.75 2.25 12 2.25 12Z"/>
+                                                <path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z"/>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="dev-password-field">
                                     <label for="devApiPinConfirm">Confirm PIN</label>
-                                    <input type="password" id="devApiPinConfirm" name="api_pin_confirmation" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="Confirm 4-digit PIN">
+                                    <div class="dev-password-input-wrap">
+                                        <input type="password" id="devApiPinConfirm" name="api_pin_confirmation" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="Confirm 4-digit PIN" autocomplete="new-password">
+                                        <button type="button" class="dev-password-toggle" data-toggle-password="devApiPinConfirm" aria-label="Show confirmed security PIN">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M2.25 12s3.5-6.75 9.75-6.75S21.75 12 21.75 12 18.25 18.75 12 18.75 2.25 12 2.25 12Z"/>
+                                                <path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z"/>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                             @endif
                         </div>
@@ -2218,6 +2444,122 @@
     </section>
 </div>
 
+<div class="dev-reset-modal" id="resetEmergencyPasswordModal" aria-hidden="true">
+    <section class="dev-reset-dialog" role="dialog" aria-modal="true" aria-labelledby="resetEmergencyPasswordTitle">
+        <header class="dev-reset-head">
+            <div class="dev-reset-head-main">
+                <span class="dev-reset-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.5c.404-.403.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
+                    </svg>
+                </span>
+                <div>
+                    <h3 id="resetEmergencyPasswordTitle">Reset Emergency Password</h3>
+                    <p>Create a new fallback password using the emergency password reset key.</p>
+                </div>
+            </div>
+            <button type="button" class="dev-reset-close" id="closeEmergencyPasswordReset" aria-label="Close emergency password reset modal">&times;</button>
+        </header>
+        @php
+            $resetEmergencyEmail = (string) config('services.emergency.email', '');
+            $resetEmergencyRole = (string) config('services.emergency.role', 'admin');
+        @endphp
+        <form method="POST" action="{{ route('admin.emergency-credentials.update') }}" class="dev-reset-form" autocomplete="off">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="emergency_action" value="reset">
+            <input type="hidden" name="emergency_email" value="{{ $resetEmergencyEmail }}">
+            <input type="hidden" name="emergency_role" value="{{ in_array($resetEmergencyRole, ['superadmin', 'super_admin'], true) ? 'superadmin' : 'admin' }}">
+
+            <div class="dev-reset-security">
+                <span class="dev-reset-security-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.75A11.959 11.959 0 0 1 12 2.714Z" />
+                    </svg>
+                </span>
+                <div>
+                    <strong>Security Verification</strong>
+                    <span>Only use this when rotating or recovering the emergency login password.</span>
+                </div>
+            </div>
+
+            <div class="dev-reset-step">
+                <span class="dev-reset-step-number">1</span>
+                <div class="dev-reset-step-body">
+                    <div>
+                        <strong class="dev-reset-step-title">Verify Reset Key</strong>
+                        <span class="dev-reset-step-copy">Enter the Emergency Password reset key from the server environment.</span>
+                    </div>
+                    <div class="dev-reset-password-wrap">
+                        <span class="dev-reset-input-icon" aria-hidden="true">
+                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
+                            </svg>
+                        </span>
+                        <input type="password" id="emergencyPasswordResetKey" name="emergency_password_reset_key" required placeholder="Enter emergency password reset key" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" readonly onfocus="this.removeAttribute('readonly');">
+                        <button type="button" class="dev-reset-eye" data-toggle-password="emergencyPasswordResetKey" aria-label="Show emergency password reset key">
+                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="dev-key-validation" id="emergencyPasswordResetKeyStatus" aria-live="polite"></div>
+                </div>
+            </div>
+
+            <div class="dev-reset-step">
+                <span class="dev-reset-step-number">2</span>
+                <div class="dev-reset-step-body">
+                    <div>
+                        <strong class="dev-reset-step-title">Create New Emergency Password</strong>
+                        <span class="dev-reset-step-copy">Use at least 8 characters with at least one letter and one number.</span>
+                    </div>
+                    <div class="dev-reset-password-wrap">
+                        <span class="dev-reset-input-icon" aria-hidden="true">
+                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
+                            </svg>
+                        </span>
+                        <input type="password" id="modalNewEmergencyPassword" name="new_emergency_password" required placeholder="Create emergency password" autocomplete="new-password">
+                        <button type="button" class="dev-reset-eye" data-toggle-password="modalNewEmergencyPassword" aria-label="Show new emergency password">
+                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="dev-reset-password-wrap">
+                        <span class="dev-reset-input-icon" aria-hidden="true">
+                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
+                            </svg>
+                        </span>
+                        <input type="password" id="modalNewEmergencyPasswordConfirm" name="new_emergency_password_confirmation" required placeholder="Confirm emergency password" autocomplete="new-password">
+                        <button type="button" class="dev-reset-eye" data-toggle-password="modalNewEmergencyPasswordConfirm" aria-label="Show confirmed emergency password">
+                            <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            @error('emergency_password_reset_key')
+                <div class="dev-pin-error">{{ $message }}</div>
+            @enderror
+            @error('new_emergency_password')
+                <div class="dev-pin-error">{{ $message }}</div>
+            @enderror
+            <div class="dev-reset-footer">
+                <button type="button" class="dev-reset-cancel" id="cancelEmergencyPasswordReset">Cancel</button>
+                <button type="submit" class="dev-reset-submit">Save Password</button>
+            </div>
+        </form>
+    </section>
+</div>
+
 <div class="dev-reset-modal" id="resetIntegrationPinModal" aria-hidden="true">
     <section class="dev-reset-dialog" role="dialog" aria-modal="true" aria-labelledby="resetIntegrationPinTitle">
         <header class="dev-reset-head">
@@ -2252,8 +2594,8 @@
                 <span class="dev-reset-step-number">1</span>
                 <div class="dev-reset-step-body">
                     <div>
-                        <strong class="dev-reset-step-title">Verify Emergency Password</strong>
-                        <span class="dev-reset-step-copy">Enter your emergency login password to continue.</span>
+                        <strong class="dev-reset-step-title">Verify PIN Reset Key</strong>
+                        <span class="dev-reset-step-copy">Enter the Integration PIN reset key from the server environment.</span>
                     </div>
                     <div class="dev-reset-password-wrap">
                         <span class="dev-reset-input-icon" aria-hidden="true">
@@ -2261,14 +2603,15 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
                             </svg>
                         </span>
-                        <input type="password" id="resetEmergencyPassword" name="emergency_password" required placeholder="Enter emergency password">
-                        <button type="button" class="dev-reset-eye" id="toggleResetEmergencyPassword" aria-label="Show emergency password">
+                        <input type="password" id="resetIntegrationPinKey" name="pin_reset_key" required placeholder="Enter Integration PIN reset key" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" readonly onfocus="this.removeAttribute('readonly');">
+                        <button type="button" class="dev-reset-eye" data-toggle-password="resetIntegrationPinKey" aria-label="Show reset key">
                             <svg class="dev-reset-step-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                             </svg>
                         </button>
                     </div>
+                    <div class="dev-key-validation" id="resetIntegrationPinKeyStatus" aria-live="polite"></div>
                 </div>
             </div>
 
@@ -2309,7 +2652,7 @@
                     </div>
                 </div>
             </div>
-            @error('emergency_password')
+            @error('pin_reset_key')
                 <div class="dev-pin-error">{{ $message }}</div>
             @enderror
             @error('api_pin')
@@ -2366,24 +2709,20 @@
         const pinControls = document.getElementById('devApiPinControls');
         const pinForm = pinMasterToggle?.closest('form');
         const pinCurrentInput = document.getElementById('devApiCurrentPin');
-        const emergencyCredentialsPinToggle = document.getElementById('devEmergencyCredentialsPinToggle');
         const emergencyForm = document.getElementById('devEmergencyCredentialsForm');
-        const emergencyCredentialPinInput = document.getElementById('devEmergencyCredentialPin');
         const emergencyActionInput = document.getElementById('devEmergencyAction');
         const emergencyEmailToggle = document.getElementById('devToggleEmergencyEmail');
         const emergencyEmailFields = document.getElementById('devEmergencyEmailFields');
         const emergencyAddToggle = document.getElementById('devToggleEmergencyAdd');
         const emergencyAddFields = document.getElementById('devEmergencyAddFields');
-        const emergencyResetToggle = document.getElementById('devToggleEmergencyReset');
-        const emergencyResetFields = document.getElementById('devEmergencyResetFields');
-        const emergencyPasswordView = document.getElementById('devViewEmergencyPassword');
-        const emergencyPasswordStatus = document.getElementById('devEmergencyPasswordStatus');
+        const emergencyResetButton = document.getElementById('openEmergencyPasswordReset');
+        const emergencyPasswordResetModal = document.getElementById('resetEmergencyPasswordModal');
+        const closeEmergencyPasswordResetButton = document.getElementById('closeEmergencyPasswordReset');
+        const cancelEmergencyPasswordResetButton = document.getElementById('cancelEmergencyPasswordReset');
         const resetPinButton = document.getElementById('openResetIntegrationPin');
         const resetPinModal = document.getElementById('resetIntegrationPinModal');
         const closeResetPinButton = document.getElementById('closeResetIntegrationPin');
         const cancelResetPinButton = document.getElementById('cancelResetIntegrationPin');
-        const resetEmergencyPassword = document.getElementById('resetEmergencyPassword');
-        const toggleResetEmergencyPassword = document.getElementById('toggleResetEmergencyPassword');
         const maintenanceToggle = document.getElementById('devMaintenanceModeToggle');
         const maintenanceSaveButton = document.getElementById('devMaintenanceSaveButton');
         const maintenanceForm = maintenanceToggle?.closest('form');
@@ -2406,7 +2745,7 @@
             pinFields.hidden = !pinMasterToggle.checked;
             pinControls.hidden = !pinMasterToggle.checked && !hasSavedPin;
             if (emergencyForm) {
-                emergencyForm.dataset.pinRequired = (pinMasterToggle.checked && emergencyCredentialsPinToggle?.checked && hasSavedPin) ? '1' : '0';
+                emergencyForm.dataset.pinRequired = '0';
             }
         };
 
@@ -2524,7 +2863,6 @@
 
         setFieldsRequired(emergencyEmailFields, !emergencyEmailFields?.hidden);
         setFieldsRequired(emergencyAddFields, false);
-        setFieldsRequired(emergencyResetFields, !emergencyResetFields?.hidden);
 
         emergencyEmailToggle?.addEventListener('click', () => {
             if (!emergencyEmailFields) {
@@ -2559,76 +2897,6 @@
             emergencyAddToggle.textContent = emergencyAddFields.hidden ? (emergencyAddToggle.dataset.closedLabel || 'Add Email') : 'Done';
         });
 
-        emergencyResetToggle?.addEventListener('click', () => {
-            if (!emergencyResetFields) {
-                return;
-            }
-            if (emergencyActionInput) {
-                emergencyActionInput.value = 'reset';
-            }
-            emergencyResetFields.hidden = !emergencyResetFields.hidden;
-            setFieldsRequired(emergencyResetFields, !emergencyResetFields.hidden);
-            emergencyResetToggle.textContent = emergencyResetFields.hidden ? 'Reset' : 'Hide';
-        });
-
-        const verifyEmergencyPin = async () => {
-            if (emergencyForm?.dataset.pinRequired !== '1') {
-                return '';
-            }
-
-            const pin = window.prompt('Enter your 4-digit PIN from PIN Management.');
-            if (!pin) {
-                return null;
-            }
-
-            try {
-                const response = await fetch('{{ route('admin.integration-pin.verify') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    },
-                    body: JSON.stringify({ purpose: 'emergency_credentials', pin }),
-                });
-                const payload = await response.json();
-                if (!response.ok || !payload.success) {
-                    alert(payload.message || 'PIN verification failed.');
-                    return null;
-                }
-                return pin;
-            } catch (error) {
-                alert('PIN verification failed. Please try again.');
-                return null;
-            }
-        };
-
-        emergencyPasswordView?.addEventListener('click', async () => {
-            const pin = await verifyEmergencyPin();
-            if (pin === null) {
-                return;
-            }
-            if (emergencyPasswordStatus) {
-                emergencyPasswordStatus.textContent = 'Password secured';
-            }
-        });
-
-        emergencyForm?.addEventListener('submit', async (event) => {
-            if (emergencyForm.dataset.pinRequired !== '1' || emergencyCredentialPinInput?.value) {
-                return;
-            }
-
-            event.preventDefault();
-            const pin = await verifyEmergencyPin();
-            if (pin === null) {
-                return;
-            }
-            if (emergencyCredentialPinInput) {
-                emergencyCredentialPinInput.value = pin;
-            }
-            emergencyForm.requestSubmit();
-        });
-
         maintenanceToggle?.addEventListener('change', () => {
             if (maintenanceSaveButton) {
                 maintenanceSaveButton.hidden = !maintenanceToggle.checked;
@@ -2647,7 +2915,6 @@
         };
 
         resetPinButton?.addEventListener('click', () => {
-            closePanel();
             window.setTimeout(() => setResetPinModalOpen(true), 80);
         });
         closeResetPinButton?.addEventListener('click', () => setResetPinModalOpen(false));
@@ -2658,14 +2925,128 @@
             }
         });
 
-        toggleResetEmergencyPassword?.addEventListener('click', () => {
-            if (!resetEmergencyPassword) {
+        const setEmergencyPasswordResetModalOpen = (isOpen) => {
+            if (!emergencyPasswordResetModal) {
+                return;
+            }
+            emergencyPasswordResetModal.classList.toggle('is-open', isOpen);
+            emergencyPasswordResetModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        };
+
+        emergencyResetButton?.addEventListener('click', () => {
+            window.setTimeout(() => setEmergencyPasswordResetModalOpen(true), 80);
+        });
+        closeEmergencyPasswordResetButton?.addEventListener('click', () => setEmergencyPasswordResetModalOpen(false));
+        cancelEmergencyPasswordResetButton?.addEventListener('click', () => setEmergencyPasswordResetModalOpen(false));
+        emergencyPasswordResetModal?.addEventListener('click', function (event) {
+            if (event.target === emergencyPasswordResetModal) {
+                setEmergencyPasswordResetModalOpen(false);
+            }
+        });
+
+        const keyValidationCheck = {
+            integration_pin: { timer: null, requestId: 0 },
+            emergency_password: { timer: null, requestId: 0 },
+        };
+
+        const renderKeyValidation = (statusEl, state, message) => {
+            if (!statusEl) {
                 return;
             }
 
-            const isHidden = resetEmergencyPassword.type === 'password';
-            resetEmergencyPassword.type = isHidden ? 'text' : 'password';
-            toggleResetEmergencyPassword.setAttribute('aria-label', isHidden ? 'Hide emergency password' : 'Show emergency password');
+            statusEl.classList.remove('is-visible', 'is-valid', 'is-invalid');
+            if (!state) {
+                statusEl.innerHTML = '';
+                return;
+            }
+
+            statusEl.classList.add('is-visible');
+            if (state === 'checking') {
+                statusEl.innerHTML = '<span class="dev-key-validation-spinner" aria-hidden="true"></span><span>Validating...</span>';
+                return;
+            }
+
+            if (state === 'valid') {
+                statusEl.classList.add('is-valid');
+                statusEl.innerHTML = '<span class="dev-key-validation-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span>' + message + '</span>';
+                return;
+            }
+
+            statusEl.classList.add('is-invalid');
+            statusEl.innerHTML = '<span class="dev-key-validation-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span><span>' + message + '</span>';
+        };
+
+        const setupResetKeyValidation = (inputId, statusId, purpose, validMessage) => {
+            const input = document.getElementById(inputId);
+            const statusEl = document.getElementById(statusId);
+            if (!input || !statusEl) {
+                return;
+            }
+
+            const runValidation = () => {
+                const key = input.value.trim();
+                const tracker = keyValidationCheck[purpose];
+                window.clearTimeout(tracker.timer);
+
+                if (!key) {
+                    tracker.requestId += 1;
+                    renderKeyValidation(statusEl, null);
+                    return;
+                }
+
+                tracker.timer = window.setTimeout(async () => {
+                    const requestId = tracker.requestId + 1;
+                    tracker.requestId = requestId;
+                    renderKeyValidation(statusEl, 'checking');
+
+                    try {
+                        const response = await fetch('{{ route('admin.reset-key.verify') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            },
+                            body: JSON.stringify({ purpose, key }),
+                        });
+                        const payload = await response.json().catch(() => ({}));
+                        if (tracker.requestId !== requestId || input.value.trim() !== key) {
+                            return;
+                        }
+
+                        if (response.ok && payload.success) {
+                            renderKeyValidation(statusEl, 'valid', validMessage);
+                        } else {
+                            renderKeyValidation(statusEl, 'invalid', payload.message || 'Reset key is invalid.');
+                        }
+                    } catch (error) {
+                        if (tracker.requestId === requestId) {
+                            renderKeyValidation(statusEl, 'invalid', 'Unable to validate reset key.');
+                        }
+                    }
+                }, 450);
+            };
+
+            input.addEventListener('input', runValidation);
+            input.addEventListener('blur', runValidation);
+        };
+
+        setupResetKeyValidation('resetIntegrationPinKey', 'resetIntegrationPinKeyStatus', 'integration_pin', 'Pin Reset Key is Valid');
+        setupResetKeyValidation('emergencyPasswordResetKey', 'emergencyPasswordResetKeyStatus', 'emergency_password', 'Emergency Password Reset Key is Valid');
+
+        document.querySelectorAll('[data-toggle-password]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const input = document.getElementById(button.dataset.togglePassword || '');
+                if (!input) {
+                    return;
+                }
+
+                const isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                const originalLabel = button.dataset.defaultLabel || button.getAttribute('aria-label') || 'Show password';
+                button.dataset.defaultLabel = originalLabel;
+                button.setAttribute('aria-label', isHidden ? originalLabel.replace(/^Show/i, 'Hide') : originalLabel);
+            });
         });
 
         document.querySelectorAll('.dev-reset-pin-digits').forEach((group) => {
@@ -2715,6 +3096,9 @@
             }
             if (event.key === 'Escape' && resetPinModal?.classList.contains('is-open')) {
                 setResetPinModalOpen(false);
+            }
+            if (event.key === 'Escape' && emergencyPasswordResetModal?.classList.contains('is-open')) {
+                setEmergencyPasswordResetModalOpen(false);
             }
         });
     });

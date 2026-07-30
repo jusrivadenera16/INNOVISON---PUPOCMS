@@ -2127,6 +2127,73 @@
         width: 100% !important;
     }
 
+    /* Final Settings hub surface pass: match Reports/Developer Tools */
+    .settings-page {
+        border-color: rgba(250, 204, 21, 0.20) !important;
+    }
+
+    .settings-page::before {
+        background: #70131B !important;
+    }
+
+    .settings-page .settings-hub-card,
+    .settings-page .settings-hub-card:nth-child(2),
+    .settings-page .settings-hub-card:nth-child(4),
+    .settings-page .settings-hub-card:nth-child(5) {
+        background: #70131B !important;
+        background-image: none !important;
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        box-shadow: 0 10px 24px rgba(112, 19, 27, 0.18) !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .settings-page {
+        background: transparent !important;
+        background-image: none !important;
+        border-color: rgba(250, 204, 21, 0.20) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.18) !important;
+    }
+
+    html[data-theme="dark"] .settings-page::before {
+        background: #facc15 !important;
+    }
+
+    html[data-theme="dark"] .settings-page .settings-hub-card,
+    html[data-theme="dark"] .settings-page .settings-hub-card:nth-child(2),
+    html[data-theme="dark"] .settings-page .settings-hub-card:nth-child(4),
+    html[data-theme="dark"] .settings-page .settings-hub-card:nth-child(5) {
+        background: transparent !important;
+        background-image: none !important;
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.22) !important;
+        color: #ffffff !important;
+    }
+
+    .settings-page .settings-hub-card:hover,
+    .settings-page .settings-hub-card:focus-visible,
+    html[data-theme="dark"] .settings-page .settings-hub-card:hover,
+    html[data-theme="dark"] .settings-page .settings-hub-card:focus-visible {
+        background: #facc15 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.12), 0 20px 30px rgba(139, 0, 0, 0.22) !important;
+        color: #70131B !important;
+    }
+
+    /* Final light-mode surface pass */
+    html:not([data-theme="dark"]) .settings-page {
+        border: 1px solid rgba(250, 204, 21, 0.20) !important;
+        box-shadow: 0 18px 34px rgba(112, 19, 27, 0.08) !important;
+    }
+
+    html:not([data-theme="dark"]) .settings-page .settings-hub-card,
+    html:not([data-theme="dark"]) .settings-page .settings-hub-card:nth-child(2),
+    html:not([data-theme="dark"]) .settings-page .settings-hub-card:nth-child(4),
+    html:not([data-theme="dark"]) .settings-page .settings-hub-card:nth-child(5) {
+        border: 1px solid rgba(250, 204, 21, 0.22) !important;
+        box-shadow: 0 14px 28px rgba(112, 19, 27, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+    }
+
 </style>
 @endpush
 
@@ -2196,7 +2263,7 @@
         </a>
 
         <a href="{{ route('admin.settings.medical') }}" class="settings-hub-card">
-            <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="plus" /></span>
             <span class="settings-hub-card-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span>
             <div>
                 <h3>Medical Configuration</h3>
@@ -2205,7 +2272,7 @@
         </a>
 
         <a href="{{ route('admin.user-management') }}" class="settings-hub-card">
-            <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="plus" /></span>
             <span class="settings-hub-card-icon" aria-hidden="true"><x-outline-icon name="users" /></span>
             <div>
                 <h3>Users Management</h3>
@@ -2214,7 +2281,7 @@
         </a>
 
         <a href="{{ route('admin.settings.faqs') }}" class="settings-hub-card">
-            <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+            <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="plus" /></span>
             <span class="settings-hub-card-icon" aria-hidden="true"><x-outline-icon name="question-mark-circle" /></span>
             <div>
                 <h3>FAQs</h3>

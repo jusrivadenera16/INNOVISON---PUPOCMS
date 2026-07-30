@@ -386,6 +386,16 @@
         .dashboard-chart-row { grid-template-columns: 84px 1fr 36px; }
     }
     @media (max-width: 500px) { .stats-grid { grid-template-columns: 1fr; } }
+
+    /* Final light-mode surface pass */
+    html:not([data-theme="dark"]) .stats-grid .stat-card {
+        border: 1px solid rgba(250, 204, 21, 0.22) !important;
+        box-shadow: 0 14px 28px rgba(112, 19, 27, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    html:not([data-theme="dark"]) .stats-grid .stat-card:hover {
+        box-shadow: 0 20px 36px rgba(112, 19, 27, 0.16), 0 6px 14px rgba(15, 23, 42, 0.08) !important;
+    }
 </style>
 @endpush
 
