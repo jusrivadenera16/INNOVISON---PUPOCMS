@@ -3728,7 +3728,7 @@
     .applicant-ref-toggle-btn,
     .applicant-ref-action-btn {
         width: 100%;
-        min-height: 46px;
+        min-height: 58px;
         border-radius: 14px;
         border: 1px solid transparent;
         font-size: 14px;
@@ -3743,7 +3743,7 @@
         align-items: center;
         justify-content: center;
         gap: 10px;
-        padding: 12px 18px;
+        padding: 0 20px;
         overflow: hidden;
         background: linear-gradient(135deg, #70131B, #8f2230);
         color: #facc15;
@@ -7890,6 +7890,225 @@
     #applicantRefModal .applicant-ref-actions.has-draft-action .applicant-ref-action-btn {
         width: 100%;
         min-width: 0;
+    }
+
+    /* Applicant workflow and employee/student lookup dark-mode polish */
+    html[data-theme="dark"] #applicantRefModal .applicant-ref-copy .applicant-ref-kicker,
+    html[data-theme="dark"] #applicantRefModal .applicant-ref-copy h4 {
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-workflow-card {
+        background: transparent !important;
+        background-image: none !important;
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.22) !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-workflow-card:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-workflow-card:focus-visible {
+        background: #facc15 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.12), 0 20px 30px rgba(139, 0, 0, 0.22) !important;
+        color: #70131B !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-instruction {
+        background: #050505 !important;
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.22) !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-help-copy,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-help-copy strong {
+        color: #ffffff !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus:not(.info):not(.success):not(.error):not(.encoded) {
+        display: none !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-input {
+        background: #111827 !important;
+        background-image: none !important;
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-input:focus {
+        border-color: rgba(250, 204, 21, 0.46) !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.10), 0 18px 34px rgba(0, 0, 0, 0.30) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-cancel-btn,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-find-btn {
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.22) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-cancel-btn {
+        background: #111827 !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-find-btn {
+        background: #70131B !important;
+        color: #facc15 !important;
+        border-color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-cancel-btn:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-cancel-btn:focus,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-find-btn:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-find-btn:focus {
+        background: #facc15 !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.12), 0 20px 30px rgba(139, 0, 0, 0.22) !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn {
+        background: #70131B !important;
+        background-image: none !important;
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        box-shadow: 0 14px 28px rgba(112, 19, 27, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn {
+        background: transparent !important;
+        background-image: none !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.22) !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn svg,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn span {
+        color: #ffffff !important;
+        stroke: currentColor !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn:hover,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn:focus {
+        background: #facc15 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.12), 0 20px 30px rgba(139, 0, 0, 0.22) !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn:hover svg,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn:focus svg,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn:hover span,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn:focus span {
+        color: #70131B !important;
+    }
+
+    /* Final Walk-in intake surface pass: match Reports/Developer Tools */
+    .patient-intake-entry-shell > .walkin-strip-card {
+        border: 1px solid rgba(250, 204, 21, 0.20) !important;
+        box-shadow: 0 18px 34px rgba(112, 19, 27, 0.08) !important;
+    }
+
+    .patient-intake-entry-shell > .walkin-strip-card::before {
+        background: #70131B !important;
+    }
+
+    .patient-intake-entry-shell .intake-option-card,
+    .patient-intake-entry-shell .intake-option-registration,
+    .patient-intake-entry-shell .intake-option-scan,
+    .patient-intake-entry-shell .intake-option-assisted,
+    .patient-intake-entry-shell .intake-option-applicant {
+        background: #70131B !important;
+        background-image: none !important;
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        box-shadow: 0 10px 24px rgba(112, 19, 27, 0.18) !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .patient-intake-entry-shell > .walkin-strip-card {
+        background: transparent !important;
+        background-image: none !important;
+        border-color: rgba(250, 204, 21, 0.20) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.18) !important;
+    }
+
+    html[data-theme="dark"] .patient-intake-entry-shell > .walkin-strip-card::before {
+        background: #facc15 !important;
+    }
+
+    html[data-theme="dark"] .patient-intake-entry-shell .intake-option-card,
+    html[data-theme="dark"] .patient-intake-entry-shell .intake-option-registration,
+    html[data-theme="dark"] .patient-intake-entry-shell .intake-option-scan,
+    html[data-theme="dark"] .patient-intake-entry-shell .intake-option-assisted,
+    html[data-theme="dark"] .patient-intake-entry-shell .intake-option-applicant {
+        background: transparent !important;
+        background-image: none !important;
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.22) !important;
+        color: #ffffff !important;
+    }
+
+    .patient-intake-entry-shell .intake-option-card:hover,
+    .patient-intake-entry-shell .intake-option-card:focus-within,
+    html[data-theme="dark"] .patient-intake-entry-shell .intake-option-card:hover,
+    html[data-theme="dark"] .patient-intake-entry-shell .intake-option-card:focus-within {
+        background: #facc15 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.12), 0 20px 30px rgba(139, 0, 0, 0.22) !important;
+        color: #70131B !important;
+    }
+
+    /* OCR modal control surfaces */
+    html[data-theme="dark"] #applicantScanModal .btn-ocr,
+    html[data-theme="dark"] #applicantScanModal .manual-find-btn {
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.22) !important;
+    }
+
+    html[data-theme="dark"] #applicantScanModal .btn-ocr-primary {
+        background: #111827 !important;
+        background-image: none !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] #applicantScanModal .btn-ocr-secondary,
+    html[data-theme="dark"] #applicantScanModal .manual-find-btn {
+        background: #70131B !important;
+        background-image: none !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] #applicantScanModal .btn-ocr:hover:not(:disabled),
+    html[data-theme="dark"] #applicantScanModal .btn-ocr:focus:not(:disabled),
+    html[data-theme="dark"] #applicantScanModal .manual-find-btn:hover:not(:disabled),
+    html[data-theme="dark"] #applicantScanModal .manual-find-btn:focus:not(:disabled) {
+        background: #facc15 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.12), 0 20px 30px rgba(139, 0, 0, 0.22) !important;
+    }
+
+    /* Final light-mode surface pass */
+    html:not([data-theme="dark"]) .patient-intake-entry-shell > .walkin-strip-card,
+    html:not([data-theme="dark"]) .patient-intake-entry-shell .intake-option-card,
+    html:not([data-theme="dark"]) .patient-intake-entry-shell .intake-option-scan,
+    html:not([data-theme="dark"]) .patient-intake-entry-shell .intake-option-assisted,
+    html:not([data-theme="dark"]) .patient-intake-entry-shell .intake-option-applicant {
+        border: 1px solid rgba(250, 204, 21, 0.22) !important;
+        box-shadow: 0 14px 28px rgba(112, 19, 27, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06) !important;
     }
 
 </style>

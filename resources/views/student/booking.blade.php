@@ -13,6 +13,7 @@
         background:
             linear-gradient(180deg, rgba(255, 250, 250, 0.70), rgba(255, 255, 255, 0.58) 42%, rgba(245, 248, 247, 0.72) 100%),
             url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat;
+        background-attachment: fixed, fixed;
         overflow: hidden;
     }
     .booking-page-shell::before {
@@ -1047,6 +1048,7 @@
         background:
             linear-gradient(180deg, rgba(2, 6, 23, 0.82), rgba(15, 23, 42, 0.74) 42%, rgba(2, 6, 23, 0.84) 100%),
             url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat;
+        background-attachment: fixed, fixed;
     }
     html[data-theme="dark"] .booking-page-shell::before {
         content: none;
@@ -1294,6 +1296,12 @@
             width: 100%;
             text-align: center;
         }
+    }
+
+    .booking-page-shell {
+        height: auto;
+        min-height: calc(100vh - 72px);
+        overflow: visible !important;
     }
 </style>
 @endpush

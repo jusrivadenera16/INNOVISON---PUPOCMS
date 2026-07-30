@@ -201,6 +201,280 @@
         border-color: rgba(255, 255, 255, 0.12);
     }
 
+    .token-pin-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 5010;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, 0.56);
+        backdrop-filter: blur(8px);
+    }
+
+    .token-pin-modal.is-open {
+        display: flex;
+    }
+
+    .token-pin-dialog {
+        width: min(620px, 100%);
+        overflow: hidden;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: #ffffff;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.26);
+    }
+
+    .token-pin-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 20px 22px;
+        background: linear-gradient(135deg, #9d1427 0%, #710012 100%);
+        color: #ffffff;
+    }
+
+    .token-pin-head-main {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .token-pin-head-icon,
+    .token-pin-warning-icon,
+    .token-pin-entry-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+
+    .token-pin-head-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+    }
+
+    .token-pin-head-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .token-pin-head h3 {
+        margin: 0;
+        color: #ffffff !important;
+        font-size: 1.22rem;
+        font-weight: 950;
+    }
+
+    .token-pin-head p {
+        margin: 4px 0 0;
+        color: rgba(255, 255, 255, 0.88) !important;
+        font-size: 0.9rem;
+    }
+
+    .token-pin-close {
+        width: 40px;
+        height: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.20);
+        color: #ffffff;
+        cursor: pointer;
+        font-size: 26px;
+        line-height: 1;
+    }
+
+    .token-pin-body {
+        display: grid;
+        gap: 16px;
+        padding: 22px;
+    }
+
+    .token-pin-warning {
+        display: flex;
+        gap: 12px;
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(250, 204, 21, 0.34);
+        background: #fff8df;
+        color: #78350f;
+    }
+
+    .token-pin-warning-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        background: #fff1b8;
+        color: #8a1220;
+    }
+
+    .token-pin-warning strong,
+    .token-pin-warning span {
+        display: block;
+    }
+
+    .token-pin-warning strong {
+        font-weight: 950;
+        color: #70131b;
+    }
+
+    .token-pin-warning span {
+        margin-top: 2px;
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+
+    .token-pin-entry {
+        text-align: center;
+        padding: 18px;
+        border-radius: 18px;
+        border: 1px solid rgba(127, 29, 45, 0.12);
+        background: #fffafa;
+    }
+
+    .token-pin-entry-icon {
+        width: 54px;
+        height: 54px;
+        margin: 0 auto 10px;
+        border-radius: 18px;
+        background: #fff1f2;
+        color: #8a1220;
+    }
+
+    .token-pin-entry-icon svg {
+        width: 26px;
+        height: 26px;
+    }
+
+    .token-pin-entry-title {
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 950;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+    }
+
+    .token-pin-entry-copy {
+        margin-top: 5px;
+        color: #64748b;
+        font-size: 0.88rem;
+    }
+
+    .token-pin-digits {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 16px;
+    }
+
+    .token-pin-digits input {
+        width: 54px;
+        height: 58px;
+        border-radius: 14px;
+        border: 1px solid rgba(127, 29, 45, 0.22);
+        background: #ffffff;
+        color: #111827;
+        text-align: center;
+        font-size: 1.45rem;
+        font-weight: 950;
+        outline: none;
+    }
+
+    .token-pin-digits input:focus {
+        border-color: #facc15;
+        box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.22);
+    }
+
+    .token-pin-hidden {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+        width: 1px;
+        height: 1px;
+    }
+
+    .token-pin-safe {
+        margin-top: 12px;
+        color: #64748b;
+        font-size: 0.82rem;
+        font-weight: 800;
+    }
+
+    .token-pin-error {
+        display: none;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: #fee2e2;
+        color: #991b1b;
+        font-size: 0.82rem;
+        font-weight: 850;
+    }
+
+    .token-pin-error.is-visible {
+        display: block;
+    }
+
+    .token-pin-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .token-pin-cancel,
+    .token-pin-submit {
+        min-height: 42px;
+        border-radius: 12px;
+        padding: 0 18px;
+        font-weight: 950;
+        cursor: pointer;
+    }
+
+    .token-pin-cancel {
+        border: 1px solid rgba(148, 163, 184, 0.34);
+        background: #ffffff;
+        color: #70131b;
+    }
+
+    .token-pin-submit {
+        border: 1px solid #8a1220;
+        background: #8a1220;
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .token-pin-dialog,
+    html[data-theme="dark"] .token-pin-entry {
+        background: #111827;
+        border-color: rgba(250, 204, 21, 0.20);
+    }
+
+    html[data-theme="dark"] .token-pin-warning {
+        background: rgba(250, 204, 21, 0.10);
+        border-color: rgba(250, 204, 21, 0.26);
+        color: #fde68a;
+    }
+
+    html[data-theme="dark"] .token-pin-warning strong,
+    html[data-theme="dark"] .token-pin-entry-title {
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .token-pin-entry-copy,
+    html[data-theme="dark"] .token-pin-safe {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .token-pin-digits input,
+    html[data-theme="dark"] .token-pin-cancel {
+        background: rgba(255, 255, 255, 0.06);
+        color: #f8fafc;
+        border-color: rgba(250, 204, 21, 0.20);
+    }
+
     .integration-primary {
         height: 44px;
         border: 0;
@@ -1370,12 +1644,186 @@
     </div>
 </div>
 
+<div class="token-pin-modal" id="tokenActionPinModal" aria-hidden="true">
+    <section class="token-pin-dialog" role="dialog" aria-modal="true" aria-labelledby="tokenActionPinTitle">
+        <header class="token-pin-head">
+            <div class="token-pin-head-main">
+                <span class="token-pin-head-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2.75 4.75 5.5v5.4c0 4.72 3.02 8.92 7.25 10.35 4.23-1.43 7.25-5.63 7.25-10.35V5.5L12 2.75Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.25 11.25v-1.5a3.25 3.25 0 1 0-6.5 0v1.5m-.5 0h7.5v5.5h-7.5v-5.5Z" />
+                    </svg>
+                </span>
+                <div>
+                    <h3 id="tokenActionPinTitle">Integration PIN</h3>
+                    <p id="tokenActionPinSubtitle">Enter your 4-digit PIN to continue.</p>
+                </div>
+            </div>
+            <button type="button" class="token-pin-close" id="closeTokenActionPinModal" aria-label="Close PIN modal">&times;</button>
+        </header>
+        <form class="token-pin-body" id="tokenActionPinForm">
+            <div class="token-pin-warning">
+                <span class="token-pin-warning-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.75A11.959 11.959 0 0 1 12 2.714Z" />
+                    </svg>
+                </span>
+                <div>
+                    <strong>Administrator Verification Required</strong>
+                    <span>Token generation, rotation, revocation, reveal, and copy actions require your Integration PIN.</span>
+                </div>
+            </div>
+            <div class="token-pin-entry">
+                <span class="token-pin-entry-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 0h10.5c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125H6.75a1.125 1.125 0 0 1-1.125-1.125v-7.5c0-.621.504-1.125 1.125-1.125Z" />
+                    </svg>
+                </span>
+                <div class="token-pin-entry-title">Enter 4-Digit PIN</div>
+                <div class="token-pin-entry-copy">Please enter your 4-digit Integration PIN.</div>
+                <div class="token-pin-digits" id="tokenActionPinDigits">
+                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="PIN digit 1" required>
+                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="PIN digit 2" required>
+                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="PIN digit 3" required>
+                    <input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="PIN digit 4" required>
+                </div>
+                <input class="token-pin-hidden" type="password" id="tokenActionPinInput" name="pin" pattern="[0-9]{4}" maxlength="4" tabindex="-1">
+                <div class="token-pin-safe">Your PIN is encrypted and safe.</div>
+            </div>
+            <div class="token-pin-error" id="tokenActionPinError"></div>
+            <div class="token-pin-actions">
+                <button type="button" class="token-pin-cancel" id="cancelTokenActionPin">Cancel</button>
+                <button type="submit" class="token-pin-submit">Verify PIN</button>
+            </div>
+        </form>
+    </section>
+</div>
+
 <script>
     let latestGeneratedToken = '';
     let selectedClientId = document.querySelector('.system-item')?.dataset.clientId || null;
     let integrationPinRequired = null;
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
     const integrationLogData = @json($clientLogPayload);
+    const tokenActionPinModal = document.getElementById('tokenActionPinModal');
+    const tokenActionPinForm = document.getElementById('tokenActionPinForm');
+    const tokenActionPinInput = document.getElementById('tokenActionPinInput');
+    const tokenActionPinDigits = Array.from(document.querySelectorAll('#tokenActionPinDigits input'));
+    const tokenActionPinError = document.getElementById('tokenActionPinError');
+    const tokenActionPinSubtitle = document.getElementById('tokenActionPinSubtitle');
+    const closeTokenActionPinModal = document.getElementById('closeTokenActionPinModal');
+    const cancelTokenActionPin = document.getElementById('cancelTokenActionPin');
+    let tokenActionPinResolver = null;
+
+    function syncTokenActionPinInput() {
+        if (!tokenActionPinInput) {
+            return;
+        }
+        tokenActionPinInput.value = tokenActionPinDigits.map((input) => input.value).join('');
+    }
+
+    function clearTokenActionPin() {
+        tokenActionPinDigits.forEach((input) => {
+            input.value = '';
+        });
+        if (tokenActionPinInput) {
+            tokenActionPinInput.value = '';
+        }
+        if (tokenActionPinError) {
+            tokenActionPinError.textContent = '';
+            tokenActionPinError.classList.remove('is-visible');
+        }
+    }
+
+    function setTokenActionPinModalOpen(isOpen, actionLabel = 'continue') {
+        if (!tokenActionPinModal) {
+            return;
+        }
+        tokenActionPinModal.classList.toggle('is-open', isOpen);
+        tokenActionPinModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        if (isOpen) {
+            clearTokenActionPin();
+            if (tokenActionPinSubtitle) {
+                tokenActionPinSubtitle.textContent = `Enter your 4-digit PIN to ${actionLabel}.`;
+            }
+            window.setTimeout(() => tokenActionPinDigits[0]?.focus(), 80);
+        }
+    }
+
+    function openTokenActionPinModal(actionLabel) {
+        return new Promise((resolve) => {
+            tokenActionPinResolver = resolve;
+            setTokenActionPinModalOpen(true, actionLabel);
+        });
+    }
+
+    function resolveTokenActionPin(pin) {
+        if (tokenActionPinResolver) {
+            tokenActionPinResolver(pin);
+            tokenActionPinResolver = null;
+        }
+        setTokenActionPinModalOpen(false);
+    }
+
+    tokenActionPinDigits.forEach((input, index) => {
+        input.addEventListener('input', () => {
+            input.value = input.value.replace(/\D/g, '').slice(0, 1);
+            syncTokenActionPinInput();
+
+            if (input.value && tokenActionPinDigits[index + 1]) {
+                tokenActionPinDigits[index + 1].focus();
+            }
+        });
+
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Backspace' && !input.value && tokenActionPinDigits[index - 1]) {
+                tokenActionPinDigits[index - 1].focus();
+            }
+        });
+
+        input.addEventListener('paste', (event) => {
+            event.preventDefault();
+            const pasted = (event.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, tokenActionPinDigits.length);
+            pasted.split('').forEach((value, pasteIndex) => {
+                if (tokenActionPinDigits[pasteIndex]) {
+                    tokenActionPinDigits[pasteIndex].value = value;
+                }
+            });
+            syncTokenActionPinInput();
+            tokenActionPinDigits[Math.min(pasted.length, tokenActionPinDigits.length) - 1]?.focus();
+        });
+    });
+
+    tokenActionPinForm?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        syncTokenActionPinInput();
+        const pin = (tokenActionPinInput?.value || '').trim();
+
+        if (!/^\d{4}$/.test(pin)) {
+            if (tokenActionPinError) {
+                tokenActionPinError.textContent = 'Enter a valid 4-digit Integration PIN.';
+                tokenActionPinError.classList.add('is-visible');
+            }
+            tokenActionPinDigits.find((input) => !input.value)?.focus();
+            return;
+        }
+
+        resolveTokenActionPin(pin);
+    });
+
+    closeTokenActionPinModal?.addEventListener('click', () => resolveTokenActionPin(null));
+    cancelTokenActionPin?.addEventListener('click', () => resolveTokenActionPin(null));
+    tokenActionPinModal?.addEventListener('click', (event) => {
+        if (event.target === tokenActionPinModal) {
+            resolveTokenActionPin(null);
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && tokenActionPinModal?.classList.contains('is-open')) {
+            resolveTokenActionPin(null);
+        }
+    });
 
     async function isIntegrationPinRequired() {
         try {
@@ -1411,7 +1859,7 @@
             return '';
         }
 
-        const pin = window.prompt(`Enter your 4-digit Integration PIN to ${actionLabel}.`);
+        const pin = await openTokenActionPinModal(actionLabel);
 
         if (pin === null) {
             return null;

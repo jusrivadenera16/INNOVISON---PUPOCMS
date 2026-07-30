@@ -45,7 +45,11 @@ class AdminUserController extends Controller
         $currentUserId = Auth::id();
 
         $allLocalUsers = $this->collectLocalUsers('');
-        $allFacultyUsers = $this->collectFacultyUsers($facultySyncService, '');
+        // Account Access only renders local managed users. Avoid blocking that
+        // page on the external faculty directory before a lookup is requested.
+        $allFacultyUsers = $managementView === 'account-access'
+            ? []
+            : $this->collectFacultyUsers($facultySyncService, '');
 
         $localRecords = collect($allLocalUsers)
             ->map(function (array $record) use ($currentUserId) {
@@ -80,12 +84,48 @@ class AdminUserController extends Controller
             ->values()
             ->all();
 
-        $adminHubRecords = $this->collectAdminHubProfiles($lookupSearch, $facultyDirectory);
+        $adminHubRecords = $managementView === 'account-access'
+            ? []
+            : $this->collectAdminHubProfiles($lookupSearch, $facultyDirectory);
 
-        $lookupRecords = $lookupSearch !== ''
-            ? collect($this->collectLocalUsers($lookupSearch))
-                ->merge($this->collectStandaloneAdminLookupRecords($lookupSearch))
-                ->merge($this->collectFacultyUsers($facultySyncService, $lookupSearch))
+        $lookupRecords = [];
+
+        if ($lookupSearch !== '') {
+            $localLookupRecords = collect($this->collectLocalUsers($lookupSearch));
+            $localEmails = $localLookupRecords
+                ->pluck('email')
+                ->filter()
+                ->map(fn ($email) => strtolower(trim((string) $email)));
+            $linkedAdminProfileIds = $localLookupRecords
+                ->pluck('meta.admin_profile_id')
+                ->filter()
+                ->map(fn ($id) => (string) $id);
+
+            $standaloneAdminRecords = collect($this->collectStandaloneAdminLookupRecords($lookupSearch))
+                ->reject(function (array $record) use ($localEmails, $linkedAdminProfileIds) {
+                    $email = strtolower(trim((string) ($record['email'] ?? '')));
+                    $adminProfileId = (string) ($record['meta']['admin_profile_id'] ?? '');
+
+                    return ($email !== '' && $localEmails->contains($email))
+                        || ($adminProfileId !== '' && $linkedAdminProfileIds->contains($adminProfileId));
+                });
+
+            $lookupRecords = $localLookupRecords->merge($standaloneAdminRecords);
+
+            // A local match is enough for Account Access. Only fall back to
+            // FLSS when no local user/admin profile matched, and keep that
+            // interactive lookup bounded if the remote service is unavailable.
+            if ($managementView !== 'account-access' || $lookupRecords->isEmpty()) {
+                $lookupRecords = $lookupRecords->merge(
+                    $this->collectFacultyUsers(
+                        $facultySyncService,
+                        $lookupSearch,
+                        $managementView === 'account-access' ? 5 : null
+                    )
+                );
+            }
+
+            $lookupRecords = $lookupRecords
                 ->map(function (array $record) use ($managementView) {
                     if ($managementView === 'admin-hub' && ($record['source'] ?? '') !== 'faculty') {
                         $record['can_edit'] = true;
@@ -99,8 +139,8 @@ class AdminUserController extends Controller
                     strtolower((string) ($record['name'] ?? ''))
                 ))
                 ->values()
-                ->all()
-            : [];
+                ->all();
+        }
 
         $stats = [
             'students' => collect($allLocalUsers)->where('source', 'student')->count(),
@@ -769,20 +809,22 @@ class AdminUserController extends Controller
 
                 if (Schema::hasTable('admins')) {
                     $builder->orWhereHas('adminProfile', function ($adminQuery) use ($search) {
-                        foreach (['admin_id', 'external_identifier', 'name', 'first_name', 'middle_name', 'last_name', 'email', 'email_address'] as $column) {
-                            if (Admin::hasColumn($column)) {
-                                $adminQuery->orWhere($column, 'like', '%' . $search . '%');
+                        $adminQuery->where(function ($adminSearchQuery) use ($search) {
+                            foreach (['admin_id', 'external_identifier', 'name', 'first_name', 'middle_name', 'last_name', 'email', 'email_address'] as $column) {
+                                if (Admin::hasColumn($column)) {
+                                    $adminSearchQuery->orWhere($column, 'like', '%' . $search . '%');
+                                }
                             }
-                        }
 
-                        if (Admin::hasColumn('first_name') && Admin::hasColumn('last_name')) {
-                            $adminNameParts = ["COALESCE(first_name, '')"];
-                            if (Admin::hasColumn('middle_name')) {
-                                $adminNameParts[] = "COALESCE(middle_name, '')";
+                            if (Admin::hasColumn('first_name') && Admin::hasColumn('last_name')) {
+                                $adminNameParts = ["COALESCE(first_name, '')"];
+                                if (Admin::hasColumn('middle_name')) {
+                                    $adminNameParts[] = "COALESCE(middle_name, '')";
+                                }
+                                $adminNameParts[] = "COALESCE(last_name, '')";
+                                $adminSearchQuery->orWhereRaw('CONCAT_WS(" ", ' . implode(', ', $adminNameParts) . ') LIKE ?', ['%' . $search . '%']);
                             }
-                            $adminNameParts[] = "COALESCE(last_name, '')";
-                            $adminQuery->orWhereRaw('CONCAT_WS(" ", ' . implode(', ', $adminNameParts) . ') LIKE ?', ['%' . $search . '%']);
-                        }
+                        });
                     });
 
                     $builder->orWhereExists(function ($adminQuery) use ($search) {
@@ -993,10 +1035,14 @@ class AdminUserController extends Controller
             ->all();
     }
 
-    private function collectFacultyUsers(FacultySyncService $facultySyncService, string $search): array
+    private function collectFacultyUsers(
+        FacultySyncService $facultySyncService,
+        string $search,
+        ?int $timeout = null
+    ): array
     {
         try {
-            $faculties = $facultySyncService->fetchFaculties($search);
+            $faculties = $facultySyncService->fetchFaculties($search, $timeout);
         } catch (\Throwable $exception) {
             return [];
         }

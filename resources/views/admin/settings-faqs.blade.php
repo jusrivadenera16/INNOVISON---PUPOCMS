@@ -676,6 +676,123 @@
         font-size: 13px;
         font-weight: 750;
     }
+    html[data-theme="dark"] .faq-admin {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .faq-hero,
+    html[data-theme="dark"] .faq-stat,
+    html[data-theme="dark"] .faq-side,
+    html[data-theme="dark"] .faq-board,
+    html[data-theme="dark"] .faq-modal-card {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, 0.16) !important;
+        box-shadow: none !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .faq-hero h2,
+    html[data-theme="dark"] .faq-side h3,
+    html[data-theme="dark"] .faq-board h3,
+    html[data-theme="dark"] .faq-quick h4,
+    html[data-theme="dark"] .faq-stat-number,
+    html[data-theme="dark"] .faq-item-question,
+    html[data-theme="dark"] .faq-preview-title {
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .faq-hero p,
+    html[data-theme="dark"] .faq-side p,
+    html[data-theme="dark"] .faq-stat-label,
+    html[data-theme="dark"] .faq-stat-help,
+    html[data-theme="dark"] .faq-item-answer,
+    html[data-theme="dark"] .faq-meta,
+    html[data-theme="dark"] .faq-preview-answer,
+    html[data-theme="dark"] .faq-category-manage-name,
+    html[data-theme="dark"] .faq-category-manage-empty,
+    html[data-theme="dark"] .faq-empty {
+        color: #cbd5e1 !important;
+    }
+    html[data-theme="dark"] .faq-title-icon,
+    html[data-theme="dark"] .faq-stat-icon,
+    html[data-theme="dark"] .faq-category-icon,
+    html[data-theme="dark"] .faq-action-icon {
+        background: rgba(250, 204, 21, 0.12) !important;
+        border: 1px solid rgba(250, 204, 21, 0.16);
+        color: #facc15 !important;
+    }
+    html[data-theme="dark"] .faq-side-count,
+    html[data-theme="dark"] .faq-status,
+    html[data-theme="dark"] .faq-category-badge {
+        color: #fde68a !important;
+    }
+    html[data-theme="dark"] .faq-category-badge,
+    html[data-theme="dark"] .faq-category-tag,
+    html[data-theme="dark"] .faq-category-tag.is-gold {
+        background: rgba(250, 204, 21, 0.12) !important;
+        border: 1px solid rgba(250, 204, 21, 0.16);
+        color: #fde68a !important;
+    }
+    html[data-theme="dark"] .faq-category-btn,
+    html[data-theme="dark"] .faq-quick-btn,
+    html[data-theme="dark"] .faq-quick,
+    html[data-theme="dark"] .faq-item,
+    html[data-theme="dark"] .faq-row-btn,
+    html[data-theme="dark"] .faq-delete-btn,
+    html[data-theme="dark"] .faq-page-btn,
+    html[data-theme="dark"] .faq-filter-pill,
+    html[data-theme="dark"] .faq-category-manage-item,
+    html[data-theme="dark"] .faq-empty,
+    html[data-theme="dark"] .faq-category-manage-empty {
+        background: #0f172a !important;
+        border-color: rgba(250, 204, 21, 0.14) !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .faq-category-btn:hover,
+    html[data-theme="dark"] .faq-category-btn.is-active,
+    html[data-theme="dark"] .faq-quick-btn:hover,
+    html[data-theme="dark"] .faq-row-btn:hover,
+    html[data-theme="dark"] .faq-filter-pill:hover,
+    html[data-theme="dark"] .faq-filter-pill.is-active,
+    html[data-theme="dark"] .faq-page-btn.is-active {
+        background: #7f0010 !important;
+        border-color: #facc15 !important;
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] .faq-search input,
+    html[data-theme="dark"] .faq-select,
+    html[data-theme="dark"] .faq-field input,
+    html[data-theme="dark"] .faq-field textarea,
+    html[data-theme="dark"] .faq-field select {
+        background: #0f172a !important;
+        border-color: rgba(250, 204, 21, 0.18) !important;
+        color: #f8fafc !important;
+        color-scheme: dark;
+    }
+    html[data-theme="dark"] .faq-search svg {
+        color: #facc15 !important;
+    }
+    html[data-theme="dark"] .faq-search input::placeholder,
+    html[data-theme="dark"] .faq-field input::placeholder,
+    html[data-theme="dark"] .faq-field textarea::placeholder {
+        color: #94a3b8 !important;
+    }
+    html[data-theme="dark"] .faq-field label,
+    html[data-theme="dark"] .faq-toggle-row {
+        color: #e2e8f0 !important;
+    }
+    html[data-theme="dark"] .faq-cancel-btn {
+        background: #1e293b !important;
+        border-color: rgba(250, 204, 21, 0.16) !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .faq-alert {
+        background: rgba(22, 101, 52, 0.22) !important;
+        border-color: rgba(74, 222, 128, 0.32) !important;
+        color: #bbf7d0 !important;
+    }
+    html[data-theme="dark"] .faq-alert.is-error {
+        background: rgba(127, 29, 29, 0.34) !important;
+        border-color: rgba(248, 113, 113, 0.34) !important;
+        color: #fecaca !important;
+    }
     @media (max-width: 1180px) {
         .faq-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .faq-grid { grid-template-columns: 1fr; }

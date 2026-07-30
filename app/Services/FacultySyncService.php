@@ -43,19 +43,10 @@ class FacultySyncService
         return $headers;
     }
 
-    public function fetchFaculties(?string $search = null): array
+    public function fetchFaculties(?string $search = null, ?int $timeoutOverride = null): array
     {
         $rawConfig = config('services.pupt_flss.faculty_profiles_url');
         $baseUrl = trim((string) $rawConfig);
-
-        \Log::error('DEBUG PUPT CONFIG', [
-            'raw_config' => $rawConfig,
-            'raw_config_type' => gettype($rawConfig),
-            'raw_config_length' => strlen((string)$rawConfig),
-            'raw_config_bytes' => bin2hex((string)$rawConfig),
-            'trimmed_url' => $baseUrl,
-            'trimmed_length' => strlen($baseUrl),
-        ]);
 
         if ($baseUrl === '') {
             throw new RuntimeException('PUPT-FLSS faculty profiles URL is not configured.');
@@ -71,9 +62,14 @@ class FacultySyncService
             ? $baseUrl
             : $baseUrl . (str_contains($baseUrl, '?') ? '&' : '?') . http_build_query($queryParams);
 
-        $timeout = (int) config('services.pupt_flss.timeout', 30);
+        $configuredTimeout = max(1, (int) config('services.pupt_flss.timeout', 30));
+        $timeout = $timeoutOverride === null
+            ? $configuredTimeout
+            : max(1, min($configuredTimeout, $timeoutOverride));
+
         $response = Http::acceptJson()
             ->timeout($timeout)
+            ->withOptions(['connect_timeout' => min(5, $timeout)])
             ->withHeaders($this->generateHmacHeaders('GET', $requestUrl))
             ->get($requestUrl);
 

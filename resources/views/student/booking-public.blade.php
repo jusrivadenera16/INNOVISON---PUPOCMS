@@ -5,9 +5,23 @@
 @push('styles')
 <style>
     .public-appt-shell {
+        position: relative;
+        isolation: isolate;
         max-width: 1120px;
         margin: 0 auto;
         padding: 54px 20px 72px;
+    }
+
+    body:has(.public-appt-shell) {
+        background:
+            linear-gradient(180deg, rgba(255, 250, 250, 0.70), rgba(255, 255, 255, 0.58) 42%, rgba(245, 248, 247, 0.72) 100%),
+            url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat fixed !important;
+    }
+
+    html[data-theme="dark"] body:has(.public-appt-shell) {
+        background:
+            linear-gradient(180deg, rgba(2, 6, 23, 0.82), rgba(15, 23, 42, 0.74) 42%, rgba(2, 6, 23, 0.84) 100%),
+            url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat fixed !important;
     }
 
     .public-appt-header {

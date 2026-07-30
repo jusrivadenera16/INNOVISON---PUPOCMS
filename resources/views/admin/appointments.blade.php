@@ -3461,6 +3461,23 @@
         stroke: #ffffff !important;
     }
 
+    /* Final light-mode surface pass */
+    html:not([data-theme="dark"]) .appointments-modern-card,
+    html:not([data-theme="dark"]) .appointments-summary-card {
+        border: 1px solid rgba(250, 204, 21, 0.22) !important;
+        box-shadow: 0 14px 28px rgba(112, 19, 27, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    html:not([data-theme="dark"]) .appointments-search-wrap,
+    html:not([data-theme="dark"]) .appointments-search-shell.is-open .appointments-search-wrap,
+    html:not([data-theme="dark"]) .appointments-filter-toggle,
+    html:not([data-theme="dark"]) .appointments-filter-reset,
+    html:not([data-theme="dark"]) .appointments-filter-close,
+    html:not([data-theme="dark"]) .modal-header-close {
+        border: 1px solid rgba(250, 204, 21, 0.22) !important;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, 0.10), 0 3px 10px rgba(15, 23, 42, 0.05) !important;
+    }
+
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 @endpush

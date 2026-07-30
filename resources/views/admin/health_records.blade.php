@@ -4701,6 +4701,102 @@
         accent-color: #facc15;
     }
 
+    /* Final Health Records dark-mode surface pass */
+    html[data-theme="dark"] .health-table-tools .health-records-search-wrap,
+    html[data-theme="dark"] .health-records-overview .health-records-search-wrap,
+    html[data-theme="dark"] .health-records-overview .health-records-search-shell.is-open .health-records-search-wrap {
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        border-bottom: 1px solid rgba(250, 204, 21, 0.18) !important;
+        border-radius: 14px !important;
+        background: #111827 !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.26), 0 4px 12px rgba(0, 0, 0, 0.18) !important;
+    }
+
+    html[data-theme="dark"] .health-table-tools .health-records-search,
+    html[data-theme="dark"] .health-records-overview .health-records-search {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .health-records-search-submit,
+    html[data-theme="dark"] .health-records-search-toggle,
+    html[data-theme="dark"] .health-filter-toggle,
+    html[data-theme="dark"] .health-filter-btn,
+    html[data-theme="dark"] .btn-view {
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.22) !important;
+    }
+
+    html[data-theme="dark"] .health-filter-toggle,
+    html[data-theme="dark"] .health-records-search-toggle,
+    html[data-theme="dark"] .btn-view {
+        background: #111827 !important;
+        background-image: none !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .health-records-search-submit:hover,
+    html[data-theme="dark"] .health-records-search-submit:focus-visible,
+    html[data-theme="dark"] .health-records-search-toggle:hover,
+    html[data-theme="dark"] .health-records-search-toggle:focus,
+    html[data-theme="dark"] .health-filter-toggle:hover,
+    html[data-theme="dark"] .health-filter-toggle:focus,
+    html[data-theme="dark"] .health-filter-toggle.is-open,
+    html[data-theme="dark"] .btn-view:hover,
+    html[data-theme="dark"] .btn-view:focus {
+        background: #facc15 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.12), 0 20px 30px rgba(139, 0, 0, 0.22) !important;
+    }
+
+    html[data-theme="dark"] .health-summary-modern-card.is-approved:hover,
+    html[data-theme="dark"] .health-summary-modern-card.is-condition:hover {
+        transform: none !important;
+        background: rgba(17, 24, 39, .94) !important;
+        border-color: rgba(250, 204, 21, 0.18) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.26), 0 4px 12px rgba(0, 0, 0, 0.18) !important;
+    }
+
+    html[data-theme="dark"] .health-summary-modern-card.is-approved:hover::before,
+    html[data-theme="dark"] .health-summary-modern-card.is-condition:hover::before {
+        opacity: 0 !important;
+        transform: translateX(0) skewX(-18deg) !important;
+    }
+
+    /* Final light-mode surface pass */
+    html:not([data-theme="dark"]) .health-summary-modern-card,
+    html:not([data-theme="dark"]) .health-summary-modern-card.is-approved,
+    html:not([data-theme="dark"]) .health-summary-modern-card.is-condition,
+    html:not([data-theme="dark"]) .health-summary-modern-card.is-pending,
+    html:not([data-theme="dark"]) .health-summary-modern-card.is-compliance {
+        border: 1px solid rgba(250, 204, 21, 0.22) !important;
+        box-shadow: 0 14px 28px rgba(112, 19, 27, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    html:not([data-theme="dark"]) .health-table-tools .health-records-search-wrap,
+    html:not([data-theme="dark"]) .health-records-overview .health-records-search-wrap,
+    html:not([data-theme="dark"]) .health-records-overview .health-records-search-shell.is-open .health-records-search-wrap,
+    html:not([data-theme="dark"]) .readonly-modal-pagination {
+        border: 1px solid rgba(250, 204, 21, 0.22) !important;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, 0.10), 0 3px 10px rgba(15, 23, 42, 0.05) !important;
+    }
+
+    html:not([data-theme="dark"]) .health-records-search-submit,
+    html:not([data-theme="dark"]) .health-records-search-toggle,
+    html:not([data-theme="dark"]) .health-filter-toggle,
+    html:not([data-theme="dark"]) .health-filter-btn,
+    html:not([data-theme="dark"]) .btn-view,
+    html:not([data-theme="dark"]) .readonly-pagination-btn,
+    html:not([data-theme="dark"]) .readonly-pagination-per-page-select,
+    html:not([data-theme="dark"]) .premium-select-button {
+        border: 1px solid rgba(250, 204, 21, 0.22) !important;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, 0.10), 0 3px 10px rgba(15, 23, 42, 0.05) !important;
+    }
+
 </style>
 @endpush
 

@@ -93,7 +93,12 @@ return [
         'email' => env('EMERGENCY_ADMIN_EMAIL'),
         'password' => env('EMERGENCY_ADMIN_PASSWORD'),
         'password_hash' => env('EMERGENCY_ADMIN_PASSWORD_HASH'),
+        'password_reset_key' => env('EMERGENCY_PASSWORD_RESET_KEY'),
         'role' => env('EMERGENCY_ADMIN_ROLE', 'admin'),
+    ],
+
+    'integration_pin' => [
+        'reset_key' => env('INTEGRATION_PIN_RESET_KEY'),
     ],
 
     'external_admin_profile' => [

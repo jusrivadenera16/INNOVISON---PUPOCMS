@@ -3686,6 +3686,20 @@
         border-radius: 8px !important;
     }
 
+    /* Final light-mode surface pass */
+    html:not([data-theme="dark"]) body.admin-inventory-page .inventory-modern-card,
+    html:not([data-theme="dark"]) body.admin-inventory-page .inventory-modern-card.is-clickable,
+    html:not([data-theme="dark"]) body.admin-inventory-page .inventory-toolbar-actions > .btn-add.inventory-action-card {
+        border: 1px solid rgba(250, 204, 21, 0.22) !important;
+        box-shadow: 0 14px 28px rgba(112, 19, 27, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    html:not([data-theme="dark"]) body.admin-inventory-page .inventory-search-wrap,
+    html:not([data-theme="dark"]) body.admin-inventory-page .inventory-search-shell.is-open .inventory-search-wrap {
+        border: 1px solid rgba(250, 204, 21, 0.22) !important;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, 0.10), 0 3px 10px rgba(15, 23, 42, 0.05) !important;
+    }
+
 </style>
 @endpush
 
