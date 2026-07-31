@@ -7,13 +7,21 @@
     <style>
         :root {
             --maroon: #70131b;
-            --maroon-strong: #8f2230;
-            --maroon-deep: #33080d;
+            --maroon-2: #8f2230;
+            --maroon-3: #a51528;
+            --dark: #1d070d;
             --gold: #facc15;
-            --gold-soft: #fff1a8;
-            --white: #ffffff;
-            --ink: #1f2937;
-            --muted: #64748b;
+            --gold-soft: #f8d86a;
+            --text: #ffffff;
+            --muted: rgba(255, 255, 255, .72);
+            --line: rgba(255, 255, 255, .38);
+            --glass: rgba(255, 255, 255, .09);
+        }
+
+        @property --shell-glow-angle {
+            syntax: "<angle>";
+            inherits: false;
+            initial-value: 0deg;
         }
 
         * {
@@ -27,1274 +35,963 @@
         }
 
         body {
+            min-height: 100vh;
             overflow-x: hidden;
-            background:
-                linear-gradient(135deg, rgba(51, 8, 13, 0.92), rgba(112, 19, 27, 0.78)),
-                url('{{ asset('images/PUPBG.jpg') }}') center center / cover no-repeat fixed;
-            color: var(--white);
+            color: var(--text);
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            transition: background 0.45s ease, color 0.28s ease;
+            background:
+                linear-gradient(180deg, rgba(68, 12, 19, .58), rgba(30, 4, 9, .88)),
+                linear-gradient(90deg, rgba(70, 8, 15, .74), rgba(112, 19, 27, .52), rgba(36, 5, 10, .82)),
+                url('{{ asset('images/PUPBG.jpg') }}') center center / cover no-repeat fixed;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
         }
 
         body::before {
-            position: fixed;
-            inset: 0;
+            z-index: 0;
             background:
-                radial-gradient(circle at 20% 18%, rgba(250, 204, 21, 0.16), transparent 24%),
-                radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.12), transparent 22%),
-                linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(15, 23, 42, 0.22));
-            content: "";
-            pointer-events: none;
-            transition: background 0.45s ease;
+                radial-gradient(circle at 50% 47%, rgba(250, 204, 21, .13), transparent 18%),
+                radial-gradient(circle at 16% 12%, rgba(255, 255, 255, .08), transparent 22%),
+                linear-gradient(180deg, rgba(255, 255, 255, .02), rgba(0, 0, 0, .22));
+            backdrop-filter: blur(1.2px);
+            -webkit-backdrop-filter: blur(1.2px);
         }
 
-        body.landing-theme-light {
-            color: #4b1520;
+        body::after {
+            z-index: 1;
             background:
-                linear-gradient(135deg, rgba(255, 248, 238, 0.94), rgba(255, 255, 255, 0.90)),
+                radial-gradient(circle, rgba(255, 255, 255, .28) 0 1px, transparent 1.5px) left bottom / 11px 11px no-repeat,
+                radial-gradient(circle, rgba(250, 204, 21, .18) 0 1px, transparent 1.5px) right bottom / 11px 11px no-repeat;
+            background-size: 132px 92px, 132px 92px;
+            opacity: .5;
+        }
+
+        body.portal-light {
+            color: #2b0b12;
+            background:
+                linear-gradient(180deg, rgba(255, 250, 242, .86), rgba(255, 244, 230, .92)),
                 url('{{ asset('images/PUPBG.jpg') }}') center center / cover no-repeat fixed;
         }
 
-        body.landing-theme-light::before {
+        body.portal-light::before {
             background:
-                radial-gradient(circle at 20% 18%, rgba(112, 19, 27, 0.14), transparent 24%),
-                radial-gradient(circle at 82% 12%, rgba(250, 204, 21, 0.18), transparent 22%),
-                linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+                radial-gradient(circle at 50% 47%, rgba(250, 204, 21, .16), transparent 18%),
+                linear-gradient(180deg, rgba(255, 255, 255, .28), rgba(255, 255, 255, .48));
         }
 
-        .landing-shell {
+        .portal-page {
             position: relative;
-            z-index: 1;
+            z-index: 2;
             min-height: 100vh;
             display: flex;
-            align-items: stretch;
-            justify-content: center;
-            padding: clamp(2px, 1vw, 10px) 18px 18px;
+            flex-direction: column;
+            align-items: center;
+            padding: 34px 18px 18px;
         }
 
-        .landing-theme-toggle {
+        .theme-toggle {
             position: fixed;
-            top: 18px;
-            right: 18px;
-            z-index: 40;
+            top: 17px;
+            right: 17px;
+            z-index: 10;
+            width: 39px;
+            height: 39px;
+            border-radius: 999px;
+            border: 1px solid rgba(250, 204, 21, .56);
+            background: rgba(42, 10, 17, .58);
+            color: #f7e7bc;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 42px;
-            height: 42px;
-            padding: 0;
-            border-radius: 999px;
-            border: 1px solid rgba(250, 204, 21, 0.45);
-            background: rgba(20, 16, 20, 0.52);
-            color: #ffffff;
             cursor: pointer;
-            box-shadow: 0 18px 32px rgba(15, 23, 42, 0.22);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+            box-shadow: 0 15px 34px rgba(0, 0, 0, .25);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: transform .18s ease, background .18s ease, color .18s ease;
         }
 
-        .landing-theme-toggle:hover,
-        .landing-theme-toggle:focus-visible {
+        .theme-toggle:hover,
+        .theme-toggle:focus-visible {
             transform: translateY(-1px);
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
-            color: var(--maroon);
-            border-color: var(--gold);
+            background: #facc15;
+            color: #70131b;
             outline: none;
         }
 
-        .landing-theme-toggle svg {
+        .theme-toggle svg {
             width: 18px;
             height: 18px;
             stroke: currentColor;
-            stroke-width: 2;
             fill: none;
+            stroke-width: 2;
         }
 
-        body.landing-theme-light .landing-theme-toggle {
-            background: rgba(255, 255, 255, 0.88);
-            color: #70131b;
-            border-color: rgba(112, 19, 27, 0.24);
+        .portal-brand {
+            width: min(760px, 100%);
+            text-align: center;
+            display: grid;
+            justify-items: center;
+            gap: 11px;
         }
 
-        .landing-panel {
+        .logo-row {
             position: relative;
-            width: min(1040px, 100%);
-            min-height: min(650px, calc(100vh - 72px));
-            display: block;
-            padding: 0 0 14px;
-            background: transparent;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 2px;
         }
 
-        .gateway-stage {
+        .logo-row::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 10px;
+            bottom: 10px;
+            width: 1px;
+            background: rgba(255, 255, 255, .42);
+            transform: translateX(-50%);
+        }
+
+        .brand-logo {
+            width: 46px;
+            height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-logo img {
+            width: 46px;
+            height: 46px;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 14px rgba(0, 0, 0, .28));
+        }
+
+        .brand-logo:nth-child(2) img {
+            width: 46px;
+            height: 46px;
+            transform: scale(1.42);
+            transform-origin: center;
+        }
+
+        .portal-title {
+            margin: 0;
+            color: #fff8ed;
+            font-size: clamp(2.12rem, 4.45vw, 3.45rem);
+            line-height: 1;
+            font-weight: 900;
+            letter-spacing: -.035em;
+            text-shadow: 0 7px 20px rgba(0, 0, 0, .24);
+        }
+
+        .portal-title span {
+            color: var(--gold-soft);
+        }
+
+        .title-mark {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            margin-top: -2px;
+        }
+
+        .title-mark::before,
+        .title-mark::after {
+            content: "";
+            width: 42px;
+            height: 1px;
+            background: rgba(250, 204, 21, .54);
+        }
+
+        .title-mark span {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: var(--gold);
+            box-shadow: 0 0 14px rgba(250, 204, 21, .7);
+        }
+
+        .portal-subtitle {
+            margin: 3px 0 0;
+            color: var(--muted);
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 31px;
+            padding: 0 15px;
+            border-radius: 999px;
+            color: rgba(255, 255, 255, .9);
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .14);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 999px;
+            background: #37d75f;
+            box-shadow: 0 0 12px rgba(55, 215, 95, .92);
+        }
+
+        .workspace-shell {
             position: relative;
-            z-index: 2;
-            min-height: 100%;
+            width: min(594px, calc(100% - 16px));
+            margin-top: 19px;
+            padding: 20px 24px 20px;
+            border-radius: 17px;
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, .13), rgba(255, 255, 255, .045)),
+                rgba(48, 14, 22, .42);
+            border: 1px solid rgba(255, 255, 255, .46);
+            box-shadow:
+                0 0 0 1px rgba(250, 204, 21, .04),
+                0 24px 52px rgba(20, 3, 8, .46),
+                inset 0 1px 0 rgba(255, 255, 255, .17);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        .workspace-shell::before {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            padding: 2px;
+            border-radius: 19px;
+            background:
+                conic-gradient(
+                    from var(--shell-glow-angle, 0deg),
+                    transparent 0deg,
+                    transparent 236deg,
+                    rgba(250, 204, 21, .02) 248deg,
+                    rgba(250, 204, 21, .18) 257deg,
+                    rgba(255, 245, 180, .72) 266deg,
+                    rgba(255, 255, 255, .96) 270deg,
+                    rgba(255, 245, 180, .72) 274deg,
+                    rgba(250, 204, 21, .18) 283deg,
+                    rgba(250, 204, 21, .02) 292deg,
+                    transparent 304deg,
+                    transparent 360deg
+                );
+            opacity: .98;
+            filter: drop-shadow(0 0 10px rgba(250, 204, 21, .72)) drop-shadow(0 0 22px rgba(250, 204, 21, .34));
+            -webkit-mask:
+                linear-gradient(#000 0 0) content-box,
+                linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask:
+                linear-gradient(#000 0 0) content-box,
+                linear-gradient(#000 0 0);
+            mask-composite: exclude;
+            pointer-events: none;
+            animation: shellGlowTrace 6.5s linear infinite;
+        }
+
+        .workspace-shell::after {
+            content: "";
+            position: absolute;
+            inset: -7px;
+            padding: 7px;
+            border-radius: 24px;
+            background:
+                conic-gradient(
+                    from var(--shell-glow-angle, 0deg),
+                    transparent 0deg,
+                    transparent 240deg,
+                    rgba(250, 204, 21, .03) 252deg,
+                    rgba(250, 204, 21, .20) 264deg,
+                    rgba(255, 250, 205, .55) 270deg,
+                    rgba(250, 204, 21, .20) 276deg,
+                    rgba(250, 204, 21, .03) 288deg,
+                    transparent 300deg,
+                    transparent 360deg
+                );
+            opacity: .66;
+            filter: blur(7px);
+            -webkit-mask:
+                linear-gradient(#000 0 0) content-box,
+                linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask:
+                linear-gradient(#000 0 0) content-box,
+                linear-gradient(#000 0 0);
+            mask-composite: exclude;
+            pointer-events: none;
+            animation: shellGlowTrace 6.5s linear infinite;
+        }
+
+        .workspace-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
+            align-items: center;
+            gap: 12px;
+        }
+
+        .workspace-card {
+            position: relative;
+            min-height: 221px;
+            padding: 16px 24px 13px;
+            border-radius: 16px;
+            color: #fff6f6;
+            text-align: center;
+            text-decoration: none;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            gap: 12px;
-            text-align: center;
-            transition: opacity .3s ease, transform .34s ease;
+            border: 1px solid rgba(255, 255, 255, .48);
+            background: rgba(255, 255, 255, .075);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, .14),
+                0 16px 28px rgba(0, 0, 0, .22);
+            transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
         }
 
-        .gateway-top-content {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            margin-top: 3px;
-            transition: opacity .26s ease, transform .32s ease;
-        }
-
-        .gateway-brand {
-            width: min(760px, 100%);
-            display: grid;
-            justify-items: center;
-            gap: 14px;
-        }
-
-        .gateway-logo-row {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .gateway-logo-card {
-            width: 72px;
-            height: 72px;
-            border-radius: 18px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.94);
-            border: 1px solid rgba(250, 204, 21, 0.36);
-            box-shadow: 0 18px 34px rgba(15, 23, 42, 0.16);
-        }
-
-        .gateway-logo-card img {
-            width: 48px;
-            height: 48px;
-            object-fit: contain;
-        }
-
-        .gateway-kicker {
-            margin: 0;
-            font-size: 10px;
-            font-weight: 950;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: #8fa4c8;
-        }
-
-        .gateway-title {
-            margin: 0;
-            max-width: 820px;
-            color: #ffffff;
-            font-size: clamp(2rem, 4vw, 3.7rem);
-            line-height: 1.02;
-            font-weight: 950;
-            letter-spacing: -0.03em;
-            text-wrap: balance;
-        }
-
-        @media (min-width: 900px) {
-            .gateway-title {
-                max-width: 100%;
-                white-space: nowrap;
-            }
-        }
-
-        body.landing-theme-light .gateway-title {
-            color: #70131b;
-        }
-
-        .gateway-copy {
-            margin: 0;
-            max-width: 760px;
-            color: rgba(255, 255, 255, 0.82);
-            font-size: clamp(0.88rem, 1.08vw, 0.96rem);
-            line-height: 1.58;
-            font-weight: 500;
-            text-wrap: balance;
-        }
-
-        body.landing-theme-light .gateway-copy,
-        body.landing-theme-light .system-foot {
-            color: #64748b;
-        }
-
-        .workspace-entry.gateway-actions {
-            width: min(500px, 100%);
-            display: grid;
-            gap: 10px;
-            justify-items: stretch;
-        }
-
-        .portal-btn {
-            min-height: 64px;
-            width: 100%;
-            padding: 0;
-            overflow: visible;
-            border-radius: 0;
-            background: transparent;
-            border: 0;
-            box-shadow: none;
-            display: grid;
-            grid-template-columns: 96px minmax(0, 1fr);
-            align-items: center;
-            gap: 12px;
-            font-size: 1.02rem;
-            font-weight: 950;
-            position: relative;
-            color: #ffffff;
-            text-decoration: none;
-            transition: color .12s ease, transform .18s ease;
-        }
-
-        .portal-btn span,
-        .portal-btn svg {
-            position: relative;
-            z-index: 1;
-        }
-
-        .portal-btn__label {
-            position: relative;
-            min-height: 64px;
-            padding: 0 18px 0 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            text-align: left;
-            background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
-            border: 1px solid rgba(250, 204, 21, 0.50);
-            box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
-            border-radius: 0 18px 18px 0;
-            overflow: hidden;
-            z-index: 1;
-            isolation: isolate;
-        }
-
-        .portal-btn__label::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
-            transform: scaleX(0);
-            transform-origin: left center;
-            transition: transform 0.32s ease;
-            pointer-events: none;
-            z-index: -2;
-        }
-
-        .portal-btn__label::after {
+        .workspace-card::before {
             content: "";
             position: absolute;
             inset: 0;
             background:
-                linear-gradient(120deg,
-                    rgba(255, 248, 196, 0) 0%,
-                    rgba(255, 239, 181, 0.14) 20%,
-                    rgba(255, 239, 181, 0.46) 48%,
-                    rgba(255, 239, 181, 0.14) 76%,
-                    rgba(255, 248, 196, 0) 100%);
-            transform: translateX(-135%);
-            transition: transform 0.9s ease;
+                radial-gradient(circle at 48% 23%, rgba(250, 204, 21, .24), transparent 20%),
+                linear-gradient(135deg, rgba(143, 10, 32, .78), rgba(81, 14, 24, .12));
+            opacity: .75;
             pointer-events: none;
-            z-index: -1;
         }
 
-        .portal-btn:hover .portal-btn__label::before,
-        .portal-btn:focus-visible .portal-btn__label::before {
-            transform: scaleX(1);
+        .workspace-card::after {
+            content: "";
+            position: absolute;
+            top: 12px;
+            right: 11px;
+            width: 31px;
+            height: 31px;
+            background-image: radial-gradient(circle, rgba(255, 255, 255, .28) 1px, transparent 1.5px);
+            background-size: 8px 8px;
+            opacity: .74;
         }
 
-        .portal-btn:hover .portal-btn__label::after,
-        .portal-btn:focus-visible .portal-btn__label::after {
-            transform: translateX(135%);
+        .workspace-card.is-admin::before {
+            background:
+                radial-gradient(circle at 48% 23%, rgba(250, 204, 21, .22), transparent 20%),
+                linear-gradient(135deg, rgba(255, 255, 255, .07), rgba(72, 25, 33, .28));
         }
 
-        .portal-btn__label > span,
-        .portal-btn__label > svg,
-        .portal-btn__label > i,
-        .portal-btn__label > strong,
-        .portal-btn__label > em,
-        .portal-btn__label > b {
+        .workspace-card:hover,
+        .workspace-card:focus-visible {
+            transform: translateY(-2px);
+            border-color: rgba(250, 204, 21, .78);
+            box-shadow:
+                0 0 0 1px rgba(250, 204, 21, .18),
+                0 22px 42px rgba(0, 0, 0, .35),
+                inset 0 1px 0 rgba(255, 255, 255, .18);
+            outline: none;
+        }
+
+        .workspace-card.is-disabled {
+            cursor: not-allowed;
+            opacity: .62;
+        }
+
+        .workspace-card > * {
             position: relative;
             z-index: 1;
         }
 
-        .portal-btn__icon {
-            width: 96px;
-            min-height: 64px;
+        .workspace-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 999px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, rgba(112, 19, 27, 0.92), rgba(143, 34, 48, 0.94));
-            border: 1px solid rgba(250, 204, 21, 0.50);
-            color: currentColor;
-            box-shadow: 0 18px 34px rgba(112, 19, 27, 0.24);
-            border-radius: 18px 0 0 18px;
+            color: #ffffff;
+            border: 1px solid rgba(250, 204, 21, .58);
+            background:
+                radial-gradient(circle at 50% 36%, rgba(250, 204, 21, .18), transparent 54%),
+                rgba(112, 19, 27, .32);
+            box-shadow: 0 10px 26px rgba(250, 204, 21, .12);
         }
 
-        .portal-btn__icon svg,
-        .portal-btn__arrow svg {
-            width: 20px;
-            height: 20px;
-            stroke: currentColor;
-            stroke-width: 2;
-            fill: none;
-        }
-
-        .portal-btn__arrow {
-            position: static;
+        .workspace-icon svg {
             width: 34px;
             height: 34px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.6;
+        }
+
+        .workspace-card h2 {
+            margin: 22px 0 0;
+            font-size: 18px;
+            line-height: 1.1;
+            font-weight: 900;
+            color: #fff8ef;
+        }
+
+        .workspace-rule {
+            width: 38px;
+            height: 2px;
+            margin: 11px auto 14px;
+            background: var(--gold);
+            border-radius: 999px;
+        }
+
+        .workspace-card p {
+            margin: 0;
+            max-width: 180px;
+            color: rgba(255, 255, 255, .70);
+            font-size: 12px;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .workspace-button {
+            position: relative;
+            width: 153px;
             min-height: 34px;
-            flex: 0 0 34px;
+            margin-top: auto;
             border-radius: 10px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            color: currentColor;
-            box-shadow: none;
-            z-index: 2;
-        }
-
-        .portal-btn:hover .portal-btn__arrow,
-        .portal-btn:focus-visible .portal-btn__arrow {
-            background: rgba(255, 255, 255, 0.22);
-            border-color: rgba(255, 255, 255, 0.28);
-            color: var(--maroon);
-        }
-
-        .portal-btn--idp:hover .portal-btn__arrow,
-        .portal-btn--idp:focus-visible .portal-btn__arrow {
-            background: linear-gradient(135deg, #fff4b8, #ffe693);
-            border-color: #ffffff;
-            color: var(--maroon);
-        }
-
-        .portal-btn:hover .portal-btn__icon,
-        .portal-btn:focus-visible .portal-btn__icon {
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
-            border-color: var(--gold);
-            color: var(--maroon);
-        }
-
-        .portal-btn:hover .portal-btn__label,
-        .portal-btn:focus-visible .portal-btn__label {
-            border-color: var(--gold);
-            color: #111111;
-        }
-
-        .workspace-schedule {
-            display: block;
-            margin: -2px 0 2px;
-            color: rgba(255, 255, 255, 0.76);
+            gap: 18px;
             font-size: 12px;
-            font-weight: 700;
-            line-height: 1.45;
-            text-align: center;
-        }
-
-        body.landing-theme-light .workspace-schedule {
-            color: #64748b;
-        }
-
-        .portal-btn.is-disabled,
-        .portal-btn.is-disabled:hover,
-        .portal-btn.is-disabled:focus-visible {
-            cursor: not-allowed;
-            color: #64748b;
-            box-shadow: none;
-            transform: none;
-        }
-
-        .portal-btn.is-disabled::after {
-            display: none;
-        }
-
-        .portal-btn.is-disabled .portal-btn__icon,
-        .portal-btn.is-disabled .portal-btn__label,
-        .portal-btn.is-disabled .portal-btn__arrow {
-            background: #e5e7eb;
-            border-color: #cbd5e1;
-            color: #64748b;
-            box-shadow: none;
-        }
-
-        .workspace-utility-actions.gateway-utility {
-            justify-content: center;
-            margin-top: 0;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .workspace-utility-actions.gateway-utility .help-btn {
-            color: rgba(255, 255, 255, 0.9);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            min-height: 34px;
-            padding: 0 12px;
-            border-radius: 999px;
-            border: 0;
-            background: transparent;
-            box-shadow: none;
-            font-size: 0.96rem;
             font-weight: 800;
-            cursor: pointer;
-        }
-
-        .workspace-utility-actions.gateway-utility .help-btn svg,
-        .local-login-link svg {
-            width: 17px;
-            height: 17px;
-            stroke: currentColor;
-            stroke-width: 2;
-            fill: none;
-        }
-
-        .workspace-utility-actions.gateway-utility .help-btn:hover,
-        .workspace-utility-actions.gateway-utility .help-btn:focus-visible {
-            color: var(--gold);
-            background: transparent;
-            outline: none;
-        }
-
-        body.landing-theme-light .workspace-utility-actions.gateway-utility .help-btn {
-            color: var(--maroon);
-        }
-
-        body.landing-theme-light .workspace-utility-actions.gateway-utility .help-btn:hover,
-        body.landing-theme-light .workspace-utility-actions.gateway-utility .help-btn:focus-visible {
-            color: #8f2230;
-        }
-
-        .local-login-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            color: rgba(255, 255, 255, 0.84);
-            text-decoration: none;
-            font-size: 0.94rem;
-            font-weight: 800;
-        }
-
-        body.landing-theme-light .local-login-link {
-            color: var(--maroon);
-        }
-
-        .gateway-feature-grid {
-            width: 100%;
-            max-width: 980px;
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 12px;
-            margin: 4px auto 0;
-            position: relative;
-            z-index: 3;
-        }
-
-        .gateway-feature-card {
-            position: relative;
+            border: 1px solid rgba(250, 204, 21, .70);
+            background: rgba(112, 19, 27, .92);
+            color: #ffffff;
+            box-shadow: 0 10px 22px rgba(112, 19, 27, .22);
             overflow: hidden;
-            border-radius: 18px;
-            padding: 14px 14px 12px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.10);
-            text-align: left;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            isolation: isolate;
+            transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
         }
 
-        body.landing-theme-light .gateway-feature-card {
-            background: rgba(255, 255, 255, 0.78);
-            border-color: rgba(112, 19, 27, 0.10);
-        }
-
-        .gateway-feature-card::before,
-        .gateway-feature-card::after {
+        .workspace-button::before {
             content: "";
             position: absolute;
-            top: 12px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #facc15, #ffe693);
-            border: 1px solid rgba(250, 204, 21, 0.92);
-            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.24);
+            inset: 0;
+            z-index: -2;
+            background: #facc15;
+            transform: scaleX(0);
+            transform-origin: left center;
+            transition: transform .28s ease;
         }
 
-        .gateway-feature-card::before {
-            left: 12px;
+        .workspace-button::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            bottom: -50%;
+            left: -140%;
+            z-index: -1;
+            width: 42%;
+            background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 246, 184, .22) 42%, rgba(255, 246, 184, .74) 50%, rgba(255, 246, 184, .22) 58%, rgba(255, 255, 255, 0) 100%);
+            transform: skewX(-18deg);
+            opacity: 0;
         }
 
-        .gateway-feature-card::after {
-            right: 12px;
+        .workspace-card.is-admin .workspace-button {
+            background: rgba(255, 250, 235, .96);
+            color: var(--maroon);
+            border-color: rgba(250, 204, 21, .62);
         }
 
-        .gateway-feature-title {
-            margin: 26px 0 4px;
-            color: #ffffff;
-            font-size: 0.98rem;
+        .workspace-card:hover .workspace-button,
+        .workspace-card:focus-visible .workspace-button {
+            background: #facc15;
+            color: var(--maroon);
+            border-color: #facc15;
+            box-shadow: 0 0 0 3px rgba(250, 204, 21, .12), 0 14px 24px rgba(112, 19, 27, .24);
+        }
+
+        .workspace-card:hover .workspace-button::before,
+        .workspace-card:focus-visible .workspace-button::before {
+            transform: scaleX(1);
+        }
+
+        .workspace-card:hover .workspace-button::after,
+        .workspace-card:focus-visible .workspace-button::after {
+            opacity: 1;
+            animation: buttonSweep .85s ease both;
+        }
+
+        .workspace-button svg {
+            width: 15px;
+            height: 15px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        @keyframes buttonSweep {
+            from { left: -140%; }
+            to { left: 140%; }
+        }
+
+        @keyframes shellGlowTrace {
+            from { --shell-glow-angle: 0deg; }
+            to { --shell-glow-angle: 360deg; }
+        }
+
+        .or-divider {
+            position: relative;
+            height: 100%;
+            min-height: 205px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .or-divider::before {
+            content: "";
+            position: absolute;
+            top: 6px;
+            bottom: 6px;
+            left: 50%;
+            width: 1px;
+            transform: translateX(-50%);
+            background: linear-gradient(180deg, transparent, rgba(255, 255, 255, .34), transparent);
+        }
+
+        .or-divider span {
+            position: relative;
+            z-index: 1;
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, .86);
+            background: rgba(55, 17, 24, .66);
+            border: 1px solid rgba(255, 255, 255, .24);
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .assistant-foot {
+            margin-top: 19px;
+            text-align: center;
+            display: grid;
+            gap: 8px;
+            justify-items: center;
+        }
+
+        .greeting {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, .73);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .greeting-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #facc15;
+            border: 1px solid rgba(250, 204, 21, .52);
+            background: rgba(112, 19, 27, .45);
+        }
+
+        .greeting-icon svg {
+            width: 15px;
+            height: 15px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .greeting strong {
+            color: #fff5f5;
             font-weight: 900;
         }
 
-        body.landing-theme-light .gateway-feature-title {
-            color: #70131b;
-        }
-
-        .gateway-feature-copy {
-            margin: 0;
-            color: rgba(255, 255, 255, 0.72);
-            font-size: 0.84rem;
-            line-height: 1.55;
-            font-weight: 600;
-        }
-
-        body.landing-theme-light .gateway-feature-copy {
-            color: #64748b;
-        }
-
-        .account-note {
-            margin: 0 0 8px;
-            color: rgba(255, 255, 255, 0.72);
-            font-size: 12px;
-            line-height: 1.55;
-            text-align: center;
-        }
-
-        body.landing-theme-light .account-note {
-            color: #7c8797;
-        }
-
-        .system-foot {
-            margin: 10px 0 0;
-            color: rgba(255, 255, 255, 0.66);
-            font-size: 13px;
-            text-align: center;
-        }
-
-        .landing-panel.is-help .gateway-top-content {
-            opacity: 0;
-            transform: translateY(-10px) scale(0.985);
-            pointer-events: none;
-        }
-
-        .landing-panel.is-help .gateway-feature-grid,
-        .landing-panel.is-help .system-foot {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        .help-panel {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            z-index: 5;
-            width: min(760px, calc(100% - 44px));
-            max-width: 760px;
-            max-height: min(560px, calc(100vh - 96px));
-            margin: 0 auto;
-            opacity: 0;
-            transform: translate(-50%, calc(-50% + 18px));
-            pointer-events: none;
-            background: transparent;
+        .sign-out {
             border: 0;
-            box-shadow: none;
-            transition: opacity .26s ease, transform .34s ease;
-            overflow: visible;
-        }
-
-        .landing-panel.is-help .help-panel {
-            opacity: 1;
-            transform: translate(-50%, -50%);
-            pointer-events: auto;
-        }
-
-        .help-panel-head {
             background: transparent;
-            color: #ffffff;
-            margin: 0;
-            padding: 0 8px 12px 54px;
-            text-align: left;
-            position: relative;
-        }
-
-        .help-panel-back {
-            position: absolute;
-            top: -2px;
-            left: 8px;
+            color: rgba(255, 255, 255, .70);
             display: inline-flex;
-            width: 32px;
-            height: 32px;
             align-items: center;
             justify-content: center;
-            padding: 0;
-            border: 1px solid rgba(250, 204, 21, .5);
-            border-radius: 50%;
-            background: rgba(255, 255, 255, .08);
-            color: #ffffff;
+            gap: 8px;
+            min-height: 26px;
+            padding: 0 10px;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 500;
             cursor: pointer;
-            transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
         }
 
-        .help-panel-back:hover,
-        .help-panel-back:focus-visible {
-            border-color: var(--gold);
-            background: var(--gold);
-            color: var(--maroon);
-            transform: translateX(-2px);
+        .sign-out:hover,
+        .sign-out:focus-visible {
+            color: #facc15;
             outline: none;
         }
 
-        .help-panel-back svg {
-            width: 17px;
-            height: 17px;
+        .sign-out svg {
+            width: 14px;
+            height: 14px;
             stroke: currentColor;
-            stroke-width: 2.3;
             fill: none;
+            stroke-width: 2;
         }
 
-        .help-panel-kicker {
-            margin: 0;
-            color: var(--gold);
-            font-size: 11px;
-            font-weight: 950;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-        }
-
-        .help-panel-title {
-            margin: 0;
-            color: #ffffff;
-            font-size: 28px;
-            line-height: 1.08;
-            font-weight: 950;
-        }
-
-        .help-panel-copy {
-            margin: 0;
-            color: rgba(255, 255, 255, 0.84);
-            font-size: 13px;
-            line-height: 1.65;
-        }
-
-        body.landing-theme-light .help-panel-title {
-            color: #111111;
-        }
-
-        body.landing-theme-light .help-panel-copy {
-            color: #1f2937;
-        }
-
-        .help-guide {
-            width: min(740px, 100%);
-            margin: 0 auto;
-            padding: 0;
-            display: grid;
-            gap: 12px;
-        }
-
-        .help-accordion {
-            overflow: hidden;
-            border: 1px solid rgba(250, 204, 21, .18);
-            border-radius: 16px;
-            background: linear-gradient(180deg, rgba(53, 15, 22, .94), rgba(39, 10, 17, .96));
-            transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
-        }
-
-        .help-accordion[open] {
-            border-color: rgba(250, 204, 21, .42);
-            box-shadow: 0 14px 28px rgba(31, 4, 9, .18);
-        }
-
-        .help-accordion summary {
-            display: flex;
-            min-height: 58px;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 14px;
-            color: #ffffff;
-            cursor: pointer;
-            list-style: none;
-            user-select: none;
-        }
-
-        .help-accordion summary::-webkit-details-marker {
-            display: none;
-        }
-
-        .help-accordion summary:focus-visible {
-            outline: 2px solid var(--gold);
-            outline-offset: -2px;
-        }
-
-        .help-accordion-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
+        .portal-footer {
+            margin-top: auto;
+            padding-top: 18px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            flex: 0 0 36px;
-            background: linear-gradient(135deg, var(--gold), var(--gold-soft));
-            color: var(--maroon);
-            box-shadow: 0 8px 18px rgba(250, 204, 21, .12);
-        }
-
-        .help-accordion-icon svg {
-            width: 18px;
-            height: 18px;
-            stroke-width: 2;
-            stroke: currentColor;
-            fill: none;
-        }
-
-        .help-accordion-heading {
-            display: grid;
-            flex: 1 1 auto;
-            gap: 1px;
-            min-width: 0;
-        }
-
-        .help-accordion-heading strong {
-            color: #ffffff;
-            font-size: 14px;
-            line-height: 1.3;
-        }
-
-        .help-accordion-heading span {
-            overflow: hidden;
-            color: rgba(255, 255, 255, .66);
+            gap: 28px;
+            color: rgba(255, 255, 255, .48);
             font-size: 11px;
-            line-height: 1.35;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            font-weight: 500;
         }
 
-        .help-accordion-chevron {
-            width: 17px;
-            height: 17px;
-            flex: 0 0 auto;
-            color: var(--gold);
-            transition: transform .22s ease;
-            stroke: currentColor;
-            stroke-width: 2;
-            fill: none;
-        }
-
-        .help-accordion[open] .help-accordion-chevron {
-            transform: rotate(180deg);
-        }
-
-        .help-accordion-body {
-            padding: 0 15px 15px 63px;
-        }
-
-        .help-check-list,
-        .help-issue-list {
-            display: grid;
-            gap: 7px;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
-
-        .help-check-list li,
-        .help-issue-list li {
+        .portal-footer span + span {
             position: relative;
-            padding-left: 18px;
-            color: rgba(255, 255, 255, .78);
-            font-size: 12px;
-            line-height: 1.55;
         }
 
-        .help-check-list li::before {
+        .portal-footer span + span::before {
+            content: "";
             position: absolute;
-            top: 1px;
-            left: 0;
-            color: var(--gold);
-            font-weight: 950;
-            content: "✓";
+            top: 50%;
+            left: -15px;
+            width: 1px;
+            height: 12px;
+            background: rgba(255, 255, 255, .32);
+            transform: translateY(-50%);
         }
 
-        .help-issue-list {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+        body.portal-light .portal-title,
+        body.portal-light .workspace-card h2,
+        body.portal-light .greeting strong {
+            color: #70131b;
+            text-shadow: none;
         }
 
-        .help-issue-list li {
-            padding: 8px 10px 8px 25px;
-            border: 1px solid rgba(255, 255, 255, .08);
-            border-radius: 10px;
-            background: rgba(255, 255, 255, .05);
+        body.portal-light .portal-subtitle,
+        body.portal-light .greeting,
+        body.portal-light .sign-out,
+        body.portal-light .portal-footer {
+            color: rgba(78, 28, 36, .70);
         }
 
-        .help-issue-list li::before {
-            position: absolute;
-            top: 7px;
-            left: 8px;
-            color: var(--gold);
-            font-weight: 950;
-            content: "!";
+        body.portal-light .workspace-shell {
+            background: rgba(255, 255, 255, .62);
+            border-color: rgba(112, 19, 27, .20);
         }
 
-        .help-contact-card {
-            display: grid;
-            gap: 6px;
-            border-radius: 14px;
-            border: 1px solid rgba(250, 204, 21, 0.18);
-            background: rgba(255, 255, 255, 0.05);
-            padding: 14px 15px;
-            color: rgba(255, 255, 255, 0.82);
-            font-size: 12px;
-            line-height: 1.6;
+        body.portal-light .workspace-card {
+            border-color: rgba(112, 19, 27, .22);
+            background: rgba(255, 255, 255, .72);
+            color: #70131b;
         }
 
-        .help-contact-card strong {
-            color: #ffffff;
-            font-size: 13px;
+        body.portal-light .workspace-card::before {
+            opacity: .20;
         }
 
-        @media (max-width: 980px) {
-            .landing-panel {
-                min-height: auto;
-                padding: 0 0 16px;
-            }
-
-            .gateway-title {
-                white-space: normal;
-            }
-
-            .gateway-feature-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
+        body.portal-light .workspace-card p {
+            color: rgba(78, 28, 36, .72);
         }
 
-        @media (max-width: 640px) {
-            .landing-shell {
-                padding: 12px 14px 16px;
+        body.portal-light .or-divider span {
+            color: #70131b;
+            background: rgba(255, 255, 255, .82);
+            border-color: rgba(112, 19, 27, .20);
+        }
+
+        @media (max-width: 760px) {
+            .portal-page {
+                padding-top: 62px;
             }
 
-            .landing-theme-toggle {
-                top: 16px;
-                right: 16px;
+            .workspace-shell {
+                width: min(430px, 100%);
+                padding: 18px;
             }
 
-            .landing-panel {
-                padding: 0 0 12px;
-            }
-
-            .gateway-logo-card {
-                width: 74px;
-                height: 74px;
-                border-radius: 20px;
-            }
-
-            .gateway-logo-card img {
-                width: 52px;
-                height: 52px;
-            }
-
-            .gateway-feature-grid {
+            .workspace-grid {
                 grid-template-columns: 1fr;
+                gap: 14px;
             }
 
-            .help-panel {
-                width: calc(100% - 20px);
-                max-height: min(520px, calc(100vh - 72px));
+            .or-divider {
+                min-height: 34px;
+                height: 34px;
             }
 
-            .help-issue-list {
-                grid-template-columns: 1fr;
+            .or-divider::before {
+                top: 50%;
+                bottom: auto;
+                left: 20px;
+                right: 20px;
+                width: auto;
+                height: 1px;
+                transform: translateY(-50%);
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .34), transparent);
             }
 
-            .help-accordion-body {
-                padding-left: 13px;
+            .workspace-card {
+                min-height: 210px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .portal-title {
+                font-size: 2rem;
+            }
+
+            .logo-row {
+                gap: 24px;
+            }
+
+            .brand-logo,
+            .brand-logo img {
+                width: 42px;
+                height: 42px;
+            }
+
+            .workspace-shell {
+                width: 100%;
+                border-radius: 15px;
+            }
+
+            .portal-footer {
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .portal-footer span + span::before {
+                content: none;
             }
         }
     </style>
 </head>
 <body>
-    @php
-        $normalizedUserRole = \App\Models\User::normalizeRole($user->user_role ?? '');
-        $rawUserRole = strtolower(trim((string) ($user->user_role ?? '')));
-        $userType = strtolower(trim((string) ($user->user_type ?? '')));
-        $isStudentAssistant = $normalizedUserRole === \App\Models\User::ROLE_ADMIN
-            && (
-                in_array($userType, ['assistant', 'student assistant', 'student_assistant'], true)
-                || in_array($rawUserRole, ['student_assistant', 'studentassistant', 'assistant'], true)
-            );
-        $showStudentWorkspace = $isStudentAssistant || $normalizedUserRole === \App\Models\User::ROLE_STUDENT;
-        $showAdminWorkspace = $isStudentAssistant
-            || in_array($normalizedUserRole, [\App\Models\User::ROLE_ADMIN, \App\Models\User::ROLE_SUPERADMIN], true);
-        $adminWorkspaceAvailable = (bool) ($adminWorkspaceAvailable ?? false);
-    @endphp
+@php
+    $user = auth()->user();
+    $normalizedUserRole = \App\Models\User::normalizeRole(optional($user)->user_role ?? '');
+    $userType = strtolower(trim((string) (optional($user)->user_type ?? '')));
+    $isStudentAssistant = method_exists($user, 'isStudentAssistant') ? $user->isStudentAssistant() : false;
+    $showStudentWorkspace = true;
+    $showAdminWorkspace = $isStudentAssistant
+        || in_array($normalizedUserRole, [\App\Models\User::ROLE_ADMIN, \App\Models\User::ROLE_SUPERADMIN], true)
+        || in_array($userType, ['assistant', 'student assistant', 'student_assistant'], true);
+    $adminWorkspaceAvailable = (bool) ($adminWorkspaceAvailable ?? false);
+    $hour = (int) now()->format('G');
+    $greeting = $hour < 12 ? 'Good Morning' : ($hour < 18 ? 'Good Afternoon' : 'Good Evening');
+    $displayName = trim((string) (optional($user)->name ?: 'Student Assistant'));
+    $statusText = $showAdminWorkspace && !$adminWorkspaceAvailable
+        ? 'Student services are available'
+        : 'All clinic services are available';
+@endphp
 
-    <main class="landing-shell">
-        <button type="button" class="landing-theme-toggle" id="landingThemeToggle" aria-pressed="false" aria-label="Switch to light mode" title="Switch theme">
-            <svg id="landingThemeToggleIcon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" stroke-linecap="round" stroke-linejoin="round"></path>
-            </svg>
-        </button>
+<main class="portal-page" aria-label="Student Assistant workspace selection">
+    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch theme" aria-pressed="false">
+        <svg id="themeIcon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+    </button>
 
-        <section class="landing-panel" id="assistantLandingPanel" aria-label="Student Assistant workspace selection">
-            <div class="gateway-stage">
-                <div class="gateway-top-content">
-                    <div class="gateway-brand">
-                        <div class="gateway-logo-row" aria-label="PUP and clinic logos">
-                            <span class="gateway-logo-card">
-                                <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
-                            </span>
-                            <span class="gateway-logo-card">
-                                <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="Clinic Logo">
-                            </span>
-                        </div>
+    <section class="portal-brand">
+        <div class="logo-row" aria-label="PUP and Medical Clinic logos">
+            <span class="brand-logo">
+                <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
+            </span>
+            <span class="brand-logo">
+                <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="Clinic Logo">
+            </span>
+        </div>
 
-                        <div class="gateway-brand-copy">
-                            <p class="gateway-kicker">Medical Services Department</p>
-                            <h1 class="gateway-title">PUP Taguig Medical Clinic</h1>
-                            <p class="gateway-copy">
-                                Continue to the workspace you need. Your Student Assistant account can access student services and authorized clinic operations from one secure gateway.
-                            </p>
-                        </div>
-                    </div>
+        <h1 class="portal-title">PUP Taguig <span>Medical Clinic</span></h1>
+        <div class="title-mark" aria-hidden="true"><span></span></div>
+        <p class="portal-subtitle">Choose the workspace you want to access</p>
+        <div class="status-pill">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span>{{ $statusText }}</span>
+        </div>
+    </section>
 
-                    <div class="workspace-entry gateway-actions">
-                        @error('workspace')
-                            <p class="account-note" role="alert" style="color:#fecaca; margin:0 0 4px;">{{ $message }}</p>
-                        @enderror
+    @error('workspace')
+        <p role="alert" style="margin:14px 0 0;color:#fecaca;font-size:13px;font-weight:700;">{{ $message }}</p>
+    @enderror
 
-                        <p class="account-note">
-                            Signed in as {{ $user->name ?? 'Student Assistant' }}
-                        </p>
-
-                        @if($showStudentWorkspace)
-                            <a class="portal-btn" href="{{ route('assistant.enter-student') }}">
-                                <span class="portal-btn__icon" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24">
-                                        <circle cx="12" cy="8" r="4"></circle>
-                                        <path d="M5 20a7 7 0 0 1 14 0"></path>
-                                    </svg>
-                                </span>
-                                <span class="portal-btn__label">
-                                    <span>Student Workspace</span>
-                                    <span class="portal-btn__arrow" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24">
-                                            <path d="M5 12h14"></path>
-                                            <path d="m13 6 6 6-6 6"></path>
-                                        </svg>
-                                    </span>
-                                </span>
-                            </a>
-                        @endif
-
-                        @if($showAdminWorkspace)
-                            @if($adminWorkspaceAvailable)
-                                <a class="portal-btn" href="{{ route('assistant.enter-admin') }}">
-                                    <span class="portal-btn__icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24">
-                                            <rect x="3" y="4" width="18" height="12" rx="2"></rect>
-                                            <path d="M8 20h8M12 16v4"></path>
-                                        </svg>
-                                    </span>
-                                    <span class="portal-btn__label">
-                                        <span>Admin Workspace</span>
-                                        <span class="portal-btn__arrow" aria-hidden="true">
-                                            <svg viewBox="0 0 24 24">
-                                                <path d="M5 12h14"></path>
-                                                <path d="m13 6 6 6-6 6"></path>
-                                            </svg>
-                                        </span>
-                                    </span>
-                                </a>
-                            @else
-                                <button class="portal-btn is-disabled" type="button" disabled aria-disabled="true">
-                                    <span class="portal-btn__icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24">
-                                            <rect x="3" y="4" width="18" height="12" rx="2"></rect>
-                                            <path d="M8 20h8M12 16v4"></path>
-                                        </svg>
-                                    </span>
-                                    <span class="portal-btn__label">
-                                        <span>Admin Workspace</span>
-                                        <span class="portal-btn__arrow" aria-hidden="true">
-                                            <svg viewBox="0 0 24 24">
-                                                <path d="M5 12h14"></path>
-                                                <path d="m13 6 6 6-6 6"></path>
-                                            </svg>
-                                        </span>
-                                    </span>
-                                </button>
-                            @endif
-                            <small class="workspace-schedule">Admin Workspace: Available daily from {{ $adminWorkspaceHoursLabel ?? '8:00 AM–8:00 PM' }}</small>
-                        @endif
-
-                        <div class="workspace-utility-actions gateway-utility">
-                            <button class="help-btn help-link" type="button" id="landingNeedHelpButton" aria-controls="landingHelpPanel" aria-expanded="false">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="M12 18h.01" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M9.5 9a2.5 2.5 0 1 1 4.1 1.9c-.9.7-1.6 1.2-1.6 2.6v.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Need Help?</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="gateway-feature-grid" aria-label="Available workspace capabilities">
-                    <article class="gateway-feature-card">
-                        <h3 class="gateway-feature-title">Student Services</h3>
-                        <p class="gateway-feature-copy">Appointments, health records, and student-side clinic actions.</p>
-                    </article>
-
-                    <article class="gateway-feature-card">
-                        <h3 class="gateway-feature-title">Clinic Operations</h3>
-                        <p class="gateway-feature-copy">Authorized clinic workflows and admin-side operational access.</p>
-                    </article>
-
-                    <article class="gateway-feature-card">
-                        <h3 class="gateway-feature-title">Protected Access</h3>
-                        <p class="gateway-feature-copy">Workspace entry still follows your clinic role and allowed access hours.</p>
-                    </article>
-
-                    <article class="gateway-feature-card">
-                        <h3 class="gateway-feature-title">Unified Gateway</h3>
-                        <p class="gateway-feature-copy">Move between student-facing and staff-facing flows from one shared portal.</p>
-                    </article>
-                </div>
-
-                <p class="system-foot">PUP Taguig Clinic Management System</p>
-            </div>
-
-            <div class="help-panel" id="landingHelpPanel" aria-hidden="true">
-                <div class="help-panel-head">
-                    <button type="button" class="help-panel-back" id="landingHelpBackButton" aria-label="Back to clinic access">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+    <section class="workspace-shell" aria-label="Workspace options">
+        <div class="workspace-grid">
+            @if($showStudentWorkspace)
+                <a class="workspace-card is-student" href="{{ route('assistant.enter-student') }}">
+                    <span class="workspace-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 7.5 12 3l8 4.5-8 4.5L4 7.5Z" stroke-linejoin="round"></path>
+                            <path d="M7 10.2v4.1c0 1.7 2.2 3.1 5 3.1s5-1.4 5-3.1v-4.1"></path>
+                            <path d="M20 8v5"></path>
+                            <path d="M6 21c.7-2.2 3-3.4 6-3.4s5.3 1.2 6 3.4"></path>
                         </svg>
-                    </button>
-                    <p class="help-panel-kicker">Help Center</p>
-                    <h2 class="help-panel-title">Before You Continue</h2>
-                    <p class="help-panel-copy">Use this guide if you cannot continue through One Portal or you are unsure what to do next.</p>
-                </div>
+                    </span>
+                    <h2>Student Workspace</h2>
+                    <span class="workspace-rule" aria-hidden="true"></span>
+                    <p>Access appointments, health records, and student services.</p>
+                    <span class="workspace-button">
+                        <span>Continue</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M5 12h14"></path>
+                            <path d="m13 6 6 6-6 6"></path>
+                        </svg>
+                    </span>
+                </a>
+            @endif
 
-                <div class="help-guide" aria-label="Help Center guide">
-                    <details class="help-accordion" open>
-                        <summary>
-                            <span class="help-accordion-icon">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                    <path d="M5 21v-2a7 7 0 0 1 14 0v2" stroke-linecap="round"/>
-                                </svg>
-                            </span>
-                            <span class="help-accordion-heading">
-                                <strong>For Students</strong>
-                                <span>Student workspace and clinic record access</span>
-                            </span>
-                            <svg class="help-accordion-chevron" viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </summary>
-                        <div class="help-accordion-body">
-                            <ul class="help-check-list">
-                                <li>Open the Student Workspace if you need appointments, health records, or clinic profile access.</li>
-                                <li>Use your official One Portal account before checking your clinic submission status.</li>
-                                <li>Prepare your Admission System reference number when medical clearance is required.</li>
-                            </ul>
-                        </div>
-                    </details>
+            <div class="or-divider" aria-hidden="true"><span>OR</span></div>
 
-                    <details class="help-accordion">
-                        <summary>
-                            <span class="help-accordion-icon">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <rect x="4" y="5" width="16" height="14" rx="2"></rect>
-                                    <path d="M8 9h8M8 13h8M8 17h5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </span>
-                            <span class="help-accordion-heading">
-                                <strong>For Clinic Staff</strong>
-                                <span>Admin-side workflows and staff assistance</span>
-                            </span>
-                            <svg class="help-accordion-chevron" viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </summary>
-                        <div class="help-accordion-body">
-                            <ul class="help-check-list">
-                                <li>Open the Admin Workspace only during your allowed Student Assistant access hours.</li>
-                                <li>If admin access is unavailable, wait for the next active schedule or contact clinic staff.</li>
-                                <li>Continue using the Student Workspace if you only need student-facing actions.</li>
-                            </ul>
-                        </div>
-                    </details>
+            @if($showAdminWorkspace && $adminWorkspaceAvailable)
+                <a class="workspace-card is-admin" href="{{ route('assistant.enter-admin') }}">
+                    <span class="workspace-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="7" r="3.4"></circle>
+                            <path d="M5.5 21v-1.4c0-3.1 2.9-5.2 6.5-5.2s6.5 2.1 6.5 5.2V21"></path>
+                            <path d="M8.7 15.5 12 19l3.3-3.5"></path>
+                            <path d="M9.2 5.1 12 3.7l2.8 1.4"></path>
+                        </svg>
+                    </span>
+                    <h2>Admin Workspace</h2>
+                    <span class="workspace-rule" aria-hidden="true"></span>
+                    <p>Authorized clinic management and operational portal.</p>
+                    <span class="workspace-button">
+                        <span>Continue</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M5 12h14"></path>
+                            <path d="m13 6 6 6-6 6"></path>
+                        </svg>
+                    </span>
+                </a>
+            @elseif($showAdminWorkspace)
+                <button class="workspace-card is-admin is-disabled" type="button" disabled aria-disabled="true" title="Admin Workspace is available {{ $adminWorkspaceHoursLabel ?? 'during clinic assistant hours' }}">
+                    <span class="workspace-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="7" r="3.4"></circle>
+                            <path d="M5.5 21v-1.4c0-3.1 2.9-5.2 6.5-5.2s6.5 2.1 6.5 5.2V21"></path>
+                            <path d="M8.7 15.5 12 19l3.3-3.5"></path>
+                            <path d="M9.2 5.1 12 3.7l2.8 1.4"></path>
+                        </svg>
+                    </span>
+                    <h2>Admin Workspace</h2>
+                    <span class="workspace-rule" aria-hidden="true"></span>
+                    <p>Available {{ $adminWorkspaceHoursLabel ?? 'during clinic assistant hours' }}.</p>
+                    <span class="workspace-button">
+                        <span>Closed</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 8v4l2.5 1.5"></path>
+                            <circle cx="12" cy="12" r="8"></circle>
+                        </svg>
+                    </span>
+                </button>
+            @endif
+        </div>
+    </section>
 
-                    <details class="help-accordion">
-                        <summary>
-                            <span class="help-accordion-icon">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="M12 3 2.8 20h18.4L12 3z" stroke-linejoin="round"></path>
-                                    <path d="M12 9v5M12 17h.01" stroke-linecap="round"></path>
-                                </svg>
-                            </span>
-                            <span class="help-accordion-heading">
-                                <strong>Common Issues</strong>
-                                <span>Quick checks for login and workspace problems</span>
-                            </span>
-                            <svg class="help-accordion-chevron" viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </summary>
-                        <div class="help-accordion-body">
-                            <ul class="help-issue-list">
-                                <li>One Portal is unavailable</li>
-                                <li>Wrong account used</li>
-                                <li>Admin hours are closed</li>
-                                <li>Clinic record is still under review</li>
-                            </ul>
-                        </div>
-                    </details>
+    <section class="assistant-foot" aria-label="Signed in account">
+        <div class="greeting">
+            <span class="greeting-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="8" r="3"></circle>
+                    <path d="M5.5 20a6.5 6.5 0 0 1 13 0"></path>
+                </svg>
+            </span>
+            <span>{{ $greeting }}, <strong>{{ $displayName }}</strong></span>
+        </div>
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <input type="hidden" name="logout_all" value="1">
+            <button type="submit" class="sign-out">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M15 8V5.5A1.5 1.5 0 0 0 13.5 4h-7A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20h7A1.5 1.5 0 0 0 15 18.5V16"></path>
+                    <path d="M10 12h9"></path>
+                    <path d="m16 9 3 3-3 3"></path>
+                </svg>
+                <span>Sign out</span>
+            </button>
+        </form>
+    </section>
 
-                    <details class="help-accordion">
-                        <summary>
-                            <span class="help-accordion-icon">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="M4 6h16v12H4z"></path>
-                                    <path d="M7 10h10M7 14h6" stroke-linecap="round"></path>
-                                </svg>
-                            </span>
-                            <span class="help-accordion-heading">
-                                <strong>Contact</strong>
-                                <span>Where to request further assistance</span>
-                            </span>
-                            <svg class="help-accordion-chevron" viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </summary>
-                        <div class="help-accordion-body">
-                            <div class="help-contact-card">
-                                <strong>PUP Taguig Medical Clinic</strong>
-                                <span>Contact the clinic staff or the assigned system administrator when the workspace, hours, or record visibility needs verification.</span>
-                            </div>
-                        </div>
-                    </details>
-                </div>
-            </div>
-        </section>
-    </main>
+    <footer class="portal-footer">
+        <span>&copy; {{ now()->year }} PUP Taguig Medical Clinic</span>
+        <span>Assistant Portal</span>
+    </footer>
+</main>
 
-    @include('partials.system_footer')
+<script>
+    (function () {
+        const body = document.body;
+        const toggle = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const storageKey = 'assistant-portal-theme';
 
-    <script>
-        (function () {
-            const landingPanel = document.getElementById('assistantLandingPanel');
-            const needHelpButton = document.getElementById('landingNeedHelpButton');
-            const helpBackButton = document.getElementById('landingHelpBackButton');
-            const helpPanel = document.getElementById('landingHelpPanel');
-            const themeToggle = document.getElementById('landingThemeToggle');
-            const themeIcon = document.getElementById('landingThemeToggleIcon');
-            const themeStorageKey = 'landing-theme-preference';
+        function setIcon(isLight) {
+            if (!icon) return;
+            icon.innerHTML = isLight
+                ? '<path d="M12 3v2.2M12 18.8V21M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M3 12h2.2M18.8 12H21M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z" stroke-linecap="round" stroke-linejoin="round"></path>'
+                : '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" stroke-linecap="round" stroke-linejoin="round"></path>';
+        }
 
-            function setThemeIcon(theme) {
-                if (!themeIcon) {
-                    return;
-                }
-
-                if (theme === 'light') {
-                    themeIcon.innerHTML = '<path d="M12 3v2.2M12 18.8V21M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M3 12h2.2M18.8 12H21M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z" stroke-linecap="round" stroke-linejoin="round"></path>';
-                } else {
-                    themeIcon.innerHTML = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" stroke-linecap="round" stroke-linejoin="round"></path>';
-                }
+        function applyTheme(theme) {
+            const isLight = theme === 'light';
+            body.classList.toggle('portal-light', isLight);
+            if (toggle) {
+                toggle.setAttribute('aria-pressed', isLight ? 'true' : 'false');
             }
+            setIcon(isLight);
+        }
 
-            function applyTheme(theme) {
-                document.body.classList.toggle('landing-theme-light', theme === 'light');
+        let initialTheme = 'dark';
+        try {
+            initialTheme = localStorage.getItem(storageKey) || 'dark';
+        } catch (error) {
+            initialTheme = 'dark';
+        }
 
-                if (themeToggle) {
-                    const isLight = theme === 'light';
-                    themeToggle.setAttribute('aria-pressed', isLight ? 'true' : 'false');
-                    themeToggle.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode');
-                    themeToggle.setAttribute('title', isLight ? 'Switch theme' : 'Switch theme');
-                }
+        applyTheme(initialTheme);
 
-                setThemeIcon(theme);
-            }
-
-            function getStoredTheme() {
+        if (toggle) {
+            toggle.addEventListener('click', function () {
+                const next = body.classList.contains('portal-light') ? 'dark' : 'light';
+                applyTheme(next);
                 try {
-                    return localStorage.getItem(themeStorageKey);
+                    localStorage.setItem(storageKey, next);
                 } catch (error) {
-                    return null;
+                    // Theme storage is optional.
                 }
-            }
-
-            function storeTheme(theme) {
-                try {
-                    localStorage.setItem(themeStorageKey, theme);
-                } catch (error) {
-                    // Ignore storage failures.
-                }
-            }
-
-            function openHelp() {
-                if (!landingPanel || !helpPanel) {
-                    return;
-                }
-
-                landingPanel.classList.add('is-help');
-                helpPanel.setAttribute('aria-hidden', 'false');
-
-                if (needHelpButton) {
-                    needHelpButton.setAttribute('aria-expanded', 'true');
-                }
-            }
-
-            function closeHelp() {
-                if (!landingPanel || !helpPanel) {
-                    return;
-                }
-
-                landingPanel.classList.remove('is-help');
-                helpPanel.setAttribute('aria-hidden', 'true');
-
-                if (needHelpButton) {
-                    needHelpButton.setAttribute('aria-expanded', 'false');
-                }
-            }
-
-            const initialTheme = getStoredTheme() || 'dark';
-            applyTheme(initialTheme);
-
-            if (themeToggle) {
-                themeToggle.addEventListener('click', function () {
-                    const nextTheme = document.body.classList.contains('landing-theme-light') ? 'dark' : 'light';
-                    applyTheme(nextTheme);
-                    storeTheme(nextTheme);
-                });
-            }
-
-            if (needHelpButton) {
-                needHelpButton.addEventListener('click', openHelp);
-            }
-
-            if (helpBackButton) {
-                helpBackButton.addEventListener('click', closeHelp);
-            }
-        })();
-    </script>
+            });
+        }
+    })();
+</script>
 </body>
 </html>
