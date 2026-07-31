@@ -2558,7 +2558,7 @@ public function updateClearance(Request $request, $id)
         $record = HealthProfile::with('user')->findOrFail($id);
         $wasAlreadyIssued = in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true)
             || !empty($record->verified_at);
-        $requestedDocuments = array_values(array_unique((array) $validated['resubmission_required_documents']));
+        $requestedDocuments = array_values(array_unique((array) ($validated['resubmission_required_documents'] ?? [])));
         $needsHealthFormCorrection = $request->boolean('needs_health_form_correction')
             || str_contains(strtolower((string) $validated['pending_reason']), 'health form correction');
 
