@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Admin;
+use App\Models\Announcement;
 use App\Models\Appointment;
 use App\Models\AppointmentFeedback;
 use App\Models\Consultation;
@@ -572,8 +573,76 @@ class AppointmentController extends Controller
         $allFeedback = $this->buildRecentFeedbackCollection();
         $feedbackCount = $allFeedback->count();
         $recentFeedback = $allFeedback->take(3);
+        $clinicHoursStatus = $this->buildClinicHoursStatus();
+        $homeAnnouncements = Announcement::query()
+            ->where('status', Announcement::STATUS_ACTIVE)
+            ->whereIn('target_audience', ['all', 'student', 'students'])
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhereDate('expires_at', '>=', now(config('app.timezone'))->toDateString());
+            })
+            ->latest()
+            ->take(8)
+            ->get()
+            ->map(fn (Announcement $announcement) => [
+                'title' => $announcement->title,
+                'message' => trim(strip_tags((string) $announcement->message)),
+                'priority' => strtoupper((string) ($announcement->priority ?: 'Announcement')),
+            ])
+            ->values();
 
-        return view('student.home', compact('recentFeedback', 'feedbackCount'));
+        return view('student.home', compact('recentFeedback', 'feedbackCount', 'clinicHoursStatus', 'homeAnnouncements'));
+    }
+
+    private function buildClinicHoursStatus(): array
+    {
+        $settings = app(ClinicWorkflowService::class)->settings();
+        $openTime = substr((string) ($settings->open_time ?: '08:00'), 0, 5);
+        $closeTime = substr((string) ($settings->close_time ?: '17:00'), 0, 5);
+        $openMinutes = $this->clinicTimeToMinutes($openTime);
+        $closeMinutes = $this->clinicTimeToMinutes($closeTime);
+        $now = now(config('app.timezone'));
+        $currentMinutes = ((int) $now->format('H')) * 60 + (int) $now->format('i');
+
+        $isOpen = $openMinutes === $closeMinutes
+            || ($openMinutes < $closeMinutes
+                ? ($currentMinutes >= $openMinutes && $currentMinutes < $closeMinutes)
+                : ($currentMinutes >= $openMinutes || $currentMinutes < $closeMinutes));
+
+        $nextOpenAt = null;
+        if (!$isOpen) {
+            $nextOpenAt = $now->copy()->setTimeFromTimeString($openTime . ':00');
+
+            if ($openMinutes < $closeMinutes) {
+                if ($currentMinutes >= $closeMinutes) {
+                    $nextOpenAt->addDay();
+                }
+            } elseif ($currentMinutes >= $closeMinutes && $currentMinutes < $openMinutes) {
+                // The clinic is closed between today's closing time and opening time.
+                // Otherwise the next opening is tomorrow.
+            } else {
+                $nextOpenAt->addDay();
+            }
+        }
+
+        return [
+            'is_open' => $isOpen,
+            'label' => $isOpen ? 'Clinic Open Now' : 'Clinic Closed Now',
+            'hours' => $this->formatClinicTime($openTime) . ' - ' . $this->formatClinicTime($closeTime),
+            'next_open_at' => $nextOpenAt?->toIso8601String(),
+        ];
+    }
+
+    private function clinicTimeToMinutes(string $time): int
+    {
+        [$hours, $minutes] = array_pad(explode(':', $time), 2, 0);
+
+        return ((int) $hours * 60) + (int) $minutes;
+    }
+
+    private function formatClinicTime(string $time): string
+    {
+        return Carbon::createFromFormat('H:i', $time, config('app.timezone'))->format('g:i A');
     }
 
     public function feedbackIndex()
