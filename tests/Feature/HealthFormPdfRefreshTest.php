@@ -86,7 +86,15 @@ class HealthFormPdfRefreshTest extends TestCase
             $table->timestamps();
         });
 
+        Storage::fake('health_private');
         Storage::fake('public');
+        config([
+            'health_files.write_disk' => 'health_private',
+            'health_files.legacy_disk' => 'public',
+            'health_files.legacy_fallback' => true,
+            'health_files.mirror_to_legacy' => false,
+            'health_files.delete_legacy_on_replace' => false,
+        ]);
     }
 
     public function test_student_snapshot_refresh_preserves_review_state(): void
@@ -113,7 +121,7 @@ class HealthFormPdfRefreshTest extends TestCase
             'submitted_at' => $submittedAt,
             'remarks' => 'Keep this review note.',
         ]);
-        Storage::disk('public')->put($oldPath, 'old-pdf');
+        Storage::disk('health_private')->put($oldPath, 'old-pdf');
 
         $dompdf = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
         $dompdf->shouldReceive('setPaper')->once()->with([0, 0, 612, 936])->andReturnSelf();
@@ -135,8 +143,8 @@ class HealthFormPdfRefreshTest extends TestCase
         $this->assertSame('Keep this review note.', $refreshed->remarks);
         $this->assertTrue($submittedAt->equalTo($refreshed->submitted_at));
         $this->assertNotSame($oldPath, $refreshed->pdf_path);
-        Storage::disk('public')->assertMissing($oldPath);
-        $this->assertSame('new-pdf', Storage::disk('public')->get($refreshed->pdf_path));
+        Storage::disk('health_private')->assertMissing($oldPath);
+        $this->assertSame('new-pdf', Storage::disk('health_private')->get($refreshed->pdf_path));
     }
 
     public function test_employee_snapshot_refresh_persists_new_path_and_removes_old_pdf(): void
@@ -154,7 +162,7 @@ class HealthFormPdfRefreshTest extends TestCase
             'uploaded_signature_path' => 'health_profile_employees/signatures/test.png',
             'staff_health_form_pdf_path' => $oldPath,
         ]);
-        Storage::disk('public')->put($oldPath, 'old-pdf');
+        Storage::disk('health_private')->put($oldPath, 'old-pdf');
 
         $dompdf = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
         $dompdf->shouldReceive('setPaper')->once()->with([0, 0, 612, 936])->andReturnSelf();
@@ -172,8 +180,8 @@ class HealthFormPdfRefreshTest extends TestCase
 
         $this->assertSame($newPath, $profile->staff_health_form_pdf_path);
         $this->assertNotSame($oldPath, $newPath);
-        Storage::disk('public')->assertMissing($oldPath);
-        $this->assertSame('new-employee-pdf', Storage::disk('public')->get($newPath));
+        Storage::disk('health_private')->assertMissing($oldPath);
+        $this->assertSame('new-employee-pdf', Storage::disk('health_private')->get($newPath));
     }
 
     public function test_stored_signature_is_converted_to_an_embedded_image_data_uri(): void

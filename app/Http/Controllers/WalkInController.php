@@ -15,10 +15,10 @@ use App\Models\ActivityLog;
 use App\Models\Consultation;
 use App\Services\PuptasWebhookService;
 use App\Services\EmployeeHealthFormPdfService;
+use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -26,6 +26,11 @@ use Illuminate\Support\Str;
 
 class WalkInController extends Controller
 {
+    private function healthFiles(): HealthFileStorage
+    {
+        return app(HealthFileStorage::class);
+    }
+
     private function normalizeConsultationSource(?string $source): string
     {
         $source = strtolower(trim((string) $source));
@@ -1072,12 +1077,7 @@ class WalkInController extends Controller
         $pdf = Pdf::loadView('admin.medical_assessment_copy', $data)->setPaper('letter');
         $path = 'health_profiles/medical_assessments/medical-assessment-' . $profile->id . '-' . now()->format('YmdHis') . '.pdf';
 
-        $previousPath = ltrim((string) $profile->medical_assessment_upload, '/');
-        if (Str::startsWith($previousPath, 'health_profiles/medical_assessments/') && Storage::disk('public')->exists($previousPath)) {
-            Storage::disk('public')->delete($previousPath);
-        }
-
-        Storage::disk('public')->put($path, $pdf->output());
+        $this->healthFiles()->put($path, $pdf->output());
 
         return $path;
     }
@@ -1103,9 +1103,9 @@ class WalkInController extends Controller
         $path = ltrim((string) $healthProfile->{$document}, '/');
         $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
 
-        abort_if($path === '' || !Storage::disk('public')->exists($path), 404, 'Uploaded document not found.');
+        abort_if($path === '' || !$this->healthFiles()->exists($path), 404, 'Uploaded document not found.');
 
-        $disk = Storage::disk('public');
+        $disk = $this->healthFiles();
         $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
         $filename = basename($path);
 
@@ -1113,7 +1113,8 @@ class WalkInController extends Controller
             'Content-Type' => $mimeType,
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', $filename) . '"',
             'X-Content-Type-Options' => 'nosniff',
-            'Cache-Control' => 'private, max-age=300',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
         ]);
     }
 
@@ -1125,8 +1126,8 @@ class WalkInController extends Controller
         $showFreshTemplate = $request->boolean('fresh');
         $snapshotPath = ltrim((string) $employeeProfile->staff_health_form_pdf_path, '/');
         $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
-        if (!$showFreshTemplate && $snapshotPath !== '' && Storage::disk('public')->exists($snapshotPath)) {
-            return response()->file(Storage::disk('public')->path($snapshotPath), [
+        if (!$showFreshTemplate && $snapshotPath !== '' && $this->healthFiles()->exists($snapshotPath)) {
+            return response()->file($this->healthFiles()->path($snapshotPath), [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($snapshotPath)) . '"',
                 'X-Content-Type-Options' => 'nosniff',
@@ -1177,9 +1178,9 @@ class WalkInController extends Controller
         $path = ltrim((string) $employeeProfile->{$documentMap[$document]}, '/');
         $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
 
-        abort_if($path === '' || !Storage::disk('public')->exists($path), 404, 'Uploaded document not found.');
+        abort_if($path === '' || !$this->healthFiles()->exists($path), 404, 'Uploaded document not found.');
 
-        $disk = Storage::disk('public');
+        $disk = $this->healthFiles();
         $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
         $filename = basename($path);
 
@@ -1187,7 +1188,8 @@ class WalkInController extends Controller
             'Content-Type' => $mimeType,
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', $filename) . '"',
             'X-Content-Type-Options' => 'nosniff',
-            'Cache-Control' => 'private, max-age=300',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
         ]);
     }
 
@@ -1781,12 +1783,13 @@ class WalkInController extends Controller
 
         $snapshotPath = ltrim((string) ($submission?->pdf_path ?? ''), '/');
         $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
-        if ($snapshotPath !== '' && Storage::disk('public')->exists($snapshotPath)) {
-            return response()->file(Storage::disk('public')->path($snapshotPath), [
+        if ($snapshotPath !== '' && $this->healthFiles()->exists($snapshotPath)) {
+            return response()->file($this->healthFiles()->path($snapshotPath), [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($snapshotPath)) . '"',
                 'X-Content-Type-Options' => 'nosniff',
-                'Cache-Control' => 'private, max-age=300',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
             ]);
         }
 

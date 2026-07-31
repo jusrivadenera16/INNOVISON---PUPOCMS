@@ -159,12 +159,27 @@ class AuditTrailMiddleware
         $params = (array) optional($request->route())->parameters();
         $subjectId = null;
 
-        foreach (['id', 'appointment', 'student_id', 'assistant', 'item', 'user'] as $candidateKey) {
+        foreach ([
+            'id',
+            'healthProfile',
+            'employeeProfile',
+            'staffProfile',
+            'submission',
+            'appointment',
+            'student_id',
+            'assistant',
+            'item',
+            'user',
+        ] as $candidateKey) {
             if (!array_key_exists($candidateKey, $params)) {
                 continue;
             }
 
             $value = $params[$candidateKey];
+            if (is_object($value) && method_exists($value, 'getKey')) {
+                $value = $value->getKey();
+            }
+
             if (is_scalar($value) && (string) $value !== '') {
                 $subjectId = (string) $value;
                 break;
@@ -174,7 +189,13 @@ class AuditTrailMiddleware
         $source = strtolower($routeName !== '' ? $routeName : $path);
         $subjectType = null;
 
-        if (str_contains($source, 'appointment')) {
+        if (array_key_exists('submission', $params)) {
+            $subjectType = 'health_form_submission';
+        } elseif (array_key_exists('employeeProfile', $params) || array_key_exists('staffProfile', $params)) {
+            $subjectType = 'employee_health_profile';
+        } elseif (array_key_exists('healthProfile', $params)) {
+            $subjectType = 'health_profile';
+        } elseif (str_contains($source, 'appointment')) {
             $subjectType = 'appointment';
         } elseif (str_contains($source, 'inventory') || str_contains($source, 'item')) {
             $subjectType = 'inventory_item';

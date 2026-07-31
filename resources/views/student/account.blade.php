@@ -4671,7 +4671,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             $documentPath = preg_replace('#^(?:public/)?storage/#', '', ltrim($documentPath, '/')) ?? $documentPath;
-            return \Illuminate\Support\Facades\Storage::disk('public')->exists($documentPath);
+            return app(\App\Services\HealthFileStorage::class)->exists($documentPath);
         };
         $healthRecordMissingDocumentKeys = collect(array_keys($resubmissionDocumentLabels))
             ->filter(fn ($documentKey) => ($documentKey !== 'pwd_id_proof' || $requiresPwdIdProof)

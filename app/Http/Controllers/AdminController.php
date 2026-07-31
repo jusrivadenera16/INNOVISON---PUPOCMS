@@ -19,6 +19,7 @@ use App\Models\SystemSetting;
 use App\Models\Admin;
 use App\Services\FacultySyncService;
 use App\Services\GuisisApiService;
+use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
 use App\Services\InventoryImportAnalyzer;
 use App\Services\InventoryDataNormalizer;
@@ -29,7 +30,6 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 use App\Models\HealthProfile;
 use App\Models\EmployeeHealthProfile;
 use Carbon\Carbon;
@@ -42,6 +42,11 @@ use App\Models\IntegrationClient;
 
 class AdminController extends Controller
 {
+    private function healthFiles(): HealthFileStorage
+    {
+        return app(HealthFileStorage::class);
+    }
+
     private function formatInventoryQuantity(float $value): string
     {
         $rounded = round($value, 2);
@@ -2291,13 +2296,14 @@ class AdminController extends Controller
     {
         $path = ltrim((string) $submission->pdf_path, '/');
         $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
-        abort_if($path === '' || !Storage::disk('public')->exists($path), 404, 'Saved Health Form PDF not found.');
+        abort_if($path === '' || !$this->healthFiles()->exists($path), 404, 'Saved Health Form PDF not found.');
 
-        return response()->file(Storage::disk('public')->path($path), [
+        return response()->file($this->healthFiles()->path($path), [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
             'X-Content-Type-Options' => 'nosniff',
-            'Cache-Control' => 'private, max-age=300',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
         ]);
     }
 
@@ -2370,8 +2376,8 @@ class AdminController extends Controller
 
         $snapshotPath = ltrim((string) ($submission?->pdf_path ?? ''), '/');
         $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
-        if ($snapshotPath !== '' && Storage::disk('public')->exists($snapshotPath)) {
-            return Storage::disk('public')->download($snapshotPath, basename($snapshotPath), [
+        if ($snapshotPath !== '' && $this->healthFiles()->exists($snapshotPath)) {
+            return $this->healthFiles()->download($snapshotPath, basename($snapshotPath), [
                 'Content-Type' => 'application/pdf',
             ]);
         }
@@ -2779,16 +2785,26 @@ public function updateClearance(Request $request, $id)
             $profile->birthday = $profile->birthday ?: (string) ($user->DOB ?? '');
             $profile->sex = $profile->sex ?: (string) ($user->gender ?? '');
 
-            if (!empty($profile->medical_assessment_upload) && Storage::disk('public')->exists($profile->medical_assessment_upload)) {
-                Storage::disk('public')->delete($profile->medical_assessment_upload);
+            $oldPath = (string) $profile->medical_assessment_upload;
+            $newPath = $this->healthFiles()->store(
+                $file,
+                'health_profiles/medical_assessment_uploads'
+            );
+            try {
+                $profile->medical_assessment_upload = $newPath;
+                $profile->save();
+            } catch (\Throwable $exception) {
+                $this->healthFiles()->delete($newPath);
+                throw $exception;
             }
 
-            $profile->medical_assessment_upload = $file->store('health_profiles/medical_assessment_uploads', 'public');
-            $profile->save();
+            if ($oldPath !== '' && $oldPath !== $newPath && $this->healthFiles()->exists($oldPath)) {
+                $this->healthFiles()->delete($oldPath);
+            }
         } else {
             // Applicant not yet in system - save to pending assessments table
             // Will be linked when they register/login later
-            $filePath = $file->store('pending_medical_assessments', 'public');
+            $filePath = $this->healthFiles()->store($file, 'pending_medical_assessments');
 
             \App\Models\PendingMedicalAssessment::updateOrCreate(
                 [

@@ -4,9 +4,9 @@ namespace App\Console\Commands;
 
 use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
+use App\Services\HealthFileStorage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
 
 class BackfillHealthFormSubmissions extends Command
 {
@@ -14,7 +14,7 @@ class BackfillHealthFormSubmissions extends Command
 
     protected $description = 'Generate saved PDF snapshots for existing health profiles that do not have one yet.';
 
-    public function handle(): int
+    public function handle(HealthFileStorage $healthFiles): int
     {
         $dryRun = (bool) $this->option('dry-run');
         $query = HealthProfile::query()
@@ -28,7 +28,7 @@ class BackfillHealthFormSubmissions extends Command
         $this->info(($dryRun ? 'Dry run: ' : '') . "Found {$count} health profile(s) without saved Health Form PDFs.");
 
         $generated = 0;
-        $query->orderBy('id')->chunkById(50, function ($profiles) use ($dryRun, &$generated) {
+        $query->orderBy('id')->chunkById(50, function ($profiles) use ($dryRun, $healthFiles, &$generated) {
             foreach ($profiles as $profile) {
                 if (!$profile->user) {
                     continue;
@@ -58,7 +58,7 @@ class BackfillHealthFormSubmissions extends Command
                     'healthFormSubmittedAt' => $profile->created_at ?: $timestamp,
                 ]);
                 $pdf->setPaper([0, 0, 612, 936]);
-                Storage::disk('public')->put($filePath, $pdf->output());
+                $healthFiles->put($filePath, $pdf->output());
 
                 HealthFormSubmission::create([
                     'user_id' => $profile->user_id,

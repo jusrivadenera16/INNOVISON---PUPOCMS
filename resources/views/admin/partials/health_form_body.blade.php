@@ -2,7 +2,7 @@
     $healthFormStudentPhotoSrc = trim((string) ($healthFormStudentPhotoSrc ?? ''));
     if ($healthFormStudentPhotoSrc === '') {
         $healthFormStudentPhotoSrc = app(\App\Services\StoredImageDataUri::class)
-            ->fromPublicDisk($profile->student_photo ?? null);
+            ->fromStorage($profile->student_photo ?? null);
     }
 @endphp
 <div class="print-container">
@@ -249,7 +249,7 @@ for the improvement of healthcare services.
     @php
         $showStoredSignature = ($pdfMode ?? false) || empty($studentPrintCopy);
         $studentSignatureSrc = $showStoredSignature
-            ? app(\App\Services\StoredImageDataUri::class)->fromPublicDisk($profile->digital_signature)
+            ? app(\App\Services\StoredImageDataUri::class)->fromStorage($profile->digital_signature)
             : '';
         $studentSignatureDate = $healthFormSubmittedAt
             ?? $profile->resubmitted_at

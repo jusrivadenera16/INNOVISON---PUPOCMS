@@ -1,8 +1,8 @@
 <?php
 
 use App\Models\EmployeeHealthProfile;
+use App\Services\HealthFileStorage;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\Storage;
 
 return new class extends Migration
 {
@@ -25,7 +25,7 @@ return new class extends Migration
 
                     $extension = strtolower($matches[1]) === 'png' ? 'png' : 'jpg';
                     $path = 'health_profile_employees/signatures/signature_' . uniqid('', true) . '.' . $extension;
-                    Storage::disk('public')->put($path, $decodedSignature);
+                    app(HealthFileStorage::class)->put($path, $decodedSignature);
 
                     $profile->uploaded_signature_path = $path;
                     $profile->staff_signature = null;

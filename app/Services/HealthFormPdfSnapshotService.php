@@ -6,10 +6,13 @@ use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Storage;
 
 class HealthFormPdfSnapshotService
 {
+    public function __construct(private HealthFileStorage $healthFiles)
+    {
+    }
+
     public function recordSubmittedWithoutPdf(HealthProfile $profile, User $user, ?string $category = null, ?string $remarks = null): HealthFormSubmission
     {
         $profile->loadMissing('user');
@@ -25,7 +28,7 @@ class HealthFormPdfSnapshotService
             'healthFormSubmittedAt' => $timestamp,
         ]);
         $pdf->setPaper([0, 0, 612, 936]);
-        Storage::disk('public')->put($filePath, $pdf->output());
+        $this->healthFiles->put($filePath, $pdf->output());
 
         $oldPath = $this->normalizeStoragePath((string) $submission->pdf_path);
 
@@ -42,8 +45,8 @@ class HealthFormPdfSnapshotService
         ]);
         $submission->save();
 
-        if ($oldPath !== '' && $oldPath !== $filePath && Storage::disk('public')->exists($oldPath)) {
-            Storage::disk('public')->delete($oldPath);
+        if ($oldPath !== '' && $oldPath !== $filePath && $this->healthFiles->exists($oldPath)) {
+            $this->healthFiles->delete($oldPath);
         }
 
         return $submission;
@@ -71,7 +74,7 @@ class HealthFormPdfSnapshotService
             'healthFormSubmittedAt' => $submittedAt,
         ]);
         $pdf->setPaper([0, 0, 612, 936]);
-        Storage::disk('public')->put($filePath, $pdf->output());
+        $this->healthFiles->put($filePath, $pdf->output());
 
         $oldPath = $this->normalizeStoragePath((string) $submission->pdf_path);
 
@@ -88,8 +91,8 @@ class HealthFormPdfSnapshotService
         ]);
         $submission->save();
 
-        if ($oldPath !== '' && $oldPath !== $filePath && Storage::disk('public')->exists($oldPath)) {
-            Storage::disk('public')->delete($oldPath);
+        if ($oldPath !== '' && $oldPath !== $filePath && $this->healthFiles->exists($oldPath)) {
+            $this->healthFiles->delete($oldPath);
         }
 
         return $submission;
@@ -137,7 +140,7 @@ class HealthFormPdfSnapshotService
         ]);
         $pdf->setPaper([0, 0, 612, 936]);
 
-        if (!Storage::disk('public')->put($filePath, $pdf->output())) {
+        if (!$this->healthFiles->put($filePath, $pdf->output())) {
             throw new \RuntimeException('Unable to write the refreshed Health Form PDF snapshot.');
         }
 
@@ -146,14 +149,14 @@ class HealthFormPdfSnapshotService
             $submission->save();
         } catch (\Throwable $exception) {
             if ($filePath !== $oldPath) {
-                Storage::disk('public')->delete($filePath);
+                $this->healthFiles->delete($filePath);
             }
 
             throw $exception;
         }
 
-        if ($oldPath !== '' && $oldPath !== $filePath && Storage::disk('public')->exists($oldPath)) {
-            Storage::disk('public')->delete($oldPath);
+        if ($oldPath !== '' && $oldPath !== $filePath && $this->healthFiles->exists($oldPath)) {
+            $this->healthFiles->delete($oldPath);
         }
 
         return $submission->fresh();

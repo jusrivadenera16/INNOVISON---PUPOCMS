@@ -249,20 +249,6 @@
     </style>
 </head>
 <body>
-@php
-    $logoPath = public_path('images/pup_logo.png');
-    $pdfStoragePath = function ($path) {
-        $path = ltrim((string) $path, '/');
-        $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
-
-        return $path !== ''
-            ? \Illuminate\Support\Facades\Storage::disk('public')->path($path)
-            : null;
-    };
-    $studentPhotoPath = $profile->student_photo ? $pdfStoragePath($profile->student_photo) : null;
-    $studentSignaturePath = $profile->digital_signature ? $pdfStoragePath($profile->digital_signature) : null;
-@endphp
-
 <div class="no-print" style="text-align: right; padding: 10px; max-width: 8.5in; margin: 0 auto; display: flex; justify-content: flex-end; gap: 10px;">
     <button onclick="window.print()" style="background: #800000; border: none; padding: 10px 22px; font-weight: bold; color: white; border-radius: 5px; cursor: pointer;">
         PRINT FORM
