@@ -2854,12 +2854,57 @@
             ->filter()
             ->intersect(['student_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])
             ->values();
+        $studentResubmissionNote = trim((string) optional($studentUser?->healthProfile)->pending_reason);
+        $studentResubmissionNote = trim(preg_replace('/^Document\s+Resubmission:\s*/i', '', $studentResubmissionNote));
+        $studentPendingHealthFormRequest = $studentUser
+            ? \App\Models\HealthFormSubmission::query()
+                ->where('user_id', $studentUser->id)
+                ->where('status', \App\Models\HealthFormSubmission::STATUS_REQUESTED)
+                ->latest('requested_at')
+                ->latest('id')
+                ->first()
+            : null;
+        $studentPendingReasonSearch = strtolower($studentResubmissionNote);
+        $studentNeedsHealthFormCorrection = $studentUser?->healthProfile
+            && (
+                str_contains($studentPendingReasonSearch, 'health form correction')
+                || (
+                    (str_contains(strtolower((string) $studentUser->healthProfile->clearance_status), 'pending')
+                        || str_contains(strtolower((string) $studentUser->healthProfile->clearance_status), 'conditional'))
+                    && collect([
+                        'health information form',
+                        'health form',
+                        'correct address',
+                        'home address',
+                        'correct information',
+                        'correct details',
+                    ])->contains(fn ($needle) => str_contains($studentPendingReasonSearch, $needle))
+                )
+            );
+        $studentCorrectionRequestedAt = optional($studentUser?->healthProfile)->resubmission_requested_at;
+        $studentNewFormRequestedAt = optional($studentPendingHealthFormRequest)->requested_at;
+        $studentHealthActionMode = null;
+        if ($studentNeedsHealthFormCorrection && $studentPendingHealthFormRequest) {
+            $studentHealthActionMode = $studentNewFormRequestedAt
+                && (!$studentCorrectionRequestedAt || $studentNewFormRequestedAt->greaterThanOrEqualTo($studentCorrectionRequestedAt))
+                    ? 'new'
+                    : 'correction';
+        } elseif ($studentNeedsHealthFormCorrection) {
+            $studentHealthActionMode = 'correction';
+        } elseif ($studentPendingHealthFormRequest) {
+            $studentHealthActionMode = 'new';
+        }
+        $showHealthFormActionModal = !$showHealthFormModal
+            && session('show_health_form_action_prompt')
+            && $studentHealthActionMode !== null;
+        $studentHealthActionNote = $studentHealthActionMode === 'correction'
+            ? trim((string) preg_replace('/(?:^|\R)\s*Health Form Correction\s*(?=\R|$)/i', '', $studentResubmissionNote))
+            : trim((string) optional($studentPendingHealthFormRequest)->remarks);
         $showGlobalResubmissionModal = !$showHealthFormModal
+            && !$showHealthFormActionModal
             && $studentUser
             && $studentUser->healthProfile
             && $studentResubmissionDocuments->isNotEmpty();
-        $studentResubmissionNote = trim((string) optional($studentUser?->healthProfile)->pending_reason);
-        $studentResubmissionNote = trim(preg_replace('/^Document\s+Resubmission:\s*/i', '', $studentResubmissionNote));
         $studentResubmissionLabels = [
             'student_photo' => '2x2 Student Photo',
             'health_declaration' => 'Health Declaration',
@@ -3244,6 +3289,401 @@
             }
         }
     </style>
+    @endif
+
+    @if($showHealthFormActionModal)
+    <div
+        id="healthFormActionModal"
+        class="health-form-action-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="healthFormActionTitle"
+        hidden
+    >
+        <section class="health-form-action-card">
+            <header class="health-form-action-head">
+                <span class="health-form-action-head-icon" aria-hidden="true">
+                    @if($studentHealthActionMode === 'correction')
+                        <x-outline-icon name="pencil-square" />
+                    @else
+                        <x-outline-icon name="document-text" />
+                    @endif
+                </span>
+                <div>
+                    <span class="health-form-action-kicker">
+                        {{ $studentHealthActionMode === 'correction' ? 'Health Form Correction' : 'New Health Form Request' }}
+                    </span>
+                    <h2 id="healthFormActionTitle">
+                        {{ $studentHealthActionMode === 'correction' ? 'Your health form is ready for editing' : 'A new health form is ready' }}
+                    </h2>
+                </div>
+                <button type="button" class="health-form-action-close" data-health-form-action-close aria-label="Close health form notification">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </header>
+
+            <div class="health-form-action-body">
+                <div class="health-form-action-status" aria-hidden="true">
+                    <span><x-outline-icon name="bell" /></span>
+                    <strong>Action requested by the Medical Clinic</strong>
+                </div>
+
+                @if($studentHealthActionMode === 'correction')
+                    <p>
+                        The Medical Clinic requested updates to your submitted Health Information Form.
+                        Review the clinic note, correct the requested details, and submit the form again.
+                    </p>
+                @else
+                    <p>
+                        The Medical Clinic requested a new Health Information Form
+                        @if(filled(optional($studentPendingHealthFormRequest)->category))
+                            for <strong>{{ $studentPendingHealthFormRequest->category }}</strong>
+                        @endif.
+                        You can now fill out and submit a fresh form.
+                    </p>
+                @endif
+
+                <div class="health-form-action-note">
+                    <span class="health-form-action-note-icon" aria-hidden="true">
+                        <x-outline-icon name="information-circle" />
+                    </span>
+                    <div>
+                        <strong>{{ $studentHealthActionMode === 'correction' ? 'Clinic Note' : 'Request Details' }}</strong>
+                        <span>
+                            {{ $studentHealthActionNote !== ''
+                                ? $studentHealthActionNote
+                                : ($studentHealthActionMode === 'correction'
+                                    ? 'Please review and update the information identified by the Medical Clinic.'
+                                    : 'Please complete the new form using your current health information.') }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="health-form-action-actions">
+                <button type="button" class="health-form-action-later" data-health-form-action-close>Review Later</button>
+                <a href="{{ $studentHealthFormStartRoute }}" class="health-form-action-primary" data-health-form-action-primary>
+                    @if($studentHealthActionMode === 'correction')
+                        <x-outline-icon name="pencil-square" />
+                        <span>Edit Health Form</span>
+                    @else
+                        <x-outline-icon name="document-text" />
+                        <span>Fill Up New Health Form</span>
+                    @endif
+                    <x-outline-icon name="arrow-long-right" />
+                </a>
+            </footer>
+        </section>
+    </div>
+
+    <style>
+        .health-form-action-modal[hidden] {
+            display: none !important;
+        }
+        .health-form-action-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000000;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, .72);
+            backdrop-filter: blur(8px);
+        }
+        .health-form-action-card {
+            width: min(590px, 100%);
+            overflow: hidden;
+            border: 1px solid rgba(250, 204, 21, .72);
+            border-radius: 12px;
+            background: #ffffff;
+            color: #182033;
+            box-shadow: 0 28px 80px rgba(15, 23, 42, .42), 0 0 0 1px rgba(127, 29, 45, .08);
+        }
+        .health-form-action-head {
+            position: relative;
+            display: grid;
+            grid-template-columns: 52px minmax(0, 1fr) 42px;
+            gap: 14px;
+            align-items: center;
+            padding: 20px 22px;
+            background: linear-gradient(135deg, #8b1823 0%, #b91c1c 100%);
+            color: #ffffff;
+        }
+        .health-form-action-head-icon,
+        .health-form-action-close {
+            width: 44px;
+            height: 44px;
+            display: grid;
+            place-items: center;
+            border-radius: 9px;
+        }
+        .health-form-action-head-icon {
+            border: 1px solid rgba(255, 255, 255, .28);
+            background: rgba(255, 255, 255, .13);
+        }
+        .health-form-action-head-icon svg,
+        .health-form-action-close svg {
+            width: 23px;
+            height: 23px;
+        }
+        .health-form-action-kicker {
+            display: block;
+            margin-bottom: 4px;
+            color: #fde68a;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .health-form-action-head h2 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 22px;
+            line-height: 1.2;
+            letter-spacing: 0;
+        }
+        .health-form-action-close {
+            border: 1px solid rgba(255, 255, 255, .2);
+            background: rgba(74, 10, 18, .32);
+            color: #ffffff;
+            cursor: pointer;
+        }
+        .health-form-action-close:hover,
+        .health-form-action-close:focus-visible {
+            background: rgba(74, 10, 18, .58);
+            outline: 2px solid #facc15;
+            outline-offset: 2px;
+        }
+        .health-form-action-body {
+            padding: 24px;
+        }
+        .health-form-action-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            color: #7f1d1d;
+            font-size: 12px;
+        }
+        .health-form-action-status > span {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: #fff1f2;
+        }
+        .health-form-action-status svg,
+        .health-form-action-note-icon svg,
+        .health-form-action-primary svg {
+            width: 18px;
+            height: 18px;
+        }
+        .health-form-action-body > p {
+            margin: 0;
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.65;
+        }
+        .health-form-action-note {
+            display: grid;
+            grid-template-columns: 38px minmax(0, 1fr);
+            gap: 11px;
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid rgba(245, 158, 11, .32);
+            border-radius: 8px;
+            background: #fffbeb;
+        }
+        .health-form-action-note-icon {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: #fef3c7;
+            color: #991b1b;
+        }
+        .health-form-action-note strong,
+        .health-form-action-note span {
+            display: block;
+        }
+        .health-form-action-note strong {
+            margin-bottom: 3px;
+            color: #7f1d1d;
+            font-size: 12px;
+        }
+        .health-form-action-note span {
+            color: #475569;
+            font-size: 12px;
+            line-height: 1.5;
+            white-space: pre-line;
+        }
+        .health-form-action-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 24px 20px;
+            border-top: 1px solid #e5e7eb;
+            background: #f8fafc;
+        }
+        .health-form-action-later,
+        .health-form-action-primary {
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 850;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .health-form-action-later {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #334155;
+        }
+        .health-form-action-primary {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #8b0000;
+            background: #8b0000;
+            color: #ffffff !important;
+            box-shadow: 0 9px 22px rgba(127, 29, 29, .24);
+        }
+        .health-form-action-primary:hover,
+        .health-form-action-primary:focus-visible {
+            border-color: #eab308;
+            background: #facc15;
+            color: #70131b !important;
+            outline: none;
+            transform: translateY(-1px);
+        }
+        html[data-theme="dark"] .health-form-action-card {
+            border-color: rgba(250, 204, 21, .42);
+            background: #101827;
+            color: #f8fafc;
+        }
+        html[data-theme="dark"] .health-form-action-body > p,
+        html[data-theme="dark"] .health-form-action-note span {
+            color: #d7deea;
+        }
+        html[data-theme="dark"] .health-form-action-status {
+            color: #fde68a;
+        }
+        html[data-theme="dark"] .health-form-action-status > span,
+        html[data-theme="dark"] .health-form-action-note-icon {
+            background: rgba(127, 29, 29, .34);
+            color: #fde68a;
+        }
+        html[data-theme="dark"] .health-form-action-note {
+            border-color: rgba(250, 204, 21, .25);
+            background: #171f2f;
+        }
+        html[data-theme="dark"] .health-form-action-note strong {
+            color: #fde68a;
+        }
+        html[data-theme="dark"] .health-form-action-actions {
+            border-color: #293548;
+            background: #0d1420;
+        }
+        html[data-theme="dark"] .health-form-action-later {
+            border-color: #415069;
+            background: transparent;
+            color: #f8fafc;
+        }
+        @media (max-width: 600px) {
+            .health-form-action-modal {
+                align-items: end;
+                padding: 12px;
+            }
+            .health-form-action-head {
+                grid-template-columns: 44px minmax(0, 1fr) 38px;
+                gap: 10px;
+                padding: 17px 16px;
+            }
+            .health-form-action-head-icon,
+            .health-form-action-close {
+                width: 38px;
+                height: 38px;
+            }
+            .health-form-action-head h2 {
+                font-size: 18px;
+            }
+            .health-form-action-body {
+                padding: 18px;
+            }
+            .health-form-action-actions {
+                flex-direction: column-reverse;
+                padding: 14px 18px 18px;
+            }
+            .health-form-action-later,
+            .health-form-action-primary {
+                width: 100%;
+            }
+        }
+    </style>
+
+    <script>
+        (function () {
+            const modal = document.getElementById('healthFormActionModal');
+            if (!modal) {
+                return;
+            }
+
+            const closeButtons = modal.querySelectorAll('[data-health-form-action-close]');
+            const primaryAction = modal.querySelector('[data-health-form-action-primary]');
+
+            function openHealthFormActionModal() {
+                modal.hidden = false;
+                document.body.style.overflow = 'hidden';
+                modal.querySelector('[data-health-form-action-primary]')?.focus();
+            }
+
+            function closeHealthFormActionModal() {
+                modal.hidden = true;
+                document.body.style.overflow = '';
+            }
+
+            function openAfterTermsGate() {
+                const termsGate = document.getElementById('termsGateOverlay');
+                if (!termsGate) {
+                    openHealthFormActionModal();
+                    return;
+                }
+
+                const observer = new MutationObserver(function () {
+                    if (!document.getElementById('termsGateOverlay')) {
+                        observer.disconnect();
+                        openHealthFormActionModal();
+                    }
+                });
+                observer.observe(document.body, { childList: true, subtree: true });
+            }
+
+            closeButtons.forEach(function (button) {
+                button.addEventListener('click', closeHealthFormActionModal);
+            });
+            primaryAction?.addEventListener('click', function () {
+                document.body.style.overflow = '';
+            });
+            modal.addEventListener('click', function (event) {
+                if (event.target === modal) {
+                    closeHealthFormActionModal();
+                }
+            });
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && !modal.hidden) {
+                    closeHealthFormActionModal();
+                }
+            });
+
+            openAfterTermsGate();
+        })();
+    </script>
     @endif
 
     @if($showGlobalResubmissionModal)

@@ -1005,6 +1005,7 @@
 
     .profile-timeline-card {
         padding: 18px;
+        margin-top: 12px;
     }
     .profile-timeline-head {
         display: flex;
@@ -1298,6 +1299,17 @@
         border-bottom-color: #70131B;
         color: #f8fafc;
     }
+    [data-theme="dark"] .correction-field select {
+        color-scheme: dark;
+    }
+    [data-theme="dark"] .correction-field select option {
+        background: #111827;
+        color: #f8fafc;
+    }
+    [data-theme="dark"] .correction-field select option:checked {
+        background: #70131B;
+        color: #ffffff;
+    }
     [data-theme="dark"] .correction-select-wrap::after {
         border-color: #facc15;
     }
@@ -1545,7 +1557,7 @@
                         @elseif(in_array($puptasSyncRaw, ['syncing', 'pending'], true))
                             <x-outline-icon name="clock" />
                         @else
-                            <x-outline-icon name="information-circle" />
+                            <x-outline-icon name="exclamation-circle" />
                         @endif
                         {{ $puptasSyncLabel }}
                     </span>
@@ -1846,7 +1858,7 @@
                     @if($puptasSyncRaw === 'synced')
                         <x-outline-icon name="check" />
                     @else
-                        <span aria-hidden="true">!</span>
+                        <x-outline-icon name="exclamation-circle" />
                     @endif
                 </span>
                 <strong>Synced to PUPTAS</strong>
@@ -2279,6 +2291,10 @@
         const otherReason = correctionReasonOther ? correctionReasonOther.value.trim() : '';
         const finalReason = selectedReason === 'Others' ? otherReason : selectedReason;
 
+        if (selectedReason === 'Health Form Correction' && correctionHealthFormOption) {
+            correctionHealthFormOption.checked = true;
+        }
+
         correctionReason.value = finalReason;
         if (correctionOtherField) {
             correctionOtherField.classList.toggle('is-open', selectedReason === 'Others');
@@ -2325,7 +2341,8 @@
     correctionForm?.addEventListener('submit', function (event) {
         const finalReason = syncCorrectionReason();
         const hasSelectedDocument = Boolean(correctionForm.querySelector('input[name="resubmission_required_documents[]"]:checked'));
-        const hasHealthFormCorrection = Boolean(correctionHealthFormOption?.checked);
+        const hasHealthFormCorrection = Boolean(correctionHealthFormOption?.checked)
+            || finalReason.toLowerCase().includes('health form correction');
         if (!hasSelectedDocument && !hasHealthFormCorrection) {
             event.preventDefault();
             alert('Select at least one file or Health Form Correction.');
