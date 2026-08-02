@@ -231,19 +231,35 @@ class AppointmentController extends Controller
         $puptasSyncStatus = optional($healthProfile)->puptas_sync_status;
         $isHealthProfileIssued = in_array($healthProfileStatus, ['Issued', 'Fully Cleared'], true);
         $isHealthProfileResubmission = $healthProfileStatus === 'Pending Resubmission';
+        $needsHealthFormCorrection = $this->healthProfileNeedsFormCorrection($healthProfile);
 
         if ($healthProfile) {
             $notifications[] = [
-                'id' => $this->buildNotificationId('health-record', [$healthProfile->id, $healthProfileStatus, optional($healthProfile->updated_at)->timestamp]),
-                'type' => $isHealthProfileIssued ? 'success' : 'warning',
-                'icon' => $isHealthProfileIssued ? 'OK' : '...',
-                'message' => $isHealthProfileIssued
+                'id' => $this->buildNotificationId(
+                    $needsHealthFormCorrection ? 'health-form-correction' : 'health-record',
+                    [
+                        $healthProfile->id,
+                        $healthProfileStatus,
+                        $needsHealthFormCorrection ? $healthProfile->pending_reason : null,
+                        optional($healthProfile->resubmission_requested_at)->timestamp,
+                        optional($healthProfile->updated_at)->timestamp,
+                    ]
+                ),
+                'type' => $needsHealthFormCorrection ? 'warning' : ($isHealthProfileIssued ? 'success' : 'warning'),
+                'icon' => $needsHealthFormCorrection ? '!' : ($isHealthProfileIssued ? 'OK' : '...'),
+                'message' => $needsHealthFormCorrection
+                    ? 'The clinic requested corrections to your Health Information Form. You may now edit and resubmit it.'
+                    : ($isHealthProfileIssued
                     ? 'Your health profile has been approved by the clinic.'
                     : ($isHealthProfileResubmission
                         ? 'The clinic requested replacement files for your health profile.'
-                        : 'Your health profile was submitted and is awaiting medical review.'),
-                'time' => 'Health profile status',
-                'link' => url('/student/account?view=health-record'),
+                        : 'Your health profile was submitted and is awaiting medical review.')),
+                'time' => $needsHealthFormCorrection && $healthProfile->resubmission_requested_at
+                    ? $healthProfile->resubmission_requested_at->diffForHumans()
+                    : 'Health profile status',
+                'link' => $needsHealthFormCorrection
+                    ? route('health.form')
+                    : url('/student/account?view=health-record'),
             ];
 
             if ($isHealthProfileIssued && $puptasSyncStatus !== null) {
@@ -263,6 +279,34 @@ class AppointmentController extends Controller
                     'link' => url('/student/account?view=health-record'),
                 ];
             }
+        }
+
+        $pendingHealthFormRequest = HealthFormSubmission::query()
+            ->where('user_id', $user->id)
+            ->where('status', HealthFormSubmission::STATUS_REQUESTED)
+            ->latest('requested_at')
+            ->latest('id')
+            ->first();
+
+        if ($pendingHealthFormRequest) {
+            $requestCategory = trim((string) $pendingHealthFormRequest->category);
+            $notifications[] = [
+                'id' => $this->buildNotificationId('new-health-form-request', [
+                    $pendingHealthFormRequest->id,
+                    optional($pendingHealthFormRequest->requested_at)->timestamp,
+                    $pendingHealthFormRequest->category,
+                    $pendingHealthFormRequest->remarks,
+                ]),
+                'type' => 'info',
+                'icon' => '!',
+                'message' => 'The clinic requested a new Health Information Form'
+                    . ($requestCategory !== '' ? " for {$requestCategory}" : '')
+                    . '. You may now fill it out and submit it.',
+                'time' => $pendingHealthFormRequest->requested_at
+                    ? $pendingHealthFormRequest->requested_at->diffForHumans()
+                    : 'New health form request',
+                'link' => route('health.form'),
+            ];
         }
 
         $closure = $workflow->activeClosure();
@@ -588,6 +632,7 @@ class AppointmentController extends Controller
                 'title' => $announcement->title,
                 'message' => trim(strip_tags((string) $announcement->message)),
                 'priority' => strtoupper((string) ($announcement->priority ?: 'Announcement')),
+                'date' => $announcement->created_at?->format('M j, Y') ?? now(config('app.timezone'))->format('M j, Y'),
             ])
             ->values();
 

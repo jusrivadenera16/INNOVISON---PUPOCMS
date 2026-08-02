@@ -4,6 +4,16 @@
 
 @push('styles')
 <style>
+    body:has(.account-layout) {
+        background:
+            linear-gradient(180deg, rgba(255, 250, 250, 0.70), rgba(255, 255, 255, 0.58) 42%, rgba(245, 248, 247, 0.72) 100%),
+            url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat fixed !important;
+    }
+    html[data-theme="dark"] body:has(.account-layout) {
+        background:
+            linear-gradient(180deg, rgba(2, 6, 23, 0.82), rgba(15, 23, 42, 0.74) 42%, rgba(2, 6, 23, 0.84) 100%),
+            url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat fixed !important;
+    }
     /* --- HERO PROFILE SECTION --- */
     .profile-hero {
         background: linear-gradient(135deg, #8B0000 0%, #5a0f15 100%);
@@ -281,7 +291,7 @@
         max-width: 1180px;
         margin: 0 auto;
         display: grid;
-        grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.38fr);
+        grid-template-columns: minmax(330px, 0.82fr) minmax(0, 1fr) minmax(0, 1fr);
         gap: 16px;
         align-items: start;
     }
@@ -300,7 +310,50 @@
     }
 
     .profile-dashboard .profile-card-head {
+        display: flex;
+        grid-column: 1;
+        grid-row: 1;
+        align-self: start;
+        justify-content: center;
+        margin: 322px 0 0;
+        z-index: 4;
+        pointer-events: none;
+    }
+
+    .profile-dashboard .profile-card-heading {
         display: none;
+    }
+
+    .profile-dashboard.is-photo-expanded .profile-card-head {
+        display: none;
+    }
+
+    .profile-dashboard .profile-card-head .profile-edit-btn {
+        pointer-events: auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-width: 146px;
+        padding: 9px 18px;
+        font-size: 13px;
+        font-weight: 700;
+        border-color: rgba(250, 204, 21, .68);
+        background: transparent;
+        color: #ffffff;
+        box-shadow:
+            0 9px 16px rgba(25, 0, 8, .38),
+            inset 0 1px 0 rgba(255, 255, 255, .08);
+    }
+
+    .profile-dashboard .profile-card-head .profile-edit-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .profile-dashboard .profile-card-head .profile-edit-btn:hover {
+        background: #facc15;
+        color: #70131b;
     }
 
     .profile-dashboard .profile-hero {
@@ -309,15 +362,118 @@
         display: grid;
         grid-template-columns: auto minmax(0, 1fr);
         align-items: start;
+        align-self: stretch;
+        min-height: 560px;
         margin: 0;
-        min-height: 126px;
-        padding: 26px 24px;
-        border-radius: 8px;
+        padding: 40px 28px 28px;
+        border-radius: 10px;
         background:
-            radial-gradient(circle at top right, rgba(250, 204, 21, 0.12), transparent 34%),
-            linear-gradient(135deg, #7f1d2d 0%, #4c0519 100%);
+            radial-gradient(circle at 22% 10%, transparent 0 48px, rgba(255, 255, 255, .035) 49px 50px, transparent 51px 67px, rgba(255, 255, 255, .025) 68px 69px, transparent 70px),
+            radial-gradient(circle at top right, rgba(250, 204, 21, .08), transparent 34%),
+            linear-gradient(180deg, #6f001f 0%, #560017 54%, #3d0012 100%);
         box-shadow: 0 18px 36px rgba(76, 5, 25, 0.18);
-        gap: 18px;
+        gap: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-dashboard .profile-hero::before {
+        content: "";
+        position: absolute;
+        left: -12%;
+        right: -12%;
+        bottom: -36px;
+        height: 128px;
+        border-top: 2px solid rgba(250, 204, 21, .9);
+        border-radius: 50% 50% 0 0 / 28% 28% 0 0;
+        background:
+            linear-gradient(180deg, rgba(127, 29, 45, .04), rgba(255, 247, 237, .16)),
+            url('{{ asset("images/PUPBG.jpg") }}') center bottom / cover no-repeat;
+        opacity: .62;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .profile-dashboard .profile-hero::before {
+        display: none;
+    }
+
+    .profile-dashboard .profile-hero-wave {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 20%;
+        z-index: 1;
+        pointer-events: none;
+        overflow: visible;
+    }
+
+    .profile-dashboard .profile-hero-wave path {
+        fill: #fff8ed;
+        stroke: #facc15;
+        stroke-width: 4;
+        stroke-linejoin: round;
+    }
+
+    html[data-theme="dark"] .profile-dashboard .profile-hero-wave path {
+        fill: #0f131a;
+    }
+
+    .profile-dashboard .profile-hero > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .profile-dashboard .profile-hero > .profile-hero-wave {
+        position: absolute;
+        z-index: 1;
+    }
+
+    .profile-dashboard .profile-hero::after {
+        display: none;
+    }
+
+    .profile-dashboard .profile-hero-campus {
+        position: absolute;
+        left: 0;
+        right: -8%;
+        bottom: 46px;
+        height: 230px;
+        z-index: 0;
+        pointer-events: none;
+        opacity: .18;
+        background: url('{{ asset("images/PUPBG.jpg") }}') center bottom / cover no-repeat;
+        filter: saturate(.25) contrast(1.1);
+        -webkit-mask-image: radial-gradient(ellipse 88% 82% at 76% 72%, #000 38%, rgba(0, 0, 0, .82) 58%, rgba(0, 0, 0, .28) 78%, transparent 100%);
+        mask-image: radial-gradient(ellipse 88% 82% at 76% 72%, #000 38%, rgba(0, 0, 0, .82) 58%, rgba(0, 0, 0, .28) 78%, transparent 100%);
+    }
+
+    .profile-dashboard .profile-hero-quote {
+        position: absolute;
+        left: 28px;
+        bottom: 126px;
+        z-index: 2;
+        color: #fffaf2;
+        font-family: Georgia, serif;
+        text-shadow: 0 2px 10px rgba(43, 0, 16, .58);
+    }
+
+    .profile-dashboard .profile-hero-quote-mark {
+        display: block;
+        height: 26px;
+        color: #facc15;
+        font-family: Georgia, serif;
+        font-size: 35px;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .profile-dashboard .profile-hero-quote p {
+        margin: 2px 0 0;
+        font-size: 20px;
+        line-height: 1.35;
     }
 
     .profile-dashboard .profile-hero.is-photo-expanded {
@@ -329,6 +485,7 @@
 
     .profile-dashboard .hero-info {
         min-width: 0;
+        position: static !important;
     }
 
     .profile-dashboard .hero-avatar {
@@ -336,10 +493,10 @@
         flex: 0 0 auto;
         margin-top: 4px;
         padding: 0;
-        width: 78px;
-        height: 78px;
+        width: 92px;
+        height: 92px;
         background: rgba(255, 255, 255, 0.90);
-        border: 2px solid rgba(250, 204, 21, 0.36);
+        border: 2px solid #f5c542;
         color: #7f1d2d;
         font-size: 28px;
         overflow: visible;
@@ -354,8 +511,9 @@
     }
 
     .profile-dashboard .hero-name {
-        font-size: 25px;
-        line-height: 1.1;
+        margin-top: 9px;
+        font-size: 21px;
+        line-height: 1.13;
         letter-spacing: 0;
     }
 
@@ -397,14 +555,14 @@
         display: flex;
         flex-wrap: wrap;
         gap: 7px;
-        margin-top: 10px;
+        margin-top: 8px;
     }
 
     .hero-identity-pill {
         display: inline-flex;
         align-items: center;
-        min-height: 26px;
-        padding: 0 10px;
+        min-height: 24px;
+        padding: 0 11px;
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.13);
         color: #fff7ed;
@@ -412,6 +570,38 @@
         font-size: 12px;
         font-weight: 800;
         line-height: 1;
+    }
+
+    .profile-dashboard .hero-status-line {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 8px;
+        padding-bottom: 14px;
+        color: rgba(255, 247, 237, .92);
+        font-size: 13px;
+        font-weight: 500;
+        position: relative;
+    }
+
+    .profile-dashboard .hero-status-line::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, .14);
+    }
+
+    .profile-dashboard .hero-status-line::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 28px;
+        height: 2px;
+        border-radius: 999px;
+        background: #facc15;
     }
 
     .profile-dashboard .profile-hero.is-photo-expanded .hero-avatar {
@@ -429,7 +619,10 @@
 
     .profile-dashboard .profile-hero.is-photo-expanded .hero-info,
     .profile-dashboard .profile-hero.is-photo-expanded .hero-stats,
-    .profile-dashboard .profile-hero.is-photo-expanded .hero-active-dot {
+    .profile-dashboard .profile-hero.is-photo-expanded .hero-active-dot,
+    .profile-dashboard .profile-hero.is-photo-expanded .profile-hero-campus,
+    .profile-dashboard .profile-hero.is-photo-expanded .profile-hero-quote,
+    .profile-dashboard .profile-hero.is-photo-expanded .profile-hero-wave {
         display: none;
     }
 
@@ -454,7 +647,7 @@
         margin-top: 16px;
         margin-left: 0;
         margin-right: 0;
-        padding: 16px 8px 0;
+        padding: 16px 8px 14px;
     }
 
     .profile-dashboard .stat-item {
@@ -462,15 +655,30 @@
         text-align: center;
     }
 
+    .profile-dashboard .stat-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 22px;
+        margin-bottom: 7px;
+        color: #facc15;
+    }
+
+    .profile-dashboard .stat-icon svg {
+        width: 20px;
+        height: 20px;
+        stroke-width: 2;
+    }
+
     .profile-dashboard .stat-label {
-        font-size: 10px;
+        font-size: 11px;
         white-space: normal;
         word-break: normal;
         letter-spacing: 0.02em;
     }
 
     .profile-dashboard .stat-val {
-        font-size: 20px;
+        font-size: 21px;
     }
 
     .profile-dashboard .stat-label {
@@ -479,21 +687,36 @@
     }
 
     .profile-dashboard .profile-sections-grid {
+        display: contents;
         margin-bottom: 0;
     }
 
     .profile-dashboard .profile-column-stack {
-        gap: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
     }
 
     .profile-dashboard .profile-sections-grid > .profile-column-stack:first-child {
-        grid-column: 1;
-        grid-row: 2;
+        grid-column: 2;
+        grid-row: 1;
     }
 
     .profile-dashboard .profile-sections-grid > .profile-column-stack:last-child {
-        grid-column: 2;
-        grid-row: 1 / span 2;
+        grid-column: 3;
+        grid-row: 1;
+    }
+
+    .profile-dashboard .profile-personal-section,
+    .profile-dashboard .profile-academic-section,
+    .profile-dashboard .profile-contact-section {
+        grid-column: auto;
+        grid-row: auto;
+    }
+
+    .profile-dashboard .profile-emergency-section {
+        grid-column: auto;
+        grid-row: auto;
     }
 
     .profile-dashboard #profileActionBar,
@@ -502,9 +725,170 @@
     }
 
     .profile-dashboard .profile-form-section {
-        border-radius: 8px;
+        border-radius: 14px;
         border-color: rgba(127, 29, 45, 0.15);
         background: linear-gradient(180deg, #ffffff 0%, #fffdf9 100%);
+        box-shadow:
+            0 12px 26px rgba(15, 23, 42, .08),
+            0 0 0 1px rgba(255,255,255,.78) inset;
+    }
+
+    .profile-dashboard .profile-form-section-title {
+        gap: 9px;
+        margin: 0 0 16px;
+        color: #70131b;
+        font-size: 15px;
+        font-weight: 900;
+    }
+
+    .profile-dashboard .profile-form-section-title svg {
+        width: 34px;
+        height: 34px;
+        padding: 8px;
+        box-sizing: border-box;
+        border-radius: 999px;
+        background: #7f1d2d;
+        color: #ffffff;
+        stroke-width: 1.8;
+    }
+
+    .profile-dashboard .profile-grid-3 > div,
+    .profile-dashboard .profile-grid-2 > div,
+    .profile-dashboard .profile-info-row {
+        min-height: 38px;
+        display: grid;
+        grid-template-columns: minmax(120px, 42%) minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+        border: 0 !important;
+        border-bottom: 1px solid rgba(250, 204, 21, .30) !important;
+        border-radius: 0;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .profile-dashboard .profile-grid-3 > div:last-child,
+    .profile-dashboard .profile-grid-2 > div:last-child,
+    .profile-dashboard .profile-info-row:last-child {
+        border-bottom: 1px solid rgba(250, 204, 21, .30) !important;
+    }
+
+    .profile-dashboard .profile-grid-3 > div .input-label,
+    .profile-dashboard .profile-grid-2 > div .input-label,
+    .profile-dashboard .profile-info-row .input-label {
+        font-family: inherit;
+        font-style: normal;
+        font-size: 12px;
+        font-weight: 700;
+        color: #475569;
+        line-height: 1.25;
+    }
+
+    .profile-dashboard .profile-grid-3 > div .form-control,
+    .profile-dashboard .profile-grid-2 > div .form-control,
+    .profile-dashboard .profile-info-row .form-control,
+    .profile-dashboard .profile-static-field {
+        font-family: inherit;
+        font-style: normal;
+        min-height: 0;
+        padding: 0;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.35;
+    }
+
+    .profile-dashboard .profile-info-row textarea.form-control {
+        min-height: 34px;
+    }
+
+    .profile-dashboard .profile-academic-section .profile-grid-3 > div {
+        min-height: 38px;
+        padding: 8px 0;
+        border: 0 !important;
+        border-bottom: 1px solid rgba(250, 204, 21, .30) !important;
+        border-radius: 0;
+        background: transparent !important;
+    }
+
+    .profile-dashboard .profile-academic-section .profile-grid-3 > div .form-control,
+    .profile-dashboard .profile-academic-section .profile-static-field {
+        font-size: 14px;
+        font-weight: 400;
+    }
+
+    .profile-dashboard .profile-contact-section,
+    .profile-dashboard .profile-emergency-section {
+        padding-top: 18px;
+    }
+
+    .profile-dashboard .profile-emergency-section {
+        align-self: start;
+    }
+
+    .profile-dashboard .hero-stats {
+        position: absolute;
+        top: 178px;
+        left: 50% !important;
+        right: auto !important;
+        width: calc(100% - 40px) !important;
+        transform: translateX(-50%);
+        z-index: 2;
+        padding: 17px 0 15px;
+        border-top: 0;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, .105);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07);
+        overflow: hidden;
+    }
+
+    .profile-dashboard .hero-stats .stat-item {
+        padding: 0 8px;
+    }
+
+    .profile-dashboard .hero-stats .stat-item + .stat-item {
+        border-left: 1px solid rgba(255, 255, 255, .18);
+    }
+
+    .profile-dashboard .stat-label {
+        white-space: nowrap;
+        font-size: 10.5px;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+
+    html[data-theme="dark"] .profile-dashboard .profile-grid-3 > div,
+    html[data-theme="dark"] .profile-dashboard .profile-grid-2 > div,
+    html[data-theme="dark"] .profile-dashboard .profile-info-row {
+        border-bottom-color: rgba(250, 204, 21, .18) !important;
+        background: transparent !important;
+    }
+
+    html[data-theme="dark"] .profile-dashboard .profile-grid-3 > div .input-label,
+    html[data-theme="dark"] .profile-dashboard .profile-grid-2 > div .input-label,
+    html[data-theme="dark"] .profile-dashboard .profile-info-row .input-label,
+    html[data-theme="dark"] .profile-dashboard .profile-grid-3 > div .form-control,
+    html[data-theme="dark"] .profile-dashboard .profile-grid-2 > div .form-control,
+    html[data-theme="dark"] .profile-dashboard .profile-info-row .form-control,
+    html[data-theme="dark"] .profile-dashboard .profile-static-field {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] body .profile-dashboard .profile-form-section .form-control:disabled,
+    html[data-theme="dark"] body .profile-dashboard .profile-form-section .form-control[readonly],
+    html[data-theme="dark"] body .profile-dashboard .profile-form-section textarea.form-control:disabled {
+        background: transparent !important;
+        background-color: transparent !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+        color: #f8fafc !important;
+        -webkit-text-fill-color: #f8fafc;
+        opacity: 1;
     }
 
     .profile-dashboard .profile-form-section::before {
@@ -601,7 +985,7 @@
         font-weight: 900;
         letter-spacing: 0.02em;
         color: #70131B;
-        text-transform: uppercase;
+        text-transform: none;
         display: inline-flex;
         align-items: center;
         gap: 7px;
@@ -1409,6 +1793,48 @@
             grid-column: 1;
             grid-row: auto;
         }
+        .profile-dashboard .profile-card-head {
+            grid-column: 1;
+            grid-row: auto;
+            position: absolute;
+            top: 322px;
+            left: 0;
+            margin: 0;
+            justify-content: center;
+        }
+        .profile-dashboard .profile-card-head .profile-edit-btn {
+            margin: 0 auto;
+        }
+        .profile-dashboard .profile-personal-section,
+        .profile-dashboard .profile-academic-section,
+        .profile-dashboard .profile-contact-section,
+        .profile-dashboard .profile-emergency-section {
+            grid-column: 1;
+            grid-row: auto;
+        }
+        .profile-dashboard .profile-hero {
+            min-height: 560px;
+        }
+        .profile-dashboard {
+            gap: 12px;
+        }
+        .profile-dashboard {
+            display: block;
+            position: relative;
+        }
+        .profile-dashboard .profile-hero {
+            width: 100%;
+            margin-bottom: 12px;
+        }
+        .profile-dashboard .profile-card-head {
+            width: 100%;
+            margin-bottom: 0;
+        }
+        .profile-dashboard .profile-form-section {
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 12px;
+        }
     }
 
     @media (max-width: 760px) {
@@ -1467,6 +1893,12 @@
         }
         .profile-edit-btn {
             width: 100%;
+        }
+        .profile-dashboard .profile-card-head {
+            align-items: center;
+        }
+        .profile-dashboard .profile-card-head .profile-edit-btn {
+            width: auto;
         }
         #saveAction {
             flex-direction: column;
@@ -4109,11 +4541,32 @@
     $isEnrolled = (bool) ($isEnrolled ?? false);
     $accountView = in_array(($accountView ?? 'profile'), ['profile', 'health-record', 'notifications'], true) ? $accountView : 'profile';
     $usesEmployeeHealthForm = $studentUsesEmployeeHealthForm ?? false;
+    $profileRoleMarkers = strtolower(trim(implode(' ', array_filter([
+        (string) ($user->user_role ?? ''),
+        (string) ($user->user_type ?? ''),
+        (string) ($user->idp_role ?? ''),
+        (string) optional($linkedAdminProfile)->access_level,
+        (string) optional($linkedAdminProfile)->admin_hub_role,
+        (string) optional($linkedAdminProfile)->role,
+    ]))));
+    $showsEmployeeActiveStatus = (bool) $usesEmployeeHealthForm;
+    foreach (['faculty', 'admin', 'staff', 'employee', 'dependent', 'designee', 'assistant', 'nurse'] as $employeeRoleMarker) {
+        if (str_contains($profileRoleMarkers, $employeeRoleMarker)) {
+            $showsEmployeeActiveStatus = true;
+            break;
+        }
+    }
+    $heroActiveStatusLabel = $showsEmployeeActiveStatus ? 'Active Employee' : 'Active Student';
     $showOfficeField = in_array($linkedAccessLevel, ['clinic_staff', 'designee', 'admin_designee', 'superadmin', 'super_admin', 'faculty'], true) || str_contains($linkedAccessLevel, 'faculty');
     $hasGuisisAccountData = (bool) ($guisisAccountData['available'] ?? false);
-    $displayStudentNumber = $usesEmployeeHealthForm
+    $displayStudentNumber = $showsEmployeeActiveStatus
         ? trim((string) ($accountProfileData['employee_number'] ?? $user->employee_number ?? ''))
-        : trim((string) ($accountProfileData['student_number'] ?? ''));
+        : trim((string) ($accountProfileData['student_number'] ?? $user->student_number ?? $user->student_id ?? ''));
+    if ($displayStudentNumber === '') {
+        $displayStudentNumber = $showsEmployeeActiveStatus
+            ? trim((string) ($user->employee_number ?? ''))
+            : trim((string) ($user->student_number ?? $user->student_id ?? ''));
+    }
     $looksLikeReferenceNumber = function ($value): bool {
         $value = strtoupper(trim((string) $value));
 
@@ -4167,11 +4620,17 @@
     $guisisPendingText = 'Available once enrolled';
     $guisisValue = fn ($value) => trim((string) $value) !== '' ? trim((string) $value) : $guisisPendingText;
     $guisisPendingClass = fn ($value) => trim((string) $value) === '' ? ' guisis-pending-value' : '';
-    $clinicMeasurementProfile = $user->relationLoaded('healthProfile')
-        ? $user->healthProfile
-        : \App\Models\HealthProfile::where('user_id', $user->id)->first();
+    $clinicMeasurementProfile = $usesEmployeeHealthForm
+        ? ($user->relationLoaded('employeeHealthProfile')
+            ? $user->employeeHealthProfile
+            : \App\Models\EmployeeHealthProfile::where('user_id', $user->id)->first())
+        : ($user->relationLoaded('healthProfile')
+            ? $user->healthProfile
+            : \App\Models\HealthProfile::where('user_id', $user->id)->first());
     $heightRaw = old('height', optional($clinicMeasurementProfile)->height ?? '');
     $weightRaw = old('weight', optional($clinicMeasurementProfile)->weight ?? '');
+    $bloodTypeDisplay = trim((string) ($accountProfileData['blood_type'] ?? optional($clinicMeasurementProfile)->blood_type ?? ''));
+    $bloodTypeDisplay = $bloodTypeDisplay !== '' ? $bloodTypeDisplay : 'N/A';
     preg_match('/\d+(?:\.\d+)?/', (string) $heightRaw, $heightMatch);
     preg_match('/\d+(?:\.\d+)?/', (string) $weightRaw, $weightMatch);
     $heightDisplay = $heightMatch[0] ?? trim((string) $heightRaw);
@@ -4214,6 +4673,14 @@
     @if($accountView === 'profile')
     <div class="profile-dashboard">
     <div class="profile-hero" id="profileHeroCard">
+        <svg class="profile-hero-wave" viewBox="0 0 1000 180" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 80 C82 106 142 116 232 94 C350 68 424 67 542 87 C694 110 801 120 890 82 C946 56 972 27 1000 -8 L1000 180 L0 180 Z" />
+        </svg>
+        <div class="profile-hero-campus" aria-hidden="true"></div>
+        <div class="profile-hero-quote" aria-hidden="true">
+            <span class="profile-hero-quote-mark">&ldquo;</span>
+            <p>Your health is<br>our priority.</p>
+        </div>
         <button type="button" class="hero-avatar" id="profilePhotoToggle" aria-label="Expand profile photo" aria-expanded="false">
             @php
                 $profilePhotoRecord = $usesEmployeeHealthForm
@@ -4232,19 +4699,14 @@
             </span>
         </button>
         <div class="hero-info">
-            <h1 class="hero-name">
-                <span class="hero-name-main">{{ $displayFirstName }}</span>
-                @if($displayRemainingName !== '')
-                    <span class="hero-name-sub">{{ $displayRemainingName }}</span>
-                @endif
-            </h1>
+            <h1 class="hero-name">{{ $displayFullName }}</h1>
             @if($displayStudentNumber !== '' || $displayCourseCode !== '')
                 <div class="hero-identity-meta">
                     @if($displayStudentNumber !== '')
-                        <span class="hero-identity-pill">{{ $displayStudentNumber }}</span>
+                        <span class="hero-identity-pill hero-identity-pill--number">{{ $displayStudentNumber }}</span>
                     @endif
                     @if($displayCourseCode !== '')
-                        <span class="hero-identity-pill">{{ $displayCourseCode }}</span>
+                        <span class="hero-identity-pill hero-identity-pill--course">{{ $displayCourseCode }}</span>
                     @endif
                 </div>
             @endif
@@ -4263,20 +4725,28 @@
                 <div class="hero-course">Available once enrolled</div>
             @endif
 
+            @if($isEnrolled)
+                <div class="hero-status-line">{{ $heroActiveStatusLabel }}</div>
+            @endif
+
             <div class="hero-stats">
                 <div class="stat-item">
+                    <span class="stat-icon"><x-outline-icon name="clock" /></span>
                     <span class="stat-val">{{ $pendingCount ?? 0 }}</span>
                     <span class="stat-label">Pending</span>
                 </div>
                 <div class="stat-item">
+                    <span class="stat-icon"><x-outline-icon name="check" /></span>
                     <span class="stat-val">{{ $approvedCount ?? 0 }}</span>
                     <span class="stat-label">Approved</span>
                 </div>
                 <div class="stat-item">
+                    <span class="stat-icon"><x-outline-icon name="clipboard-document-list" /></span>
                     <span class="stat-val">{{ $completedCount ?? 0 }}</span>
                     <span class="stat-label">Completed</span>
                 </div>
                 <div class="stat-item">
+                    <span class="stat-icon"><x-outline-icon name="x-mark" /></span>
                     <span class="stat-val">{{ $cancelledCount ?? 0 }}</span>
                     <span class="stat-label">Cancelled</span>
                 </div>
@@ -4313,7 +4783,12 @@ document.addEventListener('DOMContentLoaded', function () {
             <p class="profile-card-description">Review your personal account details and keep your clinic information up to date.</p>
         </div>
         @if($isEnrolled)
-            <button type="button" id="editBtn" class="profile-edit-btn" onclick="enableEditing()">Edit Profile</button>
+            <button type="button" id="editBtn" class="profile-edit-btn" onclick="enableEditing()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                </svg>
+                Edit Profile
+            </button>
         @endif
     </div>
 
@@ -4341,7 +4816,7 @@ document.addEventListener('DOMContentLoaded', function () {
         @elseif(empty($linkedAdminProfile))
             <div class="profile-sections-grid">
                 <div class="profile-column-stack">
-                    <section class="profile-form-section accent-gold">
+                    <section class="profile-form-section accent-gold profile-personal-section">
                         <h3 class="profile-form-section-title"><x-outline-icon name="user-circle" />Personal Details</h3>
                         <div class="profile-grid-3">
                             <div>
@@ -4397,11 +4872,17 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </div>
                             </div>
                         @endif
+                        <div class="profile-grid-2">
+                            <div>
+                                <label class="input-label">Blood Type</label>
+                                <input type="text" class="form-control" value="{{ $bloodTypeDisplay }}" readonly>
+                            </div>
+                        </div>
                     </section>
                 </div>
 
                 <div class="profile-column-stack">
-                    <section class="profile-form-section accent-maroon profile-frame-equal">
+                    <section class="profile-form-section accent-maroon profile-frame-equal profile-academic-section">
                         <h3 class="profile-form-section-title"><x-outline-icon name="document-text" />{{ $usesEmployeeHealthForm ? 'Employment Information' : 'Academic Information' }}</h3>
                         <div class="profile-grid-3">
                             @if($displayStudentNumber !== '')
@@ -4437,8 +4918,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </section>
 
-                    <section class="profile-form-section accent-maroon profile-frame-equal">
-                        <h3 class="profile-form-section-title"><x-outline-icon name="clock" />Contact Information</h3>
+                    <section class="profile-form-section accent-maroon profile-frame-equal profile-contact-section">
+                        <h3 class="profile-form-section-title"><x-outline-icon name="envelope" />Contact Information</h3>
                         <div class="profile-info-row">
                             <label class="input-label">Email Address</label>
                             <input type="email" class="form-control{{ $guisisPendingClass($accountProfileData['email'] ?? '') }}" value="{{ $guisisValue($accountProfileData['email'] ?? '') }}" readonly>
@@ -4453,7 +4934,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </section>
 
-                    <section class="profile-form-section accent-gold">
+                    <section class="profile-form-section accent-gold profile-emergency-section">
                         <h3 class="profile-form-section-title"><x-outline-icon name="exclamation-triangle" />Emergency Contact</h3>
                         <div class="profile-grid-2">
                             <div class="soft-field">
@@ -4540,10 +5021,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>
                 @endif
+                <div class="profile-grid-2">
+                    <div>
+                        <label class="input-label">Blood Type</label>
+                        <input type="text" class="form-control" value="{{ $bloodTypeDisplay }}" readonly>
+                    </div>
+                </div>
             </section>
 
             <section class="profile-form-section accent-gold">
-                <h3 class="profile-form-section-title"><x-outline-icon name="clock" />Contact Information</h3>
+                <h3 class="profile-form-section-title"><x-outline-icon name="envelope" />Contact Information</h3>
                 <div class="profile-grid-2">
                     <div>
                         <label class="input-label">Email</label>
@@ -4610,14 +5097,15 @@ document.addEventListener('DOMContentLoaded', function () {
         $isPendingStatus = !$isIssuedStatus && !$isRejectedStatus;
         $recordPendingReason = trim((string) optional($healthProfileRecord)->pending_reason);
         $recordPendingReasonSearch = strtolower($recordPendingReason);
-        $requiresHealthFormCorrection = $isConditionalStatus && collect([
-            'health information form',
-            'health form',
-            'correct address',
-            'home address',
-            'correct information',
-            'correct details',
-        ])->contains(fn ($needle) => str_contains($recordPendingReasonSearch, $needle));
+        $requiresHealthFormCorrection = str_contains($recordPendingReasonSearch, 'health form correction')
+            || ($isConditionalStatus && collect([
+                'health information form',
+                'health form',
+                'correct address',
+                'home address',
+                'correct information',
+                'correct details',
+            ])->contains(fn ($needle) => str_contains($recordPendingReasonSearch, $needle)));
         $resubmissionDocuments = collect(
             optional($healthProfileRecord)->resubmission_required_documents
                 ?? optional($healthProfileRecord)->resubmission_required_fields
@@ -4630,7 +5118,9 @@ document.addEventListener('DOMContentLoaded', function () {
         $resubmissionDocuments = $resubmissionDocuments
             ->filter(fn ($documentKey) => $documentKey !== 'pwd_id_proof' || $requiresPwdIdProof)
             ->values();
-        $isResubmissionStatus = $statusNormalized === 'pending resubmission' || $resubmissionDocuments->isNotEmpty();
+        $isResubmissionStatus = $statusNormalized === 'pending resubmission'
+            || $resubmissionDocuments->isNotEmpty()
+            || $requiresHealthFormCorrection;
         $resubmissionDocumentLabels = [
             'student_photo' => '2x2 Student Photo',
             'health_declaration' => 'Declaration of Medical Information and Data Subject Consent Form',
@@ -4710,16 +5200,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         $hasMissingESignErrors = $errors->has('digital_signature_data') || $errors->has('digital_signature_upload') || $errors->has('signature_method');
         $recordSubmissionStatus = $isResubmissionStatus ? 'Pending Resubmission' : ($isConditionalStatus ? 'Pending Compliance' : 'Waiting for clinic review');
-        $recordStatusMessage = $isResubmissionStatus
+        $recordStatusMessage = $requiresHealthFormCorrection && $resubmissionDocuments->isEmpty()
+            ? 'The clinic requested corrections to your Health Information Form. Open the form below and update the requested information.'
+            : ($isResubmissionStatus
             ? 'The clinic requested replacement files for your health profile. Upload only the selected requirement/s below.'
             : ($isConditionalStatus
                 ? 'Your health profile needs follow-up before it can be issued. Please check the pending reason and coordinate with the Medical Clinic.'
-                : 'Your health profile has been submitted. Please proceed to the Medical Clinic on your designated schedule for medical review.');
-        $recordStatusNote = $isResubmissionStatus
+                : 'Your health profile has been submitted. Please proceed to the Medical Clinic on your designated schedule for medical review.'));
+        $recordStatusNote = $requiresHealthFormCorrection && $resubmissionDocuments->isEmpty()
+            ? 'Your approved record remains available while the requested Health Form correction is pending.'
+            : ($isResubmissionStatus
             ? 'Your existing valid files will remain unchanged. Only the requested replacement file/s will be updated.'
             : ($isConditionalStatus
                 ? 'Please complete the pending requirement before your record can be marked as issued.'
-                : 'Clinic approval is required before your record can be marked as issued.');
+                : 'Clinic approval is required before your record can be marked as issued.'));
         $puptasSyncStatus = $usesEmployeeHealthForm ? null : optional($healthProfileRecord)->puptas_sync_status;
         $puptasSyncMessage = $usesEmployeeHealthForm ? '' : trim((string) optional($healthProfileRecord)->puptas_sync_message);
         $puptasSyncedAt = $usesEmployeeHealthForm ? null : optional(optional($healthProfileRecord)->puptas_synced_at)->format('M d, Y g:i A');
@@ -4931,6 +5425,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 </div>
 
+                @if($requiresHealthFormCorrection)
+                    <div class="health-status-sync missing">
+                        <x-outline-icon name="document-text" />
+                        <span>
+                            <strong>Health Form correction requested.</strong>
+                            {{ $recordPendingReason !== '' ? $recordPendingReason : 'Please update the information identified by the Medical Clinic.' }}
+                        </span>
+                    </div>
+                @endif
+
                 @if($puptasSyncStatus === 'synced')
                     <div class="health-status-sync synced">
                         <x-outline-icon name="check" />
@@ -4984,6 +5488,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         <a href="{{ $healthFormRoute }}" class="btn-print-form pending">
                             <x-outline-icon name="document-text" />
                             Fill Up New Health Form
+                        </a>
+                    @endif
+                    @if($requiresHealthFormCorrection)
+                        <a href="{{ $healthFormRoute }}" class="btn-print-form pending">
+                            <x-outline-icon name="pencil-square" />
+                            Edit Health Form
                         </a>
                     @endif
                     <a href="https://puptas.undraftedbsit2027.com/applicant-dashboard" class="health-status-link">
@@ -5720,6 +6230,7 @@ function enableEditing() {
 document.addEventListener('DOMContentLoaded', function () {
     const profileHeroCard = document.getElementById('profileHeroCard');
     const profilePhotoToggle = document.getElementById('profilePhotoToggle');
+    const profileDashboard = profileHeroCard?.closest('.profile-dashboard');
     const modal = document.getElementById('healthRecordModal');
     const modalCard = modal?.querySelector('.record-modal');
     const missingDocumentModal = document.getElementById('missingDocumentModal');
@@ -5738,6 +6249,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     profilePhotoToggle?.addEventListener('click', function () {
         const isExpanded = profileHeroCard?.classList.toggle('is-photo-expanded') ?? false;
+        profileDashboard?.classList.toggle('is-photo-expanded', isExpanded);
         profilePhotoToggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
         profilePhotoToggle.setAttribute('aria-label', isExpanded ? 'Collapse profile photo' : 'Expand profile photo');
     });

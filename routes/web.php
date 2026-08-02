@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\HealthFormCategoryController;
 use App\Http\Controllers\MedicalConditionController;
+use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\MedicineTypeController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\StudentAssistantController;
@@ -117,16 +118,7 @@ Route::get('/system-admin/emergency-login', [EmergencyAuthController::class, 'sh
 Route::post('/system-admin/emergency-login', [EmergencyAuthController::class, 'login'])
     ->middleware('throttle:10,1')
     ->name('system-admin.emergency-login.submit');
-Route::get('/maintenance', function () {
-    $estimatedCompletion = Schema::hasTable('system_settings')
-        ? SystemSetting::getValue('maintenance_estimated_completion', null)
-        : null;
-    $lastUpdated = Schema::hasTable('system_settings')
-        ? SystemSetting::getValue('maintenance_last_updated', null)
-        : null;
-
-    return view('maintenance', compact('estimatedCompletion', 'lastUpdated'));
-})->name('maintenance');
+Route::get('/maintenance', [MaintenanceController::class, 'show'])->name('maintenance');
 Route::post('/register-action', [RegisterController::class, 'register']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/idp/logout', [LoginController::class, 'handleIdpLogout'])->name('idp.logout');

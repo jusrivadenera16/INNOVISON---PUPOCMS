@@ -1049,6 +1049,13 @@
             linear-gradient(180deg, rgba(2, 6, 23, 0.82), rgba(15, 23, 42, 0.74) 42%, rgba(2, 6, 23, 0.84) 100%),
             url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat;
         background-attachment: fixed, fixed;
+        padding-top: 0;
+    }
+    html[data-theme="dark"] .booking-page-container {
+        padding-top: 0;
+    }
+    html[data-theme="dark"] .booking-page-container .page-header {
+        margin-top: 0;
     }
     html[data-theme="dark"] .booking-page-shell::before {
         content: none;

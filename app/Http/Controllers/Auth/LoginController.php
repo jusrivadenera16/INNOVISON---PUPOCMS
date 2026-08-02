@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\ActivityLog;
+use App\Models\HealthFormSubmission;
 use App\Models\User;
 use App\Services\ClinicWorkflowService;
 use Illuminate\Http\RedirectResponse;
@@ -183,8 +184,21 @@ class LoginController extends Controller
             return;
         }
 
-        if (!$user->healthProfile()->exists()) {
+        $healthProfile = $user->healthProfile()->first();
+        if (!$healthProfile) {
             $request->session()->flash('show_health_profile_prompt', true);
+            return;
+        }
+
+        $pendingReason = strtolower(trim((string) $healthProfile->pending_reason));
+        $hasHealthFormCorrection = str_contains($pendingReason, 'health form correction');
+        $hasNewHealthFormRequest = HealthFormSubmission::query()
+            ->where('user_id', $user->id)
+            ->where('status', HealthFormSubmission::STATUS_REQUESTED)
+            ->exists();
+
+        if ($hasHealthFormCorrection || $hasNewHealthFormRequest) {
+            $request->session()->flash('show_health_form_action_prompt', true);
         }
     }
 

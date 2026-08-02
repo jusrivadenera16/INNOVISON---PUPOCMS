@@ -462,13 +462,13 @@
         bottom: 0;
         z-index: 4;
         width: 100%;
-        height: 56px;
+        height: 82px;
         background: linear-gradient(
             180deg,
-            rgba(255,255,255,0) 0%,
-            rgba(255,255,255,.04) 34%,
-            rgba(255,255,255,.12) 62%,
-            rgba(255,255,255,.24) 100%
+            rgba(8, 20, 38, 0) 0%,
+            rgba(8, 20, 38, .28) 34%,
+            rgba(8, 20, 38, .64) 68%,
+            rgba(8, 20, 38, .94) 100%
         );
         pointer-events: none;
     }
@@ -494,7 +494,7 @@
         isolation: isolate;
         overflow: hidden;
         z-index: 1;
-        padding-top: 52px;
+        padding-top: 0;
         background:
             linear-gradient(180deg, rgba(255, 250, 250, 0.70), rgba(255, 255, 255, 0.58) 42%, rgba(245, 248, 247, 0.72) 100%),
             url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat;
@@ -577,111 +577,381 @@
     }
     .home-announcement-shell {
         position: relative;
-        margin: 10px 42px 10px;
-        min-height: 102px;
+        width: min(1120px, calc(100% - 88px));
+        height: 310px;
+        margin: 0 auto;
+        transform: translateY(12px);
     }
-    .home-announcement-card {
-        display: grid;
+    .home-announcement-band {
+        position: relative;
+        width: 100%;
+        min-height: 372px;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        margin: -34px 0 34px;
+        border-top: 1px solid rgba(250, 204, 21, .46);
+        border-bottom: 1px solid rgba(148, 163, 184, .24);
+        background:
+            linear-gradient(90deg, rgba(91, 7, 20, .91) 0%, rgba(9, 20, 38, .95) 48%, rgba(91, 7, 32, .88) 100%),
+            url('{{ asset("images/student-bg.png") }}') center 46% / cover no-repeat;
+        box-shadow:
+            inset 0 24px 56px rgba(43, 0, 14, .34),
+            inset 0 -30px 60px rgba(2, 6, 23, .48);
+    }
+    .home-announcement-band::before {
+        content: "";
         position: absolute;
         inset: 0;
-        min-height: 80px;
-        align-items: center;
-        grid-template-columns: 64px minmax(0, 1fr) auto;
-        gap: 20px;
-        padding: 18px 28px;
-        border-radius: 10px;
-        border: 1px solid rgba(245, 158, 11, .25);
-        background: linear-gradient(90deg, rgba(255, 247, 237, .92), rgba(255, 251, 235, .72));
-        box-shadow: 0 14px 28px rgba(139, 0, 0, .06);
+        pointer-events: none;
+        background:
+            linear-gradient(90deg, rgba(93, 10, 24, .24), transparent 24%, transparent 76%, rgba(93, 10, 42, .24)),
+            linear-gradient(180deg, rgba(255, 255, 255, .035), transparent 32%, rgba(2, 6, 23, .18));
+    }
+    .home-announcement-card {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        z-index: 1;
+        width: 272px;
+        min-height: 204px;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 22px 18px;
+        overflow: hidden;
+        border-radius: 7px;
+        border: 1px solid rgba(203, 213, 225, .30);
+        background: linear-gradient(145deg, rgba(24, 31, 49, .96), rgba(13, 24, 43, .96));
+        box-shadow: 0 18px 34px rgba(2, 6, 23, .30), inset 0 1px rgba(255, 255, 255, .035);
+        color: #f8fafc;
         opacity: 0;
         visibility: hidden;
-        transform: translateX(14px);
+        transform: translate(-50%, -50%) scale(.78);
         pointer-events: none;
-        transition: opacity .42s ease, transform .42s ease, visibility .42s ease;
+        cursor: pointer;
+        transition: left .48s cubic-bezier(.22, .8, .24, 1), width .48s ease,
+            min-height .48s ease, opacity .35s ease, transform .48s cubic-bezier(.22, .8, .24, 1),
+            visibility .35s ease, filter .35s ease, border-color .2s ease, box-shadow .2s ease;
     }
-    .home-announcement-card.is-active {
-        position: relative;
+    .home-announcement-card.is-current,
+    .home-announcement-card.is-next {
+        z-index: 3;
+        width: 272px;
+        min-height: 204px;
         opacity: 1;
         visibility: visible;
-        transform: translateX(0);
+        transform: translate(-50%, -50%) scale(1);
         pointer-events: auto;
     }
+    .home-announcement-card.is-current { left: calc(50% - 145px); }
+    .home-announcement-card.is-next { left: calc(50% + 145px); }
+    .home-announcement-card.is-prev,
+    .home-announcement-card.is-next-far {
+        z-index: 2;
+        width: 178px;
+        min-height: 174px;
+        opacity: .42;
+        visibility: visible;
+        filter: blur(.35px);
+        transform: translate(-50%, -50%) scale(.94);
+        pointer-events: auto;
+    }
+    .home-announcement-card.is-prev { left: calc(50% - 382px); }
+    .home-announcement-card.is-next-far { left: calc(50% + 382px); }
+    .home-announcement-shell.is-static .home-announcement-card {
+        z-index: 3;
+        width: 272px;
+        min-height: 204px;
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, -50%) scale(1);
+        pointer-events: auto;
+    }
+    .home-announcement-shell.static-count-1 .home-announcement-card:nth-of-type(1) {
+        left: 50%;
+    }
+    .home-announcement-shell.static-count-2 .home-announcement-card:nth-of-type(1) {
+        left: calc(50% - 145px);
+    }
+    .home-announcement-shell.static-count-2 .home-announcement-card:nth-of-type(2) {
+        left: calc(50% + 145px);
+    }
+    .home-announcement-shell.static-count-3 .home-announcement-card:nth-of-type(1) {
+        left: calc(50% - 290px);
+    }
+    .home-announcement-shell.static-count-3 .home-announcement-card:nth-of-type(2) {
+        left: 50%;
+    }
+    .home-announcement-shell.static-count-3 .home-announcement-card:nth-of-type(3) {
+        left: calc(50% + 290px);
+    }
+    .home-announcement-shell.carousel-count-3 .home-announcement-card.is-current {
+        left: 50%;
+        width: 272px;
+        min-height: 204px;
+        opacity: 1;
+        filter: none;
+    }
+    .home-announcement-shell.carousel-count-3 .home-announcement-card.is-prev,
+    .home-announcement-shell.carousel-count-3 .home-announcement-card.is-next {
+        z-index: 2;
+        width: 178px;
+        min-height: 174px;
+        opacity: .42;
+        visibility: visible;
+        filter: blur(.35px);
+        transform: translate(-50%, -50%) scale(.94);
+        pointer-events: auto;
+    }
+    .home-announcement-shell.carousel-count-3 .home-announcement-card.is-prev {
+        left: calc(50% - 382px);
+    }
+    .home-announcement-shell.carousel-count-3 .home-announcement-card.is-next {
+        left: calc(50% + 382px);
+    }
+    .home-announcement-card:hover,
+    .home-announcement-card:focus-visible {
+        border-color: rgba(250, 204, 21, .56);
+        box-shadow: 0 22px 42px rgba(2, 6, 23, .44), 0 0 0 1px rgba(250, 204, 21, .10);
+        outline: none;
+    }
+    .announcement-card-head {
+        display: grid;
+        grid-template-columns: 52px minmax(0, 1fr);
+        gap: 14px;
+        align-items: center;
+        margin-bottom: 14px;
+    }
     .announcement-icon {
-        width: 48px;
-        height: 48px;
+        width: 50px;
+        height: 50px;
         border-radius: 999px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: rgba(245, 158, 11, .16);
-        color: #8B0000;
+        background: rgba(139, 0, 0, .56);
+        border: 1px solid rgba(250, 204, 21, .70);
+        color: #facc15;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, .18);
     }
     .announcement-icon svg {
-        width: 28px;
-        height: 28px;
+        width: 25px;
+        height: 25px;
         stroke-width: 1.8;
     }
     .announcement-eyebrow {
-        margin: 0 0 5px;
-        color: #9b0716;
-        font-size: 11px;
-        letter-spacing: .7px;
+        margin: 0 0 6px;
+        color: #facc15;
+        font-size: 9px;
+        letter-spacing: 0;
         font-weight: 950;
         text-transform: uppercase;
     }
     .announcement-title {
         margin: 0;
-        color: #111827;
-        font-size: 14px;
+        color: #f8fafc;
+        font-size: 15px;
+        line-height: 1.24;
         font-weight: 900;
+        text-transform: uppercase;
     }
     .announcement-message {
-        margin: 5px 0 0;
-        color: #475569;
-        font-size: 13px;
-        line-height: 1.45;
+        display: -webkit-box;
+        margin: 0;
+        overflow: hidden;
+        color: #e2e8f0;
+        font-size: 12px;
+        line-height: 1.62;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 4;
     }
-    .announcement-detail {
+    .announcement-date {
         display: inline-flex;
         align-items: center;
-        gap: 9px;
-        color: #8B0000;
-        font-size: 13px;
-        font-weight: 900;
-        text-decoration: none;
-        white-space: nowrap;
+        gap: 7px;
+        margin-top: auto;
+        padding-top: 13px;
+        color: #94a3b8;
+        font-size: 10px;
+        font-weight: 600;
     }
-    .announcement-detail svg {
+    .announcement-date svg {
+        width: 13px;
+        height: 13px;
+    }
+    .home-announcement-card.is-prev .announcement-card-head,
+    .home-announcement-card.is-next-far .announcement-card-head,
+    .home-announcement-shell.carousel-count-3 .home-announcement-card.is-next .announcement-card-head {
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 10px;
+    }
+    .home-announcement-card.is-prev .announcement-icon,
+    .home-announcement-card.is-next-far .announcement-icon,
+    .home-announcement-shell.carousel-count-3 .home-announcement-card.is-next .announcement-icon {
+        width: 40px;
+        height: 40px;
+    }
+    .home-announcement-card.is-prev .announcement-icon svg,
+    .home-announcement-card.is-next-far .announcement-icon svg,
+    .home-announcement-shell.carousel-count-3 .home-announcement-card.is-next .announcement-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+    .home-announcement-card.is-prev .announcement-title,
+    .home-announcement-card.is-next-far .announcement-title,
+    .home-announcement-shell.carousel-count-3 .home-announcement-card.is-next .announcement-title {
+        font-size: 11px;
+    }
+    .home-announcement-card.is-prev .announcement-eyebrow,
+    .home-announcement-card.is-next-far .announcement-eyebrow,
+    .home-announcement-shell.carousel-count-3 .home-announcement-card.is-next .announcement-eyebrow {
+        font-size: 7px;
+    }
+    .home-announcement-card.is-prev .announcement-message,
+    .home-announcement-card.is-next-far .announcement-message,
+    .home-announcement-shell.carousel-count-3 .home-announcement-card.is-next .announcement-message {
+        font-size: 9px;
+        -webkit-line-clamp: 4;
+    }
+    .announcement-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1300;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(3, 7, 18, .58);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+    .announcement-modal.is-open {
+        display: flex;
+    }
+    .announcement-modal-card {
+        width: min(560px, 100%);
+        overflow: hidden;
+        border-radius: 18px;
+        background: #fffaf7;
+        border: 1px solid rgba(250, 204, 21, .34);
+        box-shadow: 0 30px 80px rgba(15, 23, 42, .36);
+    }
+    .announcement-modal-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 22px 24px;
+        background: linear-gradient(135deg, #8B0000, #b91c1c);
+        color: #fff;
+    }
+    .announcement-modal-eyebrow {
+        margin: 0 0 8px;
+        color: #facc15;
+        font-size: 11px;
+        letter-spacing: .8px;
+        text-transform: uppercase;
+        font-weight: 950;
+    }
+    .announcement-modal-title {
+        margin: 0;
+        font-size: 22px;
+        line-height: 1.2;
+        font-weight: 950;
+    }
+    .announcement-modal-close {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.24);
+        background: rgba(255,255,255,.12);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex: 0 0 auto;
+    }
+    .announcement-modal-close svg {
         width: 18px;
         height: 18px;
+    }
+    .announcement-modal-body {
+        padding: 24px;
+        color: #334155;
+        line-height: 1.7;
+        white-space: pre-wrap;
+    }
+    html[data-theme="dark"] .announcement-modal-card {
+        background: #111827;
+        border-color: rgba(250,204,21,.26);
+    }
+    html[data-theme="dark"] .announcement-modal-body {
+        color: #f8fafc;
     }
     .announcement-nav {
         position: absolute;
         top: 50%;
+        z-index: 8;
         transform: translateY(-50%);
-        width: 34px;
-        height: 34px;
+        width: 38px;
+        height: 38px;
         border-radius: 999px;
-        border: 1px solid rgba(139, 0, 0, .16);
-        background: rgba(255, 255, 255, .92);
+        border: 1px solid rgba(255, 255, 255, .72);
+        background: #ffffff;
         color: #8B0000;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 12px 24px rgba(139, 0, 0, .10);
-        transition: transform .18s ease, background .18s ease;
+        box-shadow: 0 10px 24px rgba(2, 6, 23, .28);
+        transition: transform .2s ease, background .2s ease, color .2s ease;
     }
-    .announcement-nav:hover {
-        background: #fff7ed;
-        transform: translateY(-50%) scale(1.04);
+    .announcement-nav:hover,
+    .announcement-nav:focus-visible {
+        background: #facc15;
+        color: #70131b;
+        transform: translateY(-50%) scale(1.08);
+        outline: none;
     }
     .announcement-nav svg {
-        width: 18px;
-        height: 18px;
+        width: 19px;
+        height: 19px;
+        stroke-width: 2;
     }
-    .announcement-nav.prev { left: -48px; }
-    .announcement-nav.next { right: -48px; }
+    .announcement-nav.prev { left: -30px; }
+    .announcement-nav.next { right: -30px; }
+    .announcement-pagination {
+        position: absolute;
+        left: 50%;
+        bottom: 1px;
+        z-index: 8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        transform: translateX(-50%);
+    }
+    .announcement-dot {
+        width: 5px;
+        height: 5px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(203, 213, 225, .68);
+        cursor: pointer;
+        transition: width .2s ease, background .2s ease, transform .2s ease;
+    }
+    .announcement-dot:hover,
+    .announcement-dot:focus-visible {
+        background: #f8fafc;
+        transform: scale(1.25);
+        outline: none;
+    }
+    .announcement-dot.is-active {
+        width: 15px;
+        background: #facc15;
+    }
     .btn-outline { position:relative; overflow:hidden; display:inline-flex; align-items:center; gap:8px; padding:0; border-radius:0; border:0; color:#8B0000; background:transparent; text-decoration:none; margin-top:14px; font-weight:900; transition:transform .18s ease, color .18s ease; }
     .btn-outline::after {
         content:"";
@@ -727,8 +997,9 @@
         background: linear-gradient(
             180deg,
             rgba(2, 6, 23, 0) 0%,
-            rgba(2, 6, 23, .18) 45%,
-            rgba(2, 6, 23, .58) 100%
+            rgba(8, 20, 38, .34) 42%,
+            rgba(8, 20, 38, .72) 72%,
+            rgba(8, 20, 38, .96) 100%
         );
     }
     html[data-theme="dark"] .about-section-title,
@@ -748,38 +1019,10 @@
     html[data-theme="dark"] .why-copy span {
         color: #cbd5e1;
     }
-    html[data-theme="dark"] .home-announcement-card {
-        border-color: rgba(250, 204, 21, .28);
-        background: linear-gradient(90deg, rgba(30, 41, 59, .96), rgba(15, 23, 42, .90));
-        box-shadow: 0 14px 28px rgba(0, 0, 0, .24);
-    }
-    html[data-theme="dark"] .announcement-icon {
-        background: rgba(250, 204, 21, .12);
-        color: #facc15;
-    }
-    html[data-theme="dark"] .announcement-eyebrow {
-        color: #facc15;
-    }
-    html[data-theme="dark"] .announcement-title {
-        color: #f8fafc;
-    }
-    html[data-theme="dark"] .announcement-message {
-        color: #cbd5e1;
-    }
-    html[data-theme="dark"] .announcement-detail,
     html[data-theme="dark"] .btn-outline,
     html[data-theme="dark"] .btn-outline:hover,
     html[data-theme="dark"] .btn-outline:focus-visible {
         color: #facc15;
-    }
-    html[data-theme="dark"] .announcement-nav {
-        border-color: rgba(250, 204, 21, .32);
-        background: rgba(15, 23, 42, .92);
-        color: #facc15;
-        box-shadow: 0 12px 24px rgba(0, 0, 0, .24);
-    }
-    html[data-theme="dark"] .announcement-nav:hover {
-        background: rgba(250, 204, 21, .16);
     }
     html[data-theme="dark"] .comment-card {
         background: #151d2b;
@@ -1191,18 +1434,123 @@
             margin: 0 auto;
             text-align: left;
         }
-        .home-announcement-card {
-            grid-template-columns: 1fr;
-            text-align: center;
-            justify-items: center;
-            padding: 22px;
+        .home-announcement-band { min-height: 342px; }
+        .home-announcement-shell {
+            width: calc(100% - 52px);
+            height: 286px;
+            transform: translateY(10px);
         }
-        .announcement-nav.prev { left: 8px; }
-        .announcement-nav.next { right: 8px; }
+        .home-announcement-card.is-current,
+        .home-announcement-card.is-next {
+            width: 244px;
+            min-height: 196px;
+        }
+        .home-announcement-card.is-current { left: calc(50% - 128px); }
+        .home-announcement-card.is-next { left: calc(50% + 128px); }
+        .home-announcement-card.is-prev { left: calc(50% - 330px); }
+        .home-announcement-card.is-next-far { left: calc(50% + 330px); }
+        .home-announcement-shell.is-static .home-announcement-card {
+            width: 230px;
+            min-height: 196px;
+        }
+        .home-announcement-shell.static-count-2 .home-announcement-card:nth-of-type(1) {
+            left: calc(50% - 122px);
+        }
+        .home-announcement-shell.static-count-2 .home-announcement-card:nth-of-type(2) {
+            left: calc(50% + 122px);
+        }
+        .home-announcement-shell.static-count-3 .home-announcement-card:nth-of-type(1) {
+            left: calc(50% - 244px);
+        }
+        .home-announcement-shell.static-count-3 .home-announcement-card:nth-of-type(2) {
+            left: 50%;
+        }
+        .home-announcement-shell.static-count-3 .home-announcement-card:nth-of-type(3) {
+            left: calc(50% + 244px);
+        }
+        .home-announcement-shell.carousel-count-3 .home-announcement-card.is-current {
+            left: 50%;
+            width: 244px;
+            min-height: 196px;
+        }
+        .home-announcement-shell.carousel-count-3 .home-announcement-card.is-prev {
+            left: calc(50% - 330px);
+        }
+        .home-announcement-shell.carousel-count-3 .home-announcement-card.is-next {
+            left: calc(50% + 330px);
+        }
+        .announcement-nav.prev { left: -10px; }
+        .announcement-nav.next { right: -10px; }
         .comments-grid { grid-template-columns:repeat(2,1fr); }
         .footer-grid { grid-template-columns:repeat(2,1fr); }
         .PUPBG-title { font-size:36px; max-width: 100%; }
         .hero-title-rotating-line { white-space: normal; }
+    }
+    @media (max-width:680px){
+        .home-announcement-band {
+            min-height: 344px;
+            margin-bottom: 28px;
+        }
+        .home-announcement-shell {
+            width: calc(100% - 28px);
+            height: 292px;
+            transform: translateY(8px);
+        }
+        .home-announcement-card,
+        .home-announcement-card.is-current {
+            left: 50%;
+            width: min(330px, calc(100% - 54px));
+            min-height: 220px;
+        }
+        .home-announcement-card.is-current {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: auto;
+        }
+        .home-announcement-card.is-next,
+        .home-announcement-card.is-prev,
+        .home-announcement-card.is-next-far {
+            left: 50%;
+            opacity: 0;
+            visibility: hidden;
+            transform: translate(-50%, -50%) scale(.88);
+            pointer-events: none;
+        }
+        .home-announcement-shell.is-static {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            height: 292px;
+            padding: 22px 28px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            transform: none;
+            scrollbar-width: none;
+        }
+        .home-announcement-shell.is-static::-webkit-scrollbar {
+            display: none;
+        }
+        .home-announcement-shell.is-static .home-announcement-card {
+            position: relative;
+            top: auto;
+            left: auto !important;
+            flex: 0 0 min(300px, calc(100vw - 86px));
+            width: min(300px, calc(100vw - 86px));
+            min-height: 220px;
+            opacity: 1;
+            visibility: visible;
+            transform: none;
+            pointer-events: auto;
+            scroll-snap-align: center;
+        }
+        .announcement-nav {
+            width: 36px;
+            height: 36px;
+        }
+        .announcement-nav.prev { left: 0; }
+        .announcement-nav.next { right: 0; }
+        .announcement-pagination { bottom: 0; }
     }
     @media (max-width:600px){
         .comments-grid { grid-template-columns:1fr; }
@@ -1315,7 +1663,7 @@
           </a>
         </div>
 
-        <a href="#about" class="hero-scroll" aria-label="Scroll to Explore">
+        <a href="#announcements" class="hero-scroll" aria-label="Scroll to Explore">
           <span>Scroll to Explore</span>
           <span class="hero-scroll-button" aria-hidden="true">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hero-scroll-chevron">
@@ -1328,8 +1676,93 @@
     </section>
 
     <div class="student-home-info-bg" id="homeAboutArea">
-    <section id="about" class="about-panel" style="scroll-margin-top: 100px;">
-      <div class="container">
+    <section class="about-panel">
+      @php
+        $announcementSlides = ($homeAnnouncements ?? collect())->isNotEmpty()
+            ? $homeAnnouncements
+            : collect([[
+                'priority' => 'ANNOUNCEMENT',
+                'title' => 'No clinic announcements posted yet.',
+                'message' => 'New clinic updates will appear here once they are published.',
+                'date' => now(config('app.timezone'))->format('M j, Y'),
+            ]]);
+        $announcementCount = $announcementSlides->count();
+      @endphp
+
+      <div id="announcements" class="home-announcement-band" aria-label="Clinic announcements" style="scroll-margin-top: 86px;">
+        <div class="home-announcement-shell {{ $announcementCount < 3 ? 'is-static static-count-' . $announcementCount : 'is-carousel carousel-count-' . $announcementCount }}" data-home-announcements>
+          @foreach($announcementSlides as $index => $announcement)
+            @php
+              $announcementSearch = strtolower(($announcement['priority'] ?? '') . ' ' . ($announcement['title'] ?? ''));
+              $announcementIcon = str_contains($announcementSearch, 'schedule') || str_contains($announcementSearch, 'service')
+                  ? 'calendar-days'
+                  : (str_contains($announcementSearch, 'health') || str_contains($announcementSearch, 'reminder')
+                      ? 'heart-pulse'
+                      : (str_contains($announcementSearch, 'form') || str_contains($announcementSearch, 'document')
+                          ? 'document-text'
+                          : 'megaphone'));
+              $announcementPosition = match (true) {
+                  $index === 0 => 'is-current',
+                  $index === 1 => 'is-next',
+                  $announcementCount > 2 && $index === $announcementCount - 1 => 'is-prev',
+                  $announcementCount > 3 && $index === 2 => 'is-next-far',
+                  default => '',
+              };
+            @endphp
+            <article
+              class="home-announcement-card {{ $announcementPosition }}"
+              data-announcement-slide
+              data-announcement-detail
+              data-priority="{{ e($announcement['priority'] ?: 'ANNOUNCEMENT') }}"
+              data-title="{{ e($announcement['title']) }}"
+              data-message="{{ e($announcement['message']) }}"
+              role="button"
+              tabindex="0"
+              aria-label="View announcement: {{ $announcement['title'] }}"
+            >
+              <div class="announcement-card-head">
+                <span class="announcement-icon" aria-hidden="true">
+                  <x-outline-icon :name="$announcementIcon" />
+                </span>
+                <div>
+                  <p class="announcement-eyebrow">{{ $announcement['priority'] ?: 'ANNOUNCEMENT' }}</p>
+                  <h3 class="announcement-title">{{ $announcement['title'] }}</h3>
+                </div>
+              </div>
+              <p class="announcement-message">{{ \Illuminate\Support\Str::limit($announcement['message'], 175) }}</p>
+              <span class="announcement-date">
+                <x-outline-icon name="calendar-days" />
+                <span>{{ $announcement['date'] ?? now(config('app.timezone'))->format('M j, Y') }}</span>
+              </span>
+            </article>
+          @endforeach
+
+          @if($announcementCount >= 3)
+            <button type="button" class="announcement-nav prev" data-announcement-prev aria-label="Previous announcement">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 19.5-7.5-7.5 7.5-7.5" />
+              </svg>
+            </button>
+            <button type="button" class="announcement-nav next" data-announcement-next aria-label="Next announcement">
+              <x-outline-icon name="chevron-right" />
+            </button>
+
+            <div class="announcement-pagination" aria-label="Choose announcement">
+              @foreach($announcementSlides as $index => $announcement)
+                <button
+                  type="button"
+                  class="announcement-dot {{ $index === 0 ? 'is-active' : '' }}"
+                  data-announcement-dot="{{ $index }}"
+                  aria-label="Show announcement {{ $index + 1 }}"
+                  aria-current="{{ $index === 0 ? 'true' : 'false' }}"
+                ></button>
+              @endforeach
+            </div>
+          @endif
+        </div>
+      </div>
+
+      <div id="about" class="container" style="scroll-margin-top: 100px;">
         <h2 class="about-section-title">Why choose PUP Taguig Clinic?</h2>
 
         <div class="why-grid">
@@ -1367,44 +1800,6 @@
               <x-outline-icon name="arrow-long-right" />
               <span>Learn More</span>
           </a>
-        </div>
-
-        @php
-          $announcementSlides = ($homeAnnouncements ?? collect())->isNotEmpty()
-              ? $homeAnnouncements
-              : collect([[
-                  'priority' => 'ANNOUNCEMENT',
-                  'title' => 'No clinic announcements posted yet.',
-                  'message' => 'New clinic updates will appear here once they are published.',
-              ]]);
-        @endphp
-        <div class="home-announcement-shell" data-home-announcements>
-          @foreach($announcementSlides as $index => $announcement)
-            <article class="home-announcement-card {{ $index === 0 ? 'is-active' : '' }}" data-announcement-slide>
-              <span class="announcement-icon" aria-hidden="true">
-                <x-outline-icon name="megaphone" />
-              </span>
-              <div>
-                <p class="announcement-eyebrow">{{ $announcement['priority'] ?: 'ANNOUNCEMENT' }}</p>
-                <h3 class="announcement-title">{{ $announcement['title'] }}</h3>
-                <p class="announcement-message">{{ \Illuminate\Support\Str::limit($announcement['message'], 110) }}</p>
-              </div>
-              <a href="{{ url('/student/home') }}#about" class="announcement-detail">
-                <span>View Details</span>
-                <x-outline-icon name="arrow-long-right" />
-              </a>
-            </article>
-          @endforeach
-          @if($announcementSlides->count() > 1)
-            <button type="button" class="announcement-nav prev" data-announcement-prev aria-label="Previous announcement">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 19.5-7.5-7.5 7.5-7.5" />
-              </svg>
-            </button>
-            <button type="button" class="announcement-nav next" data-announcement-next aria-label="Next announcement">
-              <x-outline-icon name="chevron-right" />
-            </button>
-          @endif
         </div>
 
         <section class="comments-section">
@@ -1482,7 +1877,7 @@
               <a class="social-link" href="#" aria-label="Official clinic site">
                 <x-outline-icon name="globe-alt" />
               </a>
-              <a class="social-link" href="#" aria-label="Clinic announcements">
+              <a class="social-link" href="#announcements" aria-label="Clinic announcements">
                 <x-outline-icon name="megaphone" />
               </a>
             </div>
@@ -1492,7 +1887,7 @@
             <h4><span class="footer-heading-icon"><x-outline-icon name="link" /></span><span>Quick Links</span></h4>
             <ul class="footer-links">
               <li><a href="{{ url('/student/home') }}"><x-outline-icon name="home" class="footer-link-icon" /><span>Home</span></a></li>
-              <li><a href="#"><x-outline-icon name="information-circle" class="footer-link-icon" /><span>About Us</span></a></li>
+              <li><a href="#about"><x-outline-icon name="information-circle" class="footer-link-icon" /><span>About Us</span></a></li>
               <li><a href="{{ url('/student/booking') }}"><x-outline-icon name="calendar-days" class="footer-link-icon" /><span>Book Appointment</span></a></li>
               <li><a href="{{ url('/student/faq') }}"><x-outline-icon name="question-mark-circle" class="footer-link-icon" /><span>FAQ</span></a></li>
             </ul>
@@ -1550,11 +1945,31 @@
       </section>
     </div>
 
+    <div class="announcement-modal" id="announcementDetailModal" aria-hidden="true">
+      <section class="announcement-modal-card" role="dialog" aria-modal="true" aria-labelledby="announcementDetailTitle">
+        <div class="announcement-modal-head">
+          <div>
+            <p class="announcement-modal-eyebrow" id="announcementDetailPriority">ANNOUNCEMENT</p>
+            <h3 class="announcement-modal-title" id="announcementDetailTitle">Announcement</h3>
+          </div>
+          <button type="button" class="announcement-modal-close" id="announcementDetailClose" aria-label="Close announcement details">
+            <x-outline-icon name="x-mark" />
+          </button>
+        </div>
+        <div class="announcement-modal-body" id="announcementDetailMessage"></div>
+      </section>
+    </div>
+
     <script>
       document.addEventListener('DOMContentLoaded', function () {
         const learnMoreBtn = document.getElementById('learnMoreBtn');
         const learnMoreModal = document.getElementById('learnMoreModal');
         const learnMoreCloseBtn = document.getElementById('learnMoreCloseBtn');
+        const announcementDetailModal = document.getElementById('announcementDetailModal');
+        const announcementDetailClose = document.getElementById('announcementDetailClose');
+        const announcementDetailPriority = document.getElementById('announcementDetailPriority');
+        const announcementDetailTitle = document.getElementById('announcementDetailTitle');
+        const announcementDetailMessage = document.getElementById('announcementDetailMessage');
         const heroRotatingWord = document.getElementById('heroRotatingWord');
         const heroScrollLink = document.querySelector('.hero-scroll');
         const announcementShell = document.querySelector('[data-home-announcements]');
@@ -1576,6 +1991,9 @@
 
         if (learnMoreModal && learnMoreModal.parentElement !== document.body) {
           document.body.appendChild(learnMoreModal);
+        }
+        if (announcementDetailModal && announcementDetailModal.parentElement !== document.body) {
+          document.body.appendChild(announcementDetailModal);
         }
 
         function setLearnMoreOpen(isOpen) {
@@ -1607,6 +2025,40 @@
           });
         }
 
+        function setAnnouncementDetailOpen(isOpen, trigger = null) {
+          if (!announcementDetailModal) return;
+
+          if (trigger && isOpen) {
+            if (announcementDetailPriority) announcementDetailPriority.textContent = trigger.dataset.priority || 'ANNOUNCEMENT';
+            if (announcementDetailTitle) announcementDetailTitle.textContent = trigger.dataset.title || 'Announcement';
+            if (announcementDetailMessage) announcementDetailMessage.textContent = trigger.dataset.message || '';
+          }
+
+          announcementDetailModal.classList.toggle('is-open', isOpen);
+          announcementDetailModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        }
+
+        document.querySelectorAll('[data-announcement-detail]').forEach(function (announcementCard) {
+          announcementCard.addEventListener('click', function () {
+            setAnnouncementDetailOpen(true, announcementCard);
+          });
+          announcementCard.addEventListener('keydown', function (event) {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            setAnnouncementDetailOpen(true, announcementCard);
+          });
+        });
+
+        announcementDetailClose?.addEventListener('click', function () {
+          setAnnouncementDetailOpen(false);
+        });
+
+        announcementDetailModal?.addEventListener('click', function (event) {
+          if (event.target === announcementDetailModal) {
+            setAnnouncementDetailOpen(false);
+          }
+        });
+
         if (heroScrollLink) {
           heroScrollLink.addEventListener('click', function (event) {
             const target = document.querySelector(heroScrollLink.getAttribute('href'));
@@ -1628,7 +2080,9 @@
           const slides = Array.from(announcementShell.querySelectorAll('[data-announcement-slide]'));
           const prevButton = announcementShell.querySelector('[data-announcement-prev]');
           const nextButton = announcementShell.querySelector('[data-announcement-next]');
-          let activeAnnouncement = slides.findIndex((slide) => slide.classList.contains('is-active'));
+          const dots = Array.from(announcementShell.querySelectorAll('[data-announcement-dot]'));
+          const positionClasses = ['is-current', 'is-next', 'is-prev', 'is-next-far'];
+          let activeAnnouncement = slides.findIndex((slide) => slide.classList.contains('is-current'));
           let announcementTimer = null;
 
           if (activeAnnouncement < 0) activeAnnouncement = 0;
@@ -1636,14 +2090,31 @@
           const showAnnouncement = function (nextIndex) {
             if (!slides.length) return;
             activeAnnouncement = (nextIndex + slides.length) % slides.length;
+
             slides.forEach((slide, index) => {
-              slide.classList.toggle('is-active', index === activeAnnouncement);
+              slide.classList.remove(...positionClasses);
+
+              if (index === activeAnnouncement) {
+                slide.classList.add('is-current');
+              } else if (slides.length > 1 && index === (activeAnnouncement + 1) % slides.length) {
+                slide.classList.add('is-next');
+              } else if (slides.length > 2 && index === (activeAnnouncement - 1 + slides.length) % slides.length) {
+                slide.classList.add('is-prev');
+              } else if (slides.length > 3 && index === (activeAnnouncement + 2) % slides.length) {
+                slide.classList.add('is-next-far');
+              }
+            });
+
+            dots.forEach((dot, index) => {
+              const isActive = index === activeAnnouncement;
+              dot.classList.toggle('is-active', isActive);
+              dot.setAttribute('aria-current', isActive ? 'true' : 'false');
             });
           };
 
           const restartAnnouncementTimer = function () {
             if (announcementTimer) window.clearInterval(announcementTimer);
-            if (slides.length > 1) {
+            if (slides.length >= 3) {
               announcementTimer = window.setInterval(function () {
                 showAnnouncement(activeAnnouncement + 1);
               }, 5000);
@@ -1660,6 +2131,20 @@
             restartAnnouncementTimer();
           });
 
+          dots.forEach(function (dot) {
+            dot.addEventListener('click', function () {
+              showAnnouncement(Number(dot.dataset.announcementDot || 0));
+              restartAnnouncementTimer();
+            });
+          });
+
+          announcementShell.addEventListener('mouseenter', function () {
+            if (announcementTimer) window.clearInterval(announcementTimer);
+          });
+
+          announcementShell.addEventListener('mouseleave', restartAnnouncementTimer);
+
+          showAnnouncement(activeAnnouncement);
           restartAnnouncementTimer();
         }
 
