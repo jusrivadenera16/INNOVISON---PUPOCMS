@@ -508,6 +508,7 @@
     $certificateGad = $gadTables['certificate'] ?? [];
     $triageOnlineGad = $gadTables['triage_online'] ?? [];
     $combinedGad = $gadTables['combined'] ?? [];
+    $freshmenClearanceGad = $gadTables['freshmen_clearance'] ?? [];
 @endphp
 
 
@@ -542,6 +543,7 @@
         <button type="button" class="report-switch-btn" data-target="mar-gad-certificate">GAD Certificate</button>
         <button type="button" class="report-switch-btn" data-target="mar-gad-triage">GAD Triage Online</button>
         <button type="button" class="report-switch-btn" data-target="mar-gad-combined">GAD Combined</button>
+        <button type="button" class="report-switch-btn" data-target="mar-gad-freshmen-clearance">GAD Freshmen Clearance</button>
     </div>
 
     
@@ -868,6 +870,34 @@
             <tr><td style="padding-left: 30px;">Male</td><td class="text-center">{{ $combinedGad['senior_male']['student'] ?? 0 }}</td><td class="text-center">{{ $combinedGad['senior_male']['faculty'] ?? 0 }}</td><td class="text-center">{{ $combinedGad['senior_male']['admin'] ?? 0 }}</td><td class="text-center">{{ $combinedGad['senior_male']['dependent'] ?? 0 }}</td><td class="text-center">{{ $combinedGad['senior_male']['total'] ?? 0 }}</td></tr>
             <tr><td style="padding-left: 30px;">Female</td><td class="text-center">{{ $combinedGad['senior_female']['student'] ?? 0 }}</td><td class="text-center">{{ $combinedGad['senior_female']['faculty'] ?? 0 }}</td><td class="text-center">{{ $combinedGad['senior_female']['admin'] ?? 0 }}</td><td class="text-center">{{ $combinedGad['senior_female']['dependent'] ?? 0 }}</td><td class="text-center">{{ $combinedGad['senior_female']['total'] ?? 0 }}</td></tr>
             <tr class="subsection-row"><td>Total</td><td class="text-center">{{ $combinedGad['total']['student'] ?? 0 }}</td><td class="text-center">{{ $combinedGad['total']['faculty'] ?? 0 }}</td><td class="text-center">{{ $combinedGad['total']['admin'] ?? 0 }}</td><td class="text-center">{{ $combinedGad['total']['dependent'] ?? 0 }}</td><td class="text-center">{{ $combinedGad['total']['total'] ?? 0 }}</td></tr>
+        </tbody>
+    </table>
+    </div>
+
+    <div class="report-panel" id="mar-gad-freshmen-clearance">
+    <div class="table-panel-title">GAD Freshmen Clearance</div>
+    <table class="gad-table">
+        <thead>
+            <tr>
+                <th>GAD (Medical Clearance for Freshmen)</th>
+                <th style="text-align: center;">Students</th>
+                <th style="text-align: center;">Faculty</th>
+                <th style="text-align: center;">Admin</th>
+                <th style="text-align: center;">Dependent</th>
+                <th style="text-align: center;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="gad-section-row"><td colspan="6">GAD Summary</td></tr>
+            <tr><td>Female</td><td class="text-center">{{ $freshmenClearanceGad['female']['student'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['female']['faculty'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['female']['admin'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['female']['dependent'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['female']['total'] ?? 0 }}</td></tr>
+            <tr><td>Male</td><td class="text-center">{{ $freshmenClearanceGad['male']['student'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['male']['faculty'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['male']['admin'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['male']['dependent'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['male']['total'] ?? 0 }}</td></tr>
+            <tr class="subsection-row"><td colspan="6">PWD</td></tr>
+            <tr><td style="padding-left: 30px;">Male</td><td class="text-center">{{ $freshmenClearanceGad['pwd_male']['student'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['pwd_male']['faculty'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['pwd_male']['admin'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['pwd_male']['dependent'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['pwd_male']['total'] ?? 0 }}</td></tr>
+            <tr><td style="padding-left: 30px;">Female</td><td class="text-center">{{ $freshmenClearanceGad['pwd_female']['student'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['pwd_female']['faculty'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['pwd_female']['admin'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['pwd_female']['dependent'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['pwd_female']['total'] ?? 0 }}</td></tr>
+            <tr class="subsection-row"><td colspan="6">Senior</td></tr>
+            <tr><td style="padding-left: 30px;">Male</td><td class="text-center">{{ $freshmenClearanceGad['senior_male']['student'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['senior_male']['faculty'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['senior_male']['admin'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['senior_male']['dependent'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['senior_male']['total'] ?? 0 }}</td></tr>
+            <tr><td style="padding-left: 30px;">Female</td><td class="text-center">{{ $freshmenClearanceGad['senior_female']['student'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['senior_female']['faculty'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['senior_female']['admin'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['senior_female']['dependent'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['senior_female']['total'] ?? 0 }}</td></tr>
+            <tr class="subsection-row"><td>Total</td><td class="text-center">{{ $freshmenClearanceGad['total']['student'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['total']['faculty'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['total']['admin'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['total']['dependent'] ?? 0 }}</td><td class="text-center">{{ $freshmenClearanceGad['total']['total'] ?? 0 }}</td></tr>
         </tbody>
     </table>
     </div>
