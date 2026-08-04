@@ -737,6 +737,19 @@ class AppointmentController extends Controller
         return '';
     }
 
+    private function normalizeManualStudentNumber(?string $value): string
+    {
+        $value = strtoupper(trim((string) $value));
+        $value = preg_replace('/[^A-Z0-9\-_]/', '', $value) ?? '';
+
+        return substr($value, 0, 120);
+    }
+
+    private function wantsManualStudentNumberMode(Request $request): bool
+    {
+        return trim((string) $request->input('reference_mode_selected')) === 'student_number';
+    }
+
     private function resolveReferenceNumber(User $user, ?HealthProfile $healthProfile = null, ?array $applicantData = null): string
     {
         $candidates = [
@@ -4224,6 +4237,22 @@ public function validateHealthFormReference(Request $request)
         : null;
     $studentNumberReference = $user ? $this->enrolledStudentReferenceNumber($user, $existingHealthProfile) : '';
 
+    if ($user && $this->wantsManualStudentNumberMode($request)) {
+        $validated = $request->validate([
+            'reference_number' => ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9\-_]+$/'],
+        ]);
+
+        $studentNumberReference = $this->normalizeManualStudentNumber($validated['reference_number']);
+        $this->persistResolvedStudentNumber($user, $existingHealthProfile, $studentNumberReference);
+        $this->persistResolvedReferenceNumber($user, $studentNumberReference, $existingHealthProfile);
+
+        return response()->json([
+            'success' => true,
+            'reference_number' => $studentNumberReference,
+            'message' => 'Student ID accepted. Admission cross-check is bypassed for current students and OJT students.',
+        ]);
+    }
+
     if ($studentNumberReference !== '') {
         $referenceMode = 'student_number';
         $accountApplicantData = null;
@@ -4443,7 +4472,15 @@ public function storeHealthForm(Request $request)
 
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
     $studentNumberReference = $user ? $this->enrolledStudentReferenceNumber($user, $existingHealthProfile) : '';
-    if ($studentNumberReference !== '') {
+    $manualStudentNumberReference = $this->wantsManualStudentNumberMode($request)
+        ? $this->normalizeManualStudentNumber($request->input('reference_number'))
+        : '';
+
+    if ($manualStudentNumberReference !== '') {
+        $studentNumberReference = $manualStudentNumberReference;
+        $accountApplicantData = null;
+        $referenceMode = 'student_number';
+    } elseif ($studentNumberReference !== '') {
         $accountApplicantData = null;
         $referenceMode = 'student_number';
     } else {
@@ -4482,7 +4519,8 @@ public function storeHealthForm(Request $request)
     ]);
 
     $isStudentNumberReferenceMode = $referenceMode === 'student_number';
-    $applicantDocumentsRequired = $referenceMode === 'admission';
+    $manualStudentDocumentsRequired = $manualStudentNumberReference !== '';
+    $applicantDocumentsRequired = $referenceMode === 'admission' || $manualStudentDocumentsRequired;
     $referenceNumberRules = $isStudentNumberReferenceMode
         ? ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9\-_]+$/']
         : ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$/'];
@@ -4654,8 +4692,14 @@ public function storeHealthForm(Request $request)
         $officialReference = $studentNumberReference;
         if ($officialReference === '' || $submittedReference !== strtoupper($officialReference)) {
             throw ValidationException::withMessages([
-                'reference_number' => 'Student Number must come from your official GUISIS account before submitting the Health Profile.',
+                'reference_number' => $manualStudentDocumentsRequired
+                    ? 'Enter your Student ID before submitting the Health Profile.'
+                    : 'Student Number must come from your official GUISIS account before submitting the Health Profile.',
             ]);
+        }
+
+        if ($manualStudentDocumentsRequired) {
+            $this->persistResolvedStudentNumber($user, $existingHealthProfile, $officialReference);
         }
     } elseif ($referenceMode === 'admission') {
         $officialReference = strtoupper(trim((string) ($user->reference_number ?? '')));
@@ -4706,6 +4750,7 @@ public function storeHealthForm(Request $request)
 
         $healthProfileData = [
                 'student_id'         => $request->student_id,
+                'student_number'     => $referenceMode === 'student_number' ? $officialReference : $this->resolveStudentNumber($user, $existingHealthProfile, $accountApplicantData),
                 'reference_number'   => $officialReference,
                 'school_year'        => $request->school_year,
                 'home_address'       => $request->home_address,
