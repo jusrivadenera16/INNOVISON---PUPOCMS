@@ -2335,6 +2335,15 @@
         background: linear-gradient(145deg, rgba(12, 31, 52, .76), rgba(4, 14, 29, .82));
         border-color: rgba(148, 163, 184, .34);
     }
+    .PUPBG .hero-scroll,
+    .PUPBG .hero-scroll:visited,
+    .PUPBG .hero-scroll:hover,
+    .PUPBG .hero-scroll:focus-visible,
+    .PUPBG .hero-scroll span,
+    .PUPBG .hero-scroll svg {
+        color: #ffffff !important;
+        stroke: #ffffff !important;
+    }
 
     @media (max-width: 760px) {
         #about.about-experience { padding: 44px 18px 48px; }
@@ -2371,13 +2380,13 @@
         }
         .home-announcement-shell {
             width: 100%;
-            height: 330px;
+            height: 390px;
             margin: 0;
             transform: none;
         }
         .home-announcement-shell.is-static {
             display: block;
-            height: 330px;
+            height: 390px;
             padding: 0;
             overflow: hidden;
         }
@@ -2386,13 +2395,15 @@
         .home-announcement-shell.carousel-count-3 .home-announcement-card.is-current,
         .home-announcement-shell.is-static .home-announcement-card {
             position: absolute;
-            top: 50%;
+            top: 56px;
             left: 50%;
             width: min(330px, calc(100% - 84px));
             min-height: 220px;
         }
+        .home-announcement-card.is-current,
+        .home-announcement-shell.carousel-count-3 .home-announcement-card.is-current,
         .home-announcement-shell.is-static .home-announcement-card {
-            transform: translate(-50%, -50%) scale(1);
+            transform: translateX(-50%) scale(1);
         }
         .home-announcement-card.is-next,
         .home-announcement-card.is-prev,
@@ -2402,15 +2413,19 @@
             left: 50%;
             opacity: 0;
             visibility: hidden;
-            transform: translate(-50%, -50%) scale(.88);
+            transform: translateX(-50%) scale(.88);
             pointer-events: none;
         }
         .announcement-nav.prev { left: 14px; }
         .announcement-nav.next { right: 14px; }
         .announcement-nav:disabled { visibility: hidden; }
         .home-announcement-shell.is-static .home-announcement-card:hover,
-        .home-announcement-shell.is-static .home-announcement-card:focus-visible {
-            transform: translate(-50%, -50%) scale(1.025);
+        .home-announcement-shell.is-static .home-announcement-card:focus-visible,
+        .home-announcement-card.is-current:hover,
+        .home-announcement-card.is-current:focus-visible,
+        .home-announcement-shell.carousel-count-3 .home-announcement-card.is-current:hover,
+        .home-announcement-shell.carousel-count-3 .home-announcement-card.is-current:focus-visible {
+            transform: translateX(-50%) translateY(-4px) scale(1.025);
         }
         .home-announcement-view-all {
             bottom: 24px;
