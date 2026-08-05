@@ -660,7 +660,7 @@
         padding: 34px 30px 20px;
         overflow: hidden;
         border-radius: 18px;
-        border: 1px solid rgba(255, 255, 255, .34);
+        border: 1px solid rgba(250, 204, 21, .30);
         background: linear-gradient(145deg, rgba(95, 13, 35, .74), rgba(50, 5, 19, .78));
         box-shadow: 0 20px 42px rgba(27, 0, 8, .30), inset 0 1px rgba(255, 255, 255, .08);
         color: #f8fafc;
@@ -682,7 +682,7 @@
         visibility: visible;
         transform: translate(-50%, -50%) scale(1);
         pointer-events: auto;
-        box-shadow: 0 20px 42px rgba(27, 0, 8, .30), 1px 1px 0 rgba(250, 204, 21, .68), inset 0 1px rgba(255, 255, 255, .08);
+        box-shadow: 0 20px 42px rgba(27, 0, 8, .30), inset 0 1px rgba(255, 255, 255, .08);
     }
     .home-announcement-card.is-current { left: calc(50% - 215px); }
     .home-announcement-card.is-next { left: calc(50% + 215px); }
@@ -752,9 +752,25 @@
     }
     .home-announcement-card:hover,
     .home-announcement-card:focus-visible {
-        border-color: rgba(250, 204, 21, .56);
-        box-shadow: 0 24px 48px rgba(27, 0, 8, .42), 2px 2px 0 rgba(250, 204, 21, .72);
+        border-color: rgba(250, 204, 21, .48);
+        box-shadow: 0 28px 52px rgba(27, 0, 8, .44), inset 0 1px rgba(255, 255, 255, .10);
         outline: none;
+    }
+    .home-announcement-card.is-current:hover,
+    .home-announcement-card.is-current:focus-visible,
+    .home-announcement-card.is-next:hover,
+    .home-announcement-card.is-next:focus-visible,
+    .home-announcement-shell.is-static .home-announcement-card:hover,
+    .home-announcement-shell.is-static .home-announcement-card:focus-visible {
+        transform: translate(-50%, -50%) scale(1.035);
+    }
+    .home-announcement-card.is-prev:hover,
+    .home-announcement-card.is-prev:focus-visible,
+    .home-announcement-card.is-next-far:hover,
+    .home-announcement-card.is-next-far:focus-visible,
+    .home-announcement-shell.carousel-count-3 .home-announcement-card.is-next:hover,
+    .home-announcement-shell.carousel-count-3 .home-announcement-card.is-next:focus-visible {
+        transform: translate(-50%, -50%) scale(.985);
     }
     .announcement-card-head {
         display: grid;
@@ -1986,14 +2002,51 @@
     }
 
     /* --- CONTINUOUS ANNOUNCEMENTS / ABOUT EXPERIENCE --- */
-    .hero-curve,
-    html[data-theme="dark"] .hero-curve {
-        height: 112px;
-        background: linear-gradient(180deg, rgba(88, 7, 27, 0), rgba(88, 7, 27, .32) 36%, #58071b 100%);
+    .hero-curve {
+        bottom: -2px;
+        height: 126px;
+        background: linear-gradient(
+            180deg,
+            rgba(74, 4, 23, 0) 0%,
+            rgba(74, 4, 23, .1) 22%,
+            rgba(74, 4, 23, .28) 45%,
+            rgba(74, 4, 23, .56) 68%,
+            rgba(74, 4, 23, .84) 86%,
+            #4a0417 100%
+        );
     }
-    .student-home-info-bg,
+    html[data-theme="dark"] .hero-curve {
+        background: linear-gradient(
+            180deg,
+            rgba(5, 13, 27, 0) 0%,
+            rgba(5, 13, 27, .1) 22%,
+            rgba(5, 13, 27, .3) 45%,
+            rgba(5, 13, 27, .6) 68%,
+            rgba(5, 13, 27, .86) 86%,
+            #050d1b 100%
+        );
+    }
+    .student-home-info-bg {
+        margin-top: -72px;
+        padding-top: 72px;
+        background: linear-gradient(
+            180deg,
+            rgba(74, 4, 23, 0) 0,
+            #4a0417 72px,
+            #6f0b24 52%,
+            #a91f35 100%
+        );
+    }
     html[data-theme="dark"] .student-home-info-bg {
-        background: linear-gradient(135deg, #58071b 0%, #741024 48%, #951c30 100%);
+        margin-top: -72px;
+        padding-top: 72px;
+        background: linear-gradient(
+            180deg,
+            rgba(5, 13, 27, 0) 0,
+            #050d1b 72px,
+            #0a1728 52%,
+            #132942 100%
+        );
     }
     .student-home-info-bg::before,
     html[data-theme="dark"] .student-home-info-bg::before {
@@ -2019,7 +2072,18 @@
         border-top: 0;
         box-shadow: none;
     }
-    #about.about-experience::before { content: none; }
+    #about.about-experience::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: min(1100px, calc(100% - 48px));
+        height: 1px;
+        transform: translateX(-50%);
+        background: linear-gradient(90deg, transparent, rgba(250, 204, 21, .55) 14%, rgba(250, 204, 21, .55) 86%, transparent);
+        pointer-events: none;
+        z-index: 2;
+    }
     #about,
     #about * { box-sizing: border-box; }
     .about-heading,
@@ -2059,9 +2123,11 @@
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 18px;
+        align-items: stretch;
         margin: 28px auto 18px;
     }
     #about .why-item {
+        height: 100%;
         min-height: 190px;
         display: flex;
         flex-direction: column;
@@ -2127,10 +2193,23 @@
     #about .btn-outline:focus-visible { color: #facc15; }
 
     #about .comments-section {
-        margin: 0;
+        position: relative;
+        width: min(1100px, 100%);
+        margin: 0 auto;
         padding: 28px 0 0;
-        border-top: 1px solid rgba(255, 255, 255, .13);
+        border-top: 0;
         background: transparent !important;
+    }
+    #about .comments-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(250, 204, 21, .55) 14%, rgba(250, 204, 21, .55) 86%, transparent);
+        pointer-events: none;
+        z-index: 2;
     }
     #about .comments-section .section-head { display: block; margin: 0 0 18px; text-align: center; }
     .feedback-stage { width: min(760px, 100%); display: grid; margin: 0 auto; }
@@ -2150,7 +2229,8 @@
         visibility: hidden;
         transform: translateX(22px) scale(.985);
         pointer-events: none;
-        transition: opacity .42s ease, transform .42s ease, visibility .42s ease;
+        transition: opacity .42s ease, transform .32s cubic-bezier(.22, 1, .36, 1),
+            visibility .42s ease, border-color .25s ease, box-shadow .25s ease;
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
     }
@@ -2159,6 +2239,12 @@
         visibility: visible;
         transform: translateX(0) scale(1);
         pointer-events: auto;
+    }
+    .feedback-slide.is-active:hover,
+    .feedback-slide.is-active:focus-within {
+        transform: translateY(-7px) scale(1.012);
+        border-color: rgba(250, 204, 21, .64);
+        box-shadow: 0 24px 42px rgba(27, 0, 8, .3), 1px 1px 0 rgba(250, 204, 21, .62);
     }
     .feedback-slide.is-empty { display: flex; align-items: center; justify-content: center; text-align: center; }
     .feedback-quote {
@@ -2174,23 +2260,35 @@
     .feedback-stars span.is-filled { color: #facc15; text-shadow: 0 0 8px rgba(250,204,21,.24); }
     .feedback-identity {
         grid-area: identity;
+        width: 100%;
+        min-width: 0;
         display: grid;
         grid-template-columns: 56px minmax(0, 1fr);
         gap: 15px;
         align-items: center;
     }
     .feedback-identity .avatar {
+        grid-area: auto !important;
         width: 56px;
         height: 56px;
         margin: 0;
+        align-self: center;
         fill: #cbd5e0;
         border: 1px solid rgba(255,255,255,.16);
         border-radius: 50%;
         background: rgba(255,255,255,.1);
     }
+    .feedback-copy { width: 100%; min-width: 0; }
     .feedback-copy h4 { margin: 0; color: #fffaf7; font-size: 13px; font-weight: 800; }
     .feedback-copy .comment-meta { display: block; margin-top: 1px; color: rgba(255,250,247,.68); font-size: 11px; }
-    .feedback-copy p { margin: 7px 0 0; color: rgba(255,250,247,.9); font-size: 13px; line-height: 1.5; }
+    .feedback-copy p {
+        width: 100%;
+        margin: 7px 0 0;
+        color: rgba(255,250,247,.9);
+        font-size: 13px;
+        line-height: 1.5;
+        overflow-wrap: break-word;
+    }
     .feedback-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 17px; }
     .feedback-dot {
         width: 7px;
@@ -2205,6 +2303,38 @@
     .feedback-dot:hover,
     .feedback-dot:focus-visible { background: rgba(255,255,255,.68); transform: scale(1.18); outline: none; }
     .feedback-dot.is-active { width: 18px; background: #facc15; }
+
+    html[data-theme="dark"] .PUPBG::before {
+        background:
+            radial-gradient(circle at 91% 11%, rgba(250, 204, 21, .12), transparent 170px),
+            radial-gradient(circle at 54% 87%, rgba(250, 204, 21, .09), transparent 180px),
+            linear-gradient(90deg, rgba(3, 10, 24, .97) 0%, rgba(8, 24, 43, .9) 48%, rgba(12, 34, 55, .68) 100%),
+            linear-gradient(180deg, rgba(2, 6, 18, .2), rgba(2, 6, 18, .42)),
+            url('{{ asset("images/PUPBG.jpg") }}') center center / cover no-repeat;
+    }
+    html[data-theme="dark"] .PUPBG-overlay {
+        background:
+            radial-gradient(circle, rgba(255, 255, 255, .12) 0 1px, transparent 1.6px) left 42px top 50px / 11px 11px no-repeat,
+            radial-gradient(circle, rgba(255, 255, 255, .1) 0 1px, transparent 1.6px) right 20px bottom 58px / 11px 11px no-repeat,
+            linear-gradient(180deg, rgba(15, 23, 42, .02), rgba(2, 6, 18, .2));
+    }
+    html[data-theme="dark"] .hero-action-card,
+    html[data-theme="dark"] .hero-status-card {
+        background: rgba(7, 20, 38, .34);
+        border-color: rgba(148, 163, 184, .34);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 22px 42px rgba(0,0,0,.42);
+    }
+    html[data-theme="dark"] .hero-action-card:hover,
+    html[data-theme="dark"] .hero-action-card:focus-visible {
+        background: linear-gradient(180deg, rgba(30, 50, 73, .72), rgba(3, 11, 25, .82));
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), 0 28px 52px rgba(0,0,0,.52), 0 0 36px rgba(250,204,21,.11);
+    }
+    html[data-theme="dark"] .home-announcement-card,
+    html[data-theme="dark"] #about .why-item,
+    html[data-theme="dark"] .feedback-slide {
+        background: linear-gradient(145deg, rgba(12, 31, 52, .76), rgba(4, 14, 29, .82));
+        border-color: rgba(148, 163, 184, .34);
+    }
 
     @media (max-width: 760px) {
         #about.about-experience { padding: 44px 18px 48px; }
@@ -2222,6 +2352,69 @@
             padding: 20px;
         }
         .feedback-stars { justify-content: flex-start; }
+    }
+
+    @media (max-width: 680px) {
+        .home-announcement-band,
+        html[data-theme="dark"] .home-announcement-band {
+            box-sizing: border-box;
+            min-height: 610px;
+            margin-top: 0;
+            padding: 96px 0 94px;
+            display: block;
+        }
+        .home-announcement-heading {
+            top: 24px;
+        }
+        .home-announcement-heading h2 {
+            font-size: 27px;
+        }
+        .home-announcement-shell {
+            width: 100%;
+            height: 330px;
+            margin: 0;
+            transform: none;
+        }
+        .home-announcement-shell.is-static {
+            display: block;
+            height: 330px;
+            padding: 0;
+            overflow: hidden;
+        }
+        .home-announcement-card,
+        .home-announcement-card.is-current,
+        .home-announcement-shell.carousel-count-3 .home-announcement-card.is-current,
+        .home-announcement-shell.is-static .home-announcement-card {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: min(330px, calc(100% - 84px));
+            min-height: 220px;
+        }
+        .home-announcement-shell.is-static .home-announcement-card {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .home-announcement-card.is-next,
+        .home-announcement-card.is-prev,
+        .home-announcement-card.is-next-far,
+        .home-announcement-shell.carousel-count-3 .home-announcement-card.is-next,
+        .home-announcement-shell.carousel-count-3 .home-announcement-card.is-prev {
+            left: 50%;
+            opacity: 0;
+            visibility: hidden;
+            transform: translate(-50%, -50%) scale(.88);
+            pointer-events: none;
+        }
+        .announcement-nav.prev { left: 14px; }
+        .announcement-nav.next { right: 14px; }
+        .announcement-nav:disabled { visibility: hidden; }
+        .home-announcement-shell.is-static .home-announcement-card:hover,
+        .home-announcement-shell.is-static .home-announcement-card:focus-visible {
+            transform: translate(-50%, -50%) scale(1.025);
+        }
+        .home-announcement-view-all {
+            bottom: 24px;
+        }
     }
 
 </style>
@@ -2363,7 +2556,7 @@
           <h2>Announcements &amp; Advisories</h2>
           <span class="home-announcement-title-line" aria-hidden="true"></span>
         </header>
-        <div class="home-announcement-shell {{ $announcementCount < 3 ? 'is-static static-count-' . $announcementCount : 'is-carousel carousel-count-' . $announcementCount }}" data-home-announcements>
+        <div class="home-announcement-shell {{ $announcementCount < 2 ? 'is-static static-count-' . $announcementCount : 'is-carousel carousel-count-' . $announcementCount }}" data-home-announcements>
           @foreach($announcementSlides as $index => $announcement)
             @php
               $announcementSearch = strtolower(($announcement['priority'] ?? '') . ' ' . ($announcement['title'] ?? ''));
@@ -2415,8 +2608,8 @@
             class="announcement-nav prev"
             data-announcement-prev
             aria-label="Previous announcement"
-            aria-disabled="{{ $announcementCount < 3 ? 'true' : 'false' }}"
-            @disabled($announcementCount < 3)
+            aria-disabled="{{ $announcementCount < 2 ? 'true' : 'false' }}"
+            @disabled($announcementCount < 2)
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 19.5-7.5-7.5 7.5-7.5" />
@@ -2427,13 +2620,13 @@
             class="announcement-nav next"
             data-announcement-next
             aria-label="Next announcement"
-            aria-disabled="{{ $announcementCount < 3 ? 'true' : 'false' }}"
-            @disabled($announcementCount < 3)
+            aria-disabled="{{ $announcementCount < 2 ? 'true' : 'false' }}"
+            @disabled($announcementCount < 2)
           >
             <x-outline-icon name="chevron-right" />
           </button>
 
-          @if($announcementCount >= 3)
+          @if($announcementCount >= 2)
             <div class="announcement-pagination" aria-label="Choose announcement">
               @foreach($announcementSlides as $index => $announcement)
                 <button
@@ -2475,7 +2668,7 @@
               <x-outline-icon name="users" />
             </span>
             <span class="why-copy">
-              <strong>Student-Centered</strong>
+              <strong>User-Centered</strong>
               <span>Services designed for your well-being.</span>
             </span>
           </div>
@@ -2630,7 +2823,7 @@
         <div class="learn-more-head">
           <div>
             <h3 id="learnMoreTitle">About PUPT Clinic</h3>
-            <p>Student-centered care through online access and campus clinic support.</p>
+            <p>User-centered care through online access and campus clinic support.</p>
           </div>
           <button type="button" class="learn-more-close" id="learnMoreCloseBtn" aria-label="Close learn more modal">
             <x-outline-icon name="x-mark" />
@@ -2880,7 +3073,7 @@
 
           const restartAnnouncementTimer = function () {
             if (announcementTimer) window.clearInterval(announcementTimer);
-            if (slides.length >= 3) {
+            if (slides.length >= 2) {
               announcementTimer = window.setInterval(function () {
                 showAnnouncement(activeAnnouncement + 1);
               }, 5000);
