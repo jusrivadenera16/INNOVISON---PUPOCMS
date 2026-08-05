@@ -907,7 +907,7 @@
         -webkit-line-clamp: 4;
     }
     .announcement-modal {
-        display: none;
+        display: flex;
         position: fixed;
         inset: 0;
         z-index: 1300;
@@ -917,9 +917,16 @@
         background: rgba(3, 7, 18, .58);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity .3s ease, visibility 0s linear .32s;
     }
     .announcement-modal.is-open {
-        display: flex;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transition-delay: 0s;
     }
     .announcement-modal-card {
         width: min(560px, 100%);
@@ -928,6 +935,13 @@
         background: #fffaf7;
         border: 1px solid rgba(250, 204, 21, .34);
         box-shadow: 0 30px 80px rgba(15, 23, 42, .36);
+        opacity: 0;
+        transform: translateY(22px) scale(.965);
+        transition: opacity .25s ease, transform .34s cubic-bezier(.22, 1, .36, 1);
+    }
+    .announcement-modal.is-open .announcement-modal-card {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
     .announcement-modal-head {
         display: flex;
@@ -964,6 +978,15 @@
         justify-content: center;
         cursor: pointer;
         flex: 0 0 auto;
+        transition: color .2s ease, background .2s ease, border-color .2s ease, transform .2s ease;
+    }
+    .announcement-modal-close:hover,
+    .announcement-modal-close:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        transform: rotate(90deg) scale(1.05);
+        outline: none;
     }
     .announcement-modal-close svg {
         width: 18px;
@@ -1056,6 +1079,17 @@
     }
     html[data-theme="dark"] .announcement-modal-body {
         color: #f8fafc;
+    }
+    html.announcement-modal-open,
+    body.announcement-modal-open {
+        overflow: hidden;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .announcement-modal,
+        .announcement-modal-card,
+        .announcement-modal-close {
+            transition-duration: .01ms !important;
+        }
     }
     .announcement-nav {
         position: absolute;
@@ -2972,6 +3006,15 @@
           });
         }
 
+        function syncAnnouncementModalLock() {
+          const hasOpenAnnouncementModal = Boolean(
+            announcementDetailModal?.classList.contains('is-open') ||
+            allAnnouncementsModal?.classList.contains('is-open')
+          );
+          document.documentElement.classList.toggle('announcement-modal-open', hasOpenAnnouncementModal);
+          document.body.classList.toggle('announcement-modal-open', hasOpenAnnouncementModal);
+        }
+
         function setAnnouncementDetailOpen(isOpen, trigger = null) {
           if (!announcementDetailModal) return;
 
@@ -2983,12 +3026,14 @@
 
           announcementDetailModal.classList.toggle('is-open', isOpen);
           announcementDetailModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+          syncAnnouncementModalLock();
         }
 
         function setAllAnnouncementsOpen(isOpen) {
           if (!allAnnouncementsModal) return;
           allAnnouncementsModal.classList.toggle('is-open', isOpen);
           allAnnouncementsModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+          syncAnnouncementModalLock();
         }
 
         viewAllAnnouncementsBtn?.addEventListener('click', function () {
@@ -3030,6 +3075,17 @@
         announcementDetailModal?.addEventListener('click', function (event) {
           if (event.target === announcementDetailModal) {
             setAnnouncementDetailOpen(false);
+          }
+        });
+
+        document.addEventListener('keydown', function (event) {
+          if (event.key !== 'Escape') return;
+          if (announcementDetailModal?.classList.contains('is-open')) {
+            setAnnouncementDetailOpen(false);
+            return;
+          }
+          if (allAnnouncementsModal?.classList.contains('is-open')) {
+            setAllAnnouncementsOpen(false);
           }
         });
 

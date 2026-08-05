@@ -454,7 +454,7 @@ class LoginController extends Controller
             return redirect()
                 ->route('assistant.choose-portal')
                 ->withErrors([
-                    'workspace' => "Admin Workspace is available daily from {$hours}.",
+                    'workspace' => "Admin Workspace is available {$hours}.",
                 ]);
         }
 

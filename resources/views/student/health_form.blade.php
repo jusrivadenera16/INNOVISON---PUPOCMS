@@ -626,7 +626,7 @@
             border-radius: 16px;
             border: 1px solid rgba(250, 204, 21, 0.34);
             background: rgba(255, 255, 255, 0.08);
-            color: #fff8db;
+            color: #111827;
             cursor: pointer;
             transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
         }
@@ -660,13 +660,13 @@
         }
 
         .reference-mode-copy strong {
-            color: #ffffff;
+            color: #111827;
             font-size: 0.94rem;
             line-height: 1.2;
         }
 
         .reference-mode-copy span {
-            color: #fde68a;
+            color: #4b5563;
             font-size: 0.78rem;
             font-weight: 750;
             line-height: 1.35;
@@ -681,6 +681,20 @@
         .reference-mode-radio:checked + .reference-mode-card .reference-mode-dot {
             background: #facc15;
             box-shadow: inset 0 0 0 4px #70131b;
+        }
+
+        .reference-mode-radio:disabled + .reference-mode-card {
+            border-color: rgba(148, 163, 184, 0.42);
+            background: rgba(226, 232, 240, 0.34);
+            cursor: not-allowed;
+            opacity: 0.72;
+            transform: none;
+        }
+
+        .reference-mode-radio:disabled + .reference-mode-card:hover {
+            border-color: rgba(148, 163, 184, 0.42);
+            background: rgba(226, 232, 240, 0.34);
+            transform: none;
         }
 
         .upload-instruction-card {
@@ -2289,8 +2303,12 @@
 
                 $displayReferenceNumber = trim((string) ($prefill['reference_number'] ?? ''));
                 $referenceMode = trim((string) ($prefill['reference_mode'] ?? 'admission'));
+                $manualStudentNumberAllowed = (bool) ($prefill['manual_student_number_allowed'] ?? false);
                 $selectedReferenceMode = old('reference_mode_selected', $referenceMode === 'student_number' ? 'student_number' : 'admission');
                 $selectedReferenceMode = in_array($selectedReferenceMode, ['admission', 'student_number'], true) ? $selectedReferenceMode : 'admission';
+                if (!$manualStudentNumberAllowed) {
+                    $selectedReferenceMode = 'admission';
+                }
                 $manualStudentModeSelected = $selectedReferenceMode === 'student_number';
                 $referenceRequiresValidation = (bool) ($prefill['reference_requires_validation'] ?? true);
                 $referenceVerificationUnavailable = $referenceMode === 'verification_unavailable';
@@ -2408,12 +2426,12 @@
                                     <span>Use your Admission Reference and verify it with Admissions.</span>
                                 </span>
                             </label>
-                            <input class="reference-mode-radio" type="radio" name="reference_mode_selected" id="referenceModeStudent" value="student_number" {{ $selectedReferenceMode === 'student_number' ? 'checked' : '' }}>
+                            <input class="reference-mode-radio" type="radio" name="reference_mode_selected" id="referenceModeStudent" value="student_number" {{ $selectedReferenceMode === 'student_number' ? 'checked' : '' }} @disabled(!$manualStudentNumberAllowed)>
                             <label class="reference-mode-card" for="referenceModeStudent">
                                 <span class="reference-mode-dot" aria-hidden="true"></span>
                                 <span class="reference-mode-copy">
                                     <strong>Current Student / OJT</strong>
-                                    <span>Use your Student ID and continue without Admission cross-check.</span>
+                                    <span>{{ $manualStudentNumberAllowed ? 'Use your Student ID and continue without Admission cross-check.' : 'Unavailable for Admission applicant accounts.' }}</span>
                                 </span>
                             </label>
                         </div>
@@ -2423,6 +2441,7 @@
                             data-reference-locked="{{ $displayReferenceNumber !== '' ? 'true' : 'false' }}"
                             data-reference-mode="{{ $referenceMode }}"
                             data-reference-requires-validation="{{ $referenceRequiresValidation ? 'true' : 'false' }}"
+                            data-manual-student-mode-allowed="{{ $manualStudentNumberAllowed ? 'true' : 'false' }}"
                         >
                             <small>{{ $referenceLabel }}</small>
                             <div class="reference-display">
@@ -3471,10 +3490,12 @@
             let isReferenceValidating = false;
             let resizeSignatureCanvas = () => {};
             const referenceRequiresValidation = referencePanel?.dataset.referenceRequiresValidation === 'true';
+            const manualStudentNumberAllowed = referencePanel?.dataset.manualStudentModeAllowed === 'true';
             const referenceVerificationUnavailable = @json($referenceVerificationUnavailable);
 
             function selectedReferenceMode() {
-                return referenceModeRadios.find((radio) => radio.checked)?.value || 'admission';
+                const selectedMode = referenceModeRadios.find((radio) => radio.checked && !radio.disabled)?.value || 'admission';
+                return selectedMode === 'student_number' && !manualStudentNumberAllowed ? 'admission' : selectedMode;
             }
 
             function syncReferenceModeUi() {
@@ -3743,13 +3764,13 @@
                 referenceEditorInput.setCustomValidity('');
 
                 const isValidReference = isStudentMode
-                    ? /^[A-Z0-9\-_]+$/.test(normalizedReference)
+                    ? /^\d{4}-\d{5}-[A-Z]{2}-\d+$/.test(normalizedReference)
                     : /^[A-Z0-9]+(?:-[A-Z0-9]+)+$/.test(normalizedReference);
 
                 if (!normalizedReference || !isValidReference) {
-                    const message = isStudentMode ? 'Enter a valid Student ID.' : 'Enter a valid reference number.';
+                    const message = isStudentMode ? 'Enter a valid Student ID in the format YYYY-#####-TG-#.' : 'Enter a valid reference number.';
                     referenceEditorInput.setCustomValidity(message);
-                    setReferenceStatus(isStudentMode ? 'Enter a valid Student ID before continuing.' : 'Enter a valid reference number before continuing.', 'is-error');
+                    setReferenceStatus(message, 'is-error');
                     showValidationBubble(referenceEditorInput);
                     referenceEditorInput.focus();
                     return;

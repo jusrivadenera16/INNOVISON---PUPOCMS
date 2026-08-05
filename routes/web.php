@@ -274,7 +274,9 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
 
     Route::middleware('role:superadmin,admin')->group(function () {
         Route::post('/admin/assistant/intent', [AdminAssistantController::class, 'handle'])->name('admin.assistant.intent');
-        Route::post('/assistant/intent', [AdminAssistantController::class, 'handle'])->name('assistant.intent');
+        Route::post('/assistant/intent', [AdminAssistantController::class, 'handle'])
+            ->middleware('assistant.schedule')
+            ->name('assistant.intent');
 
         Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
         Route::get('/admin/appointments', [AdminController::class, 'appointments'])->name('admin.appointments');
@@ -310,20 +312,28 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::get('/admin/reports/daily-treatment-record', [ReportsController::class, 'dailyTreatmentRecord'])->name('reports.daily-treatment-record');
         Route::get('/admin/reports/appointment-statistics', [ReportsController::class, 'appointmentStatistics'])->name('reports.appointment-statistics');
         Route::get('/admin/reports/appointment-history', [ReportsController::class, 'appointmentHistory'])->name('reports.appointment-history');
-        Route::get('/admin/reports/appointment-history/print', [ReportsController::class, 'printAppointmentHistory'])->name('reports.appointment-history-print');
+        Route::get('/admin/reports/appointment-history/print', [ReportsController::class, 'printAppointmentHistory'])
+            ->middleware('superadmin.export')
+            ->name('reports.appointment-history-print');
         Route::get('/admin/reports/health-forms', [ReportsController::class, 'healthFormsReport'])->name('reports.health-forms');
         Route::get('/admin/reports/health-forms/applicants-list', [ReportsController::class, 'healthFormsApplicantsList'])->name('reports.health-forms.applicants-list');
-        Route::get('/admin/reports/health-forms/export', [ReportsController::class, 'exportHealthForms'])->name('reports.health-forms.export');
+        Route::get('/admin/reports/health-forms/export', [ReportsController::class, 'exportHealthForms'])
+            ->middleware('superadmin.export')
+            ->name('reports.health-forms.export');
         Route::get('/admin/reports/health-forms-logbook', [ReportsController::class, 'healthFormsLogbook'])->name('reports.health-forms-logbook');
-        Route::get('/admin/reports/health-forms-logbook/export', [ReportsController::class, 'exportHealthFormsLogbook'])->name('reports.health-forms-logbook.export');
+        Route::get('/admin/reports/health-forms-logbook/export', [ReportsController::class, 'exportHealthFormsLogbook'])
+            ->middleware('superadmin.export')
+            ->name('reports.health-forms-logbook.export');
         Route::get('/admin/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->name('reports.feedbacks');
-        Route::get('/admin/reports/export-hub', [ReportsController::class, 'exportHub'])->name('reports.exportHub');
-        Route::get('/admin/reports/export-hub/mar', [ReportsController::class, 'exportReportsMar'])->name('reports.exportHub.mar');
-        Route::get('/admin/reports/export-hub/inventory', [ReportsController::class, 'exportReportsInventory'])->name('reports.exportHub.inventory');
-        Route::get('/admin/reports/export-hub/appointments', [ReportsController::class, 'exportReportsAppointments'])->name('reports.exportHub.appointments');
-        Route::get('/admin/reports/export-hub/audit-trail', [ReportsController::class, 'exportReportsAuditTrail'])->name('reports.exportHub.audit-trail');
-        Route::get('/admin/reports/export-hub/health-forms', [ReportsController::class, 'exportReportsHealthForms'])->name('reports.exportHub.health-forms');
-        Route::get('/admin/reports/print-reports', [ReportsController::class, 'printReport'])->name('reports.print');
+        Route::middleware('superadmin.export')->group(function () {
+            Route::get('/admin/reports/export-hub', [ReportsController::class, 'exportHub'])->name('reports.exportHub');
+            Route::get('/admin/reports/export-hub/mar', [ReportsController::class, 'exportReportsMar'])->name('reports.exportHub.mar');
+            Route::get('/admin/reports/export-hub/inventory', [ReportsController::class, 'exportReportsInventory'])->name('reports.exportHub.inventory');
+            Route::get('/admin/reports/export-hub/appointments', [ReportsController::class, 'exportReportsAppointments'])->name('reports.exportHub.appointments');
+            Route::get('/admin/reports/export-hub/audit-trail', [ReportsController::class, 'exportReportsAuditTrail'])->name('reports.exportHub.audit-trail');
+            Route::get('/admin/reports/export-hub/health-forms', [ReportsController::class, 'exportReportsHealthForms'])->name('reports.exportHub.health-forms');
+            Route::get('/admin/reports/print-reports', [ReportsController::class, 'printReport'])->name('reports.print');
+        });
         Route::get('/admin/notifications/feed', [AdminController::class, 'notificationsFeed'])->name('admin.notifications.feed');
         Route::post('/admin/notifications/mark-all-read', [AdminController::class, 'markAllAdminNotificationsRead'])->name('admin.notifications.read_all');
         Route::get('/admin/announcements', [AdminController::class, 'announcements'])->name('admin.announcements');
@@ -406,7 +416,7 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
     });
 
     // Admin prefixed entry points (same modules, different UI context)
-    Route::middleware('role:admin')->prefix('assistant')->name('assistant.')->group(function () {
+    Route::middleware(['role:admin', 'assistant.schedule'])->prefix('assistant')->name('assistant.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/appointments', [AdminController::class, 'appointments'])->name('appointments');
         Route::get('/appointments/{id}/{status}', [AdminController::class, 'updateStatus'])->name('appointments.status');
@@ -441,17 +451,23 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::get('/reports/appointment-history', [ReportsController::class, 'appointmentHistory'])->name('reports.appointment-history');
         Route::get('/reports/health-forms', [ReportsController::class, 'healthFormsReport'])->name('reports.health-forms');
         Route::get('/reports/health-forms/applicants-list', [ReportsController::class, 'healthFormsApplicantsList'])->name('reports.health-forms.applicants-list');
-        Route::get('/reports/health-forms/export', [ReportsController::class, 'exportHealthForms'])->name('reports.health-forms.export');
+        Route::get('/reports/health-forms/export', [ReportsController::class, 'exportHealthForms'])
+            ->middleware('superadmin.export')
+            ->name('reports.health-forms.export');
         Route::get('/reports/health-forms-logbook', [ReportsController::class, 'healthFormsLogbook'])->name('reports.health-forms-logbook');
-        Route::get('/reports/health-forms-logbook/export', [ReportsController::class, 'exportHealthFormsLogbook'])->name('reports.health-forms-logbook.export');
+        Route::get('/reports/health-forms-logbook/export', [ReportsController::class, 'exportHealthFormsLogbook'])
+            ->middleware('superadmin.export')
+            ->name('reports.health-forms-logbook.export');
         Route::get('/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->name('reports.feedbacks');
-        Route::get('/reports/export-hub', [ReportsController::class, 'exportHub'])->name('reports.exportHub');
-        Route::get('/reports/export-hub/mar', [ReportsController::class, 'exportReportsMar'])->name('reports.exportHub.mar');
-        Route::get('/reports/export-hub/inventory', [ReportsController::class, 'exportReportsInventory'])->name('reports.exportHub.inventory');
-        Route::get('/reports/export-hub/appointments', [ReportsController::class, 'exportReportsAppointments'])->name('reports.exportHub.appointments');
-        Route::get('/reports/export-hub/audit-trail', [ReportsController::class, 'exportReportsAuditTrail'])->name('reports.exportHub.audit-trail');
-        Route::get('/reports/export-hub/health-forms', [ReportsController::class, 'exportReportsHealthForms'])->name('reports.exportHub.health-forms');
-        Route::get('/reports/print-reports', [ReportsController::class, 'printReport'])->name('reports.print');
+        Route::middleware('superadmin.export')->group(function () {
+            Route::get('/reports/export-hub', [ReportsController::class, 'exportHub'])->name('reports.exportHub');
+            Route::get('/reports/export-hub/mar', [ReportsController::class, 'exportReportsMar'])->name('reports.exportHub.mar');
+            Route::get('/reports/export-hub/inventory', [ReportsController::class, 'exportReportsInventory'])->name('reports.exportHub.inventory');
+            Route::get('/reports/export-hub/appointments', [ReportsController::class, 'exportReportsAppointments'])->name('reports.exportHub.appointments');
+            Route::get('/reports/export-hub/audit-trail', [ReportsController::class, 'exportReportsAuditTrail'])->name('reports.exportHub.audit-trail');
+            Route::get('/reports/export-hub/health-forms', [ReportsController::class, 'exportReportsHealthForms'])->name('reports.exportHub.health-forms');
+            Route::get('/reports/print-reports', [ReportsController::class, 'printReport'])->name('reports.print');
+        });
         Route::get('/notifications/feed', [AdminController::class, 'notificationsFeed'])->name('notifications.feed');
         Route::post('/notifications/mark-all-read', [AdminController::class, 'markAllAdminNotificationsRead'])->name('notifications.read_all');
         Route::get('/developer-tools', [AdminController::class, 'developerTools'])->name('developer-tools');
