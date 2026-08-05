@@ -609,6 +609,80 @@
             font-size: clamp(1.9rem, 5vw, 3.5rem);
         }
 
+        .reference-mode-selector {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .reference-mode-card {
+            position: relative;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            min-height: 88px;
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(250, 204, 21, 0.34);
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff8db;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+        }
+
+        .reference-mode-card:hover {
+            border-color: rgba(250, 204, 21, 0.72);
+            background: rgba(250, 204, 21, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .reference-mode-radio {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .reference-mode-dot {
+            width: 18px;
+            height: 18px;
+            flex: 0 0 auto;
+            border-radius: 999px;
+            border: 2px solid rgba(250, 204, 21, 0.7);
+            margin-top: 2px;
+            box-shadow: inset 0 0 0 4px transparent;
+        }
+
+        .reference-mode-copy {
+            display: grid;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .reference-mode-copy strong {
+            color: #ffffff;
+            font-size: 0.94rem;
+            line-height: 1.2;
+        }
+
+        .reference-mode-copy span {
+            color: #fde68a;
+            font-size: 0.78rem;
+            font-weight: 750;
+            line-height: 1.35;
+        }
+
+        .reference-mode-radio:checked + .reference-mode-card {
+            border-color: #facc15;
+            background: rgba(250, 204, 21, 0.18);
+            box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.12);
+        }
+
+        .reference-mode-radio:checked + .reference-mode-card .reference-mode-dot {
+            background: #facc15;
+            box-shadow: inset 0 0 0 4px #70131b;
+        }
+
         .upload-instruction-card {
             margin-bottom: 18px;
             padding: 15px 16px;
@@ -2148,6 +2222,10 @@
             #digitalSignaturePad {
                 height: 160px;
             }
+
+            .reference-mode-selector {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 430px) {
@@ -2211,17 +2289,28 @@
 
                 $displayReferenceNumber = trim((string) ($prefill['reference_number'] ?? ''));
                 $referenceMode = trim((string) ($prefill['reference_mode'] ?? 'admission'));
+                $selectedReferenceMode = old('reference_mode_selected', $referenceMode === 'student_number' ? 'student_number' : 'admission');
+                $selectedReferenceMode = in_array($selectedReferenceMode, ['admission', 'student_number'], true) ? $selectedReferenceMode : 'admission';
+                $manualStudentModeSelected = $selectedReferenceMode === 'student_number';
                 $referenceRequiresValidation = (bool) ($prefill['reference_requires_validation'] ?? true);
                 $referenceVerificationUnavailable = $referenceMode === 'verification_unavailable';
-                $applicantDocumentsRequired = $referenceMode === 'admission';
+                $applicantDocumentsRequired = $referenceMode === 'admission' || $manualStudentModeSelected;
                 $stepOneTitle = trim((string) ($prefill['step_1_title'] ?? 'Admission Reference'));
                 $stepOneDescription = trim((string) ($prefill['step_1_description'] ?? 'Confirm your admission reference, complete your health information, then upload the required clinic documents.'));
                 $referenceLabel = trim((string) ($prefill['reference_label'] ?? 'Admission Reference Number'));
+                if ($manualStudentModeSelected) {
+                    $stepOneTitle = 'Student ID';
+                    $stepOneDescription = 'Enter your Student ID if you are already enrolled or visiting for OJT clinic requirements, then complete the same health form and upload the required clinic documents.';
+                    $referenceLabel = 'Student ID / Student Number';
+                }
                 $referenceDisplayFallback = $referenceMode === 'admission'
                     ? 'No Reference Received'
                     : ($referenceMode === 'student_number'
                         ? 'No Student Number Yet'
                         : ($referenceVerificationUnavailable ? 'Verification Temporarily Unavailable' : 'No Clinic Reference Yet'));
+                if ($manualStudentModeSelected && $displayReferenceNumber === '') {
+                    $referenceDisplayFallback = 'Enter Student ID';
+                }
                 $referenceStatusDefault = $referenceRequiresValidation
                     ? 'No Admission Reference was received. Use the pencil button to enter and verify the reference from Admissions. If you do not have one, contact Admissions or clinic staff at puptclinic@gmail.com.'
                     : ($referenceVerificationUnavailable
@@ -2229,6 +2318,9 @@
                         : ($referenceMode === 'student_number'
                             ? 'Your official student number from GUISIS will be used as your clinic reference.'
                             : 'This clinic reference is generated and managed inside the clinic system for local staff, admin, faculty, and guest records.'));
+                if ($manualStudentModeSelected) {
+                    $referenceStatusDefault = 'Enter your Student ID, then click the check icon. Admission cross-check will be bypassed for current students and OJT students.';
+                }
                 $courseOptions = $prefill['course_options'] ?? [];
                 $courseApplicable = (bool) ($prefill['course_applicable'] ?? false);
                 $selectedCourseCode = old('course_code', $prefill['course_code'] ?? '');
@@ -2238,7 +2330,7 @@
                     return trim((string) $oldValue) !== '' ? $oldValue : ($prefill[$field] ?? $fallback);
                 };
 
-                if ($displayReferenceNumber === '' && ($referenceRequiresValidation || $referenceVerificationUnavailable)) {
+                if ($displayReferenceNumber === '' && ($referenceRequiresValidation || $referenceVerificationUnavailable || $manualStudentModeSelected)) {
                     $startStep = 1;
                 }
 
@@ -2307,6 +2399,24 @@
                                 <strong>{{ $displayLastName !== '' ? $displayLastName : 'N/A' }}</strong>
                             </div>
                         </div>
+                        <div class="reference-mode-selector" aria-label="Select identification type">
+                            <input class="reference-mode-radio" type="radio" name="reference_mode_selected" id="referenceModeAdmission" value="admission" {{ $selectedReferenceMode === 'admission' ? 'checked' : '' }}>
+                            <label class="reference-mode-card" for="referenceModeAdmission">
+                                <span class="reference-mode-dot" aria-hidden="true"></span>
+                                <span class="reference-mode-copy">
+                                    <strong>Admission Applicant</strong>
+                                    <span>Use your Admission Reference and verify it with Admissions.</span>
+                                </span>
+                            </label>
+                            <input class="reference-mode-radio" type="radio" name="reference_mode_selected" id="referenceModeStudent" value="student_number" {{ $selectedReferenceMode === 'student_number' ? 'checked' : '' }}>
+                            <label class="reference-mode-card" for="referenceModeStudent">
+                                <span class="reference-mode-dot" aria-hidden="true"></span>
+                                <span class="reference-mode-copy">
+                                    <strong>Current Student / OJT</strong>
+                                    <span>Use your Student ID and continue without Admission cross-check.</span>
+                                </span>
+                            </label>
+                        </div>
                         <div
                             class="reference-panel {{ $displayReferenceNumber === '' ? 'is-missing' : '' }}"
                             id="referencePanel"
@@ -2318,7 +2428,7 @@
                             <div class="reference-display">
                                 <strong id="referenceDisplayValue">{{ $displayReferenceNumber !== '' ? $displayReferenceNumber : $referenceDisplayFallback }}</strong>
                             </div>
-                            @if($referenceRequiresValidation)
+                            @if($referenceRequiresValidation || $manualStudentModeSelected || $referenceVerificationUnavailable)
                                 <button
                                     type="button"
                                     class="reference-edit-btn"
@@ -2337,7 +2447,7 @@
                                 </button>
                             @endif
                             <input type="hidden" name="reference_number" id="reference_number" value="{{ $displayReferenceNumber }}">
-                            @if($referenceRequiresValidation)
+                            @if($referenceRequiresValidation || $manualStudentModeSelected || $referenceVerificationUnavailable)
                                 <div class="reference-verify-wrap" id="referenceVerifyWrap">
                                     <div class="reference-verify-row">
                                         <input
@@ -2345,7 +2455,7 @@
                                             id="reference_editor"
                                             class="reference-verify-input"
                                             value="{{ $displayReferenceNumber }}"
-                                            placeholder="0000-0000-0000"
+                                            placeholder="{{ $manualStudentModeSelected ? '2020-00000-TG-0' : '0000-0000-0000' }}"
                                             maxlength="20"
                                             autocomplete="off"
                                             aria-describedby="referenceVerifyStatus"
@@ -3309,6 +3419,7 @@
             const editReferenceBtn = document.getElementById('editReferenceBtn');
             const referenceDisplayValue = document.getElementById('referenceDisplayValue');
             const referenceVerifyStatus = document.getElementById('referenceVerifyStatus');
+            const referenceModeRadios = Array.from(document.querySelectorAll('input[name="reference_mode_selected"]'));
             const stepNavigationButtons = Array.from(document.querySelectorAll('[data-step-next], [data-step-back]'));
             const birthdayInput = document.getElementById('birthday');
             const ageInput = document.getElementById('age');
@@ -3360,6 +3471,37 @@
             let isReferenceValidating = false;
             let resizeSignatureCanvas = () => {};
             const referenceRequiresValidation = referencePanel?.dataset.referenceRequiresValidation === 'true';
+            const referenceVerificationUnavailable = @json($referenceVerificationUnavailable);
+
+            function selectedReferenceMode() {
+                return referenceModeRadios.find((radio) => radio.checked)?.value || 'admission';
+            }
+
+            function syncReferenceModeUi() {
+                const mode = selectedReferenceMode();
+                const isStudentMode = mode === 'student_number';
+
+                if (referenceEditorInput) {
+                    referenceEditorInput.placeholder = isStudentMode ? '2020-00000-TG-0' : '0000-0000-0000';
+                    referenceEditorInput.setCustomValidity('');
+                }
+
+                if (nextToStep2Btn) {
+                    nextToStep2Btn.disabled = referenceVerificationUnavailable && !isStudentMode;
+                }
+
+                if (!isReferenceLocked()) {
+                    if (referenceDisplayValue) {
+                        referenceDisplayValue.textContent = isStudentMode ? 'Enter Student ID' : 'No Reference Received';
+                    }
+                    referencePanel?.classList.add('is-missing');
+                    setReferenceStatus(isStudentMode
+                        ? 'Enter your Student ID, then click the check icon. Admission cross-check will be bypassed for current students and OJT students.'
+                        : 'Enter the reference exactly as shown by Admissions, then click the check icon. If you do not have a reference, contact Admissions or clinic staff.',
+                        ''
+                    );
+                }
+            }
 
             function syncHomeAddressValue() {
                 if (!homeAddressInput || homeAddressPartInputs.length === 0) return;
@@ -3595,13 +3737,19 @@
                     return;
                 }
 
-                const normalizedReference = referenceEditorInput.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
+                const isStudentMode = selectedReferenceMode() === 'student_number';
+                const normalizedReference = referenceEditorInput.value.toUpperCase().replace(isStudentMode ? /[^A-Z0-9\-_]/g : /[^A-Z0-9-]/g, '').slice(0, 20);
                 referenceEditorInput.value = normalizedReference;
                 referenceEditorInput.setCustomValidity('');
 
-                if (!normalizedReference || !/^[A-Z0-9]+(?:-[A-Z0-9]+)+$/.test(normalizedReference)) {
-                    referenceEditorInput.setCustomValidity('Enter a valid reference number.');
-                    setReferenceStatus('Enter a valid reference number before continuing.', 'is-error');
+                const isValidReference = isStudentMode
+                    ? /^[A-Z0-9\-_]+$/.test(normalizedReference)
+                    : /^[A-Z0-9]+(?:-[A-Z0-9]+)+$/.test(normalizedReference);
+
+                if (!normalizedReference || !isValidReference) {
+                    const message = isStudentMode ? 'Enter a valid Student ID.' : 'Enter a valid reference number.';
+                    referenceEditorInput.setCustomValidity(message);
+                    setReferenceStatus(isStudentMode ? 'Enter a valid Student ID before continuing.' : 'Enter a valid reference number before continuing.', 'is-error');
                     showValidationBubble(referenceEditorInput);
                     referenceEditorInput.focus();
                     return;
@@ -3609,11 +3757,12 @@
 
                 isReferenceValidating = true;
                 editReferenceBtn?.setAttribute('disabled', 'disabled');
-                setReferenceStatus('Checking reference number with the Admission System...');
+                setReferenceStatus(isStudentMode ? 'Saving Student ID for clinic use...' : 'Checking reference number with the Admission System...');
 
                 try {
                     const endpoint = new URL('{{ route('student.health_form.reference.validate') }}', window.location.origin);
                     endpoint.searchParams.set('reference_number', normalizedReference);
+                    endpoint.searchParams.set('reference_mode_selected', selectedReferenceMode());
 
                     const response = await fetch(endpoint.toString(), {
                         method: 'GET',
@@ -3645,7 +3794,7 @@
                     referenceDisplayValue.textContent = referenceInput.value;
                     referencePanel?.classList.remove('is-missing');
                     setReferenceLocked(true);
-                    setReferenceStatus(payload.message || 'Reference number verified successfully.', 'is-success');
+                    setReferenceStatus(payload.message || (isStudentMode ? 'Student ID accepted.' : 'Reference number verified successfully.'), 'is-success');
                     referenceEditorInput.setCustomValidity('');
                     setReferenceEditor(false);
                 } catch (error) {
@@ -3657,6 +3806,18 @@
                     editReferenceBtn?.removeAttribute('disabled');
                 }
             }
+
+            referenceModeRadios.forEach((radio) => {
+                radio.addEventListener('change', () => {
+                    if (!radio.checked) return;
+                    setReferenceLocked(false);
+                    if (referenceInput) referenceInput.value = '';
+                    if (referenceEditorInput) referenceEditorInput.value = '';
+                    syncReferenceModeUi();
+                    setReferenceEditor(true);
+                });
+            });
+            syncReferenceModeUi();
 
             function setStep(step) {
                 const normalizedStep = Math.min(totalSteps, Math.max(1, Number(step) || 1));
@@ -4253,13 +4414,18 @@
 
                 if (normalizedReference === '') {
                     if (referenceInput) {
-                        referenceInput.setCustomValidity(referenceRequiresValidation
-                            ? 'Admission Reference is required before continuing.'
-                            : 'Clinic Reference is required before continuing.'
+                        const isStudentMode = selectedReferenceMode() === 'student_number';
+                        referenceInput.setCustomValidity(isStudentMode
+                            ? 'Student ID is required before continuing.'
+                            : (referenceRequiresValidation
+                                ? 'Admission Reference is required before continuing.'
+                                : 'Clinic Reference is required before continuing.')
                         );
-                        setReferenceStatus(referenceRequiresValidation
-                            ? 'Verify your Admission Reference before continuing.'
-                            : 'Clinic Reference is required before continuing.',
+                        setReferenceStatus(isStudentMode
+                            ? 'Enter and accept your Student ID before continuing.'
+                            : (referenceRequiresValidation
+                                ? 'Verify your Admission Reference before continuing.'
+                                : 'Clinic Reference is required before continuing.'),
                             'is-error'
                         );
                         showValidationBubble(referenceInput);

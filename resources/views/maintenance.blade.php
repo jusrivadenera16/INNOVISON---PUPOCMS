@@ -3,496 +3,593 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3b0711">
     <title>Under Maintenance | PUP Taguig Medical Clinic</title>
     <style>
         :root {
-            --maroon: #8f1827;
-            --maroon-dark: #70131B;
-            --gold: #facc15;
-            --ink: #111827;
-            --muted: #64748b;
-            --line: rgba(112, 19, 27, 0.12);
+            --maroon: #8d1425;
+            --maroon-deep: #31050d;
+            --maroon-ink: #22030a;
+            --gold: #f4c33a;
+            --gold-soft: #f8d368;
+            --white: #fffaf7;
+            --muted: rgba(255, 250, 247, 0.76);
+            --glass: rgba(66, 14, 24, 0.62);
+            --glass-line: rgba(255, 244, 236, 0.46);
         }
 
         * {
             box-sizing: border-box;
         }
 
+        html {
+            min-width: 320px;
+            background: var(--maroon-ink);
+        }
+
         body {
             min-height: 100vh;
             margin: 0;
-            display: grid;
-            place-items: center;
-            padding: 24px;
-            background:
-                linear-gradient(135deg, rgba(51, 8, 13, 0.82), rgba(112, 19, 27, 0.66)),
-                url('{{ asset('images/PUPBG.jpg') }}') center center / cover no-repeat fixed;
-            color: var(--ink);
+            overflow-x: hidden;
+            color: var(--white);
             font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background:
+                linear-gradient(105deg, rgba(43, 3, 11, 0.92) 0%, rgba(83, 13, 26, 0.79) 48%, rgba(47, 5, 13, 0.84) 100%),
+                url('{{ asset('images/PUPBG.jpg') }}') center 47% / cover no-repeat fixed;
         }
 
         body::before {
             content: "";
             position: fixed;
             inset: 0;
-            background:
-                radial-gradient(circle at 18% 16%, rgba(250, 204, 21, 0.14), transparent 26%),
-                radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.12), transparent 28%),
-                linear-gradient(180deg, rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.28));
+            z-index: 0;
             pointer-events: none;
+            background:
+                radial-gradient(circle at 82% 8%, rgba(255, 157, 92, 0.34), transparent 20%),
+                radial-gradient(circle at 50% 62%, rgba(145, 24, 40, 0.16), transparent 40%),
+                linear-gradient(180deg, rgba(18, 2, 7, 0.08), rgba(28, 2, 8, 0.38));
         }
 
-        .maintenance-shell {
-            width: min(980px, 100%);
-            min-height: min(720px, calc(100vh - 48px));
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.22;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.12) 0.7px, transparent 0.7px);
+            background-size: 4px 4px;
+            mix-blend-mode: soft-light;
+        }
+
+        .maintenance-page {
+            position: relative;
+            z-index: 1;
+            width: min(100%, 1180px);
+            min-height: 100vh;
+            margin: 0 auto;
+            padding: clamp(28px, 4vh, 48px) clamp(20px, 4vw, 48px) 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .corner-dots {
+            position: fixed;
+            z-index: 1;
+            width: 108px;
+            height: 80px;
+            pointer-events: none;
+            opacity: 0.48;
+            background-image: radial-gradient(circle, #a92c3d 1.7px, transparent 1.9px);
+            background-size: 15px 15px;
+        }
+
+        .corner-dots.top-left {
+            top: 42px;
+            left: 26px;
+        }
+
+        .corner-dots.bottom-right {
+            right: 26px;
+            bottom: 24px;
+        }
+
+        .brand-lockup {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .brand-logos {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-logo {
+            width: 68px;
+            height: 68px;
             display: grid;
             place-items: center;
-            padding: clamp(24px, 5vw, 58px);
-            border: 1px solid rgba(148, 163, 184, 0.16);
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.92);
-            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
         }
 
-        .maintenance-content {
-            width: min(640px, 100%);
+        .brand-logo img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .brand-name {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin: 17px 0 0;
+            color: var(--gold-soft);
+            font-size: clamp(13px, 1.4vw, 17px);
+            font-weight: 500;
+            letter-spacing: 0.12em;
             text-align: center;
+            text-transform: uppercase;
+        }
+
+        .brand-name::before,
+        .brand-name::after {
+            content: "";
+            width: 38px;
+            height: 1px;
+            background: var(--gold);
+        }
+
+        .maintenance-card {
+            position: relative;
+            width: min(940px, 100%);
+            display: grid;
+            grid-template-columns: 290px minmax(0, 1fr);
+            overflow: hidden;
+            border: 1px solid var(--glass-line);
+            border-radius: 24px;
+            background:
+                linear-gradient(115deg, rgba(91, 19, 34, 0.46), rgba(33, 7, 14, 0.44)),
+                rgba(74, 17, 29, 0.46);
+            box-shadow:
+                0 28px 70px rgba(12, 1, 4, 0.48),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .maintenance-card::before {
+            content: "";
+            position: absolute;
+            top: -2px;
+            right: 8%;
+            width: 190px;
+            height: 4px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, transparent, #fff4c3 48%, transparent);
+            filter: blur(1px);
+            box-shadow: 0 0 15px rgba(248, 198, 73, 0.75);
+            opacity: 0.8;
         }
 
         .maintenance-visual {
             position: relative;
-            width: min(360px, 100%);
-            height: 210px;
-            margin: 0 auto 28px;
-        }
-
-        .visual-orbit {
-            position: absolute;
-            inset: 18% 4% 6%;
-            border-radius: 999px;
-            background: linear-gradient(135deg, rgba(143, 24, 39, 0.06), rgba(250, 204, 21, 0.08));
-        }
-
-        .spark {
-            position: absolute;
-            color: rgba(143, 24, 39, 0.35);
-            font-weight: 900;
-            animation: sparkle 2.6s ease-in-out infinite;
-        }
-
-        .spark.one { left: 4%; top: 18%; }
-        .spark.two { right: 2%; top: 30%; animation-delay: .5s; }
-        .spark.three { left: 12%; bottom: 18%; animation-delay: 1s; }
-
-        .bot-tile {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            width: 150px;
-            height: 150px;
-            transform: translateX(-62%);
-            border-radius: 34px;
-            background: linear-gradient(145deg, #7b1020, #a5162d);
-            box-shadow: 0 22px 46px rgba(112, 19, 27, 0.25);
-            animation: floatBot 3.4s ease-in-out infinite;
-        }
-
-        .maintenance-robot-image {
-            position: absolute;
-            left: 50%;
-            top: 4px;
-            z-index: 1;
-            width: 172px;
-            height: 172px;
-            transform: translateX(-50%);
-            border-radius: 34px;
-            object-fit: cover;
-            box-shadow: 0 22px 46px rgba(112, 19, 27, 0.25);
-            animation: floatBot 3.4s ease-in-out infinite;
-        }
-
-        .maintenance-visual .bot-tile {
-            display: none;
-        }
-
-        .bot-head {
-            position: absolute;
-            left: 50%;
-            top: 48px;
-            width: 104px;
-            height: 76px;
-            transform: translateX(-50%);
-            border-radius: 30px;
-            background: #ffffff;
-            box-shadow: inset 0 -8px 0 rgba(15, 23, 42, 0.08), 0 12px 22px rgba(15, 23, 42, 0.18);
-        }
-
-        .bot-face {
-            position: absolute;
-            left: 15px;
-            right: 15px;
-            top: 18px;
-            height: 38px;
-            border-radius: 18px;
-            background: linear-gradient(135deg, #3b0713, #5c1020);
-        }
-
-        .bot-eye {
-            position: absolute;
-            top: 12px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #ffffff;
-        }
-
-        .bot-eye.left { left: 18px; }
-        .bot-eye.right { right: 18px; }
-
-        .bot-smile {
-            position: absolute;
-            left: 50%;
-            bottom: 8px;
-            width: 22px;
-            height: 10px;
-            transform: translateX(-50%);
-            border-bottom: 4px solid #ffffff;
-            border-radius: 0 0 999px 999px;
-        }
-
-        .bot-antenna {
-            position: absolute;
-            left: 50%;
-            top: 16px;
-            width: 6px;
-            height: 34px;
-            transform: translateX(-50%);
-            background: #ffffff;
-            border-radius: 999px;
-        }
-
-        .bot-antenna::before {
-            content: "";
-            position: absolute;
-            left: 50%;
-            top: -10px;
-            width: 18px;
-            height: 18px;
-            transform: translateX(-50%);
-            border-radius: 50%;
-            background: #ffffff;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.22);
-        }
-
-        .bot-ear {
-            position: absolute;
-            top: 72px;
-            width: 18px;
-            height: 34px;
-            border-radius: 999px;
-            background: #ffffff;
-        }
-
-        .bot-ear.left { left: 16px; }
-        .bot-ear.right { right: 16px; }
-
-        .bot-body {
-            position: absolute;
-            left: 50%;
-            bottom: 6px;
-            width: 90px;
-            height: 42px;
-            transform: translateX(-50%);
-            border-radius: 28px 28px 18px 18px;
-            background: #ffffff;
-        }
-
-        .bot-steth {
-            position: absolute;
-            left: 36px;
-            bottom: 10px;
-            width: 24px;
-            height: 24px;
-            border: 5px solid var(--maroon);
-            border-radius: 50%;
-        }
-
-        .bubble {
-            position: absolute;
-            left: auto;
-            right: -42px;
-            top: 4px;
-            z-index: 2;
-            max-width: 156px;
-            padding: 15px 18px;
-            border: 2px solid rgba(143, 24, 39, 0.78);
-            border-radius: 22px;
-            background: #ffffff;
-            color: var(--maroon-dark);
-            font-size: 16px;
-            font-weight: 900;
-            line-height: 1.25;
-            box-shadow: 0 16px 30px rgba(112, 19, 27, 0.12);
-            animation: bubblePop 2.6s cubic-bezier(.2, .9, .2, 1) infinite;
-        }
-
-        .bubble::before {
-            content: "";
-            position: absolute;
-            left: -13px;
-            right: auto;
-            top: 42px;
-            width: 24px;
-            height: 24px;
-            background: #ffffff;
-            border-left: 2px solid rgba(143, 24, 39, 0.78);
-            border-right: 0;
-            border-bottom: 2px solid rgba(143, 24, 39, 0.78);
-            transform: rotate(45deg);
-        }
-
-        .bubble small {
-            display: block;
-            margin-top: 7px;
-            color: var(--maroon);
-            font-size: 18px;
-        }
-
-        .status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            min-height: 34px;
-            padding: 0 16px;
-            border-radius: 999px;
-            background: #fff0f2;
-            color: var(--maroon);
-            font-size: 12px;
-            font-weight: 950;
-            letter-spacing: .04em;
-            text-transform: uppercase;
-        }
-
-        .status-pill svg {
-            width: 15px;
-            height: 15px;
-        }
-
-        h1 {
-            margin: 14px 0 10px;
-            color: var(--ink);
-            font-size: clamp(30px, 4vw, 42px);
-            font-weight: 950;
-            letter-spacing: -0.02em;
-        }
-
-        h1 span {
-            color: var(--maroon);
-        }
-
-        .lead {
-            margin: 0 auto 24px;
-            max-width: 560px;
-            color: var(--muted);
-            font-size: 16px;
-            font-weight: 650;
-            line-height: 1.65;
-        }
-
-        .info-card {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0;
-            margin: 0 auto 14px;
-            overflow: hidden;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            background: #fff8f9;
-            text-align: left;
-        }
-
-        .info-item {
-            display: grid;
-            grid-template-columns: 46px minmax(0, 1fr);
-            gap: 12px;
-            align-items: center;
-            padding: 18px 20px;
-        }
-
-        .info-item + .info-item {
-            border-left: 1px solid var(--line);
-        }
-
-        .info-icon,
-        .safe-icon {
+            min-height: 300px;
             display: grid;
             place-items: center;
-            width: 44px;
-            height: 44px;
-            border-radius: 999px;
-            background: #fff0f2;
-            color: var(--maroon);
+            margin: 36px 0 28px;
+            border-right: 1px solid rgba(255, 255, 255, 0.18);
         }
 
-        .info-icon svg,
-        .safe-icon svg {
-            width: 22px;
-            height: 22px;
-        }
-
-        .label {
-            display: block;
-            color: var(--maroon);
-            font-size: 11px;
-            font-weight: 950;
-            letter-spacing: .05em;
-            text-transform: uppercase;
-        }
-
-        .value {
-            display: block;
-            margin-top: 5px;
-            color: var(--ink);
-            font-size: 15px;
-            font-weight: 900;
-        }
-
-        .note {
-            display: block;
-            margin-top: 4px;
-            color: var(--muted);
-            font-size: 13px;
-            font-weight: 650;
-        }
-
-        .safe-card {
+        .maintenance-orbit {
+            position: relative;
+            width: 190px;
+            height: 190px;
             display: grid;
-            grid-template-columns: 46px minmax(0, 1fr);
+            place-items: center;
+            border: 1px solid rgba(248, 211, 104, 0.72);
+            border-radius: 50%;
+            background: radial-gradient(circle at center, rgba(127, 20, 38, 0.66), rgba(72, 10, 21, 0.5) 64%, transparent 65%);
+            box-shadow:
+                0 0 0 12px rgba(122, 20, 36, 0.16),
+                0 0 12px rgba(248, 211, 104, 0.42),
+                0 0 38px rgba(244, 195, 58, 0.25),
+                inset 0 0 30px rgba(255, 183, 76, 0.08);
+        }
+
+        .maintenance-orbit::before,
+        .maintenance-orbit::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .maintenance-orbit::before {
+            inset: -15px;
+            border: 2px dotted rgba(200, 55, 70, 0.48);
+            animation: orbitSpin 28s linear infinite;
+        }
+
+        .maintenance-orbit::after {
+            left: 24%;
+            right: 24%;
+            bottom: -13px;
+            height: 5px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            filter: blur(1px);
+            box-shadow: 0 0 16px rgba(244, 195, 58, 0.8);
+        }
+
+        .maintenance-emblem {
+            display: block;
+            width: 154px;
+            height: 154px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 13px rgba(244, 195, 58, 0.28));
+        }
+
+        .maintenance-copy {
+            align-self: center;
+            padding: 42px 54px 34px 34px;
+        }
+
+        .maintenance-copy h1 {
+            max-width: 520px;
+            margin: 0;
+            color: var(--white);
+            font-size: clamp(40px, 5vw, 59px);
+            font-weight: 800;
+            letter-spacing: 0;
+            line-height: 0.98;
+        }
+
+        .maintenance-copy h1 span {
+            display: block;
+            margin-top: 6px;
+            color: var(--gold-soft);
+        }
+
+        .heading-rule {
+            display: block;
+            width: 43px;
+            height: 2px;
+            margin: 20px 0 17px;
+            background: var(--gold);
+        }
+
+        .maintenance-copy > p {
+            max-width: 510px;
+            margin: 0;
+            color: rgba(255, 250, 247, 0.9);
+            font-size: 15px;
+            font-weight: 450;
+            line-height: 1.55;
+        }
+
+        .return-card {
+            width: min(350px, 100%);
+            min-height: 70px;
+            margin-top: 18px;
+            padding: 12px 17px;
+            display: grid;
+            grid-template-columns: 40px minmax(0, 1fr);
             gap: 12px;
             align-items: center;
-            margin: 0 auto 20px;
-            padding: 16px 20px;
-            border: 1px solid rgba(22, 163, 74, 0.10);
-            border-radius: 12px;
-            background: #f8fff9;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 13px;
+            background: rgba(91, 20, 35, 0.62);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+
+        .return-icon,
+        .support-icon {
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            border: 1px solid rgba(244, 195, 58, 0.35);
+            border-radius: 50%;
+            color: var(--gold);
+            background: rgba(98, 16, 32, 0.72);
+        }
+
+        .return-icon {
+            width: 38px;
+            height: 38px;
+        }
+
+        .return-icon svg {
+            width: 23px;
+            height: 23px;
+        }
+
+        .return-label {
+            display: block;
+            margin-bottom: 2px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .return-value {
+            display: block;
+            color: var(--gold-soft);
+            font-size: 16px;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+
+        .support-row {
+            grid-column: 1 / -1;
+            margin: 0 34px;
+            display: grid;
+            grid-template-columns: 1.25fr 1fr 0.92fr;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .support-item {
+            min-width: 0;
+            min-height: 78px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            color: var(--white);
+            text-decoration: none;
+        }
+
+        .support-item + .support-item {
+            border-left: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .support-icon {
+            width: 39px;
+            height: 39px;
+        }
+
+        .support-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .support-text {
+            min-width: 0;
+            color: rgba(255, 250, 247, 0.86);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .support-text strong {
+            display: block;
+            color: var(--white);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        a.support-item .support-text {
+            overflow-wrap: anywhere;
+        }
+
+        a.support-item:hover .support-icon,
+        a.support-item:focus-visible .support-icon {
+            border-color: var(--gold);
+            background: rgba(117, 21, 39, 0.96);
+            box-shadow: 0 0 18px rgba(244, 195, 58, 0.2);
+        }
+
+        .page-note {
+            margin-top: 25px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 13px;
+            color: rgba(255, 250, 247, 0.9);
             text-align: left;
         }
 
-        .safe-icon {
-            background: #dcfce7;
-            color: #16a34a;
+        .page-note svg {
+            width: 27px;
+            height: 27px;
+            flex: 0 0 auto;
+            color: var(--gold);
         }
 
-        .safe-card strong {
-            display: block;
-            color: #15803d;
-            font-size: 14px;
-            font-weight: 950;
-        }
-
-        .safe-card span {
-            display: block;
-            margin-top: 4px;
-            color: var(--muted);
-            font-size: 13px;
-            font-weight: 650;
-        }
-
-        .refresh-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            min-height: 48px;
-            padding: 0 26px;
-            border: 0;
-            border-radius: 8px;
-            background: linear-gradient(135deg, var(--maroon-dark), var(--maroon));
-            color: #ffffff;
+        .page-note p {
+            margin: 0;
             font-size: 15px;
-            font-weight: 950;
-            cursor: pointer;
-            box-shadow: 0 14px 24px rgba(112, 19, 27, 0.18);
-            transition: transform .18s ease, background .18s ease, color .18s ease;
+            line-height: 1.45;
         }
 
-        .refresh-btn:hover {
-            transform: translateY(-2px);
-            background: var(--gold);
-            color: var(--maroon-dark);
+        .page-note span {
+            display: block;
+            margin-top: 3px;
+            color: var(--gold);
+            text-align: center;
         }
 
-        .refresh-btn svg {
-            width: 18px;
-            height: 18px;
+        .medical-line {
+            position: fixed;
+            left: 0;
+            bottom: 36px;
+            z-index: 1;
+            width: 170px;
+            height: 42px;
+            color: rgba(155, 22, 41, 0.46);
+            pointer-events: none;
         }
 
-        @keyframes floatBot {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-8px); }
+        .decorative-cross {
+            position: fixed;
+            z-index: 1;
+            width: 38px;
+            height: 38px;
+            color: rgba(163, 31, 49, 0.58);
+            pointer-events: none;
         }
 
-        @keyframes bubblePop {
-            0%, 100% { transform: translateY(0) scale(1); }
-            12% { transform: translateY(-8px) scale(1.06); }
-            24% { transform: translateY(0) scale(.98); }
-            36% { transform: translateY(-3px) scale(1.02); }
-            48% { transform: translateY(0) scale(1); }
+        .decorative-cross.left {
+            left: 18px;
+            top: 54%;
         }
 
-        @keyframes sparkle {
-            0%, 100% { opacity: .3; transform: scale(.9); }
-            50% { opacity: .9; transform: scale(1.15); }
+        .decorative-cross.right {
+            right: 46px;
+            top: 58%;
         }
 
-        @media (max-width: 680px) {
-            body {
-                padding: 12px;
+        @keyframes orbitSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 820px) {
+            .maintenance-page {
+                justify-content: flex-start;
+                padding-top: 28px;
             }
 
-            .maintenance-shell {
-                min-height: calc(100vh - 24px);
-                padding: 22px;
+            .maintenance-card {
+                grid-template-columns: 220px minmax(0, 1fr);
             }
 
             .maintenance-visual {
-                width: 300px;
-                height: 184px;
+                min-height: 280px;
             }
 
-            .bot-tile {
+            .maintenance-orbit {
+                width: 158px;
+                height: 158px;
+            }
+
+            .maintenance-emblem {
+                width: 128px;
+                height: 128px;
+            }
+
+            .maintenance-copy {
+                padding: 36px 30px 28px;
+            }
+
+            .support-row {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .support-item:first-child {
+                grid-column: 1 / -1;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            }
+
+            .support-item:nth-child(2) {
+                border-left: 0;
+            }
+        }
+
+        @media (max-width: 620px) {
+            body {
+                background-attachment: scroll;
+            }
+
+            .maintenance-page {
+                padding: 22px 14px 24px;
+            }
+
+            .corner-dots,
+            .medical-line,
+            .decorative-cross {
+                display: none;
+            }
+
+            .brand-lockup {
+                margin-bottom: 15px;
+            }
+
+            .brand-logo {
+                width: 52px;
+                height: 52px;
+            }
+
+            .brand-name {
+                margin-top: 12px;
+                font-size: 11px;
+                letter-spacing: 0.09em;
+            }
+
+            .brand-name::before,
+            .brand-name::after {
+                width: 22px;
+            }
+
+            .maintenance-card {
+                grid-template-columns: 1fr;
+                border-radius: 18px;
+            }
+
+            .maintenance-visual {
+                min-height: 180px;
+                margin: 20px 24px 0;
+                border-right: 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+            }
+
+            .maintenance-orbit {
                 width: 130px;
                 height: 130px;
             }
 
-            .maintenance-robot-image {
-                left: 50%;
-                top: 4px;
-                width: 148px;
-                height: 148px;
-                border-radius: 28px;
+            .maintenance-emblem {
+                width: 106px;
+                height: 106px;
             }
 
-            .bubble {
-                left: auto;
-                right: -26px;
-                top: 0;
-                max-width: 132px;
-                padding: 11px 12px;
-                font-size: 13px;
+            .maintenance-copy {
+                padding: 28px 24px 24px;
+                text-align: center;
             }
 
-            .bubble::before {
-                top: 34px;
+            .maintenance-copy h1 {
+                font-size: clamp(34px, 11vw, 46px);
             }
 
-            .info-card {
+            .heading-rule {
+                margin-right: auto;
+                margin-left: auto;
+            }
+
+            .return-card {
+                margin-right: auto;
+                margin-left: auto;
+                text-align: left;
+            }
+
+            .support-row {
+                margin: 0 20px;
                 grid-template-columns: 1fr;
             }
 
-            .info-item + .info-item {
+            .support-item,
+            .support-item:first-child,
+            .support-item:nth-child(2) {
+                grid-column: auto;
                 border-left: 0;
-                border-top: 1px solid var(--line);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            }
+
+            .support-item:last-child {
+                border-bottom: 0;
+            }
+
+            .page-note {
+                margin-top: 18px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .maintenance-orbit::before {
+                animation: none;
             }
         }
     </style>
@@ -500,111 +597,104 @@
 <body>
 @php
     $estimated = null;
-    $updated = null;
 
     try {
         $estimated = $estimatedCompletion ? \Carbon\Carbon::parse($estimatedCompletion) : null;
     } catch (\Throwable $exception) {
         $estimated = null;
     }
-
-    try {
-        $updated = $lastUpdated ? \Carbon\Carbon::parse($lastUpdated) : null;
-    } catch (\Throwable $exception) {
-        $updated = null;
-    }
 @endphp
-<main class="maintenance-shell">
-    <section class="maintenance-content" aria-labelledby="maintenance-title">
-        <div class="maintenance-visual" aria-hidden="true">
-            <div class="visual-orbit"></div>
-            <span class="spark one">+</span>
-            <span class="spark two">+</span>
-            <span class="spark three">+</span>
-            <img class="maintenance-robot-image" src="{{ asset('images/clinic-robot.png') }}" alt="">
-            <div class="bot-tile">
-                <div class="bot-antenna"></div>
-                <div class="bot-ear left"></div>
-                <div class="bot-ear right"></div>
-                <div class="bot-head">
-                    <div class="bot-face">
-                        <span class="bot-eye left"></span>
-                        <span class="bot-eye right"></span>
-                        <span class="bot-smile"></span>
-                    </div>
-                </div>
-                <div class="bot-body"></div>
-                <div class="bot-steth"></div>
-            </div>
-            <div class="bubble">
-                Thank you for patience!
-                <small>♥</small>
-            </div>
-        </div>
 
-        <div class="status-pill">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.1-3.1a6 6 0 0 1-7.9 7.9l-5.6 5.6a2.1 2.1 0 0 1-3-3l5.6-5.6a6 6 0 0 1 7.9-7.9l-3.1 3.1Z"/>
-            </svg>
-            Under Maintenance
-        </div>
+<span class="corner-dots top-left" aria-hidden="true"></span>
+<span class="corner-dots bottom-right" aria-hidden="true"></span>
 
-        <h1 id="maintenance-title">This Page is <span>Under Maintenance</span></h1>
-        <p class="lead">We're currently performing scheduled maintenance to improve your experience. Please check back soon.</p>
+<svg class="decorative-cross left" viewBox="0 0 40 40" aria-hidden="true">
+    <path d="M15 2h10v13h13v10H25v13H15V25H2V15h13V2Z" fill="none" stroke="currentColor" stroke-width="2"/>
+</svg>
+<svg class="decorative-cross right" viewBox="0 0 40 40" aria-hidden="true">
+    <path d="M15 2h10v13h13v10H25v13H15V25H2V15h13V2Z" fill="none" stroke="currentColor" stroke-width="2"/>
+</svg>
 
-        <div class="info-card">
-            <div class="info-item">
-                <span class="info-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 6v6l4 2"/>
-                        <circle cx="12" cy="12" r="9"/>
-                    </svg>
-                </span>
-                <div>
-                    <span class="label">Estimated Completion</span>
-                    <span class="value">{{ $estimated ? $estimated->format('M d, Y - h:i A') : 'Please check back soon' }}</span>
-                    <span class="note">We'll be back shortly!</span>
-                </div>
-            </div>
-            <div class="info-item">
-                <span class="info-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M8 2v4M16 2v4M3 10h18"/>
-                        <rect x="3" y="4" width="18" height="18" rx="3"/>
-                        <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>
-                    </svg>
-                </span>
-                <div>
-                    <span class="label">Last Updated</span>
-                    <span class="value">{{ $updated ? $updated->format('M d, Y - h:i A') : now()->format('M d, Y - h:i A') }}</span>
-                    <span class="note">Updates are in real-time.</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="safe-card">
-            <span class="safe-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
-                    <path d="m9 12 2 2 4-5"/>
-                </svg>
+<main class="maintenance-page">
+    <header class="brand-lockup">
+        <div class="brand-logos" aria-label="Polytechnic University of the Philippines logo">
+            <span class="brand-logo">
+                <img src="{{ asset('images/pup_logo.png') }}" alt="Polytechnic University of the Philippines logo">
             </span>
-            <div>
-                <strong>Your Data is Safe</strong>
-                <span>All your data remains secure. There is no action required on your part.</span>
+        </div>
+        <p class="brand-name">PUP Taguig Medical Clinic</p>
+    </header>
+
+    <section class="maintenance-card" aria-labelledby="maintenance-title">
+        <div class="maintenance-visual" aria-hidden="true">
+            <div class="maintenance-orbit">
+                <img class="maintenance-emblem" src="{{ asset('images/clinic_logo_transparent.png') }}" alt="">
             </div>
         </div>
 
-        <button type="button" class="refresh-btn" onclick="window.location.reload()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 12a9 9 0 0 1-15.5 6.3"/>
-                <path d="M3 12A9 9 0 0 1 18.5 5.7"/>
-                <path d="M3 19v-5h5"/>
-                <path d="M21 5v5h-5"/>
-            </svg>
-            Refresh Page
-        </button>
+        <div class="maintenance-copy">
+            <h1 id="maintenance-title">We're Under <span>Maintenance</span></h1>
+            <span class="heading-rule" aria-hidden="true"></span>
+            <p>We are currently performing scheduled maintenance to improve your experience. The website will be back online soon.</p>
+
+            <div class="return-card">
+                <span class="return-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M12 7v5l3.5 2.2"></path>
+                    </svg>
+                </span>
+                <div>
+                    <span class="return-label">Expected to be back on</span>
+                    <strong class="return-value">
+                        {{ $estimated ? $estimated->format('F j, Y') . '  -  ' . $estimated->format('g:i A') : 'Please check back soon' }}
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="support-row" aria-label="Clinic assistance channels">
+            <div class="support-item">
+                <span class="support-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"></path>
+                        <path d="M8 9h8M8 13h5"></path>
+                    </svg>
+                </span>
+                <span class="support-text"><strong>Need assistance?</strong>Please contact us through our official channels.</span>
+            </div>
+
+            <a class="support-item" href="mailto:puptclinic@gmail.com">
+                <span class="support-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                        <path d="m3 7 9 6 9-6"></path>
+                    </svg>
+                </span>
+                <span class="support-text">puptclinic@gmail.com</span>
+            </a>
+
+            <a class="support-item" href="tel:+63288375858">
+                <span class="support-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.8a2 2 0 0 1-.5 2.1L8.1 9.8a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.8 2.1Z"></path>
+                    </svg>
+                </span>
+                <span class="support-text">(02) 8837-5858</span>
+            </a>
+        </div>
     </section>
+
+    <footer class="page-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"></path>
+        </svg>
+        <p>Thank you for your patience and understanding.<span>Your health, our priority.</span></p>
+    </footer>
 </main>
+
+<svg class="medical-line" viewBox="0 0 180 45" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+    <path d="M0 27h35l6-8 6 18 9-29 10 25 7-11 7 5h20l6-7 8 7h66"></path>
+</svg>
 </body>
 </html>

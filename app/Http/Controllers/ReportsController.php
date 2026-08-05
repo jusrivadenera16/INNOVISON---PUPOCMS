@@ -685,6 +685,34 @@ class ReportsController extends Controller
         return compact('gender', 'isSenior', 'isPwd');
     }
 
+    private function extractHealthProfileDemographics(HealthProfile $profile): array
+    {
+        $user = $profile->user;
+
+        $gender = $this->normalizeReportGender(
+            $profile->sex
+            ?: optional($user)->gender
+        );
+
+        $birthday = trim((string) (
+            $profile->birthday
+            ?: optional($user)->DOB
+        ));
+
+        $isSenior = false;
+        if ($birthday !== '') {
+            try {
+                $isSenior = Carbon::parse($birthday)->age >= 60;
+            } catch (\Throwable $e) {
+                $isSenior = false;
+            }
+        }
+
+        $isPwd = trim((string) $profile->has_disability) === 'Yes';
+
+        return compact('gender', 'isSenior', 'isPwd');
+    }
+
     private function buildConsultationGadTable(Collection $consultations): array
     {
         $table = $this->emptyGadTable();
@@ -739,6 +767,38 @@ class ReportsController extends Controller
         return $table;
     }
 
+    private function buildFreshmenClearanceGadTable(Carbon $dateFrom, Carbon $dateTo): array
+    {
+        $table = $this->emptyGadTable();
+
+        $profiles = HealthProfile::with('user')
+            ->whereIn('clearance_status', ['Issued', 'Fully Cleared'])
+            ->where(function ($query) use ($dateFrom, $dateTo) {
+                $query->whereBetween('verified_at', [$dateFrom, $dateTo])
+                    ->orWhere(function ($fallback) use ($dateFrom, $dateTo) {
+                        $fallback->whereNull('verified_at')
+                            ->whereBetween('created_at', [$dateFrom, $dateTo]);
+                    });
+            })
+            ->get()
+            ->filter(fn (HealthProfile $profile) => $this->healthFormsCourseSheetIsApplicant($profile))
+            ->values();
+
+        foreach ($profiles as $profile) {
+            $demographics = $this->extractHealthProfileDemographics($profile);
+
+            $this->addGadEntry(
+                $table,
+                'student',
+                $demographics['gender'],
+                $demographics['isPwd'],
+                $demographics['isSenior']
+            );
+        }
+
+        return $table;
+    }
+
     private function buildMarGadTables(Collection $categories, Carbon $dateFrom, Carbon $dateTo): array
     {
         $consultations = $categories->flatMap(function ($category) {
@@ -758,12 +818,14 @@ class ReportsController extends Controller
         $consultationTable = $this->buildConsultationGadTable($consultations);
         $certificateTable = $this->buildConsultationGadTable($certificateConsultations);
         $triageOnlineTable = $this->buildAppointmentGadTable($onlineAppointments);
+        $freshmenClearanceTable = $this->buildFreshmenClearanceGadTable($dateFrom, $dateTo);
 
         return [
             'consultation' => $consultationTable,
             'certificate' => $certificateTable,
             'triage_online' => $triageOnlineTable,
             'combined' => $this->combineGadTables($consultationTable, $certificateTable, $triageOnlineTable),
+            'freshmen_clearance' => $freshmenClearanceTable,
         ];
     }
 
