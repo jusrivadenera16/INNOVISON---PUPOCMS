@@ -1322,6 +1322,7 @@
                                 data-update-url="{{ $record['can_edit'] ? route('admin.user-management.update', $record['id']) : '' }}"
                                 data-create-url="{{ !$record['can_edit'] && !empty($record['can_onboard']) ? route('admin.user-management.store-from-lookup') : '' }}"
                                 data-delete-url="{{ $record['can_edit'] ? route('admin.user-management.destroy', $record['id']) : '' }}"
+                                data-delete-account-url="{{ $record['can_edit'] ? route('admin.user-management.delete-account', $record['id']) : '' }}"
                                 data-can-edit="{{ $record['can_edit'] ? '1' : '0' }}"
                                 data-can-onboard="{{ !empty($record['can_onboard']) ? '1' : '0' }}"
                             data-id="{{ $record['record_id'] }}"
@@ -1417,6 +1418,7 @@
                                 data-lookup-result-row
                                 data-update-url="{{ $record['can_edit'] ? route('admin.user-management.update', $record['id']) : '' }}"
                                 data-delete-url="{{ $record['can_edit'] ? route('admin.user-management.destroy', $record['id']) : '' }}"
+                                data-delete-account-url="{{ $record['can_edit'] ? route('admin.user-management.delete-account', $record['id']) : '' }}"
                                 data-create-url="{{ !$record['can_edit'] && !empty($record['can_onboard']) ? route('admin.user-management.store-from-lookup') : '' }}"
                                 data-can-edit="{{ $record['can_edit'] ? '1' : '0' }}"
                                 data-can-onboard="{{ !empty($record['can_onboard']) ? '1' : '0' }}"
@@ -1561,6 +1563,15 @@
                             </button>
                             <button
                                 type="submit"
+                                form="deleteAccountForm"
+                                class="um-settings-action um-action-danger"
+                                id="deleteAccountBtn"
+                                onclick="return confirm('Permanently delete this user account? Linked admin profile records will be removed and related clinic records may be deleted by database rules. This cannot be undone.')"
+                            >
+                                Delete User Account
+                            </button>
+                            <button
+                                type="submit"
                                 form="deleteAdminHubForm"
                                 class="um-settings-action um-action-danger"
                                 id="deleteAdminHubBtn"
@@ -1578,6 +1589,12 @@
                         @method('DELETE')
                         <input type="hidden" name="management_view" id="deleteManagementView" value="account-access">
                         <input type="hidden" name="admin_profile_id" id="deleteAdminProfileId">
+                    </form>
+
+                    <form method="POST" id="deleteAccountForm" style="display:none;">
+                        @csrf
+                        @method('DELETE')
+                        <input type="hidden" name="management_view" id="deleteAccountManagementView" value="account-access">
                     </form>
 
                     <form method="POST" id="deleteAdminHubForm" style="display:none;">
@@ -1633,6 +1650,9 @@
     const adminEmailNote = document.getElementById('adminEmailNote');
     const deleteAdminProfileId = document.getElementById('deleteAdminProfileId');
     const deleteManagementView = document.getElementById('deleteManagementView');
+    const deleteAccountManagementView = document.getElementById('deleteAccountManagementView');
+    const deleteAccountForm = document.getElementById('deleteAccountForm');
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
     const deleteAdminHubManagementView = document.getElementById('deleteAdminHubManagementView');
     const deleteAdminHubForm = document.getElementById('deleteAdminHubForm');
     const deleteAdminHubBtn = document.getElementById('deleteAdminHubBtn');
@@ -1776,6 +1796,9 @@
         if (deleteManagementView) {
             deleteManagementView.value = managementView;
         }
+        if (deleteAccountManagementView) {
+            deleteAccountManagementView.value = managementView;
+        }
         if (deleteAdminHubManagementView) {
             deleteAdminHubManagementView.value = managementView;
         }
@@ -1883,6 +1906,9 @@
             settingsMethod.value = canEdit ? 'PUT' : 'POST';
         }
         deleteForm.action = row.dataset.deleteUrl || '#';
+        if (deleteAccountForm) {
+            deleteAccountForm.action = row.dataset.deleteAccountUrl || '#';
+        }
         if (deleteAdminHubForm) {
             deleteAdminHubForm.action = row.dataset.deleteAdminHubUrl || '#';
         }
@@ -1903,6 +1929,13 @@
         detailEditEmail.readOnly = !(canEdit || canOnboard);
 
         deleteForm.style.display = canEdit ? 'block' : 'none';
+        if (deleteAccountBtn) {
+            deleteAccountBtn.style.display = canEdit ? '' : 'none';
+            deleteAccountBtn.disabled = !canEdit;
+        }
+        if (deleteAccountForm) {
+            deleteAccountForm.style.display = 'none';
+        }
         if (deleteAdminHubBtn) {
             const showDeleteAdminHub = managementView === 'admin-hub' && canEdit && adminProfileId;
             deleteAdminHubBtn.style.display = showDeleteAdminHub ? '' : 'none';

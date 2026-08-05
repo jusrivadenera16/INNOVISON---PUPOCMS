@@ -775,6 +775,56 @@ class AdminUserController extends Controller
         return $this->redirectToManagementView($request, 'success', 'User access removed successfully. The original IDP role has been restored.');
     }
 
+    public function deleteAccount(Request $request, User $user)
+    {
+        $this->ensureCanManageUsers();
+
+        if ($user->id === Auth::id()) {
+            return $this->redirectToManagementView($request, 'error', 'You cannot delete the account you are currently using.');
+        }
+
+        $deletedUserName = $user->name ?? $user->email ?? 'Unknown User';
+        $deletedUserEmail = (string) ($user->email ?? '');
+        $deletedUserId = $user->id;
+        $linkedAdminCount = 0;
+
+        try {
+            DB::transaction(function () use ($user, &$linkedAdminCount) {
+                if (method_exists($user, 'tokens')) {
+                    $user->tokens()->delete();
+                }
+
+                $linkedAdminProfiles = $this->linkedAdminProfilesForUser($user);
+                $linkedAdminCount = $linkedAdminProfiles->count();
+
+                $linkedAdminProfiles->each(function (Admin $adminProfile) {
+                    $adminProfile->delete();
+                });
+
+                $user->delete();
+            });
+        } catch (\Throwable $exception) {
+            return $this->redirectToManagementView(
+                $request,
+                'error',
+                'The account could not be deleted because related records are protected. Deactivate the account or remove linked records first.'
+            );
+        }
+
+        $this->logUserManagementAction(
+            'Deleted user account',
+            sprintf(
+                'Deleted user account #%s for %s (%s) and removed %s linked admin profile(s).',
+                $deletedUserId,
+                $deletedUserName,
+                $deletedUserEmail !== '' ? $deletedUserEmail : 'no email',
+                $linkedAdminCount
+            )
+        );
+
+        return $this->redirectToManagementView($request, 'success', 'User account deleted successfully.');
+    }
+
     private function collectLocalUsers(string $search): array
     {
         $query = User::query()->with(['healthProfile', 'adminProfile']);
@@ -1492,33 +1542,15 @@ class AdminUserController extends Controller
     private function isProtectedUser(User $user): bool
     {
         $currentUserId = Auth::id();
-        $currentUser = Auth::user();
-        $currentUserRole = User::normalizeRole((string) ($currentUser?->user_role ?? ''));
-        $targetRole = User::normalizeRole((string) ($user->user_role ?? ''));
 
-        if ($user->id === $currentUserId) {
-            return true;
-        }
-
-        return $targetRole === User::ROLE_SUPERADMIN && $currentUserRole === User::ROLE_SUPERADMIN;
+        return $user->id === $currentUserId;
     }
 
     private function canManageRecord(array $record, ?int $currentUserId = null): bool
     {
-        $currentUser = Auth::user();
-        $currentUserRole = User::normalizeRole((string) ($currentUser?->user_role ?? ''));
-        $recordRole = strtolower(trim((string) ($record['raw_role'] ?? $record['normalized_role'] ?? $record['source'] ?? 'student')));
-        $recordSource = strtolower(trim((string) ($record['source'] ?? '')));
         $recordId = (string) ($record['id'] ?? $record['record_id'] ?? '');
 
         if ($recordId !== '' && $currentUserId !== null && $recordId === (string) $currentUserId) {
-            return false;
-        }
-
-        if (
-            ($recordSource === 'superadmin' || in_array($recordRole, ['superadmin', 'super_admin'], true))
-            && $currentUserRole === User::ROLE_SUPERADMIN
-        ) {
             return false;
         }
 
