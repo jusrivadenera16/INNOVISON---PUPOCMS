@@ -432,6 +432,14 @@
         transition: opacity .22s ease, visibility .22s ease, transform .22s ease;
         animation: scrollPop 1.9s ease-in-out infinite;
     }
+    .hero-scroll,
+    .hero-scroll:visited,
+    .hero-scroll:hover,
+    .hero-scroll:focus-visible,
+    .hero-scroll span,
+    .hero-scroll svg {
+        color: #ffffff !important;
+    }
     .hero-scroll.is-hidden {
         opacity: 0;
         visibility: hidden;
@@ -580,7 +588,7 @@
         width: min(1120px, calc(100% - 88px));
         height: 310px;
         margin: 0 auto;
-        transform: translateY(12px);
+        transform: translateY(24px);
     }
     .home-announcement-band {
         position: relative;
@@ -607,6 +615,29 @@
         background:
             linear-gradient(90deg, rgba(93, 10, 24, .24), transparent 24%, transparent 76%, rgba(93, 10, 42, .24)),
             linear-gradient(180deg, rgba(255, 255, 255, .035), transparent 32%, rgba(2, 6, 23, .18));
+    }
+    .home-announcement-heading {
+        position: absolute;
+        top: 25px;
+        left: 50%;
+        z-index: 7;
+        margin: 0;
+        color: #ffffff;
+        font-size: 20px;
+        font-weight: 950;
+        line-height: 1.2;
+        text-align: center;
+        text-transform: uppercase;
+        transform: translateX(-50%);
+    }
+    .home-announcement-heading::after {
+        content: "";
+        display: block;
+        width: 34px;
+        height: 2px;
+        margin: 9px auto 0;
+        border-radius: 999px;
+        background: #facc15;
     }
     .home-announcement-card {
         position: absolute;
@@ -1438,7 +1469,7 @@
         .home-announcement-shell {
             width: calc(100% - 52px);
             height: 286px;
-            transform: translateY(10px);
+            transform: translateY(22px);
         }
         .home-announcement-card.is-current,
         .home-announcement-card.is-next {
@@ -1488,13 +1519,17 @@
     }
     @media (max-width:680px){
         .home-announcement-band {
-            min-height: 344px;
+            min-height: 380px;
             margin-bottom: 28px;
         }
         .home-announcement-shell {
             width: calc(100% - 28px);
-            height: 292px;
+            height: 326px;
             transform: translateY(8px);
+        }
+        .home-announcement-heading {
+            top: 18px;
+            font-size: 17px;
         }
         .home-announcement-card,
         .home-announcement-card.is-current {
@@ -1521,8 +1556,8 @@
             display: flex;
             align-items: center;
             gap: 14px;
-            height: 292px;
-            padding: 22px 28px;
+            height: 326px;
+            padding: 64px 28px 22px;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
             transform: none;
@@ -1690,6 +1725,7 @@
       @endphp
 
       <div id="announcements" class="home-announcement-band" aria-label="Clinic announcements" style="scroll-margin-top: 86px;">
+        <h2 class="home-announcement-heading">Announcements</h2>
         <div class="home-announcement-shell {{ $announcementCount < 3 ? 'is-static static-count-' . $announcementCount : 'is-carousel carousel-count-' . $announcementCount }}" data-home-announcements>
           @foreach($announcementSlides as $index => $announcement)
             @php
