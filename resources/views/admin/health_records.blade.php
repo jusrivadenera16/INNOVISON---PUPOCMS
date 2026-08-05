@@ -2263,6 +2263,13 @@
         text-align: center;
     }
 
+    .health-filter-select-wrap.is-sort-order .health-filter-custom-menu {
+        top: auto;
+        bottom: calc(100% + 8px);
+        z-index: 30;
+        max-height: 150px;
+    }
+
     .health-filter-custom-option {
         border: 0;
         border-radius: 999px;
@@ -6027,7 +6034,7 @@
             </div>
             <div class="health-filter-field">
                 <label for="sortFilter">Sort By</label>
-                <div class="health-filter-select-wrap">
+                <div class="health-filter-select-wrap is-sort-order">
                     <select id="sortFilter" name="sort" class="health-filter-select health-filter-custom-source">
                         <option value="approved_date" {{ ($sortFilter ?? 'approved_date') === 'approved_date' ? 'selected' : '' }}>Approved Date</option>
                         <option value="alphabetical" {{ ($sortFilter ?? '') === 'alphabetical' ? 'selected' : '' }}>Alphabetical (A-Z)</option>
