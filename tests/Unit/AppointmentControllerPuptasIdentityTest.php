@@ -217,6 +217,46 @@ class AppointmentControllerPuptasIdentityTest extends TestCase
         );
     }
 
+    public function test_admission_applicants_cannot_use_manual_student_number_mode(): void
+    {
+        $controller = new AppointmentController();
+        $method = new ReflectionMethod($controller, 'canUseManualStudentNumberMode');
+        $method->setAccessible(true);
+
+        $applicant = new User();
+        $applicant->user_role = User::ROLE_STUDENT;
+        $applicant->idp_role = 'applicant';
+        $applicant->user_type = 'Applicant';
+
+        $this->assertFalse($method->invoke($controller, $applicant, null, null, 'not_found'));
+
+        $misclassifiedApplicant = new User();
+        $misclassifiedApplicant->user_role = User::ROLE_STUDENT;
+        $misclassifiedApplicant->idp_role = 'student';
+
+        $this->assertFalse($method->invoke(
+            $controller,
+            $misclassifiedApplicant,
+            null,
+            ['user' => ['reference_number' => '2026-1111-1111', 'firstname' => 'Test', 'lastname' => 'Applicant']],
+            'found'
+        ));
+    }
+
+    public function test_current_students_and_ojt_accounts_can_use_manual_student_number_mode(): void
+    {
+        $controller = new AppointmentController();
+        $method = new ReflectionMethod($controller, 'canUseManualStudentNumberMode');
+        $method->setAccessible(true);
+
+        $student = new User();
+        $student->user_role = User::ROLE_STUDENT;
+        $student->idp_role = 'student';
+        $student->user_type = 'Student';
+
+        $this->assertTrue($method->invoke($controller, $student, null, null, 'not_found'));
+    }
+
     public function test_non_applicant_idp_roles_use_clinic_reference_mode(): void
     {
         $controller = new AppointmentController();

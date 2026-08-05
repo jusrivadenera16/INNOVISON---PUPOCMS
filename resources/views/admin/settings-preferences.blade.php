@@ -4,6 +4,38 @@
 
 @push('styles')
 @include('admin.partials.settings-section-style')
+<style>
+    .settings-schedule-note {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 54px;
+        padding: 12px 14px;
+        border: 1px solid rgba(250, 204, 21, .34);
+        border-radius: 10px;
+        background: rgba(127, 0, 0, .035);
+        color: #334155;
+    }
+    .settings-schedule-note strong { color: #7f0000; }
+    .settings-schedule-note a {
+        flex: 0 0 auto;
+        color: #970014;
+        font-size: 12px;
+        font-weight: 850;
+        text-decoration: none;
+    }
+    html[data-theme="dark"] .settings-schedule-note {
+        background: rgba(15, 23, 42, .7);
+        color: #e2e8f0;
+    }
+    html[data-theme="dark"] .settings-schedule-note strong,
+    html[data-theme="dark"] .settings-schedule-note a { color: #facc15; }
+    @media (max-width: 640px) {
+        .settings-schedule-note { align-items: flex-start; flex-direction: column; }
+    }
+</style>
 @endpush
 
 @section('content')
@@ -28,7 +60,7 @@
     <section class="settings-section-hero">
         <div>
             <h1 class="settings-section-title"><x-outline-icon name="code-bracket-square" />System Preferences</h1>
-            <p>Configure workflow behavior for notifications, appointment approvals, assistant access hours, reminders, and clinic closures.</p>
+            <p>Configure workflow behavior for notifications, appointment approvals, reminders, and clinic closures.</p>
         </div>
         <a href="{{ route('admin.settings') }}" class="settings-back-link"><x-outline-icon name="chevron-right" /> Settings Hub</a>
     </section>
@@ -65,13 +97,9 @@
                             <option value="1" {{ old('auto_approve', $settings->auto_approve ? '1' : '0') == '1' ? 'selected' : '' }}>Enabled</option>
                         </select>
                     </div>
-                    <div class="settings-field">
-                        <label for="student_assistant_open_time">Assistant Open Time</label>
-                        <input id="student_assistant_open_time" name="student_assistant_open_time" type="time" value="{{ old('student_assistant_open_time', substr((string) ($settings->student_assistant_open_time ?: '08:00'), 0, 5)) }}" required disabled data-edit-field>
-                    </div>
-                    <div class="settings-field">
-                        <label for="student_assistant_close_time">Assistant Close Time</label>
-                        <input id="student_assistant_close_time" name="student_assistant_close_time" type="time" value="{{ old('student_assistant_close_time', substr((string) ($settings->student_assistant_close_time ?: '20:00'), 0, 5)) }}" required disabled data-edit-field>
+                    <div class="settings-schedule-note">
+                        <span>Assistant Admin Workspace follows <strong>{{ app(\App\Services\ClinicWorkflowService::class)->clinicScheduleLabel() }}</strong>.</span>
+                        <a href="{{ route('admin.settings.clinic') }}">Manage clinic schedule</a>
                     </div>
                     <div class="settings-field">
                         <label for="appointment_reminder_hours">Appointment Reminder</label>

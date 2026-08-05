@@ -2157,7 +2157,7 @@
                                                 <x-outline-icon name="arrows-right-left" class="nav-dropdown-link-icon" />
                                                 <span>
                                                     Switch to Admin Workspace
-                                                    <small class="nav-dropdown-schedule">Available {{ $studentAssistantHoursLabel ?? '8:00 AM–8:00 PM' }}</small>
+                                                    <small class="nav-dropdown-schedule">Available {{ $studentAssistantHoursLabel ?? 'Mon-Fri, 8:00 AM - 5:00 PM' }}</small>
                                                 </span>
                                             </span>
                                         </button>
@@ -3442,6 +3442,7 @@
             letter-spacing: 0;
         }
         .health-form-action-close {
+            border-radius: 50%;
             border: 1px solid rgba(255, 255, 255, .2);
             background: rgba(74, 10, 18, .32);
             color: #ffffff;

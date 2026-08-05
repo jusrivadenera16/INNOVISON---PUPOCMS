@@ -822,18 +822,18 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 20px;
+        padding: 16px;
         z-index: 1100;
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
     }
     .confirmation-modal {
-        width: min(720px, 100%);
+        width: min(640px, 100%);
         background: #ffffff;
-        border-radius: 22px;
+        border-radius: 16px;
         border: 1px solid rgba(255, 255, 255, 0.72);
-        border-top: 3px solid #facc15;
-        border-bottom: 4px solid #facc15;
+        border-top: 0;
+        border-bottom: 0;
         box-shadow: 0 34px 84px rgba(15, 23, 42, 0.34);
         padding: 0;
         position: relative;
@@ -842,23 +842,23 @@
     .confirmation-head {
         display: flex;
         align-items: center;
-        gap: 16px;
-        padding: 24px 70px 24px 28px;
+        gap: 12px;
+        padding: 18px 58px 18px 22px;
         background:
             radial-gradient(circle at 92% 10%, rgba(250, 204, 21, .16), transparent 34%),
             linear-gradient(135deg, #8f1823 0%, #70131B 55%, #5f1017 100%);
         border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     }
     .confirmation-head-badge {
-        width: 54px;
-        height: 54px;
-        border-radius: 16px;
+        width: 46px;
+        height: 46px;
+        border-radius: 13px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         flex: 0 0 auto;
         color: #ffffff;
-        font-size: 1.35rem;
+        font-size: 1.1rem;
         font-weight: 900;
         background: rgba(255, 255, 255, .14);
         border: 1px solid rgba(255, 255, 255, .24);
@@ -869,10 +869,10 @@
     }
     .confirmation-close {
         position: absolute;
-        top: 16px;
-        right: 16px;
-        width: 38px;
-        height: 38px;
+        top: 13px;
+        right: 13px;
+        width: 34px;
+        height: 34px;
         border: 1px solid rgba(255, 255, 255, 0.22);
         background: rgba(255, 255, 255, 0.16);
         color: #ffffff;
@@ -910,18 +910,24 @@
     .confirmation-close:hover::after {
         transform: translateX(135%);
     }
+    .confirmation-close svg {
+        width: 17px;
+        height: 17px;
+        position: relative;
+        z-index: 1;
+    }
     .confirmation-title {
-        margin: 0 0 6px 0;
+        margin: 0 0 4px 0;
         color: #ffffff;
-        font-size: clamp(1.5rem, 3vw, 2rem);
+        font-size: clamp(1.25rem, 2.4vw, 1.65rem);
         font-weight: 900;
         letter-spacing: 0;
     }
     .confirmation-subtitle {
         margin: 0;
         color: rgba(255, 255, 255, 0.88);
-        font-size: 14px;
-        line-height: 1.55;
+        font-size: 12px;
+        line-height: 1.45;
     }
     .confirmation-body {
         padding: 24px 28px 28px;
@@ -963,25 +969,26 @@
     }
     .confirmation-label {
         display: block;
-        font-size: 11px;
+        font-size: 10px;
         color: #64748b;
-        margin-bottom: 5px;
+        margin-bottom: 3px;
         text-transform: uppercase;
         letter-spacing: .06em;
         font-weight: 900;
     }
     .confirmation-value {
         color: #111827;
-        font-size: 15px;
+        font-size: 13px;
         font-weight: 900;
         overflow-wrap: anywhere;
     }
     .confirmation-status {
         display: inline-flex;
         align-items: center;
+        gap: 6px;
         border-radius: 999px;
-        padding: 6px 12px;
-        font-size: 12px;
+        padding: 5px 9px;
+        font-size: 10.5px;
         font-weight: 800;
         background: #fff3cd;
         color: #b45309;
@@ -1029,6 +1036,182 @@
         transform: translateY(-2px);
     }
 
+    /* Appointment submitted reference layout. */
+    .confirmation-body {
+        padding: 16px 18px 16px;
+    }
+    .confirmation-grid {
+        gap: 8px;
+        margin-bottom: 9px;
+    }
+    .confirmation-item {
+        min-height: 58px;
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+        padding: 9px 12px;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .035);
+    }
+    .confirmation-item.is-reference {
+        min-height: 72px;
+        grid-template-columns: 44px minmax(0, 1fr) auto;
+        gap: 11px;
+        padding: 11px 14px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #fff9e8 0%, #fffdf6 100%);
+    }
+    .confirmation-ref-icon,
+    .confirmation-detail-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+    .confirmation-ref-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: #facc15;
+        color: #70131b;
+        box-shadow: 0 10px 20px rgba(250, 204, 21, .2);
+    }
+    .confirmation-ref-icon svg { width: 21px; height: 21px; }
+    .confirmation-detail-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #fff1f2;
+        color: #9f1239;
+    }
+    .confirmation-detail-icon svg { width: 17px; height: 17px; }
+    .confirmation-item-copy { min-width: 0; }
+    .confirmation-item.is-reference .confirmation-label { margin-bottom: 3px; }
+    .confirmation-item.is-reference .confirmation-value {
+        color: #8f1823;
+        font-size: clamp(17px, 2.5vw, 20px);
+        line-height: 1.15;
+    }
+    .confirmation-copy-number {
+        min-height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 7px 10px;
+        border: 1px solid rgba(245, 158, 11, .48);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, .82);
+        color: #70131b;
+        font-size: 10px;
+        font-weight: 850;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: color .2s ease, background .2s ease, border-color .2s ease, transform .2s ease;
+    }
+    .confirmation-copy-number svg { width: 15px; height: 15px; }
+    .confirmation-copy-number:hover,
+    .confirmation-copy-number:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .confirmation-status::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #f59e0b;
+    }
+    .confirmation-next {
+        margin-top: 3px;
+        padding: 10px 10px 9px;
+        border: 1px solid rgba(112, 19, 27, .12);
+        border-radius: 10px;
+        background: #ffffff;
+    }
+    .confirmation-next h3 {
+        margin: 0 0 8px;
+        color: #8f1823;
+        font-size: 11px;
+        font-weight: 900;
+    }
+    .confirmation-timeline {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .confirmation-timeline::before {
+        content: "";
+        position: absolute;
+        top: 10px;
+        left: 12.5%;
+        right: 12.5%;
+        height: 1px;
+        background: linear-gradient(90deg, #e89ca4 0 33%, rgba(232, 156, 164, .45) 33% 100%);
+    }
+    .confirmation-step {
+        position: relative;
+        z-index: 1;
+        min-width: 0;
+        text-align: center;
+    }
+    .confirmation-step-marker {
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1.5px solid #f59e0b;
+        border-radius: 50%;
+        background: #ffffff;
+        color: #ffffff;
+    }
+    .confirmation-step-marker svg { width: 12px; height: 12px; stroke-width: 2.5; }
+    .confirmation-step.is-complete .confirmation-step-marker {
+        border-color: #8f1823;
+        background: #8f1823;
+        box-shadow: 0 4px 10px rgba(143, 24, 35, .2);
+    }
+    .confirmation-step strong,
+    .confirmation-step span { display: block; }
+    .confirmation-step strong {
+        margin-top: 5px;
+        color: #1f2937;
+        font-size: 9px;
+        font-weight: 850;
+    }
+    .confirmation-step p {
+        max-width: 108px;
+        margin: 3px auto 0;
+        color: #64748b;
+        font-size: 8px;
+        line-height: 1.35;
+    }
+    .confirmation-actions {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(112, 19, 27, .12);
+    }
+    .confirmation-btn {
+        min-width: 118px;
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 10.5px;
+    }
+    .confirmation-btn-primary { min-width: 160px; }
+    .confirmation-btn svg { width: 16px; height: 16px; }
+
     html[data-theme="dark"] .page-header,
     html[data-theme="dark"] .booking-form-section,
     html[data-theme="dark"] .info-card,
@@ -1041,8 +1224,8 @@
             0 0 0 1px rgba(250, 204, 21, 0.05) inset !important;
     }
     html[data-theme="dark"] .confirmation-modal {
-        border-top-color: #facc15 !important;
-        border-bottom-color: #facc15 !important;
+        border-top: 0 !important;
+        border-bottom: 0 !important;
     }
     html[data-theme="dark"] .booking-page-shell {
         background:
@@ -1230,6 +1413,38 @@
         color: #fef3c7 !important;
         border-color: rgba(250, 204, 21, 0.24) !important;
     }
+    html[data-theme="dark"] .confirmation-body,
+    html[data-theme="dark"] .confirmation-next {
+        background: #0f1012 !important;
+    }
+    html[data-theme="dark"] .confirmation-next,
+    html[data-theme="dark"] .confirmation-actions {
+        border-color: rgba(250, 204, 21, .14) !important;
+    }
+    html[data-theme="dark"] .confirmation-detail-icon {
+        background: rgba(143, 24, 35, .2);
+        color: #fda4af;
+    }
+    html[data-theme="dark"] .confirmation-copy-number {
+        background: #17171a;
+        color: #f8fafc;
+        border-color: rgba(250, 204, 21, .32);
+    }
+    html[data-theme="dark"] .confirmation-copy-number:hover,
+    html[data-theme="dark"] .confirmation-copy-number:focus-visible {
+        background: #facc15;
+        color: #70131b;
+    }
+    html[data-theme="dark"] .confirmation-next h3,
+    html[data-theme="dark"] .confirmation-step strong {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .confirmation-step p {
+        color: #94a3b8;
+    }
+    html[data-theme="dark"] .confirmation-step-marker {
+        background: #111214;
+    }
     html[data-theme="dark"] .confirmation-close {
         color: #f8fafc !important;
     }
@@ -1285,16 +1500,35 @@
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
         .confirmation-modal {
-            padding: 18px;
+            padding: 0;
         }
         .confirmation-head {
-            padding: 22px 62px 22px 20px;
+            padding: 16px 52px 16px 16px;
         }
         .confirmation-body {
-            padding: 20px;
+            padding: 14px;
         }
         .confirmation-grid {
             grid-template-columns: 1fr;
+        }
+        .confirmation-item.is-reference {
+            grid-template-columns: 40px minmax(0, 1fr);
+            padding: 11px;
+        }
+        .confirmation-ref-icon {
+            width: 40px;
+            height: 40px;
+        }
+        .confirmation-copy-number {
+            grid-column: 1 / -1;
+            width: 100%;
+        }
+        .confirmation-timeline {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px 8px;
+        }
+        .confirmation-timeline::before {
+            content: none;
         }
         .confirmation-actions {
             justify-content: stretch;
@@ -1579,10 +1813,17 @@
 @if(session('appointment_confirmation'))
     @php
         $confirmation = session('appointment_confirmation');
+        $appointmentNumber = (string) ($confirmation['apt_id'] ?? 'N/A');
+        $rawConfirmationStatus = trim((string) ($confirmation['status'] ?? 'Pending'));
+        $confirmationStatusLabel = strtolower(str_replace('_', ' ', $rawConfirmationStatus)) === 'pending'
+            ? 'Pending Review'
+            : ucwords(str_replace('_', ' ', $rawConfirmationStatus));
     @endphp
     <div class="confirmation-overlay" id="appointmentConfirmationOverlay">
         <div class="confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="appointmentConfirmationTitle">
-            <button type="button" class="confirmation-close" id="appointmentConfirmationClose" aria-label="Close confirmation">x</button>
+            <button type="button" class="confirmation-close" id="appointmentConfirmationClose" aria-label="Close confirmation">
+                <x-outline-icon name="x-mark" />
+            </button>
             <div class="confirmation-head">
                 <div class="confirmation-head-badge">AP</div>
                 <div class="confirmation-head-copy">
@@ -1593,33 +1834,86 @@
             <div class="confirmation-body">
                 <div class="confirmation-grid">
                     <div class="confirmation-item is-reference">
-                        <span class="confirmation-ref-icon">#</span>
-                        <span>
+                        <span class="confirmation-ref-icon" aria-hidden="true">
+                            <x-outline-icon name="calendar-days" />
+                        </span>
+                        <span class="confirmation-item-copy">
                             <span class="confirmation-label">Appointment Number</span>
-                            <span class="confirmation-value">{{ $confirmation['apt_id'] ?? 'N/A' }}</span>
+                            <span class="confirmation-value">{{ $appointmentNumber }}</span>
+                        </span>
+                        <button
+                            type="button"
+                            class="confirmation-copy-number"
+                            id="appointmentConfirmationCopy"
+                            data-copy-value="{{ $appointmentNumber }}"
+                            aria-label="Copy appointment number"
+                        >
+                            <x-outline-icon name="clipboard-document-list" />
+                            <span>Copy Number</span>
+                        </button>
+                    </div>
+                    <div class="confirmation-item">
+                        <span class="confirmation-detail-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
+                        <span class="confirmation-item-copy">
+                            <span class="confirmation-label">Service</span>
+                            <span class="confirmation-value">{{ $confirmation['service'] ?? '-' }}</span>
                         </span>
                     </div>
                     <div class="confirmation-item">
-                        <span class="confirmation-label">Service</span>
-                        <span class="confirmation-value">{{ $confirmation['service'] ?? '-' }}</span>
+                        <span class="confirmation-detail-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span>
+                        <span class="confirmation-item-copy">
+                            <span class="confirmation-label">Preferred Date</span>
+                            <span class="confirmation-value">{{ $confirmation['date'] ?? '-' }}</span>
+                        </span>
                     </div>
                     <div class="confirmation-item">
-                        <span class="confirmation-label">Preferred Date</span>
-                        <span class="confirmation-value">{{ $confirmation['date'] ?? '-' }}</span>
+                        <span class="confirmation-detail-icon" aria-hidden="true"><x-outline-icon name="clock" /></span>
+                        <span class="confirmation-item-copy">
+                            <span class="confirmation-label">Preferred Time</span>
+                            <span class="confirmation-value">{{ $confirmation['time'] ?? '-' }}</span>
+                        </span>
                     </div>
                     <div class="confirmation-item">
-                        <span class="confirmation-label">Preferred Time</span>
-                        <span class="confirmation-value">{{ $confirmation['time'] ?? '-' }}</span>
-                    </div>
-                    <div class="confirmation-item">
-                        <span class="confirmation-label">Current Status</span>
-                        <span class="confirmation-status">{{ $confirmation['status'] ?? 'Pending' }}</span>
+                        <span class="confirmation-detail-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span>
+                        <span class="confirmation-item-copy">
+                            <span class="confirmation-label">Current Status</span>
+                            <span class="confirmation-status">{{ $confirmationStatusLabel }}</span>
+                        </span>
                     </div>
                 </div>
 
+                <section class="confirmation-next" aria-labelledby="confirmationNextTitle">
+                    <h3 id="confirmationNextTitle">What happens next?</h3>
+                    <div class="confirmation-timeline">
+                        <div class="confirmation-step is-complete">
+                            <span class="confirmation-step-marker" aria-hidden="true"><x-outline-icon name="check" /></span>
+                            <strong>Submitted</strong>
+                            <p>Your appointment has been received.</p>
+                        </div>
+                        <div class="confirmation-step">
+                            <span class="confirmation-step-marker" aria-hidden="true"></span>
+                            <strong>Under Review</strong>
+                            <p>Our team will review your request.</p>
+                        </div>
+                        <div class="confirmation-step">
+                            <span class="confirmation-step-marker" aria-hidden="true"></span>
+                            <strong>Approved</strong>
+                            <p>You will receive a confirmation soon.</p>
+                        </div>
+                        <div class="confirmation-step">
+                            <span class="confirmation-step-marker" aria-hidden="true"></span>
+                            <strong>Completed</strong>
+                            <p>Your appointment will be completed.</p>
+                        </div>
+                    </div>
+                </section>
+
                 <div class="confirmation-actions">
-                    <button type="button" class="confirmation-btn confirmation-btn-secondary" id="appointmentConfirmationDone">Stay Here</button>
-                    <a href="/student/account" class="confirmation-btn confirmation-btn-primary">Go To My Profile</a>
+                    <a href="{{ url('/student/home') }}" class="confirmation-btn confirmation-btn-secondary">Back to Home</a>
+                    <a href="{{ url('/student/account') }}" class="confirmation-btn confirmation-btn-primary">
+                        <span>Go To My Profile</span>
+                        <x-outline-icon name="arrow-long-right" />
+                    </a>
                 </div>
             </div>
         </div>
@@ -2075,7 +2369,7 @@
 
         const confirmationOverlay = document.getElementById('appointmentConfirmationOverlay');
         const confirmationClose = document.getElementById('appointmentConfirmationClose');
-        const confirmationDone = document.getElementById('appointmentConfirmationDone');
+        const confirmationCopy = document.getElementById('appointmentConfirmationCopy');
         const seeMoreAppointmentsBtn = document.getElementById('seeMoreAppointmentsBtn');
         const moreAppointmentsList = document.getElementById('moreAppointmentsList');
 
@@ -2094,9 +2388,6 @@
             if (confirmationClose) {
                 confirmationClose.addEventListener('click', closeConfirmation);
             }
-            if (confirmationDone) {
-                confirmationDone.addEventListener('click', closeConfirmation);
-            }
             confirmationOverlay.addEventListener('click', function (event) {
                 if (event.target === confirmationOverlay) {
                     closeConfirmation();
@@ -2105,6 +2396,39 @@
             document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape' && confirmationOverlay.style.display !== 'none') {
                     closeConfirmation();
+                }
+            });
+        }
+
+        if (confirmationCopy) {
+            confirmationCopy.addEventListener('click', async function () {
+                const value = confirmationCopy.dataset.copyValue || '';
+                const label = confirmationCopy.querySelector('span');
+
+                try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(value);
+                    } else {
+                        const temporaryInput = document.createElement('textarea');
+                        temporaryInput.value = value;
+                        temporaryInput.setAttribute('readonly', '');
+                        temporaryInput.style.position = 'fixed';
+                        temporaryInput.style.opacity = '0';
+                        document.body.appendChild(temporaryInput);
+                        temporaryInput.select();
+                        document.execCommand('copy');
+                        temporaryInput.remove();
+                    }
+
+                    if (label) label.textContent = 'Copied';
+                    window.setTimeout(function () {
+                        if (label) label.textContent = 'Copy Number';
+                    }, 1600);
+                } catch (error) {
+                    if (label) label.textContent = 'Copy failed';
+                    window.setTimeout(function () {
+                        if (label) label.textContent = 'Copy Number';
+                    }, 1600);
                 }
             });
         }

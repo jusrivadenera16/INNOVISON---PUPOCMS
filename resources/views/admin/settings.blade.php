@@ -2321,18 +2321,9 @@
                         </section>
 
                         <section class="workflow-setting-group">
-                            <h4>Student Assistant Access Hours</h4>
-                            <p>The Student Workspace remains available. Only access to the Admin Workspace follows this schedule.</p>
-                            <div class="field-grid two">
-                                <div class="field">
-                                    <label for="studentAssistantOpenTime">Admin Access Starts</label>
-                                    <input type="time" id="studentAssistantOpenTime" name="student_assistant_open_time" value="{{ old('student_assistant_open_time', substr((string) ($settings->student_assistant_open_time ?: '08:00'), 0, 5)) }}" required>
-                                </div>
-                                <div class="field">
-                                    <label for="studentAssistantCloseTime">Admin Access Ends</label>
-                                    <input type="time" id="studentAssistantCloseTime" name="student_assistant_close_time" value="{{ old('student_assistant_close_time', substr((string) ($settings->student_assistant_close_time ?: '20:00'), 0, 5)) }}" required>
-                                </div>
-                            </div>
+                            <h4>Student Assistant Admin Access</h4>
+                            <p>Admin Workspace access follows the clinic operating days and hours: <strong>{{ app(\App\Services\ClinicWorkflowService::class)->clinicScheduleLabel() }}</strong>.</p>
+                            <a href="{{ route('admin.settings.clinic') }}" class="btn-secondary">Manage Clinic Schedule</a>
                         </section>
 
                         <section class="workflow-setting-group">

@@ -14,6 +14,7 @@ class Setting extends Model
         'clinic_location',
         'open_time',
         'close_time',
+        'operating_days',
         'email_notifications',
         'admin_live_notifications',
         'auto_approve',
@@ -35,5 +36,6 @@ class Setting extends Model
         'clinic_closure_enabled' => 'boolean',
         'clinic_closure_starts_at' => 'datetime',
         'clinic_closure_ends_at' => 'datetime',
+        'operating_days' => 'array',
     ];
 }
