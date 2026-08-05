@@ -894,7 +894,7 @@
                     </span>
                 </a>
             @elseif($showAdminWorkspace)
-                <button class="workspace-card is-admin is-disabled" type="button" disabled aria-disabled="true" title="Admin Workspace is available {{ $adminWorkspaceHoursLabel ?? 'during clinic assistant hours' }}">
+                <button class="workspace-card is-admin is-disabled" type="button" disabled aria-disabled="true" title="Admin Workspace is available {{ $adminWorkspaceHoursLabel ?? 'during clinic operating hours' }}">
                     <span class="workspace-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
                             <circle cx="12" cy="7" r="3.4"></circle>
@@ -905,7 +905,7 @@
                     </span>
                     <h2>Admin Workspace</h2>
                     <span class="workspace-rule" aria-hidden="true"></span>
-                    <p>Available {{ $adminWorkspaceHoursLabel ?? 'during clinic assistant hours' }}.</p>
+                    <p>Available {{ $adminWorkspaceHoursLabel ?? 'during clinic operating hours' }}.</p>
                     <span class="workspace-button">
                         <span>Closed</span>
                         <svg viewBox="0 0 24 24" aria-hidden="true">

@@ -4,6 +4,70 @@
 
 @push('styles')
 @include('admin.partials.settings-section-style')
+<style>
+    .settings-days-field {
+        grid-column: 1 / -1;
+        display: grid;
+        gap: 9px;
+    }
+    .settings-days-label {
+        color: var(--stg-muted);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+    .settings-days-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .settings-day-option { position: relative; min-width: 0; }
+    .settings-day-option input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .settings-day-option span {
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(127, 0, 0, .13);
+        border-radius: 10px;
+        background: #f8fafc;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 850;
+        cursor: default;
+        transition: border-color .18s ease, background .18s ease, color .18s ease, transform .18s ease;
+    }
+    .settings-day-option input:checked + span {
+        border-color: rgba(250, 204, 21, .76);
+        background: #7f0000;
+        color: #ffffff;
+        box-shadow: 0 7px 16px rgba(127, 0, 0, .16);
+    }
+    .settings-editable-form.is-editing .settings-day-option span { cursor: pointer; }
+    .settings-editable-form.is-editing .settings-day-option:hover span {
+        transform: translateY(-1px);
+        border-color: rgba(250, 204, 21, .72);
+    }
+    html[data-theme="dark"] .settings-days-label { color: #cbd5e1; }
+    html[data-theme="dark"] .settings-day-option span {
+        border-color: rgba(255, 255, 255, .14);
+        background: rgba(30, 41, 59, .72);
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .settings-day-option input:checked + span {
+        border-color: rgba(250, 204, 21, .64);
+        background: rgba(127, 0, 0, .62);
+        color: #ffffff;
+    }
+    @media (max-width: 760px) {
+        .settings-days-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+</style>
 @endpush
 
 @section('content')
@@ -70,7 +134,7 @@
             <div class="settings-panel-head">
                 <div>
                     <h3>Clinic Hours</h3>
-                    <p>Daily clinic operating schedule.</p>
+                    <p>Choose the operating days and opening hours used across the clinic system.</p>
                 </div>
                 <button type="button" class="settings-edit-btn" data-edit-target="clinicHoursForm">
                     <x-outline-icon name="pencil-square" />
@@ -81,6 +145,13 @@
                 <form id="clinicHoursForm" action="{{ route('admin.settings.update') }}" method="POST" class="settings-editable-form">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="clinic_hours_form" value="1">
+                    @php
+                        $selectedOperatingDays = collect(old('operating_days', $settings->operating_days ?: [1, 2, 3, 4, 5]))
+                            ->map(fn ($day) => (int) $day)
+                            ->all();
+                        $operatingDayOptions = [1 => 'Mon', 2 => 'Tue', 3 => 'Wed', 4 => 'Thu', 5 => 'Fri', 6 => 'Sat', 7 => 'Sun'];
+                    @endphp
                     <div class="settings-form-grid">
                         <div class="settings-field">
                             <label for="open_time">Opening Time</label>
@@ -89,6 +160,17 @@
                         <div class="settings-field">
                             <label for="close_time">Closing Time</label>
                             <input id="close_time" name="close_time" type="time" value="{{ old('close_time', substr((string) ($settings->close_time ?: '17:00'), 0, 5)) }}" disabled data-edit-field>
+                        </div>
+                        <div class="settings-days-field">
+                            <span class="settings-days-label">Operating Days</span>
+                            <div class="settings-days-grid">
+                                @foreach($operatingDayOptions as $dayValue => $dayLabel)
+                                    <label class="settings-day-option">
+                                        <input type="checkbox" name="operating_days[]" value="{{ $dayValue }}" {{ in_array($dayValue, $selectedOperatingDays, true) ? 'checked' : '' }} disabled data-edit-field>
+                                        <span>{{ $dayLabel }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                     <div class="settings-action-row">

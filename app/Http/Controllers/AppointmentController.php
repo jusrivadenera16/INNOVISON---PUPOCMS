@@ -641,53 +641,7 @@ class AppointmentController extends Controller
 
     private function buildClinicHoursStatus(): array
     {
-        $settings = app(ClinicWorkflowService::class)->settings();
-        $openTime = substr((string) ($settings->open_time ?: '08:00'), 0, 5);
-        $closeTime = substr((string) ($settings->close_time ?: '17:00'), 0, 5);
-        $openMinutes = $this->clinicTimeToMinutes($openTime);
-        $closeMinutes = $this->clinicTimeToMinutes($closeTime);
-        $now = now(config('app.timezone'));
-        $currentMinutes = ((int) $now->format('H')) * 60 + (int) $now->format('i');
-
-        $isOpen = $openMinutes === $closeMinutes
-            || ($openMinutes < $closeMinutes
-                ? ($currentMinutes >= $openMinutes && $currentMinutes < $closeMinutes)
-                : ($currentMinutes >= $openMinutes || $currentMinutes < $closeMinutes));
-
-        $nextOpenAt = null;
-        if (!$isOpen) {
-            $nextOpenAt = $now->copy()->setTimeFromTimeString($openTime . ':00');
-
-            if ($openMinutes < $closeMinutes) {
-                if ($currentMinutes >= $closeMinutes) {
-                    $nextOpenAt->addDay();
-                }
-            } elseif ($currentMinutes >= $closeMinutes && $currentMinutes < $openMinutes) {
-                // The clinic is closed between today's closing time and opening time.
-                // Otherwise the next opening is tomorrow.
-            } else {
-                $nextOpenAt->addDay();
-            }
-        }
-
-        return [
-            'is_open' => $isOpen,
-            'label' => $isOpen ? 'Clinic Open Now' : 'Clinic Closed Now',
-            'hours' => $this->formatClinicTime($openTime) . ' - ' . $this->formatClinicTime($closeTime),
-            'next_open_at' => $nextOpenAt?->toIso8601String(),
-        ];
-    }
-
-    private function clinicTimeToMinutes(string $time): int
-    {
-        [$hours, $minutes] = array_pad(explode(':', $time), 2, 0);
-
-        return ((int) $hours * 60) + (int) $minutes;
-    }
-
-    private function formatClinicTime(string $time): string
-    {
-        return Carbon::createFromFormat('H:i', $time, config('app.timezone'))->format('g:i A');
+        return app(ClinicWorkflowService::class)->clinicHoursStatus();
     }
 
     public function feedbackIndex()
@@ -748,6 +702,40 @@ class AppointmentController extends Controller
     private function wantsManualStudentNumberMode(Request $request): bool
     {
         return trim((string) $request->input('reference_mode_selected')) === 'student_number';
+    }
+
+    private function canUseManualStudentNumberMode(
+        User $user,
+        ?HealthProfile $healthProfile = null,
+        ?array $applicantData = null,
+        ?string $lookupOutcome = null
+    ): bool {
+        if ($this->isApplicantAccount($user) || $lookupOutcome === 'found') {
+            return false;
+        }
+
+        if (($this->normalizePuptasApplicantIdentity($applicantData)['available'] ?? false) === true) {
+            return false;
+        }
+
+        $studentNumber = trim((string) (
+            optional($healthProfile)->student_number
+            ?: ($user->student_number ?? '')
+        ));
+
+        foreach ([optional($healthProfile)->reference_number, $user->reference_number ?? null] as $referenceNumber) {
+            $referenceNumber = trim((string) $referenceNumber);
+            if (
+                $referenceNumber !== ''
+                && ($studentNumber === '' || strcasecmp($referenceNumber, $studentNumber) !== 0)
+                && !$this->looksLikeIdpIdentifier($referenceNumber, $user)
+                && !$this->isClinicReference($referenceNumber)
+            ) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function resolveReferenceNumber(User $user, ?HealthProfile $healthProfile = null, ?array $applicantData = null): string
@@ -1286,6 +1274,12 @@ class AppointmentController extends Controller
             $referenceMode = $this->resolveHealthReferenceMode($user, $linkedAdminProfile, $applicantData, $lookupOutcome);
         }
         $applicantIdentity = $this->normalizePuptasApplicantIdentity($applicantData);
+        $manualStudentNumberAllowed = $this->canUseManualStudentNumberMode(
+            $user,
+            $healthProfile,
+            $applicantData,
+            $lookupOutcome
+        );
         $this->persistPuptasApplicantIdentity($user, $applicantIdentity);
         $usePuptasApplicantPrefill = $referenceMode === 'admission' && is_array($applicantData) && !empty($applicantData);
         $useGuisisStudentPrefill = $referenceMode === 'student_number' && (bool) ($guisisAccountData['available'] ?? false);
@@ -1381,6 +1375,7 @@ class AppointmentController extends Controller
 
         return [
             'reference_mode' => $referenceMode,
+            'manual_student_number_allowed' => $manualStudentNumberAllowed,
             'reference_requires_validation' => $referenceMode === 'admission',
             'reference_label' => $referenceMode === 'admission'
                 ? 'Admission Reference Number'
@@ -4238,8 +4233,25 @@ public function validateHealthFormReference(Request $request)
     $studentNumberReference = $user ? $this->enrolledStudentReferenceNumber($user, $existingHealthProfile) : '';
 
     if ($user && $this->wantsManualStudentNumberMode($request)) {
+        $manualModeLookup = $this->fetchPuptasApplicantLookupForUser($user);
+        $manualModeApplicantData = is_array($manualModeLookup['data'] ?? null)
+            ? $manualModeLookup['data']
+            : null;
+
+        if (!$this->canUseManualStudentNumberMode(
+            $user,
+            $existingHealthProfile,
+            $manualModeApplicantData,
+            (string) ($manualModeLookup['outcome'] ?? 'not_found')
+        )) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admission applicants must verify their Admission Reference and cannot use the Student ID option.',
+            ], 403);
+        }
+
         $validated = $request->validate([
-            'reference_number' => ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9\-_]+$/'],
+            'reference_number' => ['required', 'string', 'max:120', 'regex:/^\d{4}-\d{5}-[A-Za-z]{2}-\d+$/'],
         ]);
 
         $studentNumberReference = $this->normalizeManualStudentNumber($validated['reference_number']);
@@ -4472,9 +4484,33 @@ public function storeHealthForm(Request $request)
 
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
     $studentNumberReference = $user ? $this->enrolledStudentReferenceNumber($user, $existingHealthProfile) : '';
-    $manualStudentNumberReference = $this->wantsManualStudentNumberMode($request)
-        ? $this->normalizeManualStudentNumber($request->input('reference_number'))
-        : '';
+    $manualStudentNumberRequested = $this->wantsManualStudentNumberMode($request);
+    $manualStudentNumberReference = '';
+
+    if ($manualStudentNumberRequested) {
+        $manualModeLookup = $this->fetchPuptasApplicantLookupForUser($user);
+        $manualModeApplicantData = is_array($manualModeLookup['data'] ?? null)
+            ? $manualModeLookup['data']
+            : null;
+
+        if (!$this->canUseManualStudentNumberMode(
+            $user,
+            $existingHealthProfile,
+            $manualModeApplicantData,
+            (string) ($manualModeLookup['outcome'] ?? 'not_found')
+        )) {
+            throw ValidationException::withMessages([
+                'reference_number' => 'Admission applicants must verify their Admission Reference and cannot use the Student ID option.',
+            ]);
+        }
+
+        $request->validate([
+            'reference_number' => ['required', 'string', 'max:120', 'regex:/^\d{4}-\d{5}-[A-Za-z]{2}-\d+$/'],
+        ], [
+            'reference_number.regex' => 'Enter a valid Student ID in the format YYYY-#####-TG-#.',
+        ]);
+        $manualStudentNumberReference = $this->normalizeManualStudentNumber($request->input('reference_number'));
+    }
 
     if ($manualStudentNumberReference !== '') {
         $studentNumberReference = $manualStudentNumberReference;
@@ -4522,7 +4558,7 @@ public function storeHealthForm(Request $request)
     $manualStudentDocumentsRequired = $manualStudentNumberReference !== '';
     $applicantDocumentsRequired = $referenceMode === 'admission' || $manualStudentDocumentsRequired;
     $referenceNumberRules = $isStudentNumberReferenceMode
-        ? ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9\-_]+$/']
+        ? ['required', 'string', 'max:120', 'regex:/^\d{4}-\d{5}-[A-Za-z]{2}-\d+$/']
         : ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$/'];
 
     $request->validate([

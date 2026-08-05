@@ -2154,6 +2154,20 @@
         position: relative;
     }
 
+    .health-filter-date {
+        width: 100%;
+        min-width: 0;
+        padding-right: 14px;
+        appearance: auto;
+        -webkit-appearance: auto;
+        cursor: pointer;
+    }
+
+    .health-filter-date::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: .72;
+    }
+
     .health-filter-select-wrap:not(.has-custom-dropdown)::after {
         content: "";
         position: absolute;
@@ -3128,6 +3142,11 @@
 
     html[data-theme="dark"] .health-filter-select-wrap::after {
         border-color: #facc15;
+    }
+
+    html[data-theme="dark"] .health-filter-date {
+        color-scheme: dark;
+        color: #ffffff;
     }
 
     html[data-theme="dark"] .health-filter-custom-trigger {
@@ -5951,7 +5970,7 @@
                 </span>
                 <div>
                     <h3 class="health-filter-modal-title">Filter Health Records</h3>
-                    <p class="health-filter-modal-copy">Narrow the issued medical clearance list by user type, course, month, or year level.</p>
+                    <p class="health-filter-modal-copy">Narrow and arrange the issued medical clearance list by user type, course, year level, approval date, or sort order.</p>
                 </div>
             </div>
             <button type="button" class="health-filter-modal-close" id="healthFilterCloseBtn" aria-label="Close filter popup">
@@ -5997,14 +6016,24 @@
                 </div>
             </div>
             <div class="health-filter-field">
-                <label for="monthFilter">Time</label>
+                <label for="dateFilter">Date</label>
                 <input
-                    type="month"
-                    id="monthFilter"
-                    name="month"
-                    value="{{ $monthFilter ?? '' }}"
-                    class="health-filter-select"
+                    type="date"
+                    id="dateFilter"
+                    name="date"
+                    value="{{ $dateFilter ?? '' }}"
+                    class="health-filter-select health-filter-date"
                 >
+            </div>
+            <div class="health-filter-field">
+                <label for="sortFilter">Sort By</label>
+                <div class="health-filter-select-wrap">
+                    <select id="sortFilter" name="sort" class="health-filter-select health-filter-custom-source">
+                        <option value="approved_date" {{ ($sortFilter ?? 'approved_date') === 'approved_date' ? 'selected' : '' }}>Approved Date</option>
+                        <option value="alphabetical" {{ ($sortFilter ?? '') === 'alphabetical' ? 'selected' : '' }}>Alphabetical (A-Z)</option>
+                        <option value="course" {{ ($sortFilter ?? '') === 'course' ? 'selected' : '' }}>Course (A-Z)</option>
+                    </select>
+                </div>
             </div>
             <div class="health-filter-actions">
                 <a href="{{ route('admin.health_records') }}" class="health-filter-btn health-filter-btn-reset">Reset</a>

@@ -1759,9 +1759,13 @@ class AdminController extends Controller
     {
         $search = trim((string) $request->query('q', ''));
         $courseFilter = trim((string) $request->query('course', ''));
-        $monthFilter = trim((string) $request->query('month', ''));
+        $dateFilter = trim((string) $request->query('date', ''));
         $yearFilter = trim((string) $request->query('year', ''));
         $userTypeFilter = strtolower(trim((string) $request->query('user_type', '')));
+        $sortFilter = strtolower(trim((string) $request->query('sort', 'approved_date')));
+        $sortFilter = in_array($sortFilter, ['approved_date', 'alphabetical', 'course'], true)
+            ? $sortFilter
+            : 'approved_date';
         $perPageInput = trim((string) $request->query('per_page', '20'));
         $allowedPerPage = ['20', '40', '80', '100', 'all'];
         $issuedPerPage = in_array($perPageInput, $allowedPerPage, true) ? $perPageInput : '20';
@@ -1809,13 +1813,14 @@ class AdminController extends Controller
 
         $this->applyHealthProfileUserTypeFilter($query, $userTypeFilter);
 
-        if ($monthFilter !== '') {
+        if ($dateFilter !== '') {
             try {
-                $monthDate = Carbon::parse($monthFilter . '-01');
-                $query->whereYear('created_at', $monthDate->year)
-                    ->whereMonth('created_at', $monthDate->month);
+                $approvedDate = Carbon::createFromFormat('Y-m-d', $dateFilter);
+                if ($approvedDate->format('Y-m-d') === $dateFilter) {
+                    $query->whereDate('verified_at', $dateFilter);
+                }
             } catch (\Throwable $e) {
-                // Ignore invalid month input and keep the query usable.
+                $dateFilter = '';
             }
         }
 
@@ -1873,13 +1878,14 @@ class AdminController extends Controller
 
         $this->applyStaffHealthProfileUserTypeFilter($employeeQuery, $userTypeFilter);
 
-        if ($monthFilter !== '') {
+        if ($dateFilter !== '') {
             try {
-                $monthDate = Carbon::parse($monthFilter . '-01');
-                $employeeQuery->whereYear('created_at', $monthDate->year)
-                    ->whereMonth('created_at', $monthDate->month);
+                $approvedDate = Carbon::createFromFormat('Y-m-d', $dateFilter);
+                if ($approvedDate->format('Y-m-d') === $dateFilter) {
+                    $employeeQuery->whereDate('verified_at', $dateFilter);
+                }
             } catch (\Throwable $e) {
-                // Ignore invalid month input and keep the query usable.
+                $dateFilter = '';
             }
         }
 
@@ -1929,10 +1935,47 @@ class AdminController extends Controller
             ->map(fn ($record) => $decorateHealthRecord($record, 'health'));
         $issuedEmployeeRecords = $issuedEmployeeQuery->get()
             ->map(fn ($record) => $decorateHealthRecord($record, 'employee'));
-        $issuedCombinedRecords = $issuedRecords
-            ->merge($issuedEmployeeRecords)
-            ->sortByDesc(fn ($record) => optional($record->verified_at)->timestamp ?: optional($record->updated_at)->timestamp ?: 0)
-            ->values();
+        $healthRecordName = static function ($record): string {
+            return trim((string) (optional($record->user)->name ?: $record->name ?: ''));
+        };
+        $healthRecordCourse = static function ($record): string {
+            return trim((string) (
+                $record->course_college
+                ?: $record->office
+                ?: optional($record->user)->course
+                ?: ''
+            ));
+        };
+        $healthRecordApprovedTimestamp = static function ($record): int {
+            return optional($record->verified_at)->timestamp
+                ?: optional($record->updated_at)->timestamp
+                ?: 0;
+        };
+        $issuedCombinedRecords = $issuedRecords->merge($issuedEmployeeRecords);
+        $issuedCombinedRecords = match ($sortFilter) {
+            'alphabetical' => $issuedCombinedRecords->sort(function ($left, $right) use ($healthRecordName, $healthRecordApprovedTimestamp) {
+                $comparison = strnatcasecmp($healthRecordName($left), $healthRecordName($right));
+
+                return $comparison !== 0
+                    ? $comparison
+                    : $healthRecordApprovedTimestamp($right) <=> $healthRecordApprovedTimestamp($left);
+            }),
+            'course' => $issuedCombinedRecords->sort(function ($left, $right) use ($healthRecordCourse, $healthRecordName) {
+                $comparison = strnatcasecmp($healthRecordCourse($left), $healthRecordCourse($right));
+
+                return $comparison !== 0
+                    ? $comparison
+                    : strnatcasecmp($healthRecordName($left), $healthRecordName($right));
+            }),
+            default => $issuedCombinedRecords->sort(function ($left, $right) use ($healthRecordApprovedTimestamp, $healthRecordName) {
+                $comparison = $healthRecordApprovedTimestamp($right) <=> $healthRecordApprovedTimestamp($left);
+
+                return $comparison !== 0
+                    ? $comparison
+                    : strnatcasecmp($healthRecordName($left), $healthRecordName($right));
+            }),
+        };
+        $issuedCombinedRecords = $issuedCombinedRecords->values();
         $issuedPage = max(1, (int) $request->query('issued_page', 1));
         $issuedPageSize = $issuedPerPage === 'all' ? max(1, $issuedCombinedRecords->count()) : (int) $issuedPerPage;
         $healthProfileSummaryRecords = new LengthAwarePaginator(
@@ -1988,9 +2031,10 @@ class AdminController extends Controller
             'healthProfileSummaryRecords',
             'search',
             'courseFilter',
-            'monthFilter',
+            'dateFilter',
             'yearFilter',
             'userTypeFilter',
+            'sortFilter',
             'courseOptions',
             'yearOptions',
             'userTypeOptions',
@@ -2002,7 +2046,7 @@ class AdminController extends Controller
     {
         $search = trim((string) $request->query('q', ''));
         $courseFilter = trim((string) $request->query('course', ''));
-        $monthFilter = trim((string) $request->query('month', ''));
+        $dateFilter = trim((string) $request->query('date', ''));
         $yearFilter = trim((string) $request->query('year', ''));
         $userTypeFilter = strtolower(trim((string) $request->query('user_type', '')));
 
@@ -2049,13 +2093,14 @@ class AdminController extends Controller
 
         $this->applyHealthProfileUserTypeFilter($query, $userTypeFilter);
 
-        if ($monthFilter !== '') {
+        if ($dateFilter !== '') {
             try {
-                $monthDate = Carbon::parse($monthFilter . '-01');
-                $query->whereYear('created_at', $monthDate->year)
-                    ->whereMonth('created_at', $monthDate->month);
+                $approvedDate = Carbon::createFromFormat('Y-m-d', $dateFilter);
+                if ($approvedDate->format('Y-m-d') === $dateFilter) {
+                    $query->whereDate('verified_at', $dateFilter);
+                }
             } catch (\Throwable $e) {
-                // Ignore invalid month input and keep the stats endpoint usable.
+                $dateFilter = '';
             }
         }
 
@@ -2113,13 +2158,14 @@ class AdminController extends Controller
 
         $this->applyStaffHealthProfileUserTypeFilter($employeeQuery, $userTypeFilter);
 
-        if ($monthFilter !== '') {
+        if ($dateFilter !== '') {
             try {
-                $monthDate = Carbon::parse($monthFilter . '-01');
-                $employeeQuery->whereYear('created_at', $monthDate->year)
-                    ->whereMonth('created_at', $monthDate->month);
+                $approvedDate = Carbon::createFromFormat('Y-m-d', $dateFilter);
+                if ($approvedDate->format('Y-m-d') === $dateFilter) {
+                    $employeeQuery->whereDate('verified_at', $dateFilter);
+                }
             } catch (\Throwable $e) {
-                // Ignore invalid month input and keep the stats endpoint usable.
+                $dateFilter = '';
             }
         }
 
@@ -3924,13 +3970,20 @@ public function deleteItem($id)
         if ($request->boolean('preferences_form')) {
             $closureRequired = Rule::requiredIf($request->boolean('clinic_closure_enabled'));
             $request->validate([
-                'student_assistant_open_time' => ['required', 'date_format:H:i'],
-                'student_assistant_close_time' => ['required', 'date_format:H:i'],
                 'appointment_reminder_hours' => ['required', 'integer', 'in:0,1,3,24,48'],
                 'clinic_closure_starts_at' => [$closureRequired, 'nullable', 'date'],
                 'clinic_closure_ends_at' => [$closureRequired, 'nullable', 'date', 'after:clinic_closure_starts_at'],
                 'clinic_closure_reason' => ['nullable', 'string', 'max:100'],
                 'clinic_closure_message' => ['nullable', 'string', 'max:500'],
+            ]);
+        }
+
+        if ($request->boolean('clinic_hours_form')) {
+            $request->validate([
+                'open_time' => ['required', 'date_format:H:i'],
+                'close_time' => ['required', 'date_format:H:i'],
+                'operating_days' => ['required', 'array', 'min:1'],
+                'operating_days.*' => ['integer', 'between:1,7'],
             ]);
         }
 
@@ -3941,12 +3994,19 @@ public function deleteItem($id)
         $settings->clinic_location = $request->input('clinic_location', $settings->clinic_location ?: 'Santos Ave, Lower Bicutan, Taguig');
         $settings->open_time = $request->input('open_time', $settings->open_time ?: '08:00');
         $settings->close_time = $request->input('close_time', $settings->close_time ?: '17:00');
+        if ($request->has('operating_days')) {
+            $settings->operating_days = collect($request->input('operating_days', []))
+                ->map(fn ($day) => (int) $day)
+                ->filter(fn ($day) => $day >= 1 && $day <= 7)
+                ->unique()
+                ->sort()
+                ->values()
+                ->all();
+        }
 
         if ($request->boolean('preferences_form')) {
             $settings->admin_live_notifications = $request->boolean('admin_live_notifications');
             $settings->auto_approve = $request->boolean('auto_approve');
-            $settings->student_assistant_open_time = $request->input('student_assistant_open_time', '08:00');
-            $settings->student_assistant_close_time = $request->input('student_assistant_close_time', '20:00');
             $settings->appointment_reminder_hours = (int) $request->input('appointment_reminder_hours', 24);
             $settings->clinic_closure_enabled = $request->boolean('clinic_closure_enabled');
             $settings->clinic_closure_starts_at = $request->input('clinic_closure_starts_at') ?: null;
