@@ -2449,7 +2449,7 @@
                     </div>
                     <div class="clinic-information-item">
                         <span class="clinic-information-icon"><x-outline-icon name="clock" /></span>
-                        <span><small>Clinic Hours</small><strong>8:00 AM - 7:00 PM<br>Monday to Friday</strong></span>
+                        <span><small>Clinic Hours</small><strong>{{ $clinicHours['hours'] ?? '8:00 AM - 5:00 PM' }}<br>{{ $clinicHours['operating_days_label'] ?? 'Mon-Fri' }}</strong></span>
                     </div>
                     <div class="clinic-information-item">
                         <span class="clinic-information-icon"><x-outline-icon name="phone" /></span>
