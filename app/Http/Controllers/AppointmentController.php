@@ -309,6 +309,37 @@ class AppointmentController extends Controller
             ];
         }
 
+        if (Schema::hasTable('announcements')) {
+            $activeAnnouncements = Announcement::query()
+                ->where('status', Announcement::STATUS_ACTIVE)
+                ->whereIn('target_audience', ['all', 'student', 'students'])
+                ->where(function ($query) {
+                    $query->whereNull('expires_at')
+                        ->orWhereDate('expires_at', '>=', now(config('app.timezone'))->toDateString());
+                })
+                ->latest()
+                ->take(8)
+                ->get();
+
+            foreach ($activeAnnouncements as $announcement) {
+                $announcementMessage = trim(strip_tags((string) $announcement->message));
+                $notifications[] = [
+                    'id' => $this->buildNotificationId('announcement', [
+                        $announcement->id,
+                        optional($announcement->updated_at)->timestamp,
+                    ]),
+                    'type' => strtolower((string) $announcement->priority) === 'urgent' ? 'danger' : 'info',
+                    'icon' => '!',
+                    'title' => trim((string) $announcement->title) ?: 'Clinic Announcement',
+                    'message' => $announcementMessage !== '' ? $announcementMessage : 'A new clinic announcement is available.',
+                    'time' => $announcement->created_at
+                        ? $announcement->created_at->diffForHumans()
+                        : 'Clinic announcement',
+                    'link' => url('/student/home#announcements'),
+                ];
+            }
+        }
+
         $closure = $workflow->activeClosure();
         if ($closure) {
             $notifications[] = [
@@ -331,8 +362,67 @@ class AppointmentController extends Controller
 
         return array_map(function (array $notification) use ($readMap) {
             $notification['is_unread'] = !isset($readMap[$notification['id']]);
-            return $notification;
+            return $this->decorateStudentNotification($notification);
         }, $notifications);
+    }
+
+    private function decorateStudentNotification(array $notification): array
+    {
+        $id = strtolower((string) ($notification['id'] ?? ''));
+
+        $category = match (true) {
+            str_starts_with($id, 'appointment-') => 'appointments',
+            str_starts_with($id, 'health-'),
+            str_starts_with($id, 'new-health-'),
+            str_starts_with($id, 'puptas-') => 'health-records',
+            str_starts_with($id, 'announcement-'),
+            str_starts_with($id, 'clinic-closure-') => 'announcements',
+            default => 'system',
+        };
+
+        $notification['category'] = $category;
+        $notification['category_label'] = match ($category) {
+            'appointments' => 'Appointment',
+            'health-records' => 'Health Record',
+            'announcements' => 'Announcement',
+            default => 'System',
+        };
+        $notification['letter_icon'] = match ($category) {
+            'appointments' => 'AP',
+            'health-records' => 'HR',
+            'announcements' => 'AN',
+            default => 'SY',
+        };
+
+        $derivedTitle = match (true) {
+            str_starts_with($id, 'appointment-approved-') => 'Appointment Approved',
+            str_starts_with($id, 'appointment-cancelled-') => 'Appointment Cancelled',
+            str_starts_with($id, 'appointment-expired-') => 'Appointment Expired',
+            str_starts_with($id, 'appointment-feedback-') => 'Consultation Completed',
+            str_starts_with($id, 'appointment-reminder-') => 'Appointment Reminder',
+            str_starts_with($id, 'health-form-correction-') => 'Health Form Correction Requested',
+            str_starts_with($id, 'new-health-form-request-') => 'New Health Form Requested',
+            str_starts_with($id, 'health-record-') => 'Health Record Status Updated',
+            str_starts_with($id, 'puptas-sync-') => 'Health Record Sync Updated',
+            str_starts_with($id, 'clinic-closure-') => 'Clinic Advisory',
+            str_starts_with($id, 'announcement-') => 'Clinic Announcement',
+            default => 'Clinic Update',
+        };
+        $notification['title'] = trim((string) ($notification['title'] ?? '')) ?: $derivedTitle;
+
+        $notification['action_label'] = match (true) {
+            str_starts_with($id, 'appointment-expired-') => 'Book Again',
+            str_starts_with($id, 'appointment-feedback-') => 'Open Feedback',
+            str_starts_with($id, 'health-form-correction-'),
+            str_starts_with($id, 'new-health-form-request-') => 'Review Form',
+            str_starts_with($id, 'health-record-'),
+            str_starts_with($id, 'puptas-sync-') => 'View Record',
+            str_starts_with($id, 'announcement-'),
+            str_starts_with($id, 'clinic-closure-') => 'View Details',
+            default => 'Open',
+        };
+
+        return $notification;
     }
 
     private function fetchPuptasApplicantLookupForUser(User $user): array
@@ -2257,9 +2347,11 @@ class AppointmentController extends Controller
 
         $studentContext = $this->resolveStudentContext($user);
 
-        $clinicClosure = app(ClinicWorkflowService::class)->activeClosure();
+        $workflow = app(ClinicWorkflowService::class);
+        $clinicClosure = $workflow->activeClosure();
+        $clinicHours = $workflow->clinicHoursStatus();
 
-        return view('student.booking', compact('user', 'appointments', 'studentContext', 'clinicClosure'));
+        return view('student.booking', compact('user', 'appointments', 'studentContext', 'clinicClosure', 'clinicHours'));
     }
 
     // -------------------------------
@@ -2517,7 +2609,49 @@ public function account(Request $request)
     $cancelledCount = $appointments->where('status', 'Cancelled')->count();
 
     // 4. Notification Logic
-    $notifications = collect($this->getStudentNotifications($user));
+    $notifications = collect($this->getStudentNotifications($user))->values();
+    $notificationFilter = strtolower(trim((string) $request->query('filter', 'all')));
+    $allowedNotificationFilters = ['all', 'unread', 'appointments', 'health-records', 'announcements', 'system'];
+    if (!in_array($notificationFilter, $allowedNotificationFilters, true)) {
+        $notificationFilter = 'all';
+    }
+
+    $notificationCounts = [
+        'total' => $notifications->count(),
+        'unread' => $notifications->where('is_unread', true)->count(),
+        'appointments' => $notifications->where('category', 'appointments')->count(),
+        'health-records' => $notifications->where('category', 'health-records')->count(),
+        'announcements' => $notifications->where('category', 'announcements')->count(),
+        'system' => $notifications->where('category', 'system')->count(),
+    ];
+
+    $filteredNotifications = $notifications
+        ->when($notificationFilter === 'unread', fn ($items) => $items->where('is_unread', true))
+        ->when(
+            !in_array($notificationFilter, ['all', 'unread'], true),
+            fn ($items) => $items->where('category', $notificationFilter)
+        )
+        ->values();
+    $notificationPageName = 'notification_page';
+    $notificationLastPage = max(1, (int) ceil($filteredNotifications->count() / 5));
+    $notificationCurrentPage = min(
+        $notificationLastPage,
+        max(1, (int) $request->query($notificationPageName, 1))
+    );
+    $notificationPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
+        $filteredNotifications->forPage($notificationCurrentPage, 5)->values(),
+        $filteredNotifications->count(),
+        5,
+        $notificationCurrentPage,
+        [
+            'path' => $request->url(),
+            'pageName' => $notificationPageName,
+        ]
+    );
+    $notificationPaginator->appends(array_merge(
+        $request->except($notificationPageName),
+        ['view' => 'notifications', 'filter' => $notificationFilter]
+    ));
     $studentUsesEmployeeHealthForm = $this->shouldUseEmployeeHealthForm($user);
     $hasSubmittedEmployeeHealthProfile = $this->hasSubmittedEmployeeHealthProfile($user);
     $hasSubmittedHealthProfile = $studentUsesEmployeeHealthForm
@@ -2644,6 +2778,9 @@ public function account(Request $request)
         'completedCount', 
         'cancelledCount', 
         'notifications',
+        'notificationFilter',
+        'notificationCounts',
+        'notificationPaginator',
         'linkedAdminProfile',
         'hasSubmittedHealthProfile',
         'hasSubmittedEmployeeHealthProfile',

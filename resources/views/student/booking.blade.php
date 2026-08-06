@@ -873,8 +873,8 @@
         right: 13px;
         width: 34px;
         height: 34px;
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid transparent;
+        background: #70131b;
         color: #ffffff;
         font-size: 22px;
         line-height: 1;
@@ -885,30 +885,39 @@
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        transition: background 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+        outline: none;
+        transition: color .2s ease, background .2s ease, transform .2s ease;
     }
     .confirmation-close::after {
         content: "";
         position: absolute;
-        inset: 0;
-        background:
-            linear-gradient(120deg,
-                rgba(255, 255, 255, 0) 0%,
-                rgba(248, 213, 220, 0.16) 22%,
-                rgba(248, 213, 220, 0.42) 48%,
-                rgba(248, 213, 220, 0.16) 72%,
-                rgba(255, 255, 255, 0) 100%);
-        transform: translateX(-135%);
-        transition: transform 0.5s ease;
+        top: -35%;
+        left: -78%;
+        width: 42%;
+        height: 170%;
+        background: linear-gradient(
+            115deg,
+            transparent 0%,
+            rgba(255, 255, 255, .18) 30%,
+            rgba(255, 255, 255, .82) 50%,
+            rgba(255, 255, 255, .18) 70%,
+            transparent 100%
+        );
+        transform: skewX(-18deg);
+        transition: left .48s ease;
         pointer-events: none;
     }
-    .confirmation-close:hover {
-        background: rgba(143, 34, 48, 0.30);
-        border-color: #facc15;
+    .confirmation-close:hover,
+    .confirmation-close:focus-visible {
+        background: #facc15;
+        border-color: transparent;
+        color: #70131b;
         transform: translateY(-1px);
+        outline: none;
     }
-    .confirmation-close:hover::after {
-        transform: translateX(135%);
+    .confirmation-close:hover::after,
+    .confirmation-close:focus-visible::after {
+        left: 136%;
     }
     .confirmation-close svg {
         width: 17px;
@@ -1448,6 +1457,10 @@
     html[data-theme="dark"] .confirmation-close {
         color: #f8fafc !important;
     }
+    html[data-theme="dark"] .confirmation-close:hover,
+    html[data-theme="dark"] .confirmation-close:focus-visible {
+        color: #70131b !important;
+    }
     html[data-theme="dark"] .appt-overflow-btn {
         background: #17171a !important;
         color: #ffffff !important;
@@ -1544,6 +1557,574 @@
         min-height: calc(100vh - 72px);
         overflow: visible !important;
     }
+
+    /* --- APPOINTMENT PAGE REFERENCE REDESIGN --- */
+    .booking-page-shell {
+        padding: 18px 0 36px;
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, .82), rgba(255, 250, 250, .76)),
+            url('{{ asset("images/student-bg.png") }}') center top / cover fixed no-repeat;
+    }
+    .booking-page-container {
+        width: min(1180px, calc(100% - 32px));
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0;
+    }
+    .page-header {
+        position: relative;
+        min-height: 184px;
+        display: grid;
+        grid-template-columns: 104px minmax(0, 1fr) 292px;
+        align-items: center;
+        gap: 24px;
+        margin: 0 0 14px;
+        padding: 22px 28px;
+        border: 1px solid rgba(255, 255, 255, .18);
+        border-radius: 10px;
+        background:
+            linear-gradient(90deg, rgba(111, 0, 31, .99) 0%, rgba(105, 0, 29, .97) 50%, rgba(71, 0, 22, .79) 100%),
+            url('{{ asset("images/PUPBG.jpg") }}') right 42% / 58% auto no-repeat;
+        background-blend-mode: normal, luminosity;
+        box-shadow: 0 16px 34px rgba(76, 5, 23, .22), inset 0 1px rgba(255,255,255,.08);
+        color: #ffffff;
+        overflow: hidden;
+    }
+    .page-header::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        width: auto;
+        height: auto;
+        background:
+            radial-gradient(circle at 12% 18%, transparent 0 42px, rgba(255,255,255,.045) 43px 44px, transparent 45px 59px, rgba(255,255,255,.03) 60px 61px, transparent 62px),
+            linear-gradient(105deg, transparent 42%, rgba(250, 204, 21, .045) 72%, transparent 100%);
+        pointer-events: none;
+    }
+    .page-header::after {
+        content: "";
+        position: absolute;
+        inset: 0 0 0 44%;
+        background: url('{{ asset("images/PUPBG.jpg") }}') right center / cover no-repeat;
+        opacity: .14;
+        filter: saturate(.3) contrast(1.1);
+        -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.78) 30%, #000 100%);
+        mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.78) 30%, #000 100%);
+        pointer-events: none;
+    }
+    .page-header-visual {
+        position: relative;
+        z-index: 2;
+        width: 96px;
+        height: 96px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 7px solid rgba(255,255,255,.13);
+        border-radius: 999px;
+        background: #fffafa;
+        box-shadow: 0 12px 24px rgba(20,0,7,.28);
+    }
+    .page-header-icon {
+        position: static;
+        width: 54px;
+        height: 54px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #8b0b24;
+        transform: none;
+    }
+    .page-header-icon svg { width: 54px; height: 54px; stroke-width: 1.7; }
+    .page-header-visual-plus {
+        position: absolute;
+        right: -4px;
+        bottom: 8px;
+        width: 26px;
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #fffafa;
+        border-radius: 999px;
+        background: #8b0b24;
+        color: #ffffff;
+        font-size: 17px;
+        font-weight: 900;
+        line-height: 1;
+    }
+    .page-header-content,
+    .page-header-stats { position: relative; z-index: 2; min-width: 0; }
+    .page-kicker {
+        display: inline-flex;
+        padding: 0;
+        margin: 0 0 7px;
+        border-radius: 0;
+        background: transparent;
+        color: #facc15;
+        font-size: 10px;
+        font-weight: 850;
+        letter-spacing: 0;
+    }
+    .page-kicker svg { width: 13px; height: 13px; }
+    .page-title {
+        margin: 0 0 6px;
+        color: #ffffff;
+        font-size: clamp(26px, 3vw, 34px);
+        font-weight: 900;
+        letter-spacing: 0;
+        line-height: 1.15;
+    }
+    .page-subtitle {
+        max-width: 360px;
+        margin: 0;
+        color: rgba(255,255,255,.88);
+        font-size: 13px;
+        line-height: 1.55;
+    }
+    .page-steps {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 8px;
+        margin-top: 14px;
+    }
+    .page-step {
+        min-height: 30px;
+        display: inline-flex;
+        padding: 5px 10px;
+        gap: 7px;
+        border: 1px solid rgba(255,255,255,.22);
+        border-radius: 999px;
+        background: rgba(255,255,255,.06);
+        box-shadow: none;
+        color: rgba(255,255,255,.82);
+        font-size: 10px;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+    .page-step.is-active { background: #ffffff; color: #70131b; }
+    .page-step-index {
+        width: 18px;
+        height: 18px;
+        background: rgba(255,255,255,.12);
+        color: #ffffff;
+        font-size: 8px;
+    }
+    .page-step.is-active .page-step-index { background: #8b0b24; color: #ffffff; }
+    .page-step-connector { width: 16px; height: 1px; background: rgba(255,255,255,.42); }
+    .page-header-stats {
+        align-self: stretch;
+        display: grid;
+        align-content: center;
+        gap: 0;
+        padding-left: 26px;
+        border-left: 1px solid rgba(255,255,255,.18);
+    }
+    .page-header-stat {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+        padding: 12px 0;
+    }
+    .page-header-stat + .page-header-stat { border-top: 1px solid rgba(255,255,255,.13); }
+    .page-header-stat-icon {
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(250,204,21,.42);
+        border-radius: 999px;
+        background: rgba(79,0,19,.48);
+        color: #facc15;
+    }
+    .page-header-stat-icon svg { width: 20px; height: 20px; }
+    .page-header-stat-copy,
+    .page-header-stat-copy small,
+    .page-header-stat-copy strong,
+    .page-header-stat-copy span { display: block; }
+    .page-header-stat-copy small { color: rgba(255,255,255,.68); font-size: 9px; font-weight: 850; letter-spacing: .06em; text-transform: uppercase; }
+    .page-header-stat-copy strong { margin-top: 2px; color: #ffffff; font-size: 14px; font-weight: 850; }
+    .page-header-stat-copy span { margin-top: 2px; color: rgba(255,255,255,.72); font-size: 10px; }
+
+    .booking-card {
+        display: grid;
+        grid-template-columns: minmax(0, 2.25fr) minmax(270px, .98fr);
+        align-items: start;
+        gap: 14px;
+    }
+    .booking-form-section {
+        padding: 20px;
+        border: 1px solid rgba(112,19,27,.11);
+        border-radius: 8px;
+        background: rgba(255,255,255,.96);
+        box-shadow: 0 12px 28px rgba(15,23,42,.08);
+    }
+    .booking-form-section::before,
+    .info-card::before { content: none; }
+    .form-section-title {
+        min-height: 36px;
+        margin: 0 0 12px;
+        padding: 0 0 12px;
+        border-bottom: 1px solid #e8e4e4;
+        color: #6f1120;
+        font-size: 17px;
+        font-weight: 850;
+        gap: 9px;
+    }
+    .section-title-badge {
+        width: 26px;
+        height: 26px;
+        border: 0;
+        background: #fff1f2;
+        box-shadow: none;
+        font-size: 10px;
+    }
+    .booking-subsection-title {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin: 12px 0 10px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(112,19,27,.10);
+        color: #7c1b2b;
+        font-size: 14px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    .booking-subsection-title svg { width: 14px; height: 14px; }
+    .booking-grid-2 { gap: 14px; }
+    .input-group { margin-bottom: 12px; }
+    .input-label {
+        margin-bottom: 5px;
+        color: #4b5563;
+        font-size: 14px;
+        font-weight: 850;
+        letter-spacing: 0;
+    }
+    .input-wrapper.has-leading-icon .form-control,
+    .input-wrapper.has-leading-icon .service-select-display { padding-left: 38px; }
+    .booking-field-icon {
+        position: absolute;
+        top: 50%;
+        left: 12px;
+        z-index: 3;
+        width: 15px;
+        height: 15px;
+        color: #8b2332;
+        transform: translateY(-50%);
+        pointer-events: none;
+    }
+    .booking-field-icon svg { display: block; width: 15px; height: 15px; }
+    .form-control,
+    .service-select-display {
+        min-height: 40px;
+        padding: 9px 12px;
+        border: 1px solid #dfe3e8;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: none;
+        color: #1f2937;
+        font-size: 15px;
+    }
+    .form-control[readonly] { background: #fbfcfd; border-color: #e2e5e9; }
+    .form-control:focus,
+    .service-select-display:focus,
+    .service-select-display.is-open {
+        border-color: #8b0b24;
+        box-shadow: 0 0 0 3px rgba(139,11,36,.08);
+    }
+    .service-select-wrap::before { right: 37px; height: 20px; }
+    .service-select-wrap::after { right: 15px; width: 8px; height: 8px; }
+    .date-picker-toggle {
+        right: 7px;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        box-shadow: none;
+        color: #6b7280;
+    }
+    .date-picker-toggle svg { width: 15px; height: 15px; }
+    .date-display-input { padding-right: 42px; }
+    textarea.form-control {
+        min-height: 78px;
+        padding: 11px 12px;
+        border-radius: 8px;
+        line-height: 1.5;
+    }
+    .time-slot-hint,
+    .booking-field-help {
+        display: block;
+        margin-top: 5px;
+        padding-left: 0;
+        color: #7b8492;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.45;
+    }
+    .time-slot-hint::before { content: none; }
+    .appointment-summary-notice {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+        margin: 4px 0 10px;
+        padding: 10px 12px;
+        border: 1px solid rgba(245,158,11,.12);
+        border-radius: 7px;
+        background: linear-gradient(90deg, #fffaf0, #fffdf7);
+        color: #6f1120;
+    }
+    .appointment-summary-icon {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        background: #fff3d6;
+        color: #d68700;
+    }
+    .appointment-summary-icon svg { width: 15px; height: 15px; }
+    .appointment-summary-notice strong,
+    .appointment-summary-notice small { display: block; }
+    .appointment-summary-notice strong { font-size: 14px; text-transform: uppercase; }
+    .appointment-summary-notice small { margin-top: 3px; color: #5f6875; font-size: 13px; font-weight: 500; }
+    .btn-submit {
+        min-height: 42px;
+        padding: 9px 18px;
+        border-radius: 7px;
+        background: linear-gradient(90deg, #780018, #97051f 70%, #780018);
+        box-shadow: 0 8px 18px rgba(112,19,27,.18);
+        font-size: 14px;
+        font-weight: 850;
+        transform: none;
+    }
+    .btn-submit svg { width: 15px; height: 15px; }
+    .btn-submit svg:last-child { margin-left: 4px; }
+    .btn-submit:hover { transform: translateY(-1px); }
+
+    .booking-info-section { padding: 0; gap: 12px; }
+    .info-card {
+        margin: 0;
+        padding: 15px;
+        border: 1px solid rgba(112,19,27,.11);
+        border-radius: 8px;
+        background: rgba(255,255,255,.96);
+        box-shadow: 0 10px 24px rgba(15,23,42,.07);
+    }
+    .info-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 11px;
+        padding: 0 0 10px;
+        border-bottom: 1px solid #ece7e7;
+        color: #70131b;
+        font-size: 15px;
+        font-weight: 850;
+    }
+    .info-title-icon { width: 16px; height: 16px; display: inline-flex; color: #a51b32; }
+    .info-title-icon svg { width: 16px; height: 16px; }
+    .booking-empty-state {
+        min-height: 170px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        border: 1px solid #eee3e4;
+        border-radius: 7px;
+        background: linear-gradient(145deg, #fffdfd, #fff8f8);
+        color: #4b5563;
+    }
+    .booking-empty-state .empty-icon {
+        width: 52px;
+        height: 52px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 0 10px;
+        border-radius: 999px;
+        background: #fff1f2;
+        color: #b62239;
+        opacity: 1;
+    }
+    .booking-empty-state .empty-icon svg { width: 29px; height: 29px; }
+    .booking-empty-state strong { color: #252b35; font-size: 14px; }
+    .booking-empty-state p { max-width: 220px; margin: 6px 0 0; color: #697386; font-size: 13px; line-height: 1.45; }
+    .app-list { gap: 9px; }
+    .appt-item {
+        padding: 11px 12px;
+        border: 1px solid #e6e1e2;
+        border-left: 3px solid #8b0b24;
+        border-radius: 7px;
+        background: #ffffff;
+        box-shadow: none;
+    }
+    .appt-service { font-size: 14px; }
+    .appt-time { margin-top: 4px; font-size: 13px; }
+    .appt-status { font-size: 13px; }
+    .appt-overflow-btn { font-size: 14px; }
+    .clinic-information-list { display: grid; gap: 12px; }
+    .clinic-information-item {
+        display: grid;
+        grid-template-columns: 32px minmax(0, 1fr);
+        gap: 9px;
+        align-items: start;
+    }
+    .clinic-information-icon {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #fff1f2;
+        color: #a91d35;
+    }
+    .clinic-information-icon svg { width: 15px; height: 15px; }
+    .clinic-information-item small,
+    .clinic-information-item strong { display: block; }
+    .clinic-information-item small { margin-bottom: 2px; color: #5e6672; font-size: 13px; font-weight: 850; }
+    .clinic-information-item strong { color: #303743; font-size: 14px; font-weight: 600; line-height: 1.45; }
+    .booking-reminder-card {
+        padding: 15px;
+        border: 1px solid rgba(245,158,11,.24);
+        border-left: 1px solid rgba(245,158,11,.24);
+        border-radius: 8px;
+        background: linear-gradient(145deg, #fff9e8, #fff4d8);
+        box-shadow: 0 10px 24px rgba(146,64,14,.08);
+    }
+    .booking-reminder-card::before { content: none; }
+    .booking-reminder-card .note-header {
+        margin-bottom: 9px;
+        color: #8f1b28;
+        font-size: 15px;
+        font-weight: 850;
+    }
+    .note-header-icon { width: 16px; height: 16px; display: inline-flex; color: #e2a400; }
+    .note-header-icon svg { width: 16px; height: 16px; }
+    .booking-reminder-card p {
+        margin: 0;
+        color: #534a3d;
+        font-size: 14px;
+        line-height: 1.55;
+    }
+    .booking-reminder-card p + p { margin-top: 7px; }
+
+    .time-slot-btn,
+    .service-select-option {
+        font-size: 14px;
+    }
+
+    html[data-theme="dark"] .booking-page-shell {
+        background:
+            linear-gradient(180deg, rgba(5,13,27,.88), rgba(9,22,39,.84)),
+            url('{{ asset("images/student-bg.png") }}') center top / cover fixed no-repeat !important;
+        padding-top: 18px;
+    }
+    html[data-theme="dark"] .booking-page-container .page-header {
+        margin-top: 0;
+        background:
+            linear-gradient(90deg, rgba(43,0,14,.99) 0%, rgba(55,0,18,.97) 52%, rgba(14,8,18,.82) 100%),
+            url('{{ asset("images/PUPBG.jpg") }}') right 42% / 58% auto no-repeat !important;
+        background-blend-mode: normal, luminosity !important;
+        border-color: rgba(255,255,255,.12) !important;
+    }
+    html[data-theme="dark"] .page-header-icon { color: #8b0b24 !important; }
+    html[data-theme="dark"] .page-kicker,
+    html[data-theme="dark"] .page-step { background: transparent !important; }
+    html[data-theme="dark"] .page-step.is-active { background: #ffffff !important; color: #70131b !important; }
+    html[data-theme="dark"] .booking-form-section,
+    html[data-theme="dark"] .info-card {
+        background: #121b2a !important;
+        border-color: rgba(148,163,184,.24) !important;
+        box-shadow: 0 14px 30px rgba(0,0,0,.28) !important;
+    }
+    html[data-theme="dark"] .form-section-title,
+    html[data-theme="dark"] .booking-subsection-title,
+    html[data-theme="dark"] .info-title { border-color: rgba(148,163,184,.18); }
+    html[data-theme="dark"] .booking-subsection-title,
+    html[data-theme="dark"] .booking-field-icon,
+    html[data-theme="dark"] .info-title-icon { color: #fda4af; }
+    html[data-theme="dark"] .booking-empty-state,
+    html[data-theme="dark"] .appt-item {
+        background: #172235 !important;
+        border-color: rgba(148,163,184,.18) !important;
+    }
+    html[data-theme="dark"] .booking-empty-state strong,
+    html[data-theme="dark"] .clinic-information-item strong { color: #f8fafc; }
+    html[data-theme="dark"] .booking-empty-state p,
+    html[data-theme="dark"] .clinic-information-item small { color: #b5c0d0; }
+    html[data-theme="dark"] .appointment-summary-notice {
+        background: #182235;
+        border-color: rgba(250,204,21,.18);
+    }
+    html[data-theme="dark"] .appointment-summary-notice small { color: #cbd5e1; }
+    html[data-theme="dark"] .booking-reminder-card {
+        background: #242114 !important;
+        border-color: rgba(250,204,21,.22) !important;
+    }
+    html[data-theme="dark"] .booking-reminder-card p { color: #e5dfc9 !important; }
+
+    @media (max-width: 900px) {
+        .page-header { grid-template-columns: 88px minmax(0, 1fr); }
+        .page-header-visual { width: 82px; height: 82px; }
+        .page-header-icon,
+        .page-header-icon svg { width: 46px; height: 46px; }
+        .page-header-stats {
+            grid-column: 1 / -1;
+            grid-template-columns: 1fr 1fr;
+            padding: 10px 0 0;
+            border-top: 1px solid rgba(255,255,255,.16);
+            border-left: 0;
+        }
+        .page-header-stat { padding: 10px 16px; }
+        .page-header-stat + .page-header-stat { border-top: 0; border-left: 1px solid rgba(255,255,255,.13); }
+        .booking-card { grid-template-columns: 1fr; }
+        .booking-info-section { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .booking-info-section .info-card:first-child { grid-row: span 2; }
+    }
+    @media (max-width: 680px) {
+        .booking-page-container { width: min(100% - 24px, 1180px); }
+        .page-header {
+            grid-template-columns: 66px minmax(0, 1fr);
+            gap: 14px;
+            min-height: 0;
+            padding: 18px 16px;
+        }
+        .page-header-visual { width: 64px; height: 64px; border-width: 5px; }
+        .page-header-icon,
+        .page-header-icon svg { width: 35px; height: 35px; }
+        .page-header-visual-plus { right: -3px; bottom: 2px; width: 22px; height: 22px; font-size: 14px; }
+        .page-title { font-size: 25px; }
+        .page-subtitle { font-size: 13px; }
+        .page-steps { max-width: 100%; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+        .page-steps::-webkit-scrollbar { display: none; }
+        .page-step-connector { flex: 0 0 12px; }
+        .page-header-stats { grid-template-columns: 1fr 1fr; }
+        .page-header-stat { grid-template-columns: 34px minmax(0,1fr); padding: 10px 5px; }
+        .page-header-stat-icon { width: 30px; height: 30px; }
+        .page-header-stat-icon svg { width: 16px; height: 16px; }
+        .booking-form-section { padding: 16px; }
+        .booking-info-section { display: grid; grid-template-columns: 1fr; padding: 0; }
+        .booking-info-section .info-card:first-child { grid-row: auto; }
+    }
+    @media (max-width: 480px) {
+        .page-header { grid-template-columns: 1fr; text-align: center; }
+        .page-header-visual { margin: 0 auto; }
+        .page-subtitle { margin-inline: auto; }
+        .page-steps { justify-content: flex-start; }
+        .page-header-stats { grid-template-columns: 1fr; text-align: left; }
+        .page-header-stat + .page-header-stat { border-top: 1px solid rgba(255,255,255,.13); border-left: 0; }
+        .booking-grid-2 { grid-template-columns: 1fr; gap: 0; }
+    }
 </style>
 @endpush
 
@@ -1552,26 +2133,49 @@
 <div class="container booking-page-container">
     
     <div class="page-header">
-        <div class="page-header-icon" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
-            </svg>
+        <div class="page-header-visual" aria-hidden="true">
+            <span class="page-header-icon"><x-outline-icon name="calendar-days" /></span>
+            <span class="page-header-visual-plus">+</span>
         </div>
-        <div class="page-kicker">Clinic Appointments</div>
-        <h1 class="page-title">Book an Appointment</h1>
-        <p class="page-subtitle">Fill out the form below to request a consultation with the school nurse.</p>
-        <div class="page-steps">
-            <div class="page-step">
-                <span class="page-step-index">1</span>
-                <span>Enter appointment details</span>
+
+        <div class="page-header-content">
+            <div class="page-kicker"><x-outline-icon name="sparkles" /> Clinic Appointments</div>
+            <h1 class="page-title">Book an Appointment</h1>
+            <p class="page-subtitle">Schedule a consultation with the PUP Taguig Medical Clinic.</p>
+            <div class="page-steps" aria-label="Appointment booking steps">
+                <div class="page-step is-active">
+                    <span class="page-step-index">1</span>
+                    <span>Appointment Details</span>
+                </div>
+                <span class="page-step-connector" aria-hidden="true"></span>
+                <div class="page-step">
+                    <span class="page-step-index">2</span>
+                    <span>Choose Schedule</span>
+                </div>
+                <span class="page-step-connector" aria-hidden="true"></span>
+                <div class="page-step">
+                    <span class="page-step-index">3</span>
+                    <span>Confirmation</span>
+                </div>
             </div>
-            <div class="page-step">
-                <span class="page-step-index">2</span>
-                <span>Choose an available schedule</span>
+        </div>
+
+        <div class="page-header-stats">
+            <div class="page-header-stat">
+                <span class="page-header-stat-icon"><x-outline-icon name="clock" /></span>
+                <span class="page-header-stat-copy">
+                    <small>Clinic Hours</small>
+                    <strong>{{ $clinicHours['hours'] ?? '8:00 AM - 5:00 PM' }}</strong>
+                    <span>{{ $clinicHours['operating_days_label'] ?? 'Mon-Fri' }}</span>
+                </span>
             </div>
-            <div class="page-step">
-                <span class="page-step-index">3</span>
-                <span>Submit and wait for approval</span>
+            <div class="page-header-stat">
+                <span class="page-header-stat-icon"><x-outline-icon name="calendar-days" /></span>
+                <span class="page-header-stat-copy">
+                    <small>Available Slots</small>
+                    <strong id="headerAvailableSlots">{{ !empty($clinicClosure) ? 'Booking Closed' : 'Select a Date' }}</strong>
+                    <span id="headerAvailableSlotsNote">{{ !empty($clinicClosure) ? 'Temporarily unavailable' : 'Updates with your schedule' }}</span>
+                </span>
             </div>
         </div>
     </div>
@@ -1618,18 +2222,25 @@
             <form id="bookingForm" method="POST" action="/student/appointments/store" autocomplete="off">
                 @csrf 
                 <fieldset class="booking-disabled-fields" {{ !empty($clinicClosure) ? 'disabled' : '' }}>
+
+                <div class="booking-subsection-title">
+                    <x-outline-icon name="identification" />
+                    <span>Personal Information</span>
+                </div>
                 
                 <div class="booking-grid-2">
                     <div class="input-group">
                         <label class="input-label">Full Name</label>
-                        <div class="input-wrapper">
+                        <div class="input-wrapper has-leading-icon">
+                            <span class="booking-field-icon" aria-hidden="true"><x-outline-icon name="user-circle" /></span>
                             <input type="text" name="name" class="form-control" value="{{ $user->name }}" readonly>
                         </div>
                     </div>
 
                     <div class="input-group">
                         <label class="input-label">{{ $studentContext['id_number_label'] ?? 'Student Number' }}</label>
-                        <div class="input-wrapper">
+                        <div class="input-wrapper has-leading-icon">
+                           <span class="booking-field-icon" aria-hidden="true"><x-outline-icon name="identification" /></span>
                            <input type="text" name="student_number" class="form-control" value="{{ $studentContext['student_number'] ?? $user->student_number }}" readonly>
                         </div>
                     </div>
@@ -1639,20 +2250,25 @@
 
                 <div class="input-group">
                     <label class="input-label">Email Address</label>
-                    <div class="input-wrapper">
+                    <div class="input-wrapper has-leading-icon">
+                        <span class="booking-field-icon" aria-hidden="true"><x-outline-icon name="envelope" /></span>
                         <input type="email" name="email" class="form-control" value="{{ $user->email }}" readonly>
                     </div>
                 </div>
 
-                
+                <div class="booking-subsection-title">
+                    <x-outline-icon name="calendar-days" />
+                    <span>Appointment Details</span>
+                </div>
 
                 <div class="booking-grid-2">
                     <div class="input-group">
                         <label class="input-label">Preferred Date</label>
-                        <div class="input-wrapper date-picker-wrapper">
+                        <div class="input-wrapper date-picker-wrapper has-leading-icon">
+                            <span class="booking-field-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span>
                             <input id="preferredDate" type="hidden" name="date" value="{{ old('date') }}" required>
                             <input id="preferredDateDisplay" type="text" class="form-control date-display-input" placeholder="Select a date" readonly>
-                            <button type="button" class="date-picker-toggle" id="preferredDateToggle">Pick</button>
+                            <button type="button" class="date-picker-toggle" id="preferredDateToggle" aria-label="Open date picker"><x-outline-icon name="calendar-days" /></button>
                             <div class="date-picker-panel" id="datePickerPanel" hidden>
                                 <div class="date-picker-header">
                                     <button type="button" class="date-picker-nav" id="calendarPrev" aria-label="Previous month">&lt;</button>
@@ -1676,7 +2292,8 @@
 
                     <div class="input-group">
                         <label class="input-label">Preferred Time</label>
-                        <div class="input-wrapper">
+                        <div class="input-wrapper has-leading-icon">
+                            <span class="booking-field-icon" aria-hidden="true"><x-outline-icon name="clock" /></span>
                             <input id="preferredTimeDisplay" type="text" class="form-control time-display-input" readonly placeholder="Select a date first">
                             <input id="preferredTimeInput" type="hidden" name="time" value="{{ old('time') }}" required>
                         </div>
@@ -1691,7 +2308,8 @@
                 
                 <div class="input-group">
                     <label class="input-label">Service Type</label>
-                    <div class="input-wrapper service-select-wrap">
+                    <div class="input-wrapper service-select-wrap has-leading-icon">
+                        <span class="booking-field-icon" aria-hidden="true"><x-outline-icon name="heart-pulse" /></span>
                         <select name="service" class="form-control service-select" id="serviceTypeSelect" required>
                             <option value="" disabled selected>Select a Service...</option>
                             <option value="General Consultation">General Consultation</option>
@@ -1707,13 +2325,28 @@
                     </div>
                 </div>
 
+                <div class="booking-subsection-title">
+                    <x-outline-icon name="document-text" />
+                    <span>Reason / Symptoms</span>
+                </div>
+
                 <div class="input-group">
-                    <label class="input-label">Reason / Symptoms</label>
                     <textarea name="remarks" class="form-control" placeholder="Briefly describe what you are feeling..." rows="3">{{ old('remarks') }}</textarea>
+                    <small class="booking-field-help">Please provide as much detail as possible to help our nurse prepare for your consultation.</small>
+                </div>
+
+                <div class="appointment-summary-notice">
+                    <span class="appointment-summary-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span>
+                    <span>
+                        <strong>Appointment Summary</strong>
+                        <small>Your appointment details will be shown after you confirm your booking.</small>
+                    </span>
                 </div>
 
                 <button type="submit" class="btn-submit">
-                    {{ !empty($clinicClosure) ? 'Booking Temporarily Closed' : 'Confirm Appointment' }}
+                    <x-outline-icon name="calendar-days" />
+                    <span>{{ !empty($clinicClosure) ? 'Booking Temporarily Closed' : 'Confirm Appointment' }}</span>
+                    <x-outline-icon name="arrow-long-right" />
                 </button>
                 </fieldset>
             </form>
@@ -1722,7 +2355,10 @@
         <div class="booking-info-section">
             
             <div class="info-card">
-                <h4 class="info-title">Upcoming Schedule</h4>
+                <h4 class="info-title">
+                    <span class="info-title-icon"><x-outline-icon name="calendar-days" /></span>
+                    <span>Upcoming Appointment</span>
+                </h4>
                 
                 <div class="app-list">
                     @php
@@ -1735,7 +2371,7 @@
                             <div class="appt-service">{{ $appt->service }}</div>
                             <div class="appt-time">
                                 {{ \Carbon\Carbon::parse($appt->date)->format('M d, Y') }} <br> 
-                                <span style="font-weight:normal; font-size:12px; color:#777;">
+                                <span style="font-weight:normal; font-size:13px; color:#777;">
                                     {{ \Carbon\Carbon::parse($appt->time)->format('g:i A') }}
                                 </span>
                             </div>
@@ -1753,9 +2389,16 @@
                             </div>
                         </div>
                     @empty
+                        <div class="empty-state booking-empty-state">
+                            <span class="empty-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span>
+                            <strong>No upcoming appointments</strong>
+                            <p>Once your booking is approved, it will appear here.</p>
+                        </div>
+                        <div hidden>
                         <div class="empty-state">
                             <span class="empty-icon">📆</span>
                             <div>No appointments scheduled.</div>
+                        </div>
                         </div>
                     @endforelse
 
@@ -1766,7 +2409,7 @@
                                     <div class="appt-service">{{ $appt->service }}</div>
                                     <div class="appt-time">
                                         {{ \Carbon\Carbon::parse($appt->date)->format('M d, Y') }} <br>
-                                        <span style="font-weight:normal; font-size:12px; color:#777;">
+                                        <span style="font-weight:normal; font-size:13px; color:#777;">
                                             {{ \Carbon\Carbon::parse($appt->time)->format('g:i A') }}
                                         </span>
                                     </div>
@@ -1794,7 +2437,37 @@
                 </div>
             </div>
 
-            <div class="note-widget">
+            <div class="info-card clinic-information-card">
+                <h4 class="info-title">
+                    <span class="info-title-icon"><x-outline-icon name="identification" /></span>
+                    <span>Clinic Information</span>
+                </h4>
+                <div class="clinic-information-list">
+                    <div class="clinic-information-item">
+                        <span class="clinic-information-icon"><x-outline-icon name="map-pin" /></span>
+                        <span><small>Clinic Location</small><strong>PUP Taguig Medical Clinic,<br>General Santos Avenue, Taguig City</strong></span>
+                    </div>
+                    <div class="clinic-information-item">
+                        <span class="clinic-information-icon"><x-outline-icon name="clock" /></span>
+                        <span><small>Clinic Hours</small><strong>8:00 AM - 7:00 PM<br>Monday to Friday</strong></span>
+                    </div>
+                    <div class="clinic-information-item">
+                        <span class="clinic-information-icon"><x-outline-icon name="phone" /></span>
+                        <span><small>Contact Number</small><strong>(02) 8837-5858</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="note-widget booking-reminder-card">
+                <div class="note-header">
+                    <span class="note-header-icon"><x-outline-icon name="bell" /></span>
+                    <span>Important Reminder</span>
+                </div>
+                <p>Please arrive 15 minutes before your scheduled appointment time.</p>
+                <p>Bring any relevant medical documents or previous consultation records.</p>
+            </div>
+
+            <div class="note-widget legacy-note-widget" hidden>
                 <div class="note-header">
                     <span>⚠️</span> Important Reminder
                 </div>
@@ -1943,6 +2616,9 @@
         const serviceTypeMenu = document.getElementById('serviceTypeMenu');
         const serviceTypeOptions = Array.from(document.querySelectorAll('.service-select-option'));
         const serviceTypeWrap = serviceTypeDisplay ? serviceTypeDisplay.closest('.service-select-wrap') : null;
+        const headerAvailableSlots = document.getElementById('headerAvailableSlots');
+        const headerAvailableSlotsNote = document.getElementById('headerAvailableSlotsNote');
+        const bookingClosed = @json(!empty($clinicClosure));
         const availabilityUrl = @json(url('/student/appointments/availability'));
 
         if (!dateInput || !dateDisplayInput || !dateToggle || !datePickerPanel || !calendarMonthLabel || !calendarDays || !calendarPrev || !calendarNext || !timeInput || !timeDisplay || !timeSlots || !slotsHint) {
@@ -2168,11 +2844,26 @@
             renderCalendar();
         }
 
+        function updateHeaderAvailability(value, note) {
+            if (bookingClosed) {
+                if (headerAvailableSlots) headerAvailableSlots.textContent = 'Booking Closed';
+                if (headerAvailableSlotsNote) headerAvailableSlotsNote.textContent = 'Temporarily unavailable';
+                return;
+            }
+            if (headerAvailableSlots) headerAvailableSlots.textContent = value;
+            if (headerAvailableSlotsNote) headerAvailableSlotsNote.textContent = note;
+        }
+
         function renderMessage(message) {
             timeSlots.innerHTML = '';
             setTimeSlotsOpenState(false);
             slotsHint.textContent = message;
             setSelectedTime('');
+            if (dateInput.value) {
+                updateHeaderAvailability('No Slots Available', 'Try another clinic date');
+            } else {
+                updateHeaderAvailability('Select a Date', 'Updates with your schedule');
+            }
         }
 
         function renderSlots(slots, preselectedTime) {
@@ -2207,8 +2898,14 @@
             if (availableCount === 0) {
                 slotsHint.textContent = 'No available time slots for this date.';
                 setSelectedTime('');
+                updateHeaderAvailability('No Slots Available', 'Try another clinic date');
                 return;
             }
+
+            updateHeaderAvailability(
+                availableCount + (availableCount === 1 ? ' Slot Available' : ' Slots Available'),
+                'For your selected date'
+            );
 
             if (selected && slots.some(function (slot) { return slot.available && slot.value === selected; })) {
                 setSelectedTime(selected);
@@ -2234,6 +2931,7 @@
 
             slotsHint.textContent = 'Loading available time slots...';
             timeSlots.innerHTML = '';
+            updateHeaderAvailability('Checking Slots', 'Loading selected date');
 
             try {
                 const response = await fetch(availabilityUrl + '?date=' + encodeURIComponent(dateValue), {

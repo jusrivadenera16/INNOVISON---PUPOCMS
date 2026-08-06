@@ -119,6 +119,184 @@
     #settingsModal .um-field textarea:focus {
         border-color:#8f2230; box-shadow:0 0 0 3px rgba(143,34,48,.10); outline:none;
     }
+    #settingsModal .um-module-access-preview {
+        margin:2px 0 16px; padding:14px; border:1px solid rgba(112,19,27,.14);
+        border-radius:11px; background:#f8fafc;
+    }
+    #settingsModal .um-module-access-preview[hidden] { display:none; }
+    #settingsModal .um-module-access-head {
+        display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px;
+    }
+    #settingsModal .um-module-access-head h5 {
+        margin:0; color:#70131b; font-size:13px; font-weight:900;
+    }
+    #settingsModal .um-module-access-head p {
+        margin:3px 0 0; color:#64748b; font-size:11px; line-height:1.4;
+    }
+    #settingsModal .um-preview-badge {
+        display:inline-flex; min-height:24px; flex:0 0 auto; align-items:center; padding:4px 8px;
+        border:1px solid #f3d08a; border-radius:6px; background:#fffbeb;
+        color:#92400e; font-size:9px; font-weight:900; text-transform:uppercase;
+    }
+    #settingsModal .um-module-access-toolbar {
+        display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px;
+        padding:9px 10px; border:1px solid #e2e8f0; border-radius:8px; background:#fff;
+    }
+    #settingsModal .um-module-selection-summary { min-width:0; }
+    #settingsModal .um-module-selection-summary strong {
+        display:block; color:#334155; font-size:10px; font-weight:900;
+    }
+    #settingsModal .um-module-selection-summary span {
+        display:block; margin-top:2px; color:#64748b; font-size:8px; font-weight:650;
+    }
+    #settingsModal .um-reset-module-defaults {
+        min-height:30px; flex:0 0 auto; padding:6px 9px; border:1px solid #d7b7ba; border-radius:7px;
+        background:#fff; color:#70131b; cursor:pointer; font-size:9px; font-weight:900;
+        transition:border-color .18s ease,background .18s ease,color .18s ease;
+    }
+    #settingsModal .um-reset-module-defaults:hover,
+    #settingsModal .um-reset-module-defaults:focus-visible {
+        border-color:#8f2230; background:#fef2f2; outline:none;
+    }
+    #settingsModal .um-reset-module-defaults:disabled { cursor:not-allowed; opacity:.48; }
+    #settingsModal .um-module-access-grid {
+        display:grid; grid-template-columns:1fr; gap:8px;
+    }
+    #settingsModal .um-module-item {
+        overflow:hidden; border:1px solid #e2e8f0; border-radius:8px; background:#fff;
+        transition:border-color .18s ease,background .18s ease,box-shadow .18s ease;
+    }
+    #settingsModal .um-module-item:hover { border-color:rgba(112,19,27,.30); }
+    #settingsModal .um-module-item:has(.um-module-option input:checked) {
+        border-color:rgba(112,19,27,.34); background:#fffafa; box-shadow:inset 3px 0 #8f2230;
+    }
+    #settingsModal .um-module-item.is-disabled { background:#f8fafc; opacity:.62; }
+    #settingsModal .um-module-row {
+        display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center;
+    }
+    #settingsModal .um-module-option {
+        position:relative; display:grid; grid-template-columns:30px minmax(0,1fr) 20px;
+        min-height:60px; margin:0; padding:9px 9px 9px 10px; align-items:center; gap:9px;
+        border:0; border-radius:0; background:transparent; cursor:pointer; text-transform:none; letter-spacing:0;
+    }
+    #settingsModal .um-module-option:has(input:focus-visible) {
+        outline:3px solid rgba(143,34,48,.13); outline-offset:1px;
+    }
+    #settingsModal .um-module-option input {
+        position:absolute; width:1px; height:1px; margin:0; opacity:0;
+    }
+    #settingsModal .um-module-icon {
+        display:inline-flex; width:30px; height:30px; align-items:center; justify-content:center;
+        border-radius:7px; background:#fef2f2; color:#8f2230;
+    }
+    #settingsModal .um-module-icon svg { width:16px; height:16px; }
+    #settingsModal .um-module-copy { min-width:0; }
+    #settingsModal .um-module-title {
+        display:flex; min-width:0; align-items:center; gap:7px;
+    }
+    #settingsModal .um-module-title strong {
+        display:block; min-width:0; overflow:hidden; color:#1e293b; font-size:11px; font-weight:900;
+        text-overflow:ellipsis; white-space:nowrap;
+    }
+    #settingsModal .um-module-title > span {
+        display:inline-flex; min-height:17px; flex:0 0 auto; align-items:center; padding:2px 6px;
+        border-radius:5px; background:#f1f5f9; color:#475569; font-size:8px; font-weight:900;
+        text-transform:uppercase;
+    }
+    #settingsModal .um-module-copy small {
+        display:block; margin-top:2px; color:#64748b; font-size:9px; font-weight:600; line-height:1.3;
+    }
+    #settingsModal .um-module-check {
+        display:inline-flex; width:18px; height:18px; align-items:center; justify-content:center;
+        border:1px solid #cbd5e1; border-radius:5px; background:#fff; color:transparent;
+    }
+    #settingsModal .um-module-check svg { width:12px; height:12px; stroke-width:2.5; }
+    #settingsModal .um-module-option input:checked ~ .um-module-check {
+        border-color:#8f2230; background:#8f2230; color:#fff;
+    }
+    #settingsModal .um-module-expand {
+        display:inline-flex; width:30px; height:30px; margin-right:10px; padding:0; align-items:center; justify-content:center;
+        border:1px solid #e2e8f0; border-radius:7px; background:#fff; color:#70131b; cursor:pointer;
+        transition:border-color .18s ease,background .18s ease,transform .18s ease;
+    }
+    #settingsModal .um-module-expand svg { width:15px; height:15px; transition:transform .18s ease; }
+    #settingsModal .um-module-expand:hover,
+    #settingsModal .um-module-expand:focus-visible {
+        border-color:#8f2230; background:#fef2f2; outline:none;
+    }
+    #settingsModal .um-module-expand[aria-expanded="true"] svg { transform:rotate(180deg); }
+    #settingsModal .um-module-expand:disabled { cursor:not-allowed; opacity:.45; }
+    #settingsModal .um-module-actions {
+        padding:2px 12px 12px 49px; border-top:1px solid #f1f5f9; background:rgba(248,250,252,.72);
+    }
+    #settingsModal .um-module-actions[hidden] { display:none; }
+    #settingsModal .um-module-actions-head {
+        display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 0 6px;
+    }
+    #settingsModal .um-module-actions-head strong { color:#475569; font-size:9px; font-weight:900; text-transform:uppercase; }
+    #settingsModal .um-module-actions-head span { color:#94a3b8; font-size:8px; font-weight:700; }
+    #settingsModal .um-action-permission {
+        position:relative; display:grid; grid-template-columns:18px minmax(0,1fr); min-height:42px;
+        margin:0; padding:7px 8px; align-items:center; gap:9px; border-top:1px solid #eef2f7;
+        color:#1e293b; cursor:pointer; text-transform:none; letter-spacing:0;
+    }
+    #settingsModal .um-action-permission:has(input:checked) { background:#fff7f7; }
+    #settingsModal .um-action-permission:has(input:focus-visible) { outline:2px solid rgba(143,34,48,.13); }
+    #settingsModal .um-action-permission input { position:absolute; width:1px; height:1px; margin:0; opacity:0; }
+    #settingsModal .um-action-check {
+        display:inline-flex; width:17px; height:17px; align-items:center; justify-content:center;
+        border:1px solid #cbd5e1; border-radius:4px; background:#fff; color:transparent;
+    }
+    #settingsModal .um-action-check svg { width:11px; height:11px; stroke-width:2.5; }
+    #settingsModal .um-action-permission input:checked + .um-action-check {
+        border-color:#8f2230; background:#8f2230; color:#fff;
+    }
+    #settingsModal .um-action-permission > span:nth-child(3) { min-width:0; }
+    #settingsModal .um-action-permission strong { display:block; color:#334155; font-size:10px; font-weight:850; }
+    #settingsModal .um-action-permission small {
+        display:block; margin-top:2px; color:#64748b; font-size:8px; font-weight:600; line-height:1.3;
+    }
+    #settingsModal .um-action-permission.is-locked {
+        grid-template-columns:22px minmax(0,1fr) auto; cursor:default; background:#fff8e6;
+    }
+    #settingsModal .um-action-lock {
+        display:inline-flex; width:20px; height:20px; align-items:center; justify-content:center;
+        border-radius:50%; background:#70131b; color:#fff;
+    }
+    #settingsModal .um-action-lock svg { width:12px; height:12px; }
+    #settingsModal .um-action-permission.is-locked > span:nth-child(2) { min-width:0; }
+    #settingsModal .um-locked-badge {
+        display:inline-flex; min-height:20px; align-items:center; padding:3px 6px; border-radius:5px;
+        background:#fef3c7; color:#92400e; font-size:8px; font-weight:900; text-transform:uppercase;
+    }
+    #settingsModal .um-superadmin-access-summary {
+        display:grid; grid-template-columns:30px minmax(0,1fr); gap:10px; margin-top:10px; padding:10px;
+        border:1px solid #ead8b1; border-radius:8px; background:#fffbeb;
+    }
+    #settingsModal .um-superadmin-summary-icon {
+        display:inline-flex; width:30px; height:30px; align-items:center; justify-content:center;
+        border-radius:7px; background:#70131b; color:#fff;
+    }
+    #settingsModal .um-superadmin-summary-icon svg { width:16px; height:16px; }
+    #settingsModal .um-superadmin-access-summary strong {
+        display:block; color:#70131b; font-size:10px; font-weight:900;
+    }
+    #settingsModal .um-superadmin-access-list { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
+    #settingsModal .um-superadmin-access-list span {
+        display:inline-flex; min-height:20px; align-items:center; padding:3px 6px; border:1px solid #f0dfbb;
+        border-radius:5px; background:#fff; color:#78350f; font-size:8px; font-weight:750;
+    }
+    #settingsModal .um-module-preview-note {
+        margin:10px 0 0; color:#92400e; font-size:10px; font-weight:750;
+    }
+    #settingsModal .um-module-save-warning {
+        display:flex; flex-wrap:wrap; gap:4px 7px; margin:12px 0 0; padding:9px 10px;
+        border:1px solid #f3d08a; border-radius:8px; background:#fffbeb; color:#78350f;
+        font-size:9px; line-height:1.4;
+    }
+    #settingsModal .um-module-save-warning[hidden] { display:none; }
+    #settingsModal .um-module-save-warning strong { font-weight:900; }
+    #settingsModal .um-module-save-warning span { color:#92400e; font-weight:650; }
     #settingsModal .um-actions {
         position:sticky; bottom:-18px; z-index:20; display:flex; justify-content:flex-end; gap:9px;
         margin:18px -18px -18px; padding:14px 18px; border-top:1px solid #e2e8f0;
@@ -198,6 +376,49 @@
         border-color:rgba(148,163,184,.25); background:#0f172a; color:#fff;
     }
     html[data-theme="dark"] #settingsModal .um-field label { color:#e2e8f0; }
+    html[data-theme="dark"] #settingsModal .um-module-access-preview {
+        border-color:rgba(248,113,113,.22); background:#0f172a;
+    }
+    html[data-theme="dark"] #settingsModal .um-module-access-toolbar {
+        border-color:rgba(148,163,184,.22); background:#172033;
+    }
+    html[data-theme="dark"] #settingsModal .um-module-selection-summary strong { color:#fff; }
+    html[data-theme="dark"] #settingsModal .um-module-selection-summary span { color:#cbd5e1; }
+    html[data-theme="dark"] #settingsModal .um-reset-module-defaults {
+        border-color:rgba(248,113,113,.3); background:#0f172a; color:#fecaca;
+    }
+    html[data-theme="dark"] #settingsModal .um-module-access-head h5,
+    html[data-theme="dark"] #settingsModal .um-module-title strong,
+    html[data-theme="dark"] #settingsModal .um-action-permission strong { color:#fff; }
+    html[data-theme="dark"] #settingsModal .um-module-access-head p,
+    html[data-theme="dark"] #settingsModal .um-module-copy small,
+    html[data-theme="dark"] #settingsModal .um-action-permission small { color:#cbd5e1; }
+    html[data-theme="dark"] #settingsModal .um-module-item {
+        border-color:rgba(148,163,184,.24); background:#172033;
+    }
+    html[data-theme="dark"] #settingsModal .um-module-item:hover,
+    html[data-theme="dark"] #settingsModal .um-module-item:has(.um-module-option input:checked) {
+        border-color:rgba(248,113,113,.42); background:#23171c;
+    }
+    html[data-theme="dark"] #settingsModal .um-module-actions {
+        border-color:rgba(148,163,184,.16); background:#0f172a;
+    }
+    html[data-theme="dark"] #settingsModal .um-module-expand,
+    html[data-theme="dark"] #settingsModal .um-action-check {
+        border-color:rgba(148,163,184,.28); background:#172033; color:#fecaca;
+    }
+    html[data-theme="dark"] #settingsModal .um-action-permission { border-color:rgba(148,163,184,.14); }
+    html[data-theme="dark"] #settingsModal .um-action-permission:has(input:checked) { background:#23171c; }
+    html[data-theme="dark"] #settingsModal .um-action-permission.is-locked { background:#2a2114; }
+    html[data-theme="dark"] #settingsModal .um-superadmin-access-summary,
+    html[data-theme="dark"] #settingsModal .um-module-save-warning {
+        border-color:rgba(245,158,11,.28); background:#2a2114; color:#fde68a;
+    }
+    html[data-theme="dark"] #settingsModal .um-superadmin-access-summary strong,
+    html[data-theme="dark"] #settingsModal .um-module-save-warning span { color:#fde68a; }
+    html[data-theme="dark"] #settingsModal .um-superadmin-access-list span {
+        border-color:rgba(245,158,11,.22); background:#17130c; color:#fef3c7;
+    }
     html[data-theme="dark"] #settingsModal .um-actions {
         border-color:rgba(148,163,184,.18); background:rgba(17,24,39,.96);
     }
@@ -219,6 +440,10 @@
         .um-modal-head-badge { width:40px; height:40px; flex-basis:40px; }
         #settingsModal .um-profile-fields { grid-template-columns:1fr; }
         #settingsModal .um-settings-form-body { padding:14px; }
+        #settingsModal .um-module-access-grid { grid-template-columns:1fr; }
+        #settingsModal .um-module-access-toolbar { align-items:stretch; flex-direction:column; }
+        #settingsModal .um-reset-module-defaults { width:100%; }
+        #settingsModal .um-module-actions { padding-left:38px; }
         #settingsModal .um-actions {
             position:static; display:grid; grid-template-columns:1fr 1fr;
             margin:16px -14px -14px; padding:12px 14px;
