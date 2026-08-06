@@ -1551,6 +1551,10 @@
                         <div class="um-note" id="externalNote" style="display:none; margin-top: 6px;">
                             This faculty profile comes from the external source. Saving here will add a clinic-side user and admin hub record without changing the source system.
                         </div>
+                        <div class="um-module-save-warning" id="moduleAccessSaveWarning" hidden>
+                            <strong>Module access is preview only.</strong>
+                            <span>Role and status can be saved, but these module selections will not be saved yet.</span>
+                        </div>
                         <div class="um-actions">
                             <button type="button" class="um-settings-action um-action-neutral" id="deactivateBtn">Deactivate Account</button>
                             <button
@@ -1635,6 +1639,13 @@
     const detailUpdated = document.getElementById('detailUpdated');
     const detailRole = document.getElementById('detailRole');
     const detailStatus = document.getElementById('detailStatus');
+    const moduleAccessPreview = document.getElementById('moduleAccessPreview');
+    const moduleAccessRoleSummary = document.getElementById('moduleAccessRoleSummary');
+    const moduleAccessSelectionSummary = document.getElementById('moduleAccessSelectionSummary');
+    const resetModuleDefaultsButton = document.getElementById('resetModuleDefaultsButton');
+    const moduleAccessSaveWarning = document.getElementById('moduleAccessSaveWarning');
+    const modulePermissionInputs = Array.from(document.querySelectorAll('[data-module-permission]'));
+    const moduleAccessItems = Array.from(document.querySelectorAll('[data-module-item]'));
     const detailManagementView = document.getElementById('detailManagementView');
     const detailLookupSource = document.getElementById('detailLookupSource');
     const detailFirstName = document.getElementById('detailFirstName');
@@ -1742,6 +1753,82 @@
         }
     };
 
+    const setModuleExpanded = (item, expanded) => {
+        const button = item?.querySelector('[data-module-expand]');
+        const panel = item?.querySelector('[data-module-actions]');
+        if (!button || !panel) {
+            return;
+        }
+
+        button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        panel.hidden = !expanded;
+    };
+
+    const updateModuleAccessSummary = () => {
+        if (!moduleAccessSelectionSummary) {
+            return;
+        }
+
+        const selectedModules = modulePermissionInputs.filter((input) => input.checked).length;
+        const selectedActions = moduleAccessItems.reduce((total, item) => {
+            return total + Array.from(item.querySelectorAll('[data-module-action]'))
+                .filter((input) => input.checked).length;
+        }, 0);
+        const moduleLabel = selectedModules === 1 ? 'module' : 'modules';
+        const actionLabel = selectedActions === 1 ? 'additional permission' : 'additional permissions';
+
+        moduleAccessSelectionSummary.textContent = `${selectedModules} ${moduleLabel} and ${selectedActions} ${actionLabel} selected`;
+    };
+
+    const syncModuleItem = (item, options = {}) => {
+        const moduleInput = item.querySelector('[data-module-permission]');
+        const actionInputs = Array.from(item.querySelectorAll('[data-module-action]'));
+        const expandButton = item.querySelector('[data-module-expand]');
+        const canConfigure = moduleAccessPreview?.dataset.canConfigure === '1';
+        const hasModuleAccess = moduleInput?.checked === true;
+
+        if (moduleInput) {
+            moduleInput.disabled = !canConfigure;
+        }
+
+        if (options.resetActions === true) {
+            actionInputs.forEach((input) => {
+                input.checked = false;
+            });
+        }
+
+        actionInputs.forEach((input) => {
+            input.disabled = !canConfigure || !hasModuleAccess;
+            if (!hasModuleAccess) {
+                input.checked = false;
+            }
+        });
+
+        if (expandButton) {
+            expandButton.disabled = !canConfigure || !hasModuleAccess;
+        }
+        item.classList.toggle('is-disabled', !hasModuleAccess);
+
+        if (!hasModuleAccess || options.collapse === true) {
+            setModuleExpanded(item, false);
+        }
+    };
+
+    const resetModuleAccessDefaults = (collapse = false) => {
+        const roleKey = moduleAccessPreview?.dataset.role || '';
+        if (roleKey === '') {
+            return;
+        }
+
+        modulePermissionInputs.forEach((input) => {
+            input.checked = input.dataset[roleKey] === '1';
+        });
+        moduleAccessItems.forEach((item) => {
+            syncModuleItem(item, { resetActions: true, collapse });
+        });
+        updateModuleAccessSummary();
+    };
+
     const syncRoleUi = (options = {}) => {
         const canEdit = options.canEdit === true;
         const canOnboard = options.canOnboard === true;
@@ -1752,6 +1839,47 @@
         const isSuperAdmin = detailRole.value === 'super_admin';
         const hasAdminHub = isStudentAssistant || isAdmin || isSuperAdmin;
         const usesSeparateAdminEmail = managementView !== 'admin-hub' && isStudentAssistant;
+
+        if (moduleAccessPreview) {
+            const showsModuleAccess = managementView !== 'admin-hub' && (isStudentAssistant || isAdmin);
+            moduleAccessPreview.hidden = !showsModuleAccess;
+
+            if (showsModuleAccess) {
+                const roleKey = isStudentAssistant ? 'studentAssistant' : 'clinicStaff';
+                moduleAccessPreview.dataset.canConfigure = (canEdit || canOnboard) ? '1' : '0';
+                if (moduleAccessRoleSummary) {
+                    moduleAccessRoleSummary.textContent = isStudentAssistant
+                        ? 'Suggested starting access for a Student Assistant.'
+                        : 'Suggested starting access for Clinic Staff.';
+                }
+
+                if (options.resetModuleDefaults === true || moduleAccessPreview.dataset.role !== roleKey) {
+                    modulePermissionInputs.forEach((input) => {
+                        input.checked = input.dataset[roleKey] === '1';
+                    });
+                }
+                moduleAccessPreview.dataset.role = roleKey;
+                moduleAccessItems.forEach((item) => {
+                    syncModuleItem(item, {
+                        resetActions: options.resetModuleDefaults === true,
+                        collapse: options.resetModuleDefaults === true,
+                    });
+                });
+                if (resetModuleDefaultsButton) {
+                    resetModuleDefaultsButton.disabled = !(canEdit || canOnboard);
+                }
+                if (moduleAccessSaveWarning) {
+                    moduleAccessSaveWarning.hidden = false;
+                }
+                updateModuleAccessSummary();
+            } else {
+                delete moduleAccessPreview.dataset.role;
+                delete moduleAccessPreview.dataset.canConfigure;
+                if (moduleAccessSaveWarning) {
+                    moduleAccessSaveWarning.hidden = true;
+                }
+            }
+        }
 
         applySettingsSectionMode(managementView, canEdit, canOnboard);
 
@@ -1951,7 +2079,7 @@
             }
             detailStatus.value = row.dataset.status || 'active';
         }
-        syncRoleUi({ canEdit, canOnboard });
+        syncRoleUi({ canEdit, canOnboard, resetModuleDefaults: true });
         if (saveSettingsBtn) {
             saveSettingsBtn.textContent = canEdit ? 'Save Changes' : 'Add to Clinic';
         }
@@ -2010,10 +2138,35 @@
         row.addEventListener('click', () => openSettingsFromRow(row));
     });
 
+    moduleAccessItems.forEach((item) => {
+        const moduleInput = item.querySelector('[data-module-permission]');
+        const expandButton = item.querySelector('[data-module-expand]');
+
+        moduleInput?.addEventListener('change', () => {
+            syncModuleItem(item, { resetActions: moduleInput.checked, collapse: !moduleInput.checked });
+            updateModuleAccessSummary();
+        });
+
+        item.querySelectorAll('[data-module-action]').forEach((input) => {
+            input.addEventListener('change', updateModuleAccessSummary);
+        });
+
+        expandButton?.addEventListener('click', () => {
+            if (expandButton.disabled) {
+                return;
+            }
+            setModuleExpanded(item, expandButton.getAttribute('aria-expanded') !== 'true');
+        });
+    });
+
+    resetModuleDefaultsButton?.addEventListener('click', () => {
+        resetModuleAccessDefaults(false);
+    });
+
     detailRole.addEventListener('change', () => {
         const canEdit = !deactivateBtn.disabled;
         const canOnboard = externalNote.style.display !== 'none';
-        syncRoleUi({ canEdit, canOnboard });
+        syncRoleUi({ canEdit, canOnboard, resetModuleDefaults: true });
     });
 
     deactivateBtn.addEventListener('click', () => {

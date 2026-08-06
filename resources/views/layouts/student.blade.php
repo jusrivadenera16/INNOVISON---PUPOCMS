@@ -3442,17 +3442,54 @@
             letter-spacing: 0;
         }
         .health-form-action-close {
+            position: relative;
+            overflow: hidden;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, .2);
+            border: 1px solid transparent;
             background: rgba(74, 10, 18, .32);
             color: #ffffff;
             cursor: pointer;
+            outline: none;
+            transition: background .2s ease, color .2s ease, transform .2s ease;
+        }
+        .health-form-action-close::after {
+            content: "";
+            position: absolute;
+            top: -35%;
+            left: -78%;
+            width: 42%;
+            height: 170%;
+            background: linear-gradient(
+                115deg,
+                transparent 0%,
+                rgba(255, 255, 255, .18) 30%,
+                rgba(255, 255, 255, .82) 50%,
+                rgba(255, 255, 255, .18) 70%,
+                transparent 100%
+            );
+            transform: skewX(-18deg);
+            transition: left .48s ease;
+            pointer-events: none;
+        }
+        .health-form-action-close svg {
+            position: relative;
+            z-index: 1;
+            width: 17px;
+            height: 17px;
         }
         .health-form-action-close:hover,
         .health-form-action-close:focus-visible {
-            background: rgba(74, 10, 18, .58);
-            outline: 2px solid #facc15;
-            outline-offset: 2px;
+            border-color: transparent;
+            background: #facc15;
+            color: #70131b;
+            outline: none;
+            transform: translateY(-1px);
+        }
+        .health-form-action-close:hover::after,
+        .health-form-action-close:focus-visible::after {
+            left: 136%;
         }
         .health-form-action-body {
             padding: 24px;
@@ -3610,6 +3647,10 @@
             .health-form-action-close {
                 width: 38px;
                 height: 38px;
+            }
+            .health-form-action-close {
+                width: 34px;
+                height: 34px;
             }
             .health-form-action-head h2 {
                 font-size: 18px;
