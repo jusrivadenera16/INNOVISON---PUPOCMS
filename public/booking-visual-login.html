@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Booking visual check</title></head>
+<body>
+<iframe id="loginFrame" src="/dev-login/2" hidden></iframe>
+<script>
+document.getElementById('loginFrame').addEventListener('load', function () {
+    window.setTimeout(function () {
+        window.location.replace('/student/booking');
+    }, 1200);
+});
+</script>
+</body>
+</html>

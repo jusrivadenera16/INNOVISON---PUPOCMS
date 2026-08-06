@@ -4523,6 +4523,1355 @@
             height: 52px;
         }
     }
+
+    /* --- HEALTH RECORD REVIEW --- */
+    .account-layout.health-record-layout {
+        max-width: 1180px;
+    }
+    .health-record-dashboard {
+        width: 100%;
+    }
+    .health-record-hero.page-hero {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(270px, 340px);
+        align-items: stretch;
+        gap: 28px;
+        min-height: 205px;
+        margin: -12px 0 18px;
+        padding: 28px 30px;
+        overflow: hidden;
+        border: 1px solid rgba(250, 204, 21, .28);
+        border-radius: 10px;
+        background:
+            linear-gradient(90deg, rgba(111, 0, 31, .99) 0%, rgba(105, 0, 29, .97) 50%, rgba(71, 0, 22, .79) 100%),
+            url('{{ asset("images/PUPBG.jpg") }}') right 42% / 58% auto no-repeat;
+        background-blend-mode: normal, luminosity;
+        box-shadow: 0 18px 38px rgba(76, 5, 25, .2);
+        color: #ffffff;
+    }
+    .health-record-hero.page-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        width: auto;
+        height: auto;
+        background:
+            radial-gradient(circle at 12% 18%, transparent 0 42px, rgba(255,255,255,.045) 43px 44px, transparent 45px 59px, rgba(255,255,255,.03) 60px 61px, transparent 62px),
+            linear-gradient(105deg, transparent 42%, rgba(250, 204, 21, .045) 72%, transparent 100%);
+        pointer-events: none;
+    }
+    .health-record-hero.page-hero::after {
+        content: "";
+        position: absolute;
+        inset: 0 0 0 44%;
+        background: url('{{ asset("images/PUPBG.jpg") }}') right center / cover no-repeat;
+        opacity: .14;
+        filter: saturate(.3) contrast(1.1);
+        -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.78) 30%, #000 100%);
+        mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.78) 30%, #000 100%);
+        pointer-events: none;
+    }
+    .health-record-hero-main,
+    .health-record-hero-overview {
+        position: relative;
+        z-index: 2;
+    }
+    .health-record-hero-main {
+        display: grid;
+        grid-template-columns: 112px minmax(0, 1fr);
+        align-items: center;
+        gap: 22px;
+        min-width: 0;
+    }
+    .health-record-hero-emblem {
+        width: 106px;
+        height: 106px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid rgba(255,255,255,.88);
+        border-radius: 50%;
+        background: linear-gradient(145deg, rgba(255,255,255,.97), rgba(255,239,241,.92));
+        color: #8b0018;
+        box-shadow: 0 14px 30px rgba(27, 0, 9, .28);
+    }
+    .health-record-hero-emblem svg {
+        width: 58px;
+        height: 58px;
+        stroke-width: 1.35;
+    }
+    .health-record-hero-copy { min-width: 0; }
+    .health-record-hero .page-hero-kicker {
+        padding: 0;
+        margin: 0 0 6px;
+        border-radius: 0;
+        background: transparent;
+        color: #facc15;
+        font-size: 10px;
+        letter-spacing: .08em;
+    }
+    .health-record-hero .page-hero-title {
+        margin: 0 0 6px;
+        color: #ffffff;
+        font-size: clamp(26px, 3vw, 34px);
+        font-weight: 900;
+        letter-spacing: 0;
+    }
+    .health-record-hero .page-hero-text {
+        max-width: 520px;
+        color: rgba(255,255,255,.88);
+        font-size: 13px;
+        line-height: 1.55;
+    }
+    .health-record-hero .page-hero-steps {
+        gap: 7px;
+        margin-top: 13px;
+    }
+    .health-record-hero .page-hero-step {
+        min-height: 30px;
+        padding: 6px 10px;
+        border-color: rgba(255,255,255,.1);
+        border-radius: 999px;
+        background: rgba(255,255,255,.1);
+        color: rgba(255,255,255,.78);
+        box-shadow: none;
+        font-size: 10px;
+    }
+    .health-record-hero .page-hero-step::before {
+        width: 17px;
+        height: 17px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,.94);
+        color: #7f001d;
+        box-shadow: none;
+        content: "";
+        font-size: 11px;
+        font-weight: 900;
+    }
+    .health-record-hero .page-hero-step.is-complete {
+        color: #ffffff;
+        background: rgba(255,255,255,.16);
+    }
+    .health-record-hero .page-hero-step.is-complete::before { content: "\2713"; }
+    .health-record-hero .page-hero-step.is-active {
+        color: #fff6bf;
+        border-color: rgba(250,204,21,.42);
+        background: rgba(250,204,21,.13);
+    }
+    .health-record-hero .page-hero-step.is-active::before {
+        background: #facc15;
+        box-shadow: 0 0 0 4px rgba(250,204,21,.12);
+    }
+    .health-record-hero-overview {
+        display: grid;
+        align-content: center;
+        border-left: 1px solid rgba(255,255,255,.18);
+        padding-left: 26px;
+    }
+    .health-record-hero-overview-item {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        padding: 14px 0;
+    }
+    .health-record-hero-overview-item + .health-record-hero-overview-item {
+        border-top: 1px solid rgba(255,255,255,.14);
+    }
+    .health-record-hero-overview-icon {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(250,204,21,.26);
+        border-radius: 50%;
+        background: rgba(27, 0, 9, .22);
+        color: #facc15;
+    }
+    .health-record-hero-overview-icon.is-approved {
+        color: #22c55e;
+        border-color: rgba(34,197,94,.42);
+        background: rgba(10,75,31,.28);
+    }
+    .health-record-hero-overview-icon.is-pending {
+        color: #facc15;
+        border-color: rgba(250,204,21,.38);
+        background: rgba(113,63,18,.28);
+    }
+    .health-record-hero-overview-icon.is-rejected {
+        color: #fecaca;
+        border-color: rgba(248,113,113,.4);
+        background: rgba(127,29,29,.3);
+    }
+    .health-record-hero-overview-icon svg {
+        width: 20px;
+        height: 20px;
+        stroke-width: 2;
+    }
+    .health-record-hero-overview-label {
+        display: block;
+        margin-bottom: 3px;
+        color: rgba(255,255,255,.68);
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+    .health-record-hero-overview-value {
+        display: block;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 850;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+    .health-record-content-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 292px;
+        gap: 16px;
+        align-items: start;
+    }
+    .health-record-main-column,
+    .health-record-sidebar {
+        display: grid;
+        gap: 14px;
+        min-width: 0;
+    }
+    .health-record-dashboard .health-declaration-card,
+    .health-record-dashboard .missing-requirements-panel,
+    .health-record-dashboard .health-status-card {
+        margin: 0;
+        border-radius: 8px;
+    }
+    .health-record-dashboard .health-status-card {
+        padding: 0;
+        overflow: hidden;
+        border-color: rgba(112,19,27,.13);
+        box-shadow: 0 14px 30px rgba(39, 13, 20, .09);
+    }
+    .health-record-dashboard .health-status-head {
+        margin: 0;
+        padding: 18px 20px 14px;
+        border-bottom: 1px solid #e8edf2;
+    }
+    .health-record-dashboard .health-status-title {
+        color: #7f001d;
+        font-size: 17px;
+    }
+    .health-record-dashboard .health-status-summary {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 52px;
+        margin: 0 0 14px;
+        padding: 9px 14px;
+        border: 1px solid rgba(34,197,94,.12);
+        border-radius: 7px;
+        background: linear-gradient(90deg, #effaf0, #f7fcf7);
+    }
+    .health-record-status-body {
+        padding: 16px 16px 0;
+    }
+    .health-record-dashboard .health-status-summary.is-approved .health-status-state {
+        gap: 10px;
+        padding: 0 18px 0 0;
+        border-right: 1px solid rgba(22,163,74,.2);
+        border-radius: 0;
+        background: transparent;
+        color: #159436;
+    }
+    .health-record-dashboard .health-status-summary.is-approved .health-status-state svg {
+        width: 36px;
+        height: 36px;
+        padding: 8px;
+        border-radius: 50%;
+        box-sizing: border-box;
+        background: #e3f7e7;
+        color: #16a34a;
+        stroke-width: 2;
+    }
+    .health-record-dashboard .health-status-summary.is-pending {
+        border-color: rgba(245,158,11,.18);
+        background: linear-gradient(90deg, #fff9e8, #fffdf5);
+    }
+    .health-record-dashboard .health-status-summary.is-pending .health-status-message { color: #865711; }
+    .health-record-dashboard .health-status-summary.is-incomplete {
+        border-color: rgba(239,68,68,.16);
+        background: linear-gradient(90deg, #fff3f3, #fffafa);
+    }
+    .health-record-dashboard .health-status-summary.is-incomplete .health-status-message { color: #991b1b; }
+    .health-record-dashboard .health-status-state {
+        flex: 0 0 auto;
+        padding: 6px 9px;
+        border-radius: 6px;
+    }
+    .health-record-dashboard .health-status-message {
+        margin: 0;
+        color: #357146;
+        font-size: 12px;
+        line-height: 1.45;
+    }
+    .health-record-dashboard .health-status-meta-grid {
+        gap: 9px;
+        margin: 0;
+    }
+    .health-record-dashboard .health-status-meta {
+        min-height: 78px;
+        display: grid;
+        grid-template-columns: 46px minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+        padding: 11px 12px;
+        border-radius: 7px;
+        border-color: rgba(112,19,27,.11);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(15,23,42,.045);
+    }
+    .health-status-meta-icon {
+        width: 46px;
+        height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: #fff0f2;
+        color: #a40021;
+    }
+    .health-status-meta-icon svg {
+        width: 25px;
+        height: 25px;
+        stroke-width: 1.8;
+    }
+    .health-status-meta-copy { min-width: 0; }
+    .health-record-dashboard .health-status-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+        gap: 9px;
+        margin-top: 14px;
+    }
+    .health-record-action-card {
+        width: 100%;
+        min-height: 84px;
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr) 18px;
+        align-items: center;
+        gap: 11px;
+        padding: 12px;
+        border: 1px solid rgba(176,0,32,.16);
+        border-radius: 7px;
+        box-sizing: border-box;
+        background: linear-gradient(135deg, #fff8f8, #ffffff);
+        box-shadow: 0 8px 18px rgba(15,23,42,.045);
+        color: #64111c;
+        font: inherit;
+        text-align: left;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .health-record-action-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(176,0,32,.3);
+        box-shadow: 0 12px 22px rgba(69,12,24,.1);
+    }
+    .health-record-action-icon {
+        width: 48px;
+        height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: #ffe9ed;
+        color: #a90025;
+    }
+    .health-record-action-icon svg {
+        width: 25px;
+        height: 25px;
+        stroke-width: 2;
+    }
+    .health-record-action-copy { min-width: 0; }
+    .health-record-action-title {
+        display: block;
+        margin-bottom: 4px;
+        color: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        line-height: 1.3;
+    }
+    .health-record-action-description {
+        display: block;
+        color: #374151;
+        font-size: 10px;
+        line-height: 1.55;
+    }
+    .health-record-action-arrow {
+        color: inherit;
+    }
+    .health-record-action-arrow svg {
+        width: 17px;
+        height: 17px;
+        stroke-width: 2;
+    }
+    .health-record-action-card.is-edit {
+        border-color: rgba(217,119,6,.22);
+        background: linear-gradient(135deg, #fffaf0, #ffffff);
+        color: #8b3f05;
+    }
+    .health-record-action-card.is-edit .health-record-action-icon {
+        background: #fff0c9;
+        color: #e27800;
+    }
+    .health-record-action-card.is-download {
+        border-color: rgba(22,163,74,.2);
+        background: linear-gradient(135deg, #f3fcf2, #ffffff);
+        color: #147229;
+    }
+    .health-record-action-card.is-download .health-record-action-icon {
+        background: #e3f6df;
+        color: #25a73b;
+    }
+    .health-correction-notice {
+        display: grid;
+        grid-template-columns: 24px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        margin-top: 14px;
+        padding: 8px 10px;
+        border: 1px solid rgba(245,158,11,.18);
+        border-radius: 7px;
+        background: linear-gradient(90deg, #fff9ed, #fffcf6);
+        color: #a44b08;
+    }
+    .health-correction-notice > svg {
+        width: 19px;
+        height: 19px;
+        color: #f59e0b;
+        stroke-width: 2;
+    }
+    .health-correction-copy {
+        min-width: 0;
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        font-size: 10px;
+        line-height: 1.45;
+    }
+    .health-correction-copy strong {
+        color: #d36100;
+        font-size: 11px;
+        white-space: nowrap;
+    }
+    .health-correction-details {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 10px;
+        border: 1px solid rgba(217,119,6,.3);
+        border-radius: 999px;
+        background: #ffffff;
+        color: #7f3010;
+        font-size: 10px;
+        font-weight: 800;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: border-color .2s ease, background .2s ease;
+    }
+    .health-correction-details:hover {
+        border-color: #f59e0b;
+        background: #fff8df;
+    }
+    .health-correction-details svg {
+        width: 13px;
+        height: 13px;
+        stroke-width: 2;
+    }
+    .health-record-dashboard .health-status-note {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 14px -16px 0;
+        padding: 11px 16px;
+        border-top: 1px solid #e8edf2;
+        font-size: 11px;
+    }
+    .health-record-dashboard .health-status-note svg {
+        width: 16px;
+        height: 16px;
+        color: #64748b;
+        stroke-width: 1.8;
+    }
+    .health-record-side-card {
+        padding: 18px;
+        border: 1px solid rgba(112,19,27,.13);
+        border-radius: 8px;
+        background: rgba(255,255,255,.96);
+        box-shadow: 0 14px 30px rgba(39,13,20,.08);
+    }
+    .health-record-side-card.is-reminder {
+        background: linear-gradient(160deg, #fffafa, #fffdfd);
+    }
+    .health-record-side-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin: 0 0 16px;
+        color: #7f001d;
+        font-size: 14px;
+        font-weight: 900;
+    }
+    .health-record-side-title-icon {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 7px;
+        background: #fff1f2;
+        color: #b00020;
+    }
+    .health-record-side-title-icon.is-yellow {
+        background: #fff8df;
+        color: #d97706;
+    }
+    .health-record-side-title-icon svg {
+        width: 17px;
+        height: 17px;
+        stroke-width: 2;
+    }
+    .health-record-progress-list {
+        display: grid;
+        gap: 0;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .health-record-progress-item {
+        position: relative;
+        display: grid;
+        grid-template-columns: 16px minmax(0, 1fr) 22px;
+        gap: 9px;
+        min-height: 62px;
+        padding-bottom: 12px;
+    }
+    .health-record-progress-item:last-child {
+        min-height: 38px;
+        padding-bottom: 0;
+    }
+    .health-record-progress-item::after {
+        content: "";
+        position: absolute;
+        top: 14px;
+        bottom: 0;
+        left: 6px;
+        width: 2px;
+        background: #dbe3e8;
+    }
+    .health-record-progress-item:last-child::after { display: none; }
+    .health-record-progress-dot {
+        position: relative;
+        z-index: 1;
+        width: 12px;
+        height: 12px;
+        margin-top: 3px;
+        border: 3px solid #ffffff;
+        border-radius: 50%;
+        background: #cbd5e1;
+        box-shadow: 0 0 0 1px #cbd5e1;
+    }
+    .health-record-progress-item.is-complete .health-record-progress-dot {
+        background: #22c55e;
+        box-shadow: 0 0 0 1px #22c55e;
+    }
+    .health-record-progress-item.is-active .health-record-progress-dot {
+        background: #facc15;
+        box-shadow: 0 0 0 1px #d4a700, 0 0 0 5px rgba(250,204,21,.13);
+        animation: healthRecordPulse 1.8s ease-in-out infinite;
+    }
+    .health-record-progress-copy strong {
+        display: block;
+        margin-bottom: 4px;
+        color: #1f2937;
+        font-size: 12px;
+        font-weight: 900;
+    }
+    .health-record-progress-copy span {
+        display: block;
+        color: #64748b;
+        font-size: 10px;
+        line-height: 1.35;
+    }
+    .health-record-progress-check {
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #bbefc5;
+        border-radius: 50%;
+        color: #16a34a;
+    }
+    .health-record-progress-check svg {
+        width: 12px;
+        height: 12px;
+        stroke-width: 2.5;
+    }
+    .health-record-reminder-copy {
+        margin: 0;
+        color: #334155;
+        font-size: 11px;
+        line-height: 1.65;
+    }
+    .health-record-reminder-copy + .health-record-reminder-copy {
+        margin-top: 13px;
+        padding-top: 13px;
+        border-top: 1px solid rgba(112,19,27,.1);
+    }
+    .health-record-reminder-copy strong {
+        color: #7f001d;
+    }
+    @keyframes healthRecordPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.12); }
+    }
+    html[data-theme="dark"] .health-record-hero.page-hero {
+        border-color: rgba(250,204,21,.28);
+        background:
+            linear-gradient(90deg, rgba(43,0,14,.99) 0%, rgba(55,0,18,.97) 52%, rgba(14,8,18,.82) 100%),
+            url('{{ asset("images/PUPBG.jpg") }}') right 42% / 58% auto no-repeat;
+    }
+    html[data-theme="dark"] .health-record-dashboard .health-status-card,
+    html[data-theme="dark"] .health-record-side-card {
+        border-color: rgba(250,204,21,.16);
+        background: #101722;
+        box-shadow: 0 16px 34px rgba(0,0,0,.34);
+    }
+    html[data-theme="dark"] .health-record-side-card.is-reminder { background: #111620; }
+    html[data-theme="dark"] .health-record-dashboard .health-status-head,
+    html[data-theme="dark"] .health-record-dashboard .health-status-note {
+        border-color: rgba(255,255,255,.1);
+    }
+    html[data-theme="dark"] .health-record-dashboard .health-status-summary {
+        border-color: rgba(34,197,94,.18);
+        background: rgba(22,101,52,.16);
+    }
+    html[data-theme="dark"] .health-record-dashboard .health-status-message { color: #bbf7d0; }
+    html[data-theme="dark"] .health-record-dashboard .health-status-summary.is-pending {
+        border-color: rgba(250,204,21,.2);
+        background: rgba(113,63,18,.22);
+    }
+    html[data-theme="dark"] .health-record-dashboard .health-status-summary.is-pending .health-status-message { color: #fde68a; }
+    html[data-theme="dark"] .health-record-dashboard .health-status-summary.is-incomplete {
+        border-color: rgba(248,113,113,.2);
+        background: rgba(127,29,29,.2);
+    }
+    html[data-theme="dark"] .health-record-dashboard .health-status-summary.is-incomplete .health-status-message { color: #fecaca; }
+    html[data-theme="dark"] .health-status-meta-icon {
+        background: rgba(127,29,45,.32);
+        color: #fda4af;
+    }
+    html[data-theme="dark"] .health-record-action-card {
+        border-color: rgba(250,204,21,.15);
+        background: rgba(5,8,13,.48);
+        color: #f8fafc;
+        box-shadow: 0 10px 20px rgba(0,0,0,.24);
+    }
+    html[data-theme="dark"] .health-record-action-card:hover {
+        border-color: rgba(250,204,21,.34);
+        box-shadow: 0 14px 26px rgba(0,0,0,.34);
+    }
+    html[data-theme="dark"] .health-record-action-description { color: #cbd5e1; }
+    html[data-theme="dark"] .health-record-action-card.is-edit,
+    html[data-theme="dark"] .health-record-action-card.is-download { background: rgba(5,8,13,.48); }
+    html[data-theme="dark"] .health-correction-notice {
+        border-color: rgba(250,204,21,.2);
+        background: rgba(113,63,18,.2);
+        color: #fde68a;
+    }
+    html[data-theme="dark"] .health-correction-copy strong { color: #fbbf24; }
+    html[data-theme="dark"] .health-correction-details {
+        border-color: rgba(250,204,21,.3);
+        background: #101722;
+        color: #fde68a;
+    }
+    html[data-theme="dark"] .health-record-progress-copy strong,
+    html[data-theme="dark"] .health-record-reminder-copy { color: #e5e7eb; }
+    html[data-theme="dark"] .health-record-progress-copy span { color: #94a3b8; }
+    html[data-theme="dark"] .health-record-progress-dot { border-color: #101722; }
+    html[data-theme="dark"] .health-record-progress-item::after { background: #334155; }
+    html[data-theme="dark"] .health-record-reminder-copy strong,
+    html[data-theme="dark"] .health-record-side-title { color: #facc15; }
+    html[data-theme="dark"] .health-record-reminder-copy + .health-record-reminder-copy {
+        border-color: rgba(255,255,255,.1);
+    }
+    @media (max-width: 980px) {
+        .health-record-hero.page-hero {
+            grid-template-columns: minmax(0, 1fr) 260px;
+            gap: 20px;
+            padding: 24px;
+        }
+        .health-record-hero-main {
+            grid-template-columns: 88px minmax(0, 1fr);
+            gap: 18px;
+        }
+        .health-record-hero-emblem {
+            width: 84px;
+            height: 84px;
+        }
+        .health-record-hero-emblem svg {
+            width: 46px;
+            height: 46px;
+        }
+        .health-record-content-grid {
+            grid-template-columns: minmax(0, 1fr) 250px;
+        }
+    }
+    @media (max-width: 820px) {
+        .health-record-hero.page-hero,
+        .health-record-content-grid {
+            grid-template-columns: 1fr;
+        }
+        .health-record-hero-overview {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            border-top: 1px solid rgba(255,255,255,.18);
+            border-left: 0;
+            padding: 6px 0 0;
+        }
+        .health-record-hero-overview-item + .health-record-hero-overview-item {
+            border-top: 0;
+            border-left: 1px solid rgba(255,255,255,.14);
+            padding-left: 18px;
+        }
+        .health-record-sidebar {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    @media (max-width: 620px) {
+        .health-record-hero.page-hero {
+            min-height: 0;
+            margin-top: -8px;
+            padding: 20px 17px;
+        }
+        .health-record-hero-main {
+            grid-template-columns: 64px minmax(0, 1fr);
+            align-items: start;
+            gap: 13px;
+        }
+        .health-record-hero-emblem {
+            width: 62px;
+            height: 62px;
+        }
+        .health-record-hero-emblem svg {
+            width: 34px;
+            height: 34px;
+        }
+        .health-record-hero .page-hero-title { font-size: 25px; }
+        .health-record-hero .page-hero-steps {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .health-record-hero .page-hero-step {
+            width: auto;
+            min-width: 0;
+            justify-content: center;
+            padding-inline: 6px;
+            white-space: nowrap;
+        }
+        .health-record-hero-overview {
+            grid-template-columns: 1fr;
+        }
+        .health-record-hero-overview-item + .health-record-hero-overview-item {
+            border-top: 1px solid rgba(255,255,255,.14);
+            border-left: 0;
+            padding-left: 0;
+        }
+        .health-record-sidebar,
+        .health-record-dashboard .health-status-actions {
+            grid-template-columns: 1fr;
+        }
+        .health-record-dashboard .health-status-card,
+        .health-record-side-card { padding: 16px; }
+        .health-record-dashboard .health-status-summary {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .health-record-dashboard .health-status-summary.is-approved .health-status-state {
+            width: 100%;
+            padding: 0 0 8px;
+            border-right: 0;
+            border-bottom: 1px solid rgba(22,163,74,.2);
+        }
+        .health-record-dashboard .health-status-meta-grid { grid-template-columns: 1fr; }
+        .health-correction-notice {
+            grid-template-columns: 24px minmax(0, 1fr);
+        }
+        .health-correction-copy {
+            display: grid;
+            gap: 3px;
+        }
+        .health-correction-copy strong { white-space: normal; }
+        .health-correction-details {
+            grid-column: 1 / -1;
+            justify-self: stretch;
+            justify-content: center;
+        }
+    }
+
+    /* --- NOTIFICATION CENTER --- */
+    .notification-dashboard {
+        width: 100%;
+    }
+    .notification-hero.health-record-hero {
+        margin-bottom: 16px;
+    }
+    .notification-hero .health-record-hero-emblem svg {
+        width: 56px;
+        height: 56px;
+        stroke-width: 1.45;
+    }
+    .notification-hero .page-hero-step {
+        gap: 7px;
+    }
+    .notification-hero .page-hero-step::before {
+        display: none;
+    }
+    .notification-hero .page-hero-step svg {
+        width: 14px;
+        height: 14px;
+        color: #ffffff;
+        stroke-width: 2;
+    }
+    .notification-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+    .notification-stat-card {
+        min-height: 98px;
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        padding: 13px 14px;
+        border: 1px solid rgba(112,19,27,.11);
+        border-radius: 8px;
+        box-sizing: border-box;
+        background: rgba(255,255,255,.97);
+        box-shadow: 0 10px 24px rgba(39,13,20,.07);
+        color: #111827;
+        text-decoration: none;
+        transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .notification-stat-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(250,204,21,.62);
+        box-shadow: 0 14px 26px rgba(39,13,20,.11);
+    }
+    .notification-stat-icon {
+        width: 46px;
+        height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: #fff0f2;
+        color: #a40021;
+    }
+    .notification-stat-icon svg {
+        width: 24px;
+        height: 24px;
+        stroke-width: 1.8;
+    }
+    .notification-stat-card.is-appointments .notification-stat-icon {
+        background: #fff7da;
+        color: #d97706;
+    }
+    .notification-stat-card.is-health .notification-stat-icon {
+        background: #eaf8e9;
+        color: #199447;
+    }
+    .notification-stat-card.is-announcements .notification-stat-icon {
+        background: #eaf3ff;
+        color: #2368b8;
+    }
+    .notification-stat-copy {
+        min-width: 0;
+        display: grid;
+        line-height: 1.15;
+    }
+    .notification-stat-label {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 850;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+    .notification-stat-copy strong {
+        margin: 2px 0 3px;
+        color: #182033;
+        font-size: 26px;
+        font-weight: 900;
+    }
+    .notification-stat-copy small {
+        color: #718096;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+    .notification-content-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 280px;
+        gap: 14px;
+        align-items: start;
+    }
+    .notification-feed-card,
+    .notification-side-card {
+        border: 1px solid rgba(112,19,27,.12);
+        border-radius: 8px;
+        background: rgba(255,255,255,.97);
+        box-shadow: 0 14px 30px rgba(39,13,20,.08);
+    }
+    .notification-feed-card {
+        min-width: 0;
+        padding: 12px;
+    }
+    .notification-filter-row {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 0 11px;
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+    .notification-filter-chip {
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        flex: 0 0 auto;
+        padding: 8px 13px;
+        border: 1px solid rgba(112,19,27,.14);
+        border-radius: 999px;
+        background: #ffffff;
+        color: #6f1624;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1;
+        text-decoration: none;
+        transition: border-color .18s ease, background .18s ease, color .18s ease;
+    }
+    .notification-filter-chip span {
+        color: #94a3b8;
+        font-size: 10px;
+    }
+    .notification-filter-chip:hover {
+        border-color: rgba(176,0,32,.35);
+        background: #fff7f8;
+    }
+    .notification-filter-chip.is-active {
+        border-color: #8b0018;
+        background: #8b0018;
+        color: #ffffff;
+    }
+    .notification-filter-chip.is-active span { color: #ffe9ed; }
+    .notification-feed-list {
+        display: grid;
+        gap: 7px;
+    }
+    .notification-feed-item {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr) 138px;
+        align-items: center;
+        gap: 11px;
+        padding: 14px;
+        border: 1px solid #e4e8ee;
+        border-radius: 7px;
+        background: #ffffff;
+        color: #182033;
+        text-decoration: none;
+        transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .notification-feed-item:hover {
+        transform: translateY(-1px);
+        border-color: rgba(176,0,32,.25);
+        box-shadow: 0 8px 18px rgba(39,13,20,.08);
+    }
+    .notification-feed-item.is-unread {
+        border-color: rgba(176,0,32,.22);
+        background: linear-gradient(90deg, #fff7f8, #ffffff 34%);
+    }
+    .notification-letter-icon {
+        width: 46px;
+        height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: #fff0f2;
+        color: #a40021;
+        font-size: 14px;
+        font-weight: 900;
+        letter-spacing: 0;
+    }
+    .notification-feed-item.is-appointments .notification-letter-icon {
+        background: #fff7da;
+        color: #c66a04;
+    }
+    .notification-feed-item.is-health-records .notification-letter-icon {
+        background: #eaf8e9;
+        color: #17863f;
+    }
+    .notification-feed-item.is-announcements .notification-letter-icon {
+        background: #eaf3ff;
+        color: #2464ad;
+    }
+    .notification-feed-copy {
+        min-width: 0;
+        display: grid;
+        gap: 6px;
+    }
+    .notification-feed-heading {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 7px;
+    }
+    .notification-feed-heading strong {
+        color: #4f0c17;
+        font-size: 15px;
+        font-weight: 900;
+        line-height: 1.3;
+    }
+    .notification-category-badge {
+        padding: 4px 7px;
+        border-radius: 999px;
+        background: #fff0f2;
+        color: #a40021;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: .03em;
+        line-height: 1;
+        text-transform: uppercase;
+    }
+    .notification-feed-item.is-appointments .notification-category-badge {
+        background: #fff7da;
+        color: #a65300;
+    }
+    .notification-feed-item.is-health-records .notification-category-badge {
+        background: #eaf8e9;
+        color: #147533;
+    }
+    .notification-feed-item.is-announcements .notification-category-badge {
+        background: #eaf3ff;
+        color: #205b9e;
+    }
+    .notification-feed-message {
+        display: -webkit-box;
+        overflow: hidden;
+        color: #4b5563;
+        font-size: 13px;
+        line-height: 1.55;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+    .notification-feed-meta {
+        min-width: 0;
+        display: grid;
+        justify-items: end;
+        gap: 9px;
+    }
+    .notification-feed-meta time {
+        color: #7b8798;
+        font-size: 11px;
+        text-align: right;
+    }
+    .notification-feed-action {
+        min-height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 7px 11px;
+        border: 1px solid rgba(176,0,32,.17);
+        border-radius: 999px;
+        color: #8b0018;
+        font-size: 12px;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+    .notification-feed-action svg {
+        width: 12px;
+        height: 12px;
+        stroke-width: 2.2;
+    }
+    .notification-empty-state {
+        min-height: 230px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 30px;
+        color: #64748b;
+        text-align: center;
+    }
+    .notification-empty-icon {
+        width: 54px;
+        height: 54px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+        border-radius: 50%;
+        background: #fff0f2;
+        color: #a40021;
+    }
+    .notification-empty-icon svg { width: 28px; height: 28px; }
+    .notification-empty-state strong { color: #4f0c17; font-size: 14px; }
+    .notification-empty-state p { margin: 5px 0 0; font-size: 13px; }
+    .notification-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding-top: 13px;
+    }
+    .notification-page-number,
+    .notification-page-arrow {
+        width: 31px;
+        height: 31px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #e2e8f0;
+        border-radius: 7px;
+        background: #ffffff;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 850;
+        text-decoration: none;
+    }
+    .notification-page-arrow:first-child svg { transform: rotate(180deg); }
+    .notification-page-arrow svg { width: 14px; height: 14px; }
+    .notification-page-number.is-active {
+        border-color: #8b0018;
+        background: #8b0018;
+        color: #ffffff;
+    }
+    .notification-page-arrow.is-disabled {
+        opacity: .35;
+        pointer-events: none;
+    }
+    .notification-sidebar {
+        display: grid;
+        gap: 12px;
+    }
+    .notification-side-card {
+        padding: 16px;
+    }
+    .notification-side-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 13px;
+        color: #7f001d;
+        font-size: 15px;
+        font-weight: 900;
+    }
+    .notification-side-title > span {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 7px;
+        background: #fff0f2;
+        color: #a40021;
+    }
+    .notification-side-title svg { width: 18px; height: 18px; stroke-width: 1.9; }
+    .notification-center-list {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+    }
+    .notification-center-list > div {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    .notification-center-list dt {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #475569;
+        font-size: 12px;
+    }
+    .notification-center-list dt i {
+        width: 7px;
+        height: 7px;
+        border: 1.5px solid #64748b;
+        border-radius: 50%;
+    }
+    .notification-center-list dt i.is-unread {
+        border-color: #a40021;
+        background: #a40021;
+    }
+    .notification-center-list dd {
+        margin: 0;
+        color: #182033;
+        font-size: 13px;
+        font-weight: 900;
+    }
+    .notification-last-read {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid #e8edf2;
+        color: #64748b;
+        font-size: 11px;
+    }
+    .notification-last-read strong {
+        color: #334155;
+        font-weight: 800;
+        text-align: right;
+    }
+    .notification-quick-actions,
+    .notification-quick-actions form {
+        display: grid;
+        gap: 2px;
+        margin: 0;
+    }
+    .notification-quick-actions form { display: block; }
+    .notification-quick-actions a,
+    .notification-quick-actions button {
+        width: 100%;
+        min-height: 42px;
+        display: grid;
+        grid-template-columns: 19px minmax(0, 1fr) 15px;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 3px;
+        border: 0;
+        border-bottom: 1px solid #eef1f4;
+        box-sizing: border-box;
+        background: transparent;
+        color: #334155;
+        font: inherit;
+        font-size: 12px;
+        text-align: left;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .notification-quick-actions > :last-child { border-bottom: 0; }
+    .notification-quick-actions svg { width: 17px; height: 17px; color: #8b0018; stroke-width: 1.8; }
+    .notification-quick-actions a svg:last-child,
+    .notification-quick-actions button svg:last-child { color: #64748b; }
+    .notification-quick-actions a:hover,
+    .notification-quick-actions button:hover { color: #8b0018; }
+    .notification-quick-actions button:disabled {
+        opacity: .45;
+        cursor: default;
+    }
+    html[data-theme="dark"] .notification-stat-card,
+    html[data-theme="dark"] .notification-feed-card,
+    html[data-theme="dark"] .notification-side-card {
+        border-color: rgba(250,204,21,.15);
+        background: #101722;
+        box-shadow: 0 16px 34px rgba(0,0,0,.34);
+    }
+    html[data-theme="dark"] .notification-stat-copy strong,
+    html[data-theme="dark"] .notification-feed-heading strong,
+    html[data-theme="dark"] .notification-empty-state strong,
+    html[data-theme="dark"] .notification-center-list dd,
+    html[data-theme="dark"] .notification-last-read strong { color: #f8fafc; }
+    html[data-theme="dark"] .notification-stat-label,
+    html[data-theme="dark"] .notification-stat-copy small,
+    html[data-theme="dark"] .notification-feed-message,
+    html[data-theme="dark"] .notification-feed-meta time,
+    html[data-theme="dark"] .notification-center-list dt,
+    html[data-theme="dark"] .notification-last-read,
+    html[data-theme="dark"] .notification-empty-state { color: #aeb8c7; }
+    html[data-theme="dark"] .notification-filter-chip,
+    html[data-theme="dark"] .notification-feed-item,
+    html[data-theme="dark"] .notification-page-number,
+    html[data-theme="dark"] .notification-page-arrow {
+        border-color: rgba(148,163,184,.2);
+        background: #151e2d;
+        color: #e5e7eb;
+    }
+    html[data-theme="dark"] .notification-filter-chip:hover { border-color: rgba(250,204,21,.28); background: #192334; }
+    html[data-theme="dark"] .notification-filter-chip.is-active,
+    html[data-theme="dark"] .notification-page-number.is-active {
+        border-color: #facc15;
+        background: #760018;
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .notification-feed-item.is-unread {
+        border-color: rgba(250,204,21,.2);
+        background: linear-gradient(90deg, rgba(127,29,45,.32), #151e2d 38%);
+    }
+    html[data-theme="dark"] .notification-feed-action {
+        border-color: rgba(250,204,21,.2);
+        color: #fde68a;
+    }
+    html[data-theme="dark"] .notification-side-title { color: #facc15; }
+    html[data-theme="dark"] .notification-last-read,
+    html[data-theme="dark"] .notification-quick-actions a,
+    html[data-theme="dark"] .notification-quick-actions button { border-color: rgba(255,255,255,.09); }
+    html[data-theme="dark"] .notification-quick-actions a,
+    html[data-theme="dark"] .notification-quick-actions button { color: #e5e7eb; }
+    @media (max-width: 940px) {
+        .notification-content-grid { grid-template-columns: minmax(0, 1fr) 260px; }
+        .notification-feed-item { grid-template-columns: 46px minmax(0, 1fr) 126px; }
+    }
+    @media (max-width: 820px) {
+        .notification-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .notification-content-grid { grid-template-columns: 1fr; }
+        .notification-sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 620px) {
+        .notification-hero .page-hero-steps { grid-template-columns: 1fr; }
+        .notification-hero .page-hero-step { justify-content: flex-start; }
+        .notification-stat-grid { gap: 8px; }
+        .notification-stat-card {
+            min-height: 78px;
+            grid-template-columns: 36px minmax(0, 1fr);
+            padding: 10px;
+        }
+        .notification-stat-icon { width: 35px; height: 35px; }
+        .notification-stat-icon svg { width: 18px; height: 18px; }
+        .notification-feed-card { padding: 9px; }
+        .notification-feed-item {
+            grid-template-columns: 40px minmax(0, 1fr);
+            align-items: start;
+            padding: 11px;
+        }
+        .notification-feed-meta {
+            grid-column: 2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            justify-items: stretch;
+        }
+        .notification-feed-meta time { text-align: left; }
+        .notification-feed-action { min-height: 26px; padding: 5px 8px; }
+        .notification-sidebar { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 430px) {
+        .notification-stat-grid { grid-template-columns: 1fr; }
+        .notification-stat-card { min-height: 70px; }
+    }
 </style>
 @endpush
 
@@ -4755,7 +6104,7 @@
     </div>
     @endif
 
-    <div class="account-layout">
+    <div class="account-layout {{ in_array($accountView, ['health-record', 'notifications'], true) ? 'health-record-layout' : '' }}">
         @if(session('health_profile_submitted'))
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -5217,7 +6566,43 @@ document.addEventListener('DOMContentLoaded', function () {
         $puptasSyncStatus = $usesEmployeeHealthForm ? null : optional($healthProfileRecord)->puptas_sync_status;
         $puptasSyncMessage = $usesEmployeeHealthForm ? '' : trim((string) optional($healthProfileRecord)->puptas_sync_message);
         $puptasSyncedAt = $usesEmployeeHealthForm ? null : optional(optional($healthProfileRecord)->puptas_synced_at)->format('M d, Y g:i A');
-        $recordVerifiedAt = optional(optional($healthProfileRecord)->verified_at)->format('M d, Y g:i A');
+        $formatRecordTimestamp = function ($value): ?string {
+            if (!$value) {
+                return null;
+            }
+
+            try {
+                return \Carbon\Carbon::parse($value)->format('M d, Y g:i A');
+            } catch (\Throwable $exception) {
+                return null;
+            }
+        };
+        $latestHealthFormSubmission = collect($healthFormSubmissions ?? [])->first();
+        $recordSubmittedSource = optional($latestHealthFormSubmission)->submitted_at
+            ?: optional($healthProfileRecord)->resubmitted_at
+            ?: optional($healthProfileRecord)->created_at;
+        $recordApprovedSource = optional($latestHealthFormSubmission)->approved_at
+            ?: optional($healthProfileRecord)->verified_at;
+        $recordReviewSource = optional($healthProfileRecord)->review_started_at
+            ?: ($healthFormSubmitted ? $recordSubmittedSource : null);
+        $recordSubmittedAt = $formatRecordTimestamp($recordSubmittedSource);
+        $recordApprovedAt = $formatRecordTimestamp($recordApprovedSource);
+        $recordReviewAt = $formatRecordTimestamp($recordReviewSource);
+        $recordLastUpdatedAt = $formatRecordTimestamp(optional($healthProfileRecord)->updated_at ?: $recordSubmittedSource);
+        $recordHeroStatus = match (true) {
+            !$healthFormSubmitted => 'Not Submitted',
+            $isIssuedStatus => 'Approved',
+            $isRejectedStatus => 'Rejected',
+            $isResubmissionStatus => 'Pending Resubmission',
+            $isConditionalStatus => 'Pending Compliance',
+            default => 'Under Review',
+        };
+        $recordHeroStatusClass = match (true) {
+            $isIssuedStatus => 'is-approved',
+            $isRejectedStatus => 'is-rejected',
+            default => 'is-pending',
+        };
+        $clinicScheduleLabel = app(\App\Services\ClinicWorkflowService::class)->clinicScheduleLabel();
         $recordReferenceNumber = trim((string) optional($healthProfileRecord)->reference_number);
         $recordReferenceNumber = $recordReferenceNumber !== '' ? $recordReferenceNumber : trim((string) ($user->reference_number ?? '-'));
         $hasHealthDeclaration = filled(optional($healthProfileRecord)->health_declaration);
@@ -5268,33 +6653,59 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         $recordBirthday = trim((string) optional($healthProfileRecord)->birthday);
         $recordBirthday = $recordBirthday !== '' ? optional(\Carbon\Carbon::parse($recordBirthday))->format('M d, Y') : '-';
-        $recordAssessmentDate = optional(optional($healthProfileRecord)->assessment_date)->format('M d, Y');
         $recordChestXrayDate = optional(optional($healthProfileRecord)->xray_date)->format('M d, Y');
         $recordMedicalIssuedAt = optional(optional($healthProfileRecord)->med_cert_date)->format('M d, Y');
         $recordCourseValue = trim((string) (optional($healthProfileRecord)->course_college ?: ($accountProfileData['course_college'] ?? $user->course ?? '')));
         $recordCourseLabel = strcasecmp($recordCourseValue, 'Faculty / Staff') === 0 ? 'Classification' : 'Course';
+        $recordAcademicYear = trim((string) (optional($healthProfileRecord)->school_year ?: '2025-2026'));
     @endphp
-    <div class="page-hero">
-        <div class="page-hero-icon" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-            </svg>
-        </div>
-        <div class="page-hero-kicker">Health Record</div>
-        <h1 class="page-hero-title">Record Review</h1>
-        <p class="page-hero-text">Track your submitted profile, clinic approval, and uploaded digital copies in one place.</p>
-        <div class="page-hero-steps">
-            <div class="page-hero-step">
-                <span>Submitted</span>
+    <div class="health-record-dashboard">
+        <section class="page-hero health-record-hero" aria-labelledby="healthRecordReviewTitle">
+            <div class="health-record-hero-main">
+                <span class="health-record-hero-emblem" aria-hidden="true">
+                    <x-outline-icon name="clipboard-document-list" />
+                </span>
+                <div class="health-record-hero-copy">
+                    <div class="page-hero-kicker">Health Record</div>
+                    <h1 class="page-hero-title" id="healthRecordReviewTitle">Record Review</h1>
+                    <p class="page-hero-text">Track your submitted profile, clinic approval, and uploaded digital copies in one place.</p>
+                    <div class="page-hero-steps" aria-label="Health record progress">
+                        <div class="page-hero-step {{ $healthFormSubmitted ? 'is-complete' : '' }}">
+                            <span>Submitted</span>
+                        </div>
+                        <div class="page-hero-step {{ $isIssuedStatus ? 'is-complete' : ($healthFormSubmitted ? 'is-active' : '') }}">
+                            <span>Under Review</span>
+                        </div>
+                        <div class="page-hero-step {{ $isIssuedStatus ? 'is-complete' : '' }}">
+                            <span>Issued</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="page-hero-step">
-                <span>Under Review</span>
+            <div class="health-record-hero-overview">
+                <div class="health-record-hero-overview-item">
+                    <span class="health-record-hero-overview-icon {{ $recordHeroStatusClass }}" aria-hidden="true">
+                        <x-outline-icon name="{{ $isIssuedStatus ? 'check' : ($isRejectedStatus ? 'x-mark' : 'clock') }}" />
+                    </span>
+                    <span>
+                        <span class="health-record-hero-overview-label">Status</span>
+                        <strong class="health-record-hero-overview-value">{{ $recordHeroStatus }}</strong>
+                    </span>
+                </div>
+                <div class="health-record-hero-overview-item">
+                    <span class="health-record-hero-overview-icon" aria-hidden="true">
+                        <x-outline-icon name="calendar-days" />
+                    </span>
+                    <span>
+                        <span class="health-record-hero-overview-label">Last Updated</span>
+                        <strong class="health-record-hero-overview-value">{{ $recordLastUpdatedAt ?: '-' }}</strong>
+                    </span>
+                </div>
             </div>
-            <div class="page-hero-step">
-                <span>Issued</span>
-            </div>
-        </div>
-    </div>
+        </section>
+
+        <div class="health-record-content-grid">
+            <div class="health-record-main-column">
     @if(!empty($pendingHealthFormRequest))
         <div class="health-declaration-card">
             <div class="health-declaration-head">
@@ -5368,70 +6779,50 @@ document.addEventListener('DOMContentLoaded', function () {
             </span>
         </div>
 
-        <div class="health-status-steps">
-            <div class="health-step {{ $healthFormSubmitted ? 'is-complete' : '' }}">
-                <span class="health-step-icon">
-                    @if($healthFormSubmitted)
-                        <x-outline-icon name="check" />
-                    @else
-                        <x-outline-icon name="x-mark" />
-                    @endif
-                </span>
-                <div class="health-step-label">Submitted</div>
-            </div>
-            <div class="health-step {{ $healthFormSubmitted ? ($isIssuedStatus ? 'is-complete' : 'is-active') : '' }}">
-                <span class="health-step-icon">
-                    @if($isIssuedStatus)
-                        <x-outline-icon name="check" />
-                    @elseif($healthFormSubmitted)
-                        <x-outline-icon name="clock" />
-                    @else
-                        <x-outline-icon name="x-mark" />
-                    @endif
-                </span>
-                <div class="health-step-label">Verification</div>
-            </div>
-            <div class="health-step {{ $isIssuedStatus ? 'is-complete' : '' }}">
-                <span class="health-step-icon">
-                    @if($isIssuedStatus)
-                        <x-outline-icon name="check" />
-                    @else
-                        <x-outline-icon name="x-mark" />
-                    @endif
-                </span>
-                <div class="health-step-label">Issued</div>
-            </div>
-        </div>
+        <div class="health-record-status-body">
 
         @if($healthFormSubmitted)
             @if($isIssuedStatus)
-                <div class="health-status-summary">
-                    <span class="health-status-state issued"><x-outline-icon name="check" /> Approved</span>
+                <div class="health-status-summary is-approved">
+                    <span class="health-status-state issued"><x-outline-icon name="shield-check" /> Approved</span>
                     <p class="health-status-message">Your health profile is approved and already available in your health record.</p>
                 </div>
 
                 <div class="health-status-meta-grid">
                     <div class="health-status-meta">
-                        <span class="health-status-meta-label">{{ $referenceHeading }}</span>
-                        <span class="health-status-meta-value">{{ $recordReferenceNumber !== '' ? $recordReferenceNumber : '-' }}</span>
+                        <span class="health-status-meta-icon" aria-hidden="true"><x-outline-icon name="identification" /></span>
+                        <span class="health-status-meta-copy">
+                            <span class="health-status-meta-label">{{ $referenceHeading }}</span>
+                            <span class="health-status-meta-value">{{ $recordReferenceNumber !== '' ? $recordReferenceNumber : '-' }}</span>
+                        </span>
                     </div>
                     <div class="health-status-meta">
-                        <span class="health-status-meta-label">Assessment Date</span>
-                        <span class="health-status-meta-value">{{ $recordAssessmentDate ?: '-' }}</span>
+                        <span class="health-status-meta-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span>
+                        <span class="health-status-meta-copy">
+                            <span class="health-status-meta-label">Submitted At</span>
+                            <span class="health-status-meta-value">{{ $recordSubmittedAt ?: '-' }}</span>
+                        </span>
                     </div>
                     <div class="health-status-meta">
-                        <span class="health-status-meta-label">Verified At</span>
-                        <span class="health-status-meta-value">{{ $recordVerifiedAt ?: '-' }}</span>
+                        <span class="health-status-meta-icon" aria-hidden="true"><x-outline-icon name="clock" /></span>
+                        <span class="health-status-meta-copy">
+                            <span class="health-status-meta-label">Approve Date</span>
+                            <span class="health-status-meta-value">{{ $recordApprovedAt ?: '-' }}</span>
+                        </span>
                     </div>
                 </div>
 
                 @if($requiresHealthFormCorrection)
-                    <div class="health-status-sync missing">
-                        <x-outline-icon name="document-text" />
-                        <span>
+                    <div class="health-correction-notice">
+                        <x-outline-icon name="exclamation-circle" />
+                        <span class="health-correction-copy">
                             <strong>Health Form correction requested.</strong>
-                            {{ $recordPendingReason !== '' ? $recordPendingReason : 'Please update the information identified by the Medical Clinic.' }}
+                            <span>{{ $recordPendingReason !== '' ? $recordPendingReason : 'Health Form Correction' }}</span>
                         </span>
+                        <a href="{{ $healthFormRoute }}" class="health-correction-details">
+                            View Details
+                            <x-outline-icon name="arrow-long-right" />
+                        </a>
                     </div>
                 @endif
 
@@ -5480,30 +6871,36 @@ document.addEventListener('DOMContentLoaded', function () {
                 @endif
 
                 <div class="health-status-actions">
-                    <button type="button" class="btn-print-form approved" onclick="openHealthRecordModal()">
-                        <x-outline-icon name="eye" />
-                        View Record Details
+                    <button type="button" class="health-record-action-card is-view" onclick="openHealthRecordModal()">
+                        <span class="health-record-action-icon" aria-hidden="true"><x-outline-icon name="eye" /></span>
+                        <span class="health-record-action-copy">
+                            <span class="health-record-action-title">View Record Details</span>
+                            <span class="health-record-action-description">Review all submitted information and documents.</span>
+                        </span>
+                        <span class="health-record-action-arrow" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
                     </button>
-                    @if(!empty($pendingHealthFormRequest))
-                        <a href="{{ $healthFormRoute }}" class="btn-print-form pending">
-                            <x-outline-icon name="document-text" />
-                            Fill Up New Health Form
-                        </a>
-                    @endif
                     @if($requiresHealthFormCorrection)
-                        <a href="{{ $healthFormRoute }}" class="btn-print-form pending">
-                            <x-outline-icon name="pencil-square" />
-                            Edit Health Form
+                        <a href="{{ $healthFormRoute }}" class="health-record-action-card is-edit">
+                            <span class="health-record-action-icon" aria-hidden="true"><x-outline-icon name="pencil-square" /></span>
+                            <span class="health-record-action-copy">
+                                <span class="health-record-action-title">Edit Health Form</span>
+                                <span class="health-record-action-description">Update your health form information.</span>
+                            </span>
+                            <span class="health-record-action-arrow" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
                         </a>
                     @endif
-                    <a href="https://puptas.undraftedbsit2027.com/applicant-dashboard" class="health-status-link">
-                        <x-outline-icon name="document-text" />
-                        Proceed to Admission System
+                    <a href="{{ route('student.health_record.document', ['document' => 'health_form']) }}" class="health-record-action-card is-download" download>
+                        <span class="health-record-action-icon" aria-hidden="true"><x-outline-icon name="arrow-down-tray" /></span>
+                        <span class="health-record-action-copy">
+                            <span class="health-record-action-title">Download Health Form</span>
+                            <span class="health-record-action-description">Download a copy of your health form (PDF).</span>
+                        </span>
+                        <span class="health-record-action-arrow" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
                     </a>
                 </div>
-                <span class="health-status-note">Valid for Academic Year 2025-2026</span>
+                <span class="health-status-note"><x-outline-icon name="calendar-days" /> Valid for Academic Year {{ $recordAcademicYear }}</span>
             @else
-                <div class="health-status-summary">
+                <div class="health-status-summary is-pending">
                     @if($isConditionalStatus)
                         <span class="health-status-state pending"><x-outline-icon name="clock" /> {{ $isResubmissionStatus ? 'Pending Resubmission' : 'Pending Compliance' }}</span>
                     @endif
@@ -5512,47 +6909,74 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <div class="health-status-meta-grid">
                     <div class="health-status-meta">
-                        <span class="health-status-meta-label">{{ $referenceHeading }}</span>
-                        <span class="health-status-meta-value">{{ $recordReferenceNumber !== '' ? $recordReferenceNumber : '-' }}</span>
+                        <span class="health-status-meta-icon" aria-hidden="true"><x-outline-icon name="identification" /></span>
+                        <span class="health-status-meta-copy">
+                            <span class="health-status-meta-label">{{ $referenceHeading }}</span>
+                            <span class="health-status-meta-value">{{ $recordReferenceNumber !== '' ? $recordReferenceNumber : '-' }}</span>
+                        </span>
                     </div>
                     <div class="health-status-meta">
-                        <span class="health-status-meta-label">Submission Status</span>
-                        <span class="health-status-meta-value">{{ $recordSubmissionStatus }}</span>
+                        <span class="health-status-meta-icon" aria-hidden="true"><x-outline-icon name="calendar-days" /></span>
+                        <span class="health-status-meta-copy">
+                            <span class="health-status-meta-label">Submitted At</span>
+                            <span class="health-status-meta-value">{{ $recordSubmittedAt ?: '-' }}</span>
+                        </span>
                     </div>
                     <div class="health-status-meta">
-                        <span class="health-status-meta-label">{{ $isConditionalStatus ? 'Pending Reason' : 'View Mode' }}</span>
-                        <span class="health-status-meta-value">{{ $isConditionalStatus ? ($recordPendingReason !== '' ? $recordPendingReason : '-') : 'Digital copy and status only' }}</span>
+                        <span class="health-status-meta-icon" aria-hidden="true"><x-outline-icon name="clock" /></span>
+                        <span class="health-status-meta-copy">
+                            <span class="health-status-meta-label">Approve Date</span>
+                            <span class="health-status-meta-value">{{ $recordApprovedAt ?: '-' }}</span>
+                        </span>
                     </div>
                 </div>
 
+                @if($requiresHealthFormCorrection)
+                    <div class="health-correction-notice">
+                        <x-outline-icon name="exclamation-circle" />
+                        <span class="health-correction-copy">
+                            <strong>Health Form correction requested.</strong>
+                            <span>{{ $recordPendingReason !== '' ? $recordPendingReason : 'Health Form Correction' }}</span>
+                        </span>
+                        <a href="{{ $healthFormRoute }}" class="health-correction-details">
+                            View Details
+                            <x-outline-icon name="arrow-long-right" />
+                        </a>
+                    </div>
+                @endif
+
                 <div class="health-status-actions">
-                    <button type="button" class="btn-print-form pending" onclick="openHealthRecordModal()">
-                        <x-outline-icon name="eye" />
-                        View Submitted Record
+                    <button type="button" class="health-record-action-card is-view" onclick="openHealthRecordModal()">
+                        <span class="health-record-action-icon" aria-hidden="true"><x-outline-icon name="eye" /></span>
+                        <span class="health-record-action-copy">
+                            <span class="health-record-action-title">View Record Details</span>
+                            <span class="health-record-action-description">Review all submitted information and documents.</span>
+                        </span>
+                        <span class="health-record-action-arrow" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
                     </button>
-                    @if(!empty($pendingHealthFormRequest))
-                        <a href="{{ $healthFormRoute }}" class="btn-print-form pending">
-                            <x-outline-icon name="document-text" />
-                            Fill Up New Health Form
-                        </a>
-                    @endif
                     @if($requiresHealthFormCorrection)
-                        <a href="{{ $healthFormRoute }}" class="btn-print-form pending">
-                            <x-outline-icon name="document-text" />
-                            Edit Health Form
+                        <a href="{{ $healthFormRoute }}" class="health-record-action-card is-edit">
+                            <span class="health-record-action-icon" aria-hidden="true"><x-outline-icon name="pencil-square" /></span>
+                            <span class="health-record-action-copy">
+                                <span class="health-record-action-title">Edit Health Form</span>
+                                <span class="health-record-action-description">Update your health form information.</span>
+                            </span>
+                            <span class="health-record-action-arrow" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
                         </a>
                     @endif
-                    @if(!$isResubmissionStatus || $resubmissionDocuments->isEmpty())
-                        <button class="btn-print-form disabled" disabled>
-                            <x-outline-icon name="clock" />
-                            Approval Required
-                        </button>
-                    @endif
+                    <a href="{{ route('student.health_record.document', ['document' => 'health_form']) }}" class="health-record-action-card is-download" download>
+                        <span class="health-record-action-icon" aria-hidden="true"><x-outline-icon name="arrow-down-tray" /></span>
+                        <span class="health-record-action-copy">
+                            <span class="health-record-action-title">Download Health Form</span>
+                            <span class="health-record-action-description">Download a copy of your health form (PDF).</span>
+                        </span>
+                        <span class="health-record-action-arrow" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
+                    </a>
                 </div>
-                <span class="health-status-note">{{ $recordStatusNote }}</span>
+                <span class="health-status-note"><x-outline-icon name="calendar-days" /> {{ $recordStatusNote }}</span>
             @endif
             @else
-                <div class="health-status-summary">
+                <div class="health-status-summary is-incomplete">
                     <span class="health-status-state incomplete"><x-outline-icon name="x-mark" /> Not Yet Submitted</span>
                     <p class="health-status-message">Your health profile has not been submitted yet.</p>
                 </div>
@@ -5560,8 +6984,66 @@ document.addEventListener('DOMContentLoaded', function () {
                     <x-outline-icon name="document-text" />
                     Complete Form Now
                 </a>
-            <span class="health-status-note">Submit your health profile to unlock clinic review.</span>
+            <span class="health-status-note"><x-outline-icon name="calendar-days" /> Submit your health profile to unlock clinic review.</span>
         @endif
+        </div>
+    </div>
+            </div>
+
+            <aside class="health-record-sidebar" aria-label="Health record status and reminders">
+                <section class="health-record-side-card">
+                    <h2 class="health-record-side-title">
+                        <span class="health-record-side-title-icon is-yellow" aria-hidden="true">
+                            <x-outline-icon name="clipboard-document-list" />
+                        </span>
+                        Record Status
+                    </h2>
+                    <ol class="health-record-progress-list">
+                        <li class="health-record-progress-item {{ $healthFormSubmitted ? 'is-complete' : '' }}">
+                            <span class="health-record-progress-dot" aria-hidden="true"></span>
+                            <span class="health-record-progress-copy">
+                                <strong>Submitted</strong>
+                                <span>{{ $recordSubmittedAt ?: 'Waiting for submission' }}</span>
+                            </span>
+                            @if($healthFormSubmitted)
+                                <span class="health-record-progress-check" aria-label="Completed"><x-outline-icon name="check" /></span>
+                            @endif
+                        </li>
+                        <li class="health-record-progress-item {{ $isIssuedStatus ? 'is-complete' : ($healthFormSubmitted ? 'is-active' : '') }}">
+                            <span class="health-record-progress-dot" aria-hidden="true"></span>
+                            <span class="health-record-progress-copy">
+                                <strong>Under Review</strong>
+                                <span>{{ $recordReviewAt ?: ($healthFormSubmitted ? 'Clinic review in progress' : 'Waiting for submission') }}</span>
+                            </span>
+                            @if($isIssuedStatus)
+                                <span class="health-record-progress-check" aria-label="Completed"><x-outline-icon name="check" /></span>
+                            @endif
+                        </li>
+                        <li class="health-record-progress-item {{ $isIssuedStatus ? 'is-complete' : '' }}">
+                            <span class="health-record-progress-dot" aria-hidden="true"></span>
+                            <span class="health-record-progress-copy">
+                                <strong>Issued</strong>
+                                <span>{{ $recordApprovedAt ?: 'Waiting for clinic approval' }}</span>
+                            </span>
+                            @if($isIssuedStatus)
+                                <span class="health-record-progress-check" aria-label="Completed"><x-outline-icon name="check" /></span>
+                            @endif
+                        </li>
+                    </ol>
+                </section>
+
+                <section class="health-record-side-card is-reminder">
+                    <h2 class="health-record-side-title">
+                        <span class="health-record-side-title-icon" aria-hidden="true">
+                            <x-outline-icon name="bell" />
+                        </span>
+                        Important Reminder
+                    </h2>
+                    <p class="health-record-reminder-copy"><strong>Clinic schedule:</strong><br>{{ $clinicScheduleLabel }}</p>
+                    <p class="health-record-reminder-copy">Please make sure your selected clinic visit or follow-up time falls within this schedule.</p>
+                </section>
+            </aside>
+        </div>
     </div>
     @if($healthFormSubmitted && $healthProfileRecord)
         <div class="record-modal-overlay" id="healthRecordModal" aria-hidden="true">
@@ -6027,62 +7509,217 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
     @endif
 @else
-    <div class="page-hero">
-        <div class="page-hero-icon" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-            </svg>
-        </div>
-        <div class="page-hero-kicker">Clinic Updates</div>
-        <h1 class="page-hero-title">Notifications</h1>
-        <p class="page-hero-text">Stay updated with appointment changes, health record progress, and important clinic activity.</p>
-        <div class="page-hero-steps">
-            <div class="page-hero-step">
-                <span>Clinic Updates</span>
-            </div>
-            <div class="page-hero-step">
-                <span>Important Alerts</span>
-            </div>
-            <div class="page-hero-step">
-                <span>Status Changes</span>
-            </div>
-        </div>
-    </div>
-    <div class="widget-card">
-        <div class="notif-panel-head">
-            <h2 class="notif-panel-title">
-                <x-outline-icon name="bell" />
-                Notifications
-            </h2>
-            @if(collect($notifications ?? [])->isNotEmpty())
-                <form action="{{ route('student.notifications.read_all') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="notif-mark-btn">
-                        Mark all as read
-                    </button>
-                </form>
-            @endif
-        </div>
-
-        <div class="notif-list">
-            @forelse(collect($notifications ?? []) as $notif)
-                <a href="{{ route('student.notifications.open', ['notificationId' => $notif['id']]) }}"
-                   class="notif-record {{ !empty($notif['is_unread']) ? 'is-unread' : '' }}">
-                    <span class="notif-record-dot"></span>
-                    <span class="notif-record-content">
-                        <span class="notif-record-message">
-                            {{ $notif['message'] ?? 'Notification available.' }}
-                        </span>
-                        <span class="notif-record-time">
-                            {{ $notif['time'] ?? 'Just now' }}
-                        </span>
-                    </span>
-                </a>
-            @empty
-                <div class="notif-empty">
-                    No notifications available right now.
+    @php
+        $notificationCounts = array_merge([
+            'total' => 0,
+            'unread' => 0,
+            'appointments' => 0,
+            'health-records' => 0,
+            'announcements' => 0,
+            'system' => 0,
+        ], $notificationCounts ?? []);
+        $notificationFilter = $notificationFilter ?? 'all';
+        $allStudentNotifications = collect($notifications ?? [])->values();
+        $notificationItems = isset($notificationPaginator)
+            ? collect($notificationPaginator->items())
+            : $allStudentNotifications;
+        $lastNotification = $allStudentNotifications->first();
+        $notificationFilterLinks = [
+            'all' => ['All', $notificationCounts['total']],
+            'unread' => ['Unread', $notificationCounts['unread']],
+            'appointments' => ['Appointments', $notificationCounts['appointments']],
+            'health-records' => ['Health Records', $notificationCounts['health-records']],
+            'announcements' => ['Announcements', $notificationCounts['announcements']],
+            'system' => ['System', $notificationCounts['system']],
+        ];
+    @endphp
+    <div class="notification-dashboard">
+        <section class="page-hero health-record-hero notification-hero" aria-labelledby="studentNotificationsTitle">
+            <div class="health-record-hero-main">
+                <span class="health-record-hero-emblem" aria-hidden="true">
+                    <x-outline-icon name="bell" />
+                </span>
+                <div class="health-record-hero-copy">
+                    <div class="page-hero-kicker">Clinic Updates</div>
+                    <h1 class="page-hero-title" id="studentNotificationsTitle">Notifications</h1>
+                    <p class="page-hero-text">Stay updated with clinic announcements, appointment changes, and important health record activities.</p>
+                    <div class="page-hero-steps" aria-label="Notification categories">
+                        <div class="page-hero-step">
+                            <x-outline-icon name="megaphone" />
+                            <span>Clinic Updates</span>
+                        </div>
+                        <div class="page-hero-step">
+                            <x-outline-icon name="calendar-days" />
+                            <span>Appointment Alerts</span>
+                        </div>
+                        <div class="page-hero-step">
+                            <x-outline-icon name="clipboard-document-list" />
+                            <span>Record Status</span>
+                        </div>
+                    </div>
                 </div>
-            @endforelse
+            </div>
+            <div class="health-record-hero-overview">
+                <div class="health-record-hero-overview-item">
+                    <span class="health-record-hero-overview-icon" aria-hidden="true">
+                        <x-outline-icon name="envelope" />
+                    </span>
+                    <span>
+                        <span class="health-record-hero-overview-label">Unread</span>
+                        <strong class="health-record-hero-overview-value">{{ $notificationCounts['unread'] }} {{ \Illuminate\Support\Str::plural('Notification', $notificationCounts['unread']) }}</strong>
+                    </span>
+                </div>
+                <div class="health-record-hero-overview-item">
+                    <span class="health-record-hero-overview-icon" aria-hidden="true">
+                        <x-outline-icon name="clock" />
+                    </span>
+                    <span>
+                        <span class="health-record-hero-overview-label">Last Activity</span>
+                        <strong class="health-record-hero-overview-value">{{ $lastNotification['time'] ?? 'No activity yet' }}</strong>
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <section class="notification-stat-grid" aria-label="Notification summary">
+            <a href="{{ url('/student/account') }}?view=notifications&amp;filter=unread" class="notification-stat-card is-unread">
+                <span class="notification-stat-icon"><x-outline-icon name="envelope" /></span>
+                <span class="notification-stat-copy">
+                    <span class="notification-stat-label">Unread</span>
+                    <strong>{{ $notificationCounts['unread'] }}</strong>
+                    <small>New notifications</small>
+                </span>
+            </a>
+            <a href="{{ url('/student/account') }}?view=notifications&amp;filter=appointments" class="notification-stat-card is-appointments">
+                <span class="notification-stat-icon"><x-outline-icon name="calendar-days" /></span>
+                <span class="notification-stat-copy">
+                    <span class="notification-stat-label">Appointments</span>
+                    <strong>{{ $notificationCounts['appointments'] }}</strong>
+                    <small>Appointment related</small>
+                </span>
+            </a>
+            <a href="{{ url('/student/account') }}?view=notifications&amp;filter=health-records" class="notification-stat-card is-health">
+                <span class="notification-stat-icon"><x-outline-icon name="clipboard-document-list" /></span>
+                <span class="notification-stat-copy">
+                    <span class="notification-stat-label">Health Records</span>
+                    <strong>{{ $notificationCounts['health-records'] }}</strong>
+                    <small>Record related</small>
+                </span>
+            </a>
+            <a href="{{ url('/student/account') }}?view=notifications&amp;filter=announcements" class="notification-stat-card is-announcements">
+                <span class="notification-stat-icon"><x-outline-icon name="megaphone" /></span>
+                <span class="notification-stat-copy">
+                    <span class="notification-stat-label">Announcements</span>
+                    <strong>{{ $notificationCounts['announcements'] }}</strong>
+                    <small>Clinic announcements</small>
+                </span>
+            </a>
+        </section>
+
+        <div class="notification-content-grid">
+            <main class="notification-feed-card">
+                <nav class="notification-filter-row" aria-label="Filter notifications">
+                    @foreach($notificationFilterLinks as $filterKey => [$filterLabel, $filterCount])
+                        <a
+                            href="{{ url('/student/account') }}?view=notifications&amp;filter={{ $filterKey }}"
+                            class="notification-filter-chip {{ $notificationFilter === $filterKey ? 'is-active' : '' }}"
+                            @if($notificationFilter === $filterKey) aria-current="page" @endif
+                        >
+                            {{ $filterLabel }} <span>{{ $filterCount }}</span>
+                        </a>
+                    @endforeach
+                </nav>
+
+                <div class="notification-feed-list">
+                    @forelse($notificationItems as $notif)
+                        <a
+                            href="{{ route('student.notifications.open', ['notificationId' => $notif['id']]) }}"
+                            class="notification-feed-item is-{{ $notif['category'] ?? 'system' }} {{ !empty($notif['is_unread']) ? 'is-unread' : '' }}"
+                        >
+                            <span class="notification-letter-icon" aria-hidden="true">{{ $notif['letter_icon'] ?? 'SY' }}</span>
+                            <span class="notification-feed-copy">
+                                <span class="notification-feed-heading">
+                                    <strong>{{ $notif['title'] ?? 'Clinic Update' }}</strong>
+                                    <span class="notification-category-badge">{{ $notif['category_label'] ?? 'System' }}</span>
+                                </span>
+                                <span class="notification-feed-message">{{ $notif['message'] ?? 'Notification available.' }}</span>
+                            </span>
+                            <span class="notification-feed-meta">
+                                <time>{{ $notif['time'] ?? 'Just now' }}</time>
+                                <span class="notification-feed-action">
+                                    {{ $notif['action_label'] ?? 'Open' }}
+                                    <x-outline-icon name="chevron-right" />
+                                </span>
+                            </span>
+                        </a>
+                    @empty
+                        <div class="notification-empty-state">
+                            <span class="notification-empty-icon"><x-outline-icon name="bell" /></span>
+                            <strong>No notifications found</strong>
+                            <p>There are no updates in this category right now.</p>
+                        </div>
+                    @endforelse
+                </div>
+
+                @if(isset($notificationPaginator) && $notificationPaginator->hasPages())
+                    <nav class="notification-pagination" aria-label="Notification pages">
+                        <a href="{{ $notificationPaginator->previousPageUrl() ?: '#' }}" class="notification-page-arrow {{ $notificationPaginator->onFirstPage() ? 'is-disabled' : '' }}" aria-label="Previous page">
+                            <x-outline-icon name="chevron-right" />
+                        </a>
+                        @for($page = 1; $page <= $notificationPaginator->lastPage(); $page++)
+                            <a href="{{ $notificationPaginator->url($page) }}" class="notification-page-number {{ $notificationPaginator->currentPage() === $page ? 'is-active' : '' }}" @if($notificationPaginator->currentPage() === $page) aria-current="page" @endif>{{ $page }}</a>
+                        @endfor
+                        <a href="{{ $notificationPaginator->nextPageUrl() ?: '#' }}" class="notification-page-arrow {{ !$notificationPaginator->hasMorePages() ? 'is-disabled' : '' }}" aria-label="Next page">
+                            <x-outline-icon name="chevron-right" />
+                        </a>
+                    </nav>
+                @endif
+            </main>
+
+            <aside class="notification-sidebar">
+                <section class="notification-side-card">
+                    <h2 class="notification-side-title">
+                        <span><x-outline-icon name="chart-bar" /></span>
+                        Notification Center
+                    </h2>
+                    <dl class="notification-center-list">
+                        <div><dt><i class="is-unread"></i>Unread</dt><dd>{{ $notificationCounts['unread'] }}</dd></div>
+                        <div><dt><i></i>Read</dt><dd>{{ max(0, $notificationCounts['total'] - $notificationCounts['unread']) }}</dd></div>
+                        <div><dt><i></i>Total Notifications</dt><dd>{{ $notificationCounts['total'] }}</dd></div>
+                    </dl>
+                    <div class="notification-last-read">
+                        <span>Last Activity</span>
+                        <strong>{{ $lastNotification['time'] ?? 'No activity yet' }}</strong>
+                    </div>
+                </section>
+
+                <section class="notification-side-card">
+                    <h2 class="notification-side-title">
+                        <span><x-outline-icon name="sparkles" /></span>
+                        Quick Actions
+                    </h2>
+                    <div class="notification-quick-actions">
+                        <form action="{{ route('student.notifications.read_all') }}" method="POST">
+                            @csrf
+                            <button type="submit" {{ $notificationCounts['unread'] === 0 ? 'disabled' : '' }}>
+                                <x-outline-icon name="envelope" />
+                                <span>Mark all as read</span>
+                                <x-outline-icon name="chevron-right" />
+                            </button>
+                        </form>
+                        <a href="{{ url('/student/account') }}?view=notifications&amp;filter=unread">
+                            <x-outline-icon name="bell" />
+                            <span>View unread updates</span>
+                            <x-outline-icon name="chevron-right" />
+                        </a>
+                        <a href="{{ url('/student/account') }}?view=notifications&amp;filter=all">
+                            <x-outline-icon name="clipboard-document-list" />
+                            <span>View all notifications</span>
+                            <x-outline-icon name="chevron-right" />
+                        </a>
+                    </div>
+                </section>
+            </aside>
         </div>
     </div>
 @endif
