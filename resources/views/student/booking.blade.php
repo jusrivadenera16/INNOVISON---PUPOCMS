@@ -844,9 +844,7 @@
         align-items: center;
         gap: 12px;
         padding: 18px 58px 18px 22px;
-        background:
-            radial-gradient(circle at 92% 10%, rgba(250, 204, 21, .16), transparent 34%),
-            linear-gradient(135deg, #8f1823 0%, #70131B 55%, #5f1017 100%);
+        background: linear-gradient(135deg, #70131B, #8f2230);
         border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     }
     .confirmation-head-badge {

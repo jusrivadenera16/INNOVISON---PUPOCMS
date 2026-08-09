@@ -4823,6 +4823,114 @@
         box-shadow: 0 12px 24px rgba(112, 19, 27, 0.10), 0 3px 10px rgba(15, 23, 42, 0.05) !important;
     }
 
+    /* Standard modal chrome: pending lists, submitted requirements, and filter */
+    #pendingApprovalInfoModal .awaiting-links-modal-shell,
+    #pendingConditionalInfoModal .awaiting-links-modal-shell,
+    #verifyApprovalModal .verify-approval-modal-card,
+    #healthFilterModal .health-filter-modal-card {
+        border: 1px solid rgba(250, 204, 21, .34) !important;
+    }
+
+    #pendingApprovalInfoModal .awaiting-links-modal-head,
+    #pendingConditionalInfoModal .awaiting-links-modal-head,
+    #verifyApprovalModal .verify-approval-modal-head,
+    #healthFilterModal .health-filter-modal-head,
+    html[data-theme="dark"] #pendingApprovalInfoModal .awaiting-links-modal-head,
+    html[data-theme="dark"] #pendingConditionalInfoModal .awaiting-links-modal-head,
+    html[data-theme="dark"] #verifyApprovalModal .verify-approval-modal-head,
+    html[data-theme="dark"] #healthFilterModal .health-filter-modal-head {
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+    }
+
+    #pendingApprovalInfoModal .awaiting-links-modal-badge,
+    #pendingConditionalInfoModal .awaiting-links-modal-badge,
+    #verifyApprovalModal .verify-approval-modal-badge,
+    #healthFilterModal .health-filter-modal-badge,
+    #healthFilterModal .health-filter-modal-badge svg {
+        color: #ffffff !important;
+        stroke: currentColor !important;
+    }
+
+    #pendingApprovalInfoModal .awaiting-links-modal-close,
+    #pendingConditionalInfoModal .awaiting-links-modal-close,
+    #verifyApprovalModal .verify-approval-modal-close,
+    #healthFilterModal .health-filter-modal-close,
+    html[data-theme="dark"] #pendingApprovalInfoModal .awaiting-links-modal-close,
+    html[data-theme="dark"] #pendingConditionalInfoModal .awaiting-links-modal-close,
+    html[data-theme="dark"] #verifyApprovalModal .verify-approval-modal-close,
+    html[data-theme="dark"] #healthFilterModal .health-filter-modal-close {
+        position: relative !important;
+        overflow: hidden !important;
+        width: 40px !important;
+        min-width: 40px !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        flex: 0 0 40px !important;
+        border: 1px solid #8f2230 !important;
+        border-radius: 999px !important;
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+        color: #ffffff !important;
+        box-shadow: 0 8px 18px rgba(77, 13, 23, .24) !important;
+        transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease !important;
+    }
+
+    #pendingApprovalInfoModal .awaiting-links-modal-close::before,
+    #pendingConditionalInfoModal .awaiting-links-modal-close::before,
+    #verifyApprovalModal .verify-approval-modal-close::before,
+    #healthFilterModal .health-filter-modal-close::after {
+        content: "" !important;
+        position: absolute !important;
+        top: -35% !important;
+        left: -72% !important;
+        width: 48% !important;
+        height: 170% !important;
+        border-radius: 999px !important;
+        background: linear-gradient(120deg, transparent 0%, rgba(255, 244, 180, .18) 34%, rgba(255, 244, 180, .58) 50%, rgba(255, 244, 180, .18) 66%, transparent 100%) !important;
+        transform: skewX(-18deg) !important;
+        transition: left .48s ease !important;
+        pointer-events: none !important;
+        z-index: 0 !important;
+    }
+
+    #pendingApprovalInfoModal .awaiting-links-modal-close svg,
+    #pendingConditionalInfoModal .awaiting-links-modal-close svg,
+    #verifyApprovalModal .verify-approval-modal-close svg,
+    #healthFilterModal .health-filter-modal-close svg {
+        position: relative !important;
+        z-index: 1 !important;
+        width: 18px !important;
+        height: 18px !important;
+        color: currentColor !important;
+        stroke: currentColor !important;
+    }
+
+    #pendingApprovalInfoModal .awaiting-links-modal-close:hover,
+    #pendingApprovalInfoModal .awaiting-links-modal-close:focus-visible,
+    #pendingConditionalInfoModal .awaiting-links-modal-close:hover,
+    #pendingConditionalInfoModal .awaiting-links-modal-close:focus-visible,
+    #verifyApprovalModal .verify-approval-modal-close:hover,
+    #verifyApprovalModal .verify-approval-modal-close:focus-visible,
+    #healthFilterModal .health-filter-modal-close:hover,
+    #healthFilterModal .health-filter-modal-close:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 10px 22px rgba(250, 204, 21, .22) !important;
+        outline: none !important;
+    }
+
+    #pendingApprovalInfoModal .awaiting-links-modal-close:hover::before,
+    #pendingApprovalInfoModal .awaiting-links-modal-close:focus-visible::before,
+    #pendingConditionalInfoModal .awaiting-links-modal-close:hover::before,
+    #pendingConditionalInfoModal .awaiting-links-modal-close:focus-visible::before,
+    #verifyApprovalModal .verify-approval-modal-close:hover::before,
+    #verifyApprovalModal .verify-approval-modal-close:focus-visible::before,
+    #healthFilterModal .health-filter-modal-close:hover::after,
+    #healthFilterModal .health-filter-modal-close:focus-visible::after {
+        left: 128% !important;
+    }
+
 </style>
 @endpush
 
@@ -4990,7 +5098,7 @@
                 <div class="health-summary-modern-copy">
                     <span class="health-summary-modern-label">With Medical Conditions</span>
                     <span class="health-summary-modern-count" data-health-record-stat="with_conditions">{{ $healthSummaryStats['with_conditions'] }}</span>
-                    <span class="health-summary-modern-note">Approved records only</span>
+                    <span class="health-summary-modern-note">Approved records</span>
                 </div>
             </div>
             <button type="button" class="health-summary-modern-card health-summary-info-btn is-pending is-clickable" id="pendingApprovalInfoBtn" onclick="document.getElementById('pendingApprovalInfoModal').style.display='flex';">

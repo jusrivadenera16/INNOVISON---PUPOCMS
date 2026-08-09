@@ -944,7 +944,7 @@
         justify-content: space-between;
         gap: 18px;
         padding: 22px 24px;
-        background: linear-gradient(135deg, #8B0000, #b91c1c);
+        background: linear-gradient(135deg, #70131B, #8f2230);
         color: #fff;
     }
     .announcement-modal-eyebrow {
@@ -1034,6 +1034,23 @@
         border-radius: 999px;
         background: rgba(112, 19, 27, .55);
     }
+    .announcement-modal-published {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+        padding: 12px 24px 16px;
+        border-top: 1px solid rgba(112, 19, 27, .1);
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 650;
+    }
+    .announcement-modal-published svg {
+        width: 15px;
+        height: 15px;
+        color: #8b0b24;
+    }
     .announcement-all-card {
         width: min(760px, 100%);
         max-height: min(780px, calc(100vh - 48px));
@@ -1117,6 +1134,13 @@
     }
     html[data-theme="dark"] .announcement-modal-body {
         color: #f8fafc;
+    }
+    html[data-theme="dark"] .announcement-modal-published {
+        border-top-color: rgba(255,255,255,.1);
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .announcement-modal-published svg {
+        color: #facc15;
     }
     html.announcement-modal-open,
     body.announcement-modal-open {
@@ -2670,9 +2694,11 @@
               class="home-announcement-card {{ $announcementPosition }}"
               data-announcement-slide
               data-announcement-detail
+              data-announcement-id="{{ $announcement['id'] ?? '' }}"
               data-priority="{{ e($announcement['priority'] ?: 'ANNOUNCEMENT') }}"
               data-title="{{ e($announcement['title']) }}"
               data-message="{{ e($announcement['message']) }}"
+              data-date="{{ e($announcement['date'] ?? now(config('app.timezone'))->format('M j, Y')) }}"
               role="button"
               tabindex="0"
               aria-label="View announcement: {{ $announcement['title'] }}"
@@ -2880,8 +2906,8 @@
             <h4><span class="footer-heading-icon"><x-outline-icon name="heart-pulse" /></span><span>Services</span></h4>
             <ul class="footer-links">
               <li><span class="footer-service-item"><x-outline-icon name="phone" class="footer-service-icon" /><span>General Consultation</span></span></li>
-              <li><span class="footer-service-item"><x-outline-icon name="heart-pulse" class="footer-service-icon" /><span>Mental Health Support</span></span></li>
-              <li><span class="footer-service-item"><x-outline-icon name="link" class="footer-service-icon" /><span>Prescription Services</span></span></li>
+              <li><span class="footer-service-item"><x-outline-icon name="heart-pulse" class="footer-service-icon" /><span>Blood Pressure Monitoring</span></span></li>
+              <li><span class="footer-service-item"><x-outline-icon name="link" class="footer-service-icon" /><span>Medical Clearance Issuance</span></span></li>
             </ul>
           </div>
 
@@ -2940,6 +2966,10 @@
           </button>
         </div>
         <div class="announcement-modal-body" id="announcementDetailMessage"></div>
+        <div class="announcement-modal-published">
+          <x-outline-icon name="calendar-days" />
+          <span>Published <time id="announcementDetailDate"></time></span>
+        </div>
       </section>
     </div>
 
@@ -2960,9 +2990,11 @@
               type="button"
               class="announcement-all-item"
               data-announcement-list-item
+              data-announcement-id="{{ $announcement['id'] ?? '' }}"
               data-priority="{{ e($announcement['priority'] ?: 'ANNOUNCEMENT') }}"
               data-title="{{ e($announcement['title']) }}"
               data-message="{{ e($announcement['message']) }}"
+              data-date="{{ e($announcement['date'] ?? now(config('app.timezone'))->format('M j, Y')) }}"
             >
               <span class="announcement-all-item-icon" aria-hidden="true">
                 <x-outline-icon name="megaphone" />
@@ -2988,6 +3020,7 @@
         const announcementDetailPriority = document.getElementById('announcementDetailPriority');
         const announcementDetailTitle = document.getElementById('announcementDetailTitle');
         const announcementDetailMessage = document.getElementById('announcementDetailMessage');
+        const announcementDetailDate = document.getElementById('announcementDetailDate');
         const viewAllAnnouncementsBtn = document.getElementById('viewAllAnnouncementsBtn');
         const allAnnouncementsModal = document.getElementById('allAnnouncementsModal');
         const allAnnouncementsClose = document.getElementById('allAnnouncementsClose');
@@ -3065,6 +3098,7 @@
             if (announcementDetailPriority) announcementDetailPriority.textContent = trigger.dataset.priority || 'ANNOUNCEMENT';
             if (announcementDetailTitle) announcementDetailTitle.textContent = trigger.dataset.title || 'Announcement';
             if (announcementDetailMessage) announcementDetailMessage.textContent = trigger.dataset.message || '';
+            if (announcementDetailDate) announcementDetailDate.textContent = trigger.dataset.date || '';
           }
 
           announcementDetailModal.classList.toggle('is-open', isOpen);
@@ -3110,6 +3144,20 @@
             setAnnouncementDetailOpen(true, announcementCard);
           });
         });
+
+        const requestedAnnouncementId = new URLSearchParams(window.location.search).get('announcement');
+        if (requestedAnnouncementId) {
+          const requestedAnnouncement = Array.from(document.querySelectorAll('[data-announcement-id]'))
+            .find(function (item) {
+              return item.dataset.announcementId === requestedAnnouncementId;
+            });
+
+          if (requestedAnnouncement) {
+            window.setTimeout(function () {
+              setAnnouncementDetailOpen(true, requestedAnnouncement);
+            }, 180);
+          }
+        }
 
         announcementDetailClose?.addEventListener('click', function () {
           setAnnouncementDetailOpen(false);

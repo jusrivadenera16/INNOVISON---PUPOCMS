@@ -4,12 +4,14 @@
 
 @push('styles')
 <style>
-      body:has(.history-hero-icon) {
+      body:has(.history-hero-icon),
+      body:has(.history-modern-page) {
           background:
               linear-gradient(180deg, rgba(255, 250, 250, 0.70), rgba(255, 255, 255, 0.58) 42%, rgba(245, 248, 247, 0.72) 100%),
               url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat fixed !important;
       }
-      html[data-theme="dark"] body:has(.history-hero-icon) {
+      html[data-theme="dark"] body:has(.history-hero-icon),
+      html[data-theme="dark"] body:has(.history-modern-page) {
           background:
               linear-gradient(180deg, rgba(2, 6, 23, 0.82), rgba(15, 23, 42, 0.74) 42%, rgba(2, 6, 23, 0.84) 100%),
               url('{{ asset("images/student-bg.png") }}') center top / cover no-repeat fixed !important;
@@ -976,10 +978,619 @@
               justify-content: flex-start;
           }
       }
+
+      /* --- APPOINTMENT HISTORY REDESIGN --- */
+      .history-modern-page {
+          width: min(1060px, calc(100% - 40px));
+          margin: 0 auto;
+          padding: 0 0 60px;
+      }
+      .history-modern-hero {
+          position: relative;
+          min-height: 205px;
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 310px;
+          align-items: stretch;
+          gap: 28px;
+          margin: -8px 0 16px;
+          padding: 28px 30px;
+          overflow: hidden;
+          border: 1px solid rgba(250,204,21,.28);
+          border-radius: 10px;
+          box-sizing: border-box;
+          background: linear-gradient(90deg, rgba(111,0,31,.99), rgba(105,0,29,.97) 52%, rgba(71,0,22,.82));
+          box-shadow: 0 18px 38px rgba(76,5,25,.2);
+          color: #ffffff;
+      }
+      .history-modern-hero::before {
+          content: "";
+          position: absolute;
+          inset: 0 0 0 43%;
+          background: url('{{ asset("images/PUPBG.jpg") }}') right center / cover no-repeat;
+          opacity: .16;
+          filter: saturate(.3) contrast(1.1);
+          -webkit-mask-image: linear-gradient(90deg, transparent, rgba(0,0,0,.8) 30%, #000);
+          mask-image: linear-gradient(90deg, transparent, rgba(0,0,0,.8) 30%, #000);
+          pointer-events: none;
+      }
+      .history-modern-hero::after {
+          content: "";
+          position: absolute;
+          right: 22px;
+          top: 12px;
+          width: 170px;
+          height: 170px;
+          border: 8px solid rgba(255,255,255,.035);
+          border-radius: 50%;
+          box-shadow: 0 0 0 18px rgba(255,255,255,.018);
+          pointer-events: none;
+      }
+      .history-modern-hero-main,
+      .history-modern-hero-overview {
+          position: relative;
+          z-index: 1;
+      }
+      .history-modern-hero-main {
+          display: grid;
+          grid-template-columns: 112px minmax(0, 1fr);
+          align-items: center;
+          gap: 22px;
+      }
+      .history-modern-emblem {
+          width: 106px;
+          height: 106px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid rgba(255,255,255,.88);
+          border-radius: 50%;
+          background: linear-gradient(145deg, rgba(255,255,255,.98), rgba(255,239,241,.94));
+          color: #8b0018;
+          box-shadow: 0 14px 30px rgba(27,0,9,.28);
+      }
+      .history-modern-emblem svg {
+          width: 56px;
+          height: 56px;
+          stroke-width: 1.45;
+      }
+      .history-modern-kicker {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 5px;
+          color: #facc15;
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+      }
+      .history-modern-kicker svg { width: 13px; height: 13px; }
+      .history-modern-title {
+          margin: 0 0 6px;
+          color: #ffffff;
+          font-size: clamp(27px, 3vw, 34px);
+          font-weight: 900;
+          letter-spacing: 0;
+      }
+      .history-modern-description {
+          max-width: 510px;
+          margin: 0;
+          color: rgba(255,255,255,.88);
+          font-size: 13px;
+          line-height: 1.55;
+      }
+      .history-modern-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 7px;
+          margin-top: 13px;
+      }
+      .history-modern-chip {
+          min-height: 30px;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 6px 10px;
+          border: 1px solid rgba(255,255,255,.1);
+          border-radius: 999px;
+          background: rgba(255,255,255,.1);
+          color: #ffffff;
+          font-size: 10px;
+          font-weight: 750;
+      }
+      .history-modern-chip svg { width: 14px; height: 14px; stroke-width: 2; }
+      .history-modern-hero-overview {
+          display: grid;
+          align-content: center;
+          padding-left: 26px;
+          border-left: 1px solid rgba(255,255,255,.18);
+      }
+      .history-modern-overview-item {
+          display: grid;
+          grid-template-columns: 42px minmax(0, 1fr);
+          align-items: center;
+          gap: 12px;
+          padding: 14px 0;
+      }
+      .history-modern-overview-item + .history-modern-overview-item {
+          border-top: 1px solid rgba(255,255,255,.14);
+      }
+      .history-modern-overview-icon {
+          width: 40px;
+          height: 40px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(250,204,21,.3);
+          border-radius: 50%;
+          background: rgba(27,0,9,.24);
+          color: #facc15;
+      }
+      .history-modern-overview-icon svg { width: 20px; height: 20px; stroke-width: 2; }
+      .history-modern-overview-label {
+          display: block;
+          margin-bottom: 3px;
+          color: rgba(255,255,255,.68);
+          font-size: 9px;
+          font-weight: 850;
+          letter-spacing: .06em;
+          text-transform: uppercase;
+      }
+      .history-modern-overview-value {
+          display: block;
+          color: #ffffff;
+          font-size: 14px;
+          font-weight: 850;
+          line-height: 1.35;
+      }
+      .history-modern-stat-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 10px;
+          margin-bottom: 14px;
+      }
+      .history-modern-stat-card {
+          min-height: 98px;
+          display: grid;
+          grid-template-columns: 48px minmax(0, 1fr);
+          align-items: center;
+          gap: 10px;
+          padding: 13px 14px;
+          border: 1px solid rgba(112,19,27,.11);
+          border-radius: 8px;
+          background: rgba(255,255,255,.97);
+          box-shadow: 0 10px 24px rgba(39,13,20,.07);
+      }
+      .history-modern-stat-icon {
+          width: 46px;
+          height: 46px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          background: #fff0f2;
+          color: #a40021;
+      }
+      .history-modern-stat-icon svg { width: 24px; height: 24px; stroke-width: 1.8; }
+      .history-modern-stat-card.is-upcoming .history-modern-stat-icon { background: #fff7da; color: #d97706; }
+      .history-modern-stat-card.is-completed .history-modern-stat-icon { background: #eaf8e9; color: #199447; }
+      .history-modern-stat-card.is-missed .history-modern-stat-icon { background: #fff0f2; color: #dc334d; }
+      .history-modern-stat-copy { min-width: 0; display: grid; }
+      .history-modern-stat-label {
+          color: #64748b;
+          font-size: 12px;
+          font-weight: 850;
+          letter-spacing: .04em;
+          text-transform: uppercase;
+      }
+      .history-modern-stat-value {
+          margin: 2px 0 3px;
+          color: #182033;
+          font-size: 26px;
+          font-weight: 900;
+          line-height: 1;
+      }
+      .history-modern-stat-note { color: #718096; font-size: 12px; line-height: 1.4; }
+      .history-modern-content-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 280px;
+          gap: 14px;
+          align-items: start;
+      }
+      .history-modern-list-panel,
+      .history-modern-side-card {
+          border: 1px solid rgba(112,19,27,.12);
+          border-radius: 8px;
+          background: rgba(255,255,255,.97);
+          box-shadow: 0 14px 30px rgba(39,13,20,.08);
+      }
+      .history-modern-list-panel { min-width: 0; padding: 12px; }
+      .history-modern-filter-row {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 7px;
+          padding-bottom: 12px;
+      }
+      .history-modern-filter-btn {
+          min-height: 34px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 8px 13px;
+          border: 1px solid rgba(112,19,27,.15);
+          border-radius: 999px;
+          background: #ffffff;
+          color: #6f1624;
+          font: inherit;
+          font-size: 12px;
+          font-weight: 850;
+          cursor: pointer;
+      }
+      .history-modern-filter-btn svg { width: 13px; height: 13px; stroke-width: 2; }
+      .history-modern-filter-btn:hover { background: #fff7f8; border-color: rgba(176,0,32,.32); }
+      .history-modern-filter-btn.is-active { background: #8b0018; border-color: #8b0018; color: #ffffff; }
+      .history-appointment-list {
+          position: relative;
+          display: grid;
+          gap: 8px;
+          padding-left: 20px;
+      }
+      .history-appointment-list::before {
+          content: "";
+          position: absolute;
+          left: 7px;
+          top: 22px;
+          bottom: 22px;
+          width: 1px;
+          background: #d8dee7;
+      }
+      .history-modern-entry {
+          position: relative;
+          min-width: 0;
+      }
+      .history-modern-entry[hidden] { display: none !important; }
+      .history-entry-dot {
+          position: absolute;
+          left: -19px;
+          top: 43px;
+          z-index: 1;
+          width: 14px;
+          height: 14px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid #8b0018;
+          border-radius: 50%;
+          box-sizing: border-box;
+          background: #ffffff;
+          color: #ffffff;
+      }
+      .history-entry-dot svg { width: 8px; height: 8px; stroke-width: 3; }
+      .history-entry-dot.status-completed { border-color: #16a34a; background: #16a34a; }
+      .history-entry-dot.status-pending,
+      .history-entry-dot.status-approved { border-color: #e59600; background: #fff; }
+      .history-entry-dot.status-missed,
+      .history-entry-dot.status-expired { border-color: #dc334d; background: #dc334d; }
+      .history-entry-dot.status-cancelled { border-color: #64748b; background: #fff; }
+      .history-entry-month {
+          margin: 0 0 5px 8px;
+          color: #7f001d;
+          font-size: 9px;
+          font-weight: 900;
+          letter-spacing: .04em;
+          text-transform: uppercase;
+      }
+      .history-modern-appointment-card {
+          min-width: 0;
+          display: grid;
+          grid-template-columns: 48px minmax(0, 1fr) 138px;
+          align-items: center;
+          gap: 11px;
+          padding: 14px;
+          border: 1px solid #e4e8ee;
+          border-radius: 7px;
+          background: #ffffff;
+          transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+      }
+      .history-modern-appointment-card:hover {
+          transform: translateY(-1px);
+          border-color: rgba(176,0,32,.24);
+          box-shadow: 0 8px 18px rgba(39,13,20,.08);
+      }
+      .history-service-icon {
+          width: 46px;
+          height: 46px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          background: #fff0f2;
+          color: #a40021;
+      }
+      .history-service-icon.is-bp { background: #eaf8e9; color: #17863f; }
+      .history-service-icon.is-other { background: #f1f5f9; color: #64748b; }
+      .history-service-icon.is-status-approved { background: #eaf8e9; color: #17863f; }
+      .history-service-icon.is-status-pending { background: #fff7da; color: #d97706; }
+      .history-service-icon.is-status-alert { background: #fff0f2; color: #dc334d; }
+      .history-service-icon svg { width: 24px; height: 24px; stroke-width: 1.8; }
+      .history-entry-copy { min-width: 0; }
+      .history-entry-service {
+          display: block;
+          margin-bottom: 6px;
+          color: #4f0c17;
+          font-size: 15px;
+          font-weight: 900;
+          line-height: 1.3;
+      }
+      .history-entry-meta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 5px;
+      }
+      .history-entry-meta span {
+          min-height: 25px;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 7px;
+          border: 1px solid #e5eaf0;
+          border-radius: 999px;
+          background: #f8fafc;
+          color: #526173;
+          font-size: 10px;
+          font-weight: 700;
+      }
+      .history-entry-meta svg { width: 10px; height: 10px; stroke-width: 2; }
+      .history-entry-problem {
+          display: block;
+          margin-top: 6px;
+          color: #64748b;
+          font-size: 13px;
+          line-height: 1.55;
+      }
+      .history-entry-actions {
+          display: grid;
+          justify-items: end;
+          gap: 8px;
+      }
+      .history-entry-status {
+          padding: 5px 8px;
+          border-radius: 999px;
+          background: #f1f5f9;
+          color: #475569;
+          font-size: 9px;
+          font-weight: 900;
+          text-transform: uppercase;
+      }
+      .history-entry-status.status-completed { background: #eaf8e9; color: #17863f; }
+      .history-entry-status.status-pending,
+      .history-entry-status.status-approved { background: #fff7da; color: #a75b00; }
+      .history-entry-status.status-missed,
+      .history-entry-status.status-expired { background: #fff0f2; color: #bd1734; }
+      .history-entry-status.status-cancelled { background: #eef2f5; color: #596575; }
+      .history-view-btn {
+          min-height: 32px;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 7px 11px;
+          border: 1px solid rgba(176,0,32,.17);
+          border-radius: 999px;
+          background: #ffffff;
+          color: #8b0018;
+          font: inherit;
+          font-size: 12px;
+          font-weight: 850;
+          cursor: pointer;
+      }
+      .history-view-btn svg { width: 12px; height: 12px; stroke-width: 2.2; }
+      .history-entry-details {
+          display: none;
+          grid-column: 1 / -1;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 8px;
+          padding: 11px 12px 0 57px;
+          border-top: 1px solid #eef1f4;
+      }
+      .history-modern-appointment-card.is-expanded .history-entry-details { display: grid; }
+      .history-detail-item { min-width: 0; display: grid; gap: 3px; }
+      .history-detail-item span { color: #7b8798; font-size: 10px; font-weight: 850; text-transform: uppercase; }
+      .history-detail-item strong { color: #263445; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+      .history-detail-actions {
+          grid-column: 1 / -1;
+          display: flex;
+          justify-content: flex-end;
+          padding-top: 3px;
+      }
+      .history-detail-actions .cancel-appointment-btn { min-height: 36px; padding: 0 13px; font-size: 12px; }
+      .history-modern-pagination {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          padding-top: 13px;
+      }
+      .history-modern-page-btn {
+          width: 31px;
+          height: 31px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid #e2e8f0;
+          border-radius: 7px;
+          background: #ffffff;
+          color: #64748b;
+          font: inherit;
+          font-size: 12px;
+          font-weight: 850;
+          cursor: pointer;
+      }
+      .history-modern-page-btn.is-active { border-color: #8b0018; background: #8b0018; color: #ffffff; }
+      .history-modern-page-btn:disabled { opacity: .35; cursor: default; }
+      .history-modern-sidebar { display: grid; gap: 12px; }
+      .history-modern-side-card { padding: 16px; }
+      .history-modern-side-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin: 0 0 13px;
+          color: #7f001d;
+          font-size: 15px;
+          font-weight: 900;
+      }
+      .history-modern-side-title > span {
+          width: 32px;
+          height: 32px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 7px;
+          background: #fff0f2;
+          color: #a40021;
+      }
+      .history-modern-side-title svg { width: 18px; height: 18px; stroke-width: 1.9; }
+      .history-summary-list { display: grid; gap: 10px; margin: 0; }
+      .history-summary-list > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .history-summary-list dt { display: inline-flex; align-items: center; gap: 8px; color: #475569; font-size: 12px; }
+      .history-summary-list dt i { width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; }
+      .history-summary-list dt i.is-upcoming { background: #e59600; }
+      .history-summary-list dt i.is-completed { background: #16a34a; }
+      .history-summary-list dt i.is-missed { background: #ef4760; }
+      .history-summary-list dd { margin: 0; color: #182033; font-size: 13px; font-weight: 900; }
+      .history-summary-total {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+          margin-top: 14px;
+          padding-top: 12px;
+          border-top: 1px solid #e8edf2;
+          color: #64748b;
+          font-size: 11px;
+      }
+      .history-summary-total strong { color: #334155; }
+      .history-quick-actions { display: grid; }
+      .history-quick-actions a {
+          min-height: 42px;
+          display: grid;
+          grid-template-columns: 19px minmax(0, 1fr) 15px;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 3px;
+          border-bottom: 1px solid #eef1f4;
+          color: #334155;
+          font-size: 12px;
+          text-decoration: none;
+      }
+      .history-quick-actions a:last-child { border-bottom: 0; }
+      .history-quick-actions svg { width: 17px; height: 17px; color: #8b0018; stroke-width: 1.8; }
+      .history-quick-actions a svg:last-child { color: #64748b; }
+      .history-help-card { background: linear-gradient(145deg, #fffdf6, #fff9ed); }
+      .history-help-card p { margin: 0 0 12px; color: #64748b; font-size: 12px; line-height: 1.55; }
+      .history-contact-btn {
+          min-height: 31px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 10px;
+          border: 1px solid rgba(176,0,32,.17);
+          border-radius: 999px;
+          color: #8b0018;
+          font-size: 12px;
+          font-weight: 850;
+          text-decoration: none;
+      }
+      .history-contact-btn svg { width: 12px; height: 12px; }
+      .history-filter-empty {
+          display: none;
+          min-height: 180px;
+          align-items: center;
+          justify-content: center;
+          color: #64748b;
+          font-size: 12px;
+          text-align: center;
+      }
+      .history-filter-empty.is-visible { display: flex; }
+      html[data-theme="dark"] .history-modern-hero {
+          background: linear-gradient(90deg, rgba(43,0,14,.99), rgba(55,0,18,.97) 52%, rgba(14,8,18,.84));
+      }
+      html[data-theme="dark"] .history-modern-stat-card,
+      html[data-theme="dark"] .history-modern-list-panel,
+      html[data-theme="dark"] .history-modern-side-card {
+          border-color: rgba(250,204,21,.15);
+          background: #101722;
+          box-shadow: 0 16px 34px rgba(0,0,0,.34);
+      }
+      html[data-theme="dark"] .history-modern-stat-value,
+      html[data-theme="dark"] .history-entry-service,
+      html[data-theme="dark"] .history-summary-list dd,
+      html[data-theme="dark"] .history-summary-total strong,
+      html[data-theme="dark"] .history-detail-item strong { color: #f8fafc; }
+      html[data-theme="dark"] .history-modern-stat-label,
+      html[data-theme="dark"] .history-modern-stat-note,
+      html[data-theme="dark"] .history-entry-problem,
+      html[data-theme="dark"] .history-summary-list dt,
+      html[data-theme="dark"] .history-summary-total,
+      html[data-theme="dark"] .history-help-card p { color: #aeb8c7; }
+      html[data-theme="dark"] .history-modern-filter-btn,
+      html[data-theme="dark"] .history-modern-appointment-card,
+      html[data-theme="dark"] .history-view-btn,
+      html[data-theme="dark"] .history-modern-page-btn {
+          border-color: rgba(148,163,184,.2);
+          background: #151e2d;
+          color: #e5e7eb;
+      }
+      html[data-theme="dark"] .history-modern-filter-btn.is-active,
+      html[data-theme="dark"] .history-modern-page-btn.is-active { border-color: #facc15; background: #760018; color: #ffffff; }
+      html[data-theme="dark"] .history-entry-meta span { border-color: rgba(148,163,184,.18); background: #182233; color: #cbd5e1; }
+      html[data-theme="dark"] .history-entry-details { border-color: rgba(255,255,255,.09); }
+      html[data-theme="dark"] .history-appointment-list::before { background: #334155; }
+      html[data-theme="dark"] .history-entry-dot { background: #101722; }
+      html[data-theme="dark"] .history-help-card { background: #111620; }
+      html[data-theme="dark"] .history-quick-actions a { border-color: rgba(255,255,255,.09); color: #e5e7eb; }
+      @media (max-width: 900px) {
+          .history-modern-hero { grid-template-columns: minmax(0, 1fr) 250px; padding: 24px; }
+          .history-modern-hero-main { grid-template-columns: 86px minmax(0, 1fr); gap: 17px; }
+          .history-modern-emblem { width: 82px; height: 82px; }
+          .history-modern-emblem svg { width: 45px; height: 45px; }
+          .history-modern-content-grid { grid-template-columns: minmax(0, 1fr) 230px; }
+      }
+      @media (max-width: 780px) {
+          .history-modern-hero,
+          .history-modern-content-grid { grid-template-columns: 1fr; }
+          .history-modern-hero-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 6px 0 0; border-top: 1px solid rgba(255,255,255,.18); border-left: 0; }
+          .history-modern-overview-item + .history-modern-overview-item { border-top: 0; border-left: 1px solid rgba(255,255,255,.14); padding-left: 18px; }
+          .history-modern-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .history-modern-sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .history-help-card { grid-column: 1 / -1; }
+      }
+      @media (max-width: 600px) {
+          .history-modern-page { width: min(100% - 20px, 1060px); }
+          .history-modern-hero { min-height: 0; margin-top: -4px; padding: 19px 16px; }
+          .history-modern-hero-main { grid-template-columns: 62px minmax(0, 1fr); align-items: start; gap: 12px; }
+          .history-modern-emblem { width: 60px; height: 60px; }
+          .history-modern-emblem svg { width: 33px; height: 33px; }
+          .history-modern-title { font-size: 25px; }
+          .history-modern-chips { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr; }
+          .history-modern-hero-overview { grid-template-columns: 1fr; }
+          .history-modern-overview-item + .history-modern-overview-item { border-top: 1px solid rgba(255,255,255,.14); border-left: 0; padding-left: 0; }
+          .history-modern-appointment-card { grid-template-columns: 42px minmax(0, 1fr); align-items: start; }
+          .history-entry-actions { grid-column: 2; display: flex; justify-content: space-between; align-items: center; justify-items: stretch; }
+          .history-entry-details { grid-template-columns: 1fr; padding-left: 0; }
+          .history-modern-sidebar { grid-template-columns: 1fr; }
+          .history-help-card { grid-column: auto; }
+      }
+      @media (max-width: 420px) {
+          .history-modern-stat-grid { grid-template-columns: 1fr; }
+      }
     </style>
 @endpush
 
 @section('content')
+    @include('student.partials.history-modern')
+
+    @if(false)
     @php
         $totalAppointments = $appointments->count();
         $pendingAppointments = $appointments->filter(fn ($appt) => strtolower((string) $appt->status) === 'pending')->count();
@@ -1171,6 +1782,7 @@
         
       </section>
     </div>
+    @endif
 @endsection
 
 @push('scripts')
@@ -1179,7 +1791,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const emptyState = document.getElementById('emptyHistoryState');
     const cta = document.getElementById('emptyHistoryCta');
     const filterRow = document.getElementById('historyFilterRow');
-    const historyCards = Array.from(document.querySelectorAll('.apt-card[data-history-status]'));
+    const historyEntries = Array.from(document.querySelectorAll('.history-modern-entry[data-history-group]'));
+    const filterEmpty = document.getElementById('historyFilterEmpty');
+    const pagination = document.getElementById('historyPagination');
     const cancelBackdrop = document.getElementById('cancelDialogBackdrop');
     const cancelDialogForm = document.getElementById('cancelDialogForm');
     const cancelDialogName = document.getElementById('cancelDialogName');
@@ -1188,7 +1802,100 @@ document.addEventListener('DOMContentLoaded', function () {
     const cancelDialogTitle = document.getElementById('cancelDialogTitle');
     const cancelDialogClose = document.getElementById('cancelDialogClose');
     const cancelButtons = Array.from(document.querySelectorAll('.js-open-cancel-dialog'));
+    const detailsButtons = Array.from(document.querySelectorAll('.js-toggle-history-details'));
+    const pageSize = 5;
+    let activeFilter = 'all';
+    let currentPage = 1;
     let lastFocusedElement = null;
+
+    const matchingEntries = function () {
+        return historyEntries.filter(function (entry) {
+            return activeFilter === 'all' || entry.dataset.historyGroup === activeFilter;
+        });
+    };
+
+    const createPageButton = function (label, page, options = {}) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'history-modern-page-btn';
+        button.textContent = label;
+        button.disabled = Boolean(options.disabled);
+        button.classList.toggle('is-active', Boolean(options.active));
+        if (options.label) {
+            button.setAttribute('aria-label', options.label);
+        }
+        if (options.active) {
+            button.setAttribute('aria-current', 'page');
+        }
+        button.addEventListener('click', function () {
+            currentPage = page;
+            renderHistory();
+        });
+        return button;
+    };
+
+    const renderPagination = function (totalPages) {
+        if (!pagination) {
+            return;
+        }
+
+        pagination.replaceChildren();
+        if (totalPages <= 1) {
+            pagination.hidden = true;
+            return;
+        }
+
+        pagination.hidden = false;
+        pagination.appendChild(createPageButton('\u2039', Math.max(1, currentPage - 1), {
+            disabled: currentPage === 1,
+            label: 'Previous page'
+        }));
+
+        for (let page = 1; page <= totalPages; page += 1) {
+            pagination.appendChild(createPageButton(String(page), page, {
+                active: page === currentPage,
+                label: `Page ${page}`
+            }));
+        }
+
+        pagination.appendChild(createPageButton('\u203a', Math.min(totalPages, currentPage + 1), {
+            disabled: currentPage === totalPages,
+            label: 'Next page'
+        }));
+    };
+
+    const renderHistory = function () {
+        const matches = matchingEntries();
+        const totalPages = Math.max(1, Math.ceil(matches.length / pageSize));
+        currentPage = Math.min(currentPage, totalPages);
+        const pageStart = (currentPage - 1) * pageSize;
+        const visibleEntries = matches.slice(pageStart, pageStart + pageSize);
+        let previousMonth = null;
+
+        historyEntries.forEach(function (entry) {
+            entry.hidden = true;
+            const monthLabel = entry.querySelector('.history-entry-month');
+            if (monthLabel) {
+                monthLabel.hidden = true;
+            }
+        });
+
+        visibleEntries.forEach(function (entry) {
+            entry.hidden = false;
+            const month = entry.dataset.historyMonth || '';
+            const monthLabel = entry.querySelector('.history-entry-month');
+            if (monthLabel) {
+                monthLabel.hidden = month === previousMonth;
+            }
+            previousMonth = month;
+        });
+
+        if (filterEmpty) {
+            filterEmpty.classList.toggle('is-visible', matches.length === 0);
+        }
+
+        renderPagination(totalPages);
+    };
 
     const closeCancelDialog = function () {
         if (!cancelBackdrop) {
@@ -1219,25 +1926,36 @@ document.addEventListener('DOMContentLoaded', function () {
         cancelDialogClose.focus();
     };
 
-    if (filterRow && historyCards.length) {
-        const filterButtons = Array.from(filterRow.querySelectorAll('.history-filter-btn'));
+    if (filterRow && historyEntries.length) {
+        const filterButtons = Array.from(filterRow.querySelectorAll('.history-modern-filter-btn'));
 
         filterButtons.forEach(function (button) {
             button.addEventListener('click', function () {
-                const filter = button.dataset.filter || 'all';
+                activeFilter = button.dataset.filter || 'all';
+                currentPage = 1;
 
                 filterButtons.forEach(function (btn) {
                     btn.classList.toggle('is-active', btn === button);
                 });
-
-                historyCards.forEach(function (card) {
-                    const cardStatus = card.dataset.historyStatus || '';
-                    const shouldShow = filter === 'all' || cardStatus === filter;
-                    card.style.display = shouldShow ? '' : 'none';
-                });
+                renderHistory();
             });
         });
     }
+
+    detailsButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            const card = button.closest('.history-modern-appointment-card');
+            const details = card ? card.querySelector('.history-entry-details') : null;
+            if (!card || !details) {
+                return;
+            }
+
+            const isOpen = card.classList.toggle('is-expanded');
+            button.setAttribute('aria-expanded', String(isOpen));
+            details.setAttribute('aria-hidden', String(!isOpen));
+            button.firstChild.textContent = isOpen ? 'Hide Details ' : 'View Details ';
+        });
+    });
 
     cancelButtons.forEach(function (button) {
         button.addEventListener('click', function () {
@@ -1262,6 +1980,10 @@ document.addEventListener('DOMContentLoaded', function () {
             closeCancelDialog();
         }
     });
+
+    if (historyEntries.length) {
+        renderHistory();
+    }
 
     if (!emptyState || !cta) {
         return;

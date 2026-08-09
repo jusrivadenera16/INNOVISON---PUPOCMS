@@ -3700,6 +3700,85 @@
         box-shadow: 0 12px 24px rgba(112, 19, 27, 0.10), 0 3px 10px rgba(15, 23, 42, 0.05) !important;
     }
 
+    /* Standard modal chrome: import, review, add/edit, restock, and issue stock */
+    #inventoryImportModal .modal-box,
+    #inventoryImportReviewModal .modal-box,
+    #itemModal .modal-box,
+    #restockModal .modal-box,
+    #issueModal .modal-box,
+    html[data-theme="dark"] #inventoryImportModal .modal-box,
+    html[data-theme="dark"] #inventoryImportReviewModal .modal-box,
+    html[data-theme="dark"] #itemModal .modal-box,
+    html[data-theme="dark"] #restockModal .modal-box,
+    html[data-theme="dark"] #issueModal .modal-box {
+        border: 1px solid rgba(250, 204, 21, .34) !important;
+    }
+
+    #inventoryImportModal .inventory-modal-head,
+    #inventoryImportReviewModal .inventory-modal-head,
+    #itemModal .inventory-modal-head,
+    #restockModal .inventory-modal-head,
+    #issueModal .inventory-modal-head {
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+    }
+
+    #inventoryImportModal .inventory-modal-close,
+    #inventoryImportReviewModal .inventory-modal-close,
+    #itemModal .inventory-modal-close,
+    #restockModal .inventory-modal-close,
+    #issueModal .inventory-modal-close {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+        padding: 0 !important;
+        border: 1px solid #8f2230 !important;
+        border-radius: 999px !important;
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+        color: #ffffff !important;
+        overflow: hidden !important;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, .12), 0 10px 22px rgba(112, 19, 27, .20) !important;
+    }
+
+    #inventoryImportModal .inventory-modal-close::after,
+    #inventoryImportReviewModal .inventory-modal-close::after,
+    #itemModal .inventory-modal-close::after,
+    #restockModal .inventory-modal-close::after,
+    #issueModal .inventory-modal-close::after {
+        z-index: 0 !important;
+        pointer-events: none;
+    }
+
+    #inventoryImportModal .inventory-modal-close svg,
+    #inventoryImportReviewModal .inventory-modal-close svg,
+    #itemModal .inventory-modal-close svg,
+    #restockModal .inventory-modal-close svg,
+    #issueModal .inventory-modal-close svg {
+        position: relative;
+        z-index: 1;
+        width: 18px;
+        height: 18px;
+        stroke-width: 2.2;
+    }
+
+    #inventoryImportModal .inventory-modal-close:hover,
+    #inventoryImportModal .inventory-modal-close:focus-visible,
+    #inventoryImportReviewModal .inventory-modal-close:hover,
+    #inventoryImportReviewModal .inventory-modal-close:focus-visible,
+    #itemModal .inventory-modal-close:hover,
+    #itemModal .inventory-modal-close:focus-visible,
+    #restockModal .inventory-modal-close:hover,
+    #restockModal .inventory-modal-close:focus-visible,
+    #issueModal .inventory-modal-close:hover,
+    #issueModal .inventory-modal-close:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-1px) !important;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .18), 0 14px 24px rgba(112, 19, 27, .16) !important;
+    }
+
 </style>
 @endpush
 
