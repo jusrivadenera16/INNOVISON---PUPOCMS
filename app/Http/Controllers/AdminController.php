@@ -2883,7 +2883,10 @@ public function updateClearance(Request $request, $id)
     {
         Appointment::expireOverduePending();
 
-        $appointments = Appointment::with('user')
+        $appointments = Appointment::with([
+            'user.healthProfile',
+            'user.healthProfileStaff',
+        ])
             ->orderByRaw("CASE LOWER(status)
                 WHEN 'pending' THEN 0
                 WHEN 'approved' THEN 1

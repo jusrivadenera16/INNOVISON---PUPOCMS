@@ -2316,7 +2316,11 @@
                             <a href="{{ route('student.notifications.open', ['notificationId' => $notification['id']]) }}" class="student-notif-item-link">
                                 <span class="student-notif-dot" aria-hidden="true"></span>
                                 <span class="student-notif-content">
-                                    <span class="student-notif-item-title">{{ $notification['message'] ?? 'Notification available.' }}</span>
+                                    <span class="student-notif-item-title">
+                                        {{ !empty($notification['announcement_id'])
+                                            ? ($notification['title'] ?? 'Clinic Announcement')
+                                            : ($notification['message'] ?? 'Notification available.') }}
+                                    </span>
                                     <span class="student-notif-item-time">{{ $notification['time'] ?? 'Just now' }}</span>
                                 </span>
                             </a>
@@ -2338,7 +2342,9 @@
                                 <span class="student-notif-dot {{ !empty($notification['is_unread']) ? '' : 'is-read' }}" aria-hidden="true"></span>
                                 <span class="student-notif-content">
                                     <span class="student-notif-item-title">
-                                        {{ $notification['message'] ?? 'Notification available.' }}
+                                        {{ !empty($notification['announcement_id'])
+                                            ? ($notification['title'] ?? 'Clinic Announcement')
+                                            : ($notification['message'] ?? 'Notification available.') }}
                                         @if(empty($notification['is_unread']))
                                             <span class="student-notif-chip">Read</span>
                                         @endif
@@ -3732,7 +3738,7 @@
     <div id="globalResubmissionModal" class="global-resubmission-modal" role="dialog" aria-modal="true" aria-labelledby="globalResubmissionTitle">
         <div class="global-resubmission-card">
             <button type="button" class="global-resubmission-close" aria-label="Close upload required files modal" onclick="closeGlobalResubmissionModal()">
-                &times;
+                <x-outline-icon name="x-mark" />
             </button>
             <div class="global-resubmission-head">
                 <span class="global-resubmission-head-icon" aria-hidden="true">
@@ -3894,7 +3900,7 @@
             align-items: center;
             gap: 16px;
             padding: 24px 76px 22px 32px;
-            background: linear-gradient(135deg, #991b1b 0%, #7f1d2d 100%);
+            background: linear-gradient(135deg, #70131b 0%, #8f2230 100%);
             color: #ffffff;
             flex: 0 0 auto;
             position: relative;
@@ -3940,12 +3946,17 @@
             border: 1px solid rgba(255, 255, 255, .18);
             background: rgba(127, 29, 45, .5);
             color: #ffffff;
-            font-size: 30px;
-            line-height: 1;
             cursor: pointer;
             overflow: hidden;
             isolation: isolate;
             transition: border-color .22s ease, color .22s ease, background .22s ease;
+        }
+        .global-resubmission-close svg {
+            position: relative;
+            z-index: 1;
+            width: 19px;
+            height: 19px;
+            stroke-width: 2.2;
         }
         .global-resubmission-close::before {
             position: absolute;
@@ -4205,17 +4216,50 @@
             cursor: pointer;
         }
         .global-resubmission-choose {
+            position: relative;
+            overflow: hidden;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             min-width: 92px;
             min-height: 28px;
             padding: 7px 12px;
+            border: 1px solid #7f1d2d;
             border-radius: 6px;
             background: #7f1d2d;
             color: #ffffff;
             font-size: 11px;
             font-weight: 900;
+            transition: border-color .18s ease, background .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+        }
+        .global-resubmission-choose::after {
+            position: absolute;
+            top: -45%;
+            bottom: -45%;
+            left: -48%;
+            width: 34%;
+            pointer-events: none;
+            opacity: 0;
+            transform: skewX(-20deg);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .75), transparent);
+            content: '';
+        }
+        .global-resubmission-upload-zone:hover .global-resubmission-choose,
+        .global-resubmission-upload-zone:focus-within .global-resubmission-choose {
+            border-color: #facc15;
+            color: #70131b;
+            background: #facc15;
+            box-shadow: 0 7px 16px rgba(77, 16, 29, .16);
+            transform: translateY(-1px);
+        }
+        .global-resubmission-upload-zone:hover .global-resubmission-choose::after,
+        .global-resubmission-upload-zone:focus-within .global-resubmission-choose::after {
+            animation: globalResubmissionChooseSweep .68s ease-out;
+        }
+        @keyframes globalResubmissionChooseSweep {
+            0% { left: -48%; opacity: 0; }
+            18% { opacity: .9; }
+            100% { left: 120%; opacity: 0; }
         }
         .global-resubmission-preview {
             display: none;
@@ -4339,7 +4383,7 @@
         .global-resubmission-submit {
             min-height: 46px;
             padding: 0 22px;
-            border-radius: 12px;
+            border-radius: 6px;
             font-size: 14px;
             font-weight: 900;
             cursor: pointer;

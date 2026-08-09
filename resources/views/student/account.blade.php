@@ -2953,11 +2953,66 @@
         padding: 24px 24px 18px;
         background: linear-gradient(135deg, #70131B, #8f2230);
     }
+    .health-record-details-modal {
+        border: 1px solid rgba(250, 204, 21, .34);
+    }
+    .health-record-details-modal .record-modal-head {
+        min-height: 108px;
+        display: grid;
+        grid-template-columns: 54px minmax(0, 1fr);
+        align-items: center;
+        gap: 16px;
+        padding: 22px 74px 22px 24px;
+        box-sizing: border-box;
+    }
+    .health-record-details-head-icon {
+        width: 52px;
+        height: 52px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255,255,255,.22);
+        border-radius: 12px;
+        background: rgba(255,255,255,.1);
+        color: #ffffff;
+        box-shadow: 0 10px 20px rgba(40,0,12,.18);
+    }
+    .health-record-details-head-icon svg {
+        width: 28px;
+        height: 28px;
+        stroke-width: 1.7;
+    }
+    .health-record-details-modal .record-modal-head-main {
+        min-width: 0;
+    }
+    .health-record-details-modal .record-modal-summary {
+        grid-template-columns: 1fr;
+    }
     .record-modal-title {
         margin: 0 0 8px;
         color: #ffffff;
         font-size: 24px;
         font-weight: 800;
+    }
+    @media (max-width: 620px) {
+        .health-record-details-modal .record-modal-head {
+            min-height: 96px;
+            grid-template-columns: 44px minmax(0, 1fr);
+            gap: 12px;
+            padding: 18px 60px 18px 18px;
+        }
+        .health-record-details-head-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+        }
+        .health-record-details-head-icon svg {
+            width: 23px;
+            height: 23px;
+        }
+        .health-record-details-modal .record-modal-title {
+            font-size: 20px;
+        }
     }
     .record-modal-subtitle {
         margin: 0;
@@ -2965,6 +3020,12 @@
         font-size: 14px;
         line-height: 1.6;
         max-width: 640px;
+    }
+    @media (max-width: 620px) {
+        .health-record-details-modal .record-modal-subtitle {
+            font-size: 12px;
+            line-height: 1.45;
+        }
     }
     .record-modal-close {
         position: absolute;
@@ -3023,6 +3084,14 @@
     .record-modal-close:hover::after {
         transform: translateX(135%);
     }
+    .health-record-details-modal .record-modal-close:hover,
+    .health-record-details-modal .record-modal-close:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        outline: none;
+    }
     .record-modal-body {
         padding: 20px 24px 24px;
         position: relative;
@@ -3041,48 +3110,6 @@
         box-shadow:
             0 10px 18px rgba(15, 23, 42, 0.06),
             inset 0 1px 0 rgba(255,255,255,0.82);
-    }
-    .record-modal-summary-download {
-        background: #facc15 !important;
-        border-color: #facc15 !important;
-        color: #111827 !important;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 14px;
-        transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
-    }
-    .record-modal-summary-download:hover {
-        transform: translateY(-2px);
-        border-color: #eab308 !important;
-        background: #fbbf24 !important;
-        box-shadow: 0 16px 26px rgba(112, 19, 27, 0.12);
-        color: #111827 !important;
-        text-decoration: none;
-    }
-    .record-modal-summary-download .record-modal-label,
-    .record-modal-summary-download .record-modal-value {
-        color: #111827 !important;
-    }
-    .record-modal-download-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.42) !important;
-        color: #111827 !important;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
-        box-shadow: 0 10px 18px rgba(250, 204, 21, 0.18);
-    }
-    .record-modal-download-icon svg {
-        width: 20px;
-        height: 20px;
-        stroke-width: 2.4;
-        color: #111827 !important;
-        stroke: #111827 !important;
     }
     .record-modal-body-fade {
         display: none;
@@ -3317,7 +3344,7 @@
     }
     .missing-document-modal {
         width: min(915px, calc(100vw - 48px));
-        height: min(820px, calc(100vh - 36px));
+        height: auto;
         max-height: min(820px, calc(100vh - 36px));
         border-top: 0;
         border-bottom: 0;
@@ -3471,7 +3498,7 @@
         font-weight: 950;
         line-height: 1.15;
     }
-    .missing-document-stat span {
+    .missing-document-stat > div > span {
         display: block;
         margin-top: 2px;
         color: #64748b;
@@ -3901,15 +3928,31 @@
         color: #70131B;
     }
     .missing-esign-submit {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
         border: 1px solid #8B0000;
         background: #8B0000;
-        color: #facc15;
+        color: #ffffff;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
         min-width: 230px;
         transition: background-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .missing-document-footer .missing-esign-submit::after {
+        content: '';
+        position: absolute;
+        z-index: -1;
+        top: -45%;
+        bottom: -45%;
+        left: -48%;
+        width: 34%;
+        pointer-events: none;
+        opacity: 0;
+        transform: skewX(-20deg);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .78), transparent);
     }
     .missing-document-footer .missing-esign-submit:hover,
     .missing-document-footer .missing-esign-submit:focus-visible {
@@ -3919,6 +3962,15 @@
         box-shadow: 0 6px 14px rgba(250, 204, 21, .28);
         transform: translateY(-1px);
         outline: none;
+    }
+    .missing-document-footer .missing-esign-submit:hover::after,
+    .missing-document-footer .missing-esign-submit:focus-visible::after {
+        animation: missingDocumentSubmitSweep .68s ease-out;
+    }
+    @keyframes missingDocumentSubmitSweep {
+        0% { left: -48%; opacity: 0; }
+        18% { opacity: .9; }
+        100% { left: 120%; opacity: 0; }
     }
     .missing-document-footer .missing-esign-submit:active {
         background: #facc15;
@@ -3960,7 +4012,7 @@
     @media (max-width: 640px) {
         .missing-document-modal {
             width: calc(100vw - 24px);
-            height: calc(100vh - 24px);
+            height: auto;
             max-height: calc(100vh - 24px);
         }
         .missing-document-progress,
@@ -4448,15 +4500,6 @@
         background: #111214 !important;
         border-color: rgba(250, 204, 21, 0.14) !important;
         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24) !important;
-    }
-    html[data-theme="dark"] .record-modal-summary-download {
-        background: #facc15 !important;
-        border-color: #facc15 !important;
-        color: #111827 !important;
-    }
-    html[data-theme="dark"] .record-modal-summary-download:hover {
-        background: #fbbf24 !important;
-        border-color: #eab308 !important;
     }
     html[data-theme="dark"] .record-modal-label,
     html[data-theme="dark"] .record-modal-value {
@@ -5872,6 +5915,725 @@
         .notification-stat-grid { grid-template-columns: 1fr; }
         .notification-stat-card { min-height: 70px; }
     }
+
+    /* Version-aware Health Form dashboard. */
+    .health-doc-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 272px;
+        gap: 14px;
+        align-items: start;
+    }
+    .health-doc-main,
+    .health-doc-sidebar {
+        display: grid;
+        gap: 14px;
+        min-width: 0;
+    }
+    .health-doc-card,
+    .health-doc-side-card {
+        border: 1px solid rgba(127, 0, 25, .13);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, .96);
+        box-shadow: 0 12px 30px rgba(73, 25, 35, .08);
+    }
+    .health-doc-latest {
+        position: relative;
+        overflow: hidden;
+        padding: 31px 15px 13px;
+    }
+    .health-doc-ribbon {
+        position: absolute;
+        top: 0;
+        left: 0;
+        min-height: 23px;
+        padding: 6px 20px 5px 12px;
+        clip-path: polygon(0 0, 100% 0, calc(100% - 11px) 100%, 0 100%);
+        background: #850019;
+        color: #fff;
+        font-size: 9px;
+        font-weight: 900;
+        line-height: 1;
+        text-transform: uppercase;
+    }
+    .health-doc-latest-grid {
+        display: grid;
+        grid-template-columns: minmax(205px, 1.35fr) minmax(145px, .82fr) minmax(145px, .82fr);
+        column-gap: 12px;
+        row-gap: 0;
+    }
+    .health-doc-identity,
+    .health-doc-meta-item,
+    .health-doc-type {
+        min-width: 0;
+        padding: 9px 10px;
+        border-bottom: 1px solid rgba(148, 163, 184, .2);
+    }
+    .health-doc-identity,
+    .health-doc-meta-item {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    .health-doc-identity {
+        grid-row: span 1;
+        padding-left: 0;
+    }
+    .health-doc-type {
+        display: grid;
+        align-content: center;
+        gap: 3px;
+        padding-left: 0;
+    }
+    .health-doc-primary-icon,
+    .health-doc-meta-icon,
+    .health-doc-section-icon,
+    .health-doc-side-card h2 > span,
+    .health-doc-modal-summary > span:first-child {
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 auto;
+        color: #a50020;
+        background: #fff0f2;
+    }
+    .health-doc-primary-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+    }
+    .health-doc-primary-icon svg { width: 27px; height: 27px; }
+    .health-doc-meta-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+    }
+    .health-doc-meta-icon svg { width: 16px; height: 16px; }
+    .health-doc-identity > span:last-child,
+    .health-doc-meta-item > span:last-child {
+        display: grid;
+        min-width: 0;
+        gap: 2px;
+    }
+    .health-doc-label {
+        display: block;
+        color: #64748b;
+        font-size: 9px;
+        font-weight: 900;
+        line-height: 1.25;
+        text-transform: uppercase;
+    }
+    .health-doc-form-id {
+        color: #9f001e;
+        font-size: 18px;
+        line-height: 1.15;
+    }
+    .health-doc-meta-item strong,
+    .health-doc-type strong {
+        color: #172033;
+        font-size: 11px;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+    .health-doc-meta-item small {
+        color: #64748b;
+        font-size: 9px;
+    }
+    .health-doc-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        width: max-content;
+        max-width: 100%;
+        min-height: 0;
+        margin-top: 3px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        color: #b45309;
+        background: transparent;
+        font-size: 8px;
+        font-weight: 900;
+        line-height: 1.1;
+        text-transform: uppercase;
+    }
+    .health-doc-status.is-approved { color: #15803d; background: transparent; }
+    .health-doc-status.is-correction { color: #c2410c; background: transparent; }
+    .health-doc-status.is-requested { color: #9f001e; background: transparent; }
+    .health-doc-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 13px 0 0;
+    }
+    .health-doc-action {
+        position: relative;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 34px;
+        padding: 8px 12px;
+        border: 1px solid rgba(159, 0, 30, .32);
+        border-radius: 6px;
+        color: #850019;
+        background: #fff;
+        font-size: 10px;
+        font-weight: 900;
+        line-height: 1.15;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .health-doc-action svg { width: 15px; height: 15px; }
+    .health-doc-action.is-primary { color: #fff; background: #92001c; }
+    .health-doc-action.is-edit { color: #a34b00; border-color: #f0b743; background: #fffaf0; }
+    .health-doc-action:hover,
+    .health-doc-action:focus-visible {
+        transform: translateY(-1px);
+        border-color: #facc15;
+        color: #650012;
+        background: #facc15;
+        box-shadow: 0 8px 18px rgba(77, 16, 29, .15);
+    }
+    .health-doc-action::after,
+    .health-doc-history-actions a::after,
+    .health-doc-history-actions button::after {
+        content: '';
+        position: absolute;
+        top: -45%;
+        bottom: -45%;
+        left: -48%;
+        width: 32%;
+        pointer-events: none;
+        opacity: 0;
+        transform: skewX(-20deg);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .72), transparent);
+    }
+    .health-doc-action:hover::after,
+    .health-doc-action:focus-visible::after,
+    .health-doc-history-actions a:hover::after,
+    .health-doc-history-actions a:focus-visible::after,
+    .health-doc-history-actions button:hover::after,
+    .health-doc-history-actions button:focus-visible::after {
+        animation: healthDocActionSweep .68s ease-out;
+    }
+    @keyframes healthDocActionSweep {
+        0% { left: -48%; opacity: 0; }
+        18% { opacity: .85; }
+        100% { left: 120%; opacity: 0; }
+    }
+    .health-doc-note,
+    .health-doc-requirement,
+    .health-doc-history-request {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: 11px;
+        padding: 9px 11px;
+        border: 1px solid #f4d9a5;
+        border-radius: 6px;
+        color: #9a4d00;
+        background: #fff9eb;
+        font-size: 10px;
+        line-height: 1.4;
+    }
+    .health-doc-note svg,
+    .health-doc-requirement svg,
+    .health-doc-history-request svg { width: 15px; height: 15px; flex: 0 0 auto; }
+    .health-doc-note.is-requested { color: #850019; border-color: #f3c6ce; background: #fff4f5; }
+    .health-doc-requirement { justify-content: space-between; color: #9f001e; border-color: #f3c6ce; background: #fff7f8; }
+    .health-doc-requirement > span { display: flex; align-items: center; gap: 7px; font-weight: 800; }
+    .health-doc-requirement button {
+        min-height: 34px;
+        padding: 8px 12px;
+        border: 1px solid #a50020;
+        border-radius: 6px;
+        color: #fff;
+        background: #92001c;
+        font: inherit;
+        font-weight: 900;
+        cursor: pointer;
+    }
+    .health-doc-requirement .health-doc-upload-button:hover,
+    .health-doc-requirement .health-doc-upload-button:focus-visible {
+        border-color: #facc15;
+        color: #650012;
+        background: #facc15;
+    }
+    .health-doc-empty {
+        display: grid;
+        justify-items: center;
+        gap: 7px;
+        padding: 30px 16px 18px;
+        text-align: center;
+    }
+    .health-doc-empty > span {
+        display: grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        color: #a50020;
+        background: #fff0f2;
+    }
+    .health-doc-empty > span svg { width: 25px; height: 25px; }
+    .health-doc-empty strong { color: #172033; font-size: 14px; }
+    .health-doc-empty p { margin: 0; color: #64748b; font-size: 11px; }
+    .health-doc-section-head {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 13px 14px 11px;
+    }
+    .health-doc-section-icon,
+    .health-doc-side-card h2 > span {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+    }
+    .health-doc-section-icon svg,
+    .health-doc-side-card h2 > span svg { width: 16px; height: 16px; }
+    .health-doc-section-head h2,
+    .health-doc-side-card h2 {
+        margin: 0;
+        color: #850019;
+        font-size: 12px;
+        line-height: 1.2;
+    }
+    .health-doc-section-head p {
+        margin: 3px 0 0;
+        color: #64748b;
+        font-size: 9px;
+    }
+    .health-doc-history-table { padding: 0 10px; }
+    .health-doc-history-head,
+    .health-doc-history-row {
+        display: grid;
+        grid-template-columns: 1.12fr 1.55fr .9fr .9fr .78fr 1.18fr;
+        align-items: center;
+    }
+    .health-doc-history-head {
+        min-height: 29px;
+        padding: 0 8px;
+        border-radius: 5px 5px 0 0;
+        color: #fff;
+        background: #850019;
+        font-size: 8px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    .health-doc-history-row {
+        min-height: 66px;
+        padding: 7px 8px;
+        border: solid rgba(148, 163, 184, .2);
+        border-width: 0 1px 1px;
+        background: #fff;
+        color: #334155;
+        font-size: 9px;
+    }
+    .health-doc-history-row.is-latest { background: linear-gradient(90deg, #fffaf0, #fff); }
+    .health-doc-history-row > div { min-width: 0; padding: 0 5px; }
+    .health-doc-history-row strong { display: block; color: #172033; line-height: 1.35; overflow-wrap: anywhere; }
+    .health-doc-history-row small { display: block; margin-top: 2px; color: #64748b; font-size: 8px; line-height: 1.35; }
+    .health-doc-history-id { display: flex; align-items: center; gap: 7px; }
+    .health-doc-row-icon {
+        display: grid;
+        place-items: center;
+        width: 31px;
+        height: 31px;
+        flex: 0 0 31px;
+        border-radius: 50%;
+        color: #b45309;
+        background: #fff5d8;
+    }
+    .health-doc-row-icon svg { width: 15px; height: 15px; }
+    .health-doc-history-id small {
+        width: max-content;
+        padding: 2px 5px;
+        border-radius: 999px;
+        color: #a34b00;
+        background: #fff1b9;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    .health-doc-history-actions { display: flex; flex-wrap: wrap; gap: 3px; }
+    .health-doc-history-actions a,
+    .health-doc-history-actions button {
+        position: relative;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        min-height: 22px;
+        padding: 4px 6px;
+        border: 1px solid rgba(159, 0, 30, .25);
+        border-radius: 5px;
+        color: #850019;
+        background: #fff;
+        font: inherit;
+        font-size: 8px;
+        font-weight: 900;
+        line-height: 1.1;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
+    }
+    .health-doc-history-actions svg { width: 10px; height: 10px; }
+    .health-doc-history-actions a:hover,
+    .health-doc-history-actions a:focus-visible,
+    .health-doc-history-actions button:hover,
+    .health-doc-history-actions button:focus-visible {
+        transform: translateY(-1px);
+        border-color: #facc15;
+        color: #650012;
+        background: #facc15;
+        box-shadow: 0 7px 15px rgba(77, 16, 29, .14);
+    }
+    .health-doc-history-empty { padding: 22px; text-align: center; color: #64748b; font-size: 10px; }
+    .health-doc-history-request {
+        justify-content: space-between;
+        margin: 10px;
+        color: #9a4d00;
+    }
+    .health-doc-history-request > span { display: flex; align-items: center; gap: 6px; font-weight: 900; }
+    .health-doc-history-request small { color: #7c5a22; }
+    .health-doc-side-card { padding: 12px; }
+    .health-doc-side-card h2 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    .health-doc-progress { margin: 0; padding: 0; list-style: none; }
+    .health-doc-progress li {
+        position: relative;
+        display: grid;
+        grid-template-columns: 11px minmax(0, 1fr) 17px;
+        gap: 8px;
+        min-height: 70px;
+        padding-bottom: 10px;
+    }
+    .health-doc-progress li:last-child { min-height: 0; padding-bottom: 0; }
+    .health-doc-progress li::before {
+        content: '';
+        position: absolute;
+        top: 12px;
+        bottom: -2px;
+        left: 5px;
+        width: 1px;
+        background: #d8dee8;
+    }
+    .health-doc-progress li:last-child::before { display: none; }
+    .health-doc-progress i {
+        position: relative;
+        z-index: 1;
+        width: 8px;
+        height: 8px;
+        margin: 3px 0 0 1px;
+        border: 2px solid #cbd5e1;
+        border-radius: 50%;
+        background: #fff;
+    }
+    .health-doc-progress li.is-active i { border-color: #a50020; box-shadow: 0 0 0 3px rgba(165, 0, 32, .1); }
+    .health-doc-progress li.is-complete i { border-color: #22a447; background: #22a447; }
+    .health-doc-progress li.is-complete::before { background: #22a447; }
+    .health-doc-progress li > span { display: grid; align-content: start; gap: 2px; }
+    .health-doc-progress strong { color: #172033; font-size: 10px; }
+    .health-doc-progress small { color: #64748b; font-size: 8px; }
+    .health-doc-progress em { color: #64748b; font-size: 8px; font-style: normal; line-height: 1.35; }
+    .health-doc-progress b {
+        display: grid;
+        place-items: center;
+        width: 16px;
+        height: 16px;
+        border: 1px solid #86d398;
+        border-radius: 50%;
+        color: #16923a;
+        background: #effcf2;
+    }
+    .health-doc-progress b svg { width: 10px; height: 10px; }
+    .health-doc-side-card.is-reminder { background: linear-gradient(145deg, #fff9fa, #fff); }
+    .health-doc-schedule {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px;
+        border: 1px solid #f3d3d8;
+        border-radius: 6px;
+        color: #a50020;
+        background: #fff0f2;
+    }
+    .health-doc-schedule > svg { width: 17px; height: 17px; flex: 0 0 auto; }
+    .health-doc-schedule span { display: grid; gap: 2px; }
+    .health-doc-schedule strong { font-size: 9px; }
+    .health-doc-schedule small { color: #6b1c2c; font-size: 8px; }
+    .health-doc-side-card p { margin: 9px 0 0; color: #64748b; font-size: 9px; line-height: 1.55; }
+    .health-doc-side-card.is-help a {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 7px;
+        color: #850019;
+        font-size: 9px;
+        font-weight: 800;
+        text-decoration: none;
+    }
+    .health-doc-side-card.is-help a svg { width: 14px; height: 14px; }
+    .health-doc-files-modal { width: min(760px, calc(100vw - 28px)); }
+    .health-doc-files-modal .record-modal-body { padding: 15px; }
+    .health-doc-modal-summary {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 12px;
+        padding: 10px;
+        border: 1px solid rgba(159, 0, 30, .12);
+        border-radius: 7px;
+        background: #fff8f9;
+    }
+    .health-doc-modal-summary > span:first-child { width: 34px; height: 34px; border-radius: 50%; }
+    .health-doc-modal-summary > span:first-child svg { width: 18px; height: 18px; }
+    .health-doc-modal-summary > span:last-child { display: grid; gap: 2px; }
+    .health-doc-modal-summary strong { color: #850019; font-size: 12px; }
+    .health-doc-modal-summary small { color: #64748b; font-size: 9px; }
+    .health-doc-modal-files { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+    .health-doc-file-card {
+        display: grid;
+        grid-template-columns: 54px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        padding: 10px;
+        border: 1px solid rgba(148, 163, 184, .25);
+        border-radius: 7px;
+        background: #fff;
+    }
+    .health-doc-file-preview {
+        display: grid;
+        place-items: center;
+        width: 54px;
+        height: 54px;
+        overflow: hidden;
+        border-radius: 6px;
+        color: #a50020;
+        background: #fff0f2;
+    }
+    .health-doc-file-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .health-doc-file-preview svg { width: 25px; height: 25px; }
+    .health-doc-file-copy { display: grid; min-width: 0; gap: 3px; }
+    .health-doc-file-copy strong { color: #172033; font-size: 10px; line-height: 1.3; }
+    .health-doc-file-copy small { color: #64748b; font-size: 8px; }
+    .health-doc-file-card > a {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        color: #850019;
+        font-size: 8px;
+        font-weight: 900;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    .health-doc-file-card > a svg { width: 11px; height: 11px; }
+    .health-doc-modal-empty {
+        grid-column: 1 / -1;
+        display: grid;
+        justify-items: center;
+        gap: 6px;
+        padding: 25px 12px;
+        color: #64748b;
+        text-align: center;
+    }
+    .health-doc-modal-empty > span { color: #a50020; }
+    .health-doc-modal-empty svg { width: 30px; height: 30px; }
+    .health-doc-modal-empty strong { color: #172033; font-size: 12px; }
+    .health-doc-modal-empty p { margin: 0; font-size: 9px; }
+
+    /* Match the readable typography scale used by the Notifications module. */
+    .health-doc-ribbon { font-size: 10px; }
+    .health-doc-label { font-size: 11px; }
+    .health-doc-form-id { font-size: 20px; }
+    .health-doc-meta-item strong,
+    .health-doc-type strong { font-size: 13px; }
+    .health-doc-meta-item small { font-size: 10px; }
+    .health-doc-status { min-height: 0; padding: 0; font-size: 11px; }
+    .health-doc-action { min-height: 38px; padding: 9px 13px; font-size: 12px; }
+    .health-doc-note,
+    .health-doc-requirement,
+    .health-doc-history-request { padding: 10px 12px; font-size: 12px; }
+    .health-doc-empty strong { font-size: 15px; }
+    .health-doc-empty p { font-size: 12px; }
+    .health-doc-section-head { padding: 15px 15px 12px; }
+    .health-doc-section-icon,
+    .health-doc-side-card h2 > span { width: 34px; height: 34px; }
+    .health-doc-section-icon svg,
+    .health-doc-side-card h2 > span svg { width: 18px; height: 18px; }
+    .health-doc-section-head h2,
+    .health-doc-side-card h2 { font-size: 15px; }
+    .health-doc-section-head p { font-size: 11px; }
+    .health-doc-history-head { min-height: 34px; font-size: 10px; }
+    .health-doc-history-row { min-height: 82px; padding-top: 10px; padding-bottom: 10px; font-size: 11px; }
+    .health-doc-history-row strong { font-size: 11px; }
+    .health-doc-history-row small { font-size: 10px; }
+    .health-doc-row-icon { width: 36px; height: 36px; flex-basis: 36px; }
+    .health-doc-row-icon svg { width: 18px; height: 18px; }
+    .health-doc-history-actions a,
+    .health-doc-history-actions button { min-height: 25px; padding: 5px 7px; font-size: 10px; }
+    .health-doc-history-actions svg { width: 12px; height: 12px; }
+    .health-doc-history-request small { font-size: 10px; }
+    .health-doc-side-card { padding: 15px; }
+    .health-doc-progress li { min-height: 82px; }
+    .health-doc-progress strong { font-size: 12px; }
+    .health-doc-progress small,
+    .health-doc-progress em { font-size: 10px; }
+    .health-doc-schedule strong { font-size: 11px; }
+    .health-doc-schedule small { font-size: 10px; }
+    .health-doc-side-card p,
+    .health-doc-side-card.is-help a { font-size: 11px; }
+    .health-doc-modal-summary strong { font-size: 14px; }
+    .health-doc-modal-summary small { font-size: 11px; }
+    .health-doc-file-copy strong { font-size: 12px; }
+    .health-doc-file-copy small,
+    .health-doc-file-card > a { font-size: 10px; }
+    .health-doc-modal-empty strong { font-size: 15px; }
+    .health-doc-modal-empty p { font-size: 11px; }
+
+    html[data-theme="dark"] .health-doc-card,
+    html[data-theme="dark"] .health-doc-side-card,
+    html[data-theme="dark"] .health-doc-history-row,
+    html[data-theme="dark"] .health-doc-file-card {
+        border-color: rgba(250, 204, 21, .16);
+        background: #111827;
+        box-shadow: 0 13px 28px rgba(0, 0, 0, .28);
+    }
+    html[data-theme="dark"] .health-doc-history-row.is-latest { background: linear-gradient(90deg, rgba(133, 0, 25, .3), #111827 45%); }
+    html[data-theme="dark"] .health-doc-primary-icon,
+    html[data-theme="dark"] .health-doc-meta-icon,
+    html[data-theme="dark"] .health-doc-section-icon,
+    html[data-theme="dark"] .health-doc-side-card h2 > span,
+    html[data-theme="dark"] .health-doc-modal-summary > span:first-child,
+    html[data-theme="dark"] .health-doc-file-preview,
+    html[data-theme="dark"] .health-doc-empty > span { color: #facc15; background: #30151d; }
+    html[data-theme="dark"] .health-doc-form-id,
+    html[data-theme="dark"] .health-doc-section-head h2,
+    html[data-theme="dark"] .health-doc-side-card h2,
+    html[data-theme="dark"] .health-doc-side-card.is-help a,
+    html[data-theme="dark"] .health-doc-modal-summary strong,
+    html[data-theme="dark"] .health-doc-file-card > a { color: #fde68a; }
+    html[data-theme="dark"] .health-doc-meta-item strong,
+    html[data-theme="dark"] .health-doc-type strong,
+    html[data-theme="dark"] .health-doc-history-row strong,
+    html[data-theme="dark"] .health-doc-progress strong,
+    html[data-theme="dark"] .health-doc-file-copy strong,
+    html[data-theme="dark"] .health-doc-modal-empty strong,
+    html[data-theme="dark"] .health-doc-empty strong { color: #f8fafc; }
+    html[data-theme="dark"] .health-doc-label,
+    html[data-theme="dark"] .health-doc-meta-item small,
+    html[data-theme="dark"] .health-doc-section-head p,
+    html[data-theme="dark"] .health-doc-history-row small,
+    html[data-theme="dark"] .health-doc-progress small,
+    html[data-theme="dark"] .health-doc-progress em,
+    html[data-theme="dark"] .health-doc-side-card p,
+    html[data-theme="dark"] .health-doc-file-copy small,
+    html[data-theme="dark"] .health-doc-modal-summary small,
+    html[data-theme="dark"] .health-doc-modal-empty,
+    html[data-theme="dark"] .health-doc-empty p { color: #aeb8c7; }
+    html[data-theme="dark"] .health-doc-identity,
+    html[data-theme="dark"] .health-doc-meta-item,
+    html[data-theme="dark"] .health-doc-type { border-color: rgba(255, 255, 255, .09); }
+    html[data-theme="dark"] .health-doc-action,
+    html[data-theme="dark"] .health-doc-history-actions a,
+    html[data-theme="dark"] .health-doc-history-actions button { color: #fde68a; border-color: rgba(250, 204, 21, .22); background: #151e2d; }
+    html[data-theme="dark"] .health-doc-action.is-primary { color: #fff; background: #850019; }
+    html[data-theme="dark"] .health-doc-action.is-edit { color: #facc15; background: rgba(133, 0, 25, .2); }
+    html[data-theme="dark"] .health-doc-action:hover,
+    html[data-theme="dark"] .health-doc-action:focus-visible,
+    html[data-theme="dark"] .health-doc-history-actions a:hover,
+    html[data-theme="dark"] .health-doc-history-actions a:focus-visible,
+    html[data-theme="dark"] .health-doc-history-actions button:hover,
+    html[data-theme="dark"] .health-doc-history-actions button:focus-visible {
+        border-color: #facc15;
+        color: #650012;
+        background: #facc15;
+    }
+    html[data-theme="dark"] .health-doc-note,
+    html[data-theme="dark"] .health-doc-requirement,
+    html[data-theme="dark"] .health-doc-history-request,
+    html[data-theme="dark"] .health-doc-side-card.is-reminder,
+    html[data-theme="dark"] .health-doc-modal-summary { color: #fde68a; border-color: rgba(250, 204, 21, .18); background: #151e2d; }
+    html[data-theme="dark"] .health-doc-history-request small { color: #cbd5e1; }
+    html[data-theme="dark"] .health-doc-progress i { background: #111827; }
+    html[data-theme="dark"] .health-doc-schedule { color: #fde68a; border-color: rgba(250, 204, 21, .18); background: #2a1720; }
+    html[data-theme="dark"] .health-doc-schedule small { color: #e5e7eb; }
+
+    @media (max-width: 980px) {
+        .health-doc-layout { grid-template-columns: minmax(0, 1fr) 245px; }
+        .health-doc-latest-grid { grid-template-columns: minmax(180px, 1.15fr) 1fr 1fr; }
+        .health-doc-history-head,
+        .health-doc-history-row { grid-template-columns: 1.08fr 1.4fr .85fr .85fr .72fr 1.1fr; }
+    }
+    @media (max-width: 820px) {
+        .health-doc-layout { grid-template-columns: 1fr; }
+        .health-doc-sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .health-doc-side-card:first-child { grid-row: span 2; }
+    }
+    @media (max-width: 680px) {
+        .health-doc-latest-grid { grid-template-columns: 1fr 1fr; }
+        .health-doc-identity,
+        .health-doc-type { grid-column: 1 / -1; }
+        .health-doc-history-head { display: none; }
+        .health-doc-history-row {
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 12px;
+            margin-bottom: 8px;
+            padding: 11px;
+            border-width: 1px;
+            border-radius: 7px;
+        }
+        .health-doc-history-row > div { padding: 0; }
+        .health-doc-history-row > div::before {
+            content: attr(data-label);
+            display: block;
+            margin-bottom: 3px;
+            color: #64748b;
+            font-size: 8px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .health-doc-history-id,
+        .health-doc-history-type,
+        .health-doc-history-actions { grid-column: 1 / -1; }
+        .health-doc-history-id::before,
+        .health-doc-history-type::before,
+        .health-doc-history-actions::before { display: none !important; }
+        .health-doc-modal-files { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+        .health-doc-layout,
+        .health-doc-main,
+        .health-doc-sidebar { gap: 10px; }
+        .health-doc-sidebar { grid-template-columns: 1fr; }
+        .health-doc-side-card:first-child { grid-row: auto; }
+        .health-doc-latest { padding-right: 11px; padding-left: 11px; }
+        .health-doc-latest-grid { grid-template-columns: 1fr; }
+        .health-doc-identity,
+        .health-doc-type { grid-column: auto; }
+        .health-doc-identity,
+        .health-doc-type,
+        .health-doc-meta-item { padding-right: 2px; padding-left: 2px; }
+        .health-doc-actions { display: grid; grid-template-columns: 1fr; }
+        .health-doc-action { width: 100%; }
+        .health-doc-note,
+        .health-doc-requirement,
+        .health-doc-history-request { align-items: flex-start; flex-direction: column; }
+        .health-doc-requirement button { width: 100%; }
+        .health-doc-history-row { grid-template-columns: 1fr; }
+        .health-doc-history-id,
+        .health-doc-history-type,
+        .health-doc-history-actions { grid-column: auto; }
+        .health-doc-file-card { grid-template-columns: 46px minmax(0, 1fr); }
+        .health-doc-file-preview { width: 46px; height: 46px; }
+        .health-doc-file-card > a { grid-column: 2; }
+    }
 </style>
 @endpush
 
@@ -6704,6 +7466,9 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         </section>
 
+        @include('student.partials.health-record-dashboard')
+
+        @if(false)
         <div class="health-record-content-grid">
             <div class="health-record-main-column">
     @if(!empty($pendingHealthFormRequest))
@@ -7047,8 +7812,11 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
     @if($healthFormSubmitted && $healthProfileRecord)
         <div class="record-modal-overlay" id="healthRecordModal" aria-hidden="true">
-            <div class="record-modal" role="dialog" aria-modal="true" aria-labelledby="healthRecordModalTitle">
+            <div class="record-modal health-record-details-modal" role="dialog" aria-modal="true" aria-labelledby="healthRecordModalTitle">
                 <div class="record-modal-head">
+                    <span class="health-record-details-head-icon" aria-hidden="true">
+                        <x-outline-icon name="clipboard-document-list" />
+                    </span>
                     <button type="button" class="record-modal-close" aria-label="Close record details" onclick="closeHealthRecordModal()">
                         <x-outline-icon name="x-mark" />
                     </button>
@@ -7063,19 +7831,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             <span class="record-modal-label">Current Status</span>
                             <span class="record-modal-status">{{ $status }}</span>
                         </div>
-                        <a class="record-modal-summary-card record-modal-summary-download" href="{{ route('student.health_record.document', ['document' => 'health_form']) }}" target="_blank" rel="noopener">
-                            <span>
-                                <span class="record-modal-label">Health Form</span>
-                                <span class="record-modal-value">Download</span>
-                            </span>
-                            <span class="record-modal-download-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 3v12"></path>
-                                    <path d="m7 10 5 5 5-5"></path>
-                                    <path d="M5 21h14"></path>
-                                </svg>
-                            </span>
-                        </a>
                     </div>
 
                     <div class="record-modal-grid">
@@ -7254,6 +8009,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         </div>
     @endif
+        @endif
     @if($clinicResubmissionUploadKeys->isNotEmpty() || $missingDocumentUploadKeys->isNotEmpty() || session('signature_attached') || session('signature_removed'))
         <div class="record-modal-overlay" id="missingDocumentModal" aria-hidden="true">
             <div class="record-modal missing-document-modal" role="dialog" aria-modal="true" aria-labelledby="missingDocumentTitle">
@@ -7383,7 +8139,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </div>
                             </div>
                         @endforeach
-                        @if($requiresMissingESign || $hasExistingESign)
+                        @if($requiresMissingESign)
                             <div class="missing-document-esign-row">
                                 <span class="missing-document-row-icon" aria-hidden="true">
                                     <x-outline-icon name="pencil-square" />
@@ -7453,7 +8209,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         </div>
     @endif
-    @if($requiresMissingESign || $hasExistingESign)
+    @if($requiresMissingESign)
         <div class="record-modal-overlay" id="missingESignModal" aria-hidden="true">
             <div class="record-modal missing-esign-modal" role="dialog" aria-modal="true" aria-labelledby="missingESignTitle">
                 <div class="record-modal-head">
@@ -7642,7 +8398,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <strong>{{ $notif['title'] ?? 'Clinic Update' }}</strong>
                                     <span class="notification-category-badge">{{ $notif['category_label'] ?? 'System' }}</span>
                                 </span>
-                                <span class="notification-feed-message">{{ $notif['message'] ?? 'Notification available.' }}</span>
+                                @if(empty($notif['announcement_id']))
+                                    <span class="notification-feed-message">{{ $notif['message'] ?? 'Notification available.' }}</span>
+                                @endif
                             </span>
                             <span class="notification-feed-meta">
                                 <time>{{ $notif['time'] ?? 'Just now' }}</time>

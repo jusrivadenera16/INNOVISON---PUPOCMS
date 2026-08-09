@@ -368,8 +368,8 @@
         box-shadow: 0 24px 60px rgba(0, 0, 0, 0.16);
         border-left: 1px solid rgba(112, 19, 27, 0.12);
         border-right: 1px solid rgba(112, 19, 27, 0.12);
-        border-top: 4px solid #facc15;
-        border-bottom: 4px solid #facc15;
+        border-top: 0;
+        border-bottom: 0;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
@@ -383,8 +383,8 @@
         background: rgba(255, 255, 255, 0.98) !important;
         border-left: 1px solid rgba(112, 19, 27, 0.12) !important;
         border-right: 1px solid rgba(112, 19, 27, 0.12) !important;
-        border-top: 4px solid #facc15 !important;
-        border-bottom: 4px solid #facc15 !important;
+        border-top: 0 !important;
+        border-bottom: 0 !important;
         border-radius: 18px !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
@@ -964,8 +964,8 @@
         width: min(100%, 900px);
         max-height: min(640px, calc(100dvh - 42px));
         border: 1px solid rgba(255, 255, 255, 0.78) !important;
-        border-top: 1px solid rgba(250, 204, 21, 0.92) !important;
-        border-bottom: 3px solid #facc15 !important;
+        border-top: 0 !important;
+        border-bottom: 0 !important;
         border-radius: 20px !important;
         background: #ffffff !important;
         box-shadow: 0 34px 78px rgba(15, 23, 42, 0.28);
@@ -1516,8 +1516,6 @@
         font-weight: 700;
         cursor: pointer;
         transition: 0.2s;
-        border-bottom: 1px solid yellow;
-        border-bottom-radius: 6px;
     }
     .dialog-btn-confirm {
         background: linear-gradient(135deg, #70131B, #8f2230);
@@ -2383,8 +2381,8 @@
         background: rgba(15, 23, 42, 0.98);
         border-left: 1px solid rgba(143, 34, 48, 0.36);
         border-right: 1px solid rgba(143, 34, 48, 0.36);
-        border-top: 4px solid #facc15;
-        border-bottom: 4px solid #facc15;
+        border-top: 0;
+        border-bottom: 0;
         box-shadow:
             0 22px 38px rgba(0, 0, 0, 0.42),
             0 0 0 1px rgba(250, 204, 21, 0.06);
@@ -2395,8 +2393,8 @@
         background: rgba(15, 23, 42, 0.98) !important;
         border-left: 1px solid rgba(143, 34, 48, 0.36) !important;
         border-right: 1px solid rgba(143, 34, 48, 0.36) !important;
-        border-top: 4px solid #facc15 !important;
-        border-bottom: 4px solid #facc15 !important;
+        border-top: 0 !important;
+        border-bottom: 0 !important;
         border-radius: 18px !important;
     }
 
@@ -2566,7 +2564,6 @@
             display: none;
         }
 
-        /* MOBILE: Filter Modal */
         .appointments-filter-panel {
             position: fixed !important;
             right: 16px !important;
@@ -2582,7 +2579,6 @@
             display: block !important;
         }
 
-        /* MOBILE: Appointment Summary Table - Horizontal Scroll */
         .card table,
         .appointments-table,
         table {
@@ -2633,7 +2629,6 @@
         }
     }
 
-    /* DARK MODE FIXES */
     html[data-theme="dark"] .appointments-filter-panel {
         background: rgba(35, 17, 25, 0.96) !important;
         border-color: rgba(255, 255, 255, 0.12) !important;
@@ -3179,7 +3174,7 @@
     #rescheduleModal .modal-box {
         border: 1px solid rgba(255, 255, 255, .62) !important;
         border-top: 0 !important;
-        border-bottom: 4px solid #70131B !important;
+        border-bottom: 0 !important;
         border-radius: 24px !important;
         background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.98)) !important;
         box-shadow: 0 26px 60px rgba(15, 23, 42, .24) !important;
@@ -3260,7 +3255,7 @@
     }
 
     #statusActionModal .modal-header-main::before {
-        content: "OK";
+        content: "RA";
     }
 
     #rescheduleModal .modal-header-main::before {
@@ -3392,9 +3387,9 @@
     html[data-theme="dark"] #statusActionModal .modal-box,
     html[data-theme="dark"] #rescheduleModal .modal-box {
         background: linear-gradient(180deg, rgba(15, 23, 42, .98), rgba(17, 24, 39, .98)) !important;
-        border-color: rgba(250, 204, 21, .24) !important;
+        border-color: rgba(148, 163, 184, .20) !important;
         border-top: 0 !important;
-        border-bottom-color: #70131B !important;
+        border-bottom: 0 !important;
         box-shadow: 0 26px 70px rgba(0, 0, 0, .48) !important;
     }
 
@@ -3478,6 +3473,995 @@
         box-shadow: 0 12px 24px rgba(112, 19, 27, 0.10), 0 3px 10px rgba(15, 23, 42, 0.05) !important;
     }
 
+    /* Standard modal chrome: view, approve/reject, and reschedule */
+    #infoModal .modal-box,
+    #statusActionModal .modal-box,
+    #rescheduleModal .modal-box,
+    html[data-theme="dark"] #infoModal .modal-box,
+    html[data-theme="dark"] #statusActionModal .modal-box,
+    html[data-theme="dark"] #rescheduleModal .modal-box {
+        border: 1px solid rgba(112, 19, 27, .18) !important;
+    }
+
+    #infoModal .modal-header,
+    #statusActionModal .modal-header,
+    #rescheduleModal .modal-header {
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+    }
+
+    #infoModal .modal-header-close,
+    #statusActionModal .modal-header-close,
+    #rescheduleModal .modal-header-close {
+        border: 1px solid #8f2230 !important;
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+        color: #ffffff !important;
+    }
+
+    #infoModal .modal-header-close:hover,
+    #infoModal .modal-header-close:focus-visible,
+    #statusActionModal .modal-header-close:hover,
+    #statusActionModal .modal-header-close:focus-visible,
+    #rescheduleModal .modal-header-close:hover,
+    #rescheduleModal .modal-header-close:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+
+    /* Final appointment modal and toolbar control pass */
+    .main #infoModal .modal-box,
+    .main #statusActionModal .modal-box,
+    .main #rescheduleModal .modal-box {
+        border: 0 !important;
+        border-left: 1px solid rgba(112, 19, 27, .18) !important;
+        border-right: 1px solid rgba(112, 19, 27, .18) !important;
+        border-top: 0 !important;
+        border-bottom: 0 !important;
+    }
+
+    html[data-theme="dark"] .main #infoModal .modal-box,
+    html[data-theme="dark"] .main #statusActionModal .modal-box,
+    html[data-theme="dark"] .main #rescheduleModal .modal-box {
+        border: 0 !important;
+        border-left: 1px solid rgba(148, 163, 184, .20) !important;
+        border-right: 1px solid rgba(148, 163, 184, .20) !important;
+        border-top: 0 !important;
+        border-bottom: 0 !important;
+    }
+
+    #infoModal .modal-header-main::before,
+    #statusActionModal .modal-header-main::before,
+    #rescheduleModal .modal-header-main::before {
+        color: #ffffff !important;
+    }
+
+    #statusActionModal .modal-header-main,
+    #rescheduleModal .modal-header-main {
+        display: grid !important;
+        grid-template-columns: 46px minmax(0, 1fr) !important;
+        column-gap: 14px !important;
+        row-gap: 4px !important;
+        align-items: start !important;
+    }
+
+    #statusActionModal .modal-header-main::before,
+    #rescheduleModal .modal-header-main::before {
+        grid-column: 1 !important;
+        grid-row: 1 / span 2 !important;
+    }
+
+    #statusActionModal .modal-title,
+    #rescheduleModal .modal-title {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+    }
+
+    #statusActionModal .appointment-detail-id-line,
+    #rescheduleModal .appointment-detail-id-line {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 4px 6px !important;
+        margin: 0 !important;
+    }
+
+    .appointments-search-wrap,
+    .appointments-search-shell.is-open .appointments-search-wrap,
+    .appointments-filter-toggle,
+    .appointment-action-menu-toggle,
+    .appointment-action-menu-item,
+    .appointment-inline-pill.is-view {
+        box-shadow: 0 12px 24px rgba(112, 19, 27, .10), 0 3px 10px rgba(15, 23, 42, .05) !important;
+    }
+
+    .appointments-filter-toggle,
+    .appointment-action-menu-toggle,
+    .appointment-inline-pill.is-view {
+        width: 118px !important;
+        min-width: 118px !important;
+        max-width: 118px !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        padding: 0 14px !important;
+        border-radius: 12px !important;
+        gap: 8px !important;
+        font-size: 12px !important;
+        line-height: 1 !important;
+    }
+
+    .appointment-action-menu-item,
+    .appointment-action-menu-state {
+        min-height: 42px !important;
+        padding: 0 14px !important;
+        border-radius: 12px !important;
+    }
+
+    #statusActionModal .dialog-actions,
+    #rescheduleModal .dialog-actions {
+        gap: 10px !important;
+        align-items: center !important;
+    }
+
+    #statusActionModal .dialog-btn,
+    #rescheduleModal .dialog-btn {
+        min-width: 124px !important;
+        min-height: 42px !important;
+        height: 42px !important;
+        padding: 0 16px !important;
+        border-radius: 12px !important;
+        border-bottom-width: 1px !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        line-height: 1 !important;
+        gap: 8px !important;
+        white-space: nowrap !important;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, .10), 0 3px 10px rgba(15, 23, 42, .05) !important;
+    }
+
+    #statusActionModal .dialog-btn-secondary,
+    #rescheduleModal .dialog-btn-secondary {
+        border: 1px solid rgba(112, 19, 27, .20) !important;
+        background: #ffffff !important;
+        color: #70131B !important;
+    }
+
+    #statusActionModal .dialog-btn-approve,
+    #statusActionModal .dialog-btn-reject,
+    #statusActionModal .dialog-btn-warning,
+    #rescheduleModal .dialog-btn-approve {
+        position: relative !important;
+        overflow: hidden !important;
+        border: 1px solid #7f1d2d !important;
+        background: #7f1d2d !important;
+        color: #ffffff !important;
+    }
+
+    #statusActionModal .dialog-btn-approve::before,
+    #statusActionModal .dialog-btn-reject::before,
+    #statusActionModal .dialog-btn-warning::before,
+    #rescheduleModal .dialog-btn-approve::before {
+        content: "" !important;
+        position: absolute !important;
+        inset: 0 !important;
+        background: linear-gradient(120deg, transparent 0%, rgba(255, 247, 181, .58) 45%, transparent 78%) !important;
+        transform: translateX(-120%) !important;
+        transition: transform .52s ease !important;
+        pointer-events: none !important;
+    }
+
+    #statusActionModal .dialog-btn svg,
+    #rescheduleModal .dialog-btn svg {
+        position: relative !important;
+        z-index: 1 !important;
+        width: 16px !important;
+        height: 16px !important;
+        flex: 0 0 16px !important;
+        color: currentColor !important;
+        stroke: currentColor !important;
+    }
+
+    #statusActionModal .dialog-btn span,
+    #rescheduleModal .dialog-btn span {
+        position: relative !important;
+        z-index: 1 !important;
+    }
+
+    #statusActionModal .dialog-btn-approve:hover,
+    #statusActionModal .dialog-btn-approve:focus-visible,
+    #statusActionModal .dialog-btn-reject:hover,
+    #statusActionModal .dialog-btn-reject:focus-visible,
+    #statusActionModal .dialog-btn-warning:hover,
+    #statusActionModal .dialog-btn-warning:focus-visible,
+    #rescheduleModal .dialog-btn-approve:hover,
+    #rescheduleModal .dialog-btn-approve:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-1px) !important;
+    }
+
+    #statusActionModal .dialog-btn-approve:hover::before,
+    #statusActionModal .dialog-btn-approve:focus-visible::before,
+    #statusActionModal .dialog-btn-reject:hover::before,
+    #statusActionModal .dialog-btn-reject:focus-visible::before,
+    #statusActionModal .dialog-btn-warning:hover::before,
+    #statusActionModal .dialog-btn-warning:focus-visible::before,
+    #rescheduleModal .dialog-btn-approve:hover::before,
+    #rescheduleModal .dialog-btn-approve:focus-visible::before {
+        transform: translateX(120%) !important;
+    }
+
+    #statusActionModal .dialog-btn-secondary:hover,
+    #statusActionModal .dialog-btn-secondary:focus-visible,
+    #rescheduleModal .dialog-btn-secondary:hover,
+    #rescheduleModal .dialog-btn-secondary:focus-visible {
+        border-color: #facc15 !important;
+        background: #fffbea !important;
+        color: #70131B !important;
+        transform: translateY(-1px) !important;
+    }
+
+    html[data-theme="dark"] .appointments-search-wrap,
+    html[data-theme="dark"] .appointments-search-shell.is-open .appointments-search-wrap,
+    html[data-theme="dark"] .appointments-filter-toggle,
+    html[data-theme="dark"] .appointment-action-menu-toggle,
+    html[data-theme="dark"] .appointment-action-menu-item,
+    html[data-theme="dark"] .appointment-inline-pill.is-view,
+    html[data-theme="dark"] #statusActionModal .dialog-btn,
+    html[data-theme="dark"] #rescheduleModal .dialog-btn {
+        box-shadow: 0 14px 28px rgba(0, 0, 0, .34), 0 3px 10px rgba(0, 0, 0, .22) !important;
+    }
+
+    html[data-theme="dark"] #statusActionModal .dialog-btn-secondary,
+    html[data-theme="dark"] #rescheduleModal .dialog-btn-secondary {
+        border-color: rgba(148, 163, 184, .28) !important;
+        background: #111827 !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] #statusActionModal .dialog-btn-secondary:hover,
+    html[data-theme="dark"] #statusActionModal .dialog-btn-secondary:focus-visible,
+    html[data-theme="dark"] #rescheduleModal .dialog-btn-secondary:hover,
+    html[data-theme="dark"] #rescheduleModal .dialog-btn-secondary:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+
+    /* Keep the primary appointment controls on one identical shadow system. */
+    .appointments-toolbar-actions .appointments-search-wrap,
+    .appointments-toolbar-actions .appointments-filter-toggle,
+    #apptTable .appointment-action-menu-toggle,
+    #apptTable .appointment-inline-pill.is-view {
+        box-shadow:
+            0 15px 30px rgba(15, 23, 42, .22),
+            0 6px 14px rgba(15, 23, 42, .14),
+            0 0 0 1px rgba(15, 23, 42, .03) !important;
+    }
+
+    html:not([data-theme="dark"]) .appointments-toolbar-actions .appointments-filter-toggle,
+    html:not([data-theme="dark"]) #apptTable .appointment-action-menu-toggle,
+    html:not([data-theme="dark"]) #apptTable .appointment-inline-pill.is-view {
+        position: relative !important;
+        z-index: 2 !important;
+        box-shadow:
+            0 16px 30px rgba(15, 23, 42, .26),
+            0 7px 15px rgba(15, 23, 42, .18),
+            0 2px 4px rgba(15, 23, 42, .12) !important;
+    }
+
+    html[data-theme="dark"] .appointments-toolbar-actions .appointments-search-wrap,
+    html[data-theme="dark"] .appointments-toolbar-actions .appointments-filter-toggle,
+    html[data-theme="dark"] #apptTable .appointment-action-menu-toggle,
+    html[data-theme="dark"] #apptTable .appointment-inline-pill.is-view {
+        box-shadow:
+            0 16px 30px rgba(0, 0, 0, .44),
+            0 5px 14px rgba(0, 0, 0, .28) !important;
+    }
+
+    @media (max-width: 768px) {
+        .appointments-filter-toggle {
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: none !important;
+        }
+    }
+
+    /* Appointment workflow summary and queue modals */
+    button.appointments-modern-card {
+        width: 100%;
+        margin: 0;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+    .appointments-modern-card.is-workflow {
+        grid-template-columns: 44px minmax(0, 1fr) 38px !important;
+        border-color: #8f2230 !important;
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+        color: #ffffff;
+    }
+    html:not([data-theme="dark"]) .appointments-modern-card.is-workflow,
+    html[data-theme="dark"] .appointments-modern-card.is-workflow {
+        border-color: #8f2230 !important;
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+        box-shadow: 0 16px 30px rgba(112, 19, 27, .24) !important;
+    }
+    .appointments-modern-card.is-workflow .appointments-modern-icon {
+        background: rgba(255, 255, 255, .13) !important;
+        color: #ffffff !important;
+    }
+    .appointments-modern-card.is-workflow .appointments-modern-label,
+    .appointments-modern-card.is-workflow .appointments-modern-copy strong,
+    .appointments-modern-card.is-workflow .appointments-modern-copy span:last-child {
+        color: #ffffff !important;
+    }
+    .appointments-modern-card.is-workflow .appointments-modern-arrow {
+        width: 38px;
+        height: 38px;
+        border: 1px solid rgba(250, 204, 21, .72);
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        color: #facc15;
+        font-size: 19px;
+        font-weight: 900;
+        transition: background .18s ease, color .18s ease, transform .18s ease;
+    }
+    .appointments-modern-card.is-workflow:hover .appointments-modern-arrow {
+        background: #facc15;
+        color: #70131B;
+        transform: translateX(2px);
+    }
+    html[data-theme="dark"] .appointments-modern-card:not(.is-workflow) {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+    }
+    html[data-theme="dark"] .appointments-modern-card:not(.is-workflow) .appointments-modern-label,
+    html[data-theme="dark"] .appointments-modern-card:not(.is-workflow) .appointments-modern-copy strong {
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] .appointments-modern-card:not(.is-workflow) .appointments-modern-copy span:last-child {
+        color: #cbd5e1 !important;
+    }
+
+    .appointment-queue-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1300;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, .68);
+        backdrop-filter: blur(8px);
+    }
+    #infoModal { z-index: 1400 !important; }
+    #statusActionModal,
+    #rescheduleModal { z-index: 1500 !important; }
+    .appointment-queue-shell {
+        width: min(980px, 100%);
+        max-height: min(86vh, 760px);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid rgba(250, 204, 21, .26);
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 28px 72px rgba(15, 23, 42, .32);
+    }
+    .appointment-queue-header {
+        flex: 0 0 auto;
+        min-height: 96px;
+        padding: 18px 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        background: linear-gradient(135deg, #70131B, #8f2230);
+        color: #ffffff;
+    }
+    .appointment-queue-header-main {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .appointment-queue-badge {
+        width: 48px;
+        height: 48px;
+        flex: 0 0 48px;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(255, 255, 255, .28);
+        border-radius: 13px;
+        background: rgba(255, 255, 255, .14);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 900;
+    }
+    .appointment-queue-header h3 {
+        margin: 0;
+        color: #ffffff;
+        font-size: 20px;
+        line-height: 1.2;
+        font-weight: 900;
+    }
+    .appointment-queue-header p {
+        margin: 5px 0 0;
+        color: rgba(255, 255, 255, .92);
+        font-size: 12px;
+        line-height: 1.45;
+    }
+    .appointment-queue-header .modal-header-close {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+        flex: 0 0 40px;
+        border: 1px solid #8f2230 !important;
+        border-radius: 999px !important;
+        background: #70131B !important;
+        color: #ffffff !important;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, .18) !important;
+    }
+    .appointment-queue-header .modal-header-close:hover,
+    .appointment-queue-header .modal-header-close:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+    .appointment-queue-body {
+        min-height: 0;
+        padding: 20px;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        gap: 16px;
+        background: #fffdfd;
+    }
+    .appointment-queue-search {
+        height: 46px;
+        padding: 0 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid #ead8dc;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, .08);
+    }
+    .appointment-queue-search svg {
+        width: 18px;
+        height: 18px;
+        color: #70131B;
+    }
+    .main .appointment-queue-search input[type="search"] {
+        width: 100%;
+        min-width: 0;
+        height: auto !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        outline: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        appearance: none;
+        -webkit-appearance: none;
+        color: #111827;
+        font-size: 13px;
+    }
+    .appointment-queue-list {
+        min-height: 0;
+        overflow-y: auto;
+        padding-right: 4px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(112, 19, 27, .42) transparent;
+    }
+    .appointment-queue-record {
+        min-height: 98px;
+        padding: 16px;
+        display: grid;
+        grid-template-columns: minmax(190px, 1.5fr) minmax(180px, 1fr) 150px 126px;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid #efd8dd;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #ffffff, #fff8f8);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .04);
+        position: relative;
+        z-index: 0;
+        transform: translateY(0);
+        transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+    }
+    .appointment-queue-record:hover,
+    .appointment-queue-record:focus-within {
+        z-index: 1;
+        transform: translateY(-3px);
+        border-color: rgba(250, 204, 21, .58);
+        box-shadow: 0 18px 34px rgba(112, 19, 27, .14);
+    }
+    .appointment-queue-identity,
+    .appointment-queue-reference,
+    .appointment-queue-condition {
+        min-width: 0;
+    }
+    .appointment-queue-identity strong,
+    .appointment-queue-reference strong,
+    .appointment-queue-condition strong {
+        display: block;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 900;
+        overflow-wrap: anywhere;
+    }
+    .appointment-queue-identity span,
+    .appointment-queue-identity small,
+    .appointment-queue-reference span,
+    .appointment-queue-condition span {
+        display: block;
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 800;
+    }
+    .appointment-queue-reference,
+    .appointment-queue-condition {
+        min-height: 62px;
+        padding: 10px 12px;
+        border: 1px solid #e7e5e4;
+        border-radius: 11px;
+        background: rgba(255, 255, 255, .86);
+    }
+    .appointment-queue-reference span,
+    .appointment-queue-condition span {
+        margin: 0 0 5px;
+        text-transform: uppercase;
+    }
+    .appointment-queue-condition.has-condition {
+        border-color: #fecaca;
+        background: #fff1f2;
+    }
+    .appointment-queue-condition.has-condition strong { color: #b91c1c; }
+    .appointment-queue-condition.no-condition {
+        border-color: #bfdbfe;
+        background: #eff6ff;
+    }
+    .appointment-queue-condition.no-condition strong { color: #1d4ed8; }
+    .appointment-queue-view {
+        width: 126px;
+        height: 44px;
+        border: 1px solid #7f1d2d;
+        border-radius: 11px;
+        background: #7f1d2d;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, .16);
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        transition: transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
+    }
+    .appointment-queue-view::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background: linear-gradient(115deg, transparent 5%, rgba(255, 255, 255, .08) 36%, rgba(255, 255, 255, .72) 50%, rgba(255, 255, 255, .08) 64%, transparent 95%);
+        transform: translateX(-130%);
+        transition: transform .52s ease;
+    }
+    .appointment-queue-view > span {
+        position: relative;
+        z-index: 1;
+    }
+    .appointment-queue-view:hover,
+    .appointment-queue-view:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+    }
+    .appointment-queue-view:hover::before,
+    .appointment-queue-view:focus-visible::before {
+        transform: translateX(130%);
+    }
+    .appointment-queue-empty {
+        padding: 24px;
+        border: 1px dashed #e7c8ce;
+        border-radius: 12px;
+        color: #64748b;
+        text-align: center;
+        font-size: 13px;
+    }
+    .appointment-queue-search-empty { display: none; }
+    .appointment-queue-pagination {
+        min-height: 64px;
+        padding: 10px 14px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+        border: 1px solid rgba(250, 204, 21, .30);
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(112, 19, 27, .08);
+    }
+    .appointment-queue-pagination > span {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 800;
+    }
+    .appointment-queue-page-actions {
+        display: flex;
+        gap: 8px;
+    }
+    .appointment-queue-page-actions button,
+    .appointment-queue-pagination select {
+        height: 38px;
+        border: 1px solid #ead8dc;
+        border-radius: 9px;
+        background: #ffffff;
+        color: #70131B;
+        font-size: 12px;
+        font-weight: 900;
+    }
+    .appointment-queue-page-actions button {
+        width: 38px;
+        cursor: pointer;
+    }
+    .appointment-queue-page-actions button.is-current {
+        border-color: #7f1d2d;
+        background: #7f1d2d;
+        color: #ffffff;
+    }
+    .appointment-queue-page-actions button:disabled {
+        opacity: .42;
+        cursor: not-allowed;
+    }
+    .appointment-queue-pagination select {
+        min-width: 112px;
+        justify-self: end;
+        padding: 0 10px;
+    }
+
+    #infoModal .appointment-detail-actions {
+        flex: 0 0 auto;
+        padding: 14px 20px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        border-top: 1px solid #ead8dc;
+        background: #ffffff;
+    }
+    #infoModal .appointment-detail-actions[hidden] { display: none !important; }
+    #infoModal .appointment-detail-actions .dialog-btn[hidden],
+    #appointmentDetailTimelinePanel[hidden] { display: none !important; }
+    #infoModal .appointment-detail-actions .dialog-btn {
+        position: relative;
+        overflow: hidden;
+        min-width: 118px;
+        height: 42px;
+        padding: 0 15px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-radius: 11px;
+        font-size: 12px;
+        font-weight: 900;
+        text-decoration: none;
+        cursor: pointer;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, .10);
+    }
+    #infoModal .appointment-detail-actions .dialog-btn::before,
+    .appointment-action-dialog-body .dialog-btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background: linear-gradient(120deg, transparent 0%, rgba(255, 247, 181, .62) 46%, transparent 78%);
+        transform: translateX(-125%);
+        transition: transform .52s ease;
+    }
+    #infoModal .appointment-detail-actions .dialog-btn > *,
+    .appointment-action-dialog-body .dialog-btn > * {
+        position: relative;
+        z-index: 1;
+    }
+    #infoModal .appointment-detail-actions .dialog-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+    #infoModal .appointment-detail-actions .dialog-btn-secondary {
+        border: 1px solid #d8dee8;
+        background: #ffffff;
+        color: #70131B;
+    }
+    #infoModal .appointment-detail-actions .dialog-btn-approve,
+    #infoModal .appointment-detail-actions .dialog-btn-reject,
+    #infoModal .appointment-detail-actions .dialog-btn-warning {
+        border: 1px solid #7f1d2d;
+        background: #7f1d2d;
+        color: #ffffff;
+    }
+    #infoModal .appointment-detail-actions .dialog-btn:hover,
+    #infoModal .appointment-detail-actions .dialog-btn:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+    }
+    #infoModal .appointment-detail-actions .dialog-btn:hover::before,
+    #infoModal .appointment-detail-actions .dialog-btn:focus-visible::before,
+    .appointment-action-dialog-body .dialog-btn:hover::before,
+    .appointment-action-dialog-body .dialog-btn:focus-visible::before {
+        transform: translateX(125%) !important;
+    }
+    #infoModal .appointment-detail-consult.is-disabled {
+        opacity: .55;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    #statusActionModal .appointment-action-dialog,
+    #rescheduleModal .appointment-action-dialog {
+        width: min(560px, 100%) !important;
+        max-height: calc(100vh - 44px) !important;
+    }
+    .appointment-action-dialog-body {
+        min-height: 0;
+        overflow-y: auto;
+        padding: 20px;
+        background: #fffdfd;
+    }
+    .appointment-action-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+    .appointment-action-summary > div,
+    .appointment-reschedule-summary {
+        padding: 12px;
+        border: 1px solid #ead8dc;
+        border-radius: 11px;
+        background: #ffffff;
+    }
+    .appointment-action-summary span,
+    .appointment-reschedule-summary > span {
+        display: block;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    .appointment-action-summary strong,
+    .appointment-reschedule-summary strong {
+        display: block;
+        margin-top: 5px;
+        color: #111827;
+        font-size: 12px;
+        font-weight: 900;
+        overflow-wrap: anywhere;
+    }
+    .appointment-action-confirmation {
+        padding: 16px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        border: 1px solid #bbf7d0;
+        border-radius: 12px;
+        background: #f0fdf4;
+    }
+    .appointment-action-confirmation[hidden],
+    .appointment-action-field[hidden] { display: none !important; }
+    .appointment-action-confirmation-icon {
+        width: 36px;
+        height: 36px;
+        flex: 0 0 36px;
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+        background: #dcfce7;
+        color: #15803d;
+    }
+    .appointment-action-confirmation-icon svg { width: 19px; height: 19px; }
+    .appointment-action-confirmation strong { color: #166534; font-size: 13px; }
+    .appointment-action-confirmation p {
+        margin: 4px 0 0;
+        color: #3f6212;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+    .appointment-action-field {
+        min-width: 0;
+    }
+    .appointment-action-field label {
+        display: block;
+        margin-bottom: 7px;
+        color: #111827;
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    .appointment-action-field input,
+    .appointment-action-field textarea {
+        width: 100%;
+        border: 1px solid #d8dee8;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 13px;
+        outline: none;
+    }
+    .appointment-action-field input {
+        height: 44px;
+        padding: 0 12px;
+    }
+    .appointment-action-field textarea {
+        min-height: 112px;
+        padding: 12px;
+        resize: vertical;
+    }
+    .appointment-action-field input:focus,
+    .appointment-action-field textarea:focus {
+        border-color: #8f2230;
+        box-shadow: 0 0 0 3px rgba(143, 34, 48, .10);
+    }
+    .appointment-action-field small {
+        display: block;
+        margin-top: 6px;
+        color: #b91c1c;
+        font-size: 11px;
+        font-weight: 800;
+    }
+    .appointment-reschedule-summary {
+        margin-bottom: 16px;
+        background: #fff8f8;
+    }
+    .appointment-reschedule-summary p {
+        margin: 5px 0 0;
+        color: #64748b;
+        font-size: 12px;
+    }
+    .appointment-reschedule-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+    .appointment-reschedule-grid .is-full { grid-column: 1 / -1; }
+    #statusActionModal .appointment-action-dialog-body .dialog-actions,
+    #rescheduleModal .appointment-action-dialog-body .dialog-actions {
+        margin-top: 28px !important;
+        padding-top: 18px !important;
+        border-top: 1px solid #ead8dc;
+    }
+    .appointment-action-dialog-body .dialog-btn {
+        position: relative !important;
+        overflow: hidden !important;
+    }
+
+    html[data-theme="dark"] .appointment-queue-shell,
+    html[data-theme="dark"] .appointment-queue-body,
+    html[data-theme="dark"] .appointment-action-dialog-body,
+    html[data-theme="dark"] #infoModal .appointment-detail-actions {
+        background: #0f172a !important;
+    }
+    html[data-theme="dark"] .appointment-queue-record,
+    html[data-theme="dark"] .appointment-queue-search,
+    html[data-theme="dark"] .appointment-queue-pagination,
+    html[data-theme="dark"] .appointment-action-summary > div,
+    html[data-theme="dark"] .appointment-reschedule-summary {
+        border-color: rgba(250, 204, 21, .18);
+        background: #111827;
+    }
+    html[data-theme="dark"] .appointment-queue-search input,
+    html[data-theme="dark"] .appointment-queue-identity strong,
+    html[data-theme="dark"] .appointment-queue-reference strong,
+    html[data-theme="dark"] .appointment-action-summary strong,
+    html[data-theme="dark"] .appointment-reschedule-summary strong,
+    html[data-theme="dark"] .appointment-action-field label,
+    html[data-theme="dark"] .appointment-action-field input,
+    html[data-theme="dark"] .appointment-action-field textarea {
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .appointment-queue-identity span,
+    html[data-theme="dark"] .appointment-queue-identity small,
+    html[data-theme="dark"] .appointment-queue-reference span,
+    html[data-theme="dark"] .appointment-action-summary span,
+    html[data-theme="dark"] .appointment-reschedule-summary p,
+    html[data-theme="dark"] .appointment-queue-pagination > span {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .appointment-queue-reference,
+    html[data-theme="dark"] .appointment-action-field input,
+    html[data-theme="dark"] .appointment-action-field textarea,
+    html[data-theme="dark"] .appointment-queue-page-actions button,
+    html[data-theme="dark"] .appointment-queue-pagination select {
+        border-color: rgba(250, 204, 21, .18);
+        background: #0f172a;
+        color: #ffffff;
+    }
+    .appointment-queue-header,
+    .appointment-queue-header h3,
+    .appointment-queue-header p,
+    .appointment-queue-header .appointment-queue-badge,
+    .appointment-queue-header .modal-header-close,
+    .appointment-queue-header .modal-header-close svg {
+        color: #ffffff !important;
+    }
+    #infoModal .modal-header,
+    #statusActionModal .modal-header,
+    #rescheduleModal .modal-header {
+        box-sizing: border-box;
+        border: 1px solid rgba(250, 204, 21, .30) !important;
+    }
+    html[data-theme="dark"] #infoModal .modal-header,
+    html[data-theme="dark"] #statusActionModal .modal-header,
+    html[data-theme="dark"] #rescheduleModal .modal-header {
+        border-color: rgba(250, 204, 21, .34) !important;
+    }
+    html[data-theme="dark"] .appointment-queue-condition.has-condition {
+        border-color: rgba(248, 113, 113, .30);
+        background: rgba(127, 29, 29, .28);
+    }
+    html[data-theme="dark"] .appointment-queue-condition.has-condition strong { color: #fecaca; }
+    html[data-theme="dark"] .appointment-queue-condition.no-condition {
+        border-color: rgba(96, 165, 250, .30);
+        background: rgba(30, 64, 175, .24);
+    }
+    html[data-theme="dark"] .appointment-queue-condition.no-condition strong { color: #bfdbfe; }
+    html[data-theme="dark"] #infoModal .appointment-detail-actions .dialog-btn-secondary {
+        border-color: rgba(148, 163, 184, .28);
+        background: #111827;
+        color: #ffffff;
+    }
+    html[data-theme="dark"] #infoModal .appointment-detail-actions .dialog-btn:hover,
+    html[data-theme="dark"] #infoModal .appointment-detail-actions .dialog-btn:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+    }
+    html[data-theme="dark"] .appointment-action-confirmation {
+        border-color: rgba(34, 197, 94, .30);
+        background: rgba(22, 101, 52, .18);
+    }
+    html[data-theme="dark"] .appointment-action-confirmation strong { color: #bbf7d0; }
+    html[data-theme="dark"] .appointment-action-confirmation p { color: #dcfce7; }
+
+    @media (max-width: 820px) {
+        .appointments-modern-summary { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        .appointment-queue-record {
+            grid-template-columns: minmax(0, 1fr) minmax(150px, .8fr);
+        }
+        .appointment-queue-view { width: 100%; }
+    }
+    @media (max-width: 560px) {
+        .appointments-modern-summary { grid-template-columns: 1fr !important; }
+        .appointment-queue-modal { padding: 10px; }
+        .appointment-queue-shell { max-height: calc(100dvh - 20px); border-radius: 14px; }
+        .appointment-queue-header { min-height: 88px; padding: 14px; }
+        .appointment-queue-body { padding: 12px; }
+        .appointment-queue-record { grid-template-columns: 1fr; }
+        .appointment-queue-pagination { grid-template-columns: 1fr; justify-items: center; }
+        .appointment-queue-pagination > span,
+        .appointment-queue-pagination select { justify-self: center; }
+        #infoModal .appointment-detail-actions { flex-wrap: wrap; padding: 12px; }
+        #infoModal .appointment-detail-actions .dialog-btn { flex: 1 1 calc(50% - 8px); }
+        .appointment-action-summary,
+        .appointment-reschedule-grid { grid-template-columns: 1fr; }
+        .appointment-reschedule-grid .is-full { grid-column: 1; }
+    }
+
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 @endpush
@@ -3491,45 +4475,86 @@
             ? collect($appointments->items())
             : collect($appointments);
         $appointmentTotal = $appointmentCollection->count();
-        $commonIllness = $appointmentCollection
-            ->map(fn ($appt) => trim((string) ($appt->clinical_findings_comment ?? '')))
-            ->filter()
-            ->countBy()
-            ->sortDesc()
-            ->keys()
-            ->first() ?: 'N/A';
-        $mostGender = $appointmentCollection
-            ->map(function ($appt) {
-                return trim((string) (
-                    optional($appt->user)->gender
-                    ?: optional(optional($appt->user)->healthProfile)->gender
-                    ?: optional(optional($appt->user)->healthProfile)->sex
-                    ?: ''
-                ));
-            })
-            ->filter()
-            ->map(fn ($gender) => ucfirst(strtolower($gender)))
-            ->countBy()
-            ->sortDesc()
-            ->keys()
-            ->first() ?: 'N/A';
-        $peakHour = $appointmentCollection
-            ->map(function ($appt) {
-                $time = trim((string) ($appt->time ?? ''));
-                if ($time === '') {
-                    return null;
+        $appointmentHasMedicalCondition = function ($appointment): bool {
+            $user = $appointment->user;
+            $profile = $user?->healthProfileStaff ?: $user?->healthProfile;
+
+            return $profile && method_exists($profile, 'hasMedicalCondition')
+                ? $profile->hasMedicalCondition()
+                : false;
+        };
+        $appointmentsWithMedicalConditions = $appointmentCollection
+            ->filter($appointmentHasMedicalCondition);
+        $forConsultationAppointments = $appointmentCollection
+            ->filter(fn ($appointment) => in_array(strtolower(trim((string) $appointment->status)), ['approved', 'scheduled'], true))
+            ->values();
+        $forReviewAppointments = $appointmentCollection
+            ->filter(fn ($appointment) => strtolower(trim((string) $appointment->status)) === 'pending')
+            ->values();
+        $summaryAppointments = $appointmentCollection
+            ->filter(fn ($appointment) => in_array(strtolower(trim((string) $appointment->status)), ['approved', 'cancelled', 'rejected', 'rescheduled', 'missed'], true))
+            ->values();
+        $appointmentPresentation = function ($appointment) use ($appointmentHasMedicalCondition, $basePrefix): array {
+            $user = $appointment->user;
+            $studentProfile = $user?->healthProfile;
+            $employeeProfile = $user?->healthProfileStaff;
+            $roleMarkers = strtolower(trim(implode(' ', array_filter([
+                (string) ($user?->user_type ?? ''),
+                (string) ($user?->user_role ?? ''),
+                (string) ($user?->idp_role ?? ''),
+            ]))));
+            $usesEmployeeNumber = collect(['faculty', 'admin', 'staff', 'employee', 'dependent'])
+                ->contains(fn ($needle) => str_contains($roleMarkers, $needle));
+            $profile = $usesEmployeeNumber ? ($employeeProfile ?: $studentProfile) : ($studentProfile ?: $employeeProfile);
+            $idNumber = $usesEmployeeNumber
+                ? ($employeeProfile?->employee_number ?: $user?->employee_number ?: $appointment->student_number)
+                : ($appointment->student_number ?: $studentProfile?->student_number ?: $user?->student_number);
+            $idLabel = $usesEmployeeNumber ? 'Employee Number' : 'Student Number';
+            $photoPath = $profile?->student_photo;
+            $photoUrl = '';
+
+            if ($photoPath && $profile) {
+                $isAssistant = request()->routeIs('assistant.*');
+                $routeName = $usesEmployeeNumber
+                    ? ($isAssistant ? 'assistant.walkin.employeeDocument' : 'walkin.employeeDocument')
+                    : ($isAssistant ? 'assistant.walkin.document' : 'walkin.document');
+                $routeParameters = $usesEmployeeNumber
+                    ? ['employeeProfile' => $profile->id, 'document' => 'student_photo']
+                    : ['healthProfile' => $profile->id, 'document' => 'student_photo'];
+                $photoUrl = route($routeName, $routeParameters);
+            }
+
+            $type = strtolower(trim((string) ($appointment->type ?? '')));
+            if ($type === '') {
+                $legacyType = strtolower(trim((string) ($appointment->user_type ?? '')));
+                if (in_array($legacyType, ['walkin', 'walk-in', 'online'], true)) {
+                    $type = str_replace('-', '', $legacyType);
                 }
-                try {
-                    return \Carbon\Carbon::parse($time)->format('g A');
-                } catch (\Throwable $exception) {
-                    return null;
-                }
-            })
-            ->filter()
-            ->countBy()
-            ->sortDesc()
-            ->keys()
-            ->first() ?: 'N/A';
+            }
+
+            $program = $usesEmployeeNumber
+                ? ($employeeProfile?->course_college ?: $user?->department ?: 'Employee')
+                : trim(implode(' ', array_filter([
+                    $user?->course ?: $studentProfile?->course_college,
+                    trim(implode('-', array_filter([$user?->year, $user?->section]))),
+                ])));
+            $scheduledAt = in_array(strtolower((string) $appointment->status), ['approved', 'scheduled'], true)
+                ? \Carbon\Carbon::parse($appointment->date . ' ' . $appointment->time)
+                : null;
+            $consultEligibleAt = $scheduledAt?->copy()->subMinutes(10);
+
+            return [
+                'id_number' => $idNumber ?: '',
+                'id_label' => $idLabel,
+                'contact' => $user?->contact_no ?: $profile?->contact_no ?: $profile?->cellphone ?: '',
+                'program' => $program ?: '',
+                'photo_url' => $photoUrl,
+                'type' => $type === 'walkin' ? 'Walk-in' : 'Online',
+                'has_condition' => $appointmentHasMedicalCondition($appointment),
+                'consult_url' => url($basePrefix . '/walkin/form/' . $appointment->student_id) . '?source=online',
+                'consult_locked' => $consultEligibleAt ? \Carbon\Carbon::now()->lt($consultEligibleAt) : false,
+            ];
+        };
         $appointmentsLatestUpdatedAt = $appointmentCollection
             ->map(fn ($appt) => $appt->updated_at ?? $appt->created_at ?? null)
             ->filter()
@@ -3567,30 +4592,32 @@
                     <span>Current list</span>
                 </div>
             </div>
-            <div class="appointments-modern-card is-service">
+            <div class="appointments-modern-card is-condition">
                 <span class="appointments-modern-icon"><x-outline-icon name="heart-pulse" /></span>
                 <div class="appointments-modern-copy">
-                    <span class="appointments-modern-label">Common Illness</span>
-                    <strong>{{ $commonIllness }}</strong>
-                    <span>Most recorded</span>
+                    <span class="appointments-modern-label">With Medical Conditions</span>
+                    <strong>{{ $appointmentsWithMedicalConditions->count() }}</strong>
+                    <span>Current records</span>
                 </div>
             </div>
-            <div class="appointments-modern-card is-gender">
-                <span class="appointments-modern-icon"><x-outline-icon name="users" /></span>
+            <button type="button" class="appointments-modern-card is-workflow is-consultation" onclick="openAppointmentQueueModal('consultationQueueModal')">
+                <span class="appointments-modern-icon"><x-outline-icon name="clipboard-document-list" /></span>
                 <div class="appointments-modern-copy">
-                    <span class="appointments-modern-label">Most Gender</span>
-                    <strong>{{ $mostGender }}</strong>
-                    <span>From profiles</span>
+                    <span class="appointments-modern-label">For Consultations</span>
+                    <strong>{{ $forConsultationAppointments->count() }}</strong>
+                    <span>Click to view</span>
                 </div>
-            </div>
-            <div class="appointments-modern-card is-peak">
-                <span class="appointments-modern-icon"><x-outline-icon name="clock" /></span>
+                <span class="appointments-modern-arrow" aria-hidden="true">&rarr;</span>
+            </button>
+            <button type="button" class="appointments-modern-card is-workflow is-review" onclick="openAppointmentQueueModal('reviewQueueModal')">
+                <span class="appointments-modern-icon"><x-outline-icon name="exclamation-triangle" /></span>
                 <div class="appointments-modern-copy">
-                    <span class="appointments-modern-label">Peak Hours</span>
-                    <strong>{{ $peakHour }}</strong>
-                    <span>Most scheduled</span>
+                    <span class="appointments-modern-label">For Review</span>
+                    <strong>{{ $forReviewAppointments->count() }}</strong>
+                    <span>Click to view</span>
                 </div>
-            </div>
+                <span class="appointments-modern-arrow" aria-hidden="true">&rarr;</span>
+            </button>
         </div>
     </section>
     <div class="card appointments-summary-card">
@@ -3616,11 +4643,10 @@
                         <div class="appointments-status-wrap" id="appointmentsStatusWrap">
                             <select id="appointmentStatusFilter" class="appointments-status-select" aria-hidden="true" tabindex="-1">
                                 <option value="">All Statuses</option>
-                                <option value="Pending">Pending</option>
                                 <option value="Approved">Approved</option>
-                                <option value="Completed">Completed</option>
                                 <option value="Cancelled">Cancelled</option>
-                                <option value="Expired">Expired</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="Rescheduled">Rescheduled</option>
                                 <option value="Missed">Missed</option>
                             </select>
                             <button type="button" class="appointments-status-display" id="appointmentsStatusDisplay" aria-haspopup="listbox" aria-expanded="false">
@@ -3629,11 +4655,10 @@
                             <div class="appointments-status-menu" id="appointmentsStatusMenu" role="listbox" aria-label="Appointment status options">
                                 <div class="appointments-status-options">
                                     <button type="button" class="appointments-status-option is-selected" data-status-value="">All Statuses</button>
-                                    <button type="button" class="appointments-status-option" data-status-value="Pending">Pending</button>
                                     <button type="button" class="appointments-status-option" data-status-value="Approved">Approved</button>
-                                    <button type="button" class="appointments-status-option" data-status-value="Completed">Completed</button>
                                     <button type="button" class="appointments-status-option" data-status-value="Cancelled">Cancelled</button>
-                                    <button type="button" class="appointments-status-option" data-status-value="Expired">Expired</button>
+                                    <button type="button" class="appointments-status-option" data-status-value="Rejected">Rejected</button>
+                                    <button type="button" class="appointments-status-option" data-status-value="Rescheduled">Rescheduled</button>
                                     <button type="button" class="appointments-status-option" data-status-value="Missed">Missed</button>
                                 </div>
                             </div>
@@ -3658,38 +4683,12 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($appointments as $appt)
+                @forelse($summaryAppointments as $appt)
                     @php
-                        $appointmentPhotoProfile = optional($appt->user)->healthProfile;
-                        $appointmentPhotoPath = optional($appointmentPhotoProfile)->student_photo;
-                        $appointmentDocumentRoute = request()->routeIs('assistant.*')
-                            ? 'assistant.walkin.document'
-                            : 'walkin.document';
-                        $appointmentPhotoUrl = $appointmentPhotoPath && $appointmentPhotoProfile
-                            ? route($appointmentDocumentRoute, [
-                                'healthProfile' => $appointmentPhotoProfile->id,
-                                'document' => 'student_photo',
-                            ])
-                            : '';
-                        $appointmentUser = $appt->user;
-                        $appointmentRoleMarkers = strtolower(trim(implode(' ', array_filter([
-                            (string) optional($appointmentUser)->user_type,
-                            (string) optional($appointmentUser)->user_role,
-                            (string) optional($appointmentUser)->idp_role,
-                        ]))));
-                        $appointmentUsesEmployeeNumber = collect(['faculty', 'admin', 'staff', 'employee', 'dependent'])
-                            ->contains(fn ($needle) => str_contains($appointmentRoleMarkers, $needle));
-                        $appointmentIdNumber = $appointmentUsesEmployeeNumber
-                            ? (optional(optional($appointmentUser)->healthProfileStaff)->employee_number ?: optional($appointmentUser)->employee_number ?: $appt->student_number)
-                            : ($appt->student_number ?: optional(optional($appointmentUser)->healthProfile)->student_number ?: optional($appointmentUser)->student_number);
-                        $appointmentIdLabel = $appointmentUsesEmployeeNumber ? 'Employee Number' : 'Student Number';
-                        $currentType = strtolower(trim((string) ($appt->type ?? '')));
-                        if ($currentType === '') {
-                            $legacyType = strtolower(trim((string) ($appt->user_type ?? '')));
-                            if (in_array($legacyType, ['walkin', 'walk-in', 'online'], true)) {
-                                $currentType = str_replace('-', '', $legacyType);
-                            }
-                        }
+                        $appointmentMeta = $appointmentPresentation($appt);
+                        $appointmentIdNumber = $appointmentMeta['id_number'];
+                        $appointmentIdLabel = $appointmentMeta['id_label'];
+                        $appointmentPhotoUrl = $appointmentMeta['photo_url'];
                     @endphp
                     <tr
                         data-appointment-row
@@ -3703,11 +4702,11 @@
                         data-view-clinical-findings="{{ $appt->clinical_findings_comment ?: '' }}"
                         data-view-email="{{ $appt->email }}"
                         data-view-status="{{ $appt->status }}"
-                        data-view-type="{{ $currentType === 'walkin' ? 'Walk-in' : 'Online' }}"
+                        data-view-type="{{ $appointmentMeta['type'] }}"
                         data-view-student-number="{{ $appointmentIdNumber ?: '' }}"
                         data-view-id-number-label="{{ $appointmentIdLabel }}"
-                        data-view-contact="{{ optional($appt->user)->contact_no ?: optional(optional($appt->user)->healthProfile)->cellphone ?: '' }}"
-                        data-view-program="{{ trim(implode(' ', array_filter([optional($appt->user)->course ?: optional(optional($appt->user)->healthProfile)->course_college, trim(implode('-', array_filter([optional($appt->user)->year, optional($appt->user)->section]))) ]))) }}"
+                        data-view-contact="{{ $appointmentMeta['contact'] }}"
+                        data-view-program="{{ $appointmentMeta['program'] }}"
                         data-view-photo-url="{{ $appointmentPhotoUrl }}"
                         data-view-created="{{ optional($appt->created_at)->format('M d, Y g:i A') }}"
                         data-view-updated="{{ optional($appt->updated_at)->format('M d, Y g:i A') }}"
@@ -3723,7 +4722,7 @@
                         </td>
                         <td>{{ $appt->apt_id ?: 'N/A' }}</td>
                        <td>
-    @if($currentType === 'walkin')
+    @if($appointmentMeta['type'] === 'Walk-in')
         <span class="type-badge type-walkin">Walk-in</span>
     @else
         <span class="type-badge type-online">Online</span>
@@ -3759,7 +4758,7 @@
                                         Consult
                                     </a>
                                 @endif
-                            @elseif(in_array($appt->status, ['Completed', 'Cancelled', 'Expired', 'Missed'], true))
+                            @elseif(in_array($appt->status, ['Completed', 'Cancelled', 'Rejected', 'Rescheduled', 'Expired', 'Missed'], true))
                                 <button
                                     type="button"
                                     class="appointment-inline-pill is-view"
@@ -3830,6 +4829,122 @@
         </table>
     </div>
 
+    @foreach([
+        [
+            'id' => 'consultationQueueModal',
+            'badge' => 'FC',
+            'title' => 'For Consultations',
+            'description' => 'Approved appointments that are ready for clinic consultation.',
+            'records' => $forConsultationAppointments,
+            'review' => false,
+            'empty' => 'No appointments are currently ready for consultation.',
+        ],
+        [
+            'id' => 'reviewQueueModal',
+            'badge' => 'FR',
+            'title' => 'For Review',
+            'description' => 'Pending appointment requests awaiting approval, rejection, or rescheduling.',
+            'records' => $forReviewAppointments,
+            'review' => true,
+            'empty' => 'No appointment requests are currently waiting for review.',
+        ],
+    ] as $queue)
+        <div id="{{ $queue['id'] }}" class="modal-overlay appointment-queue-modal" onclick="if(event.target === this) closeAppointmentQueueModal('{{ $queue['id'] }}')">
+            <div class="appointment-queue-shell" role="dialog" aria-modal="true" aria-labelledby="{{ $queue['id'] }}Title">
+                <div class="appointment-queue-header">
+                    <div class="appointment-queue-header-main">
+                        <span class="appointment-queue-badge">{{ $queue['badge'] }}</span>
+                        <div>
+                            <h3 id="{{ $queue['id'] }}Title">{{ $queue['title'] }}</h3>
+                            <p>{{ $queue['description'] }}</p>
+                        </div>
+                    </div>
+                    <button type="button" class="modal-header-close" onclick="closeAppointmentQueueModal('{{ $queue['id'] }}')" aria-label="Close {{ strtolower($queue['title']) }} modal">
+                        <x-outline-icon name="x-mark" />
+                    </button>
+                </div>
+                <div class="appointment-queue-body">
+                    <label class="appointment-queue-search">
+                        <x-outline-icon name="magnifying-glass" />
+                        <input type="search" data-queue-search placeholder="Search by name, email, ID, or appointment number">
+                    </label>
+                    <div class="appointment-queue-list" data-queue-list>
+                        @forelse($queue['records'] as $queueAppointment)
+                            @php($queueMeta = $appointmentPresentation($queueAppointment))
+                            <article
+                                class="appointment-queue-record"
+                                data-queue-record
+                                data-search-text="{{ strtolower(implode(' ', array_filter([$queueAppointment->name, $queueAppointment->email, $queueAppointment->apt_id, $queueMeta['id_number'], $queueAppointment->service]))) }}"
+                            >
+                                <div class="appointment-queue-identity">
+                                    <strong>{{ $queueAppointment->name }}</strong>
+                                    <span>{{ $queueAppointment->email ?: 'No email available' }}</span>
+                                    <small>{{ $queueMeta['id_label'] }}: {{ $queueMeta['id_number'] ?: 'N/A' }}</small>
+                                </div>
+                                <div class="appointment-queue-reference">
+                                    <span>Appointment Number</span>
+                                    <strong>{{ $queueAppointment->apt_id ?: 'N/A' }}</strong>
+                                </div>
+                                <div class="appointment-queue-condition {{ $queueMeta['has_condition'] ? 'has-condition' : 'no-condition' }}">
+                                    <span>Condition</span>
+                                    <strong>{{ $queueMeta['has_condition'] ? 'With Condition' : 'No Condition' }}</strong>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="appointment-queue-view"
+                                    data-queue-modal="{{ $queue['id'] }}"
+                                    data-show-review-actions="{{ $queue['review'] ? '1' : '0' }}"
+                                    data-show-consult-action="{{ !$queue['review'] ? '1' : '0' }}"
+                                    data-show-timeline="0"
+                                    data-consult-url="{{ $queueMeta['consult_url'] }}"
+                                    data-consult-locked="{{ $queueMeta['consult_locked'] ? '1' : '0' }}"
+                                    data-name="{{ $queueAppointment->name }}"
+                                    data-service="{{ $queueAppointment->service }}"
+                                    data-date="{{ $queueAppointment->date }}"
+                                    data-time="{{ $queueAppointment->time }}"
+                                    data-remarks="{{ $queueAppointment->remarks ?? 'No notes provided.' }}"
+                                    data-clinical-findings="{{ $queueAppointment->clinical_findings_comment ?: '' }}"
+                                    data-email="{{ $queueAppointment->email }}"
+                                    data-status="{{ $queueAppointment->status }}"
+                                    data-appointment-id="{{ $queueAppointment->id }}"
+                                    data-apt-id="{{ $queueAppointment->apt_id ?: '' }}"
+                                    data-student-number="{{ $queueMeta['id_number'] }}"
+                                    data-id-number-label="{{ $queueMeta['id_label'] }}"
+                                    data-contact="{{ $queueMeta['contact'] }}"
+                                    data-program="{{ $queueMeta['program'] }}"
+                                    data-photo-url="{{ $queueMeta['photo_url'] }}"
+                                    data-type="{{ $queueMeta['type'] }}"
+                                    data-created="{{ optional($queueAppointment->created_at)->format('M d, Y g:i A') }}"
+                                    data-updated="{{ optional($queueAppointment->updated_at)->format('M d, Y g:i A') }}"
+                                    onclick="openAppointmentFromQueue(this)"
+                                >
+                                    <span>View Info</span>
+                                </button>
+                            </article>
+                        @empty
+                            <div class="appointment-queue-empty">{{ $queue['empty'] }}</div>
+                        @endforelse
+                        <div class="appointment-queue-empty appointment-queue-search-empty" data-queue-search-empty>No matching appointments found.</div>
+                    </div>
+                    <div class="appointment-queue-pagination" data-queue-pagination data-page-size="5">
+                        <span data-queue-summary>Showing 0-0 of 0</span>
+                        <div class="appointment-queue-page-actions">
+                            <button type="button" data-queue-prev aria-label="Previous page">&larr;</button>
+                            <button type="button" class="is-current" data-queue-current>1</button>
+                            <button type="button" data-queue-next aria-label="Next page">&rarr;</button>
+                        </div>
+                        <select data-queue-page-size aria-label="Appointments per page">
+                            <option value="5">5 per page</option>
+                            <option value="10">10 per page</option>
+                            <option value="15">15 per page</option>
+                            <option value="all">Show all</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endforeach
+
     <div id="infoModal" class="modal-overlay">
         <div class="modal-box appointment-detail-modal">
             <div class="modal-header appointment-detail-header">
@@ -3879,19 +4994,19 @@
                         <div class="appointment-info-list">
                             <div>
                                 <span><x-outline-icon name="clipboard-document-list" /> Service Request</span>
-                                <strong class="appointment-service-pill" id="mService">N/A</strong>
+                                <strong id="mService">N/A</strong>
                             </div>
                             <div>
-                                <span><x-outline-icon name="calendar-days" /> Date</span>
+                                <span><x-outline-icon name="calendar-days" /> Scheduled Date</span>
                                 <strong id="mDate">N/A</strong>
                             </div>
                             <div>
-                                <span><x-outline-icon name="clock" /> Time</span>
+                                <span><x-outline-icon name="clock" /> Scheduled Time</span>
                                 <strong id="mTime">N/A</strong>
                             </div>
                             <div>
                                 <span><x-outline-icon name="check" /> Status</span>
-                                <strong class="appointment-inline-status"><span class="appointment-status-dot"></span><span id="mStatusInline">N/A</span></strong>
+                                <strong id="mStatusInline">N/A</strong>
                             </div>
                             <div>
                                 <span><x-outline-icon name="document-text" /> Created</span>
@@ -3919,7 +5034,7 @@
                     </div>
                 </section>
 
-                <section class="appointment-timeline-panel">
+                <section class="appointment-timeline-panel" id="appointmentDetailTimelinePanel">
                     <h4><x-outline-icon name="clock" /> Appointment Timeline</h4>
                     <div class="appointment-timeline" id="mTimeline">
                         <div class="timeline-step" data-timeline-step="submitted">
@@ -3959,11 +5074,30 @@
                     <span><x-outline-icon name="document-text" /> Last Updated: <strong id="mFooterUpdated">N/A</strong></span>
                 </div>
             </div>
+            <div class="appointment-detail-actions" id="appointmentDetailActions" hidden>
+                <button type="button" class="dialog-btn dialog-btn-secondary" onclick="closeInfoModal()"><span>Cancel</span></button>
+                <a id="mRejectAction" href="#" class="dialog-btn dialog-btn-reject btn-reject btn-cancel" data-status-target="Cancelled">
+                    <x-outline-icon name="x-mark" />
+                    <span>Reject</span>
+                </a>
+                <button id="mRescheduleAction" type="button" class="dialog-btn dialog-btn-warning btn-reschedule">
+                    <x-outline-icon name="calendar-days" />
+                    <span>Reschedule</span>
+                </button>
+                <a id="mApproveAction" href="#" class="dialog-btn dialog-btn-approve btn-approve" data-status-target="Approved">
+                    <x-outline-icon name="check" />
+                    <span>Approve</span>
+                </a>
+                <a id="mConsultAction" href="#" class="dialog-btn dialog-btn-approve appointment-detail-consult" hidden>
+                    <x-outline-icon name="clipboard-document-list" />
+                    <span>Start Consultation</span>
+                </a>
+            </div>
         </div>
     </div>
 
     <div id="statusActionModal" class="modal-overlay">
-        <div class="modal-box appointment-detail-modal status-action-detail-modal">
+        <div class="modal-box appointment-action-dialog">
             <div class="modal-header appointment-detail-header">
                 <div class="modal-header-main appointment-detail-header-main">
                     <h3 id="statusActionTitle" class="modal-title">Appointment Action</h3>
@@ -3972,141 +5106,39 @@
                         <strong id="sAppointmentId">N/A</strong>
                     </p>
                 </div>
-                <span class="modal-status-badge appointment-detail-status" id="statusActionBadge">
-                    <span class="appointment-status-dot"></span>
-                    <span id="sStatusText">Pending</span>
-                    <small id="statusActionSubtitle" hidden></small>
-                </span>
                 <button type="button" class="modal-header-close" onclick="closeStatusActionModal()" aria-label="Close action modal">
                     <x-outline-icon name="x-mark" />
                 </button>
             </div>
-            <div class="appointment-detail-body">
-                <div class="appointment-detail-grid">
-                    <section class="appointment-detail-card">
-                        <h4><x-outline-icon name="users" /> Student Information</h4>
-                        <div class="appointment-student-layout">
-                            <div class="appointment-avatar" id="sAvatar">NA</div>
-                            <div class="appointment-student-info">
-                                <strong id="sName">N/A</strong>
-                                <p><x-outline-icon name="envelope" /> <span id="sEmail">N/A</span></p>
-                                <p><x-outline-icon name="phone" /> <span id="sContact">N/A</span></p>
-                                <p><x-outline-icon name="information-circle" /> <span id="sStudentId">ID Number: N/A</span></p>
-                                <p><x-outline-icon name="academic-cap" /> <span id="sProgram">Program: N/A</span></p>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="appointment-detail-card">
-                        <h4><x-outline-icon name="calendar-days" /> Appointment Information</h4>
-                        <div class="appointment-info-list">
-                            <div>
-                                <span><x-outline-icon name="clipboard-document-list" /> Service Request</span>
-                                <strong class="appointment-service-pill" id="sService">N/A</strong>
-                            </div>
-                            <div>
-                                <span><x-outline-icon name="calendar-days" /> Date</span>
-                                <strong id="sDate">N/A</strong>
-                            </div>
-                            <div>
-                                <span><x-outline-icon name="clock" /> Time</span>
-                                <strong id="sTime">N/A</strong>
-                            </div>
-                            <div>
-                                <span><x-outline-icon name="document-text" /> Created</span>
-                                <strong id="sCreated">N/A</strong>
-                            </div>
-                            <div>
-                                <span><x-outline-icon name="check" /> Consultation Type</span>
-                                <strong><span class="appointment-type-badge" id="sConsultationType">N/A</span></strong>
-                            </div>
-                            <div>
-                                <span><x-outline-icon name="document-text" /> Notes</span>
-                                <strong id="sNotes">N/A</strong>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-
-                <section class="approval-details-panel">
-                    <h4><x-outline-icon name="check" /> <span id="sDecisionDetailsTitle">Approval Details</span></h4>
-                    <div class="approval-detail-grid">
-                        <div class="approval-detail-card" id="sDecisionTypeCard">
-                            <span id="sDecisionTypeLabel">Consultation Type</span>
-                            <strong id="sDecisionTypeWrap"><span class="appointment-type-badge" id="sApprovalConsultationType">N/A</span></strong>
-                            <div class="approval-message-field">
-                                <label for="sApprovalMessage" id="sDecisionMessageLabel">Message (Optional)</label>
-                                <textarea id="sApprovalMessage" placeholder="Your appointment has been approved. Please come to the clinic on your scheduled date and time."></textarea>
-                            </div>
-                        </div>
-                        <div class="approval-detail-card" id="sDecisionReminderCard">
-                            <span>Reminder to Student</span>
-                            <ul class="approval-reminder-list">
-                                <li>
-                                    <input type="checkbox" id="sReminderEarly" checked>
-                                    <label for="sReminderEarly">Arrive 15 minutes early</label>
-                                </li>
-                                <li>
-                                    <input type="checkbox" id="sReminderId" checked>
-                                    <label for="sReminderId">Bring valid school ID</label>
-                                </li>
-                                <li>
-                                    <input type="checkbox" id="sReminderMask" checked>
-                                    <label for="sReminderMask">Wear face mask</label>
-                                </li>
-                                <li>
-                                    <input type="checkbox" id="sReminderGuidelines" checked>
-                                    <label for="sReminderGuidelines">Follow clinic guidelines</label>
-                                </li>
-                            </ul>
-                        </div>
+            <div class="appointment-action-dialog-body">
+                <section class="appointment-action-summary" id="statusActionSummary">
+                    <div>
+                        <span>Patient</span>
+                        <strong id="sName">N/A</strong>
+                    </div>
+                    <div>
+                        <span>Service</span>
+                        <strong id="sService">N/A</strong>
+                    </div>
+                    <div>
+                        <span>Schedule</span>
+                        <strong id="sSchedule">N/A</strong>
                     </div>
                 </section>
-
-                <div class="approval-timeline-row" id="sDecisionTimelineRow">
-                    <section class="appointment-timeline-panel">
-                        <h4><x-outline-icon name="clock" /> Appointment Timeline</h4>
-                        <div class="appointment-timeline" id="sApprovalTimeline">
-                            <div class="timeline-step is-done">
-                                <span class="timeline-dot"><x-outline-icon name="check" /></span>
-                                <strong>Submitted</strong>
-                                <small id="sTimelineSubmitted">N/A</small>
-                            </div>
-                            <div class="timeline-line is-done"></div>
-                            <div class="timeline-step is-done">
-                                <span class="timeline-dot"><x-outline-icon name="check" /></span>
-                                <strong>Pending Review</strong>
-                                <small id="sTimelinePending">N/A</small>
-                            </div>
-                            <div class="timeline-line is-done"></div>
-                            <div class="timeline-step is-current">
-                                <span class="timeline-dot"></span>
-                                <strong>Approved</strong>
-                                <small>Current Step</small>
-                            </div>
-                            <div class="timeline-line"></div>
-                            <div class="timeline-step is-muted">
-                                <span class="timeline-dot"></span>
-                                <strong>Scheduled</strong>
-                                <small id="sTimelineScheduled">N/A</small>
-                            </div>
-                            <div class="timeline-line"></div>
-                            <div class="timeline-step is-muted">
-                                <span class="timeline-dot"></span>
-                                <strong>Completed</strong>
-                                <small>Upcoming</small>
-                            </div>
-                        </div>
-                    </section>
-
-                    <aside class="approval-notice-card">
-                        <h4><x-outline-icon name="information-circle" /> After Approval</h4>
-                        <p>The student will be notified via email that their appointment has been approved.</p>
-                    </aside>
+                <div class="appointment-action-confirmation" id="statusApprovePrompt">
+                    <span class="appointment-action-confirmation-icon"><x-outline-icon name="check" /></span>
+                    <div>
+                        <strong>Approve this appointment?</strong>
+                        <p>The appointment will be moved to For Consultations and the patient will be notified.</p>
+                    </div>
                 </div>
-
+                <div class="appointment-action-field" id="statusReasonGroup" hidden>
+                    <label for="sApprovalMessage" id="statusReasonLabel">Rejection Reason</label>
+                    <textarea id="sApprovalMessage" placeholder="Enter the reason for rejecting this appointment."></textarea>
+                    <small id="statusReasonError" hidden>Please enter a rejection reason.</small>
+                </div>
                 <div class="dialog-actions">
-                    <button type="button" class="dialog-btn dialog-btn-secondary" onclick="closeStatusActionModal()">Cancel</button>
+                    <button type="button" class="dialog-btn dialog-btn-secondary" onclick="closeStatusActionModal()"><span>Cancel</span></button>
                     <a id="statusActionConfirm" href="#" class="dialog-btn dialog-btn-confirm">
                         <x-outline-icon name="check" />
                         <span>Confirm</span>
@@ -4117,7 +5149,7 @@
     </div>
 
     <div id="rescheduleModal" class="modal-overlay">
-        <div class="modal-box appointment-detail-modal status-action-detail-modal">
+        <div class="modal-box appointment-action-dialog">
             <form id="rescheduleForm" method="POST" action="">
                 @csrf
                 <div class="modal-header appointment-detail-header">
@@ -4128,81 +5160,29 @@
                             <strong id="rAppointmentId">N/A</strong>
                         </p>
                     </div>
-                    <span class="modal-status-badge appointment-detail-status action-reschedule">
-                        <span class="appointment-status-dot"></span>
-                        <span id="rStatusText">Reschedule</span>
-                    </span>
                     <button type="button" class="modal-header-close" onclick="closeRescheduleModal()" aria-label="Close reschedule modal">
                         <x-outline-icon name="x-mark" />
                     </button>
                 </div>
-                <div class="appointment-detail-body">
-                    <div class="appointment-detail-grid">
-                        <section class="appointment-detail-card">
-                            <h4><x-outline-icon name="users" /> Student Information</h4>
-                            <div class="appointment-student-layout">
-                                <div class="appointment-avatar" id="rAvatar">NA</div>
-                                <div class="appointment-student-info">
-                                    <strong id="rName">N/A</strong>
-                                    <p><x-outline-icon name="envelope" /> <span id="rEmail">N/A</span></p>
-                                    <p><x-outline-icon name="phone" /> <span id="rContact">N/A</span></p>
-                                    <p><x-outline-icon name="information-circle" /> <span id="rStudentId">ID Number: N/A</span></p>
-                                    <p><x-outline-icon name="academic-cap" /> <span id="rProgram">Program: N/A</span></p>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section class="appointment-detail-card">
-                            <h4><x-outline-icon name="calendar-days" /> Appointment Information</h4>
-                            <div class="appointment-info-list">
-                                <div>
-                                    <span><x-outline-icon name="clipboard-document-list" /> Service Request</span>
-                                    <strong class="appointment-service-pill" id="rService">N/A</strong>
-                                </div>
-                                <div>
-                                    <span><x-outline-icon name="calendar-days" /> Current Date</span>
-                                    <strong id="rCurrentDate">N/A</strong>
-                                </div>
-                                <div>
-                                    <span><x-outline-icon name="clock" /> Current Time</span>
-                                    <strong id="rCurrentTime">N/A</strong>
-                                </div>
-                                <div>
-                                    <span><x-outline-icon name="check" /> Consultation Type</span>
-                                    <strong><span class="appointment-type-badge" id="rConsultationType">N/A</span></strong>
-                                </div>
-                                <div>
-                                    <span><x-outline-icon name="document-text" /> Notes</span>
-                                    <strong id="rNotes">N/A</strong>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-
-                    <section class="approval-details-panel">
-                        <h4><x-outline-icon name="calendar-days" /> Reschedule Details</h4>
-                        <div class="approval-detail-grid">
-                            <div class="approval-detail-card">
-                                <span>New Date</span>
-                                <input type="date" name="date" id="rDate" class="approval-detail-input" required>
-                            </div>
-                            <div class="approval-detail-card">
-                                <span>New Time</span>
-                                <input type="time" name="time" id="rTime" class="approval-detail-input" required>
-                            </div>
-                            <div class="approval-detail-card is-full">
-                                <span>Reason for Rescheduling</span>
-                                <div class="approval-message-field">
-                                    <textarea name="reschedule_reason" id="rReason" placeholder="Add a short message or reason for the new schedule."></textarea>
-                                </div>
-                            </div>
+                <div class="appointment-action-dialog-body">
+                    <div class="appointment-reschedule-grid">
+                        <div class="appointment-action-field">
+                            <label for="rDate">New Date</label>
+                            <input type="date" name="date" id="rDate" required>
                         </div>
-                    </section>
-
+                        <div class="appointment-action-field">
+                            <label for="rTime">New Time</label>
+                            <input type="time" name="time" id="rTime" required>
+                        </div>
+                        <div class="appointment-action-field is-full">
+                            <label for="rReason">Reason for Rescheduling</label>
+                            <textarea name="reschedule_reason" id="rReason" placeholder="Enter the reason for changing this schedule."></textarea>
+                        </div>
+                    </div>
                     <div class="dialog-actions">
-                        <button type="button" class="dialog-btn dialog-btn-secondary" onclick="closeRescheduleModal()">Cancel</button>
+                        <button type="button" class="dialog-btn dialog-btn-secondary" onclick="closeRescheduleModal()"><span>Cancel</span></button>
                         <button type="submit" class="dialog-btn dialog-btn-approve">
-                            <x-outline-icon name="check" />
+                            <x-outline-icon name="calendar-days" />
                             <span>Confirm New Schedule</span>
                         </button>
                     </div>
@@ -4319,8 +5299,14 @@
             contact: '',
             program: '',
             photoUrl: '',
+            type: '',
             created: '',
-            updated: ''
+            updated: '',
+            showReviewActions: false,
+            showConsultAction: false,
+            showTimeline: true,
+            consultUrl: '',
+            consultLocked: false
         };
 
         if (triggerOrName && typeof triggerOrName === 'object' && triggerOrName.dataset) {
@@ -4342,8 +5328,14 @@
                 contact: triggerOrName.dataset.contact || rowData.viewContact || '',
                 program: triggerOrName.dataset.program || rowData.viewProgram || '',
                 photoUrl: triggerOrName.dataset.photoUrl || rowData.viewPhotoUrl || '',
+                type: triggerOrName.dataset.type || rowData.viewType || '',
                 created: triggerOrName.dataset.created || rowData.viewCreated || '',
-                updated: triggerOrName.dataset.updated || rowData.viewUpdated || ''
+                updated: triggerOrName.dataset.updated || rowData.viewUpdated || '',
+                showReviewActions: triggerOrName.dataset.showReviewActions === '1',
+                showConsultAction: triggerOrName.dataset.showConsultAction === '1',
+                showTimeline: triggerOrName.dataset.showTimeline !== '0',
+                consultUrl: triggerOrName.dataset.consultUrl || '',
+                consultLocked: triggerOrName.dataset.consultLocked === '1'
             };
         }
 
@@ -4359,8 +5351,23 @@
         document.getElementById('mAppointmentId').innerText = appointmentId;
         const avatar = document.getElementById('mAvatar');
         if (avatar) {
+            const initials = getNameInitials(payload.name);
             avatar.innerHTML = '';
-            avatar.textContent = getNameInitials(payload.name);
+            avatar.classList.toggle('has-photo', Boolean(payload.photoUrl));
+
+            if (payload.photoUrl) {
+                const photo = document.createElement('img');
+                photo.src = payload.photoUrl;
+                photo.alt = safeOrNA(payload.name) + ' 2x2 photo';
+                photo.addEventListener('error', function () {
+                    avatar.classList.remove('has-photo');
+                    avatar.innerHTML = '';
+                    avatar.textContent = initials;
+                }, { once: true });
+                avatar.appendChild(photo);
+            } else {
+                avatar.textContent = initials;
+            }
         }
         document.getElementById('mName').innerText = safeOrNA(payload.name);
         document.getElementById('mService').innerText = safeOrNA(payload.service);
@@ -4484,11 +5491,147 @@
             }
         });
 
+        const detailActions = document.getElementById('appointmentDetailActions');
+        const timelinePanel = document.getElementById('appointmentDetailTimelinePanel');
+        const approveAction = document.getElementById('mApproveAction');
+        const rejectAction = document.getElementById('mRejectAction');
+        const rescheduleAction = document.getElementById('mRescheduleAction');
+        const consultAction = document.getElementById('mConsultAction');
+        const shouldShowReviewActions = payload.showReviewActions || normalizedTimelineStatus === 'pending';
+        const shouldShowConsultAction = payload.showConsultAction && ['approved', 'scheduled'].includes(normalizedTimelineStatus);
+        const actionPayload = {
+            id: payload.id,
+            aptId: payload.aptId,
+            name: payload.name,
+            service: payload.service,
+            date: payload.date,
+            time: payload.time,
+            remarks: payload.remarks,
+            email: payload.email,
+            contact: payload.contact,
+            studentNumber: payload.studentNumber,
+            idNumberLabel: payload.idNumberLabel || 'ID Number',
+            program: payload.program,
+            type: payload.type,
+            created: payload.created,
+            updated: payload.updated
+        };
+
+        [approveAction, rejectAction, rescheduleAction].filter(Boolean).forEach((action) => {
+            Object.entries(actionPayload).forEach(([key, value]) => {
+                action.dataset[key] = value ?? '';
+            });
+        });
+
+        if (approveAction) {
+            approveAction.href = appointmentsBaseUrl + '/' + payload.id + '/Approved';
+            approveAction.hidden = !shouldShowReviewActions;
+        }
+        if (rejectAction) {
+            rejectAction.href = appointmentsBaseUrl + '/' + payload.id + '/Cancelled';
+            rejectAction.hidden = !shouldShowReviewActions;
+        }
+        if (rescheduleAction) {
+            rescheduleAction.hidden = !shouldShowReviewActions;
+        }
+        if (consultAction) {
+            consultAction.hidden = !shouldShowConsultAction;
+            consultAction.classList.toggle('is-disabled', payload.consultLocked);
+            consultAction.setAttribute('aria-disabled', payload.consultLocked ? 'true' : 'false');
+            consultAction.href = payload.consultLocked ? '#' : (payload.consultUrl || '#');
+            consultAction.title = payload.consultLocked
+                ? 'Consultation opens 10 minutes before the scheduled time.'
+                : 'Open consultation form';
+        }
+        if (detailActions) {
+            detailActions.hidden = !(shouldShowReviewActions || shouldShowConsultAction);
+        }
+        if (timelinePanel) {
+            timelinePanel.hidden = !payload.showTimeline;
+        }
+
         document.getElementById('infoModal').style.display = 'flex';
     }
 
     function closeInfoModal() {
         document.getElementById('infoModal').style.display = 'none';
+    }
+
+    function openAppointmentQueueModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        modal.style.display = 'flex';
+        const search = modal.querySelector('[data-queue-search]');
+        window.setTimeout(() => search?.focus(), 80);
+    }
+
+    function closeAppointmentQueueModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.style.display = 'none';
+    }
+
+    function openAppointmentFromQueue(trigger) {
+        openInfoModal(trigger);
+    }
+
+    function initializeAppointmentQueue(modal) {
+        if (!modal || modal.dataset.queueReady === '1') return;
+
+        const search = modal.querySelector('[data-queue-search]');
+        const records = Array.from(modal.querySelectorAll('[data-queue-record]'));
+        const searchEmpty = modal.querySelector('[data-queue-search-empty]');
+        const pagination = modal.querySelector('[data-queue-pagination]');
+        const summary = modal.querySelector('[data-queue-summary]');
+        const previous = modal.querySelector('[data-queue-prev]');
+        const current = modal.querySelector('[data-queue-current]');
+        const next = modal.querySelector('[data-queue-next]');
+        const pageSizeSelect = modal.querySelector('[data-queue-page-size]');
+        let page = 1;
+
+        const render = function () {
+            const term = (search?.value || '').trim().toLowerCase();
+            const matches = records.filter((record) => (record.dataset.searchText || '').includes(term));
+            const requestedSize = pageSizeSelect?.value || '5';
+            const pageSize = requestedSize === 'all' ? Math.max(matches.length, 1) : Math.max(parseInt(requestedSize, 10) || 5, 1);
+            const pages = Math.max(Math.ceil(matches.length / pageSize), 1);
+            page = Math.min(Math.max(page, 1), pages);
+            const start = (page - 1) * pageSize;
+            const end = Math.min(start + pageSize, matches.length);
+
+            records.forEach((record) => {
+                record.style.display = 'none';
+            });
+            matches.slice(start, end).forEach((record) => {
+                record.style.display = 'grid';
+            });
+
+            if (searchEmpty) searchEmpty.style.display = term && matches.length === 0 ? 'block' : 'none';
+            if (summary) summary.textContent = matches.length ? `Showing ${start + 1}-${end} of ${matches.length}` : 'Showing 0-0 of 0';
+            if (current) current.textContent = page;
+            if (previous) previous.disabled = page <= 1;
+            if (next) next.disabled = page >= pages;
+            if (pagination) pagination.classList.toggle('has-records', records.length > 0);
+        };
+
+        search?.addEventListener('input', () => {
+            page = 1;
+            render();
+        });
+        pageSizeSelect?.addEventListener('change', () => {
+            page = 1;
+            render();
+        });
+        previous?.addEventListener('click', () => {
+            page -= 1;
+            render();
+        });
+        next?.addEventListener('click', () => {
+            page += 1;
+            render();
+        });
+
+        modal.dataset.queueReady = '1';
+        render();
     }
 
     function openStatusActionModal(trigger) {
@@ -4500,117 +5643,59 @@
         const decodedStatus = matches ? decodeURIComponent(matches[2]) : '';
         const statusTarget = trigger?.dataset?.statusTarget || decodedStatus || (href.includes('/Approved') ? 'Approved' : 'Cancelled');
         const id = trigger?.dataset?.id || (matches ? matches[1] : '');
-        const actionUrl = id ? (appointmentsBaseUrl + '/' + id + '/' + encodeURIComponent(statusTarget)) : href;
+        if (!id) return;
 
+        const actionUrl = id ? (appointmentsBaseUrl + '/' + id + '/' + encodeURIComponent(statusTarget)) : href;
         const name = trigger?.dataset?.name || rowData.viewName || fallback.name;
         const service = trigger?.dataset?.service || rowData.viewService || fallback.service;
         const date = trigger?.dataset?.date || rowData.viewDate || fallback.date;
         const time = trigger?.dataset?.time || rowData.viewTime || fallback.time;
-        const appointmentId = safeText(rowData.viewAptId) === '-' ? 'N/A' : rowData.viewAptId;
-        const email = safeText(rowData.viewEmail) === '-' ? 'N/A' : rowData.viewEmail;
-        const contact = safeText(rowData.viewContact) === '-' ? 'N/A' : rowData.viewContact;
-        const studentNumber = safeText(rowData.viewStudentNumber) === '-' ? 'N/A' : rowData.viewStudentNumber;
-        const idNumberLabel = safeText(rowData.viewIdNumberLabel) === '-' ? 'ID Number' : rowData.viewIdNumberLabel;
-        const program = safeText(rowData.viewProgram) === '-' ? 'N/A' : rowData.viewProgram;
-        const created = safeText(rowData.viewCreated) === '-' ? 'N/A' : rowData.viewCreated;
-        const notes = safeText(rowData.viewRemarks) === '-' ? 'N/A' : rowData.viewRemarks;
-        const consultationType = safeText(rowData.viewType) === '-' ? 'Online' : rowData.viewType;
-        const isApprove = statusTarget === 'Approved';
-        const isReject = statusTarget === 'Cancelled';
-        const isMissed = statusTarget === 'Missed Scheduled';
-        const statusBadge = document.getElementById('statusActionBadge');
+        const appointmentId = trigger?.dataset?.aptId || rowData.viewAptId || 'N/A';
+        const normalizedTarget = statusTarget.toLowerCase();
+        const isApprove = normalizedTarget === 'approved';
+        const isMissed = normalizedTarget.includes('missed');
+
         document.getElementById('statusActionTitle').innerText = isApprove
             ? 'Approve Appointment'
             : (isMissed ? 'Mark Appointment as Missed' : 'Reject Appointment');
-        document.getElementById('statusActionSubtitle').innerText = isApprove
-            ? 'This will mark the appointment as approved and notify the workflow.'
-            : (isMissed
-                ? 'Use this only when the appointment is still not consulted and at least 1 hour has passed after the scheduled time.'
-                : 'This will reject the appointment request and mark it as cancelled.');
         document.getElementById('sAppointmentId').innerText = appointmentId || 'N/A';
         document.getElementById('sName').innerText = safeText(name);
-        document.getElementById('sEmail').innerText = email;
-        document.getElementById('sContact').innerText = contact;
-        document.getElementById('sStudentId').innerText = idNumberLabel + ': ' + studentNumber;
-        document.getElementById('sProgram').innerText = 'Program: ' + program;
         document.getElementById('sService').innerText = safeText(service);
-        document.getElementById('sDate').innerText = safeText(date ? formatDateLong(date) : '');
-        document.getElementById('sTime').innerText = safeText(time ? formatTime(time) : '');
-        document.getElementById('sCreated').innerText = created;
-        document.getElementById('sNotes').innerText = notes;
-        document.getElementById('sStatusText').innerText = isApprove ? 'Pending' : (isMissed ? 'Missed' : 'Reject');
-        document.getElementById('sTimelineSubmitted').innerText = created.replace(' ', '\n');
-        document.getElementById('sTimelinePending').innerText = safeText(rowData.viewUpdated).replace(' ', '\n');
-        document.getElementById('sTimelineScheduled').innerText = formatSchedule(date, time).replace(' at ', '\n');
+        document.getElementById('sSchedule').innerText = formatSchedule(date, time);
 
-        [document.getElementById('sConsultationType'), document.getElementById('sApprovalConsultationType')]
-            .filter(Boolean)
-            .forEach((consultationTypeEl) => {
-                consultationTypeEl.textContent = consultationType;
-                consultationTypeEl.className = 'appointment-type-badge ' + (consultationType.toLowerCase().includes('walk') ? 'is-walkin' : 'is-online');
-            });
-
-        const avatar = document.getElementById('sAvatar');
-        if (avatar) {
-            avatar.innerHTML = '';
-            avatar.textContent = getNameInitials(name);
-        }
-
-        if (statusBadge) {
-            statusBadge.className = 'modal-status-badge appointment-detail-status ' + (isApprove ? 'pending' : (isMissed ? 'missed' : 'cancelled'));
-        }
-
-        const decisionTitle = document.getElementById('sDecisionDetailsTitle');
-        const decisionTypeCard = document.getElementById('sDecisionTypeCard');
-        const decisionTypeLabel = document.getElementById('sDecisionTypeLabel');
-        const decisionTypeWrap = document.getElementById('sDecisionTypeWrap');
-        const decisionMessageLabel = document.getElementById('sDecisionMessageLabel');
-        const decisionReminderCard = document.getElementById('sDecisionReminderCard');
-        const decisionTimelineRow = document.getElementById('sDecisionTimelineRow');
+        const summary = document.getElementById('statusActionSummary');
+        const approvePrompt = document.getElementById('statusApprovePrompt');
+        const reasonGroup = document.getElementById('statusReasonGroup');
+        const reasonLabel = document.getElementById('statusReasonLabel');
+        const reasonError = document.getElementById('statusReasonError');
         const decisionMessage = document.getElementById('sApprovalMessage');
 
-        if (decisionTitle) {
-            decisionTitle.innerText = isApprove ? 'Approval Details' : (isMissed ? 'Missed Appointment Details' : 'Rejection Details');
-        }
-        if (decisionTypeCard) {
-            decisionTypeCard.classList.toggle('is-full', !isApprove);
-        }
-        if (decisionTypeLabel) {
-            decisionTypeLabel.innerText = isApprove ? 'Consultation Type' : 'Message';
-        }
-        if (decisionTypeWrap) {
-            decisionTypeWrap.hidden = !isApprove;
-        }
-        if (decisionMessageLabel) {
-            decisionMessageLabel.hidden = !isApprove;
-        }
-        if (decisionReminderCard) {
-            decisionReminderCard.hidden = !isApprove;
-        }
-        if (decisionTimelineRow) {
-            decisionTimelineRow.hidden = !isApprove;
-        }
+        if (summary) summary.hidden = !isApprove;
+        if (approvePrompt) approvePrompt.hidden = !isApprove;
+        if (reasonGroup) reasonGroup.hidden = isApprove;
+        if (reasonLabel) reasonLabel.textContent = isMissed ? 'Missed Appointment Reason' : 'Rejection Reason';
+        if (reasonError) reasonError.hidden = true;
         if (decisionMessage) {
             decisionMessage.value = '';
-            decisionMessage.placeholder = isApprove
-                ? 'Your appointment has been approved. Please come to the clinic on your scheduled date and time.'
-                : (isMissed
-                    ? 'Add a short note about why this appointment is marked as missed.'
-                    : 'Add a short rejection message or reason for the student.');
+            decisionMessage.placeholder = isMissed
+                ? 'Enter why this appointment is being marked as missed.'
+                : 'Enter the reason for rejecting this appointment.';
+            decisionMessage.required = !isApprove;
         }
 
         const confirmBtn = document.getElementById('statusActionConfirm');
         confirmBtn.href = actionUrl;
-        confirmBtn.onclick = function () {
+        confirmBtn.onclick = function (event) {
             const message = (document.getElementById('sApprovalMessage')?.value || '').trim();
-            const selectedReminders = Array.from(document.querySelectorAll('#sDecisionReminderCard input[type="checkbox"]:checked'))
-                .map((input) => document.querySelector('label[for="' + input.id + '"]')?.textContent?.trim() || '')
-                .filter(Boolean);
+            if (!isApprove && !message) {
+                event.preventDefault();
+                if (reasonError) reasonError.hidden = false;
+                decisionMessage?.focus();
+                return false;
+            }
 
             const params = new URLSearchParams();
             if (message) params.append('message', message);
-            selectedReminders.forEach((reminder) => params.append('reminders[]', reminder));
-
             confirmBtn.href = params.toString()
                 ? actionUrl + (actionUrl.includes('?') ? '&' : '?') + params.toString()
                 : actionUrl;
@@ -4619,7 +5704,12 @@
         const confirmText = isApprove
             ? 'Confirm Approval'
             : (isMissed ? 'Confirm Missed Status' : 'Confirm Rejection');
-        confirmBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>' + confirmText + '</span>';
+        const confirmIcon = isApprove
+            ? '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+            : (isMissed
+                ? '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                : '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>');
+        confirmBtn.innerHTML = confirmIcon + '<span>' + confirmText + '</span>';
         confirmBtn.className = 'dialog-btn ' + (isApprove ? 'dialog-btn-approve' : (isMissed ? 'dialog-btn-warning' : 'dialog-btn-reject'));
 
         document.getElementById('statusActionModal').style.display = 'flex';
@@ -4675,35 +5765,9 @@
         }
 
         form.action = appointmentsBaseUrl + '/' + id + '/reschedule';
-        const appointmentId = safeText(rowData.viewAptId) === '-' ? 'N/A' : rowData.viewAptId;
-        const email = safeText(rowData.viewEmail) === '-' ? 'N/A' : rowData.viewEmail;
-        const contact = safeText(rowData.viewContact) === '-' ? 'N/A' : rowData.viewContact;
-        const studentNumber = safeText(rowData.viewStudentNumber) === '-' ? 'N/A' : rowData.viewStudentNumber;
-        const idNumberLabel = safeText(rowData.viewIdNumberLabel) === '-' ? 'ID Number' : rowData.viewIdNumberLabel;
-        const program = safeText(rowData.viewProgram) === '-' ? 'N/A' : rowData.viewProgram;
-        const notes = safeText(rowData.viewRemarks) === '-' ? 'N/A' : rowData.viewRemarks;
-        const consultationType = safeText(rowData.viewType) === '-' ? 'Online' : rowData.viewType;
+        const appointmentId = triggerOrId?.dataset?.aptId || rowData.viewAptId || 'N/A';
 
         document.getElementById('rAppointmentId').innerText = appointmentId || 'N/A';
-        document.getElementById('rName').innerText = safeText(name);
-        document.getElementById('rEmail').innerText = email;
-        document.getElementById('rContact').innerText = contact;
-        document.getElementById('rStudentId').innerText = idNumberLabel + ': ' + studentNumber;
-        document.getElementById('rProgram').innerText = 'Program: ' + program;
-        document.getElementById('rService').innerText = safeText(service);
-        document.getElementById('rCurrentDate').innerText = safeText(date ? formatDateLong(date) : '');
-        document.getElementById('rCurrentTime').innerText = safeText(time ? formatTime(time) : '');
-        document.getElementById('rNotes').innerText = notes;
-        const rType = document.getElementById('rConsultationType');
-        if (rType) {
-            rType.textContent = consultationType;
-            rType.className = 'appointment-type-badge ' + (consultationType.toLowerCase().includes('walk') ? 'is-walkin' : 'is-online');
-        }
-        const rAvatar = document.getElementById('rAvatar');
-        if (rAvatar) {
-            rAvatar.innerHTML = '';
-            rAvatar.textContent = getNameInitials(name);
-        }
         document.getElementById('rDate').value = date;
         document.getElementById('rTime').value = (time || '').toString().slice(0, 5);
         document.getElementById('rReason').value = '';
@@ -4733,13 +5797,35 @@
 
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
-            closeInfoModal();
-            closeStatusActionModal();
-            closeRescheduleModal();
+            const rescheduleModal = document.getElementById('rescheduleModal');
+            const statusModal = document.getElementById('statusActionModal');
+            const infoModal = document.getElementById('infoModal');
+            const visibleQueue = Array.from(document.querySelectorAll('.appointment-queue-modal'))
+                .reverse()
+                .find((modal) => modal.style.display === 'flex');
+
+            if (rescheduleModal?.style.display === 'flex') {
+                closeRescheduleModal();
+            } else if (statusModal?.style.display === 'flex') {
+                closeStatusActionModal();
+            } else if (infoModal?.style.display === 'flex') {
+                closeInfoModal();
+            } else if (visibleQueue) {
+                closeAppointmentQueueModal(visibleQueue.id);
+            }
         }
     });
 
     document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.appointment-queue-modal').forEach(initializeAppointmentQueue);
+
+        const consultAction = document.getElementById('mConsultAction');
+        consultAction?.addEventListener('click', function (event) {
+            if (this.classList.contains('is-disabled')) {
+                event.preventDefault();
+            }
+        });
+
         const liveFeedNode = document.getElementById('adminLiveAlertFeedUrl');
         let appointmentsLivePollTimer = null;
 
