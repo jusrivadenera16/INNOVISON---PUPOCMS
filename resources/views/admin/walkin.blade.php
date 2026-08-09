@@ -8111,6 +8111,58 @@
         box-shadow: 0 14px 28px rgba(112, 19, 27, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06) !important;
     }
 
+    /* Standard modal chrome: OCR/walk-in and applicant/employee workflows */
+    #applicantScanModal .applicant-modal-shell,
+    #applicantRefModal .applicant-modal-shell,
+    html[data-theme="dark"] #applicantScanModal .applicant-modal-shell,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell {
+        border: 1px solid rgba(250, 204, 21, .34) !important;
+    }
+
+    #applicantScanModal .applicant-modal-head,
+    #applicantRefModal .applicant-modal-head {
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+    }
+
+    #applicantScanModal .applicant-modal-close,
+    #applicantRefModal .applicant-modal-close {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+        padding: 0 !important;
+        border: 1px solid #8f2230 !important;
+        border-radius: 999px !important;
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+        color: #ffffff !important;
+        overflow: hidden !important;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, .12), 0 10px 22px rgba(112, 19, 27, .20) !important;
+    }
+
+    #applicantScanModal .applicant-modal-close::after,
+    #applicantRefModal .applicant-modal-close::after {
+        z-index: 0 !important;
+        pointer-events: none;
+    }
+
+    #applicantScanModal .applicant-modal-close svg,
+    #applicantRefModal .applicant-modal-close svg {
+        position: relative;
+        z-index: 1;
+    }
+
+    #applicantScanModal .applicant-modal-close:hover,
+    #applicantScanModal .applicant-modal-close:focus-visible,
+    #applicantRefModal .applicant-modal-close:hover,
+    #applicantRefModal .applicant-modal-close:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-1px) !important;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .18), 0 14px 24px rgba(112, 19, 27, .16) !important;
+    }
+
 </style>
 @endpush
 

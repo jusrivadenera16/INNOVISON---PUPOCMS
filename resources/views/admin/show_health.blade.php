@@ -1358,6 +1358,113 @@
         .profile-meta.is-wide,
         .profile-meta.is-full { grid-column: auto; }
     }
+
+    /* Standard modal chrome: new form, correction, history, and pullout */
+    #newHealthFormModal .correction-card,
+    #correctionModal .correction-card,
+    #healthFormHistoryModal .correction-card,
+    #pulloutRequestModal .correction-card,
+    [data-theme="dark"] #newHealthFormModal .correction-card,
+    [data-theme="dark"] #correctionModal .correction-card,
+    [data-theme="dark"] #healthFormHistoryModal .correction-card,
+    [data-theme="dark"] #pulloutRequestModal .correction-card {
+        border: 1px solid rgba(250, 204, 21, .34) !important;
+    }
+
+    #newHealthFormModal .correction-head,
+    #correctionModal .correction-head,
+    #healthFormHistoryModal .correction-head,
+    #pulloutRequestModal .correction-head {
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+    }
+
+    #newHealthFormModal .correction-head-icon,
+    #correctionModal .correction-head-icon,
+    #healthFormHistoryModal .correction-head-icon,
+    #pulloutRequestModal .correction-head-icon,
+    #newHealthFormModal .correction-head-icon svg,
+    #correctionModal .correction-head-icon svg,
+    #healthFormHistoryModal .correction-head-icon svg,
+    #pulloutRequestModal .correction-head-icon svg {
+        color: #ffffff !important;
+        stroke: currentColor !important;
+    }
+
+    #newHealthFormModal .correction-close,
+    #correctionModal .correction-close,
+    #healthFormHistoryModal .correction-close,
+    #pulloutRequestModal .correction-close {
+        position: relative !important;
+        overflow: hidden !important;
+        width: 40px !important;
+        min-width: 40px !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        flex: 0 0 40px !important;
+        border: 1px solid #8f2230 !important;
+        border-radius: 999px !important;
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+        color: #ffffff !important;
+        box-shadow: 0 8px 18px rgba(77, 13, 23, .24) !important;
+        transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease !important;
+    }
+
+    #newHealthFormModal .correction-close::after,
+    #correctionModal .correction-close::after,
+    #healthFormHistoryModal .correction-close::after,
+    #pulloutRequestModal .correction-close::after {
+        content: "" !important;
+        position: absolute !important;
+        top: -35% !important;
+        left: -72% !important;
+        width: 48% !important;
+        height: 170% !important;
+        border-radius: 999px !important;
+        background: linear-gradient(120deg, transparent 0%, rgba(255, 244, 180, .18) 34%, rgba(255, 244, 180, .58) 50%, rgba(255, 244, 180, .18) 66%, transparent 100%) !important;
+        transform: skewX(-18deg) !important;
+        transition: left .48s ease !important;
+        pointer-events: none !important;
+        z-index: 0 !important;
+    }
+
+    #newHealthFormModal .correction-close svg,
+    #correctionModal .correction-close svg,
+    #healthFormHistoryModal .correction-close svg,
+    #pulloutRequestModal .correction-close svg {
+        position: relative !important;
+        z-index: 1 !important;
+        width: 18px !important;
+        height: 18px !important;
+        color: currentColor !important;
+        stroke: currentColor !important;
+    }
+
+    #newHealthFormModal .correction-close:hover,
+    #newHealthFormModal .correction-close:focus-visible,
+    #correctionModal .correction-close:hover,
+    #correctionModal .correction-close:focus-visible,
+    #healthFormHistoryModal .correction-close:hover,
+    #healthFormHistoryModal .correction-close:focus-visible,
+    #pulloutRequestModal .correction-close:hover,
+    #pulloutRequestModal .correction-close:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 10px 22px rgba(250, 204, 21, .22) !important;
+        outline: none !important;
+    }
+
+    #newHealthFormModal .correction-close:hover::after,
+    #newHealthFormModal .correction-close:focus-visible::after,
+    #correctionModal .correction-close:hover::after,
+    #correctionModal .correction-close:focus-visible::after,
+    #healthFormHistoryModal .correction-close:hover::after,
+    #healthFormHistoryModal .correction-close:focus-visible::after,
+    #pulloutRequestModal .correction-close:hover::after,
+    #pulloutRequestModal .correction-close:focus-visible::after {
+        left: 128% !important;
+    }
 </style>
 @endpush
 

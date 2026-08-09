@@ -330,12 +330,13 @@ class AppointmentController extends Controller
                     ]),
                     'type' => strtolower((string) $announcement->priority) === 'urgent' ? 'danger' : 'info',
                     'icon' => '!',
+                    'announcement_id' => $announcement->id,
                     'title' => trim((string) $announcement->title) ?: 'Clinic Announcement',
                     'message' => $announcementMessage !== '' ? $announcementMessage : 'A new clinic announcement is available.',
                     'time' => $announcement->created_at
                         ? $announcement->created_at->diffForHumans()
                         : 'Clinic announcement',
-                    'link' => url('/student/home#announcements'),
+                    'link' => url('/student/home') . '?announcement=' . $announcement->id . '#announcements',
                 ];
             }
         }
@@ -719,6 +720,7 @@ class AppointmentController extends Controller
             ->take(8)
             ->get()
             ->map(fn (Announcement $announcement) => [
+                'id' => $announcement->id,
                 'title' => $announcement->title,
                 'message' => trim(strip_tags((string) $announcement->message)),
                 'priority' => strtoupper((string) ($announcement->priority ?: 'Announcement')),
@@ -2664,8 +2666,6 @@ public function account(Request $request)
         ->first();
     $healthFormSubmissions = HealthFormSubmission::query()
         ->where('user_id', $user->id)
-        ->whereNotNull('pdf_path')
-        ->latest('submitted_at')
         ->latest('id')
         ->get();
 
@@ -3725,6 +3725,36 @@ public function updateContact(Request $request)
                                    ->orderBy('date', 'desc')
                                    ->orderBy('time', 'desc')
                                    ->get();
+
+        $completedAppointments = $appointments->filter(function ($appointment) {
+            return strtolower(trim((string) $appointment->status)) === 'completed';
+        });
+        $completedDates = $completedAppointments
+            ->pluck('date')
+            ->filter()
+            ->map(fn ($date) => Carbon::parse($date)->format('Y-m-d'))
+            ->unique()
+            ->values();
+
+        $consultationsByDate = $completedDates->isEmpty()
+            ? collect()
+            : Consultation::query()
+                ->where('user_id', $user->id)
+                ->whereIn('consultation_date', $completedDates)
+                ->orderByDesc('time_in')
+                ->get()
+                ->groupBy(fn ($consultation) => optional($consultation->consultation_date)->format('Y-m-d'));
+
+        $completedAppointments->each(function ($appointment) use ($consultationsByDate) {
+            $dateKey = Carbon::parse($appointment->date)->format('Y-m-d');
+            $dateConsultations = $consultationsByDate->get($dateKey, collect());
+            $serviceKey = strtolower(trim((string) $appointment->service));
+            $consultation = $dateConsultations->first(function ($candidate) use ($serviceKey) {
+                return strtolower(trim((string) $candidate->service)) === $serviceKey;
+            }) ?: $dateConsultations->first();
+
+            $appointment->setRelation('historyConsultation', $consultation);
+        });
 
         $studentContext = $this->resolveStudentContext($user);
 
