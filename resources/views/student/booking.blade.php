@@ -1855,6 +1855,10 @@
         border-radius: 8px;
         line-height: 1.5;
     }
+    .booking-form-section textarea[name="remarks"]::placeholder {
+        color: rgba(71, 85, 105, .48) !important;
+        opacity: 1;
+    }
     .time-slot-hint,
     .booking-field-help {
         display: block;
@@ -1906,6 +1910,62 @@
     .btn-submit svg { width: 15px; height: 15px; }
     .btn-submit svg:last-child { margin-left: 4px; }
     .btn-submit:hover { transform: translateY(-1px); }
+    .btn-submit-idle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    .btn-submit-heartbeat {
+        position: relative;
+        display: none;
+        width: 104px;
+        height: 28px;
+        overflow: hidden;
+        background: transparent;
+    }
+    .btn-submit .btn-submit-heartbeat svg {
+        position: absolute;
+        top: -10px;
+        left: 0;
+        width: 104px;
+        height: 50px;
+        margin: 0;
+    }
+    .btn-submit-heartbeat polyline {
+        stroke: #facc15;
+        stroke-dasharray: 360;
+        stroke-dashoffset: 360;
+        vector-effect: non-scaling-stroke;
+        animation: bookingHeartbeatTrace 2s linear infinite;
+    }
+    .btn-submit.is-loading,
+    .btn-submit.is-loading:hover,
+    html[data-theme="dark"] .btn-submit.is-loading,
+    html[data-theme="dark"] .btn-submit.is-loading:hover {
+        background: linear-gradient(90deg, #780018, #97051f 70%, #780018) !important;
+        color: #ffffff !important;
+        cursor: wait;
+        opacity: 1;
+        transform: none;
+    }
+    .btn-submit.is-loading .btn-submit-idle { display: none; }
+    .btn-submit.is-loading .btn-submit-heartbeat { display: inline-block; }
+
+    @keyframes bookingHeartbeatTrace {
+        0% { stroke-dashoffset: 360; opacity: 0; }
+        8% { opacity: 1; }
+        62% { stroke-dashoffset: 0; opacity: 1; }
+        82%, 100% { stroke-dashoffset: -360; opacity: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .btn-submit-heartbeat polyline {
+            animation: none;
+            stroke-dashoffset: 0;
+            opacity: 1;
+        }
+    }
 
     .booking-info-section { padding: 0; gap: 12px; }
     .info-card {
@@ -2065,6 +2125,9 @@
         border-color: rgba(250,204,21,.18);
     }
     html[data-theme="dark"] .appointment-summary-notice small { color: #cbd5e1; }
+    html[data-theme="dark"] .booking-form-section textarea[name="remarks"]::placeholder {
+        color: rgba(203, 213, 225, .48) !important;
+    }
     html[data-theme="dark"] .booking-reminder-card {
         background: #242114 !important;
         border-color: rgba(250,204,21,.22) !important;
@@ -2341,10 +2404,22 @@
                     </span>
                 </div>
 
-                <button type="submit" class="btn-submit">
-                    <x-outline-icon name="calendar-days" />
-                    <span>{{ !empty($clinicClosure) ? 'Booking Temporarily Closed' : 'Confirm Appointment' }}</span>
-                    <x-outline-icon name="arrow-long-right" />
+                <button type="submit" class="btn-submit" aria-label="{{ !empty($clinicClosure) ? 'Booking Temporarily Closed' : 'Confirm Appointment' }}">
+                    <span class="btn-submit-idle">
+                        <x-outline-icon name="calendar-days" />
+                        <span>{{ !empty($clinicClosure) ? 'Booking Temporarily Closed' : 'Confirm Appointment' }}</span>
+                        <x-outline-icon name="arrow-long-right" />
+                    </span>
+                    <span class="btn-submit-heartbeat" aria-hidden="true">
+                        <svg viewBox="0 0 150 73" xmlns="http://www.w3.org/2000/svg" role="presentation">
+                            <polyline
+                                points="0,45.486 38.514,45.486 44.595,33.324 50.676,45.486 57.771,45.486 62.838,55.622 71.959,9 80.067,63.729 84.122,45.486 97.297,45.486 103.379,40.419 110.473,45.486 150,45.486"
+                                stroke-miterlimit="10"
+                                stroke-width="3"
+                                fill="none"
+                            ></polyline>
+                        </svg>
+                    </span>
                 </button>
                 </fieldset>
             </form>
@@ -3056,6 +3131,20 @@
                 if (!isValid) {
                     event.preventDefault();
                     event.stopPropagation();
+                    return;
+                }
+
+                const submitButton = bookingForm.querySelector('.btn-submit');
+                if (submitButton) {
+                    if (submitButton.classList.contains('is-loading')) {
+                        event.preventDefault();
+                        return;
+                    }
+
+                    submitButton.classList.add('is-loading');
+                    submitButton.disabled = true;
+                    submitButton.setAttribute('aria-busy', 'true');
+                    submitButton.setAttribute('aria-label', 'Submitting appointment');
                 }
             });
         }
