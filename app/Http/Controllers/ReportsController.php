@@ -1776,6 +1776,8 @@ private function exportReportsPreview(Request $request, string $reportType)
         $healthFormsExtraQuery['bmi_categories'] = $healthFormsBmiCategories;
     }
 
+    $healthFormsExportQuery = $baseExportQuery + $healthFormsExtraQuery;
+
     $config = [
         'mar' => [
             'view' => 'admin.reports.export-reports-mar',
@@ -1825,7 +1827,17 @@ private function exportReportsPreview(Request $request, string $reportType)
             'kicker' => 'Medical Clearance',
             'subtitle' => 'Preview health form records before exporting the report.',
             'export_label' => 'Health Forms',
-            'export_url' => $healthFormsExportUrl . '?' . http_build_query($baseExportQuery + $healthFormsExtraQuery),
+            'export_url' => $healthFormsExportUrl . '?' . http_build_query($healthFormsExportQuery + ['output' => 'csv']),
+            'export_links' => [
+                [
+                    'label' => 'Excel Export',
+                    'url' => $healthFormsExportUrl . '?' . http_build_query($healthFormsExportQuery + ['output' => 'csv']),
+                ],
+                [
+                    'label' => 'PDF Export',
+                    'url' => $healthFormsExportUrl . '?' . http_build_query($healthFormsExportQuery + ['output' => 'pdf']),
+                ],
+            ],
         ],
     ][$reportType] ?? null;
 
@@ -2309,6 +2321,10 @@ public function exportHealthForms(Request $request)
         })->values();
     }
 
+    if (strtolower(trim((string) $request->query('output', 'csv'))) === 'pdf') {
+        return $this->streamHealthFormsPdf($records, $dateFrom, $dateTo, $courseFilter);
+    }
+
     if ($request->boolean('course_sheets')) {
         return $this->exportHealthFormsCourseSheets($records, $dateFrom, $dateTo);
     }
@@ -2357,6 +2373,120 @@ public function exportHealthForms(Request $request)
     }, $filename, [
         'Content-Type' => 'text/csv; charset=UTF-8',
         'Cache-Control' => 'no-store, no-cache, must-revalidate',
+    ]);
+}
+
+private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Carbon $dateTo, string $courseFilter)
+{
+    $formatName = function (?User $user): string {
+        if (!$user) {
+            return 'N/A';
+        }
+
+        $firstName = trim((string) $user->first_name);
+        $middleName = trim((string) $user->middle_name);
+        $lastName = trim((string) $user->last_name);
+
+        if ($firstName !== '' || $middleName !== '' || $lastName !== '') {
+            $givenNames = trim(implode(' ', array_filter([$firstName, $middleName])));
+
+            return trim(strtoupper($lastName) . ($lastName !== '' && $givenNames !== '' ? ', ' : '') . $givenNames);
+        }
+
+        return trim((string) $user->name) ?: 'N/A';
+    };
+
+    $formatDose = function (array $dose, string $label): ?string {
+        $brand = trim((string) ($dose['brand'] ?? ''));
+        $dateValue = trim((string) ($dose['date'] ?? ''));
+
+        if ($brand === '' && $dateValue === '') {
+            return null;
+        }
+
+        $date = $dateValue;
+        if ($dateValue !== '') {
+            try {
+                $date = Carbon::parse($dateValue)->format('m/d/Y');
+            } catch (\Throwable $exception) {
+                $date = $dateValue;
+            }
+        }
+
+        $details = trim(implode(' - ', array_filter([$brand, $date])));
+
+        return $label . ($details !== '' ? ': ' . $details : '');
+    };
+
+    $pdfRows = $records->map(function (HealthProfile $record) use ($formatName, $formatDose) {
+        $user = $record->user;
+        $vaccineHistory = is_array($record->vaccine_history) ? $record->vaccine_history : [];
+        $firstDose = $formatDose((array) ($vaccineHistory['first_dose'] ?? []), '1st Dose');
+        $secondDose = $formatDose((array) ($vaccineHistory['second_dose'] ?? []), '2nd Dose');
+        $isVaccinated = strtolower(trim((string) $record->covid_vaccinated)) === 'yes';
+        $guardian = trim((string) $record->guardian_name);
+        $guardianContact = trim((string) $record->cellphone);
+        $guardianDetails = trim(implode(' - ', array_filter([$guardian, $guardianContact])));
+
+        return [
+            'name' => $formatName($user),
+            'address' => trim((string) $record->home_address) ?: 'N/A',
+            'contact' => trim((string) optional($user)->contact_no) ?: (trim((string) $record->landline) ?: 'N/A'),
+            'guardian' => $guardianDetails !== '' ? $guardianDetails : 'N/A',
+            'vaccination_status' => $isVaccinated ? ($firstDose && $secondDose ? 'FV' : 'Vaccinated') : (trim((string) $record->covid_vaccinated) ?: 'N/A'),
+            'vaccination_doses' => collect([$firstDose, $secondDose])->filter()->values()->all(),
+            'illness' => Str::limit($this->healthProfileConditionText($record, 'all') ?: 'N/A', 220),
+            'living_with' => 'N/A',
+        ];
+    })->values();
+
+    $courseNames = $records
+        ->map(fn (HealthProfile $record) => trim((string) ($record->course_college ?: optional($record->user)->course)))
+        ->filter()
+        ->unique()
+        ->values();
+    $reportCourse = trim($courseFilter) !== ''
+        ? $courseFilter
+        : ($courseNames->count() === 1 ? (string) $courseNames->first() : 'All Courses');
+
+    $schoolYears = $records
+        ->pluck('school_year')
+        ->map(fn ($value) => trim((string) $value))
+        ->filter()
+        ->unique()
+        ->values();
+    $schoolYear = $schoolYears->count() === 1
+        ? (string) $schoolYears->first()
+        : $dateFrom->format('Y') . ($dateFrom->year !== $dateTo->year ? '-' . $dateTo->format('Y') : '');
+
+    $yearSections = $records
+        ->map(function (HealthProfile $record) {
+            $year = trim((string) optional($record->user)->year);
+            $section = trim((string) optional($record->user)->section);
+
+            return trim(implode('-', array_filter([$year, $section])));
+        })
+        ->filter()
+        ->unique()
+        ->values();
+    $reportLevel = $yearSections->count() === 1 ? (string) $yearSections->first() : '';
+
+    $pdf = Pdf::loadView('admin.reports.health-forms-export-pdf', [
+        'rows' => $pdfRows,
+        'reportCourse' => $reportCourse,
+        'reportLevel' => $reportLevel,
+        'schoolYear' => $schoolYear,
+        'dateFrom' => $dateFrom,
+        'dateTo' => $dateTo,
+        'generatedAt' => now(),
+    ])->setPaper('a4', 'portrait');
+
+    $filename = 'health-forms-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '-' . now()->format('His') . '.pdf';
+
+    return $pdf->stream($filename, [
+        'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma' => 'no-cache',
+        'Expires' => '0',
     ]);
 }
 

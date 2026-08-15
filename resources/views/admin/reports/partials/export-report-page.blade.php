@@ -358,6 +358,80 @@
         gap: 8px;
     }
 
+    .health-forms-export-card {
+        display: block !important;
+        padding: 0 !important;
+    }
+
+    .health-forms-export-card > summary {
+        min-height: 104px;
+        padding: 14px 16px;
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr) 44px;
+        align-items: center;
+        gap: 14px;
+        cursor: pointer;
+        list-style: none;
+    }
+
+    .health-forms-export-card > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .health-forms-export-card[open] > summary {
+        display: none;
+    }
+
+    .health-forms-export-options {
+        min-height: 104px;
+        padding: 0 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .health-forms-export-option {
+        min-height: 49px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: #ffffff !important;
+        font-size: 14px;
+        font-weight: 900;
+        text-align: center;
+        text-decoration: none;
+        transition: color .18s ease, background .18s ease;
+    }
+
+    .health-forms-export-option + .health-forms-export-option {
+        border-top: 1px solid rgba(255, 255, 255, .34);
+    }
+
+    .health-forms-export-option:hover,
+    .health-forms-export-option:focus-visible {
+        background: rgba(255, 255, 255, .06);
+        color: #facc15 !important;
+        outline: none;
+    }
+
+    .health-forms-export-card[open],
+    .health-forms-export-card[open]:hover,
+    .health-forms-export-card[open]:focus-within,
+    html[data-theme="dark"] .health-forms-export-card[open],
+    html[data-theme="dark"] .health-forms-export-card[open]:hover,
+    html[data-theme="dark"] .health-forms-export-card[open]:focus-within {
+        border-color: rgba(250, 204, 21, .72);
+        background: #8f1827;
+        color: #ffffff;
+    }
+
+    .health-forms-export-card[open]::after {
+        display: none;
+    }
+
     .export-filter-backdrop {
         position: fixed;
         inset: 0;
@@ -957,6 +1031,14 @@
         background: #facc15;
     }
 
+    html[data-theme="dark"] .health-forms-export-card[open],
+    html[data-theme="dark"] .health-forms-export-card[open]:hover,
+    html[data-theme="dark"] .health-forms-export-card[open]:focus-within {
+        border-color: rgba(250, 204, 21, .72);
+        background: #8f1827;
+        color: #ffffff;
+    }
+
     html[data-theme="dark"] .export-filter-modal {
         background: rgba(15, 23, 42, .96);
         border-color: rgba(250, 204, 21, .18);
@@ -1184,19 +1266,34 @@
                 <span class="export-card-arrow" aria-hidden="true">→</span>
             </button>
 
-            <a href="{{ $exportUrl }}" target="_blank" class="export-action-card is-export">
-                <span class="export-card-icon"><x-outline-icon name="document-text" /></span>
-                <span>
-                    <span class="export-card-label">Export Report</span>
-                    <span class="export-card-value">{{ $exportLabel }}</span>
-                    <span class="export-card-copy">Click to view</span>
-                </span>
-                <span class="export-card-arrow" aria-hidden="true">&rarr;</span>
-                @if(false)
-                        <a href="{{ $exportUrl }}" target="_blank" class="export-card-link">→</a>
+            @if(($reportType ?? '') === 'health-forms')
+                <details class="export-action-card is-export health-forms-export-card">
+                    <summary aria-label="Choose a Health Forms export format">
+                        <span class="export-card-icon"><x-outline-icon name="document-text" /></span>
+                        <span>
+                            <span class="export-card-label">Export Report</span>
+                            <span class="export-card-value">{{ $exportLabel }}</span>
+                            <span class="export-card-copy">Click to view</span>
+                        </span>
+                        <span class="export-card-arrow" aria-hidden="true">&rarr;</span>
+                    </summary>
+                    <div class="health-forms-export-options">
+                        @foreach($exportLinks as $link)
+                            <a href="{{ $link['url'] }}" target="_blank" class="health-forms-export-option">{{ $link['label'] }}</a>
+                        @endforeach
+                    </div>
+                </details>
+            @else
+                <a href="{{ $exportUrl }}" target="_blank" class="export-action-card is-export">
+                    <span class="export-card-icon"><x-outline-icon name="document-text" /></span>
+                    <span>
+                        <span class="export-card-label">Export Report</span>
+                        <span class="export-card-value">{{ $exportLabel }}</span>
+                        <span class="export-card-copy">Click to view</span>
                     </span>
-                @endif
-            </a>
+                    <span class="export-card-arrow" aria-hidden="true">&rarr;</span>
+                </a>
+            @endif
             @endif
         </div>
     </section>

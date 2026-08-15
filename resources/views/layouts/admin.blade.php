@@ -1291,6 +1291,21 @@
             top: 1px;
             right: 1px;
             border-color: #7f1d2d;
+            transition: opacity 0.16s ease, visibility 0.16s ease, transform 0.16s ease;
+        }
+
+        .quick-actions-wrap.is-open > .quick-actions-toggle > .quick-action-badge {
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.76);
+            pointer-events: none;
+        }
+
+        .quick-actions-wrap.is-open .quick-action-bell > .quick-action-badge {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: none !important;
+            z-index: 4;
         }
 
         .quick-action-tooltip {
