@@ -435,6 +435,21 @@
             top: 1px;
             right: 1px;
             border-color: #7f1d2d;
+            transition: opacity 0.16s ease, visibility 0.16s ease, transform 0.16s ease;
+        }
+
+        .student-quick-actions-wrap.is-open > .student-quick-actions-toggle > .student-quick-actions-badge {
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.76);
+            pointer-events: none;
+        }
+
+        .student-quick-actions-wrap.is-open .student-quick-action-bell > .student-quick-actions-badge {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: none !important;
+            z-index: 4;
         }
 
         .student-quick-actions-panel {
@@ -1684,6 +1699,45 @@
             background: rgba(255, 255, 255, 0.22);
         }
 
+        .nav-list li .student-logout-btn {
+            box-shadow:
+                0 3px 2px rgba(72, 0, 14, 0.22),
+                0 6px 10px rgba(45, 0, 10, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.24),
+                inset 0 -2px 3px rgba(56, 0, 12, 0.16);
+            transition:
+                background 0.2s ease,
+                border-color 0.2s ease,
+                color 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .nav-list li .student-logout-btn:hover {
+            box-shadow:
+                0 4px 3px rgba(72, 0, 14, 0.26),
+                0 7px 12px rgba(45, 0, 10, 0.24),
+                0 -2px 4px rgba(255, 255, 255, 0.14),
+                inset 0 1px 2px rgba(255, 255, 255, 0.28),
+                inset 0 -3px 4px rgba(56, 0, 12, 0.2);
+        }
+
+        .nav-list li .student-logout-btn:active {
+            transform: translateY(1px);
+            box-shadow:
+                0 2px 3px rgba(45, 0, 10, 0.2),
+                inset 0 2px 5px rgba(40, 0, 10, 0.42),
+                inset 0 0 14px rgba(76, 0, 18, 0.28);
+        }
+
+        .nav-list li .student-logout-btn:focus-visible {
+            box-shadow:
+                0 4px 3px rgba(72, 0, 14, 0.24),
+                0 7px 12px rgba(45, 0, 10, 0.22),
+                inset 0 1px 2px rgba(255, 255, 255, 0.26),
+                inset 0 -3px 4px rgba(56, 0, 12, 0.18);
+        }
+
         html[data-theme="dark"] .nav-list-divider {
             background: rgba(255, 255, 255, 0.16);
         }
@@ -2167,7 +2221,7 @@
                         </ul>
                     </li>
                     <li>
-                        <a href="#" class="logout-btn" 
+                        <a href="#" class="logout-btn student-logout-btn"
                         onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                             <x-outline-icon name="arrow-left-on-rectangle" />
                             <span>Logout</span>

@@ -3782,6 +3782,7 @@
         border-color: #8f2230 !important;
         background: linear-gradient(135deg, #70131B, #8f2230) !important;
         color: #ffffff;
+        transition: transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
     }
     html:not([data-theme="dark"]) .appointments-modern-card.is-workflow,
     html[data-theme="dark"] .appointments-modern-card.is-workflow {
@@ -3789,14 +3790,32 @@
         background: linear-gradient(135deg, #70131B, #8f2230) !important;
         box-shadow: 0 16px 30px rgba(112, 19, 27, .24) !important;
     }
+    .appointments-modern-card.is-workflow:hover,
+    html:not([data-theme="dark"]) .appointments-modern-card.is-workflow:hover,
+    html[data-theme="dark"] .appointments-modern-card.is-workflow:hover {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        box-shadow: 0 18px 34px rgba(112, 19, 27, .22), 0 0 0 1px rgba(250, 204, 21, .28) !important;
+    }
     .appointments-modern-card.is-workflow .appointments-modern-icon {
         background: rgba(255, 255, 255, .13) !important;
         color: #ffffff !important;
+        transition: background .18s ease, color .18s ease;
     }
     .appointments-modern-card.is-workflow .appointments-modern-label,
     .appointments-modern-card.is-workflow .appointments-modern-copy strong,
     .appointments-modern-card.is-workflow .appointments-modern-copy span:last-child {
         color: #ffffff !important;
+    }
+    .appointments-modern-card.is-workflow:hover .appointments-modern-icon {
+        background: rgba(112, 19, 27, .12) !important;
+        color: #70131B !important;
+    }
+    .appointments-modern-card.is-workflow:hover .appointments-modern-label,
+    .appointments-modern-card.is-workflow:hover .appointments-modern-copy strong,
+    .appointments-modern-card.is-workflow:hover .appointments-modern-copy span:last-child {
+        color: #70131B !important;
     }
     .appointments-modern-card.is-workflow .appointments-modern-arrow {
         width: 38px;
@@ -3811,8 +3830,9 @@
         transition: background .18s ease, color .18s ease, transform .18s ease;
     }
     .appointments-modern-card.is-workflow:hover .appointments-modern-arrow {
-        background: #facc15;
-        color: #70131B;
+        background: #70131B;
+        border-color: #70131B;
+        color: #ffffff;
         transform: translateX(2px);
     }
     html[data-theme="dark"] .appointments-modern-card:not(.is-workflow) {

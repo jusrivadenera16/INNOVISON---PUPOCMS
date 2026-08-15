@@ -908,7 +908,7 @@
         <article class="appointment-stat-card is-action-card">
             <p class="appointment-stat-label">Appointment History</p>
             <div class="appointment-stat-value">Open</div>
-            <p class="appointment-stat-hint">Review patient visits and clinic records.</p>
+            <p class="appointment-stat-hint">Review records.</p>
             <a href="{{ $historyUrl }}" class="appointment-stat-action" aria-label="Open appointment history">Open History &rarr;</a>
         </article>
     </section>
