@@ -1077,68 +1077,39 @@ class ReportsController extends Controller
             [$dateFrom, $dateTo] = [$dateTo->copy()->startOfDay(), $dateFrom->copy()->endOfDay()];
         }
 
+        $courseFilter = function ($builder) use ($search) {
+            $builder->where('course_college', 'like', "%{$search}%")
+                ->orWhereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('course', 'like', "%{$search}%");
+                });
+        };
+
         $issuedBaseQuery = HealthProfile::query()
             ->with('user')
             ->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
 
         if ($search !== '') {
-            $issuedBaseQuery->where(function ($builder) use ($search) {
-                $builder->where('course_college', 'like', "%{$search}%")
-                    ->orWhereHas('user', function ($userQuery) use ($search) {
-                        $userQuery->where('course', 'like', "%{$search}%");
-                    });
-            });
+            $issuedBaseQuery->where($courseFilter);
         }
 
         $this->applyHealthApprovalDateRange($issuedBaseQuery, $dateFrom, $dateTo);
 
         $pendingBaseQuery = HealthProfile::query()
             ->with('user')
-            ->whereNotIn('clearance_status', ['Issued', 'Fully Cleared', 'Rejected'])
+            ->where(function ($builder) {
+                $builder->whereNotIn('clearance_status', ['Issued', 'Fully Cleared', 'Rejected'])
+                    ->orWhereNull('clearance_status')
+                    ->orWhere('clearance_status', '');
+            })
             ->whereBetween('created_at', [$dateFrom, $dateTo]);
 
         if ($search !== '') {
-            $pendingBaseQuery->where(function ($builder) use ($search) {
-                $builder->where('course_college', 'like', "%{$search}%")
-                    ->orWhereHas('user', function ($userQuery) use ($search) {
-                        $userQuery->where('course', 'like', "%{$search}%");
-                    });
-            });
+            $pendingBaseQuery->where($courseFilter);
         }
 
-        $pendingByCourse = (clone $pendingBaseQuery)
-            ->get()
-            ->groupBy(function (HealthProfile $form) {
-                $course = trim((string) ($form->course_college ?: optional($form->user)->course ?: 'Unspecified Course'));
-                return $course !== '' ? $course : 'Unspecified Course';
-            })
-            ->map(fn ($forms) => $forms->count());
-
-        $issuedFormsCollection = (clone $issuedBaseQuery)
-            ->get()
-            ->groupBy(function (HealthProfile $form) {
-                $course = trim((string) ($form->course_college ?: optional($form->user)->course ?: 'Unspecified Course'));
-                return $course !== '' ? $course : 'Unspecified Course';
-            })
-            ->map(function ($forms, $course) use ($pendingByCourse) {
-                $sortedForms = $forms->sortByDesc(function (HealthProfile $form) {
-                    return $this->healthApprovalDate($form);
-                })->values();
-
-                $withConditionCount = $forms->filter(fn (HealthProfile $form) => $form->hasMedicalCondition())->count();
-                $issuedCount = $forms->count();
-
-                return (object) [
-                    'course' => $course,
-                    'issued_count' => $issuedCount,
-                    'with_condition_count' => $withConditionCount,
-                    'no_condition_count' => $issuedCount - $withConditionCount,
-                    'for_approval_count' => (int) ($pendingByCourse->get($course) ?? 0),
-                    'last_issued_at' => $this->healthApprovalDate($sortedForms->first()),
-                ];
-            })
-            ->sortByDesc('issued_count')
-            ->values();
+        $issuedRecords = (clone $issuedBaseQuery)->get();
+        $pendingRecords = (clone $pendingBaseQuery)->get();
+        $issuedFormsCollection = $this->healthFormsCourseSummaryRows($issuedRecords, $pendingRecords);
 
         $perPage = 12;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
@@ -1154,24 +1125,16 @@ class ReportsController extends Controller
             ]
         );
 
-        $summaryQuery = HealthProfile::query()->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
+        $totalIssued = $issuedFormsCollection->sum('issued_count');
+        $totalCourses = $issuedFormsCollection->count();
+        $issuedWithConditions = $issuedFormsCollection->sum('with_condition_count');
 
-        $totalIssued = (clone $summaryQuery)->count();
-        $totalCourses = (clone $summaryQuery)
+        $allCourses = HealthProfile::query()
             ->with('user:id,course')
-            ->get()
-            ->map(function (HealthProfile $form) {
-                return trim((string) ($form->course_college ?: optional($form->user)->course));
-            })
-            ->filter()
+            ->get(['id', 'user_id', 'course_college'])
+            ->map(fn (HealthProfile $form) => $this->healthFormsCourseLabel($form))
+            ->filter(fn (string $course) => $course !== 'Unspecified Course')
             ->unique()
-            ->count();
-        $issuedWithConditions = (clone $summaryQuery)->withMedicalCondition()->count();
-        $topCourse = optional($issuedFormsCollection->first())->course ?? 'No course data yet';
-
-        $allCourses = HealthProfile::distinct('course_college')
-            ->pluck('course_college')
-            ->filter()
             ->sort()
             ->values();
 
@@ -1185,6 +1148,46 @@ class ReportsController extends Controller
             'dateTo',
             'allCourses'
         ));
+    }
+
+    private function healthFormsCourseSummaryRows(Collection $issuedRecords, Collection $pendingRecords): Collection
+    {
+        $issuedByCourse = $issuedRecords->groupBy(fn (HealthProfile $form) => $this->healthFormsCourseLabel($form));
+        $pendingByCourse = $pendingRecords
+            ->groupBy(fn (HealthProfile $form) => $this->healthFormsCourseLabel($form))
+            ->map(fn (Collection $forms) => $forms->count());
+
+        return $issuedByCourse
+            ->keys()
+            ->merge($pendingByCourse->keys())
+            ->unique()
+            ->map(function (string $course) use ($issuedByCourse, $pendingByCourse) {
+                $forms = $issuedByCourse->get($course, collect());
+                $sortedForms = $forms->sortByDesc(fn (HealthProfile $form) => $this->healthApprovalDate($form))->values();
+                $withConditionCount = $forms->filter(fn (HealthProfile $form) => $form->hasMedicalCondition())->count();
+                $issuedCount = $forms->count();
+
+                return (object) [
+                    'course' => $course,
+                    'issued_count' => $issuedCount,
+                    'with_condition_count' => $withConditionCount,
+                    'no_condition_count' => $issuedCount - $withConditionCount,
+                    'for_approval_count' => (int) ($pendingByCourse->get($course) ?? 0),
+                    'last_issued_at' => $this->healthApprovalDate($sortedForms->first()),
+                ];
+            })
+            ->sort(function ($first, $second) {
+                return [$second->issued_count, $second->for_approval_count, $first->course]
+                    <=> [$first->issued_count, $first->for_approval_count, $second->course];
+            })
+            ->values();
+    }
+
+    private function healthFormsCourseLabel(HealthProfile $form): string
+    {
+        $course = trim((string) ($form->course_college ?: optional($form->user)->course ?: ''));
+
+        return $course !== '' ? $course : 'Unspecified Course';
     }
 
     private function healthFormsApplicantsListQuery(Request $request): array
