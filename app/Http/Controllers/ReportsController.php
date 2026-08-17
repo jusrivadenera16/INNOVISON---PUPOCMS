@@ -1070,6 +1070,7 @@ class ReportsController extends Controller
     public function healthFormsReport(Request $request)
     {
         $search = trim((string) $request->query('q', ''));
+        $hasDateFilter = $request->filled('date_from') || $request->filled('date_to');
         $dateFrom = $this->parseReportDate((string) $request->query('date_from', ''), now()->startOfMonth())->startOfDay();
         $dateTo = $this->parseReportDate((string) $request->query('date_to', ''), now())->endOfDay();
 
@@ -1092,7 +1093,9 @@ class ReportsController extends Controller
             $issuedBaseQuery->where($courseFilter);
         }
 
-        $this->applyHealthApprovalDateRange($issuedBaseQuery, $dateFrom, $dateTo);
+        if ($hasDateFilter) {
+            $this->applyHealthApprovalDateRange($issuedBaseQuery, $dateFrom, $dateTo);
+        }
 
         $pendingBaseQuery = HealthProfile::query()
             ->with('user')
@@ -1100,8 +1103,11 @@ class ReportsController extends Controller
                 $builder->whereNotIn('clearance_status', ['Issued', 'Fully Cleared', 'Rejected'])
                     ->orWhereNull('clearance_status')
                     ->orWhere('clearance_status', '');
-            })
-            ->whereBetween('created_at', [$dateFrom, $dateTo]);
+            });
+
+        if ($hasDateFilter) {
+            $pendingBaseQuery->whereBetween('created_at', [$dateFrom, $dateTo]);
+        }
 
         if ($search !== '') {
             $pendingBaseQuery->where($courseFilter);
