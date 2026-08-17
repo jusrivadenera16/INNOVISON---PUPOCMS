@@ -377,6 +377,36 @@
         letter-spacing: 0.05em;
         color: #64748b;
     }
+    .health-forms-course-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #7f1d2d;
+        font-weight: 900;
+        text-decoration: none;
+    }
+    .health-forms-course-link::after {
+        content: "View students";
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: #fff7ed;
+        color: #9a3412;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        opacity: 0;
+        transform: translateX(-4px);
+        transition: opacity .18s ease, transform .18s ease;
+    }
+    .health-forms-table tbody tr:hover .health-forms-course-link::after,
+    .health-forms-course-link:focus-visible::after {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    .health-forms-table tbody tr:hover td {
+        background: #fffafa;
+    }
     .health-status-badge {
         display: inline-flex;
         align-items: center;
@@ -500,6 +530,16 @@
     html[data-theme="dark"] .health-forms-table th,
     html[data-theme="dark"] .health-forms-table td {
         border-bottom-color: rgba(250, 204, 21, .12);
+    }
+    html[data-theme="dark"] .health-forms-course-link {
+        color: #facc15;
+    }
+    html[data-theme="dark"] .health-forms-course-link::after {
+        background: rgba(250, 204, 21, .12);
+        color: #fde68a;
+    }
+    html[data-theme="dark"] .health-forms-table tbody tr:hover td {
+        background: rgba(127, 29, 45, .18);
     }
     html[data-theme="dark"] .health-forms-field input,
     html[data-theme="dark"] .health-forms-field select,
@@ -697,6 +737,12 @@
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
     $reportsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
     $applicantsListUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/health-forms/applicants-list') : url('/admin/reports/health-forms/applicants-list');
+    $courseDetailsUrl = function (string $course) use ($applicantsListUrl) {
+        return $applicantsListUrl . '?' . http_build_query([
+            'course' => $course,
+            'per_page' => 'all',
+        ]);
+    };
 @endphp
 <div class="health-forms-shell">
     <div class="health-forms-head">
@@ -774,7 +820,11 @@
                     <tbody>
                         @forelse($issuedForms as $form)
                             <tr>
-                                <td>{{ $form->course }}</td>
+                                <td>
+                                    <a class="health-forms-course-link" href="{{ $courseDetailsUrl($form->course) }}" title="View students in {{ $form->course }}">
+                                        {{ $form->course }}
+                                    </a>
+                                </td>
                                 <td><span class="health-status-badge">{{ $form->issued_count }}</span></td>
                                 <td><span class="health-condition-badge">{{ $form->with_condition_count }}</span></td>
                                 <td><span class="health-condition-badge none">{{ $form->no_condition_count }}</span></td>
