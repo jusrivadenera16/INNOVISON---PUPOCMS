@@ -1221,12 +1221,28 @@ class ReportsController extends Controller
         }
 
         if ($courseFilter !== '') {
-            $query->where(function ($q) use ($courseFilter) {
-                $q->where('course_college', 'like', "%{$courseFilter}%")
-                    ->orWhereHas('user', function ($uq) use ($courseFilter) {
-                        $uq->where('course', 'like', "%{$courseFilter}%");
+            if ($courseFilter === 'Unspecified Course') {
+                $query->where(function ($q) {
+                    $q->where(function ($profileCourse) {
+                        $profileCourse->whereNull('course_college')
+                            ->orWhere('course_college', '');
+                    })
+                    ->where(function ($userCourse) {
+                        $userCourse->whereDoesntHave('user')
+                            ->orWhereHas('user', function ($uq) {
+                                $uq->whereNull('course')
+                                    ->orWhere('course', '');
+                            });
                     });
-            });
+                });
+            } else {
+                $query->where(function ($q) use ($courseFilter) {
+                    $q->where('course_college', 'like', "%{$courseFilter}%")
+                        ->orWhereHas('user', function ($uq) use ($courseFilter) {
+                            $uq->where('course', 'like', "%{$courseFilter}%");
+                        });
+                });
+            }
         }
 
         if ($userTypeFilter !== '') {
