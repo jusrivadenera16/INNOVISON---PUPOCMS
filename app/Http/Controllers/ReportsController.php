@@ -2222,7 +2222,7 @@ private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateF
         })->values();
     }
 
-    return $records->values();
+    return $this->sortHealthFormsByPatientLastName($records);
 }
 
 public function exportHealthForms(Request $request)
@@ -2345,6 +2345,8 @@ public function exportHealthForms(Request $request)
             return $terms->contains(fn ($term) => str_contains($haystack, $term));
         })->values();
     }
+
+    $records = $this->sortHealthFormsByPatientLastName($records);
 
     if (strtolower(trim((string) $request->query('output', 'csv'))) === 'pdf') {
         return $this->streamHealthFormsPdf($records, $dateFrom, $dateTo, $courseFilter);
@@ -2525,21 +2527,7 @@ private function exportHealthFormsCourseSheets(Collection $records, Carbon $date
         ->groupBy(fn (HealthProfile $record) => $this->healthFormsCourseSheetCourse($record))
         ->sortKeys()
         ->map(function (Collection $courseRecords) {
-            return $courseRecords
-                ->sortBy(function (HealthProfile $record) {
-                    $statusRank = $this->healthFormsCourseSheetStatusRank($record);
-                    $date = $statusRank === 0
-                        ? ($record->verified_at ?: $record->created_at)
-                        : ($record->created_at ?: $record->updated_at);
-
-                    return sprintf(
-                        '%d-%s-%010d',
-                        $statusRank,
-                        $date ? Carbon::parse($date)->format('YmdHis') : '99999999999999',
-                        $record->id
-                    );
-                })
-                ->values();
+            return $this->sortHealthFormsByPatientLastName($courseRecords);
         });
 
     if ($sheets->isEmpty()) {
@@ -2844,6 +2832,42 @@ private function healthFormsCourseSheetStatusRank(HealthProfile $record): int
         'Rejected' => 1,
         default => 2,
     };
+}
+
+private function sortHealthFormsByPatientLastName(Collection $records): Collection
+{
+    return $records
+        ->sortBy(fn (HealthProfile $record) => $this->healthFormsPatientNameSortKey($record), SORT_NATURAL | SORT_FLAG_CASE)
+        ->values();
+}
+
+private function healthFormsPatientNameSortKey(HealthProfile $record): string
+{
+    $user = $record->user;
+    $firstName = trim((string) optional($user)->first_name);
+    $middleName = trim((string) optional($user)->middle_name);
+    $lastName = trim((string) optional($user)->last_name);
+    $fullName = trim((string) optional($user)->name);
+
+    if ($lastName === '' && $fullName !== '') {
+        $nameParts = preg_split('/\s+/', $fullName) ?: [];
+        $lastName = trim((string) array_pop($nameParts));
+
+        if ($firstName === '') {
+            $firstName = trim(implode(' ', $nameParts));
+        }
+    }
+
+    $reference = trim((string) ($record->reference_number ?: $record->student_number ?: optional($user)->student_number ?: ''));
+
+    return implode('|', [
+        mb_strtolower($lastName !== '' ? $lastName : $fullName),
+        mb_strtolower($firstName),
+        mb_strtolower($middleName),
+        mb_strtolower($fullName),
+        mb_strtolower($reference),
+        str_pad((string) ($record->id ?? 0), 10, '0', STR_PAD_LEFT),
+    ]);
 }
 
 private function healthFormsCourseSheetName(string $course, array &$usedSheetNames): string

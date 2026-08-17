@@ -45,14 +45,53 @@ class HealthFormsCourseSummaryTest extends TestCase
         $this->assertSame(1, $psychology->for_approval_count);
     }
 
+    public function test_it_sorts_health_form_records_by_patient_last_name(): void
+    {
+        $records = $this->sortByLastName(collect([
+            $this->profile('Bachelor of Science in Information Technology', [
+                'reference_number' => '2026-0208-1884',
+                'user' => [
+                    'first_name' => 'Hana Catig',
+                    'last_name' => 'Valle',
+                    'name' => 'Hana Catig Valle',
+                ],
+            ]),
+            $this->profile('Bachelor of Science in Information Technology', [
+                'reference_number' => '2026-0205-0412',
+                'user' => [
+                    'first_name' => 'Joege Catayen',
+                    'last_name' => 'Nono',
+                    'name' => 'Joege Catayen Nono',
+                ],
+            ]),
+            $this->profile('Bachelor of Science in Information Technology', [
+                'reference_number' => '2026-0210-3745',
+                'user' => [
+                    'first_name' => 'Eunice Allison Abarquez',
+                    'last_name' => 'Abdon',
+                    'name' => 'Eunice Allison Abarquez Abdon',
+                ],
+            ]),
+        ]));
+
+        $this->assertSame([
+            'Eunice Allison Abarquez Abdon',
+            'Joege Catayen Nono',
+            'Hana Catig Valle',
+        ], $records->map(fn (HealthProfile $record) => $record->user->name)->all());
+    }
+
     private function profile(string $course, array $attributes = []): HealthProfile
     {
+        $userAttributes = $attributes['user'] ?? ['course' => $course];
+        unset($attributes['user']);
+
         $profile = new HealthProfile(array_merge([
             'course_college' => $course,
             'clearance_status' => 'Issued',
         ], $attributes));
 
-        $profile->setRelation('user', new User(['course' => $course]));
+        $profile->setRelation('user', new User(array_merge(['course' => $course], $userAttributes)));
 
         return $profile;
     }
@@ -64,5 +103,14 @@ class HealthFormsCourseSummaryTest extends TestCase
         $method->setAccessible(true);
 
         return $method->invoke($controller, $issuedRecords, $pendingRecords);
+    }
+
+    private function sortByLastName($records)
+    {
+        $controller = new ReportsController();
+        $method = new ReflectionMethod($controller, 'sortHealthFormsByPatientLastName');
+        $method->setAccessible(true);
+
+        return $method->invoke($controller, $records);
     }
 }
