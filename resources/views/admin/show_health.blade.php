@@ -229,6 +229,8 @@
         background: #70131B;
         border: 1px solid #8f2230;
         text-decoration: none;
+        cursor: pointer;
+        font-family: inherit;
         box-shadow:
             0 0 0 2px rgba(112, 19, 27, 0.08),
             0 10px 22px rgba(15, 23, 42, 0.10);
@@ -295,6 +297,19 @@
         border-color: #facc15;
     }
     .profile-head-actions { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .profile-top-form {
+        margin: 0;
+        display: inline-flex;
+    }
+    .profile-top-btn-warning {
+        background: #9a3412;
+        border-color: #c2410c;
+    }
+    .profile-top-btn-warning:hover,
+    .profile-top-btn-warning:focus {
+        background: #facc15;
+        border-color: #facc15;
+    }
     .profile-switch { display: flex; gap: 10px; flex-wrap: wrap; }
     .profile-switch-head {
         display: flex;
@@ -1584,6 +1599,7 @@
     $canResyncPuptas = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && !in_array($puptasSyncRaw, ['synced', 'not_applicable'], true);
     $canRequestFileCorrection = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true);
+    $canReturnToPending = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true);
     $hasCorrectionRequest = !empty($profile->resubmission_required_documents) || !empty($profile->resubmission_requested_at);
     $correctionStatusLabel = !$hasCorrectionRequest
         ? 'None'
@@ -1604,6 +1620,15 @@
                     <p class="profile-sub">Issued health profile details and submitted documents.</p>
                 </div>
                 <div class="profile-head-actions">
+                @if($canReturnToPending)
+                    <form method="POST" action="{{ route('admin.health_profile.return_to_pending', $profile->id) }}" class="profile-top-form" onsubmit="return confirm('Return this approved health record to Pending Approval?');">
+                        @csrf
+                        <button type="submit" class="profile-top-btn profile-top-btn-warning">
+                            <span aria-hidden="true">&crarr;</span>
+                            Return to Pending
+                        </button>
+                    </form>
+                @endif
                 <a href="{{ route('admin.health_records') }}" class="profile-top-btn">
                     <span aria-hidden="true">&larr;</span>
                     Back

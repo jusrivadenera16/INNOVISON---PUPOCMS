@@ -250,6 +250,9 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
     Route::post('/health-profile/{id}/request-health-form', [AdminController::class, 'requestNewHealthForm'])
         ->middleware('role:superadmin,admin')
         ->name('admin.health_profile.request_health_form');
+    Route::post('/health-profile/{id}/return-to-pending', [AdminController::class, 'returnHealthProfileToPending'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.health_profile.return_to_pending');
     Route::post('/health-form-submissions/{submission}/status', [AdminController::class, 'updateHealthFormSubmissionStatus'])
         ->middleware('role:superadmin,admin')
         ->name('admin.health_form_submissions.status');

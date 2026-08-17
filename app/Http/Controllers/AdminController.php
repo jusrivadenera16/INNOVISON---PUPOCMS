@@ -2301,6 +2301,65 @@ class AdminController extends Controller
             ->with('success', 'New Health Form request sent to the student.');
     }
 
+    public function returnHealthProfileToPending(Request $request, $id)
+    {
+        $profile = HealthProfile::with('user')->findOrFail($id);
+        $previousStatus = trim((string) $profile->clearance_status);
+
+        if (!in_array($previousStatus, ['Issued', 'Fully Cleared'], true)) {
+            return redirect()->route('admin.show_health', $profile->id)
+                ->with('error', 'Only approved health records can be returned to pending approval.');
+        }
+
+        $previousVerifiedAt = $profile->verified_at;
+        $previousApprovedBy = $profile->approved_by_user_id;
+        $previousPuptasStatus = $profile->puptas_sync_status;
+
+        $profile->clearance_status = 'For Verification';
+        $profile->physical_assessment_status = 'Not Yet Conducted';
+        $profile->pending_reason = null;
+        $profile->verified_at = null;
+        $profile->approved_by_user_id = null;
+        $profile->save();
+        $this->updatePuptasSyncState($profile, null, null);
+
+        if ($profile->user) {
+            $profile->user->is_health_profile_completed = 0;
+            $profile->user->save();
+        }
+
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_name' => auth()->user()?->name ?? auth()->user()?->email ?? 'System',
+            'user_role' => strtolower((string) (auth()->user()?->user_role ?? '')),
+            'action' => 'Approved Health Profile Returned to Pending',
+            'module' => 'Health Records',
+            'event_type' => 'health_profile_returned_to_pending',
+            'description' => 'Approved health profile #' . $profile->id . ' was returned to Pending Approval without deleting submitted profile data.',
+            'route_name' => optional($request->route())->getName(),
+            'http_method' => 'POST',
+            'request_path' => '/' . ltrim((string) $request->path(), '/'),
+            'status_code' => 200,
+            'subject_type' => HealthProfile::class,
+            'subject_id' => (string) $profile->id,
+            'metadata' => [
+                'health_profile_id' => $profile->id,
+                'reference_number' => $profile->reference_number,
+                'student_id' => $profile->student_id,
+                'previous_status' => $previousStatus,
+                'previous_verified_at' => optional($previousVerifiedAt)->toDateTimeString(),
+                'previous_approved_by_user_id' => $previousApprovedBy,
+                'previous_puptas_sync_status' => $previousPuptasStatus,
+            ],
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 255),
+        ]);
+
+        return redirect()
+            ->route('admin.health_records', ['tab' => 'pending_approval'])
+            ->with('success', 'Approved health record returned to Pending Approval.');
+    }
+
     public function updateHealthFormSubmissionStatus(Request $request, HealthFormSubmission $submission)
     {
         $validated = $request->validate([
