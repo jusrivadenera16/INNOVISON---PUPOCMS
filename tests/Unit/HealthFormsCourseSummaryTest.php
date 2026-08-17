@@ -81,6 +81,20 @@ class HealthFormsCourseSummaryTest extends TestCase
         ], $records->map(fn (HealthProfile $record) => $record->user->name)->all());
     }
 
+    public function test_it_formats_health_form_patient_names_for_reports(): void
+    {
+        $this->assertSame('ABDON, Eunice Allison Abarquez', $this->formatReportName(new User([
+            'first_name' => 'Eunice Allison',
+            'middle_name' => 'Abarquez',
+            'last_name' => 'Abdon',
+            'name' => 'Eunice Allison Abarquez Abdon',
+        ])));
+
+        $this->assertSame('Clinic User', $this->formatReportName(new User([
+            'name' => 'Clinic User',
+        ])));
+    }
+
     private function profile(string $course, array $attributes = []): HealthProfile
     {
         $userAttributes = $attributes['user'] ?? ['course' => $course];
@@ -112,5 +126,14 @@ class HealthFormsCourseSummaryTest extends TestCase
         $method->setAccessible(true);
 
         return $method->invoke($controller, $records);
+    }
+
+    private function formatReportName(?User $user): string
+    {
+        $controller = new ReportsController();
+        $method = new ReflectionMethod($controller, 'formatHealthFormsPatientReportName');
+        $method->setAccessible(true);
+
+        return $method->invoke($controller, $user);
     }
 }

@@ -920,9 +920,9 @@
                             }
                         }
                     @endphp
-                    <tr data-logbook-row data-search="{{ strtolower(($user->name ?? 'N/A') . ' ' . ($user->email ?? '') . ' ' . ($record->sex ?: ($user->gender ?? 'N/A')) . ' ' . ($record->course_college ?? $user->course ?? 'N/A') . ' ' . ($user->user_type ?? 'N/A') . ' ' . $statusLabel . ' ' . ($hasCondition ? 'yes with condition medical condition' : 'no condition')) }}">
+                    <tr data-logbook-row data-search="{{ strtolower(($record->formatted_patient_name ?? $user->name ?? 'N/A') . ' ' . ($user->name ?? '') . ' ' . ($user->email ?? '') . ' ' . ($record->sex ?: ($user->gender ?? 'N/A')) . ' ' . ($record->course_college ?? $user->course ?? 'N/A') . ' ' . ($user->user_type ?? 'N/A') . ' ' . $statusLabel . ' ' . ($hasCondition ? 'yes with condition medical condition' : 'no condition')) }}">
                         <td>
-                            <strong>{{ $user->name ?? 'N/A' }}</strong>
+                            <strong>{{ $record->formatted_patient_name ?? $user->name ?? 'N/A' }}</strong>
                         </td>
                         <td>{{ $record->sex ?: ($user->gender ?? 'N/A') }}</td>
                         <td>{{ $record->course_college ?? $user->course ?? 'N/A' }}</td>

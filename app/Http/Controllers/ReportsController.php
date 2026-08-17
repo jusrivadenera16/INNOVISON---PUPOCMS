@@ -1289,7 +1289,10 @@ class ReportsController extends Controller
             $perPage = '20';
         }
 
-        $logbookCollection = $this->sortHealthFormsByPatientLastName($query->get());
+        $logbookCollection = $this->sortHealthFormsByPatientLastName($query->get())
+            ->each(function (HealthProfile $record) {
+                $record->setAttribute('formatted_patient_name', $this->formatHealthFormsPatientReportName($record->user));
+            });
         $logbookCurrentPage = LengthAwarePaginator::resolveCurrentPage();
         $logbookPerPage = $perPage === 'all'
             ? max(1, $logbookCollection->count())
@@ -2074,7 +2077,7 @@ private function exportHealthFormsPreviewColumns(Request $request): array
 
     $definitions = [
         'Reference' => fn (HealthProfile $record) => $record->reference_number ?: $record->student_number ?: optional($record->user)->student_number ?: 'N/A',
-        'Name' => fn (HealthProfile $record) => optional($record->user)->name ?: 'N/A',
+        'Name' => fn (HealthProfile $record) => $this->formatHealthFormsPatientReportName($record->user),
         'Course' => fn (HealthProfile $record) => $record->course_college ?: optional($record->user)->course ?: 'N/A',
         'User Type' => fn (HealthProfile $record) => $this->healthFormsExportUserType($record),
         'Gender' => fn (HealthProfile $record) => $record->sex ?: optional($record->user)->gender ?: 'N/A',
@@ -2395,7 +2398,7 @@ public function exportHealthForms(Request $request)
 
             fputcsv($output, [
                 $record->reference_number ?: $record->student_number ?: optional($record->user)->student_number ?: 'N/A',
-                optional($record->user)->name ?: 'N/A',
+                $this->formatHealthFormsPatientReportName($record->user),
                 $record->course_college ?: optional($record->user)->course ?: 'N/A',
                 $record->sex ?: optional($record->user)->gender ?: 'N/A',
                 $status,
@@ -2416,24 +2419,6 @@ public function exportHealthForms(Request $request)
 
 private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Carbon $dateTo, string $courseFilter)
 {
-    $formatName = function (?User $user): string {
-        if (!$user) {
-            return 'N/A';
-        }
-
-        $firstName = trim((string) $user->first_name);
-        $middleName = trim((string) $user->middle_name);
-        $lastName = trim((string) $user->last_name);
-
-        if ($firstName !== '' || $middleName !== '' || $lastName !== '') {
-            $givenNames = trim(implode(' ', array_filter([$firstName, $middleName])));
-
-            return trim(strtoupper($lastName) . ($lastName !== '' && $givenNames !== '' ? ', ' : '') . $givenNames);
-        }
-
-        return trim((string) $user->name) ?: 'N/A';
-    };
-
     $formatDose = function (array $dose, string $label): ?string {
         $brand = trim((string) ($dose['brand'] ?? ''));
         $dateValue = trim((string) ($dose['date'] ?? ''));
@@ -2456,7 +2441,7 @@ private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Car
         return $label . ($details !== '' ? ': ' . $details : '');
     };
 
-    $pdfRows = $records->map(function (HealthProfile $record) use ($formatName, $formatDose) {
+    $pdfRows = $records->map(function (HealthProfile $record) use ($formatDose) {
         $user = $record->user;
         $vaccineHistory = is_array($record->vaccine_history) ? $record->vaccine_history : [];
         $firstDose = $formatDose((array) ($vaccineHistory['first_dose'] ?? []), '1st Dose');
@@ -2467,7 +2452,7 @@ private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Car
         $guardianDetails = trim(implode(' - ', array_filter([$guardian, $guardianContact])));
 
         return [
-            'name' => $formatName($user),
+            'name' => $this->formatHealthFormsPatientReportName($user),
             'address' => trim((string) $record->home_address) ?: 'N/A',
             'contact' => trim((string) optional($user)->contact_no) ?: (trim((string) $record->landline) ?: 'N/A'),
             'guardian' => $guardianDetails !== '' ? $guardianDetails : 'N/A',
@@ -2753,7 +2738,7 @@ private function healthFormsCourseSheetRow(HealthProfile $record): array
 
     return [
         $record->reference_number ?: $record->student_number ?: optional($record->user)->student_number ?: 'N/A',
-        optional($record->user)->name ?: 'N/A',
+        $this->formatHealthFormsPatientReportName($record->user),
         $this->healthFormsCourseSheetCourse($record),
         $record->sex ?: optional($record->user)->gender ?: 'N/A',
         $this->healthFormsCourseSheetStatus($record),
@@ -2850,6 +2835,25 @@ private function sortHealthFormsByPatientLastName(Collection $records): Collecti
     return $records
         ->sortBy(fn (HealthProfile $record) => $this->healthFormsPatientNameSortKey($record), SORT_NATURAL | SORT_FLAG_CASE)
         ->values();
+}
+
+private function formatHealthFormsPatientReportName(?User $user): string
+{
+    if (!$user) {
+        return 'N/A';
+    }
+
+    $firstName = trim((string) $user->first_name);
+    $middleName = trim((string) $user->middle_name);
+    $lastName = trim((string) $user->last_name);
+
+    if ($firstName !== '' || $middleName !== '' || $lastName !== '') {
+        $givenNames = trim(implode(' ', array_filter([$firstName, $middleName])));
+
+        return trim(strtoupper($lastName) . ($lastName !== '' && $givenNames !== '' ? ', ' : '') . $givenNames);
+    }
+
+    return trim((string) $user->name) ?: 'N/A';
 }
 
 private function healthFormsPatientNameSortKey(HealthProfile $record): string
