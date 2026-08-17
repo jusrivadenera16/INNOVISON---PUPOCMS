@@ -1799,6 +1799,8 @@ private function exportReportsPreview(Request $request, string $reportType)
         'gender' => trim((string) $request->query('gender', '')),
         'condition' => trim((string) $request->query('condition', '')),
         'status' => trim((string) $request->query('status', '')),
+        'school_year' => trim((string) $request->query('school_year', '')),
+        'sort' => $this->normalizeHealthFormsExportSort((string) $request->query('sort', 'name_asc')),
         'condition_keyword' => trim((string) $request->query('condition_keyword', '')),
         'condition_source' => trim((string) $request->query('condition_source', 'all')),
         'condition_match' => trim((string) $request->query('condition_match', 'any')),
@@ -1912,6 +1914,15 @@ private function exportReportsPreview(Request $request, string $reportType)
             ->filter()
             ->unique()
             ->sort()
+            ->values(),
+        'healthFormSchoolYears' => HealthProfile::query()
+            ->select('school_year')
+            ->whereNotNull('school_year')
+            ->get()
+            ->map(fn (HealthProfile $profile) => trim((string) $profile->school_year))
+            ->filter()
+            ->unique()
+            ->sortDesc()
             ->values(),
         'healthConditionSuggestions' => $reportType === 'health-forms'
             ? $this->healthConditionKeywordSuggestions()
@@ -2135,6 +2146,8 @@ private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateF
     $genderFilter = strtolower(trim((string) $request->query('gender', '')));
     $conditionFilter = strtolower(trim((string) $request->query('condition', '')));
     $statusFilter = strtolower(trim((string) $request->query('status', '')));
+    $schoolYearFilter = trim((string) $request->query('school_year', ''));
+    $sortMode = $this->normalizeHealthFormsExportSort((string) $request->query('sort', 'name_asc'));
     $conditionKeyword = trim((string) $request->query('condition_keyword', ''));
     $conditionSource = trim((string) $request->query('condition_source', 'all'));
     $conditionMatch = trim((string) $request->query('condition_match', 'any'));
@@ -2179,6 +2192,10 @@ private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateF
         $query->whereNotIn('clearance_status', ['Issued', 'Fully Cleared', 'Rejected']);
     } elseif ($statusFilter === 'rejected') {
         $query->where('clearance_status', 'Rejected');
+    }
+
+    if ($schoolYearFilter !== '') {
+        $query->whereRaw('TRIM(school_year) = ?', [$schoolYearFilter]);
     }
 
     $records = $query->orderByDesc(DB::raw('COALESCE(verified_at, created_at)'))->get();
@@ -2236,7 +2253,7 @@ private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateF
         })->values();
     }
 
-    return $this->sortHealthFormsByPatientLastName($records);
+    return $this->sortHealthFormsExportRecords($records, $sortMode);
 }
 
 public function exportHealthForms(Request $request)
@@ -2248,6 +2265,8 @@ public function exportHealthForms(Request $request)
     $genderFilter = strtolower(trim((string) $request->query('gender', '')));
     $conditionFilter = strtolower(trim((string) $request->query('condition', '')));
     $statusFilter = strtolower(trim((string) $request->query('status', '')));
+    $schoolYearFilter = trim((string) $request->query('school_year', ''));
+    $sortMode = $this->normalizeHealthFormsExportSort((string) $request->query('sort', 'name_asc'));
     $conditionKeyword = trim((string) $request->query('condition_keyword', ''));
     $conditionSource = trim((string) $request->query('condition_source', 'all'));
     $conditionMatch = trim((string) $request->query('condition_match', 'any'));
@@ -2305,6 +2324,10 @@ public function exportHealthForms(Request $request)
         $query->where('clearance_status', 'Rejected');
     }
 
+    if ($schoolYearFilter !== '') {
+        $query->whereRaw('TRIM(school_year) = ?', [$schoolYearFilter]);
+    }
+
     $records = $query->orderByDesc(DB::raw('COALESCE(verified_at, created_at)'))->get();
 
     if ($userTypeFilter !== '') {
@@ -2360,14 +2383,14 @@ public function exportHealthForms(Request $request)
         })->values();
     }
 
-    $records = $this->sortHealthFormsByPatientLastName($records);
+    $records = $this->sortHealthFormsExportRecords($records, $sortMode);
 
     if (strtolower(trim((string) $request->query('output', 'csv'))) === 'pdf') {
         return $this->streamHealthFormsPdf($records, $dateFrom, $dateTo, $courseFilter);
     }
 
     if ($request->boolean('course_sheets')) {
-        return $this->exportHealthFormsCourseSheets($records, $dateFrom, $dateTo);
+        return $this->exportHealthFormsCourseSheets($records, $dateFrom, $dateTo, $sortMode);
     }
 
     $filename = 'health-forms-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '-' . now()->format('His') . '.csv';
@@ -2513,7 +2536,7 @@ private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Car
     ]);
 }
 
-private function exportHealthFormsCourseSheets(Collection $records, Carbon $dateFrom, Carbon $dateTo)
+private function exportHealthFormsCourseSheets(Collection $records, Carbon $dateFrom, Carbon $dateTo, string $sortMode = 'name_asc')
 {
     $applicantRecords = $records
         ->filter(fn (HealthProfile $record) => $this->healthFormsCourseSheetIsApplicant($record))
@@ -2522,8 +2545,8 @@ private function exportHealthFormsCourseSheets(Collection $records, Carbon $date
     $sheets = $applicantRecords
         ->groupBy(fn (HealthProfile $record) => $this->healthFormsCourseSheetCourse($record))
         ->sortKeys()
-        ->map(function (Collection $courseRecords) {
-            return $this->sortHealthFormsByPatientLastName($courseRecords);
+        ->map(function (Collection $courseRecords) use ($sortMode) {
+            return $this->sortHealthFormsExportRecords($courseRecords, $sortMode);
         });
 
     if ($sheets->isEmpty()) {
@@ -2835,6 +2858,39 @@ private function sortHealthFormsByPatientLastName(Collection $records): Collecti
     return $records
         ->sortBy(fn (HealthProfile $record) => $this->healthFormsPatientNameSortKey($record), SORT_NATURAL | SORT_FLAG_CASE)
         ->values();
+}
+
+private function sortHealthFormsExportRecords(Collection $records, string $sortMode): Collection
+{
+    return match ($this->normalizeHealthFormsExportSort($sortMode)) {
+        'name_desc' => $records
+            ->sortByDesc(fn (HealthProfile $record) => $this->healthFormsPatientNameSortKey($record), SORT_NATURAL | SORT_FLAG_CASE)
+            ->values(),
+        'date_asc' => $records
+            ->sortBy(fn (HealthProfile $record) => $this->healthFormsRecordDateSortKey($record))
+            ->values(),
+        'date_desc' => $records
+            ->sortByDesc(fn (HealthProfile $record) => $this->healthFormsRecordDateSortKey($record))
+            ->values(),
+        default => $this->sortHealthFormsByPatientLastName($records),
+    };
+}
+
+private function normalizeHealthFormsExportSort(string $sortMode): string
+{
+    $sortMode = strtolower(trim($sortMode));
+
+    return in_array($sortMode, ['name_asc', 'name_desc', 'date_desc', 'date_asc'], true)
+        ? $sortMode
+        : 'name_asc';
+}
+
+private function healthFormsRecordDateSortKey(HealthProfile $record): int
+{
+    $attributes = $record->getAttributes();
+    $date = $attributes['verified_at'] ?? $attributes['created_at'] ?? null;
+
+    return $date ? Carbon::parse($date)->timestamp : 0;
 }
 
 private function formatHealthFormsPatientReportName(?User $user): string
