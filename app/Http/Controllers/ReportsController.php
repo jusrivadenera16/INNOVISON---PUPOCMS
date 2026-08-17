@@ -1289,10 +1289,21 @@ class ReportsController extends Controller
             $perPage = '20';
         }
 
-        $logbookQuery = $query->orderByDesc('created_at');
-        $logbookRecords = $logbookQuery
-            ->paginate($perPage === 'all' ? max(1, (clone $logbookQuery)->count()) : (int) $perPage)
-            ->withQueryString();
+        $logbookCollection = $this->sortHealthFormsByPatientLastName($query->get());
+        $logbookCurrentPage = LengthAwarePaginator::resolveCurrentPage();
+        $logbookPerPage = $perPage === 'all'
+            ? max(1, $logbookCollection->count())
+            : (int) $perPage;
+        $logbookRecords = new LengthAwarePaginator(
+            $logbookCollection->slice(($logbookCurrentPage - 1) * $logbookPerPage, $logbookPerPage)->values(),
+            $logbookCollection->count(),
+            $logbookPerPage,
+            $logbookCurrentPage,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
 
         $courses = HealthProfile::query()
             ->select('course_college', 'course_code')
