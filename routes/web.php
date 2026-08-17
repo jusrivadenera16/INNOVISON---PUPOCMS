@@ -227,46 +227,46 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
     });
 
     Route::get('/health-records', [AdminController::class, 'viewHealth'])
-        ->middleware('role:superadmin,admin')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
         ->name('admin.health_records');
     Route::get('/health-records/stats', [AdminController::class, 'healthRecordStats'])
-        ->middleware('role:superadmin,admin')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
         ->name('admin.health_records.stats');
     Route::get('/health-profile/{id}', [AdminController::class, 'showHealth'])
-        ->middleware('role:superadmin,admin')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
         ->name('admin.show_health');
     Route::get('/health-profile/{id}/plain', [AdminController::class, 'showHealthPlain'])
-        ->middleware('role:superadmin,admin')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
         ->name('admin.show_health_plain');
     Route::get('/health-profile/{id}/pdf', [AdminController::class, 'exportHealthPdf'])
-        ->middleware('role:superadmin,admin')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
         ->name('admin.health_pdf');
     Route::post('/health-profile/{id}/resync-puptas', [AdminController::class, 'resyncPuptasHealthProfile'])
-        ->middleware('role:superadmin,admin')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.update_assessment'])
         ->name('admin.health_profile.resync_puptas');
     Route::post('/health-profile/{id}/request-resubmission', [AdminController::class, 'requestHealthProfileResubmission'])
-        ->middleware('role:superadmin,admin')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
         ->name('admin.health_profile.request_resubmission');
     Route::post('/health-profile/{id}/request-health-form', [AdminController::class, 'requestNewHealthForm'])
-        ->middleware('role:superadmin,admin')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
         ->name('admin.health_profile.request_health_form');
     Route::post('/health-profile/{id}/return-to-pending', [AdminController::class, 'returnHealthProfileToPending'])
-        ->middleware('role:superadmin,admin')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
         ->name('admin.health_profile.return_to_pending');
     Route::post('/health-form-submissions/{submission}/status', [AdminController::class, 'updateHealthFormSubmissionStatus'])
-        ->middleware('role:superadmin,admin')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.review_documents'])
         ->name('admin.health_form_submissions.status');
     Route::get('/health-form-submissions/{submission}/pdf', [AdminController::class, 'showHealthFormSubmissionPdf'])
-        ->middleware('role:superadmin,admin')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
         ->name('admin.health_form_submissions.pdf');
     Route::post('/health-profile/{id}/for-final-review', [AdminController::class, 'markHealthProfileForFinalReview'])
-        ->middleware('role:superadmin,admin')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.review_documents'])
         ->name('admin.health_profile.for_final_review');
     Route::post('/health-profile/{id}/for-approval', [AdminController::class, 'markHealthProfileForApproval'])
-        ->middleware('role:superadmin,admin')
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.review_documents'])
         ->name('admin.health_profile.for_approval');
     Route::post('/health-profile/medical-assessment-upload', [AdminController::class, 'uploadMedicalAssessmentCopy'])
-        ->middleware('role:superadmin,admin,nurse')
+        ->middleware(['role:superadmin,admin,nurse', 'module.permission:health_records.update_assessment'])
         ->name('admin.medical_assessment_upload');
     Route::get('/health-profile/{id}/sign', [AdminController::class, 'showSignPage'])
         ->middleware('role:superadmin')
@@ -282,67 +282,67 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
             ->name('assistant.intent');
 
         Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-        Route::get('/admin/appointments', [AdminController::class, 'appointments'])->name('admin.appointments');
-        Route::get('/admin/appointments/{id}/{status}', [AdminController::class, 'updateStatus'])->name('admin.appointments.status');
-        Route::post('/admin/appointments/{id}/reschedule', [AdminController::class, 'reschedule'])->name('admin.appointments.reschedule');
+        Route::get('/admin/appointments', [AdminController::class, 'appointments'])->middleware('module.permission:appointments.view')->name('admin.appointments');
+        Route::get('/admin/appointments/{id}/{status}', [AdminController::class, 'updateStatus'])->middleware('module.permission:appointments.status')->name('admin.appointments.status');
+        Route::post('/admin/appointments/{id}/reschedule', [AdminController::class, 'reschedule'])->middleware('module.permission:appointments.reschedule')->name('admin.appointments.reschedule');
 
-        Route::get('/admin/inventory', [AdminController::class, 'inventory'])->name('admin.inventory');
+        Route::get('/admin/inventory', [AdminController::class, 'inventory'])->middleware('module.permission:inventory.view')->name('admin.inventory');
 
-        Route::get('/admin/walkin', [WalkInController::class, 'index'])->name('walkin.index');
-        Route::get('/admin/walkin/get-student', [WalkInController::class, 'getStudent'])->name('walkin.getStudent');
-        Route::get('/admin/walkin/final-review-applicants', [WalkInController::class, 'finalReviewApplicants'])->name('walkin.final-review-applicants');
-        Route::post('/admin/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->name('walkin.verify-id-ai');
-        Route::post('/admin/walkin/register', [WalkInController::class, 'registerStudent'])->name('walkin.registerStudent');
-        Route::get('/admin/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->name('walkin.form');
-        Route::get('/admin/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->name('walkin.healthForm');
-        Route::get('/admin/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->name('walkin.document');
-        Route::get('/admin/walkin/employee-health-form/{employeeProfile}', [WalkInController::class, 'showEmployeeHealthForm'])->name('walkin.employeeHealthForm');
-        Route::get('/admin/walkin/employee-document/{employeeProfile}/{document}', [WalkInController::class, 'showEmployeeDocument'])->name('walkin.employeeDocument');
-        Route::get('/admin/walkin/staff-health-form/{staffProfile}', [WalkInController::class, 'showStaffHealthForm'])->name('walkin.staffHealthForm');
-        Route::get('/admin/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->name('walkin.staffDocument');
-        Route::post('/admin/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->name('walkin.health-profile-information.update');
-        Route::post('/admin/walkin/store', [WalkInController::class, 'store'])->name('walkin.store');
-        Route::post('/admin/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->name('admin.walkin.applicant_encoding');
-        Route::post('/admin/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->name('admin.walkin.final_review.time_in');
-        Route::post('/admin/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->name('admin.walkin.approve_applicant');
-        Route::post('/admin/walkin/applicant-final-review-draft', [WalkInController::class, 'saveApplicantFinalReviewDraft'])->name('admin.walkin.applicant_final_review_draft');
-        Route::post('/admin/walkin/employee-draft', [WalkInController::class, 'saveEmployeeDraft'])->name('admin.walkin.employee_draft');
+        Route::get('/admin/walkin', [WalkInController::class, 'index'])->middleware('module.permission:walkin.view')->name('walkin.index');
+        Route::get('/admin/walkin/get-student', [WalkInController::class, 'getStudent'])->middleware('module.permission:walkin.view')->name('walkin.getStudent');
+        Route::get('/admin/walkin/final-review-applicants', [WalkInController::class, 'finalReviewApplicants'])->middleware('module.permission:walkin.review_submission')->name('walkin.final-review-applicants');
+        Route::post('/admin/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->middleware('module.permission:walkin.register_patient')->name('walkin.verify-id-ai');
+        Route::post('/admin/walkin/register', [WalkInController::class, 'registerStudent'])->middleware('module.permission:walkin.register_patient')->name('walkin.registerStudent');
+        Route::get('/admin/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->middleware('module.permission:walkin.view')->name('walkin.form');
+        Route::get('/admin/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->middleware('module.permission:walkin.view')->name('walkin.healthForm');
+        Route::get('/admin/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->middleware('module.permission:walkin.view')->name('walkin.document');
+        Route::get('/admin/walkin/employee-health-form/{employeeProfile}', [WalkInController::class, 'showEmployeeHealthForm'])->middleware('module.permission:walkin.view')->name('walkin.employeeHealthForm');
+        Route::get('/admin/walkin/employee-document/{employeeProfile}/{document}', [WalkInController::class, 'showEmployeeDocument'])->middleware('module.permission:walkin.view')->name('walkin.employeeDocument');
+        Route::get('/admin/walkin/staff-health-form/{staffProfile}', [WalkInController::class, 'showStaffHealthForm'])->middleware('module.permission:walkin.view')->name('walkin.staffHealthForm');
+        Route::get('/admin/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->middleware('module.permission:walkin.view')->name('walkin.staffDocument');
+        Route::post('/admin/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.health-profile-information.update');
+        Route::post('/admin/walkin/store', [WalkInController::class, 'store'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.store');
+        Route::post('/admin/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->middleware('module.permission:walkin.encode_assessment')->name('admin.walkin.applicant_encoding');
+        Route::post('/admin/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->middleware('module.permission:walkin.final_review')->name('admin.walkin.final_review.time_in');
+        Route::post('/admin/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->middleware('module.permission:walkin.final_review')->name('admin.walkin.approve_applicant');
+        Route::post('/admin/walkin/applicant-final-review-draft', [WalkInController::class, 'saveApplicantFinalReviewDraft'])->middleware('module.permission:walkin.final_review')->name('admin.walkin.applicant_final_review_draft');
+        Route::post('/admin/walkin/employee-draft', [WalkInController::class, 'saveEmployeeDraft'])->middleware('module.permission:walkin.encode_assessment')->name('admin.walkin.employee_draft');
 
-        Route::get('/admin/reports', [AdminController::class, 'reports'])->name('admin.reports');
-        Route::get('/admin/reports/digital-logbook', [ReportsController::class, 'digitalLogbook'])->name('reports.digital-logbook');
-        Route::get('/admin/reports/mar', [ReportsController::class, 'marReport'])->name('reports.mar');
-        Route::get('/admin/reports/inventory-summary', [AdminController::class, 'inventorySummary'])->name('reports.inventory-summary');
-        Route::get('/admin/reports/daily-treatment-record', [ReportsController::class, 'dailyTreatmentRecord'])->name('reports.daily-treatment-record');
-        Route::get('/admin/reports/appointment-statistics', [ReportsController::class, 'appointmentStatistics'])->name('reports.appointment-statistics');
-        Route::get('/admin/reports/appointment-history', [ReportsController::class, 'appointmentHistory'])->name('reports.appointment-history');
+        Route::get('/admin/reports', [AdminController::class, 'reports'])->middleware('module.permission:reports.view')->name('admin.reports');
+        Route::get('/admin/reports/digital-logbook', [ReportsController::class, 'digitalLogbook'])->middleware('module.permission:reports.digital_logbook')->name('reports.digital-logbook');
+        Route::get('/admin/reports/mar', [ReportsController::class, 'marReport'])->middleware('module.permission:reports.mar')->name('reports.mar');
+        Route::get('/admin/reports/inventory-summary', [AdminController::class, 'inventorySummary'])->middleware('module.permission:reports.inventory_summary')->name('reports.inventory-summary');
+        Route::get('/admin/reports/daily-treatment-record', [ReportsController::class, 'dailyTreatmentRecord'])->middleware('module.permission:reports.digital_logbook')->name('reports.daily-treatment-record');
+        Route::get('/admin/reports/appointment-statistics', [ReportsController::class, 'appointmentStatistics'])->middleware('module.permission:reports.appointment_statistics')->name('reports.appointment-statistics');
+        Route::get('/admin/reports/appointment-history', [ReportsController::class, 'appointmentHistory'])->middleware('module.permission:reports.appointment_statistics')->name('reports.appointment-history');
         Route::get('/admin/reports/appointment-history/print', [ReportsController::class, 'printAppointmentHistory'])
-            ->middleware('superadmin.export')
+            ->middleware(['module.permission:reports.export_reports', 'superadmin.export'])
             ->name('reports.appointment-history-print');
-        Route::get('/admin/reports/health-forms', [ReportsController::class, 'healthFormsReport'])->name('reports.health-forms');
-        Route::get('/admin/reports/health-forms/applicants-list', [ReportsController::class, 'healthFormsApplicantsList'])->name('reports.health-forms.applicants-list');
+        Route::get('/admin/reports/health-forms', [ReportsController::class, 'healthFormsReport'])->middleware('module.permission:reports.health_forms')->name('reports.health-forms');
+        Route::get('/admin/reports/health-forms/applicants-list', [ReportsController::class, 'healthFormsApplicantsList'])->middleware('module.permission:reports.health_forms')->name('reports.health-forms.applicants-list');
         Route::get('/admin/reports/health-forms/export', [ReportsController::class, 'exportHealthForms'])
-            ->middleware('superadmin.export')
+            ->middleware(['module.permission:reports.export_reports', 'superadmin.export'])
             ->name('reports.health-forms.export');
-        Route::get('/admin/reports/health-forms-logbook', [ReportsController::class, 'healthFormsLogbook'])->name('reports.health-forms-logbook');
+        Route::get('/admin/reports/health-forms-logbook', [ReportsController::class, 'healthFormsLogbook'])->middleware('module.permission:reports.health_forms')->name('reports.health-forms-logbook');
         Route::get('/admin/reports/health-forms-logbook/export', [ReportsController::class, 'exportHealthFormsLogbook'])
-            ->middleware('superadmin.export')
+            ->middleware(['module.permission:reports.export_reports', 'superadmin.export'])
             ->name('reports.health-forms-logbook.export');
-        Route::get('/admin/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->name('reports.feedbacks');
-        Route::middleware('superadmin.export')->group(function () {
+        Route::get('/admin/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->middleware('module.permission:reports.feedbacks')->name('reports.feedbacks');
+        Route::middleware(['module.permission:reports.export_reports', 'superadmin.export'])->group(function () {
             Route::get('/admin/reports/export-hub', [ReportsController::class, 'exportHub'])->name('reports.exportHub');
             Route::get('/admin/reports/export-hub/mar', [ReportsController::class, 'exportReportsMar'])->name('reports.exportHub.mar');
             Route::get('/admin/reports/export-hub/inventory', [ReportsController::class, 'exportReportsInventory'])->name('reports.exportHub.inventory');
             Route::get('/admin/reports/export-hub/appointments', [ReportsController::class, 'exportReportsAppointments'])->name('reports.exportHub.appointments');
-            Route::get('/admin/reports/export-hub/audit-trail', [ReportsController::class, 'exportReportsAuditTrail'])->name('reports.exportHub.audit-trail');
+            Route::get('/admin/reports/export-hub/audit-trail', [ReportsController::class, 'exportReportsAuditTrail'])->middleware('role:superadmin')->name('reports.exportHub.audit-trail');
             Route::get('/admin/reports/export-hub/health-forms', [ReportsController::class, 'exportReportsHealthForms'])->name('reports.exportHub.health-forms');
             Route::get('/admin/reports/print-reports', [ReportsController::class, 'printReport'])->name('reports.print');
         });
         Route::get('/admin/notifications/feed', [AdminController::class, 'notificationsFeed'])->name('admin.notifications.feed');
         Route::post('/admin/notifications/mark-all-read', [AdminController::class, 'markAllAdminNotificationsRead'])->name('admin.notifications.read_all');
-        Route::get('/admin/announcements', [AdminController::class, 'announcements'])->name('admin.announcements');
-        Route::post('/admin/announcements', [AdminController::class, 'storeAnnouncement'])->name('admin.announcements.store');
-        Route::patch('/admin/announcements/{announcement}/archive', [AdminController::class, 'archiveAnnouncement'])->name('admin.announcements.archive');
-        Route::delete('/admin/announcements/{announcement}', [AdminController::class, 'destroyAnnouncement'])->name('admin.announcements.destroy');
+        Route::get('/admin/announcements', [AdminController::class, 'announcements'])->middleware('module.permission:announcements.view')->name('admin.announcements');
+        Route::post('/admin/announcements', [AdminController::class, 'storeAnnouncement'])->middleware('module.permission:announcements.publish')->name('admin.announcements.store');
+        Route::patch('/admin/announcements/{announcement}/archive', [AdminController::class, 'archiveAnnouncement'])->middleware('module.permission:announcements.archive')->name('admin.announcements.archive');
+        Route::delete('/admin/announcements/{announcement}', [AdminController::class, 'destroyAnnouncement'])->middleware('module.permission:announcements.archive')->name('admin.announcements.destroy');
         Route::get('/admin/user-management', [AdminUserController::class, 'index'])->name('admin.user-management');
         Route::get('/admin/user-management/account-access', [AdminUserController::class, 'accountAccess'])->name('admin.user-management.account-access');
         Route::get('/admin/user-management/admin-hub', [AdminUserController::class, 'adminHub'])->name('admin.user-management.admin-hub');
@@ -422,53 +422,53 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
     // Admin prefixed entry points (same modules, different UI context)
     Route::middleware(['role:admin', 'assistant.schedule'])->prefix('assistant')->name('assistant.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-        Route::get('/appointments', [AdminController::class, 'appointments'])->name('appointments');
-        Route::get('/appointments/{id}/{status}', [AdminController::class, 'updateStatus'])->name('appointments.status');
-        Route::post('/appointments/{id}/reschedule', [AdminController::class, 'reschedule'])->name('appointments.reschedule');
-        Route::get('/inventory', [AdminController::class, 'inventory'])->name('inventory');
+        Route::get('/appointments', [AdminController::class, 'appointments'])->middleware('module.permission:appointments.view')->name('appointments');
+        Route::get('/appointments/{id}/{status}', [AdminController::class, 'updateStatus'])->middleware('module.permission:appointments.status')->name('appointments.status');
+        Route::post('/appointments/{id}/reschedule', [AdminController::class, 'reschedule'])->middleware('module.permission:appointments.reschedule')->name('appointments.reschedule');
+        Route::get('/inventory', [AdminController::class, 'inventory'])->middleware('module.permission:inventory.view')->name('inventory');
 
-        Route::get('/walkin', [WalkInController::class, 'index'])->name('walkin.index');
-        Route::get('/walkin/get-student', [WalkInController::class, 'getStudent'])->name('walkin.getStudent');
-        Route::get('/walkin/final-review-applicants', [WalkInController::class, 'finalReviewApplicants'])->name('walkin.final-review-applicants');
-        Route::post('/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->name('walkin.verify-id-ai');
-        Route::post('/walkin/register', [WalkInController::class, 'registerStudent'])->name('walkin.registerStudent');
-        Route::get('/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->name('walkin.form');
-        Route::get('/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->name('walkin.healthForm');
-        Route::get('/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->name('walkin.document');
-        Route::get('/walkin/employee-health-form/{employeeProfile}', [WalkInController::class, 'showEmployeeHealthForm'])->name('walkin.employeeHealthForm');
-        Route::get('/walkin/employee-document/{employeeProfile}/{document}', [WalkInController::class, 'showEmployeeDocument'])->name('walkin.employeeDocument');
-        Route::get('/walkin/staff-health-form/{staffProfile}', [WalkInController::class, 'showStaffHealthForm'])->name('walkin.staffHealthForm');
-        Route::get('/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->name('walkin.staffDocument');
-        Route::post('/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->name('walkin.health-profile-information.update');
-        Route::post('/walkin/store', [WalkInController::class, 'store'])->name('walkin.store');
-        Route::post('/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->name('walkin.applicant_encoding');
-        Route::post('/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->name('walkin.final_review.time_in');
-        Route::post('/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->name('walkin.approve_applicant');
-        Route::post('/walkin/applicant-final-review-draft', [WalkInController::class, 'saveApplicantFinalReviewDraft'])->name('walkin.applicant_final_review_draft');
+        Route::get('/walkin', [WalkInController::class, 'index'])->middleware('module.permission:walkin.view')->name('walkin.index');
+        Route::get('/walkin/get-student', [WalkInController::class, 'getStudent'])->middleware('module.permission:walkin.view')->name('walkin.getStudent');
+        Route::get('/walkin/final-review-applicants', [WalkInController::class, 'finalReviewApplicants'])->middleware('module.permission:walkin.review_submission')->name('walkin.final-review-applicants');
+        Route::post('/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->middleware('module.permission:walkin.register_patient')->name('walkin.verify-id-ai');
+        Route::post('/walkin/register', [WalkInController::class, 'registerStudent'])->middleware('module.permission:walkin.register_patient')->name('walkin.registerStudent');
+        Route::get('/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->middleware('module.permission:walkin.view')->name('walkin.form');
+        Route::get('/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->middleware('module.permission:walkin.view')->name('walkin.healthForm');
+        Route::get('/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->middleware('module.permission:walkin.view')->name('walkin.document');
+        Route::get('/walkin/employee-health-form/{employeeProfile}', [WalkInController::class, 'showEmployeeHealthForm'])->middleware('module.permission:walkin.view')->name('walkin.employeeHealthForm');
+        Route::get('/walkin/employee-document/{employeeProfile}/{document}', [WalkInController::class, 'showEmployeeDocument'])->middleware('module.permission:walkin.view')->name('walkin.employeeDocument');
+        Route::get('/walkin/staff-health-form/{staffProfile}', [WalkInController::class, 'showStaffHealthForm'])->middleware('module.permission:walkin.view')->name('walkin.staffHealthForm');
+        Route::get('/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->middleware('module.permission:walkin.view')->name('walkin.staffDocument');
+        Route::post('/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.health-profile-information.update');
+        Route::post('/walkin/store', [WalkInController::class, 'store'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.store');
+        Route::post('/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.applicant_encoding');
+        Route::post('/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->middleware('module.permission:walkin.final_review')->name('walkin.final_review.time_in');
+        Route::post('/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->middleware('module.permission:walkin.final_review')->name('walkin.approve_applicant');
+        Route::post('/walkin/applicant-final-review-draft', [WalkInController::class, 'saveApplicantFinalReviewDraft'])->middleware('module.permission:walkin.final_review')->name('walkin.applicant_final_review_draft');
 
-        Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
-        Route::get('/reports/digital-logbook', [ReportsController::class, 'digitalLogbook'])->name('reports.digital-logbook');
-        Route::get('/reports/mar', [ReportsController::class, 'marReport'])->name('reports.mar');
-        Route::get('/reports/inventory-summary', [AdminController::class, 'inventorySummary'])->name('reports.inventory-summary');
-        Route::get('/reports/daily-treatment-record', [ReportsController::class, 'dailyTreatmentRecord'])->name('reports.daily-treatment-record');
-        Route::get('/reports/appointment-statistics', [ReportsController::class, 'appointmentStatistics'])->name('reports.appointment-statistics');
-        Route::get('/reports/appointment-history', [ReportsController::class, 'appointmentHistory'])->name('reports.appointment-history');
-        Route::get('/reports/health-forms', [ReportsController::class, 'healthFormsReport'])->name('reports.health-forms');
-        Route::get('/reports/health-forms/applicants-list', [ReportsController::class, 'healthFormsApplicantsList'])->name('reports.health-forms.applicants-list');
+        Route::get('/reports', [AdminController::class, 'reports'])->middleware('module.permission:reports.view')->name('reports');
+        Route::get('/reports/digital-logbook', [ReportsController::class, 'digitalLogbook'])->middleware('module.permission:reports.digital_logbook')->name('reports.digital-logbook');
+        Route::get('/reports/mar', [ReportsController::class, 'marReport'])->middleware('module.permission:reports.mar')->name('reports.mar');
+        Route::get('/reports/inventory-summary', [AdminController::class, 'inventorySummary'])->middleware('module.permission:reports.inventory_summary')->name('reports.inventory-summary');
+        Route::get('/reports/daily-treatment-record', [ReportsController::class, 'dailyTreatmentRecord'])->middleware('module.permission:reports.digital_logbook')->name('reports.daily-treatment-record');
+        Route::get('/reports/appointment-statistics', [ReportsController::class, 'appointmentStatistics'])->middleware('module.permission:reports.appointment_statistics')->name('reports.appointment-statistics');
+        Route::get('/reports/appointment-history', [ReportsController::class, 'appointmentHistory'])->middleware('module.permission:reports.appointment_statistics')->name('reports.appointment-history');
+        Route::get('/reports/health-forms', [ReportsController::class, 'healthFormsReport'])->middleware('module.permission:reports.health_forms')->name('reports.health-forms');
+        Route::get('/reports/health-forms/applicants-list', [ReportsController::class, 'healthFormsApplicantsList'])->middleware('module.permission:reports.health_forms')->name('reports.health-forms.applicants-list');
         Route::get('/reports/health-forms/export', [ReportsController::class, 'exportHealthForms'])
-            ->middleware('superadmin.export')
+            ->middleware(['module.permission:reports.export_reports', 'superadmin.export'])
             ->name('reports.health-forms.export');
-        Route::get('/reports/health-forms-logbook', [ReportsController::class, 'healthFormsLogbook'])->name('reports.health-forms-logbook');
+        Route::get('/reports/health-forms-logbook', [ReportsController::class, 'healthFormsLogbook'])->middleware('module.permission:reports.health_forms')->name('reports.health-forms-logbook');
         Route::get('/reports/health-forms-logbook/export', [ReportsController::class, 'exportHealthFormsLogbook'])
-            ->middleware('superadmin.export')
+            ->middleware(['module.permission:reports.export_reports', 'superadmin.export'])
             ->name('reports.health-forms-logbook.export');
-        Route::get('/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->name('reports.feedbacks');
-        Route::middleware('superadmin.export')->group(function () {
+        Route::get('/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->middleware('module.permission:reports.feedbacks')->name('reports.feedbacks');
+        Route::middleware(['module.permission:reports.export_reports', 'superadmin.export'])->group(function () {
             Route::get('/reports/export-hub', [ReportsController::class, 'exportHub'])->name('reports.exportHub');
             Route::get('/reports/export-hub/mar', [ReportsController::class, 'exportReportsMar'])->name('reports.exportHub.mar');
             Route::get('/reports/export-hub/inventory', [ReportsController::class, 'exportReportsInventory'])->name('reports.exportHub.inventory');
             Route::get('/reports/export-hub/appointments', [ReportsController::class, 'exportReportsAppointments'])->name('reports.exportHub.appointments');
-            Route::get('/reports/export-hub/audit-trail', [ReportsController::class, 'exportReportsAuditTrail'])->name('reports.exportHub.audit-trail');
+            Route::get('/reports/export-hub/audit-trail', [ReportsController::class, 'exportReportsAuditTrail'])->middleware('role:superadmin')->name('reports.exportHub.audit-trail');
             Route::get('/reports/export-hub/health-forms', [ReportsController::class, 'exportReportsHealthForms'])->name('reports.exportHub.health-forms');
             Route::get('/reports/print-reports', [ReportsController::class, 'printReport'])->name('reports.print');
         });

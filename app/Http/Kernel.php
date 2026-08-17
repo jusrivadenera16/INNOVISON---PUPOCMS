@@ -69,5 +69,6 @@ class Kernel extends HttpKernel
         'idp.session' => \App\Http\Middleware\EnsureIdpSessionIsActive::class,
         'assistant.schedule' => \App\Http\Middleware\EnsureStudentAssistantWorkspaceAvailable::class,
         'superadmin.export' => \App\Http\Middleware\EnsureSuperAdminExportAccess::class,
+        'module.permission' => \App\Http\Middleware\EnsureModulePermission::class,
     ];
 }

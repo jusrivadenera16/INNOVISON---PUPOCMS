@@ -1552,8 +1552,8 @@
                             This faculty profile comes from the external source. Saving here will add a clinic-side user and admin hub record without changing the source system.
                         </div>
                         <div class="um-module-save-warning" id="moduleAccessSaveWarning" hidden>
-                            <strong>Module access is preview only.</strong>
-                            <span>Role and status can be saved, but these module selections will not be saved yet.</span>
+                            <strong>Module access is saved with this account.</strong>
+                            <span>Changes take effect on the user&apos;s next request.</span>
                         </div>
                         <div class="um-actions">
                             <button type="button" class="um-settings-action um-action-neutral" id="deactivateBtn">Deactivate Account</button>
@@ -1853,7 +1853,19 @@
                         : 'Suggested starting access for Clinic Staff.';
                 }
 
-                if (options.resetModuleDefaults === true || moduleAccessPreview.dataset.role !== roleKey) {
+                const savedPermissions = Array.isArray(options.modulePermissions)
+                    ? options.modulePermissions
+                    : null;
+                const shouldLoadDefaults = savedPermissions === null
+                    && (options.resetModuleDefaults === true || moduleAccessPreview.dataset.role !== roleKey);
+
+                if (savedPermissions !== null) {
+                    moduleAccessItems.forEach((item) => item
+                        .querySelectorAll('[data-module-permission], [data-module-action]')
+                        .forEach((input) => {
+                        input.checked = savedPermissions.includes(input.value);
+                        }));
+                } else if (shouldLoadDefaults) {
                     modulePermissionInputs.forEach((input) => {
                         input.checked = input.dataset[roleKey] === '1';
                     });
@@ -1861,8 +1873,8 @@
                 moduleAccessPreview.dataset.role = roleKey;
                 moduleAccessItems.forEach((item) => {
                     syncModuleItem(item, {
-                        resetActions: options.resetModuleDefaults === true,
-                        collapse: options.resetModuleDefaults === true,
+                        resetActions: shouldLoadDefaults,
+                        collapse: shouldLoadDefaults,
                     });
                 });
                 if (resetModuleDefaultsButton) {
@@ -1962,6 +1974,9 @@
                 return {};
             }
         })();
+        const savedModulePermissions = Array.isArray(meta.module_permissions)
+            ? meta.module_permissions
+            : null;
         const originalRole = String(meta.idp_role || '').trim();
         detailOriginalRole.value = originalRole
             ? originalRole.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
@@ -2079,7 +2094,12 @@
             }
             detailStatus.value = row.dataset.status || 'active';
         }
-        syncRoleUi({ canEdit, canOnboard, resetModuleDefaults: true });
+        syncRoleUi({
+            canEdit,
+            canOnboard,
+            modulePermissions: savedModulePermissions,
+            resetModuleDefaults: savedModulePermissions === null,
+        });
         if (saveSettingsBtn) {
             saveSettingsBtn.textContent = canEdit ? 'Save Changes' : 'Add to Clinic';
         }

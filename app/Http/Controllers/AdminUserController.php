@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\HealthProfile;
 use App\Models\User;
 use App\Services\FacultySyncService;
+use App\Services\ModulePermissionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -192,6 +193,8 @@ class AdminUserController extends Controller
             'admin_email' => ['nullable', 'email', 'max:255'],
             'access_level' => ['nullable', Rule::in(['clinic_staff', 'designee'])],
             'office' => ['nullable', 'string', 'max:255'],
+            'module_permissions' => ['nullable', 'array'],
+            'module_permissions.*' => ['string', Rule::in(app(ModulePermissionService::class)->all())],
         ]);
 
         if ($managementView === 'admin-hub') {
@@ -286,6 +289,11 @@ class AdminUserController extends Controller
         if (Schema::hasColumn('users', 'status')) {
             $user->status = $request->status;
         }
+        if (Schema::hasColumn('users', 'module_permissions')) {
+            $user->module_permissions = $normalizedRequestedRole === User::ROLE_SUPERADMIN
+                ? null
+                : app(ModulePermissionService::class)->normalize($request->input('module_permissions', []));
+        }
 
         $user->save();
 
@@ -378,6 +386,8 @@ class AdminUserController extends Controller
             'admin_email' => ['nullable', 'email', 'max:255'],
             'access_level' => ['nullable', Rule::in(['clinic_staff', 'designee'])],
             'office' => ['nullable', 'string', 'max:255'],
+            'module_permissions' => ['nullable', 'array'],
+            'module_permissions.*' => ['string', Rule::in(app(ModulePermissionService::class)->all())],
             'first_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['nullable', 'string', 'max:255'],
             'full_name' => ['nullable', 'string', 'max:255'],
@@ -492,6 +502,11 @@ class AdminUserController extends Controller
         }
         if (Schema::hasColumn('users', 'status')) {
             $user->status = $request->status;
+        }
+        if (Schema::hasColumn('users', 'module_permissions')) {
+            $user->module_permissions = $normalizedRequestedRole === User::ROLE_SUPERADMIN
+                ? null
+                : app(ModulePermissionService::class)->normalize($request->input('module_permissions', []));
         }
         $user->save();
 
@@ -992,6 +1007,9 @@ class AdminUserController extends Controller
                         'access_level' => $resolvedAccessLevel,
                         'idp_role' => (string) ($user->idp_role ?? ''),
                         'user_type' => (string) ($user->user_type ?? ''),
+                        'module_permissions' => Schema::hasColumn('users', 'module_permissions')
+                            ? app(ModulePermissionService::class)->assigned($user)
+                            : app(ModulePermissionService::class)->defaults(),
                         'admin_login_email' => (string) ($linkedAdmin?->email_address ?? $linkedAdmin?->email ?? ''),
                         'admin_profile_id' => $linkedAdmin?->admin_id,
                         'admin_profile_name' => (string) ($linkedAdmin?->name ?? ''),
