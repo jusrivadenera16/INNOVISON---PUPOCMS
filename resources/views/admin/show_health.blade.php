@@ -837,6 +837,48 @@
         font-weight: 700;
         line-height: 1.55;
     }
+    .return-pending-card {
+        width: min(620px, 100%);
+    }
+    .return-pending-summary {
+        display: grid;
+        grid-template-columns: 46px minmax(0, 1fr);
+        gap: 12px;
+        align-items: flex-start;
+        border: 1px solid #fed7aa;
+        border-radius: 14px;
+        background: #fffbeb;
+        color: #7c2d12;
+        padding: 14px;
+    }
+    .return-pending-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #fef3c7;
+        color: #9a3412;
+    }
+    .return-pending-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+    .return-pending-summary strong {
+        display: block;
+        margin-bottom: 4px;
+        color: #70131B;
+        font-size: 15px;
+        font-weight: 950;
+    }
+    .return-pending-summary p {
+        margin: 0;
+        color: #7c2d12;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.5;
+    }
     .correction-doc-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1621,13 +1663,10 @@
                 </div>
                 <div class="profile-head-actions">
                 @if($canReturnToPending)
-                    <form method="POST" action="{{ route('admin.health_profile.return_to_pending', $profile->id) }}" class="profile-top-form" onsubmit="return confirm('Return this approved health record to Pending Approval?');">
-                        @csrf
-                        <button type="submit" class="profile-top-btn profile-top-btn-warning">
-                            <span aria-hidden="true">&crarr;</span>
-                            Return to Pending
-                        </button>
-                    </form>
+                    <button type="button" class="profile-top-btn profile-top-btn-warning" id="openReturnToPendingModal">
+                        <span aria-hidden="true">&crarr;</span>
+                        Return to Pending
+                    </button>
                 @endif
                 <a href="{{ route('admin.health_records') }}" class="profile-top-btn">
                     <span aria-hidden="true">&larr;</span>
@@ -2119,6 +2158,53 @@
     </div>
 </div>
 
+@if($canReturnToPending)
+    <div class="correction-modal" id="returnToPendingModal" aria-hidden="true">
+        <div class="correction-card return-pending-card" role="dialog" aria-modal="true" aria-labelledby="returnPendingTitle">
+            <div class="correction-head">
+                <div class="correction-head-title">
+                    <span class="correction-head-icon"><x-outline-icon name="clock" /></span>
+                    <div>
+                        <h3 id="returnPendingTitle">Return to Pending Approval</h3>
+                        <p>Move this approved health record back to clinic review.</p>
+                    </div>
+                </div>
+                <button type="button" class="correction-close" id="closeReturnToPendingModal" aria-label="Close return to pending confirmation">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </div>
+            <form method="POST" action="{{ route('admin.health_profile.return_to_pending', $profile->id) }}" class="correction-body">
+                @csrf
+                <div class="return-pending-summary">
+                    <span class="return-pending-icon"><x-outline-icon name="exclamation-triangle" /></span>
+                    <div>
+                        <strong>{{ $profileName }}</strong>
+                        <p>This will remove the approval status and place the record under Pending Approval. Submitted profile details and uploaded documents will remain saved.</p>
+                    </div>
+                </div>
+                <div class="correction-info-list">
+                    <div class="correction-info-row">
+                        <span>Current Status</span>
+                        <strong>{{ $profileStatusLabel }}</strong>
+                    </div>
+                    <div class="correction-info-row">
+                        <span>Next Status</span>
+                        <strong>For Verification</strong>
+                    </div>
+                    <div class="correction-info-row">
+                        <span>PUPTAS Sync</span>
+                        <strong>Will be cleared</strong>
+                    </div>
+                </div>
+                <div class="correction-actions">
+                    <button type="button" class="correction-cancel" id="cancelReturnToPendingModal">Cancel</button>
+                    <button type="submit" class="correction-submit">Confirm Return</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endif
+
 @if($canRequestFileCorrection)
     <div class="correction-modal" id="correctionModal" aria-hidden="true">
         <div class="correction-card">
@@ -2291,6 +2377,10 @@
     const openPulloutRequestModal = document.getElementById('openPulloutRequestModal');
     const closePulloutRequestModal = document.getElementById('closePulloutRequestModal');
     const closePulloutRequestDone = document.getElementById('closePulloutRequestDone');
+    const returnToPendingModal = document.getElementById('returnToPendingModal');
+    const openReturnToPendingModal = document.getElementById('openReturnToPendingModal');
+    const closeReturnToPendingModal = document.getElementById('closeReturnToPendingModal');
+    const cancelReturnToPendingModal = document.getElementById('cancelReturnToPendingModal');
 
     function setProfileActionsMenu(open) {
         if (!profileActionsMenu || !profileActionsToggle) return;
@@ -2379,6 +2469,30 @@
     pulloutRequestModal?.addEventListener('click', function (event) {
         if (event.target === pulloutRequestModal) {
             setPulloutRequestModal(false);
+        }
+    });
+
+    function setReturnToPendingModal(open) {
+        if (!returnToPendingModal) return;
+        returnToPendingModal.classList.toggle('is-open', open);
+        returnToPendingModal.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+
+    openReturnToPendingModal?.addEventListener('click', function () {
+        setReturnToPendingModal(true);
+    });
+
+    closeReturnToPendingModal?.addEventListener('click', function () {
+        setReturnToPendingModal(false);
+    });
+
+    cancelReturnToPendingModal?.addEventListener('click', function () {
+        setReturnToPendingModal(false);
+    });
+
+    returnToPendingModal?.addEventListener('click', function (event) {
+        if (event.target === returnToPendingModal) {
+            setReturnToPendingModal(false);
         }
     });
 
