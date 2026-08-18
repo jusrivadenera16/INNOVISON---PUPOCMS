@@ -1349,6 +1349,7 @@
     $healthFormsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/health-forms') : url('/admin/reports/health-forms');
     $feedbacksUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/feedbacks') : url('/admin/reports/feedbacks');
     $exportHubUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/export-hub') : url('/admin/reports/export-hub');
+    $canAccessReport = fn (string $permission): bool => optional(auth()->user())->canAccessPermission($permission) ?? false;
 @endphp
 <div class="dashboard-container">
     <div class="reports-frame">
@@ -1360,6 +1361,7 @@
 
         <div class="report-grid">
         
+        @if($canAccessReport('reports.mar'))
         <a href="{{ $marUrl }}" class="report-card report-card-primary">
             <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
             <span class="report-card-icon"><x-outline-icon name="clipboard-document-list" /></span>
@@ -1368,7 +1370,9 @@
                 <p class="report-card-copy">Review personnel medical accomplishment records.</p>
             </div>
         </a>
+        @endif
 
+        @if($canAccessReport('reports.inventory_summary'))
         <a href="{{ $inventorySummaryUrl }}" class="report-card report-card-primary">
             <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
             <span class="report-card-icon"><x-outline-icon name="cube" /></span>
@@ -1377,7 +1381,9 @@
                 <p class="report-card-copy">Track stock movement, supplies, medicine records, and inventory levels.</p>
             </div>
         </a>
+        @endif
 
+        @if($canAccessReport('reports.health_forms'))
         <a href="{{ $healthFormsUrl }}" class="report-card">
             <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
             <span class="report-card-icon"><x-outline-icon name="document-text" /></span>
@@ -1386,7 +1392,9 @@
                 <p class="report-card-copy">View issued health forms summarized by course and selected date range.</p>
             </div>
         </a>
+        @endif
 
+        @if($canAccessReport('reports.appointment_statistics'))
         <a href="{{ $appointmentStatisticsUrl }}" class="report-card report-card-primary">
             <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
             <span class="report-card-icon"><x-outline-icon name="calendar-days" /></span>
@@ -1395,7 +1403,9 @@
                 <p class="report-card-copy">Analyze appointment trends, service demand, schedules, and clinic flow.</p>
             </div>
         </a>
+        @endif
 
+        @if($canAccessReport('reports.digital_logbook'))
         <a href="{{ $digitalLogbookUrl }}" class="report-card report-card-primary">
             <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
             <span class="report-card-icon"><x-outline-icon name="clipboard-document-list" /></span>
@@ -1404,7 +1414,9 @@
                 <p class="report-card-copy">Monitor clinic treatments, visit logs, and submitted form activity.</p>
             </div>
         </a>
+        @endif
 
+        @if($canAccessReport('reports.feedbacks'))
         <a href="{{ $feedbacksUrl }}" class="report-card">
             <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
             <span class="report-card-icon"><x-outline-icon name="megaphone" /></span>
@@ -1413,7 +1425,9 @@
                 <p class="report-card-copy">Review patient feedback, ratings, comments, and clinic experience notes to improve care.</p>
             </div>
         </a>
+        @endif
 
+        @if($canAccessReport('reports.export_reports'))
         <a href="{{ $exportHubUrl }}" class="report-card">
             <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
             <span class="report-card-icon"><x-outline-icon name="arrow-down-tray" /></span>
@@ -1422,7 +1436,9 @@
                 <p class="report-card-copy">Open the export hub for printable and downloadable clinic reports.</p>
             </div>
         </a>
+        @endif
 
+        @if($role === \App\Models\User::ROLE_SUPERADMIN)
         <a href="{{ route('admin.logs') }}" class="report-card report-card-audit">
             <span class="report-card-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
             <span class="report-card-icon"><x-outline-icon name="clock" /></span>
@@ -1431,6 +1447,7 @@
                 <p class="report-card-copy">Inspect user activity logs, system actions, and administrative changes.</p>
             </div>
         </a>
+        @endif
 
         </div>
     </div>

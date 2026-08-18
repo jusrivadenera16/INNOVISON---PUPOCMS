@@ -4379,10 +4379,25 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     $isStudentAssistant = $currentRole === \App\Models\User::ROLE_ADMIN
         && in_array($currentUserType, ['assistant', 'student assistant', 'student_assistant'], true);
     $isAdminLike = $currentRole === \App\Models\User::ROLE_SUPERADMIN;
+    $canAccessModule = fn (string $permission): bool => $authUser?->canAccessPermission($permission) ?? false;
+    $canAccessAnyModule = fn (array $permissions): bool => $authUser?->canAccessAnyPermission($permissions) ?? false;
     $linkedAdminProfile = null;
+    $linkedAdminHubProfile = null;
     $adminTypeLabel = null;
     if ($authUser && $currentRole === \App\Models\User::ROLE_ADMIN) {
         $email = trim((string) ($authUser->email ?? ''));
+        if (\Illuminate\Support\Facades\Schema::hasTable('admin_hub')) {
+            if (\App\Models\AdminHub::hasColumn('user_id')) {
+                $linkedAdminHubProfile = \App\Models\AdminHub::query()
+                    ->where('user_id', $authUser->id)
+                    ->first();
+            }
+            if (!$linkedAdminHubProfile && $email !== '' && \App\Models\AdminHub::hasColumn('email')) {
+                $linkedAdminHubProfile = \App\Models\AdminHub::query()
+                    ->where('email', $email)
+                    ->first();
+            }
+        }
         if (\App\Models\Admin::hasColumn('user_id')) {
             $linkedAdminProfile = \App\Models\Admin::query()
                 ->where('user_id', $authUser->id)
@@ -4403,12 +4418,13 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         if ($isStudentAssistant) {
             $adminTypeLabel = 'Admin - Student Assistant';
         } else {
+            $adminHubAccessLevel = strtolower(trim((string) ($linkedAdminHubProfile?->role ?? '')));
+            $adminHubStatus = strtolower(trim((string) ($linkedAdminHubProfile?->status ?? 'active')));
             $accessLevel = strtolower(trim((string) (
                 $linkedAdminProfile?->access_level
-                ?? $linkedAdminProfile?->admin_hub_role
                 ?? ''
             )));
-            if (in_array($accessLevel, ['designee', 'admin_designee'], true)) {
+            if ($linkedAdminHubProfile && $adminHubStatus !== 'inactive' && in_array($adminHubAccessLevel, ['designee', 'admin_designee'], true)) {
                 $adminTypeLabel = 'Admin - Designee';
             } elseif (in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff'], true)) {
                 $adminTypeLabel = 'Admin - Clinic Staff';
@@ -4433,16 +4449,16 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     $reportNavUrl = fn (string $path = '') => $isStudentAssistant
         ? url('/assistant/reports' . ($path !== '' ? '/' . ltrim($path, '/') : ''))
         : url('/admin/reports' . ($path !== '' ? '/' . ltrim($path, '/') : ''));
-    $reportNavLinks = [
-        ['label' => 'MAR', 'url' => $reportNavUrl('mar'), 'active' => request()->routeIs('reports.mar'), 'icon' => 'clipboard-document-list'],
-        ['label' => 'Inventory Summary', 'url' => $reportNavUrl('inventory-summary'), 'active' => request()->routeIs('reports.inventory-summary'), 'icon' => 'cube'],
-        ['label' => 'Health Forms', 'url' => $reportNavUrl('health-forms'), 'active' => request()->routeIs('reports.health-forms') || request()->routeIs('reports.health-forms.applicants-list'), 'icon' => 'document-text'],
-        ['label' => 'Appointment Statistics', 'url' => $reportNavUrl('appointment-statistics'), 'active' => request()->routeIs('reports.appointment-statistics'), 'icon' => 'calendar-days'],
-        ['label' => 'Digital Logbook', 'url' => $reportNavUrl('digital-logbook'), 'active' => request()->routeIs('reports.digital-logbook'), 'icon' => 'clipboard-document-list'],
-        ['label' => 'Feedbacks', 'url' => $reportNavUrl('feedbacks'), 'active' => request()->routeIs('reports.feedbacks'), 'icon' => 'megaphone'],
-        ['label' => 'Export Reports', 'url' => $reportNavUrl('export-hub'), 'active' => request()->routeIs('reports.exportHub*'), 'icon' => 'arrow-down-tray'],
-        ['label' => 'Audit Trail', 'url' => $isStudentAssistant ? url('/assistant/logs') : url('/admin/activity-logs'), 'active' => request()->routeIs('admin.logs') || Request::is('admin/activity-logs') || Request::is('assistant/logs'), 'icon' => 'clock'],
-    ];
+    $reportNavLinks = collect([
+        ['label' => 'MAR', 'url' => $reportNavUrl('mar'), 'active' => request()->routeIs('reports.mar'), 'icon' => 'clipboard-document-list', 'permission' => 'reports.mar'],
+        ['label' => 'Inventory Summary', 'url' => $reportNavUrl('inventory-summary'), 'active' => request()->routeIs('reports.inventory-summary'), 'icon' => 'cube', 'permission' => 'reports.inventory_summary'],
+        ['label' => 'Health Forms', 'url' => $reportNavUrl('health-forms'), 'active' => request()->routeIs('reports.health-forms') || request()->routeIs('reports.health-forms.applicants-list'), 'icon' => 'document-text', 'permission' => 'reports.health_forms'],
+        ['label' => 'Appointment Statistics', 'url' => $reportNavUrl('appointment-statistics'), 'active' => request()->routeIs('reports.appointment-statistics'), 'icon' => 'calendar-days', 'permission' => 'reports.appointment_statistics'],
+        ['label' => 'Digital Logbook', 'url' => $reportNavUrl('digital-logbook'), 'active' => request()->routeIs('reports.digital-logbook'), 'icon' => 'clipboard-document-list', 'permission' => 'reports.digital_logbook'],
+        ['label' => 'Feedbacks', 'url' => $reportNavUrl('feedbacks'), 'active' => request()->routeIs('reports.feedbacks'), 'icon' => 'megaphone', 'permission' => 'reports.feedbacks'],
+        ['label' => 'Export Reports', 'url' => $reportNavUrl('export-hub'), 'active' => request()->routeIs('reports.exportHub*'), 'icon' => 'arrow-down-tray', 'permission' => 'reports.export_reports'],
+        ['label' => 'Audit Trail', 'url' => $isStudentAssistant ? url('/assistant/logs') : url('/admin/activity-logs'), 'active' => request()->routeIs('admin.logs') || Request::is('admin/activity-logs') || Request::is('assistant/logs'), 'icon' => 'clock', 'superadmin' => true],
+    ])->filter(fn (array $link): bool => !empty($link['superadmin']) ? $isAdminLike : $canAccessModule($link['permission']))->values()->all();
     $dailyTreatmentRecordUrl = $isStudentAssistant
         ? url('/assistant/reports/daily-treatment-record')
         : url('/admin/reports/daily-treatment-record');
@@ -4551,9 +4567,9 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         : route('admin.notifications.feed');
     $workflowSettings = app(\App\Services\ClinicWorkflowService::class)->settings();
     $adminLiveNotificationsEnabled = $workflowSettings->admin_live_notifications !== false;
-    $apiTestingUrl = $isStudentAssistant ? url('/assistant/api-testing') : url('/admin/api-testing');
-    $developerToolsUrl = $isStudentAssistant ? url('/assistant/developer-tools') : url('/admin/developer-tools');
-    $canSeeDeveloperTools = strtolower(trim((string) optional($authUser)->email)) === 'pupocms2027@gmail.com';
+    $apiTestingUrl = url('/admin/api-testing');
+    $developerToolsUrl = url('/admin/developer-tools');
+    $canSeeDeveloperTools = $isAdminLike;
     $settingsUrl = url('/admin/settings');
     $settingsIsActive = request()->routeIs('admin.settings*')
         || Request::is('admin/settings*')
@@ -4562,14 +4578,21 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         || request()->routeIs('admin.reports.manage-health-form-categories')
         || request()->routeIs('admin.user-management*')
         || Request::is('admin/user-management*');
-    $settingsNavLinks = [
-        ['label' => 'Personal Information', 'url' => route('admin.settings.personal'), 'active' => request()->routeIs('admin.settings.personal'), 'icon' => 'user-circle'],
-        ['label' => 'Clinic Information', 'url' => route('admin.settings.clinic'), 'active' => request()->routeIs('admin.settings.clinic'), 'icon' => 'home'],
-        ['label' => 'System Preferences', 'url' => route('admin.settings.preferences'), 'active' => request()->routeIs('admin.settings.preferences'), 'icon' => 'code-bracket-square'],
-        ['label' => 'Medical Configuration', 'url' => route('admin.settings.medical') ?: route('admin.reports.manage-mar'), 'active' => request()->routeIs('admin.settings.medical') || request()->routeIs('admin.reports.manage-mar') || request()->routeIs('admin.reports.manage-medicine-types') || request()->routeIs('admin.reports.manage-health-form-categories'), 'icon' => 'clipboard-document-list'],
-        ['label' => 'Users Management', 'url' => route('admin.user-management'), 'active' => request()->routeIs('admin.user-management*'), 'icon' => 'users'],
-        ['label' => 'FAQs', 'url' => route('admin.settings.faqs'), 'active' => request()->routeIs('admin.settings.faqs'), 'icon' => 'question-mark-circle'],
-    ];
+    $settingsNavLinks = collect([
+        ['label' => 'Personal Information', 'url' => route('admin.settings.personal'), 'active' => request()->routeIs('admin.settings.personal'), 'icon' => 'user-circle', 'permission' => 'settings.personal'],
+        ['label' => 'Clinic Information', 'url' => route('admin.settings.clinic'), 'active' => request()->routeIs('admin.settings.clinic'), 'icon' => 'home', 'permission' => 'settings.clinic'],
+        ['label' => 'System Preferences', 'url' => route('admin.settings.preferences'), 'active' => request()->routeIs('admin.settings.preferences'), 'icon' => 'code-bracket-square', 'permission' => 'settings.preferences'],
+        ['label' => 'Medical Configuration', 'url' => route('admin.settings.medical'), 'active' => request()->routeIs('admin.settings.medical') || request()->routeIs('admin.reports.manage-mar') || request()->routeIs('admin.reports.manage-medicine-types') || request()->routeIs('admin.reports.manage-health-form-categories'), 'icon' => 'clipboard-document-list', 'permission' => 'settings.medical'],
+        ['label' => 'Users Management', 'url' => route('admin.user-management'), 'active' => request()->routeIs('admin.user-management*'), 'icon' => 'users', 'superadmin' => true],
+        ['label' => 'FAQs', 'url' => route('admin.settings.faqs'), 'active' => request()->routeIs('admin.settings.faqs'), 'icon' => 'question-mark-circle', 'permission' => 'settings.faqs'],
+    ])->filter(fn (array $link): bool => !empty($link['superadmin']) ? $isAdminLike : $canAccessModule($link['permission']))->values()->all();
+    $canViewAppointments = $canAccessModule('appointments.view');
+    $canViewInventory = $canAccessModule('inventory.view');
+    $canViewReports = $canAccessModule('reports.view') && $reportNavLinks !== [];
+    $canViewWalkin = $canAccessModule('walkin.view');
+    $canViewHealthRecords = $canAccessModule('health_records.view');
+    $canViewAnnouncements = $canAccessModule('announcements.view');
+    $canViewSettings = $canAccessModule('settings.view') && $settingsNavLinks !== [];
     $walkinUrl = $isStudentAssistant ? url('/assistant/walkin') : url('/admin/walkin');
     $assistantEndpoint = $isStudentAssistant ? route('assistant.intent') : route('admin.assistant.intent');
     $displayName = optional($authUser)->name ?? 'Clinic User';
@@ -4903,7 +4926,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             </button>
 
             <div id="profileDropdown" class="profile-dropdown">
-                @if($isAdminLike)
+                @if($canViewSettings)
                     <a href="{{ $settingsUrl }}">
                         <x-outline-icon name="cog-6-tooth" />
                         <span>Settings</span>
@@ -4942,12 +4965,17 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
       <a href="{{ $dashboardUrl }}" class="nav-dashboard {{ (request()->routeIs('admin.dashboard') || request()->routeIs('assistant.dashboard')) ? 'active' : '' }}">
         <span class="sidebar-short"><x-outline-icon name="squares-2x2" /></span><span class="sidebar-label">Dashboard</span>
       </a>
-      <a href="{{ $appointmentsUrl }}" class="nav-appointments {{ (request()->routeIs('admin.appointments*') || request()->routeIs('assistant.appointments*')) ? 'active' : '' }}">
-        <span class="sidebar-short"><x-outline-icon name="calendar-days" /></span><span class="sidebar-label">Appointments</span>
-      </a>
-      <a href="{{ $inventoryUrl }}" class="nav-inventory {{ (request()->routeIs('admin.inventory*') || request()->routeIs('assistant.inventory*')) ? 'active' : '' }}">
-        <span class="sidebar-short"><x-outline-icon name="cube" /></span><span class="sidebar-label">Inventory</span>
-      </a>
+      @if($canViewAppointments)
+        <a href="{{ $appointmentsUrl }}" class="nav-appointments {{ (request()->routeIs('admin.appointments*') || request()->routeIs('assistant.appointments*')) ? 'active' : '' }}">
+          <span class="sidebar-short"><x-outline-icon name="calendar-days" /></span><span class="sidebar-label">Appointments</span>
+        </a>
+      @endif
+      @if($canViewInventory)
+        <a href="{{ $inventoryUrl }}" class="nav-inventory {{ (request()->routeIs('admin.inventory*') || request()->routeIs('assistant.inventory*')) ? 'active' : '' }}">
+          <span class="sidebar-short"><x-outline-icon name="cube" /></span><span class="sidebar-label">Inventory</span>
+        </a>
+      @endif
+      @if($canViewReports)
       <div class="sidebar-nav-group {{ $reportsIsActive ? 'is-open' : '' }}" data-sidebar-dropdown-group>
         <a
           href="{{ $reportsUrl }}"
@@ -4973,10 +5001,14 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
           @endforeach
         </div>
       </div>
+      @endif
      
+      @if($canViewWalkin)
       <a href="{{ $walkinUrl }}" class="nav-walkin {{ (Request::is('admin/walkin*') || Request::is('assistant/walkin*')) ? 'active' : '' }}">
         <span class="sidebar-short"><x-outline-icon name="user-plus" /></span><span class="sidebar-label">Walk-in</span>
       </a>
+      @endif
+      @if($canViewHealthRecords)
       <div class="sidebar-nav-group {{ $healthRecordsIsActive ? 'is-open' : '' }}" data-sidebar-dropdown-group>
         <a
           href="{{ $healthRecordsUrl }}"
@@ -5008,6 +5040,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
           @endforeach
         </div>
       </div>
+      @endif
+      @if($canViewAnnouncements)
       <a href="{{ route('admin.announcements') }}" class="nav-announcements {{ request()->routeIs('admin.announcements') ? 'active' : '' }}">
         <span class="sidebar-short">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -5015,10 +5049,13 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
           </svg>
         </span><span class="sidebar-label">Announcements</span>
       </a>
+      @endif
       @if($isAdminLike)
           <a href="{{ route('admin.logs') }}" class="nav-audit {{ (request()->routeIs('admin.logs') || Request::is('admin/activity-logs*')) ? 'active' : '' }}">
             <span class="sidebar-short"><x-outline-icon name="clipboard-document-list" /></span><span class="sidebar-label">Audit Trail</span>
           </a>
+      @endif
+      @if($canViewSettings)
           <div class="sidebar-nav-group {{ $settingsIsActive ? 'is-open' : '' }}" data-sidebar-dropdown-group>
             <a
               href="{{ $settingsUrl }}"

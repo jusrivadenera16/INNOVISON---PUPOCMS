@@ -2963,7 +2963,7 @@
             <ul class="footer-links">
               <li><span class="footer-service-item"><x-outline-icon name="phone" class="footer-service-icon" /><span>General Consultation</span></span></li>
               <li><span class="footer-service-item"><x-outline-icon name="heart-pulse" class="footer-service-icon" /><span>Blood Pressure Monitoring</span></span></li>
-              <li><span class="footer-service-item"><x-outline-icon name="link" class="footer-service-icon" /><span>Medical Clearance Issuance</span></span></li>
+              <li><span class="footer-service-item"><x-outline-icon name="document-check" class="footer-service-icon" /><span>Medical Clearance Issuance</span></span></li>
             </ul>
           </div>
 

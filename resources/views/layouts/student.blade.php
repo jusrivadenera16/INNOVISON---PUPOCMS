@@ -2886,13 +2886,13 @@
     @auth('student')
     @php
         $studentUser = Auth::guard('student')->user();
-        $studentUser?->loadMissing('healthProfile', 'employeeHealthProfile', 'adminProfile');
+        $studentUser?->loadMissing('healthProfile', 'employeeHealthProfile', 'adminProfile', 'adminHubProfile');
         $studentHealthFormMarkers = strtolower(trim(implode(' ', array_filter([
             (string) data_get($studentUser, 'user_type', ''),
             (string) data_get($studentUser, 'user_role', ''),
             (string) data_get($studentUser, 'idp_role', ''),
+            (string) data_get($studentUser, 'adminHubProfile.role', ''),
             (string) data_get($studentUser, 'adminProfile.access_level', ''),
-            (string) data_get($studentUser, 'adminProfile.admin_hub_role', ''),
         ]))));
         $studentUsesEmployeeHealthForm = false;
         foreach (['faculty', 'admin', 'staff', 'employee', 'dependent'] as $studentHealthFormNeedle) {

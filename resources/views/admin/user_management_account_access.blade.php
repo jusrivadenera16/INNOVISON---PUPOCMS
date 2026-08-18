@@ -1322,6 +1322,7 @@
                                 data-update-url="{{ $record['can_edit'] ? route('admin.user-management.update', $record['id']) : '' }}"
                                 data-create-url="{{ !$record['can_edit'] && !empty($record['can_onboard']) ? route('admin.user-management.store-from-lookup') : '' }}"
                                 data-delete-url="{{ $record['can_edit'] ? route('admin.user-management.destroy', $record['id']) : '' }}"
+                                data-delete-account-url="{{ $record['can_edit'] ? route('admin.user-management.delete-account', $record['id']) : '' }}"
                                 data-can-edit="{{ $record['can_edit'] ? '1' : '0' }}"
                                 data-can-onboard="{{ !empty($record['can_onboard']) ? '1' : '0' }}"
                             data-id="{{ $record['record_id'] }}"
@@ -1417,6 +1418,7 @@
                                 data-lookup-result-row
                                 data-update-url="{{ $record['can_edit'] ? route('admin.user-management.update', $record['id']) : '' }}"
                                 data-delete-url="{{ $record['can_edit'] ? route('admin.user-management.destroy', $record['id']) : '' }}"
+                                data-delete-account-url="{{ $record['can_edit'] ? route('admin.user-management.delete-account', $record['id']) : '' }}"
                                 data-create-url="{{ !$record['can_edit'] && !empty($record['can_onboard']) ? route('admin.user-management.store-from-lookup') : '' }}"
                                 data-can-edit="{{ $record['can_edit'] ? '1' : '0' }}"
                                 data-can-onboard="{{ !empty($record['can_onboard']) ? '1' : '0' }}"
@@ -1550,8 +1552,8 @@
                             This faculty profile comes from the external source. Saving here will add a clinic-side user and admin hub record without changing the source system.
                         </div>
                         <div class="um-module-save-warning" id="moduleAccessSaveWarning" hidden>
-                            <strong>Module access is preview only.</strong>
-                            <span>Role and status can be saved, but these module selections will not be saved yet.</span>
+                            <strong>Module access is saved with this account.</strong>
+                            <span>Changes take effect on the user&apos;s next request.</span>
                         </div>
                         <div class="um-actions">
                             <button type="button" class="um-settings-action um-action-neutral" id="deactivateBtn">Deactivate Account</button>
@@ -1562,6 +1564,15 @@
                                 onclick="return confirm('Remove this clinic access and restore the account role provided by the IDP?')"
                             >
                                 Remove Access
+                            </button>
+                            <button
+                                type="submit"
+                                form="deleteAccountForm"
+                                class="um-settings-action um-action-danger"
+                                id="deleteAccountBtn"
+                                onclick="return confirm('Permanently delete this user account? Linked admin profile records will be removed and related clinic records may be deleted by database rules. This cannot be undone.')"
+                            >
+                                Delete User Account
                             </button>
                             <button
                                 type="submit"
@@ -1582,6 +1593,12 @@
                         @method('DELETE')
                         <input type="hidden" name="management_view" id="deleteManagementView" value="account-access">
                         <input type="hidden" name="admin_profile_id" id="deleteAdminProfileId">
+                    </form>
+
+                    <form method="POST" id="deleteAccountForm" style="display:none;">
+                        @csrf
+                        @method('DELETE')
+                        <input type="hidden" name="management_view" id="deleteAccountManagementView" value="account-access">
                     </form>
 
                     <form method="POST" id="deleteAdminHubForm" style="display:none;">
@@ -1644,6 +1661,9 @@
     const adminEmailNote = document.getElementById('adminEmailNote');
     const deleteAdminProfileId = document.getElementById('deleteAdminProfileId');
     const deleteManagementView = document.getElementById('deleteManagementView');
+    const deleteAccountManagementView = document.getElementById('deleteAccountManagementView');
+    const deleteAccountForm = document.getElementById('deleteAccountForm');
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
     const deleteAdminHubManagementView = document.getElementById('deleteAdminHubManagementView');
     const deleteAdminHubForm = document.getElementById('deleteAdminHubForm');
     const deleteAdminHubBtn = document.getElementById('deleteAdminHubBtn');
@@ -1833,7 +1853,19 @@
                         : 'Suggested starting access for Clinic Staff.';
                 }
 
-                if (options.resetModuleDefaults === true || moduleAccessPreview.dataset.role !== roleKey) {
+                const savedPermissions = Array.isArray(options.modulePermissions)
+                    ? options.modulePermissions
+                    : null;
+                const shouldLoadDefaults = savedPermissions === null
+                    && (options.resetModuleDefaults === true || moduleAccessPreview.dataset.role !== roleKey);
+
+                if (savedPermissions !== null) {
+                    moduleAccessItems.forEach((item) => item
+                        .querySelectorAll('[data-module-permission], [data-module-action]')
+                        .forEach((input) => {
+                        input.checked = savedPermissions.includes(input.value);
+                        }));
+                } else if (shouldLoadDefaults) {
                     modulePermissionInputs.forEach((input) => {
                         input.checked = input.dataset[roleKey] === '1';
                     });
@@ -1841,8 +1873,8 @@
                 moduleAccessPreview.dataset.role = roleKey;
                 moduleAccessItems.forEach((item) => {
                     syncModuleItem(item, {
-                        resetActions: options.resetModuleDefaults === true,
-                        collapse: options.resetModuleDefaults === true,
+                        resetActions: shouldLoadDefaults,
+                        collapse: shouldLoadDefaults,
                     });
                 });
                 if (resetModuleDefaultsButton) {
@@ -1904,6 +1936,9 @@
         if (deleteManagementView) {
             deleteManagementView.value = managementView;
         }
+        if (deleteAccountManagementView) {
+            deleteAccountManagementView.value = managementView;
+        }
         if (deleteAdminHubManagementView) {
             deleteAdminHubManagementView.value = managementView;
         }
@@ -1939,6 +1974,9 @@
                 return {};
             }
         })();
+        const savedModulePermissions = Array.isArray(meta.module_permissions)
+            ? meta.module_permissions
+            : null;
         const originalRole = String(meta.idp_role || '').trim();
         detailOriginalRole.value = originalRole
             ? originalRole.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
@@ -2011,6 +2049,9 @@
             settingsMethod.value = canEdit ? 'PUT' : 'POST';
         }
         deleteForm.action = row.dataset.deleteUrl || '#';
+        if (deleteAccountForm) {
+            deleteAccountForm.action = row.dataset.deleteAccountUrl || '#';
+        }
         if (deleteAdminHubForm) {
             deleteAdminHubForm.action = row.dataset.deleteAdminHubUrl || '#';
         }
@@ -2031,6 +2072,13 @@
         detailEditEmail.readOnly = !(canEdit || canOnboard);
 
         deleteForm.style.display = canEdit ? 'block' : 'none';
+        if (deleteAccountBtn) {
+            deleteAccountBtn.style.display = canEdit ? '' : 'none';
+            deleteAccountBtn.disabled = !canEdit;
+        }
+        if (deleteAccountForm) {
+            deleteAccountForm.style.display = 'none';
+        }
         if (deleteAdminHubBtn) {
             const showDeleteAdminHub = managementView === 'admin-hub' && canEdit && adminProfileId;
             deleteAdminHubBtn.style.display = showDeleteAdminHub ? '' : 'none';
@@ -2046,7 +2094,12 @@
             }
             detailStatus.value = row.dataset.status || 'active';
         }
-        syncRoleUi({ canEdit, canOnboard, resetModuleDefaults: true });
+        syncRoleUi({
+            canEdit,
+            canOnboard,
+            modulePermissions: savedModulePermissions,
+            resetModuleDefaults: savedModulePermissions === null,
+        });
         if (saveSettingsBtn) {
             saveSettingsBtn.textContent = canEdit ? 'Save Changes' : 'Add to Clinic';
         }

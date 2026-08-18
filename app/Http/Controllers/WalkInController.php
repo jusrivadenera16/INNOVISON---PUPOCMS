@@ -14,6 +14,7 @@ use App\Models\Item;
 use App\Models\ActivityLog;
 use App\Models\Consultation;
 use App\Services\PuptasWebhookService;
+use App\Services\StudentNotificationMailer;
 use App\Services\EmployeeHealthFormPdfService;
 use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
@@ -1261,7 +1262,9 @@ class WalkInController extends Controller
 
     $mode = $request->query('mode', '');
     $walkins = Appointment::latest()->take(10)->get();
-    $finalReviewApplicants = $this->finalReviewApplicantQuery()->get();
+    $finalReviewApplicants = optional($request->user())->canAccessPermission('walkin.review_submission')
+        ? $this->finalReviewApplicantQuery()->get()
+        : collect();
     
     return view('admin.walkin', compact('walkins', 'mode', 'finalReviewApplicants'));
 }
@@ -1458,6 +1461,11 @@ class WalkInController extends Controller
     // 3. GET STUDENT INFO
     public function getStudent(Request $request, PuptasWebhookService $puptasWebhookService)
     {
+        $lookupScope = strtolower(trim((string) $request->input('lookup_scope', '')));
+        if (in_array($lookupScope, ['employee_local', 'clinic_local'], true)) {
+            abort_unless(optional($request->user())->canAccessPermission('walkin.employee_lookup'), 403);
+        }
+
         $lookup = trim((string) $request->student_id);
         $lookupName = trim((string) $request->student_name);
         $previewOnly = $request->boolean('preview_only');
@@ -2105,10 +2113,11 @@ PROMPT;
             return redirect()->back()->withInput()->with('error', 'Select a medicine before entering a quantity to issue.');
         }
 
-        DB::transaction(function () use ($request, $student, $dispensedItem, $issuedQuantity, $requestedSource, $consultationStartedAt) {
+        $completedAppointment = DB::transaction(function () use ($request, $student, $dispensedItem, $issuedQuantity, $requestedSource, $consultationStartedAt) {
             $isOnlineSource = $requestedSource === 'online';
             $finalSource = 'walkin';
             $patientType = Appointment::normalizeUserType($student->user_role ?? $student->user_type);
+            $completedAppointment = null;
 
             if ($isOnlineSource) {
                 $existingAppt = Appointment::where('student_id', $student->student_id)
@@ -2134,6 +2143,7 @@ PROMPT;
                     $existingAppt->service = $request->service;
                     $existingAppt->save();
                     $finalSource = 'online';
+                    $completedAppointment = $existingAppt;
                 }
             }
 
@@ -2153,6 +2163,7 @@ PROMPT;
                 $appointment->type       = 'walkin';
                 $appointment->user_type  = $patientType;
                 $appointment->save();
+                $completedAppointment = $appointment;
             }
 
             // --- MEDICINE LOGIC ---
@@ -2218,7 +2229,13 @@ PROMPT;
                 'medicine_quantity'    => $issuedQuantity > 0 ? $issuedQuantity : 0,
                 'comments'             => $request->remarks,
             ]);
+
+            return $completedAppointment;
         });
+
+        if ($completedAppointment) {
+            app(StudentNotificationMailer::class)->sendAppointmentNotice($student, $completedAppointment, 'feedback');
+        }
 
         $request->session()->forget($consultationSessionKey);
 
@@ -2590,6 +2607,7 @@ PROMPT;
         }
 
         $employeeProfile->loadMissing('user');
+        $previousClearanceStatus = trim((string) $employeeProfile->clearance_status);
         $employeeProfile = DB::transaction(function () use (
             $request,
             $validated,
@@ -2714,6 +2732,17 @@ PROMPT;
             'ip_address' => $request->ip(),
             'user_agent' => substr((string) $request->userAgent(), 0, 255),
         ]);
+
+        if ($employeeProfile->user) {
+            if (!$hasPendingFinding && !in_array($previousClearanceStatus, ['Issued', 'Fully Cleared'], true)) {
+                app(StudentNotificationMailer::class)->sendHealthRecordNotice($employeeProfile->user, 'approved', [
+                    'approved_at' => optional($employeeProfile->verified_at ?: $employeeProfile->certified_at)->format('F j, Y'),
+                    'reference_number' => trim((string) ($employeeProfile->employee_number ?: $referenceNumber)),
+                ]);
+            } elseif ($clearanceStatus === 'Pending Resubmission') {
+                app(StudentNotificationMailer::class)->sendHealthRecordNotice($employeeProfile->user, 'resubmission');
+            }
+        }
 
         return response()->json([
             'success' => true,

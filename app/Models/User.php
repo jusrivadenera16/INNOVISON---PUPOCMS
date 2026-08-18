@@ -69,6 +69,9 @@ class User extends Authenticatable
     'api_pin_disabled',
     'is_health_profile_completed',
     'notification_read_map',
+    'notification_email_enabled',
+    'notification_system_enabled',
+    'module_permissions',
 
 ];
 
@@ -93,6 +96,9 @@ class User extends Authenticatable
         'api_pin_emergency_credentials_enabled' => 'boolean',
         'api_pin_disabled' => 'boolean',
         'notification_read_map' => 'array',
+        'notification_email_enabled' => 'boolean',
+        'notification_system_enabled' => 'boolean',
+        'module_permissions' => 'array',
     ];
 
     protected static function booted(): void
@@ -171,6 +177,11 @@ class User extends Authenticatable
         return $this->hasOne(Admin::class, 'user_id', 'id');
     }
 
+    public function adminHubProfile()
+    {
+        return $this->hasOne(AdminHub::class, 'user_id', 'id');
+    }
+
     /**
      * SCOPE: Only students
      */
@@ -205,6 +216,16 @@ class User extends Authenticatable
                 self::normalizeRole($rawRole) === self::ROLE_ADMIN
                 && in_array($userType, ['assistant', 'student assistant', 'student_assistant'], true)
             );
+    }
+
+    public function canAccessPermission(string $permission): bool
+    {
+        return app(\App\Services\ModulePermissionService::class)->can($this, $permission);
+    }
+
+    public function canAccessAnyPermission(array $permissions): bool
+    {
+        return app(\App\Services\ModulePermissionService::class)->canAny($this, $permissions);
     }
 
     public function healthProfile()

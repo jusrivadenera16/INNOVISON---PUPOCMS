@@ -1050,6 +1050,8 @@
 
     $archivedAnnouncements = $announcements->where('status', \App\Models\Announcement::STATUS_ARCHIVED);
     $activeBulletins = $announcements->reject(fn ($announcement) => $announcement->status === \App\Models\Announcement::STATUS_ARCHIVED);
+    $canPublishAnnouncements = optional(auth()->user())->canAccessPermission('announcements.publish') ?? false;
+    $canArchiveAnnouncements = optional(auth()->user())->canAccessPermission('announcements.archive') ?? false;
 @endphp
 
 <div class="announcement-page">
@@ -1124,6 +1126,7 @@
     @endif
 
     <div class="announcement-grid">
+        @if($canPublishAnnouncements)
         <section class="announcement-card">
             <div class="announcement-card-head">
                 <h3 class="announcement-card-title">
@@ -1180,6 +1183,7 @@
                 </button>
             </form>
         </section>
+        @endif
 
         <section class="announcement-card">
             <div class="announcement-card-head">
@@ -1207,7 +1211,7 @@
                             </div>
                             <div class="announcement-actions">
                                 <span class="announcement-status {{ $statusClass }}">{{ $statusLabel }}</span>
-                                @if(! $isArchived)
+                                @if($canArchiveAnnouncements && ! $isArchived)
                                     <form method="POST" action="{{ route('admin.announcements.archive', $announcement) }}">
                                         @csrf
                                         @method('PATCH')
@@ -1218,6 +1222,7 @@
                                         </button>
                                     </form>
                                 @endif
+                                @if($canArchiveAnnouncements)
                                 <form method="POST" action="{{ route('admin.announcements.destroy', $announcement) }}" onsubmit="return confirm('Delete this announcement?');">
                                     @csrf
                                     @method('DELETE')
@@ -1227,6 +1232,7 @@
                                         </svg>
                                     </button>
                                 </form>
+                                @endif
                             </div>
                         </div>
 

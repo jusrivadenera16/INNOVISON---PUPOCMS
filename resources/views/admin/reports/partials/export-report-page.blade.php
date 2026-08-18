@@ -1413,6 +1413,32 @@
                         </select>
                     </div>
                 </div>
+                <div class="export-filter-field">
+                    <label for="exportHealthSchoolYear">School Year</label>
+                    <div class="export-filter-select-wrap">
+                        <select class="export-filter-select export-filter-custom-source" id="exportHealthSchoolYear" name="school_year">
+                            <option value="">All School Years</option>
+                            @foreach(($healthFormSchoolYears ?? collect()) as $schoolYear)
+                                <option value="{{ $schoolYear }}" {{ request('school_year') === $schoolYear ? 'selected' : '' }}>{{ $schoolYear }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="export-filter-field">
+                    <label for="exportHealthSort">Sort By</label>
+                    <div class="export-filter-select-wrap">
+                        <select class="export-filter-select export-filter-custom-source" id="exportHealthSort" name="sort">
+                            @foreach([
+                                'name_asc' => 'Name A-Z',
+                                'name_desc' => 'Name Z-A',
+                                'date_desc' => 'Newest First',
+                                'date_asc' => 'Oldest First',
+                            ] as $value => $label)
+                                <option value="{{ $value }}" {{ request('sort', 'name_asc') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
                 <div class="export-filter-field is-wide">
                     <div class="export-condition-keyword-head">
                         <label for="exportHealthConditionKeyword">Condition Keyword</label>

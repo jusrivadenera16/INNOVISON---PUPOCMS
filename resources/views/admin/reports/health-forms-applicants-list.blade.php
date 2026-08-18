@@ -431,6 +431,50 @@
         color: #64748b;
         background: #f8fafc;
     }
+    .logbook-table tbody tr[data-logbook-row] {
+        cursor: pointer;
+        transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .logbook-table tbody tr[data-logbook-row]:hover,
+    .logbook-table tbody tr[data-logbook-row]:focus-within {
+        background: #fff7ed;
+        box-shadow: inset 4px 0 0 #facc15;
+    }
+    .logbook-record-link {
+        color: #70131B;
+        font-weight: 900;
+        text-decoration: none;
+    }
+    .logbook-record-link:hover,
+    .logbook-record-link:focus-visible {
+        color: #9f1239;
+        text-decoration: underline;
+        outline: none;
+    }
+    .logbook-view-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid #7f1d2d;
+        background: #7f1d2d;
+        color: #ffffff !important;
+        font-size: 12px;
+        font-weight: 900;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+    }
+    .logbook-view-link:hover,
+    .logbook-view-link:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B !important;
+        transform: translateY(-1px);
+        outline: none;
+    }
     .status-badge {
         display: inline-flex;
         align-items: center;
@@ -694,6 +738,14 @@
     html[data-theme="dark"] .logbook-table td {
         border-bottom-color: rgba(250, 204, 21, .12);
     }
+    html[data-theme="dark"] .logbook-table tbody tr[data-logbook-row]:hover,
+    html[data-theme="dark"] .logbook-table tbody tr[data-logbook-row]:focus-within {
+        background: rgba(250, 204, 21, .08);
+        box-shadow: inset 4px 0 0 #facc15;
+    }
+    html[data-theme="dark"] .logbook-record-link {
+        color: #facc15;
+    }
     html[data-theme="dark"] .filter-group label,
     html[data-theme="dark"] .logbook-pagination-meta,
     html[data-theme="dark"] .logbook-empty,
@@ -867,11 +919,13 @@
                     <th>Approved By</th>
                     <th>Status</th>
                     <th>Condition</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($logbookRecords as $record)
                     @php
+                        $recordDetailsUrl = route('admin.show_health', $record->id);
                         $user = $record->user;
                         $approver = $record->approvedBy;
                         $reviewer = $record->reviewStartedBy;
@@ -920,9 +974,11 @@
                             }
                         }
                     @endphp
-                    <tr data-logbook-row data-search="{{ strtolower(($user->name ?? 'N/A') . ' ' . ($user->email ?? '') . ' ' . ($record->sex ?: ($user->gender ?? 'N/A')) . ' ' . ($record->course_college ?? $user->course ?? 'N/A') . ' ' . ($user->user_type ?? 'N/A') . ' ' . $statusLabel . ' ' . ($hasCondition ? 'yes with condition medical condition' : 'no condition')) }}">
+                    <tr data-logbook-row data-view-url="{{ $recordDetailsUrl }}" data-search="{{ strtolower(($record->formatted_patient_name ?? $user->name ?? 'N/A') . ' ' . ($user->name ?? '') . ' ' . ($user->email ?? '') . ' ' . ($record->sex ?: ($user->gender ?? 'N/A')) . ' ' . ($record->course_college ?? $user->course ?? 'N/A') . ' ' . ($user->user_type ?? 'N/A') . ' ' . $statusLabel . ' ' . ($hasCondition ? 'yes with condition medical condition' : 'no condition')) }}" tabindex="0" aria-label="View health record for {{ $record->formatted_patient_name ?? $user->name ?? 'N/A' }}">
                         <td>
-                            <strong>{{ $user->name ?? 'N/A' }}</strong>
+                            <a href="{{ $recordDetailsUrl }}" class="logbook-record-link">
+                                {{ $record->formatted_patient_name ?? $user->name ?? 'N/A' }}
+                            </a>
                         </td>
                         <td>{{ $record->sex ?: ($user->gender ?? 'N/A') }}</td>
                         <td>{{ $record->course_college ?? $user->course ?? 'N/A' }}</td>
@@ -968,15 +1024,18 @@
                                 <span class="status-badge condition-no">No</span>
                             @endif
                         </td>
+                        <td>
+                            <a href="{{ $recordDetailsUrl }}" class="logbook-view-link">View</a>
+                        </td>
                     </tr>
                 @empty
                     <tr data-logbook-empty-row>
-                        <td colspan="9" class="logbook-empty">No health form records found matching your filters.</td>
+                        <td colspan="10" class="logbook-empty">No health form records found matching your filters.</td>
                     </tr>
                 @endforelse
                 @if($logbookRecords->count() > 0)
                     <tr data-logbook-empty-row style="display:none;">
-                        <td colspan="9" class="logbook-empty">No health form records found matching your search.</td>
+                        <td colspan="10" class="logbook-empty">No health form records found matching your search.</td>
                     </tr>
                 @endif
             </tbody>
@@ -1059,6 +1118,35 @@ const logbookSearchInput = document.getElementById('searchInput');
 const logbookRows = Array.from(document.querySelectorAll('[data-logbook-row]'));
 const logbookEmptyRow = document.querySelector('[data-logbook-empty-row]');
 const logbookTotalCardValue = document.querySelector('.logbook-total-card span');
+
+logbookRows.forEach(function (row) {
+    row.addEventListener('click', function (event) {
+        if (event.target.closest('a, button, input, select, textarea, [tabindex]:not([data-logbook-row])')) {
+            return;
+        }
+
+        const viewUrl = row.getAttribute('data-view-url');
+        if (viewUrl) {
+            window.location.href = viewUrl;
+        }
+    });
+
+    row.addEventListener('keydown', function (event) {
+        if (!['Enter', ' '].includes(event.key)) {
+            return;
+        }
+
+        if (event.target.closest('a, button, input, select, textarea, [tabindex]:not([data-logbook-row])')) {
+            return;
+        }
+
+        const viewUrl = row.getAttribute('data-view-url');
+        if (viewUrl) {
+            event.preventDefault();
+            window.location.href = viewUrl;
+        }
+    });
+});
 
 function filterVisibleLogbookRows() {
     const query = (logbookSearchInput?.value || '').trim().toLowerCase();

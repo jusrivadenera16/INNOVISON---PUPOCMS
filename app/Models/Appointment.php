@@ -30,11 +30,13 @@ class Appointment extends Model
         'notes',        // Stored DB field for notes
         'approval_message',
         'approval_reminders',
+        'appointment_reminder_email_sent_at',
         'remarks',      // Backward-compatible virtual alias to notes
     ];
 
     protected $casts = [
         'approval_reminders' => 'array',
+        'appointment_reminder_email_sent_at' => 'datetime',
     ];
 
     /**

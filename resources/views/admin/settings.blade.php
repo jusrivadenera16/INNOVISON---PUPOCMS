@@ -2202,6 +2202,8 @@
     @php
         $reminderLabels = [0 => 'Disabled', 1 => '1 hour before', 3 => '3 hours before', 24 => '1 day before', 48 => '2 days before'];
         $closureIsCurrentlyActive = app(\App\Services\ClinicWorkflowService::class)->activeClosure() !== null;
+        $canAccessSetting = fn (string $permission): bool => optional(auth()->user())->canAccessPermission($permission) ?? false;
+        $isSuperAdmin = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '') === \App\Models\User::ROLE_SUPERADMIN;
     @endphp
 
     @if(session('success'))
@@ -2224,17 +2226,18 @@
                 <h1><x-outline-icon name="cog-6-tooth" />Settings</h1>
                 <p>Manage your account, clinic details, medical setup, users, and system preferences.</p>
                 <div class="badges">
-                    <div class="badge"><span></span> Personal Information</div>
-                    <div class="badge"><span></span> Clinic Information</div>
-                    <div class="badge"><span></span> System Preferences</div>
-                    <div class="badge"><span></span> Medical Configuration</div>
-                    <div class="badge"><span></span> Users Management</div>
+                    @if($canAccessSetting('settings.personal'))<div class="badge"><span></span> Personal Information</div>@endif
+                    @if($canAccessSetting('settings.clinic'))<div class="badge"><span></span> Clinic Information</div>@endif
+                    @if($canAccessSetting('settings.preferences'))<div class="badge"><span></span> System Preferences</div>@endif
+                    @if($canAccessSetting('settings.medical'))<div class="badge"><span></span> Medical Configuration</div>@endif
+                    @if($isSuperAdmin)<div class="badge"><span></span> Users Management</div>@endif
                 </div>
             </div>
         </div>
     </section>
 
     <div class="settings-hub-grid">
+        @if($canAccessSetting('settings.personal'))
         <a href="{{ route('admin.settings.personal') }}" class="settings-hub-card">
             <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
             <span class="settings-hub-card-icon" aria-hidden="true"><x-outline-icon name="user-circle" /></span>
@@ -2243,7 +2246,9 @@
                 <p class="settings-hub-copy">Update your profile details, email address, password, and account identity.</p>
             </div>
         </a>
+        @endif
 
+        @if($canAccessSetting('settings.clinic'))
         <a href="{{ route('admin.settings.clinic') }}" class="settings-hub-card">
             <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
             <span class="settings-hub-card-icon" aria-hidden="true"><x-outline-icon name="home" /></span>
@@ -2252,7 +2257,9 @@
                 <p class="settings-hub-copy">Manage clinic profile, contact information, service details, and office hours.</p>
             </div>
         </a>
+        @endif
 
+        @if($canAccessSetting('settings.preferences'))
         <a href="{{ route('admin.settings.preferences') }}" class="settings-hub-card">
             <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="chevron-right" /></span>
             <span class="settings-hub-card-icon" aria-hidden="true"><x-outline-icon name="code-bracket-square" /></span>
@@ -2261,7 +2268,9 @@
                 <p class="settings-hub-copy">Configure workflow behavior, notifications, reminders, and availability rules.</p>
             </div>
         </a>
+        @endif
 
+        @if($canAccessSetting('settings.medical'))
         <a href="{{ route('admin.settings.medical') }}" class="settings-hub-card">
             <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="plus" /></span>
             <span class="settings-hub-card-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span>
@@ -2270,7 +2279,9 @@
                 <p class="settings-hub-copy">Open medical conditions and medicine type setup used by clinic workflows.</p>
             </div>
         </a>
+        @endif
 
+        @if($isSuperAdmin)
         <a href="{{ route('admin.user-management') }}" class="settings-hub-card">
             <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="plus" /></span>
             <span class="settings-hub-card-icon" aria-hidden="true"><x-outline-icon name="users" /></span>
@@ -2279,7 +2290,9 @@
                 <p class="settings-hub-copy">Open account access, admin hub profiles, roles, and user permissions.</p>
             </div>
         </a>
+        @endif
 
+        @if($canAccessSetting('settings.faqs'))
         <a href="{{ route('admin.settings.faqs') }}" class="settings-hub-card">
             <span class="settings-hub-chip" aria-hidden="true"><x-outline-icon name="plus" /></span>
             <span class="settings-hub-card-icon" aria-hidden="true"><x-outline-icon name="question-mark-circle" /></span>
@@ -2288,8 +2301,10 @@
                 <p class="settings-hub-copy">View frequently asked questions about clinic appointments, records, and services.</p>
             </div>
         </a>
+        @endif
     </div>
 
+    @if($canAccessSetting('settings.preferences'))
     <div id="workflowSettingsModal" class="modal-overlay">
         <div class="modal-box workflow-modal-box">
             <div class="modal-head">
@@ -2393,7 +2408,9 @@
             </form>
         </div>
     </div>
+    @endif
 
+    @if($canAccessSetting('settings.clinic'))
     <div id="clinicInfoModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-head">
@@ -2465,7 +2482,9 @@
             </form>
         </div>
     </div>
+    @endif
 
+    @if($canAccessSetting('settings.personal'))
     <div id="profileModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-head">
@@ -2591,6 +2610,7 @@
             </form>
         </div>
     </div>
+    @endif
 </div>
 @endsection
 

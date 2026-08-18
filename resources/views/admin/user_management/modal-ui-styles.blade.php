@@ -128,15 +128,15 @@
         display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px;
     }
     #settingsModal .um-module-access-head h5 {
-        margin:0; color:#70131b; font-size:13px; font-weight:900;
+        margin:0; color:#70131b; font-size:15px; font-weight:900;
     }
     #settingsModal .um-module-access-head p {
-        margin:3px 0 0; color:#64748b; font-size:11px; line-height:1.4;
+        margin:4px 0 0; color:#64748b; font-size:12px; line-height:1.45;
     }
     #settingsModal .um-preview-badge {
         display:inline-flex; min-height:24px; flex:0 0 auto; align-items:center; padding:4px 8px;
         border:1px solid #f3d08a; border-radius:6px; background:#fffbeb;
-        color:#92400e; font-size:9px; font-weight:900; text-transform:uppercase;
+        color:#92400e; font-size:10px; font-weight:900; text-transform:uppercase;
     }
     #settingsModal .um-module-access-toolbar {
         display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px;
@@ -144,14 +144,14 @@
     }
     #settingsModal .um-module-selection-summary { min-width:0; }
     #settingsModal .um-module-selection-summary strong {
-        display:block; color:#334155; font-size:10px; font-weight:900;
+        display:block; color:#334155; font-size:12px; font-weight:900;
     }
     #settingsModal .um-module-selection-summary span {
-        display:block; margin-top:2px; color:#64748b; font-size:8px; font-weight:650;
+        display:block; margin-top:3px; color:#64748b; font-size:10px; font-weight:650;
     }
     #settingsModal .um-reset-module-defaults {
-        min-height:30px; flex:0 0 auto; padding:6px 9px; border:1px solid #d7b7ba; border-radius:7px;
-        background:#fff; color:#70131b; cursor:pointer; font-size:9px; font-weight:900;
+        min-height:32px; flex:0 0 auto; padding:7px 10px; border:1px solid #d7b7ba; border-radius:7px;
+        background:#fff; color:#70131b; cursor:pointer; font-size:10px; font-weight:900;
         transition:border-color .18s ease,background .18s ease,color .18s ease;
     }
     #settingsModal .um-reset-module-defaults:hover,
@@ -176,7 +176,7 @@
     }
     #settingsModal .um-module-option {
         position:relative; display:grid; grid-template-columns:30px minmax(0,1fr) 20px;
-        min-height:60px; margin:0; padding:9px 9px 9px 10px; align-items:center; gap:9px;
+        min-height:66px; margin:0; padding:10px 10px 10px 11px; align-items:center; gap:10px;
         border:0; border-radius:0; background:transparent; cursor:pointer; text-transform:none; letter-spacing:0;
     }
     #settingsModal .um-module-option:has(input:focus-visible) {
@@ -195,16 +195,16 @@
         display:flex; min-width:0; align-items:center; gap:7px;
     }
     #settingsModal .um-module-title strong {
-        display:block; min-width:0; overflow:hidden; color:#1e293b; font-size:11px; font-weight:900;
+        display:block; min-width:0; overflow:hidden; color:#1e293b; font-size:13px; font-weight:900;
         text-overflow:ellipsis; white-space:nowrap;
     }
     #settingsModal .um-module-title > span {
         display:inline-flex; min-height:17px; flex:0 0 auto; align-items:center; padding:2px 6px;
-        border-radius:5px; background:#f1f5f9; color:#475569; font-size:8px; font-weight:900;
+        border-radius:5px; background:#f1f5f9; color:#475569; font-size:9px; font-weight:900;
         text-transform:uppercase;
     }
     #settingsModal .um-module-copy small {
-        display:block; margin-top:2px; color:#64748b; font-size:9px; font-weight:600; line-height:1.3;
+        display:block; margin-top:3px; color:#64748b; font-size:11px; font-weight:600; line-height:1.35;
     }
     #settingsModal .um-module-check {
         display:inline-flex; width:18px; height:18px; align-items:center; justify-content:center;
@@ -233,11 +233,11 @@
     #settingsModal .um-module-actions-head {
         display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 0 6px;
     }
-    #settingsModal .um-module-actions-head strong { color:#475569; font-size:9px; font-weight:900; text-transform:uppercase; }
-    #settingsModal .um-module-actions-head span { color:#94a3b8; font-size:8px; font-weight:700; }
+    #settingsModal .um-module-actions-head strong { color:#475569; font-size:10px; font-weight:900; text-transform:uppercase; }
+    #settingsModal .um-module-actions-head span { color:#94a3b8; font-size:9px; font-weight:700; }
     #settingsModal .um-action-permission {
-        position:relative; display:grid; grid-template-columns:18px minmax(0,1fr); min-height:42px;
-        margin:0; padding:7px 8px; align-items:center; gap:9px; border-top:1px solid #eef2f7;
+        position:relative; display:grid; grid-template-columns:18px minmax(0,1fr); min-height:46px;
+        margin:0; padding:8px 9px; align-items:center; gap:9px; border-top:1px solid #eef2f7;
         color:#1e293b; cursor:pointer; text-transform:none; letter-spacing:0;
     }
     #settingsModal .um-action-permission:has(input:checked) { background:#fff7f7; }
@@ -252,9 +252,9 @@
         border-color:#8f2230; background:#8f2230; color:#fff;
     }
     #settingsModal .um-action-permission > span:nth-child(3) { min-width:0; }
-    #settingsModal .um-action-permission strong { display:block; color:#334155; font-size:10px; font-weight:850; }
+    #settingsModal .um-action-permission strong { display:block; color:#334155; font-size:12px; font-weight:850; }
     #settingsModal .um-action-permission small {
-        display:block; margin-top:2px; color:#64748b; font-size:8px; font-weight:600; line-height:1.3;
+        display:block; margin-top:3px; color:#64748b; font-size:10px; font-weight:600; line-height:1.35;
     }
     #settingsModal .um-action-permission.is-locked {
         grid-template-columns:22px minmax(0,1fr) auto; cursor:default; background:#fff8e6;
@@ -267,7 +267,7 @@
     #settingsModal .um-action-permission.is-locked > span:nth-child(2) { min-width:0; }
     #settingsModal .um-locked-badge {
         display:inline-flex; min-height:20px; align-items:center; padding:3px 6px; border-radius:5px;
-        background:#fef3c7; color:#92400e; font-size:8px; font-weight:900; text-transform:uppercase;
+        background:#fef3c7; color:#92400e; font-size:9px; font-weight:900; text-transform:uppercase;
     }
     #settingsModal .um-superadmin-access-summary {
         display:grid; grid-template-columns:30px minmax(0,1fr); gap:10px; margin-top:10px; padding:10px;

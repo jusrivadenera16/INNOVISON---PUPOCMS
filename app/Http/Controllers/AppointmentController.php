@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Admin;
+use App\Models\AdminHub;
 use App\Models\Announcement;
 use App\Models\Appointment;
 use App\Models\AppointmentFeedback;
@@ -13,6 +14,7 @@ use App\Models\HealthProfile;
 use App\Models\EmployeeHealthProfile;
 use App\Models\Faq;
 use App\Models\SystemSetting;
+use App\Services\StudentNotificationMailer;
 use App\Models\User;
 use App\Services\GuisisApiService;
 use App\Services\PuptasWebhookService;
@@ -50,37 +52,32 @@ class AppointmentController extends Controller
             return null;
         }
 
-        $linkedAdmin = null;
-        if ($adminUser->relationLoaded('adminProfile')) {
-            $linkedAdmin = $adminUser->adminProfile;
-        }
-        if (!$linkedAdmin) {
-            $linkedAdmin = Admin::query()
-                ->where(function ($builder) use ($adminUser) {
-                    if (Admin::hasColumn('user_id')) {
+        $linkedAdminHub = $adminUser->relationLoaded('adminHubProfile')
+            ? $adminUser->adminHubProfile
+            : $adminUser->adminHubProfile()->first();
+
+        if (!$linkedAdminHub && Schema::hasTable('admin_hub')) {
+            $adminUuid = trim((string) ($adminUser->student_id ?? ''));
+            $email = trim(strtolower((string) ($adminUser->email ?? '')));
+            $linkedAdminHub = AdminHub::query()
+                ->where(function ($builder) use ($adminUser, $adminUuid, $email) {
+                    if (AdminHub::hasColumn('user_id')) {
                         $builder->orWhere('user_id', $adminUser->id);
                     }
-
-                    $email = trim((string) ($adminUser->email ?? ''));
-                    if ($email !== '') {
-                        if (Admin::hasColumn('email')) {
-                            $builder->orWhere('email', $email);
-                        }
-                        if (Admin::hasColumn('email_address')) {
-                            $builder->orWhere('email_address', $email);
-                        }
+                    if ($adminUuid !== '' && AdminHub::hasColumn('admin_uuid')) {
+                        $builder->orWhere('admin_uuid', $adminUuid);
+                    }
+                    if ($email !== '' && AdminHub::hasColumn('email')) {
+                        $builder->orWhereRaw('LOWER(email) = ?', [$email]);
                     }
                 })
                 ->first();
         }
 
-        $resolvedRole = strtolower(trim((string) (
-            $linkedAdmin?->access_level
-            ?? $linkedAdmin?->admin_hub_role
-            ?? ''
-        )));
+        $resolvedRole = strtolower(trim((string) ($linkedAdminHub?->role ?? '')));
+        $resolvedStatus = strtolower(trim((string) ($linkedAdminHub?->status ?? 'active')));
 
-        if (!in_array($resolvedRole, ['designee', 'admin_designee'], true)) {
+        if ($resolvedStatus === 'inactive' || !in_array($resolvedRole, ['designee', 'admin_designee'], true)) {
             return null;
         }
 
@@ -134,6 +131,11 @@ class AppointmentController extends Controller
     public function getStudentNotifications(User $user): array
     {
         Appointment::expireOverduePending();
+
+        if ($user->getAttribute('notification_system_enabled') === false) {
+            return [];
+        }
+
         $workflow = app(ClinicWorkflowService::class);
         $settings = $workflow->settings();
 
@@ -2072,7 +2074,7 @@ class AppointmentController extends Controller
             (string) ($user->user_role ?? ''),
             (string) ($user->idp_role ?? ''),
             (string) data_get($user, 'adminProfile.access_level', ''),
-            (string) data_get($user, 'adminProfile.admin_hub_role', ''),
+            (string) data_get($user, 'adminHubProfile.role', ''),
         ]))));
 
         foreach (['faculty', 'admin', 'staff', 'employee', 'dependent'] as $needle) {
@@ -2454,6 +2456,8 @@ class AppointmentController extends Controller
         $appointment->type = 'online';
         $appointment->user_type = Appointment::normalizeUserType($user->user_role);
         $appointment->save(); // Dito lang dapat magtatapos ang command.
+
+        app(StudentNotificationMailer::class)->sendAppointmentNotice($user, $appointment, 'booked');
 
         $successMessage = $appointment->status === 'Approved'
             ? 'Appointment booked and approved automatically.'
@@ -3532,6 +3536,28 @@ public function account(Request $request)
         $user->save();
 
         return back()->with('success', 'All notifications marked as read.');
+    }
+
+    public function updateNotificationPreferences(Request $request)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if (!$user) {
+            return redirect('/login-as-student')->with('error', 'Please login first.');
+        }
+
+        $emailEnabled = $request->boolean('notification_email_enabled');
+        $systemEnabled = true;
+
+        $user->notification_email_enabled = $emailEnabled;
+        $user->notification_system_enabled = $systemEnabled;
+        $user->save();
+
+        $message = $emailEnabled
+            ? 'Email and in-system notifications are enabled.'
+            : 'In-system notifications are enabled.';
+
+        return redirect('/student/account?view=notifications')->with('success', $message);
     }
 
     public function showFeedbackForm(Appointment $appointment)

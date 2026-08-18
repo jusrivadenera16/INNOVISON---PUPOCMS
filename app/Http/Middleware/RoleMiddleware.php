@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Admin;
+use App\Models\AdminHub;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
@@ -63,21 +64,19 @@ class RoleMiddleware
 
         $linkedAdmin = $this->findLinkedAdminProfile($user);
         $accessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
+        $linkedAdminHub = $this->findLinkedAdminHubProfile($user);
+        $adminHubRole = strtolower(trim((string) ($linkedAdminHub?->role ?? '')));
+        $adminHubStatus = strtolower(trim((string) ($linkedAdminHub?->status ?? 'active')));
 
         if (in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff', 'superadmin'], true)) {
             return false;
         }
 
-        if ($accessLevel === 'designee') {
-            return !Admin::hasColumn('admin_hub_enabled')
-                || (bool) ($linkedAdmin?->admin_hub_enabled ?? false);
+        if ($linkedAdminHub && in_array($adminHubRole, ['designee', 'admin_designee'], true)) {
+            return $adminHubStatus !== 'inactive';
         }
 
-        $adminHubEnabled = !Admin::hasColumn('admin_hub_enabled')
-            || (bool) ($linkedAdmin?->admin_hub_enabled ?? false);
-        $adminHubRole = strtolower(trim((string) ($linkedAdmin?->admin_hub_role ?? '')));
-
-        return $adminHubEnabled && in_array($adminHubRole, ['designee', 'admin_designee'], true);
+        return false;
     }
 
     private function isClinicStaffAdmin($user): bool
@@ -116,20 +115,66 @@ class RoleMiddleware
 
         $linkedAdmin = $this->findLinkedAdminProfile($user);
         $accessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
+        $linkedAdminHub = $this->findLinkedAdminHubProfile($user);
+        $adminHubRole = strtolower(trim((string) ($linkedAdminHub?->role ?? '')));
+        $adminHubStatus = strtolower(trim((string) ($linkedAdminHub?->status ?? 'active')));
 
         if (in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff', 'superadmin'], true)) {
             return false;
         }
 
-        if ($accessLevel === 'designee') {
+        if ($linkedAdminHub && $adminHubStatus !== 'inactive' && in_array($adminHubRole, ['designee', 'admin_designee'], true)) {
             return false;
         }
 
-        $adminHubEnabled = Admin::hasColumn('admin_hub_enabled')
-            && (bool) ($linkedAdmin?->admin_hub_enabled ?? false);
-        $adminHubRole = strtolower(trim((string) ($linkedAdmin?->admin_hub_role ?? '')));
+        return true;
+    }
 
-        return !$adminHubEnabled || !in_array($adminHubRole, ['designee', 'admin_designee'], true);
+    private function findLinkedAdminHubProfile($user): ?AdminHub
+    {
+        if (!$user || !Schema::hasTable('admin_hub')) {
+            return null;
+        }
+
+        if (AdminHub::hasColumn('user_id')) {
+            $linkedByUserId = AdminHub::query()
+                ->where('user_id', $user->id)
+                ->first();
+
+            if ($linkedByUserId) {
+                return $linkedByUserId;
+            }
+        }
+
+        $adminUuid = trim((string) ($user->student_id ?? ''));
+        if ($adminUuid !== '' && AdminHub::hasColumn('admin_uuid')) {
+            $linkedByUuid = AdminHub::query()
+                ->where('admin_uuid', $adminUuid)
+                ->first();
+
+            if ($linkedByUuid) {
+                return $linkedByUuid;
+            }
+        }
+
+        $email = trim((string) ($user->email ?? ''));
+        if ($email === '' || !AdminHub::hasColumn('email')) {
+            return null;
+        }
+
+        $linkedByEmail = AdminHub::query()
+            ->whereRaw('LOWER(email) = ?', [strtolower($email)])
+            ->first();
+
+        if (!$linkedByEmail || $adminUuid === '' || !AdminHub::hasColumn('admin_uuid')) {
+            return $linkedByEmail;
+        }
+
+        $storedUuid = trim((string) ($linkedByEmail->admin_uuid ?? ''));
+
+        return $storedUuid === '' || hash_equals($storedUuid, $adminUuid)
+            ? $linkedByEmail
+            : null;
     }
 
     private function findLinkedAdminProfile($user): ?Admin

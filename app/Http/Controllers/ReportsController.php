@@ -1070,6 +1070,7 @@ class ReportsController extends Controller
     public function healthFormsReport(Request $request)
     {
         $search = trim((string) $request->query('q', ''));
+        $hasDateFilter = $request->filled('date_from') || $request->filled('date_to');
         $dateFrom = $this->parseReportDate((string) $request->query('date_from', ''), now()->startOfMonth())->startOfDay();
         $dateTo = $this->parseReportDate((string) $request->query('date_to', ''), now())->endOfDay();
 
@@ -1077,68 +1078,44 @@ class ReportsController extends Controller
             [$dateFrom, $dateTo] = [$dateTo->copy()->startOfDay(), $dateFrom->copy()->endOfDay()];
         }
 
+        $courseFilter = function ($builder) use ($search) {
+            $builder->where('course_college', 'like', "%{$search}%")
+                ->orWhereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('course', 'like', "%{$search}%");
+                });
+        };
+
         $issuedBaseQuery = HealthProfile::query()
             ->with('user')
             ->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
 
         if ($search !== '') {
-            $issuedBaseQuery->where(function ($builder) use ($search) {
-                $builder->where('course_college', 'like', "%{$search}%")
-                    ->orWhereHas('user', function ($userQuery) use ($search) {
-                        $userQuery->where('course', 'like', "%{$search}%");
-                    });
-            });
+            $issuedBaseQuery->where($courseFilter);
         }
 
-        $this->applyHealthApprovalDateRange($issuedBaseQuery, $dateFrom, $dateTo);
+        if ($hasDateFilter) {
+            $this->applyHealthApprovalDateRange($issuedBaseQuery, $dateFrom, $dateTo);
+        }
 
         $pendingBaseQuery = HealthProfile::query()
             ->with('user')
-            ->whereNotIn('clearance_status', ['Issued', 'Fully Cleared', 'Rejected'])
-            ->whereBetween('created_at', [$dateFrom, $dateTo]);
-
-        if ($search !== '') {
-            $pendingBaseQuery->where(function ($builder) use ($search) {
-                $builder->where('course_college', 'like', "%{$search}%")
-                    ->orWhereHas('user', function ($userQuery) use ($search) {
-                        $userQuery->where('course', 'like', "%{$search}%");
-                    });
+            ->where(function ($builder) {
+                $builder->whereNotIn('clearance_status', ['Issued', 'Fully Cleared', 'Rejected'])
+                    ->orWhereNull('clearance_status')
+                    ->orWhere('clearance_status', '');
             });
+
+        if ($hasDateFilter) {
+            $pendingBaseQuery->whereBetween('created_at', [$dateFrom, $dateTo]);
         }
 
-        $pendingByCourse = (clone $pendingBaseQuery)
-            ->get()
-            ->groupBy(function (HealthProfile $form) {
-                $course = trim((string) ($form->course_college ?: optional($form->user)->course ?: 'Unspecified Course'));
-                return $course !== '' ? $course : 'Unspecified Course';
-            })
-            ->map(fn ($forms) => $forms->count());
+        if ($search !== '') {
+            $pendingBaseQuery->where($courseFilter);
+        }
 
-        $issuedFormsCollection = (clone $issuedBaseQuery)
-            ->get()
-            ->groupBy(function (HealthProfile $form) {
-                $course = trim((string) ($form->course_college ?: optional($form->user)->course ?: 'Unspecified Course'));
-                return $course !== '' ? $course : 'Unspecified Course';
-            })
-            ->map(function ($forms, $course) use ($pendingByCourse) {
-                $sortedForms = $forms->sortByDesc(function (HealthProfile $form) {
-                    return $this->healthApprovalDate($form);
-                })->values();
-
-                $withConditionCount = $forms->filter(fn (HealthProfile $form) => $form->hasMedicalCondition())->count();
-                $issuedCount = $forms->count();
-
-                return (object) [
-                    'course' => $course,
-                    'issued_count' => $issuedCount,
-                    'with_condition_count' => $withConditionCount,
-                    'no_condition_count' => $issuedCount - $withConditionCount,
-                    'for_approval_count' => (int) ($pendingByCourse->get($course) ?? 0),
-                    'last_issued_at' => $this->healthApprovalDate($sortedForms->first()),
-                ];
-            })
-            ->sortByDesc('issued_count')
-            ->values();
+        $issuedRecords = (clone $issuedBaseQuery)->get();
+        $pendingRecords = (clone $pendingBaseQuery)->get();
+        $issuedFormsCollection = $this->healthFormsCourseSummaryRows($issuedRecords, $pendingRecords);
 
         $perPage = 12;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
@@ -1154,24 +1131,16 @@ class ReportsController extends Controller
             ]
         );
 
-        $summaryQuery = HealthProfile::query()->whereIn('clearance_status', ['Issued', 'Fully Cleared']);
+        $totalIssued = $issuedFormsCollection->sum('issued_count');
+        $totalCourses = $issuedFormsCollection->count();
+        $issuedWithConditions = $issuedFormsCollection->sum('with_condition_count');
 
-        $totalIssued = (clone $summaryQuery)->count();
-        $totalCourses = (clone $summaryQuery)
+        $allCourses = HealthProfile::query()
             ->with('user:id,course')
-            ->get()
-            ->map(function (HealthProfile $form) {
-                return trim((string) ($form->course_college ?: optional($form->user)->course));
-            })
-            ->filter()
+            ->get(['id', 'user_id', 'course_college'])
+            ->map(fn (HealthProfile $form) => $this->healthFormsCourseLabel($form))
+            ->filter(fn (string $course) => $course !== 'Unspecified Course')
             ->unique()
-            ->count();
-        $issuedWithConditions = (clone $summaryQuery)->withMedicalCondition()->count();
-        $topCourse = optional($issuedFormsCollection->first())->course ?? 'No course data yet';
-
-        $allCourses = HealthProfile::distinct('course_college')
-            ->pluck('course_college')
-            ->filter()
             ->sort()
             ->values();
 
@@ -1185,6 +1154,46 @@ class ReportsController extends Controller
             'dateTo',
             'allCourses'
         ));
+    }
+
+    private function healthFormsCourseSummaryRows(Collection $issuedRecords, Collection $pendingRecords): Collection
+    {
+        $issuedByCourse = $issuedRecords->groupBy(fn (HealthProfile $form) => $this->healthFormsCourseLabel($form));
+        $pendingByCourse = $pendingRecords
+            ->groupBy(fn (HealthProfile $form) => $this->healthFormsCourseLabel($form))
+            ->map(fn (Collection $forms) => $forms->count());
+
+        return $issuedByCourse
+            ->keys()
+            ->merge($pendingByCourse->keys())
+            ->unique()
+            ->map(function (string $course) use ($issuedByCourse, $pendingByCourse) {
+                $forms = $issuedByCourse->get($course, collect());
+                $sortedForms = $forms->sortByDesc(fn (HealthProfile $form) => $this->healthApprovalDate($form))->values();
+                $withConditionCount = $forms->filter(fn (HealthProfile $form) => $form->hasMedicalCondition())->count();
+                $issuedCount = $forms->count();
+
+                return (object) [
+                    'course' => $course,
+                    'issued_count' => $issuedCount,
+                    'with_condition_count' => $withConditionCount,
+                    'no_condition_count' => $issuedCount - $withConditionCount,
+                    'for_approval_count' => (int) ($pendingByCourse->get($course) ?? 0),
+                    'last_issued_at' => $this->healthApprovalDate($sortedForms->first()),
+                ];
+            })
+            ->sort(function ($first, $second) {
+                return [$second->issued_count, $second->for_approval_count, $first->course]
+                    <=> [$first->issued_count, $first->for_approval_count, $second->course];
+            })
+            ->values();
+    }
+
+    private function healthFormsCourseLabel(HealthProfile $form): string
+    {
+        $course = trim((string) ($form->course_college ?: optional($form->user)->course ?: ''));
+
+        return $course !== '' ? $course : 'Unspecified Course';
     }
 
     private function healthFormsApplicantsListQuery(Request $request): array
@@ -1212,12 +1221,28 @@ class ReportsController extends Controller
         }
 
         if ($courseFilter !== '') {
-            $query->where(function ($q) use ($courseFilter) {
-                $q->where('course_college', 'like', "%{$courseFilter}%")
-                    ->orWhereHas('user', function ($uq) use ($courseFilter) {
-                        $uq->where('course', 'like', "%{$courseFilter}%");
+            if ($courseFilter === 'Unspecified Course') {
+                $query->where(function ($q) {
+                    $q->where(function ($profileCourse) {
+                        $profileCourse->whereNull('course_college')
+                            ->orWhere('course_college', '');
+                    })
+                    ->where(function ($userCourse) {
+                        $userCourse->whereDoesntHave('user')
+                            ->orWhereHas('user', function ($uq) {
+                                $uq->whereNull('course')
+                                    ->orWhere('course', '');
+                            });
                     });
-            });
+                });
+            } else {
+                $query->where(function ($q) use ($courseFilter) {
+                    $q->where('course_college', 'like', "%{$courseFilter}%")
+                        ->orWhereHas('user', function ($uq) use ($courseFilter) {
+                            $uq->where('course', 'like', "%{$courseFilter}%");
+                        });
+                });
+            }
         }
 
         if ($userTypeFilter !== '') {
@@ -1264,10 +1289,24 @@ class ReportsController extends Controller
             $perPage = '20';
         }
 
-        $logbookQuery = $query->orderByDesc('created_at');
-        $logbookRecords = $logbookQuery
-            ->paginate($perPage === 'all' ? max(1, (clone $logbookQuery)->count()) : (int) $perPage)
-            ->withQueryString();
+        $logbookCollection = $this->sortHealthFormsByPatientLastName($query->get())
+            ->each(function (HealthProfile $record) {
+                $record->setAttribute('formatted_patient_name', $this->formatHealthFormsPatientReportName($record->user));
+            });
+        $logbookCurrentPage = LengthAwarePaginator::resolveCurrentPage();
+        $logbookPerPage = $perPage === 'all'
+            ? max(1, $logbookCollection->count())
+            : (int) $perPage;
+        $logbookRecords = new LengthAwarePaginator(
+            $logbookCollection->slice(($logbookCurrentPage - 1) * $logbookPerPage, $logbookPerPage)->values(),
+            $logbookCollection->count(),
+            $logbookPerPage,
+            $logbookCurrentPage,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
 
         $courses = HealthProfile::query()
             ->select('course_college', 'course_code')
@@ -1760,6 +1799,8 @@ private function exportReportsPreview(Request $request, string $reportType)
         'gender' => trim((string) $request->query('gender', '')),
         'condition' => trim((string) $request->query('condition', '')),
         'status' => trim((string) $request->query('status', '')),
+        'school_year' => trim((string) $request->query('school_year', '')),
+        'sort' => $this->normalizeHealthFormsExportSort((string) $request->query('sort', 'name_asc')),
         'condition_keyword' => trim((string) $request->query('condition_keyword', '')),
         'condition_source' => trim((string) $request->query('condition_source', 'all')),
         'condition_match' => trim((string) $request->query('condition_match', 'any')),
@@ -1873,6 +1914,15 @@ private function exportReportsPreview(Request $request, string $reportType)
             ->filter()
             ->unique()
             ->sort()
+            ->values(),
+        'healthFormSchoolYears' => HealthProfile::query()
+            ->select('school_year')
+            ->whereNotNull('school_year')
+            ->get()
+            ->map(fn (HealthProfile $profile) => trim((string) $profile->school_year))
+            ->filter()
+            ->unique()
+            ->sortDesc()
             ->values(),
         'healthConditionSuggestions' => $reportType === 'health-forms'
             ? $this->healthConditionKeywordSuggestions()
@@ -2038,7 +2088,7 @@ private function exportHealthFormsPreviewColumns(Request $request): array
 
     $definitions = [
         'Reference' => fn (HealthProfile $record) => $record->reference_number ?: $record->student_number ?: optional($record->user)->student_number ?: 'N/A',
-        'Name' => fn (HealthProfile $record) => optional($record->user)->name ?: 'N/A',
+        'Name' => fn (HealthProfile $record) => $this->formatHealthFormsPatientReportName($record->user),
         'Course' => fn (HealthProfile $record) => $record->course_college ?: optional($record->user)->course ?: 'N/A',
         'User Type' => fn (HealthProfile $record) => $this->healthFormsExportUserType($record),
         'Gender' => fn (HealthProfile $record) => $record->sex ?: optional($record->user)->gender ?: 'N/A',
@@ -2096,6 +2146,8 @@ private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateF
     $genderFilter = strtolower(trim((string) $request->query('gender', '')));
     $conditionFilter = strtolower(trim((string) $request->query('condition', '')));
     $statusFilter = strtolower(trim((string) $request->query('status', '')));
+    $schoolYearFilter = trim((string) $request->query('school_year', ''));
+    $sortMode = $this->normalizeHealthFormsExportSort((string) $request->query('sort', 'name_asc'));
     $conditionKeyword = trim((string) $request->query('condition_keyword', ''));
     $conditionSource = trim((string) $request->query('condition_source', 'all'));
     $conditionMatch = trim((string) $request->query('condition_match', 'any'));
@@ -2140,6 +2192,10 @@ private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateF
         $query->whereNotIn('clearance_status', ['Issued', 'Fully Cleared', 'Rejected']);
     } elseif ($statusFilter === 'rejected') {
         $query->where('clearance_status', 'Rejected');
+    }
+
+    if ($schoolYearFilter !== '') {
+        $query->whereRaw('TRIM(school_year) = ?', [$schoolYearFilter]);
     }
 
     $records = $query->orderByDesc(DB::raw('COALESCE(verified_at, created_at)'))->get();
@@ -2197,7 +2253,7 @@ private function exportHealthFormsPreviewRecords(Request $request, Carbon $dateF
         })->values();
     }
 
-    return $records->values();
+    return $this->sortHealthFormsExportRecords($records, $sortMode);
 }
 
 public function exportHealthForms(Request $request)
@@ -2209,6 +2265,8 @@ public function exportHealthForms(Request $request)
     $genderFilter = strtolower(trim((string) $request->query('gender', '')));
     $conditionFilter = strtolower(trim((string) $request->query('condition', '')));
     $statusFilter = strtolower(trim((string) $request->query('status', '')));
+    $schoolYearFilter = trim((string) $request->query('school_year', ''));
+    $sortMode = $this->normalizeHealthFormsExportSort((string) $request->query('sort', 'name_asc'));
     $conditionKeyword = trim((string) $request->query('condition_keyword', ''));
     $conditionSource = trim((string) $request->query('condition_source', 'all'));
     $conditionMatch = trim((string) $request->query('condition_match', 'any'));
@@ -2266,6 +2324,10 @@ public function exportHealthForms(Request $request)
         $query->where('clearance_status', 'Rejected');
     }
 
+    if ($schoolYearFilter !== '') {
+        $query->whereRaw('TRIM(school_year) = ?', [$schoolYearFilter]);
+    }
+
     $records = $query->orderByDesc(DB::raw('COALESCE(verified_at, created_at)'))->get();
 
     if ($userTypeFilter !== '') {
@@ -2321,12 +2383,14 @@ public function exportHealthForms(Request $request)
         })->values();
     }
 
+    $records = $this->sortHealthFormsExportRecords($records, $sortMode);
+
     if (strtolower(trim((string) $request->query('output', 'csv'))) === 'pdf') {
         return $this->streamHealthFormsPdf($records, $dateFrom, $dateTo, $courseFilter);
     }
 
     if ($request->boolean('course_sheets')) {
-        return $this->exportHealthFormsCourseSheets($records, $dateFrom, $dateTo);
+        return $this->exportHealthFormsCourseSheets($records, $dateFrom, $dateTo, $sortMode);
     }
 
     $filename = 'health-forms-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '-' . now()->format('His') . '.csv';
@@ -2357,7 +2421,7 @@ public function exportHealthForms(Request $request)
 
             fputcsv($output, [
                 $record->reference_number ?: $record->student_number ?: optional($record->user)->student_number ?: 'N/A',
-                optional($record->user)->name ?: 'N/A',
+                $this->formatHealthFormsPatientReportName($record->user),
                 $record->course_college ?: optional($record->user)->course ?: 'N/A',
                 $record->sex ?: optional($record->user)->gender ?: 'N/A',
                 $status,
@@ -2378,24 +2442,6 @@ public function exportHealthForms(Request $request)
 
 private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Carbon $dateTo, string $courseFilter)
 {
-    $formatName = function (?User $user): string {
-        if (!$user) {
-            return 'N/A';
-        }
-
-        $firstName = trim((string) $user->first_name);
-        $middleName = trim((string) $user->middle_name);
-        $lastName = trim((string) $user->last_name);
-
-        if ($firstName !== '' || $middleName !== '' || $lastName !== '') {
-            $givenNames = trim(implode(' ', array_filter([$firstName, $middleName])));
-
-            return trim(strtoupper($lastName) . ($lastName !== '' && $givenNames !== '' ? ', ' : '') . $givenNames);
-        }
-
-        return trim((string) $user->name) ?: 'N/A';
-    };
-
     $formatDose = function (array $dose, string $label): ?string {
         $brand = trim((string) ($dose['brand'] ?? ''));
         $dateValue = trim((string) ($dose['date'] ?? ''));
@@ -2418,7 +2464,7 @@ private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Car
         return $label . ($details !== '' ? ': ' . $details : '');
     };
 
-    $pdfRows = $records->map(function (HealthProfile $record) use ($formatName, $formatDose) {
+    $pdfRows = $records->map(function (HealthProfile $record) use ($formatDose) {
         $user = $record->user;
         $vaccineHistory = is_array($record->vaccine_history) ? $record->vaccine_history : [];
         $firstDose = $formatDose((array) ($vaccineHistory['first_dose'] ?? []), '1st Dose');
@@ -2429,7 +2475,7 @@ private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Car
         $guardianDetails = trim(implode(' - ', array_filter([$guardian, $guardianContact])));
 
         return [
-            'name' => $formatName($user),
+            'name' => $this->formatHealthFormsPatientReportName($user),
             'address' => trim((string) $record->home_address) ?: 'N/A',
             'contact' => trim((string) optional($user)->contact_no) ?: (trim((string) $record->landline) ?: 'N/A'),
             'guardian' => $guardianDetails !== '' ? $guardianDetails : 'N/A',
@@ -2490,7 +2536,7 @@ private function streamHealthFormsPdf(Collection $records, Carbon $dateFrom, Car
     ]);
 }
 
-private function exportHealthFormsCourseSheets(Collection $records, Carbon $dateFrom, Carbon $dateTo)
+private function exportHealthFormsCourseSheets(Collection $records, Carbon $dateFrom, Carbon $dateTo, string $sortMode = 'name_asc')
 {
     $applicantRecords = $records
         ->filter(fn (HealthProfile $record) => $this->healthFormsCourseSheetIsApplicant($record))
@@ -2499,22 +2545,8 @@ private function exportHealthFormsCourseSheets(Collection $records, Carbon $date
     $sheets = $applicantRecords
         ->groupBy(fn (HealthProfile $record) => $this->healthFormsCourseSheetCourse($record))
         ->sortKeys()
-        ->map(function (Collection $courseRecords) {
-            return $courseRecords
-                ->sortBy(function (HealthProfile $record) {
-                    $statusRank = $this->healthFormsCourseSheetStatusRank($record);
-                    $date = $statusRank === 0
-                        ? ($record->verified_at ?: $record->created_at)
-                        : ($record->created_at ?: $record->updated_at);
-
-                    return sprintf(
-                        '%d-%s-%010d',
-                        $statusRank,
-                        $date ? Carbon::parse($date)->format('YmdHis') : '99999999999999',
-                        $record->id
-                    );
-                })
-                ->values();
+        ->map(function (Collection $courseRecords) use ($sortMode) {
+            return $this->sortHealthFormsExportRecords($courseRecords, $sortMode);
         });
 
     if ($sheets->isEmpty()) {
@@ -2729,7 +2761,7 @@ private function healthFormsCourseSheetRow(HealthProfile $record): array
 
     return [
         $record->reference_number ?: $record->student_number ?: optional($record->user)->student_number ?: 'N/A',
-        optional($record->user)->name ?: 'N/A',
+        $this->formatHealthFormsPatientReportName($record->user),
         $this->healthFormsCourseSheetCourse($record),
         $record->sex ?: optional($record->user)->gender ?: 'N/A',
         $this->healthFormsCourseSheetStatus($record),
@@ -2819,6 +2851,94 @@ private function healthFormsCourseSheetStatusRank(HealthProfile $record): int
         'Rejected' => 1,
         default => 2,
     };
+}
+
+private function sortHealthFormsByPatientLastName(Collection $records): Collection
+{
+    return $records
+        ->sortBy(fn (HealthProfile $record) => $this->healthFormsPatientNameSortKey($record), SORT_NATURAL | SORT_FLAG_CASE)
+        ->values();
+}
+
+private function sortHealthFormsExportRecords(Collection $records, string $sortMode): Collection
+{
+    return match ($this->normalizeHealthFormsExportSort($sortMode)) {
+        'name_desc' => $records
+            ->sortByDesc(fn (HealthProfile $record) => $this->healthFormsPatientNameSortKey($record), SORT_NATURAL | SORT_FLAG_CASE)
+            ->values(),
+        'date_asc' => $records
+            ->sortBy(fn (HealthProfile $record) => $this->healthFormsRecordDateSortKey($record))
+            ->values(),
+        'date_desc' => $records
+            ->sortByDesc(fn (HealthProfile $record) => $this->healthFormsRecordDateSortKey($record))
+            ->values(),
+        default => $this->sortHealthFormsByPatientLastName($records),
+    };
+}
+
+private function normalizeHealthFormsExportSort(string $sortMode): string
+{
+    $sortMode = strtolower(trim($sortMode));
+
+    return in_array($sortMode, ['name_asc', 'name_desc', 'date_desc', 'date_asc'], true)
+        ? $sortMode
+        : 'name_asc';
+}
+
+private function healthFormsRecordDateSortKey(HealthProfile $record): int
+{
+    $attributes = $record->getAttributes();
+    $date = $attributes['verified_at'] ?? $attributes['created_at'] ?? null;
+
+    return $date ? Carbon::parse($date)->timestamp : 0;
+}
+
+private function formatHealthFormsPatientReportName(?User $user): string
+{
+    if (!$user) {
+        return 'N/A';
+    }
+
+    $firstName = trim((string) $user->first_name);
+    $middleName = trim((string) $user->middle_name);
+    $lastName = trim((string) $user->last_name);
+
+    if ($firstName !== '' || $middleName !== '' || $lastName !== '') {
+        $givenNames = trim(implode(' ', array_filter([$firstName, $middleName])));
+
+        return trim(strtoupper($lastName) . ($lastName !== '' && $givenNames !== '' ? ', ' : '') . $givenNames);
+    }
+
+    return trim((string) $user->name) ?: 'N/A';
+}
+
+private function healthFormsPatientNameSortKey(HealthProfile $record): string
+{
+    $user = $record->user;
+    $firstName = trim((string) optional($user)->first_name);
+    $middleName = trim((string) optional($user)->middle_name);
+    $lastName = trim((string) optional($user)->last_name);
+    $fullName = trim((string) optional($user)->name);
+
+    if ($lastName === '' && $fullName !== '') {
+        $nameParts = preg_split('/\s+/', $fullName) ?: [];
+        $lastName = trim((string) array_pop($nameParts));
+
+        if ($firstName === '') {
+            $firstName = trim(implode(' ', $nameParts));
+        }
+    }
+
+    $reference = trim((string) ($record->reference_number ?: $record->student_number ?: optional($user)->student_number ?: ''));
+
+    return implode('|', [
+        mb_strtolower($lastName !== '' ? $lastName : $fullName),
+        mb_strtolower($firstName),
+        mb_strtolower($middleName),
+        mb_strtolower($fullName),
+        mb_strtolower($reference),
+        str_pad((string) ($record->id ?? 0), 10, '0', STR_PAD_LEFT),
+    ]);
 }
 
 private function healthFormsCourseSheetName(string $course, array &$usedSheetNames): string

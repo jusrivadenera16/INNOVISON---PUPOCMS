@@ -5540,6 +5540,7 @@
         background: #ffffff;
         color: #182033;
         text-decoration: none;
+        cursor: default;
         transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
     }
     .notification-feed-item:hover {
@@ -5575,6 +5576,14 @@
     .notification-feed-item.is-announcements .notification-letter-icon {
         background: #eaf3ff;
         color: #2464ad;
+    }
+    .notification-feed-item.is-announcements {
+        border-color: rgba(36,100,173,.18);
+        background: linear-gradient(90deg, #f7fbff 0%, #ffffff 46%);
+    }
+    .notification-feed-item.is-announcements.is-unread {
+        border-color: rgba(36,100,173,.28);
+        background: linear-gradient(90deg, #edf6ff 0%, #ffffff 48%);
     }
     .notification-feed-copy {
         min-width: 0;
@@ -5624,7 +5633,13 @@
         font-size: 13px;
         line-height: 1.55;
         -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
+        -webkit-line-clamp: 1;
+    }
+    .notification-feed-item.is-expanded .notification-feed-message {
+        display: block;
+        overflow: visible;
+        white-space: pre-line;
+        -webkit-line-clamp: unset;
     }
     .notification-feed-meta {
         min-width: 0;
@@ -5637,23 +5652,86 @@
         font-size: 11px;
         text-align: right;
     }
-    .notification-feed-action {
-        min-height: 32px;
+    .notification-feed-toggle {
+        width: 32px;
+        height: 32px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 5px;
-        padding: 7px 11px;
         border: 1px solid rgba(176,0,32,.17);
-        border-radius: 999px;
+        border-radius: 50%;
+        background: #ffffff;
         color: #8b0018;
+        cursor: pointer;
+        transition: color .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .notification-feed-toggle:hover,
+    .notification-feed-toggle:focus-visible {
+        border-color: #f1bd00;
+        background: #ffd21f;
+        color: #690014;
+        outline: none;
+    }
+    .notification-feed-toggle svg {
+        width: 14px;
+        height: 14px;
+        stroke-width: 2.2;
+        transition: transform .2s ease;
+    }
+    .notification-feed-item.is-expanded .notification-feed-toggle svg {
+        transform: rotate(180deg);
+    }
+    .notification-expanded-details {
+        min-width: 0;
+        grid-column: 2 / -1;
+        display: grid;
+        grid-template-rows: 0fr;
+        opacity: 0;
+        transition: grid-template-rows .22s ease, opacity .18s ease;
+    }
+    .notification-expanded-inner {
+        min-height: 0;
+        overflow: hidden;
+    }
+    .notification-feed-item.is-expanded .notification-expanded-details {
+        grid-template-rows: 1fr;
+        opacity: 1;
+    }
+    .notification-expanded-content {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(176,0,32,.12);
+    }
+    .notification-open-link {
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 13px;
+        border: 1px solid #8b0018;
+        border-radius: 6px;
+        background: #8b0018;
+        color: #ffffff;
         font-size: 12px;
         font-weight: 850;
+        text-decoration: none;
         white-space: nowrap;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
     }
-    .notification-feed-action svg {
-        width: 12px;
-        height: 12px;
+    .notification-open-link:hover,
+    .notification-open-link:focus-visible {
+        border-color: #f1bd00;
+        background: #ffd21f;
+        color: #690014;
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .notification-open-link svg {
+        width: 13px;
+        height: 13px;
         stroke-width: 2.2;
     }
     .notification-empty-state {
@@ -5826,6 +5904,201 @@
         opacity: .45;
         cursor: default;
     }
+    .notification-settings-modal {
+        width: min(520px, 100%);
+        border-top: 0;
+        border-bottom: 0;
+        overflow: hidden;
+    }
+    .notification-settings-modal .record-modal-head {
+        min-height: 106px;
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr);
+        align-items: center;
+        gap: 14px;
+        padding: 20px 70px 20px 22px;
+    }
+    .notification-settings-head-icon {
+        width: 48px;
+        height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255,255,255,.22);
+        border-radius: 8px;
+        background: rgba(255,255,255,.1);
+        color: #ffffff;
+    }
+    .notification-settings-head-icon svg { width: 25px; height: 25px; }
+    .notification-settings-modal .record-modal-title { font-size: 22px; }
+    .notification-settings-modal .record-modal-subtitle { font-size: 13px; line-height: 1.45; }
+    .notification-settings-modal .record-modal-close {
+        border-color: rgba(255,255,255,.18);
+        background: rgba(112,19,27,.45);
+        color: #ffffff;
+        transition: background .18s ease, color .08s linear, box-shadow .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .notification-settings-modal .record-modal-close:hover,
+    .notification-settings-modal .record-modal-close:focus-visible {
+        border-color: #ffd21f;
+        background: #ffd21f;
+        color: #70131b;
+        box-shadow: 0 0 0 3px rgba(255,210,31,.22), 0 14px 24px rgba(112,19,27,.16);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .notification-settings-body {
+        display: grid;
+        gap: 18px;
+        padding: 22px;
+    }
+    .notification-settings-options {
+        display: grid;
+        gap: 10px;
+    }
+    .notification-settings-option {
+        position: relative;
+        display: grid;
+        grid-template-columns: 20px 42px minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+        min-height: 82px;
+        padding: 13px;
+        border: 1px solid #dfe5ec;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #334155;
+        cursor: pointer;
+        text-transform: none;
+        transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+    .notification-settings-option input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .notification-settings-option:has(input:checked) {
+        border-color: #8b0018;
+        background: #fff8f9;
+        box-shadow: 0 0 0 3px rgba(139,0,24,.08);
+    }
+    .notification-settings-option.is-locked,
+    .notification-settings-option.is-locked:has(input:checked) {
+        border-color: #e2e8f0;
+        background: #f8fafc;
+        box-shadow: none;
+        color: #64748b;
+        cursor: default;
+    }
+    .notification-settings-option:has(input:focus-visible) {
+        outline: 3px solid rgba(250,204,21,.5);
+        outline-offset: 2px;
+    }
+    .notification-settings-check {
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1.5px solid #b8c3d1;
+        border-radius: 5px;
+        background: #ffffff;
+        color: transparent;
+        box-sizing: border-box;
+        transition: background .18s ease, border-color .18s ease, color .18s ease;
+    }
+    .notification-settings-check svg { width: 14px; height: 14px; stroke-width: 2.5; }
+    .notification-settings-option:has(input:checked) .notification-settings-check {
+        border-color: #8b0018;
+        background: #8b0018;
+        color: #ffffff;
+    }
+    .notification-settings-option.is-locked .notification-settings-check,
+    .notification-settings-option.is-locked:has(input:checked) .notification-settings-check {
+        border-color: #cbd5e1;
+        background: #e2e8f0;
+        color: #64748b;
+    }
+    .notification-settings-option-icon {
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: #fff0f2;
+        color: #a40021;
+    }
+    .notification-settings-option-icon svg { width: 21px; height: 21px; stroke-width: 1.8; }
+    .notification-settings-option.is-locked .notification-settings-option-icon {
+        background: #eef2f6;
+        color: #64748b;
+    }
+    .notification-settings-option-copy {
+        min-width: 0;
+        display: grid;
+        gap: 3px;
+    }
+    .notification-settings-option-copy strong {
+        color: #4f0c17;
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1.3;
+        text-transform: none;
+    }
+    .notification-settings-option-copy span {
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.45;
+        text-transform: none;
+    }
+    .notification-settings-option.is-locked .notification-settings-option-copy strong,
+    .notification-settings-option.is-locked .notification-settings-option-copy span {
+        color: #64748b;
+    }
+    .notification-settings-actions {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        padding-top: 16px;
+        border-top: 1px solid #e8edf2;
+    }
+    .notification-settings-actions button {
+        min-height: 42px;
+        padding: 10px 16px;
+        border-radius: 7px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 850;
+        cursor: pointer;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+    }
+    .notification-settings-cancel {
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #475569;
+    }
+    .notification-settings-save {
+        border: 1px solid #8b0018;
+        background: #8b0018;
+        color: #ffffff;
+    }
+    .notification-settings-cancel:hover,
+    .notification-settings-cancel:focus-visible {
+        border-color: #8b0018;
+        color: #8b0018;
+        outline: none;
+    }
+    .notification-settings-save:hover,
+    .notification-settings-save:focus-visible {
+        border-color: #facc15;
+        background: #ffd21f;
+        color: #690014;
+        outline: none;
+    }
+    .notification-settings-actions button:active { transform: translateY(1px); }
     html[data-theme="dark"] .notification-stat-card,
     html[data-theme="dark"] .notification-feed-card,
     html[data-theme="dark"] .notification-side-card {
@@ -5864,9 +6137,18 @@
         border-color: rgba(250,204,21,.2);
         background: linear-gradient(90deg, rgba(127,29,45,.32), #151e2d 38%);
     }
-    html[data-theme="dark"] .notification-feed-action {
+    html[data-theme="dark"] .notification-feed-toggle {
         border-color: rgba(250,204,21,.2);
+        background: #111827;
         color: #fde68a;
+    }
+    html[data-theme="dark"] .notification-feed-item.is-announcements,
+    html[data-theme="dark"] .notification-feed-item.is-announcements.is-unread {
+        border-color: rgba(96,165,250,.24);
+        background: linear-gradient(90deg, rgba(30,64,175,.18), #151e2d 45%);
+    }
+    html[data-theme="dark"] .notification-expanded-content {
+        border-color: rgba(250,204,21,.16);
     }
     html[data-theme="dark"] .notification-side-title { color: #facc15; }
     html[data-theme="dark"] .notification-last-read,
@@ -5874,6 +6156,49 @@
     html[data-theme="dark"] .notification-quick-actions button { border-color: rgba(255,255,255,.09); }
     html[data-theme="dark"] .notification-quick-actions a,
     html[data-theme="dark"] .notification-quick-actions button { color: #e5e7eb; }
+    html[data-theme="dark"] .notification-settings-body { background: #101722; }
+    html[data-theme="dark"] .notification-settings-option {
+        border-color: rgba(148,163,184,.22);
+        background: #151e2d;
+    }
+    html[data-theme="dark"] .notification-settings-option:has(input:checked) {
+        border-color: #facc15;
+        background: rgba(127,29,45,.3);
+        box-shadow: 0 0 0 3px rgba(250,204,21,.08);
+    }
+    html[data-theme="dark"] .notification-settings-option.is-locked,
+    html[data-theme="dark"] .notification-settings-option.is-locked:has(input:checked) {
+        border-color: rgba(148,163,184,.16);
+        background: rgba(15,23,42,.65);
+        box-shadow: none;
+    }
+    html[data-theme="dark"] .notification-settings-option-copy strong { color: #f8fafc; }
+    html[data-theme="dark"] .notification-settings-option-copy span { color: #aeb8c7; }
+    html[data-theme="dark"] .notification-settings-option-icon {
+        background: rgba(127,29,45,.36);
+        color: #fde68a;
+    }
+    html[data-theme="dark"] .notification-settings-check {
+        border-color: rgba(148,163,184,.55);
+        background: #101722;
+    }
+    html[data-theme="dark"] .notification-settings-option:has(input:checked) .notification-settings-check {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+    }
+    html[data-theme="dark"] .notification-settings-option.is-locked .notification-settings-check,
+    html[data-theme="dark"] .notification-settings-option.is-locked:has(input:checked) .notification-settings-check {
+        border-color: rgba(148,163,184,.38);
+        background: rgba(100,116,139,.22);
+        color: #94a3b8;
+    }
+    html[data-theme="dark"] .notification-settings-actions { border-color: rgba(255,255,255,.1); }
+    html[data-theme="dark"] .notification-settings-cancel {
+        border-color: rgba(148,163,184,.3);
+        background: #151e2d;
+        color: #e5e7eb;
+    }
     @media (max-width: 940px) {
         .notification-content-grid { grid-template-columns: minmax(0, 1fr) 260px; }
         .notification-feed-item { grid-template-columns: 46px minmax(0, 1fr) 126px; }
@@ -5908,8 +6233,29 @@
             justify-items: stretch;
         }
         .notification-feed-meta time { text-align: left; }
-        .notification-feed-action { min-height: 26px; padding: 5px 8px; }
+        .notification-feed-toggle { width: 30px; height: 30px; }
+        .notification-expanded-details { grid-column: 1 / -1; }
+        .notification-expanded-content {
+            grid-template-columns: 1fr;
+            align-items: start;
+            gap: 11px;
+        }
+        .notification-open-link { justify-self: start; }
         .notification-sidebar { grid-template-columns: 1fr; }
+        .notification-settings-modal .record-modal-head {
+            min-height: 94px;
+            grid-template-columns: 42px minmax(0, 1fr);
+            gap: 11px;
+            padding: 17px 60px 17px 17px;
+        }
+        .notification-settings-head-icon { width: 42px; height: 42px; }
+        .notification-settings-head-icon svg { width: 22px; height: 22px; }
+        .notification-settings-modal .record-modal-title { font-size: 19px; }
+        .notification-settings-modal .record-modal-subtitle { font-size: 12px; }
+        .notification-settings-body { padding: 17px; }
+        .notification-settings-option { min-height: 76px; padding: 11px; }
+        .notification-settings-option-copy strong { font-size: 13px; }
+        .notification-settings-option-copy span { font-size: 11px; }
     }
     @media (max-width: 430px) {
         .notification-stat-grid { grid-template-columns: 1fr; }
@@ -6639,9 +6985,11 @@
 
 @section('content')
 @php
+    $user?->loadMissing('adminHubProfile');
+    $linkedAdminHubProfile = $user?->adminHubProfile;
     $linkedAccessLevel = strtolower(trim((string) (
-        optional($linkedAdminProfile)->access_level
-        ?? optional($linkedAdminProfile)->admin_hub_role
+        optional($linkedAdminHubProfile)->role
+        ?? optional($linkedAdminProfile)->access_level
         ?? ''
     )));
     $linkedRoleLabel = in_array($linkedAccessLevel, ['clinic_staff', 'designee', 'admin_designee', 'superadmin', 'super_admin'], true)
@@ -6656,8 +7004,8 @@
         (string) ($user->user_role ?? ''),
         (string) ($user->user_type ?? ''),
         (string) ($user->idp_role ?? ''),
+        (string) optional($linkedAdminHubProfile)->role,
         (string) optional($linkedAdminProfile)->access_level,
-        (string) optional($linkedAdminProfile)->admin_hub_role,
         (string) optional($linkedAdminProfile)->role,
     ]))));
     $showsEmployeeActiveStatus = (bool) $usesEmployeeHealthForm;
@@ -8388,8 +8736,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <div class="notification-feed-list">
                     @forelse($notificationItems as $notif)
-                        <a
-                            href="{{ route('student.notifications.open', ['notificationId' => $notif['id']]) }}"
+                        @php
+                            $notificationMessage = trim(preg_replace(
+                                '/\s+/u',
+                                ' ',
+                                html_entity_decode(strip_tags((string) ($notif['message'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8')
+                            ) ?? '');
+                            if ($notificationMessage === '') {
+                                $notificationMessage = match ($notif['category'] ?? 'system') {
+                                    'appointments' => 'Open this update to review your latest appointment information.',
+                                    'health-records' => 'Open this update to review the latest activity in your health record.',
+                                    'announcements' => 'Open this announcement to read the complete clinic update.',
+                                    default => 'Open this notification to review the complete update.',
+                                };
+                            }
+                            $notificationDetailsId = 'notification-details-' . $loop->index;
+                        @endphp
+                        <article
                             class="notification-feed-item is-{{ $notif['category'] ?? 'system' }} {{ !empty($notif['is_unread']) ? 'is-unread' : '' }}"
                         >
                             <span class="notification-letter-icon" aria-hidden="true">{{ $notif['letter_icon'] ?? 'SY' }}</span>
@@ -8398,18 +8761,40 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <strong>{{ $notif['title'] ?? 'Clinic Update' }}</strong>
                                     <span class="notification-category-badge">{{ $notif['category_label'] ?? 'System' }}</span>
                                 </span>
-                                @if(empty($notif['announcement_id']))
-                                    <span class="notification-feed-message">{{ $notif['message'] ?? 'Notification available.' }}</span>
-                                @endif
+                                <span class="notification-feed-message">{{ $notificationMessage }}</span>
                             </span>
                             <span class="notification-feed-meta">
                                 <time>{{ $notif['time'] ?? 'Just now' }}</time>
-                                <span class="notification-feed-action">
-                                    {{ $notif['action_label'] ?? 'Open' }}
-                                    <x-outline-icon name="chevron-right" />
-                                </span>
+                                <button
+                                    type="button"
+                                    class="notification-feed-toggle"
+                                    aria-expanded="false"
+                                    aria-controls="{{ $notificationDetailsId }}"
+                                    aria-label="Show full message for {{ $notif['title'] ?? 'this notification' }}"
+                                    data-notification-toggle
+                                >
+                                    <x-outline-icon name="chevron-down" />
+                                </button>
                             </span>
-                        </a>
+                            <div
+                                class="notification-expanded-details"
+                                id="{{ $notificationDetailsId }}"
+                                aria-hidden="true"
+                                inert
+                            >
+                                <div class="notification-expanded-inner">
+                                    <div class="notification-expanded-content">
+                                        <a
+                                            href="{{ route('student.notifications.open', ['notificationId' => $notif['id']]) }}"
+                                            class="notification-open-link"
+                                        >
+                                            Open
+                                            <x-outline-icon name="chevron-right" />
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
                     @empty
                         <div class="notification-empty-state">
                             <span class="notification-empty-icon"><x-outline-icon name="bell" /></span>
@@ -8475,9 +8860,62 @@ document.addEventListener('DOMContentLoaded', function () {
                             <span>View all notifications</span>
                             <x-outline-icon name="chevron-right" />
                         </a>
+                        <button type="button" data-notification-settings-open>
+                            <x-outline-icon name="cog-6-tooth" />
+                            <span>Notification settings</span>
+                            <x-outline-icon name="chevron-right" />
+                        </button>
                     </div>
                 </section>
             </aside>
+        </div>
+    </div>
+
+    @php
+        $notificationEmailEnabled = $user->getAttribute('notification_email_enabled') !== false;
+        $notificationEmailChecked = old('notification_email_enabled', $notificationEmailEnabled ? '1' : '0') === '1';
+    @endphp
+    <div class="record-modal-overlay" id="notificationSettingsModal" aria-hidden="true">
+        <div class="record-modal notification-settings-modal" role="dialog" aria-modal="true" aria-labelledby="notificationSettingsTitle">
+            <div class="record-modal-head">
+                <span class="notification-settings-head-icon" aria-hidden="true">
+                    <x-outline-icon name="cog-6-tooth" />
+                </span>
+                <div>
+                    <h2 class="record-modal-title" id="notificationSettingsTitle">Notification Settings</h2>
+                    <p class="record-modal-subtitle">Choose how you receive future clinic updates.</p>
+                </div>
+                <button type="button" class="record-modal-close" aria-label="Close notification settings" onclick="closeNotificationSettingsModal()">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </div>
+            <form class="notification-settings-body" method="POST" action="{{ route('student.notifications.preferences') }}">
+                @csrf
+                <div class="notification-settings-options">
+                    <label class="notification-settings-option">
+                        <input type="checkbox" name="notification_email_enabled" value="1" {{ $notificationEmailChecked ? 'checked' : '' }}>
+                        <span class="notification-settings-check" aria-hidden="true"><x-outline-icon name="check" /></span>
+                        <span class="notification-settings-option-icon" aria-hidden="true"><x-outline-icon name="envelope" /></span>
+                        <span class="notification-settings-option-copy">
+                            <strong>Email</strong>
+                            <span>receive clinic updates by email.</span>
+                        </span>
+                    </label>
+                    <label class="notification-settings-option is-locked">
+                        <input type="checkbox" checked disabled aria-label="In-system notifications are enabled">
+                        <span class="notification-settings-check" aria-hidden="true"><x-outline-icon name="check" /></span>
+                        <span class="notification-settings-option-icon" aria-hidden="true"><x-outline-icon name="bell" /></span>
+                        <span class="notification-settings-option-copy">
+                            <strong>In-system</strong>
+                            <span>receive clinic updates in the student portal.</span>
+                        </span>
+                    </label>
+                </div>
+                <div class="notification-settings-actions">
+                    <button type="button" class="notification-settings-cancel" onclick="closeNotificationSettingsModal()">Cancel</button>
+                    <button type="submit" class="notification-settings-save">Save Preferences</button>
+                </div>
+            </form>
         </div>
     </div>
 @endif
@@ -8557,6 +8995,29 @@ function closeMissingDocumentModal() {
     document.body.style.overflow = '';
 }
 
+function openNotificationSettingsModal() {
+    const modal = document.getElementById('notificationSettingsModal');
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    modal.querySelector('input:checked, input')?.focus();
+}
+
+function closeNotificationSettingsModal() {
+    const modal = document.getElementById('notificationSettingsModal');
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+}
+
 function initializeHealthDeclarationPreview(root = document) {
     root.querySelectorAll('[data-health-declaration-input]').forEach(function (input) {
         if (input.dataset.previewBound === 'true') {
@@ -8623,6 +9084,30 @@ function enableEditing() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-notification-toggle]').forEach(function (toggle) {
+        const detailsId = toggle.getAttribute('aria-controls');
+        const details = detailsId ? document.getElementById(detailsId) : null;
+        const item = toggle.closest('.notification-feed-item');
+        if (!details || !item) {
+            return;
+        }
+
+        toggle.addEventListener('click', function () {
+            const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+            const nextExpanded = !isExpanded;
+
+            toggle.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false');
+            toggle.setAttribute(
+                'aria-label',
+                (nextExpanded ? 'Hide full message for ' : 'Show full message for ') +
+                    (item.querySelector('.notification-feed-heading strong')?.textContent?.trim() || 'this notification')
+            );
+            item.classList.toggle('is-expanded', nextExpanded);
+            details.setAttribute('aria-hidden', nextExpanded ? 'false' : 'true');
+            details.toggleAttribute('inert', !nextExpanded);
+        });
+    });
+
     const profileHeroCard = document.getElementById('profileHeroCard');
     const profilePhotoToggle = document.getElementById('profilePhotoToggle');
     const profileDashboard = profileHeroCard?.closest('.profile-dashboard');
@@ -8630,6 +9115,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalCard = modal?.querySelector('.record-modal');
     const missingDocumentModal = document.getElementById('missingDocumentModal');
     const missingESignModal = document.getElementById('missingESignModal');
+    const notificationSettingsModal = document.getElementById('notificationSettingsModal');
     const missingESignCanvas = document.getElementById('missingESignPad');
     const missingESignData = document.getElementById('missingESignData');
     const missingESignStatus = document.getElementById('missingESignStatus');
@@ -8663,6 +9149,9 @@ document.addEventListener('DOMContentLoaded', function () {
             openMissingDocumentModal(missingDocumentButton);
         }
     }
+    document.querySelectorAll('[data-notification-settings-open]').forEach(function (button) {
+        button.addEventListener('click', openNotificationSettingsModal);
+    });
 
     modal?.addEventListener('click', function (event) {
         if (event.target === modal) {
@@ -8677,6 +9166,11 @@ document.addEventListener('DOMContentLoaded', function () {
     missingDocumentModal?.addEventListener('click', function (event) {
         if (event.target === missingDocumentModal) {
             closeMissingDocumentModal();
+        }
+    });
+    notificationSettingsModal?.addEventListener('click', function (event) {
+        if (event.target === notificationSettingsModal) {
+            closeNotificationSettingsModal();
         }
     });
     document.querySelectorAll('[data-missing-document-open]').forEach(function (button) {
@@ -8784,6 +9278,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (missingDocumentModal?.classList.contains('is-open')) {
             return closeMissingDocumentModal();
+        }
+        if (notificationSettingsModal?.classList.contains('is-open')) {
+            return closeNotificationSettingsModal();
         }
     });
 

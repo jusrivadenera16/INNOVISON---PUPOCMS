@@ -1271,10 +1271,10 @@
                         <input type="hidden" name="first_name" id="detailFirstName" value="">
                         <input type="hidden" name="last_name" id="detailLastName" value="">
                         <input type="hidden" name="full_name" id="detailFullName" value="">
-                        <input type="hidden" name="external_identifier" id="detailExternalIdentifier" value="">
+                        <input type="hidden" name="admin_uuid" id="detailAdminUuid" value="">
                         @include('admin.user_management.account-access-section')
                         <div class="um-note" id="externalNote" style="display:none; margin-top: 6px;">
-                            This faculty profile comes from the external source. Saving here will add a clinic-side user and admin hub record without changing the source system.
+                            This profile comes from an external source. Saving here adds it to the Admin Hub and links an existing clinic account when available without changing the source system.
                         </div>
                         <div class="um-actions">
                             <button type="button" class="um-settings-action um-action-neutral" id="deactivateBtn">Deactivate Account</button>
@@ -1352,7 +1352,7 @@
     const detailFirstName = document.getElementById('detailFirstName');
     const detailLastName = document.getElementById('detailLastName');
     const detailFullName = document.getElementById('detailFullName');
-    const detailExternalIdentifier = document.getElementById('detailExternalIdentifier');
+    const detailAdminUuid = document.getElementById('detailAdminUuid');
     const adminEmailWrap = document.getElementById('adminEmailWrap');
     const detailAdminEmail = document.getElementById('detailAdminEmail');
     const detailOffice = document.getElementById('detailOffice');
@@ -1465,7 +1465,7 @@
 
         detailName.value = row.dataset.name || '';
         detailEmail.value = row.dataset.email || '';
-        detailIdentifier.value = displayValue(meta.external_identifier || meta.faculty_identifier || row.dataset.studentId || row.dataset.id);
+        detailIdentifier.value = displayValue(meta.faculty_identifier || row.dataset.studentId);
         if (detailIdentifierLabel) {
             detailIdentifierLabel.textContent = 'ID Number';
         }
@@ -1527,12 +1527,12 @@
         if (detailFullName) {
             detailFullName.value = row.dataset.name || '';
         }
-        if (detailExternalIdentifier) {
-            detailExternalIdentifier.value = row.dataset.studentId || row.dataset.id || '';
+        if (detailAdminUuid) {
+            detailAdminUuid.value = meta.admin_uuid || '';
         }
         if (detailAdminProfileStatus) {
             detailAdminProfileStatus.textContent = adminProfileId
-                ? `Linked to admin hub record #${adminProfileId}${meta.admin_profile_name ? ` | ${meta.admin_profile_name}` : ''}`
+                ? `Linked to Admin Hub${meta.admin_profile_name ? ` | ${meta.admin_profile_name}` : ''}`
                 : (managementView === 'admin-hub'
                     ? 'No linked admin hub record yet. Saving here will create the selected Admin Hub role.'
                     : 'No linked admin hub record yet. One will be created when you save an admin-side role.');
@@ -1556,7 +1556,7 @@
             if (field.id === 'deactivateBtn') {
                 return;
             }
-            if (field.id === 'settingsMethod' || field.id === 'detailLookupSource' || field.id === 'detailFirstName' || field.id === 'detailLastName' || field.id === 'detailFullName' || field.id === 'detailExternalIdentifier') {
+            if (field.id === 'settingsMethod' || field.id === 'detailLookupSource' || field.id === 'detailFirstName' || field.id === 'detailLastName' || field.id === 'detailFullName' || field.id === 'detailAdminUuid') {
                 field.disabled = false;
                 return;
             }

@@ -8171,6 +8171,14 @@
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
     $isStudentAssistant = optional(auth()->user())->isStudentAssistant();
     $basePrefix = $role === \App\Models\User::ROLE_ADMIN ? '/assistant' : '/admin';
+    $canViewWalkin = optional(auth()->user())->canAccessPermission('walkin.view') ?? false;
+    $canScanId = optional(auth()->user())->canAccessPermission('walkin.scan_id') ?? false;
+    $canRegisterPatient = optional(auth()->user())->canAccessPermission('walkin.register_patient') ?? false;
+    $canEncodeAssessment = optional(auth()->user())->canAccessPermission('walkin.encode_assessment') ?? false;
+    $canReviewFinalSubmission = optional(auth()->user())->canAccessPermission('walkin.review_submission') ?? false;
+    $canViewEmployeeRecords = optional(auth()->user())->canAccessPermission('walkin.employee_view') ?? false;
+    $canLookupEmployeeRecords = optional(auth()->user())->canAccessPermission('walkin.employee_lookup') ?? false;
+    $canApproveFinalReview = optional(auth()->user())->canAccessPermission('walkin.final_review') ?? false;
     $currentMode = in_array($mode ?? '', ['scan', 'assisted', 'registration', 'applicant'], true) ? $mode : '';
     $idpBaseUrl = rtrim((string) config('services.idp.base_url', ''), '/');
     $idpClientId = trim((string) config('services.idp.client_id', ''));
@@ -8191,6 +8199,7 @@
         </div>
 
         <div class="intake-options-grid">
+            @if($canScanId)
             <a href="#" class="intake-option-link" id="openScanLookupModal">
                 <div class="intake-option-card intake-option-scan {{ $currentMode === 'scan' ? 'is-active' : '' }}">
                     <span class="intake-option-chip" aria-hidden="true">
@@ -8203,11 +8212,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5A1.5 1.5 0 0 1 4.5 6h15A1.5 1.5 0 0 1 21 7.5v9A1.5 1.5 0 0 1 19.5 18h-15A1.5 1.5 0 0 1 3 16.5v-9Zm3 3h12m-12 3h7.5" />
                         </svg>
                     </span>
-                    <h3 class="intake-option-title">Walk-in Patient</h3>
-                    <p class="intake-option-copy">Look up an existing patient record using ID scanning or manual entry to continue directly to consultation.</p>
+                    <h3 class="intake-option-title">OCR / Scan ID</h3>
+                    <p class="intake-option-copy">Scan or manually enter an ID to open an existing patient record for consultation.</p>
                 </div>
             </a>
+            @endif
 
+            @if($canRegisterPatient)
             <a href="{{ url()->current() }}?mode=assisted" class="intake-option-link">
                 <div class="intake-option-card intake-option-assisted {{ $currentMode === 'assisted' ? 'is-active' : '' }}">
                     <span class="intake-option-chip" aria-hidden="true">
@@ -8224,8 +8235,9 @@
                     <p class="intake-option-copy">Let clinic staff capture the patient record on their behalf when illness or urgency makes self-registration impractical.</p>
                 </div>
             </a>
+            @endif
 
-            @unless($isStudentAssistant)
+            @if($canEncodeAssessment || $canReviewFinalSubmission)
                 {{-- Applicants card — opens the reference number modal --}}
                 <a href="#" class="intake-option-link" id="openApplicantRefModal">
                     <div class="intake-option-card intake-option-applicant {{ $currentMode === 'applicant' ? 'is-active' : '' }}">
@@ -8243,8 +8255,9 @@
                         <p class="intake-option-copy">Enter a reference number to look up the applicant record.</p>
                     </div>
                 </a>
-            @endunless
+            @endif
 
+            @if($canViewEmployeeRecords && $canLookupEmployeeRecords)
             <a href="#" class="intake-option-link" id="openClinicRefModal">
                 <div class="intake-option-card intake-option-applicant">
                     <span class="intake-option-chip" aria-hidden="true">
@@ -8257,10 +8270,11 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" />
                         </svg>
                     </span>
-                    <h3 class="intake-option-title">Employee's / Student</h3>
-                    <p class="intake-option-copy">Enter Employee's / Student ID to lookup clinic records to manage clinic profiles.</p>
+                    <h3 class="intake-option-title">Employees Module</h3>
+                    <p class="intake-option-copy">Enter an employee or student ID to view the permitted clinic record.</p>
                 </div>
             </a>
+            @endif
 
         </div>
     </div>
@@ -8292,18 +8306,22 @@
                     <div class="applicant-ref-copy">
                         <p class="applicant-ref-kicker">Proceed</p>
                         <h4 id="lookupModalEntryTitle">Applicant Workflow</h4>
-                        <p id="lookupModalEntrySubtitle">Choose encoding for the first station or final review for approval.</p>
+                        <p id="lookupModalEntrySubtitle">Choose encoding or review encoded applicants waiting for Super Admin approval.</p>
                     </div>
 
                     <div class="applicant-workflow-grid" id="applicantWorkflowChoices">
+                        @if($canEncodeAssessment)
                         <button type="button" class="applicant-workflow-card" id="btnStartApplicantEncoding">
                             <x-outline-icon name="clipboard-document-list" />
                             <strong>Encode Assessment</strong>
                         </button>
+                        @endif
+                        @if($canReviewFinalSubmission)
                         <button type="button" class="applicant-workflow-card" id="btnStartApplicantFinalReview">
                             <x-outline-icon name="document-text" />
                             <strong>Final Review</strong>
                         </button>
+                        @endif
                     </div>
 
                     <button type="button" id="btnShowApplicantRefInput" class="applicant-ref-toggle-btn" style="max-width:360px; display:none;">
@@ -10784,6 +10802,7 @@
         let finalReviewPage = 1;
         let currentLookupRedirect = '';
         let currentAssessmentReview = {};
+        const canApproveFinalReview = @json($canApproveFinalReview);
         const getStudentUrl   = '{{ url($basePrefix . '/walkin/get-student') }}';
         const finalReviewApplicantsUrl = '{{ url($basePrefix . '/walkin/final-review-applicants') }}';
         const finalReviewTimeInUrl = '{{ url($basePrefix . '/walkin/final-review/time-in') }}';
@@ -12812,17 +12831,19 @@
                         const lookupRow = document.querySelector('.applicant-ref-lookup-row');
                         if (lookupRow) lookupRow.style.display = 'none';
 
-                        // Change button mode based on the selected applicant workflow.
-                        isApprovalMode = !isEncodeWorkflow();
+                        // Final approval is reserved for Super Admin, even when staff can review the record.
+                        const requiresFinalApproval = isFinalReviewWorkflow() || isClinicLookupMode();
+                        const canSubmitDecision = !requiresFinalApproval || canApproveFinalReview;
+                        isApprovalMode = !isEncodeWorkflow() && canSubmitDecision;
                         if (findBtn) {
                             findBtn.textContent = alreadyEncodedForReview
                                 ? 'Already Encoded'
                                 : (isEncodeWorkflow()
                                 ? 'Save Assessment'
-                                : (isFinalReviewWorkflow() ? 'Approve' : (hasSavedReview ? 'Edit Review' : 'Approve')));
-                            findBtn.disabled = alreadyEncodedForReview;
-                            findBtn.style.opacity = alreadyEncodedForReview ? '0.72' : '1';
-                            findBtn.style.cursor = alreadyEncodedForReview ? 'not-allowed' : 'pointer';
+                                : (!canSubmitDecision ? 'View Only' : (isFinalReviewWorkflow() ? 'Approve' : (hasSavedReview ? 'Edit Review' : 'Approve'))));
+                            findBtn.disabled = alreadyEncodedForReview || !canSubmitDecision;
+                            findBtn.style.opacity = (alreadyEncodedForReview || !canSubmitDecision) ? '0.72' : '1';
+                            findBtn.style.cursor = (alreadyEncodedForReview || !canSubmitDecision) ? 'not-allowed' : 'pointer';
                             findBtn.removeEventListener('click', doLookup);
                             findBtn.removeEventListener('click', doApprove);
                             findBtn.removeEventListener('click', saveApplicantEncoding);
@@ -12832,13 +12853,15 @@
                                 // Encoded applicants must proceed through Final Review so the webhook approval flow stays separate.
                             } else if (isEncodeWorkflow()) {
                                 findBtn.addEventListener('click', saveApplicantEncoding);
-                            } else if (isFinalReviewWorkflow()) {
+                            } else if (isFinalReviewWorkflow() && canSubmitDecision) {
                                 findBtn.addEventListener('click', doApprove);
-                            } else {
+                            } else if (!isFinalReviewWorkflow() && !isClinicLookupMode()) {
                                 findBtn.addEventListener('click', hasSavedReview ? enterSavedReviewEditMode : doApprove);
+                            } else if (isClinicLookupMode() && canSubmitDecision) {
+                                findBtn.addEventListener('click', doApprove);
                             }
                         }
-                        setReviewDraftButtonVisible(isClinicLookupMode() || isFinalReviewWorkflow());
+                        setReviewDraftButtonVisible(canApproveFinalReview && (isClinicLookupMode() || isFinalReviewWorkflow()));
                         if (!hasSavedReview) syncFindingsReviewFields();
                     }
                 } else {
@@ -13580,7 +13603,7 @@
         const finalReviewPhysicalPanel = document.querySelector('#applicantRefModal .applicant-medical-condition-section > section:not(.applicant-review-panel)');
         if (finalReviewPhysicalPanel) {
             finalReviewPhysicalPanel.addEventListener('dblclick', function () {
-                if (!isFinalReviewWorkflow()) return;
+                if (!isFinalReviewWorkflow() || !canApproveFinalReview) return;
                 setFinalReviewPhysicalReadonly(false);
                 setStatus('info', 'Physical assessment fields are now editable.');
             });
@@ -13662,7 +13685,7 @@
         }
 
         function markFinalReviewTimeIn(referenceNumber) {
-            if (!referenceNumber || !finalReviewTimeInUrl) {
+            if (!canApproveFinalReview || !referenceNumber || !finalReviewTimeInUrl) {
                 return Promise.resolve();
             }
 

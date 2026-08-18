@@ -4490,6 +4490,10 @@
     @php
         $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
         $basePrefix = $role === \App\Models\User::ROLE_ADMIN ? '/assistant' : '/admin';
+        $canApproveAppointments = optional(auth()->user())->canAccessPermission('appointments.approve') ?? false;
+        $canRejectAppointments = optional(auth()->user())->canAccessPermission('appointments.reject') ?? false;
+        $canRescheduleAppointments = optional(auth()->user())->canAccessPermission('appointments.reschedule') ?? false;
+        $canOpenConsultation = optional(auth()->user())->canAccessPermission('walkin.view') ?? false;
         $highlightAppointmentId = trim((string) request()->query('highlight_appointment', ''));
         $appointmentCollection = $appointments instanceof \Illuminate\Contracts\Pagination\Paginator
             ? collect($appointments->items())
@@ -4772,7 +4776,7 @@
                                         <x-outline-icon name="clipboard-document-list" />
                                         Consult
                                     </span>
-                                @else
+                                @elseif($canOpenConsultation)
                                     <a href="{{ url($basePrefix . '/walkin/form/' . $appt->student_id) }}?source=online" class="appointment-inline-pill is-consult" title="Open consult form">
                                         <x-outline-icon name="clipboard-document-list" />
                                         Consult
@@ -4822,18 +4826,24 @@
                                         </button>
 
                                         @if($appt->status == 'Pending')
+                                            @if($canApproveAppointments)
                                             <a href="{{ url($basePrefix . '/appointments/' . $appt->id . '/Approved') }}" class="appointment-action-menu-item is-approve btn-approve" title="Approve" data-id="{{ $appt->id }}" data-name="{{ $appt->name }}" data-service="{{ $appt->service }}" data-date="{{ $appt->date }}" data-time="{{ $appt->time }}" data-status-target="Approved">
                                                 <x-outline-icon name="check" />
                                                 Approve
                                             </a>
+                                            @endif
+                                            @if($canRescheduleAppointments)
                                             <button type="button" class="appointment-action-menu-item is-reschedule btn-reschedule" title="Reschedule" data-id="{{ $appt->id }}" data-date="{{ $appt->date }}" data-time="{{ $appt->time }}" data-name="{{ $appt->name }}" data-service="{{ $appt->service }}">
                                                 <x-outline-icon name="calendar-days" />
                                                 Reschedule
                                             </button>
+                                            @endif
+                                            @if($canRejectAppointments)
                                             <a href="{{ url($basePrefix . '/appointments/' . $appt->id . '/Cancelled') }}" class="appointment-action-menu-item is-reject btn-reject btn-cancel" title="Reject" data-id="{{ $appt->id }}" data-name="{{ $appt->name }}" data-service="{{ $appt->service }}" data-date="{{ $appt->date }}" data-time="{{ $appt->time }}" data-status-target="Cancelled">
                                                 <x-outline-icon name="x-mark" />
                                                 Reject
                                             </a>
+                                            @endif
                                         @endif
                                     </div>
                                 </div>
@@ -5096,22 +5106,30 @@
             </div>
             <div class="appointment-detail-actions" id="appointmentDetailActions" hidden>
                 <button type="button" class="dialog-btn dialog-btn-secondary" onclick="closeInfoModal()"><span>Cancel</span></button>
+                @if($canRejectAppointments)
                 <a id="mRejectAction" href="#" class="dialog-btn dialog-btn-reject btn-reject btn-cancel" data-status-target="Cancelled">
                     <x-outline-icon name="x-mark" />
                     <span>Reject</span>
                 </a>
+                @endif
+                @if($canRescheduleAppointments)
                 <button id="mRescheduleAction" type="button" class="dialog-btn dialog-btn-warning btn-reschedule">
                     <x-outline-icon name="calendar-days" />
                     <span>Reschedule</span>
                 </button>
+                @endif
+                @if($canApproveAppointments)
                 <a id="mApproveAction" href="#" class="dialog-btn dialog-btn-approve btn-approve" data-status-target="Approved">
                     <x-outline-icon name="check" />
                     <span>Approve</span>
                 </a>
+                @endif
+                @if($canOpenConsultation)
                 <a id="mConsultAction" href="#" class="dialog-btn dialog-btn-approve appointment-detail-consult" hidden>
                     <x-outline-icon name="clipboard-document-list" />
                     <span>Start Consultation</span>
                 </a>
+                @endif
             </div>
         </div>
     </div>

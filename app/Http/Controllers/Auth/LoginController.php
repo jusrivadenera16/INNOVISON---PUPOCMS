@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Models\AdminHub;
 use App\Models\ActivityLog;
 use App\Models\HealthFormSubmission;
 use App\Models\User;
@@ -243,13 +244,26 @@ class LoginController extends Controller
         return $linkedAdmin;
     }
 
-    private function ensureDefaultAdminHubProfile(User $user, string $role): void
+    private function ensureDefaultClinicAdminProfile(User $user, string $role): void
     {
         if (!Schema::hasTable('admins') || User::normalizeRole($role) !== User::ROLE_ADMIN) {
             return;
         }
 
         $linkedAdmin = $this->findLinkedAdminProfile($user);
+        $linkedAdminHub = $this->findLinkedAdminHubProfile($user);
+        $adminHubRole = strtolower(trim((string) ($linkedAdminHub?->role ?? '')));
+        $adminHubStatus = strtolower(trim((string) ($linkedAdminHub?->status ?? 'active')));
+        $clinicAccessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
+
+        if (
+            $linkedAdminHub
+            && $adminHubStatus !== 'inactive'
+            && in_array($adminHubRole, ['designee', 'admin_designee'], true)
+            && !in_array($clinicAccessLevel, ['clinic_staff', 'clinic staff', 'staff', 'superadmin'], true)
+        ) {
+            return;
+        }
 
         if (!$linkedAdmin) {
             $linkedAdmin = new Admin();
@@ -305,30 +319,42 @@ class LoginController extends Controller
 
         $linkedAdmin = $this->findLinkedAdminProfile($user);
         $accessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
+        $linkedAdminHub = $this->findLinkedAdminHubProfile($user);
+        $adminHubRole = strtolower(trim((string) ($linkedAdminHub?->role ?? '')));
+        $adminHubStatus = strtolower(trim((string) ($linkedAdminHub?->status ?? 'active')));
         if (in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff', 'superadmin'], true)) {
             return false;
         }
 
-        if ($accessLevel === 'designee') {
-            return !Admin::hasColumn('admin_hub_enabled')
-                || (bool) ($linkedAdmin?->admin_hub_enabled ?? false);
+        if ($linkedAdminHub && in_array($adminHubRole, ['designee', 'admin_designee'], true)) {
+            return $adminHubStatus !== 'inactive';
         }
 
-        $adminHubEnabled = !Admin::hasColumn('admin_hub_enabled')
-            || (bool) ($linkedAdmin?->admin_hub_enabled ?? false);
-        $adminHubRole = strtolower(trim((string) ($linkedAdmin?->admin_hub_role ?? '')));
-
-        return $adminHubEnabled && in_array($adminHubRole, ['designee', 'admin_designee'], true);
+        return false;
     }
 
-    private function resolveLocalRoleFromAdminHub(string $email): ?string
+    private function resolveLocalRoleFromAdminHub(string $email, string $adminUuid = ''): ?string
     {
-        if (!Schema::hasTable('admins')) {
+        $email = trim(strtolower($email));
+        $adminUuid = trim($adminUuid);
+        if ($email === '' && $adminUuid === '') {
             return null;
         }
 
-        $email = trim(strtolower($email));
-        if ($email === '') {
+        $linkedAdminHub = $this->findAdminHubProfileByIdentity($email, $adminUuid);
+        if ($linkedAdminHub) {
+            $hubStatus = strtolower(trim((string) ($linkedAdminHub->status ?? 'active')));
+            if ($hubStatus === 'inactive') {
+                return null;
+            }
+
+            $hubRole = strtolower(trim((string) ($linkedAdminHub->role ?? '')));
+            if (in_array($hubRole, ['designee', 'admin_designee'], true)) {
+                return $this->adminRoleValue();
+            }
+        }
+
+        if (!Schema::hasTable('admins')) {
             return null;
         }
 
@@ -350,7 +376,6 @@ class LoginController extends Controller
 
         $hubRole = strtolower(trim((string) (
             $linkedAdmin->access_level
-            ?? $linkedAdmin->admin_hub_role
             ?? $linkedAdmin->role
             ?? $linkedAdmin->user_role
             ?? ''
@@ -360,11 +385,96 @@ class LoginController extends Controller
             return $this->superAdminRoleValue();
         }
 
-        if (in_array($hubRole, ['clinic_staff', 'clinic staff', 'staff', 'designee', 'admin_designee'], true)) {
+        if (in_array($hubRole, ['clinic_staff', 'clinic staff', 'staff'], true)) {
             return $this->adminRoleValue();
         }
 
         return null;
+    }
+
+    private function findLinkedAdminHubProfile(User $user): ?AdminHub
+    {
+        if (!Schema::hasTable('admin_hub')) {
+            return null;
+        }
+
+        if (AdminHub::hasColumn('user_id')) {
+            $linkedByUserId = AdminHub::query()
+                ->where('user_id', $user->id)
+                ->first();
+
+            if ($linkedByUserId) {
+                return $linkedByUserId;
+            }
+        }
+
+        return $this->findAdminHubProfileByIdentity(
+            (string) ($user->email ?? ''),
+            (string) ($user->student_id ?? '')
+        );
+    }
+
+    private function findAdminHubProfileByIdentity(string $email, string $adminUuid = ''): ?AdminHub
+    {
+        if (!Schema::hasTable('admin_hub')) {
+            return null;
+        }
+
+        $adminUuid = trim($adminUuid);
+        if ($adminUuid !== '' && AdminHub::hasColumn('admin_uuid')) {
+            $matchedByUuid = AdminHub::query()->where('admin_uuid', $adminUuid)->first();
+            if ($matchedByUuid) {
+                return $matchedByUuid;
+            }
+        }
+
+        $email = trim(strtolower($email));
+        if ($email === '' || !AdminHub::hasColumn('email')) {
+            return null;
+        }
+
+        $matchedByEmail = AdminHub::query()->whereRaw('LOWER(email) = ?', [$email])->first();
+        if (!$matchedByEmail || $adminUuid === '' || !AdminHub::hasColumn('admin_uuid')) {
+            return $matchedByEmail;
+        }
+
+        $storedUuid = trim((string) ($matchedByEmail->admin_uuid ?? ''));
+
+        return $storedUuid === '' || hash_equals($storedUuid, $adminUuid)
+            ? $matchedByEmail
+            : null;
+    }
+
+    private function syncAdminHubProfileFromIdp(User $user, string $adminUuid): ?AdminHub
+    {
+        $adminUuid = trim($adminUuid);
+        $adminHub = $this->findAdminHubProfileByIdentity((string) ($user->email ?? ''), $adminUuid);
+        if (!$adminHub) {
+            return null;
+        }
+
+        if (AdminHub::hasColumn('admin_uuid') && trim((string) ($adminHub->admin_uuid ?? '')) === '' && $adminUuid !== '') {
+            $adminHub->admin_uuid = $adminUuid;
+        }
+        if (AdminHub::hasColumn('user_id')) {
+            $adminHub->user_id = $user->id;
+        }
+        if (AdminHub::hasColumn('first_name') && trim((string) ($user->first_name ?? '')) !== '') {
+            $adminHub->first_name = $user->first_name;
+        }
+        if (AdminHub::hasColumn('middle_name')) {
+            $adminHub->middle_name = trim((string) ($user->middle_name ?? '')) ?: null;
+        }
+        if (AdminHub::hasColumn('last_name') && trim((string) ($user->last_name ?? '')) !== '') {
+            $adminHub->last_name = $user->last_name;
+        }
+        if (AdminHub::hasColumn('email') && trim((string) ($user->email ?? '')) !== '') {
+            $adminHub->email = strtolower(trim((string) $user->email));
+        }
+
+        $adminHub->save();
+
+        return $adminHub;
     }
 
     private function resolveForcedLocalRole(string $email): ?string
@@ -1236,6 +1346,19 @@ class LoginController extends Controller
             'data.user.sub',
             'data.user.id',
         ]) ?? '';
+        $idpSubjectSeed = $this->firstNonEmptyScalar($profile, [
+            'idp_user_id',
+            'sub',
+            'id',
+            'user.idp_user_id',
+            'user.sub',
+            'user.id',
+            'data.idp_user_id',
+            'data.sub',
+            'data.user.idp_user_id',
+            'data.user.sub',
+            'data.user.id',
+        ]) ?? '';
         $firstName = $this->firstNonEmptyScalar($profile, [
             'first_name',
             'firstname',
@@ -1302,7 +1425,7 @@ class LoginController extends Controller
             $role = $forcedRole;
         }
 
-        $adminHubRole = $this->resolveLocalRoleFromAdminHub($emailSeed);
+        $adminHubRole = $this->resolveLocalRoleFromAdminHub($emailSeed, $idpSubjectSeed);
         if ($forcedRole === null && $adminHubRole !== null) {
             $role = $adminHubRole;
         }
@@ -1391,7 +1514,8 @@ class LoginController extends Controller
             }
 
             $existingUser->save();
-            $this->ensureDefaultAdminHubProfile($existingUser, $role);
+            $this->syncAdminHubProfileFromIdp($existingUser, $idpSubjectSeed);
+            $this->ensureDefaultClinicAdminProfile($existingUser, $role);
             return $existingUser;
         }
 
@@ -1426,7 +1550,8 @@ class LoginController extends Controller
             $user->save();
         }
 
-        $this->ensureDefaultAdminHubProfile($user, $role);
+        $this->syncAdminHubProfileFromIdp($user, $idpSubjectSeed);
+        $this->ensureDefaultClinicAdminProfile($user, $role);
 
         return $user;
     }
