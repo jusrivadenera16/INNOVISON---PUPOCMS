@@ -69,6 +69,8 @@ class User extends Authenticatable
     'api_pin_disabled',
     'is_health_profile_completed',
     'notification_read_map',
+    'notification_email_enabled',
+    'notification_system_enabled',
     'module_permissions',
 
 ];
@@ -94,6 +96,8 @@ class User extends Authenticatable
         'api_pin_emergency_credentials_enabled' => 'boolean',
         'api_pin_disabled' => 'boolean',
         'notification_read_map' => 'array',
+        'notification_email_enabled' => 'boolean',
+        'notification_system_enabled' => 'boolean',
         'module_permissions' => 'array',
     ];
 
@@ -171,6 +175,11 @@ class User extends Authenticatable
     public function adminProfile()
     {
         return $this->hasOne(Admin::class, 'user_id', 'id');
+    }
+
+    public function adminHubProfile()
+    {
+        return $this->hasOne(AdminHub::class, 'user_id', 'id');
     }
 
     /**

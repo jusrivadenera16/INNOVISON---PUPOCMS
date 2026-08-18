@@ -15,10 +15,13 @@ class EnsureModulePermission
             $permission = $status === 'approved' ? 'appointments.approve' : 'appointments.reject';
         }
 
-        if (!app(ModulePermissionService::class)->can($request->user(), $permission)) {
-            abort(403, 'You do not have access to this area.');
+        $permissions = array_filter(explode('|', $permission));
+        foreach ($permissions as $candidate) {
+            if (app(ModulePermissionService::class)->can($request->user(), $candidate)) {
+                return $next($request);
+            }
         }
 
-        return $next($request);
+        abort(403, 'You do not have access to this area.');
     }
 }

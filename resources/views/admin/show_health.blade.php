@@ -1639,9 +1639,12 @@
         default => 'profile-status-pending',
     };
     $canResyncPuptas = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
-        && !in_array($puptasSyncRaw, ['synced', 'not_applicable'], true);
-    $canRequestFileCorrection = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true);
-    $canReturnToPending = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true);
+        && !in_array($puptasSyncRaw, ['synced', 'not_applicable'], true)
+        && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
+    $canRequestFileCorrection = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
+        && (optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false);
+    $canReturnToPending = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
+        && (optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false);
     $hasCorrectionRequest = !empty($profile->resubmission_required_documents) || !empty($profile->resubmission_requested_at);
     $correctionStatusLabel = !$hasCorrectionRequest
         ? 'None'

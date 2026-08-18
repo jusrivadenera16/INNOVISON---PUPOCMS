@@ -13,7 +13,7 @@ class AddModulePermissionsToUsersTable extends Migration
         }
 
         Schema::table('users', function (Blueprint $table) {
-            $table->json('module_permissions')->nullable()->after('notification_read_map');
+            $table->json('module_permissions')->nullable();
         });
     }
 

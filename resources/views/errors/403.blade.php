@@ -14,11 +14,16 @@
     </style>
 </head>
 <body>
+    @php
+        $backUrl = optional(auth()->user())->isStudentAssistant()
+            ? url('/assistant/dashboard')
+            : url('/admin/dashboard');
+    @endphp
     <main>
         <div class="mark">!</div>
         <h1>Access Restricted</h1>
         <p>You do not have permission to open this area.</p>
-        <a href="{{ url('/admin/dashboard') }}">Return to Dashboard</a>
+        <a href="{{ $backUrl }}">Return to Dashboard</a>
     </main>
 </body>
 </html>

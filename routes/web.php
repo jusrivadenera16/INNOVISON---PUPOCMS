@@ -14,7 +14,6 @@ use App\Http\Controllers\MedicineTypeController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\StudentAssistantController;
 use App\Http\Controllers\WalkInController;
-use App\Models\Admin;
 use App\Models\Announcement;
 use App\Models\SystemSetting;
 use App\Models\User;
@@ -41,32 +40,6 @@ if (!function_exists('resolveWorkspaceRedirectForUser')) {
         }
 
         if ($normalizedRole === User::ROLE_ADMIN) {
-            $linkedAdmin = null;
-            $email = trim((string) ($user->email ?? ''));
-
-            if ($email !== '' && \Illuminate\Support\Facades\Schema::hasTable('admins')) {
-                $linkedAdmin = Admin::query()
-                    ->where(function ($query) use ($email) {
-                        if (Admin::hasColumn('email')) {
-                            $query->orWhere('email', $email);
-                        }
-                        if (Admin::hasColumn('email_address')) {
-                            $query->orWhere('email_address', $email);
-                        }
-                    })
-                    ->first();
-            }
-
-            $linkedRole = strtolower(trim((string) (
-                $linkedAdmin?->access_level
-                ?? $linkedAdmin?->admin_hub_role
-                ?? ''
-            )));
-
-            if (in_array($linkedRole, ['designee', 'admin_designee'], true)) {
-                return '/student/home';
-            }
-
             return '/student/home';
         }
 
@@ -116,8 +89,31 @@ Route::post('/login-action', [LoginController::class, 'login']);
 Route::post('/post-login-terms/acknowledge', [LoginController::class, 'acknowledgePostLoginTerms'])->name('post-login-terms.acknowledge');
 Route::get('/system-admin/emergency-login', [EmergencyAuthController::class, 'showLoginForm'])->name('system-admin.emergency-login');
 Route::post('/system-admin/emergency-login', [EmergencyAuthController::class, 'login'])
-    ->middleware('throttle:10,1')
     ->name('system-admin.emergency-login.submit');
+Route::get('/system-admin/emergency-login/enroll', [EmergencyAuthController::class, 'showEnrollment'])
+    ->name('system-admin.emergency-login.enroll');
+Route::post('/system-admin/emergency-login/enroll/continue', [EmergencyAuthController::class, 'continueEnrollment'])
+    ->middleware('throttle:5,15')
+    ->name('system-admin.emergency-login.enroll.continue');
+Route::get('/system-admin/emergency-login/enroll/backup-codes', [EmergencyAuthController::class, 'showBackupCodes'])
+    ->name('system-admin.emergency-login.enroll.backup-codes');
+Route::post('/system-admin/emergency-login/enroll/backup-codes', [EmergencyAuthController::class, 'confirmBackupCodes'])
+    ->name('system-admin.emergency-login.enroll.backup-codes.confirm');
+Route::get('/system-admin/emergency-login/enroll/verify', [EmergencyAuthController::class, 'showEnrollmentVerification'])
+    ->name('system-admin.emergency-login.enroll.verify');
+Route::post('/system-admin/emergency-login/enroll', [EmergencyAuthController::class, 'confirmEnrollment'])
+    ->middleware('throttle:10,1')
+    ->name('system-admin.emergency-login.enroll.confirm');
+Route::get('/system-admin/emergency-login/method', [EmergencyAuthController::class, 'showMethodChoice'])
+    ->name('system-admin.emergency-login.method');
+Route::post('/system-admin/emergency-login/method', [EmergencyAuthController::class, 'chooseMethod'])
+    ->middleware('throttle:5,1')
+    ->name('system-admin.emergency-login.method.select');
+Route::get('/system-admin/emergency-login/verify', [EmergencyAuthController::class, 'showVerification'])
+    ->name('system-admin.emergency-login.verify');
+Route::post('/system-admin/emergency-login/verify', [EmergencyAuthController::class, 'verify'])
+    ->middleware('throttle:5,15')
+    ->name('system-admin.emergency-login.verify.submit');
 Route::get('/maintenance', [MaintenanceController::class, 'show'])->name('maintenance');
 Route::post('/register-action', [RegisterController::class, 'register']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -206,6 +202,7 @@ Route::middleware(['auth:student', 'idp.session', 'audit'])->group(function () {
         Route::post('/student/reset-barcode', [AppointmentController::class, 'resetBarcode'])->name('barcode.reset');
         Route::get('/student/notifications/{notificationId}', [AppointmentController::class, 'openNotification'])->name('student.notifications.open');
         Route::post('/student/notifications/mark-all-read', [AppointmentController::class, 'markAllNotificationsRead'])->name('student.notifications.read_all');
+        Route::post('/student/notifications/preferences', [AppointmentController::class, 'updateNotificationPreferences'])->name('student.notifications.preferences');
         Route::get('/student/appointments/{appointment}/feedback', [AppointmentController::class, 'showFeedbackForm'])->name('student.feedback.show');
         Route::post('/student/appointments/{appointment}/feedback', [AppointmentController::class, 'storeFeedback'])->name('student.feedback.store');
     });
@@ -289,24 +286,24 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::get('/admin/inventory', [AdminController::class, 'inventory'])->middleware('module.permission:inventory.view')->name('admin.inventory');
 
         Route::get('/admin/walkin', [WalkInController::class, 'index'])->middleware('module.permission:walkin.view')->name('walkin.index');
-        Route::get('/admin/walkin/get-student', [WalkInController::class, 'getStudent'])->middleware('module.permission:walkin.view')->name('walkin.getStudent');
+        Route::get('/admin/walkin/get-student', [WalkInController::class, 'getStudent'])->middleware('module.permission:walkin.scan_id|walkin.register_patient|walkin.encode_assessment|walkin.review_submission|walkin.employee_lookup')->name('walkin.getStudent');
         Route::get('/admin/walkin/final-review-applicants', [WalkInController::class, 'finalReviewApplicants'])->middleware('module.permission:walkin.review_submission')->name('walkin.final-review-applicants');
-        Route::post('/admin/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->middleware('module.permission:walkin.register_patient')->name('walkin.verify-id-ai');
+        Route::post('/admin/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->middleware('module.permission:walkin.scan_id')->name('walkin.verify-id-ai');
         Route::post('/admin/walkin/register', [WalkInController::class, 'registerStudent'])->middleware('module.permission:walkin.register_patient')->name('walkin.registerStudent');
-        Route::get('/admin/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->middleware('module.permission:walkin.view')->name('walkin.form');
-        Route::get('/admin/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->middleware('module.permission:walkin.view')->name('walkin.healthForm');
-        Route::get('/admin/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->middleware('module.permission:walkin.view')->name('walkin.document');
-        Route::get('/admin/walkin/employee-health-form/{employeeProfile}', [WalkInController::class, 'showEmployeeHealthForm'])->middleware('module.permission:walkin.view')->name('walkin.employeeHealthForm');
-        Route::get('/admin/walkin/employee-document/{employeeProfile}/{document}', [WalkInController::class, 'showEmployeeDocument'])->middleware('module.permission:walkin.view')->name('walkin.employeeDocument');
-        Route::get('/admin/walkin/staff-health-form/{staffProfile}', [WalkInController::class, 'showStaffHealthForm'])->middleware('module.permission:walkin.view')->name('walkin.staffHealthForm');
-        Route::get('/admin/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->middleware('module.permission:walkin.view')->name('walkin.staffDocument');
+        Route::get('/admin/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->middleware('module.permission:walkin.scan_id|walkin.register_patient')->name('walkin.form');
+        Route::get('/admin/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->middleware('module.permission:walkin.encode_assessment|walkin.review_submission')->name('walkin.healthForm');
+        Route::get('/admin/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->middleware('module.permission:walkin.encode_assessment|walkin.review_submission')->name('walkin.document');
+        Route::get('/admin/walkin/employee-health-form/{employeeProfile}', [WalkInController::class, 'showEmployeeHealthForm'])->middleware('module.permission:walkin.employee_view')->name('walkin.employeeHealthForm');
+        Route::get('/admin/walkin/employee-document/{employeeProfile}/{document}', [WalkInController::class, 'showEmployeeDocument'])->middleware('module.permission:walkin.employee_view')->name('walkin.employeeDocument');
+        Route::get('/admin/walkin/staff-health-form/{staffProfile}', [WalkInController::class, 'showStaffHealthForm'])->middleware('module.permission:walkin.employee_view')->name('walkin.staffHealthForm');
+        Route::get('/admin/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->middleware('module.permission:walkin.employee_view')->name('walkin.staffDocument');
         Route::post('/admin/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.health-profile-information.update');
         Route::post('/admin/walkin/store', [WalkInController::class, 'store'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.store');
         Route::post('/admin/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->middleware('module.permission:walkin.encode_assessment')->name('admin.walkin.applicant_encoding');
-        Route::post('/admin/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->middleware('module.permission:walkin.final_review')->name('admin.walkin.final_review.time_in');
-        Route::post('/admin/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->middleware('module.permission:walkin.final_review')->name('admin.walkin.approve_applicant');
-        Route::post('/admin/walkin/applicant-final-review-draft', [WalkInController::class, 'saveApplicantFinalReviewDraft'])->middleware('module.permission:walkin.final_review')->name('admin.walkin.applicant_final_review_draft');
-        Route::post('/admin/walkin/employee-draft', [WalkInController::class, 'saveEmployeeDraft'])->middleware('module.permission:walkin.encode_assessment')->name('admin.walkin.employee_draft');
+        Route::post('/admin/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('admin.walkin.final_review.time_in');
+        Route::post('/admin/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('admin.walkin.approve_applicant');
+        Route::post('/admin/walkin/applicant-final-review-draft', [WalkInController::class, 'saveApplicantFinalReviewDraft'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('admin.walkin.applicant_final_review_draft');
+        Route::post('/admin/walkin/employee-draft', [WalkInController::class, 'saveEmployeeDraft'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('admin.walkin.employee_draft');
 
         Route::get('/admin/reports', [AdminController::class, 'reports'])->middleware('module.permission:reports.view')->name('admin.reports');
         Route::get('/admin/reports/digital-logbook', [ReportsController::class, 'digitalLogbook'])->middleware('module.permission:reports.digital_logbook')->name('reports.digital-logbook');
@@ -343,34 +340,39 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::post('/admin/announcements', [AdminController::class, 'storeAnnouncement'])->middleware('module.permission:announcements.publish')->name('admin.announcements.store');
         Route::patch('/admin/announcements/{announcement}/archive', [AdminController::class, 'archiveAnnouncement'])->middleware('module.permission:announcements.archive')->name('admin.announcements.archive');
         Route::delete('/admin/announcements/{announcement}', [AdminController::class, 'destroyAnnouncement'])->middleware('module.permission:announcements.archive')->name('admin.announcements.destroy');
-        Route::get('/admin/user-management', [AdminUserController::class, 'index'])->name('admin.user-management');
-        Route::get('/admin/user-management/account-access', [AdminUserController::class, 'accountAccess'])->name('admin.user-management.account-access');
-        Route::get('/admin/user-management/admin-hub', [AdminUserController::class, 'adminHub'])->name('admin.user-management.admin-hub');
-        Route::post('/admin/user-management/from-lookup', [AdminUserController::class, 'storeFromLookup'])->name('admin.user-management.store-from-lookup');
-        Route::put('/admin/user-management/{user}', [AdminUserController::class, 'update'])->name('admin.user-management.update');
-        Route::delete('/admin/user-management/{user}/account', [AdminUserController::class, 'deleteAccount'])->name('admin.user-management.delete-account');
-        Route::delete('/admin/user-management/{user}', [AdminUserController::class, 'destroy'])->name('admin.user-management.destroy');
-        Route::put('/admin/user-management/admin-hub/{admin}', [AdminUserController::class, 'updateAdminHub'])->name('admin.user-management.admin-hub.update');
-        Route::delete('/admin/user-management/admin-hub/{admin}', [AdminUserController::class, 'destroyAdminHub'])->name('admin.user-management.admin-hub.destroy');
-        Route::delete('/admin/user-management/admin-hub/{admin}/delete-record', [AdminUserController::class, 'deleteAdminHubRecord'])->name('admin.user-management.admin-hub.delete-record');
-        Route::get('/admin/developer-tools', [AdminController::class, 'developerTools'])->name('admin.developer-tools');
-        Route::get('/admin/api-testing', [AdminController::class, 'apiTesting'])->name('admin.api-testing');
-        Route::get('/admin/api/health-monitor', [AdminController::class, 'apiHealthMonitor'])->name('admin.api.health-monitor');
-        Route::get('/admin/api/error-logs', [AdminController::class, 'apiErrorLogs'])->name('admin.api.error-logs');
-        Route::get('/admin/api/system-status', [AdminController::class, 'apiSystemStatus'])->name('admin.api.system-status');
-        Route::put('/admin/integration-pin/settings', [AdminController::class, 'updateIntegrationPinSettings'])->name('admin.integration-pin.update');
-        Route::post('/admin/integration-pin/reset', [AdminController::class, 'resetIntegrationPin'])->name('admin.integration-pin.reset');
-        Route::get('/admin/integration-pin/status', [AdminController::class, 'integrationPinStatus'])->name('admin.integration-pin.status');
-        Route::post('/admin/integration-pin/verify', [AdminController::class, 'verifyIntegrationPin'])->name('admin.integration-pin.verify');
-        Route::post('/admin/reset-key/verify', [AdminController::class, 'verifyResetKey'])->name('admin.reset-key.verify');
-        Route::put('/admin/emergency-credentials', [AdminController::class, 'updateEmergencyCredentials'])->name('admin.emergency-credentials.update');
-        Route::put('/admin/maintenance-policy', [AdminController::class, 'updateMaintenancePolicy'])->name('admin.maintenance-policy.update');
-        Route::get('/admin/integration-tokens', [AdminController::class, 'integrationTokens'])->name('admin.integration-tokens');
-        Route::get('/admin/integration-tokens/docs', [AdminController::class, 'integrationTokensDocs'])->name('admin.integration-tokens.docs');
-        Route::get('/admin/integration-tokens/activity', [AdminController::class, 'integrationTokensActivity'])->name('admin.integration-tokens.activity');
-        Route::post('/admin/integration-tokens/generate', [AdminController::class, 'generateIntegrationToken'])->name('admin.integration-tokens.generate');
-        Route::post('/admin/integration-tokens/revoke', [AdminController::class, 'revokeIntegrationToken'])->name('admin.integration-tokens.revoke');
-        Route::post('/admin/integration-clients/store', [AdminController::class, 'createIntegrationClient'])->name('admin.integration-clients.store');
+        Route::middleware('role:superadmin')->group(function () {
+            Route::get('/admin/user-management', [AdminUserController::class, 'index'])->name('admin.user-management');
+            Route::get('/admin/user-management/account-access', [AdminUserController::class, 'accountAccess'])->name('admin.user-management.account-access');
+            Route::get('/admin/user-management/admin-hub', [AdminUserController::class, 'adminHub'])->name('admin.user-management.admin-hub');
+            Route::post('/admin/user-management/from-lookup', [AdminUserController::class, 'storeFromLookup'])->name('admin.user-management.store-from-lookup');
+            Route::put('/admin/user-management/{user}', [AdminUserController::class, 'update'])->name('admin.user-management.update');
+            Route::delete('/admin/user-management/{user}/account', [AdminUserController::class, 'deleteAccount'])->name('admin.user-management.delete-account');
+            Route::delete('/admin/user-management/{user}', [AdminUserController::class, 'destroy'])->name('admin.user-management.destroy');
+            Route::put('/admin/user-management/admin-hub/{admin}', [AdminUserController::class, 'updateAdminHub'])->name('admin.user-management.admin-hub.update');
+            Route::delete('/admin/user-management/admin-hub/{admin}', [AdminUserController::class, 'destroyAdminHub'])->name('admin.user-management.admin-hub.destroy');
+            Route::delete('/admin/user-management/admin-hub/{admin}/delete-record', [AdminUserController::class, 'deleteAdminHubRecord'])->name('admin.user-management.admin-hub.delete-record');
+        });
+
+        Route::middleware('role:superadmin')->group(function () {
+            Route::get('/admin/developer-tools', [AdminController::class, 'developerTools'])->name('admin.developer-tools');
+            Route::get('/admin/api-testing', [AdminController::class, 'apiTesting'])->name('admin.api-testing');
+            Route::get('/admin/api/health-monitor', [AdminController::class, 'apiHealthMonitor'])->name('admin.api.health-monitor');
+            Route::get('/admin/api/error-logs', [AdminController::class, 'apiErrorLogs'])->name('admin.api.error-logs');
+            Route::get('/admin/api/system-status', [AdminController::class, 'apiSystemStatus'])->name('admin.api.system-status');
+            Route::put('/admin/integration-pin/settings', [AdminController::class, 'updateIntegrationPinSettings'])->name('admin.integration-pin.update');
+            Route::post('/admin/integration-pin/reset', [AdminController::class, 'resetIntegrationPin'])->name('admin.integration-pin.reset');
+            Route::get('/admin/integration-pin/status', [AdminController::class, 'integrationPinStatus'])->name('admin.integration-pin.status');
+            Route::post('/admin/integration-pin/verify', [AdminController::class, 'verifyIntegrationPin'])->name('admin.integration-pin.verify');
+            Route::post('/admin/reset-key/verify', [AdminController::class, 'verifyResetKey'])->name('admin.reset-key.verify');
+            Route::put('/admin/emergency-credentials', [AdminController::class, 'updateEmergencyCredentials'])->name('admin.emergency-credentials.update');
+            Route::put('/admin/maintenance-policy', [AdminController::class, 'updateMaintenancePolicy'])->name('admin.maintenance-policy.update');
+            Route::get('/admin/integration-tokens', [AdminController::class, 'integrationTokens'])->name('admin.integration-tokens');
+            Route::get('/admin/integration-tokens/docs', [AdminController::class, 'integrationTokensDocs'])->name('admin.integration-tokens.docs');
+            Route::get('/admin/integration-tokens/activity', [AdminController::class, 'integrationTokensActivity'])->name('admin.integration-tokens.activity');
+            Route::post('/admin/integration-tokens/generate', [AdminController::class, 'generateIntegrationToken'])->name('admin.integration-tokens.generate');
+            Route::post('/admin/integration-tokens/revoke', [AdminController::class, 'revokeIntegrationToken'])->name('admin.integration-tokens.revoke');
+            Route::post('/admin/integration-clients/store', [AdminController::class, 'createIntegrationClient'])->name('admin.integration-clients.store');
+        });
         Route::get('/admin/activity-logs', [AdminController::class, 'indexLogs'])
             ->middleware('role:superadmin')
             ->name('admin.logs');
@@ -378,30 +380,46 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
 
     // Super Admin-only routes
     Route::middleware('role:superadmin')->group(function () {
-        Route::get('/admin/settings', [AdminController::class, 'settings'])->name('admin.settings');
-        Route::get('/admin/settings/personal-information', [AdminController::class, 'settingsPersonal'])->name('admin.settings.personal');
-        Route::get('/admin/settings/clinic-information', [AdminController::class, 'settingsClinic'])->name('admin.settings.clinic');
-        Route::get('/admin/settings/system-preferences', [AdminController::class, 'settingsPreferences'])->name('admin.settings.preferences');
-        Route::get('/admin/settings/medical-configuration', [AdminController::class, 'settingsMedicalConfiguration'])->name('admin.settings.medical');
-        Route::get('/admin/settings/faqs', [AdminController::class, 'settingsFaqs'])->name('admin.settings.faqs');
-        Route::post('/admin/settings/faqs', [AdminController::class, 'storeFaq'])->name('admin.settings.faqs.store');
-        Route::post('/admin/settings/faqs/category/rename', [AdminController::class, 'renameFaqCategory'])->name('admin.settings.faqs.category.rename');
-        Route::put('/admin/settings/faqs/{faq}', [AdminController::class, 'updateFaq'])->name('admin.settings.faqs.update');
-        Route::delete('/admin/settings/faqs/{faq}', [AdminController::class, 'destroyFaq'])->name('admin.settings.faqs.destroy');
-        Route::put('/admin/settings/update', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
-        Route::put('/admin/profile/update', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
         Route::put('/admin/api-testing/database/{table}/{id}', [AdminController::class, 'updateApiTestingDatabaseRecord'])->name('admin.api-testing.database.update');
         Route::delete('/admin/api-testing/database/{table}/{id}', [AdminController::class, 'deleteApiTestingDatabaseRecord'])->name('admin.api-testing.database.delete');
 
-        Route::post('/admin/inventory/store', [AdminController::class, 'storeItem'])->name('admin.inventory.store');
+        Route::get('/admin/student-assistants', [StudentAssistantController::class, 'index'])->name('admin.student-assistants.index');
+        Route::post('/admin/student-assistants', [StudentAssistantController::class, 'store'])->name('admin.student-assistants.store');
+        Route::put('/admin/student-assistants/{assistant}', [StudentAssistantController::class, 'update'])->name('admin.student-assistants.update');
+        Route::delete('/admin/student-assistants/{assistant}', [StudentAssistantController::class, 'destroy'])->name('admin.student-assistants.destroy');
+    });
+
+    Route::middleware('module.permission:settings.view')->group(function () {
+        Route::get('/admin/settings', [AdminController::class, 'settings'])->name('admin.settings');
+        Route::get('/admin/settings/personal-information', [AdminController::class, 'settingsPersonal'])->middleware('module.permission:settings.personal')->name('admin.settings.personal');
+        Route::get('/admin/settings/clinic-information', [AdminController::class, 'settingsClinic'])->middleware('module.permission:settings.clinic')->name('admin.settings.clinic');
+        Route::get('/admin/settings/system-preferences', [AdminController::class, 'settingsPreferences'])->middleware('module.permission:settings.preferences')->name('admin.settings.preferences');
+        Route::get('/admin/settings/medical-configuration', [AdminController::class, 'settingsMedicalConfiguration'])->middleware('module.permission:settings.medical')->name('admin.settings.medical');
+        Route::get('/admin/settings/faqs', [AdminController::class, 'settingsFaqs'])->middleware('module.permission:settings.faqs')->name('admin.settings.faqs');
+        Route::post('/admin/settings/faqs', [AdminController::class, 'storeFaq'])->middleware('module.permission:settings.faqs')->name('admin.settings.faqs.store');
+        Route::post('/admin/settings/faqs/category/rename', [AdminController::class, 'renameFaqCategory'])->middleware('module.permission:settings.faqs')->name('admin.settings.faqs.category.rename');
+        Route::put('/admin/settings/faqs/{faq}', [AdminController::class, 'updateFaq'])->middleware('module.permission:settings.faqs')->name('admin.settings.faqs.update');
+        Route::delete('/admin/settings/faqs/{faq}', [AdminController::class, 'destroyFaq'])->middleware('module.permission:settings.faqs')->name('admin.settings.faqs.destroy');
+        Route::put('/admin/settings/update', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
+        Route::put('/admin/profile/update', [AdminController::class, 'updateProfile'])->middleware('module.permission:settings.personal')->name('admin.profile.update');
+    });
+
+    Route::middleware('module.permission:inventory.add_stock')->group(function () {
+        Route::post('/admin/inventory/{id}/restock', [AdminController::class, 'restockItem'])->name('admin.inventory.restock');
+    });
+    Route::middleware('module.permission:inventory.import')->group(function () {
         Route::post('/admin/inventory/import/analyze', [AdminController::class, 'analyzeInventoryImport'])->name('admin.inventory.import.analyze');
         Route::post('/admin/inventory/import/commit', [AdminController::class, 'commitInventoryImport'])->name('admin.inventory.import.commit');
         Route::post('/admin/inventory/import/clear', [AdminController::class, 'clearInventoryImportPreview'])->name('admin.inventory.import.clear');
-        Route::post('/admin/inventory/{id}/restock', [AdminController::class, 'restockItem'])->name('admin.inventory.restock');
+    });
+    Route::middleware('module.permission:inventory.manage')->group(function () {
+        Route::post('/admin/inventory/store', [AdminController::class, 'storeItem'])->name('admin.inventory.store');
         Route::post('/admin/inventory/{id}/issue', [AdminController::class, 'issueStock'])->name('admin.inventory.issue');
         Route::put('/admin/inventory/{id}', [AdminController::class, 'updateItem'])->name('admin.inventory.update');
         Route::delete('/admin/inventory/{id}', [AdminController::class, 'deleteItem'])->name('admin.inventory.delete');
+    });
 
+    Route::middleware('module.permission:settings.medical')->group(function () {
         Route::get('/admin/reports/manage-mar', [ReportsController::class, 'manageMar'])->name('admin.reports.manage-mar');
         Route::get('/admin/reports/manage-medicine-types', [MedicineTypeController::class, 'index'])->name('admin.reports.manage-medicine-types');
         Route::get('/admin/reports/manage-health-form-categories', [HealthFormCategoryController::class, 'index'])->name('admin.reports.manage-health-form-categories');
@@ -412,11 +430,6 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::delete('/admin/medicine-types/{id}', [MedicineTypeController::class, 'destroy'])->name('medicine-types.destroy');
         Route::post('/admin/health-form-categories', [HealthFormCategoryController::class, 'store'])->name('health-form-categories.store');
         Route::delete('/admin/health-form-categories/{id}', [HealthFormCategoryController::class, 'destroy'])->name('health-form-categories.destroy');
-
-        Route::get('/admin/student-assistants', [StudentAssistantController::class, 'index'])->name('admin.student-assistants.index');
-        Route::post('/admin/student-assistants', [StudentAssistantController::class, 'store'])->name('admin.student-assistants.store');
-        Route::put('/admin/student-assistants/{assistant}', [StudentAssistantController::class, 'update'])->name('admin.student-assistants.update');
-        Route::delete('/admin/student-assistants/{assistant}', [StudentAssistantController::class, 'destroy'])->name('admin.student-assistants.destroy');
     });
 
     // Admin prefixed entry points (same modules, different UI context)
@@ -428,23 +441,23 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::get('/inventory', [AdminController::class, 'inventory'])->middleware('module.permission:inventory.view')->name('inventory');
 
         Route::get('/walkin', [WalkInController::class, 'index'])->middleware('module.permission:walkin.view')->name('walkin.index');
-        Route::get('/walkin/get-student', [WalkInController::class, 'getStudent'])->middleware('module.permission:walkin.view')->name('walkin.getStudent');
+        Route::get('/walkin/get-student', [WalkInController::class, 'getStudent'])->middleware('module.permission:walkin.scan_id|walkin.register_patient|walkin.encode_assessment|walkin.review_submission|walkin.employee_lookup')->name('walkin.getStudent');
         Route::get('/walkin/final-review-applicants', [WalkInController::class, 'finalReviewApplicants'])->middleware('module.permission:walkin.review_submission')->name('walkin.final-review-applicants');
-        Route::post('/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->middleware('module.permission:walkin.register_patient')->name('walkin.verify-id-ai');
+        Route::post('/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->middleware('module.permission:walkin.scan_id')->name('walkin.verify-id-ai');
         Route::post('/walkin/register', [WalkInController::class, 'registerStudent'])->middleware('module.permission:walkin.register_patient')->name('walkin.registerStudent');
-        Route::get('/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->middleware('module.permission:walkin.view')->name('walkin.form');
-        Route::get('/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->middleware('module.permission:walkin.view')->name('walkin.healthForm');
-        Route::get('/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->middleware('module.permission:walkin.view')->name('walkin.document');
-        Route::get('/walkin/employee-health-form/{employeeProfile}', [WalkInController::class, 'showEmployeeHealthForm'])->middleware('module.permission:walkin.view')->name('walkin.employeeHealthForm');
-        Route::get('/walkin/employee-document/{employeeProfile}/{document}', [WalkInController::class, 'showEmployeeDocument'])->middleware('module.permission:walkin.view')->name('walkin.employeeDocument');
-        Route::get('/walkin/staff-health-form/{staffProfile}', [WalkInController::class, 'showStaffHealthForm'])->middleware('module.permission:walkin.view')->name('walkin.staffHealthForm');
-        Route::get('/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->middleware('module.permission:walkin.view')->name('walkin.staffDocument');
+        Route::get('/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->middleware('module.permission:walkin.scan_id|walkin.register_patient')->name('walkin.form');
+        Route::get('/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->middleware('module.permission:walkin.encode_assessment|walkin.review_submission')->name('walkin.healthForm');
+        Route::get('/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->middleware('module.permission:walkin.encode_assessment|walkin.review_submission')->name('walkin.document');
+        Route::get('/walkin/employee-health-form/{employeeProfile}', [WalkInController::class, 'showEmployeeHealthForm'])->middleware('module.permission:walkin.employee_view')->name('walkin.employeeHealthForm');
+        Route::get('/walkin/employee-document/{employeeProfile}/{document}', [WalkInController::class, 'showEmployeeDocument'])->middleware('module.permission:walkin.employee_view')->name('walkin.employeeDocument');
+        Route::get('/walkin/staff-health-form/{staffProfile}', [WalkInController::class, 'showStaffHealthForm'])->middleware('module.permission:walkin.employee_view')->name('walkin.staffHealthForm');
+        Route::get('/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->middleware('module.permission:walkin.employee_view')->name('walkin.staffDocument');
         Route::post('/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.health-profile-information.update');
         Route::post('/walkin/store', [WalkInController::class, 'store'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.store');
         Route::post('/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.applicant_encoding');
-        Route::post('/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->middleware('module.permission:walkin.final_review')->name('walkin.final_review.time_in');
-        Route::post('/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->middleware('module.permission:walkin.final_review')->name('walkin.approve_applicant');
-        Route::post('/walkin/applicant-final-review-draft', [WalkInController::class, 'saveApplicantFinalReviewDraft'])->middleware('module.permission:walkin.final_review')->name('walkin.applicant_final_review_draft');
+        Route::post('/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('walkin.final_review.time_in');
+        Route::post('/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('walkin.approve_applicant');
+        Route::post('/walkin/applicant-final-review-draft', [WalkInController::class, 'saveApplicantFinalReviewDraft'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('walkin.applicant_final_review_draft');
 
         Route::get('/reports', [AdminController::class, 'reports'])->middleware('module.permission:reports.view')->name('reports');
         Route::get('/reports/digital-logbook', [ReportsController::class, 'digitalLogbook'])->middleware('module.permission:reports.digital_logbook')->name('reports.digital-logbook');
@@ -474,8 +487,8 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         });
         Route::get('/notifications/feed', [AdminController::class, 'notificationsFeed'])->name('notifications.feed');
         Route::post('/notifications/mark-all-read', [AdminController::class, 'markAllAdminNotificationsRead'])->name('notifications.read_all');
-        Route::get('/developer-tools', [AdminController::class, 'developerTools'])->name('developer-tools');
-        Route::get('/api-testing', [AdminController::class, 'apiTesting'])->name('api-testing');
+        Route::get('/developer-tools', [AdminController::class, 'developerTools'])->middleware('role:superadmin')->name('developer-tools');
+        Route::get('/api-testing', [AdminController::class, 'apiTesting'])->middleware('role:superadmin')->name('api-testing');
     });
 });
 

@@ -3784,8 +3784,11 @@
 
 @section('content')
     @php
-        $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
-        $canManageInventory = $role === \App\Models\User::ROLE_SUPERADMIN;
+        $canImportInventory = optional(auth()->user())->canAccessPermission('inventory.import') ?? false;
+        $canAddInventoryStock = optional(auth()->user())->canAccessPermission('inventory.add_stock') ?? false;
+        $canManageInventoryItems = optional(auth()->user())->canAccessPermission('inventory.manage') ?? false;
+        $canChangeInventory = $canAddInventoryStock || $canManageInventoryItems;
+        $canManageInventory = $canImportInventory || $canAddInventoryStock || $canManageInventoryItems;
         $highlightItemId = (string) request()->query('highlight_item', '');
         $inventoryImportPreview = session('inventory_import_preview');
         $inventoryImportFeedback = session('inventory_import_feedback');
@@ -3853,7 +3856,7 @@
                     <span>Needs attention</span>
                 </span>
             </div>
-            @if($canManageInventory)
+            @if($canImportInventory)
                 <button type="button" class="inventory-modern-card inventory-action-card is-clickable" onclick="openInventoryImportModal()">
                     <span class="inventory-action-icon"><x-outline-icon name="clipboard-document-list" /></span>
                     <span class="inventory-action-copy">
@@ -3863,6 +3866,8 @@
                     </span>
                     <span class="inventory-action-arrow">&rarr;</span>
                 </button>
+            @endif
+            @if($canManageInventoryItems)
                 <button type="button" class="inventory-modern-card inventory-action-card is-clickable" onclick="openModal()">
                     <span class="inventory-action-icon"><x-outline-icon name="plus-circle" /></span>
                     <span class="inventory-action-copy">
@@ -3872,7 +3877,8 @@
                     </span>
                     <span class="inventory-action-arrow">&rarr;</span>
                 </button>
-            @else
+            @endif
+            @if(! $canManageInventory)
                 <div class="inventory-modern-card is-out">
                     <span class="inventory-action-icon"><x-outline-icon name="x-mark" /></span>
                     <span class="inventory-action-copy">
@@ -3938,7 +3944,7 @@
                     <th>Balance</th>
                     <th>Expiration Date</th>
                     <th>Stock Status</th>
-                    <th>{{ $canManageInventory ? 'Actions' : 'Access' }}</th>
+                    <th>{{ $canChangeInventory ? 'Actions' : 'Access' }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -4046,7 +4052,7 @@
                             @endif
                         </td>
                         <td>
-                            @if($canManageInventory)
+                            @if($canChangeInventory)
                                 @php
                                     $editItemPayload = [
                                         'id' => $item->id,
@@ -4077,25 +4083,35 @@
                                         })->values(),
                                     ];
                                 @endphp
-                                <div class="inventory-actions">
+                                    @if($canAddInventoryStock || $canManageInventoryItems)
+                                    <div class="inventory-actions">
                                     <div class="inventory-actions-dropdown">
                                         <button type="button" class="btn-icon btn-edit inventory-actions-toggle" onclick="toggleInventoryActionMenu(event)">
                                             <x-outline-icon name="bars-3" />
                                             <span>Actions</span>
                                         </button>
                                         <div class="inventory-actions-menu" role="menu">
+                                            @if($canAddInventoryStock)
                                             <button type="button" class="inventory-actions-menu-item" onclick='closeInventoryActionMenus(); openRestockModal(@json($editItemPayload));'>
                                                 <span>Restock</span>
                                             </button>
+                                            @endif
+                                            @if($canManageInventoryItems)
                                             <button type="button" class="inventory-actions-menu-item" onclick='closeInventoryActionMenus(); openIssueModal(@json($editItemPayload));'>
                                                 <span>Issue Stock</span>
                                             </button>
+                                            @endif
+                                            @if($canManageInventoryItems)
                                             <button type="button" class="inventory-actions-menu-item" onclick='closeInventoryActionMenus(); editItem(@json($editItemPayload));'>
                                                 <span>Edit</span>
                                             </button>
+                                            @endif
                                         </div>
                                     </div>
-                                </div>
+                                    </div>
+                                    @else
+                                        <span style="font-size: 12px; color: #64748b; font-weight: 700;">View Only</span>
+                                    @endif
                             @else
                                 <span style="font-size: 12px; color: #64748b; font-weight: 700;">View Only</span>
                             @endif

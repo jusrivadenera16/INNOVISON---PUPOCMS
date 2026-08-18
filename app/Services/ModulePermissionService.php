@@ -19,9 +19,12 @@ class ModulePermissionService
         'appointments.reject',
         'appointments.reschedule',
         'walkin.view',
+        'walkin.scan_id',
         'walkin.register_patient',
         'walkin.encode_assessment',
         'walkin.review_submission',
+        'walkin.employee_view',
+        'walkin.employee_lookup',
         'walkin.final_review',
         'health_records.view',
         'health_records.review_documents',
@@ -54,9 +57,12 @@ class ModulePermissionService
         'appointments.approve' => 'appointments.view',
         'appointments.reject' => 'appointments.view',
         'appointments.reschedule' => 'appointments.view',
+        'walkin.scan_id' => 'walkin.view',
         'walkin.register_patient' => 'walkin.view',
         'walkin.encode_assessment' => 'walkin.view',
         'walkin.review_submission' => 'walkin.view',
+        'walkin.employee_view' => 'walkin.view',
+        'walkin.employee_lookup' => 'walkin.employee_view',
         'walkin.final_review' => 'walkin.view',
         'health_records.review_documents' => 'health_records.view',
         'health_records.request_resubmission' => 'health_records.view',
@@ -128,6 +134,10 @@ class ModulePermissionService
         }
 
         if (User::normalizeRole((string) $user->user_role) !== User::ROLE_ADMIN) {
+            return false;
+        }
+
+        if (in_array($permission, ['walkin.final_review', 'reports.export_reports'], true)) {
             return false;
         }
 

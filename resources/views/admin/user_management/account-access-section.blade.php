@@ -25,7 +25,7 @@
                     <h5 id="moduleAccessTitle">Module Access</h5>
                     <p id="moduleAccessRoleSummary">Suggested access for this clinic role.</p>
                 </div>
-                <span class="um-preview-badge">UI Preview</span>
+                <span class="um-preview-badge">Live Access</span>
             </div>
 
             <div class="um-module-access-toolbar">
@@ -92,25 +92,47 @@
                     <div class="um-module-actions" id="walkinPermissions" data-module-actions hidden>
                         <div class="um-module-actions-head"><strong>Additional permissions</strong><span>View access is included</span></div>
                         <label class="um-action-permission">
+                            <input type="checkbox" name="module_permissions[]" value="walkin.scan_id" data-module-action>
+                            <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
+                            <span><strong>OCR / Scan ID</strong><small>Scan or manually enter an ID for walk-in intake</small></span>
+                        </label>
+                        <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="walkin.register_patient" data-module-action>
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
                             <span><strong>Register patient</strong><small>Create walk-in clinic entries</small></span>
                         </label>
+                        <div class="um-module-actions-head"><strong>Applicants Module</strong><span>Choose the allowed workflow steps</span></div>
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="walkin.encode_assessment" data-module-action>
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
-                            <span><strong>Encode assessment</strong><small>Enter intake and assessment information</small></span>
+                            <span><strong>Encode</strong><small>Enter applicant assessment information</small></span>
                         </label>
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="walkin.review_submission" data-module-action>
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
-                            <span><strong>Review submission</strong><small>Review completed patient information</small></span>
+                            <span><strong>Final Review</strong><small>View encoded applicants awaiting final approval</small></span>
+                        </label>
+                        <div class="um-action-permission is-locked">
+                            <span class="um-action-lock" aria-hidden="true"><x-outline-icon name="shield-check" /></span>
+                            <span><strong>Final approval</strong><small>Restricted to Super Admin</small></span>
+                            <span class="um-locked-badge">Locked</span>
+                        </div>
+                        <div class="um-module-actions-head"><strong>Employees Module</strong><span>View access is required before ID lookup</span></div>
+                        <label class="um-action-permission">
+                            <input type="checkbox" name="module_permissions[]" value="walkin.employee_view" data-module-action>
+                            <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
+                            <span><strong>View employee records</strong><small>Open employee or student clinic records</small></span>
                         </label>
                         <label class="um-action-permission">
-                            <input type="checkbox" name="module_permissions[]" value="walkin.final_review" data-module-action>
+                            <input type="checkbox" name="module_permissions[]" value="walkin.employee_lookup" data-module-action>
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
-                            <span><strong>Final review / approve patients</strong><small>Complete the final patient review and approval</small></span>
+                            <span><strong>Input employee / student ID</strong><small>Look up an employee or student clinic record</small></span>
                         </label>
+                        <div class="um-action-permission is-locked">
+                            <span class="um-action-lock" aria-hidden="true"><x-outline-icon name="shield-check" /></span>
+                            <span><strong>Employee approval</strong><small>Restricted to Super Admin</small></span>
+                            <span class="um-locked-badge">Locked</span>
+                        </div>
                     </div>
                 </div>
 
@@ -236,11 +258,11 @@
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
                             <span><strong>Feedbacks</strong><small>Patient ratings, comments, and feedback</small></span>
                         </label>
-                        <label class="um-action-permission">
-                            <input type="checkbox" name="module_permissions[]" value="reports.export_reports" data-module-action>
-                            <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
-                            <span><strong>Export reports</strong><small>Download or print report data</small></span>
-                        </label>
+                        <div class="um-action-permission is-locked">
+                            <span class="um-action-lock" aria-hidden="true"><x-outline-icon name="shield-check" /></span>
+                            <span><strong>Export Reports</strong><small>Restricted to Super Admin</small></span>
+                            <span class="um-locked-badge">Locked</span>
+                        </div>
                         <div class="um-action-permission is-locked">
                             <span class="um-action-lock" aria-hidden="true"><x-outline-icon name="shield-check" /></span>
                             <span><strong>Audit Trail</strong><small>Restricted to Super Admin</small></span>
@@ -337,8 +359,6 @@
                     <div class="um-superadmin-access-list">
                         <span>Final approval &amp; signing</span>
                         <span>User Management</span>
-                        <span>Developer Tools</span>
-                        <span>API Integrations</span>
                         <span>Audit Trail</span>
                     </div>
                 </div>

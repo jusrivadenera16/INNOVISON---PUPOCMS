@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Models\AdminHub;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -75,7 +76,26 @@ class RegisterController extends Controller
 
     $user = User::create($payload);
 
-    if (($isClinicAdmin || $isAdminDesignee || $selectedRole === 'super_admin') && Schema::hasTable('admins')) {
+    if ($isAdminDesignee && Schema::hasTable('admin_hub')) {
+        $adminHubPayload = [
+            'user_id' => $user->id,
+            'first_name' => $user->first_name,
+            'middle_name' => $user->middle_name,
+            'last_name' => $user->last_name,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => 'admin_designee',
+            'status' => 'active',
+        ];
+
+        AdminHub::create(array_filter(
+            $adminHubPayload,
+            fn ($value, $column) => AdminHub::hasColumn($column),
+            ARRAY_FILTER_USE_BOTH
+        ));
+    }
+
+    if (($isClinicAdmin || $selectedRole === 'super_admin') && Schema::hasTable('admins')) {
         $adminPayload = [
             'first_name' => $user->first_name,
             'middle_name' => $user->middle_name,
@@ -84,7 +104,6 @@ class RegisterController extends Controller
             'email' => $user->email,
             'access_level' => match (true) {
                 $selectedRole === 'super_admin' => 'superadmin',
-                $isAdminDesignee => 'designee',
                 default => 'clinic_staff',
             },
         ];
@@ -95,18 +114,6 @@ class RegisterController extends Controller
 
         if (Admin::hasColumn('email_address')) {
             $adminPayload['email_address'] = $user->email;
-        }
-
-        if (Admin::hasColumn('admin_hub_role')) {
-            $adminPayload['admin_hub_role'] = match (true) {
-                $selectedRole === 'super_admin' => 'super_admin',
-                $isAdminDesignee => 'admin_designee',
-                default => 'admin_clinic_staff',
-            };
-        }
-
-        if (Admin::hasColumn('admin_hub_enabled')) {
-            $adminPayload['admin_hub_enabled'] = $selectedRole === 'super_admin';
         }
 
         Admin::create($adminPayload);

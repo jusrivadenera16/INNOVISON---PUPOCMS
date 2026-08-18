@@ -39,6 +39,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Models\IntegrationClient;
+use App\Services\StudentNotificationMailer;
 
 class AdminController extends Controller
 {
@@ -2297,6 +2298,10 @@ class AdminController extends Controller
             'ACTION'
         );
 
+        if ($profile->user) {
+            app(StudentNotificationMailer::class)->sendHealthRecordNotice($profile->user, 'new_form');
+        }
+
         return redirect()->route('admin.show_health', $profile->id)
             ->with('success', 'New Health Form request sent to the student.');
     }
@@ -2590,6 +2595,22 @@ public function updateClearance(Request $request, $id)
             $record->user->is_health_profile_completed = $isApproval ? 1 : 0;
             $record->user->save();
 
+            if ($isApproval && !in_array($previousStatus, ['Issued', 'Fully Cleared'], true)) {
+                app(StudentNotificationMailer::class)->sendHealthRecordNotice($record->user, 'approved', [
+                    'approved_at' => optional($record->verified_at)->format('F j, Y'),
+                    'reference_number' => trim((string) (
+                        $record->reference_number
+                        ?: $record->student_number
+                        ?: optional($record->user)->reference_number
+                    )),
+                ]);
+            } elseif ($requestedStatus === 'Pending Resubmission') {
+                $resubmissionEvent = str_contains(strtolower((string) $record->pending_reason), 'health form correction')
+                    ? 'health_form_correction'
+                    : 'resubmission';
+                app(StudentNotificationMailer::class)->sendHealthRecordNotice($record->user, $resubmissionEvent);
+            }
+
             if ($isApproval) {
                 try {
                     app(HealthFormPdfSnapshotService::class)->saveApprovedSnapshot($record->fresh('user'));
@@ -2750,11 +2771,28 @@ public function updateClearance(Request $request, $id)
             'ip_address' => request()->ip(),
         ]);
 
+        $emailStatus = 'skipped';
+        if ($record->user) {
+            $emailResult = app(StudentNotificationMailer::class)->sendHealthRecordNotice(
+                $record->user,
+                $needsHealthFormCorrection ? 'health_form_correction' : 'resubmission'
+            );
+            $emailStatus = $emailResult['status'];
+        }
+
         $message = $needsHealthFormCorrection && empty($requestedDocuments)
             ? 'Health form correction request sent. The student can update their health form details.'
             : ($request->boolean('clear_uploaded_documents')
             ? 'Replacement file request sent. Selected uploaded document references were removed from the record.'
             : 'Replacement file request sent. The student will see the reupload prompt in Health Records.');
+
+        if ($emailStatus === 'sent') {
+            $message .= ' Email notification sent.';
+        } elseif ($emailStatus === 'failed') {
+            $message .= ' The student will still see the request in the portal, but email delivery could not be confirmed.';
+        } elseif ($emailStatus === 'skipped') {
+            $message .= ' Email notification was not sent.';
+        }
 
         $returnTo = (string) ($validated['return_to'] ?? '');
         $redirect = (!$wasAlreadyIssued || $returnTo === 'health_records')
@@ -3309,6 +3347,7 @@ public function updateClearance(Request $request, $id)
     {
         $appointment = Appointment::find($id);
         if ($appointment) {
+            $previousStatus = (string) $appointment->status;
             $appointment->status = $status;
             if ($status === 'Approved') {
                 if (Schema::hasColumn('appointments', 'approval_message')) {
@@ -3322,9 +3361,24 @@ public function updateClearance(Request $request, $id)
                         ->values()
                         ->all();
                 }
+
+                $appointment->appointment_reminder_email_sent_at = null;
             }
             $appointment->save();
             $actionMessage = trim((string) request()->query('message', ''));
+
+            if ($appointment->user && $previousStatus !== $status) {
+                $emailEvent = match (strtolower(trim((string) $status))) {
+                    'approved' => 'approved',
+                    'cancelled', 'rejected' => 'rejected',
+                    'rescheduled' => 'rescheduled',
+                    default => null,
+                };
+
+                if ($emailEvent !== null) {
+                    app(StudentNotificationMailer::class)->sendAppointmentNotice($appointment->user, $appointment, $emailEvent);
+                }
+            }
 
             \App\Models\ActivityLog::create([
             'user_id'     => auth()->id(), 
@@ -3353,7 +3407,12 @@ public function updateClearance(Request $request, $id)
             $appointment->date = $request->date;
             $appointment->time = $request->time;
             $appointment->status = 'Approved';
+            $appointment->appointment_reminder_email_sent_at = null;
             $appointment->save();
+
+            if ($appointment->user) {
+                app(StudentNotificationMailer::class)->sendAppointmentNotice($appointment->user, $appointment, 'rescheduled');
+            }
 
             // LOGS CODES
              \App\Models\ActivityLog::create([
@@ -4029,6 +4088,11 @@ public function deleteItem($id)
     // --- 3. SETTINGS & PROFILE ---
     public function updateSettings(Request $request)
     {
+        $settingsPermission = $request->boolean('preferences_form')
+            ? 'settings.preferences'
+            : 'settings.clinic';
+        abort_unless(optional($request->user())->canAccessPermission($settingsPermission), 403);
+
         if ($request->boolean('preferences_form')) {
             $closureRequired = Rule::requiredIf($request->boolean('clinic_closure_enabled'));
             $request->validate([
@@ -4458,8 +4522,16 @@ public function exportInventory()
     $appointment = Appointment::find($id);
     if(!$appointment) return redirect()->back()->with('error', 'Appointment not found.');
 
+    if ($appointment->status === 'Completed') {
+        return redirect()->back()->with('success', 'Appointment was already completed.');
+    }
+
     $appointment->status = 'Completed';
     $appointment->save();
+
+    if ($appointment->user) {
+        app(StudentNotificationMailer::class)->sendAppointmentNotice($appointment->user, $appointment, 'feedback');
+    }
 
     $logDescription = "Completed Appointment #$id for {$appointment->name}.";
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Models\AdminHub;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -13,41 +14,37 @@ class AdminProfileController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        if (!Schema::hasTable('admins')) {
-            return $this->errorResponse('Admins table was not found.', 404);
+        if (!Schema::hasTable('admin_hub')) {
+            return $this->errorResponse('Admin Hub table was not found.', 404);
         }
 
-        $query = Admin::query();
+        $query = AdminHub::query();
         $search = trim((string) $request->query('search', ''));
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
-                foreach (['admin_id', 'name', 'first_name', 'middle_name', 'last_name', 'suffix_name', 'email', 'email_address', 'office', 'access_level', 'role'] as $column) {
-                    if (!Admin::hasColumn($column)) {
+                foreach (['admin_uuid', 'name', 'first_name', 'middle_name', 'last_name', 'suffix_name', 'email', 'office', 'role', 'status'] as $column) {
+                    if (!AdminHub::hasColumn($column)) {
                         continue;
                     }
 
-                    if ($column === 'admin_id') {
-                        $builder->orWhere($column, 'like', '%' . $search . '%');
-                    } else {
-                        $builder->orWhere($column, 'like', '%' . $search . '%');
-                    }
+                    $builder->orWhere($column, 'like', '%' . $search . '%');
                 }
             });
         }
 
-        foreach (['admin_id', 'email', 'email_address', 'access_level', 'role'] as $column) {
+        foreach (['admin_uuid', 'email', 'role', 'status'] as $column) {
             $value = trim((string) $request->query($column, ''));
-            if ($value !== '' && Admin::hasColumn($column)) {
+            if ($value !== '' && AdminHub::hasColumn($column)) {
                 $query->where($column, $value);
             }
         }
 
         $limit = max(1, min((int) $request->query('limit', 25), 100));
-        $admins = $query->orderBy($this->defaultOrderColumn())
+        $admins = $query->orderBy($this->defaultAdminHubOrderColumn())
             ->limit($limit)
             ->get()
-            ->map(fn (Admin $admin) => $this->transformAdmin($admin))
+            ->map(fn (AdminHub $admin) => $this->transformAdminHub($admin))
             ->values()
             ->all();
 
@@ -56,17 +53,17 @@ class AdminProfileController extends Controller
 
     public function options(Request $request): JsonResponse
     {
-        if (!Schema::hasTable('admins')) {
-            return $this->errorResponse('Admins table was not found.', 404);
+        if (!Schema::hasTable('admin_hub')) {
+            return $this->errorResponse('Admin Hub table was not found.', 404);
         }
 
-        $query = Admin::query();
+        $query = AdminHub::query();
         $search = trim((string) $request->query('search', ''));
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
-                foreach (['admin_id', 'first_name', 'last_name', 'suffix_name', 'email', 'email_address'] as $column) {
-                    if (!Admin::hasColumn($column)) {
+                foreach (['admin_uuid', 'first_name', 'last_name', 'suffix_name', 'email'] as $column) {
+                    if (!AdminHub::hasColumn($column)) {
                         continue;
                     }
 
@@ -76,10 +73,10 @@ class AdminProfileController extends Controller
         }
 
         $limit = max(1, min((int) $request->query('limit', 100), 250));
-        $admins = $query->orderBy($this->defaultOrderColumn())
+        $admins = $query->orderBy($this->defaultAdminHubOrderColumn())
             ->limit($limit)
             ->get()
-            ->map(fn (Admin $admin) => $this->transformAdminOption($admin))
+            ->map(fn (AdminHub $admin) => $this->transformAdminHubOption($admin))
             ->values()
             ->all();
 
@@ -88,26 +85,26 @@ class AdminProfileController extends Controller
 
     public function lookup(Request $request): JsonResponse
     {
-        if (!Schema::hasTable('admins')) {
-            return $this->errorResponse('Admins table was not found.', 404);
+        if (!Schema::hasTable('admin_hub')) {
+            return $this->errorResponse('Admin Hub table was not found.', 404);
         }
 
-        $lookup = $this->resolveLookup($request);
+        $lookup = $this->resolveAdminHubLookup($request);
         if ($lookup === null) {
             return $this->errorResponse('Admin profile not found.', 404);
         }
 
         [$column, $value] = $lookup;
-        if (!Admin::hasColumn($column)) {
+        if (!AdminHub::hasColumn($column)) {
             return $this->errorResponse('Admin profile not found.', 404);
         }
 
-        $admin = Admin::query()->where($column, $value)->first();
+        $admin = AdminHub::query()->where($column, $value)->first();
         if (!$admin) {
             return $this->errorResponse('Admin profile not found.', 404);
         }
 
-        return $this->successResponse($this->transformAdmin($admin), 'Admin profile retrieved successfully.');
+        return $this->successResponse($this->transformAdminHub($admin), 'Admin profile retrieved successfully.');
     }
 
     public function show($admin_id): JsonResponse
@@ -129,16 +126,71 @@ class AdminProfileController extends Controller
         return $this->successResponse($this->transformAdmin($admin), 'Admin profile retrieved successfully.');
     }
 
-    public function externalShow($admin_id): JsonResponse
+    public function externalShow($admin_uuid): JsonResponse
     {
-        return $this->show($admin_id);
+        if (!Schema::hasTable('admin_hub')) {
+            return $this->errorResponse('Admin Hub table was not found.', 404);
+        }
+
+        if (!AdminHub::hasColumn('admin_uuid')) {
+            return $this->errorResponse('Admin profile not found.', 404);
+        }
+
+        $admin = AdminHub::query()->where('admin_uuid', $admin_uuid)->first();
+
+        if (!$admin) {
+            return $this->errorResponse('Admin profile not found.', 404);
+        }
+
+        return $this->successResponse($this->transformAdminHub($admin), 'Admin profile retrieved successfully.');
     }
 
-    public function externalUpdate(Request $request, $admin_id): JsonResponse
+    public function externalUpdate(Request $request, $admin_uuid): JsonResponse
     {
-        $request->merge(['admin_id' => $admin_id]);
+        if (!Schema::hasTable('admin_hub')) {
+            return $this->errorResponse('Admin Hub table was not found.', 404);
+        }
 
-        return $this->update($request);
+        if (!AdminHub::hasColumn('admin_uuid')) {
+            return $this->errorResponse('Admin profile not found.', 404);
+        }
+
+        $admin = AdminHub::query()->where('admin_uuid', $admin_uuid)->first();
+
+        if (!$admin) {
+            return $this->errorResponse('Admin profile not found.', 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'email' => 'nullable|email',
+            'first_name' => 'nullable|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'suffix_name' => 'nullable|string|max:50',
+            'office' => 'nullable|string|max:255',
+            'role' => 'nullable|in:admin_designee,designee',
+            'status' => 'nullable|in:active,inactive',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'data' => [
+                    'errors' => $validator->errors(),
+                ],
+                'message' => 'Validation failed.',
+            ], 422);
+        }
+
+        $validated = $validator->validated();
+        if (array_key_exists('role', $validated)) {
+            $validated['role'] = 'admin_designee';
+        }
+
+        $admin->fill($this->filterSupportedAdminHubColumns($validated));
+        $admin->save();
+
+        return $this->successResponse($this->transformAdminHub($admin->fresh()), 'Admin profile updated successfully.');
     }
 
     private function resolveLookup(Request $request): ?array
@@ -148,6 +200,23 @@ class AdminProfileController extends Controller
             if ($value !== '') {
                 return [$column, $value];
             }
+        }
+
+        return null;
+    }
+
+    private function resolveAdminHubLookup(Request $request): ?array
+    {
+        foreach (['admin_uuid', 'email'] as $column) {
+            $value = trim((string) $request->query($column, ''));
+            if ($value !== '') {
+                return [$column, $value];
+            }
+        }
+
+        $legacyAdminId = trim((string) $request->query('admin_id', ''));
+        if ($legacyAdminId !== '') {
+            return ['admin_uuid', $legacyAdminId];
         }
 
         return null;
@@ -253,6 +322,46 @@ class AdminProfileController extends Controller
         ];
     }
 
+    private function transformAdminHub(AdminHub $admin): array
+    {
+        $data = [];
+
+        foreach ($this->adminHubResponseFieldMap() as $outputField => $candidateColumns) {
+            $value = $this->pickFirstAvailableAdminHubValue($admin, $candidateColumns);
+            if ($value !== null && $value !== '') {
+                $data[$outputField] = $value;
+            }
+        }
+
+        if (!isset($data['name'])) {
+            $name = trim(implode(' ', array_filter([
+                $this->pickFirstAvailableAdminHubValue($admin, ['first_name']),
+                $this->pickFirstAvailableAdminHubValue($admin, ['middle_name']),
+                $this->pickFirstAvailableAdminHubValue($admin, ['last_name']),
+                $this->pickFirstAvailableAdminHubValue($admin, ['suffix_name']),
+            ])));
+
+            if ($name !== '') {
+                $data['name'] = $name;
+            }
+        }
+
+        return $data;
+    }
+
+    private function transformAdminHubOption(AdminHub $admin): array
+    {
+        return [
+            'id' => $this->pickFirstAvailableAdminHubValue($admin, ['admin_uuid']),
+            'admin_uuid' => $this->pickFirstAvailableAdminHubValue($admin, ['admin_uuid']),
+            'first_name' => $this->pickFirstAvailableAdminHubValue($admin, ['first_name']) ?? '',
+            'last_name' => $this->pickFirstAvailableAdminHubValue($admin, ['last_name']) ?? '',
+            'suffix_name' => $this->pickFirstAvailableAdminHubValue($admin, ['suffix_name']),
+            'email' => $this->pickFirstAvailableAdminHubValue($admin, ['email']) ?? '',
+            'status' => $this->pickFirstAvailableAdminHubValue($admin, ['status']) ?? 'N/A',
+        ];
+    }
+
     private function responseFieldMap(): array
     {
         return [
@@ -278,10 +387,37 @@ class AdminProfileController extends Controller
         ];
     }
 
+    private function adminHubResponseFieldMap(): array
+    {
+        return [
+            'admin_uuid' => ['admin_uuid'],
+            'first_name' => ['first_name'],
+            'middle_name' => ['middle_name'],
+            'last_name' => ['last_name'],
+            'suffix_name' => ['suffix_name'],
+            'name' => ['name'],
+            'email' => ['email'],
+            'office' => ['office'],
+            'role' => ['role'],
+            'status' => ['status'],
+        ];
+    }
+
     private function pickFirstAvailableValue(Admin $admin, array $candidateColumns)
     {
         foreach ($candidateColumns as $column) {
             if (Admin::hasColumn($column)) {
+                return $admin->getAttribute($column);
+            }
+        }
+
+        return null;
+    }
+
+    private function pickFirstAvailableAdminHubValue(AdminHub $admin, array $candidateColumns)
+    {
+        foreach ($candidateColumns as $column) {
+            if (AdminHub::hasColumn($column)) {
                 return $admin->getAttribute($column);
             }
         }
@@ -302,6 +438,19 @@ class AdminProfileController extends Controller
         return $filtered;
     }
 
+    private function filterSupportedAdminHubColumns(array $attributes): array
+    {
+        $filtered = [];
+
+        foreach ($attributes as $column => $value) {
+            if (AdminHub::hasColumn($column)) {
+                $filtered[$column] = $value;
+            }
+        }
+
+        return $filtered;
+    }
+
     private function defaultOrderColumn(): string
     {
         foreach (['name', 'first_name', 'admin_id', 'id'] as $column) {
@@ -311,6 +460,17 @@ class AdminProfileController extends Controller
         }
 
         return 'admin_id';
+    }
+
+    private function defaultAdminHubOrderColumn(): string
+    {
+        foreach (['name', 'first_name', 'admin_uuid', 'id'] as $column) {
+            if (AdminHub::hasColumn($column)) {
+                return $column;
+            }
+        }
+
+        return 'id';
     }
 
     private function successResponse($data, string $message, int $status = 200): JsonResponse
