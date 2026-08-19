@@ -1476,28 +1476,6 @@
                         <div class="um-note" id="externalNote" style="display:none; margin-top: 6px;">
                             This profile comes from an external source. Saving here adds it to the Admin Hub and links an existing clinic account when available without changing the source system.
                         </div>
-                        <div class="um-actions">
-                            <button type="button" class="um-settings-action um-action-neutral" id="deactivateBtn">Deactivate Account</button>
-                            <button
-                                type="submit"
-                                form="deleteForm"
-                                class="um-settings-action um-action-warning"
-                                onclick="return confirm('Remove only the Admin Designee role and restore the linked account to its base role?')"
-                            >
-                                Remove Admin Designee Role
-                            </button>
-                            <button
-                                type="submit"
-                                form="deleteAdminHubForm"
-                                class="um-settings-action um-action-danger"
-                                id="deleteAdminHubBtn"
-                                style="display:none;"
-                                onclick="return confirm('Delete this standalone directory record? Linked clinic accounts will be preserved and only removed from the Admin Hub.')"
-                            >
-                                Delete Directory Record
-                            </button>
-                            <button type="submit" class="um-settings-action um-action-primary" id="saveSettingsBtn">Save Changes</button>
-                        </div>
                     </form>
 
                     <form method="POST" id="deleteForm" style="margin-top: 10px;">
@@ -1512,6 +1490,28 @@
                         @method('DELETE')
                         <input type="hidden" name="management_view" id="deleteAdminHubManagementView" value="admin-hub">
                     </form>
+                    </div>
+                    <div class="um-actions um-settings-actions-footer">
+                        <button type="button" class="um-settings-action um-action-neutral" id="deactivateBtn">Deactivate Account</button>
+                        <button
+                            type="submit"
+                            form="deleteForm"
+                            class="um-settings-action um-action-warning"
+                            onclick="return confirm('Remove only the Admin Designee role and restore the linked account to its base role?')"
+                        >
+                            Remove Admin Designee Role
+                        </button>
+                        <button
+                            type="submit"
+                            form="deleteAdminHubForm"
+                            class="um-settings-action um-action-danger"
+                            id="deleteAdminHubBtn"
+                            style="display:none;"
+                            onclick="return confirm('Delete this standalone directory record? Linked clinic accounts will be preserved and only removed from the Admin Hub.')"
+                        >
+                            Delete Directory Record
+                        </button>
+                        <button type="submit" form="settingsForm" class="um-settings-action um-action-primary" id="saveSettingsBtn">Save Changes</button>
                     </div>
                 </div>
             </div>
