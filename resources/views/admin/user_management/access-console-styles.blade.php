@@ -555,10 +555,9 @@
         font-size: 24px;
     }
     #settingsModal .um-settings-console > .um-modal-body {
-        display: block;
-        height: 0;
+        display: flex;
         min-height: 0;
-        flex: 1 1 auto;
+        flex: 1 1 0;
         max-height: none;
         padding: 0 !important;
         overflow: hidden;
@@ -567,9 +566,12 @@
     #settingsModal .um-settings-console .um-modal-grid {
         display: grid;
         grid-template-columns: 276px minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr);
+        width: 100%;
         height: 100%;
         min-height: 0;
         gap: 0;
+        align-items: stretch;
     }
     #settingsModal .um-settings-console .um-detail-card {
         min-height: 0;
@@ -677,6 +679,8 @@
     #settingsModal .um-settings-console .um-settings-form-card {
         display: flex;
         flex-direction: column;
+        height: 100%;
+        max-height: 100%;
         min-height: 0;
         overflow: hidden;
         scrollbar-color: #a62638 #f2edef;
@@ -713,7 +717,7 @@
         border-radius: 7px;
         font-size: 10px;
     }
-    #settingsModal .um-settings-console .um-settings-form-body { height: 0; flex: 1 1 auto; min-height: 0; padding: 18px 24px 24px; overflow-y: auto !important; overscroll-behavior: contain; }
+    #settingsModal .um-settings-console .um-settings-form-body { flex: 1 1 0; min-height: 0; padding: 18px 24px 24px; overflow-y: auto !important; overscroll-behavior: contain; }
     #settingsModal .um-settings-console .um-section-block {
         padding: 16px;
         border: 1px solid #eadfe2;
