@@ -23,7 +23,7 @@ class AdminProfileController extends Controller
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
-                foreach (['admin_uuid', 'name', 'first_name', 'middle_name', 'last_name', 'suffix_name', 'email', 'office', 'role', 'status'] as $column) {
+                foreach (['admin_uuid', 'employee_number', 'name', 'first_name', 'middle_name', 'last_name', 'suffix_name', 'email', 'office', 'role', 'access_level', 'status'] as $column) {
                     if (!AdminHub::hasColumn($column)) {
                         continue;
                     }
@@ -33,7 +33,7 @@ class AdminProfileController extends Controller
             });
         }
 
-        foreach (['admin_uuid', 'email', 'role', 'status'] as $column) {
+        foreach (['admin_uuid', 'employee_number', 'email', 'role', 'access_level', 'status'] as $column) {
             $value = trim((string) $request->query($column, ''));
             if ($value !== '' && AdminHub::hasColumn($column)) {
                 $query->where($column, $value);
@@ -62,7 +62,7 @@ class AdminProfileController extends Controller
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
-                foreach (['admin_uuid', 'first_name', 'last_name', 'suffix_name', 'email'] as $column) {
+                foreach (['admin_uuid', 'employee_number', 'first_name', 'last_name', 'suffix_name', 'email'] as $column) {
                     if (!AdminHub::hasColumn($column)) {
                         continue;
                     }
@@ -167,6 +167,15 @@ class AdminProfileController extends Controller
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'suffix_name' => 'nullable|string|max:50',
+            'employee_number' => 'nullable|string|max:255',
+            'birthday' => 'nullable|date',
+            'age' => 'nullable|integer|min:0|max:150',
+            'gender' => 'nullable|string|max:50',
+            'civil_status' => 'nullable|string|max:50',
+            'address' => 'nullable|string',
+            'emergency_contact_person' => 'nullable|string|max:255',
+            'emergency_contact_no' => 'nullable|string|max:50',
+            'access_level' => 'nullable|in:designee,admin_designee',
             'office' => 'nullable|string|max:255',
             'role' => 'nullable|in:admin_designee,designee',
             'status' => 'nullable|in:active,inactive',
@@ -185,6 +194,9 @@ class AdminProfileController extends Controller
         $validated = $validator->validated();
         if (array_key_exists('role', $validated)) {
             $validated['role'] = 'admin_designee';
+        }
+        if (array_key_exists('access_level', $validated)) {
+            $validated['access_level'] = 'designee';
         }
 
         $admin->fill($this->filterSupportedAdminHubColumns($validated));
@@ -207,7 +219,7 @@ class AdminProfileController extends Controller
 
     private function resolveAdminHubLookup(Request $request): ?array
     {
-        foreach (['admin_uuid', 'email'] as $column) {
+        foreach (['admin_uuid', 'employee_number', 'email'] as $column) {
             $value = trim((string) $request->query($column, ''));
             if ($value !== '') {
                 return [$column, $value];
@@ -216,7 +228,7 @@ class AdminProfileController extends Controller
 
         $legacyAdminId = trim((string) $request->query('admin_id', ''));
         if ($legacyAdminId !== '') {
-            return ['admin_uuid', $legacyAdminId];
+            return ['employee_number', $legacyAdminId];
         }
 
         return null;
@@ -231,6 +243,7 @@ class AdminProfileController extends Controller
         $validator = Validator::make($request->all(), [
             'admin_id' => 'required|exists:admins,admin_id',
             'email' => 'nullable|email',
+            'employee_number' => 'nullable|string|max:255',
             'first_name' => 'nullable|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
@@ -351,9 +364,13 @@ class AdminProfileController extends Controller
 
     private function transformAdminHubOption(AdminHub $admin): array
     {
+        $adminUuid = $this->pickFirstAvailableAdminHubValue($admin, ['admin_uuid']);
+        $employeeNumber = $this->pickFirstAvailableAdminHubValue($admin, ['employee_number']);
+
         return [
-            'id' => $this->pickFirstAvailableAdminHubValue($admin, ['admin_uuid']),
-            'admin_uuid' => $this->pickFirstAvailableAdminHubValue($admin, ['admin_uuid']),
+            'id' => $adminUuid ?: $employeeNumber ?: $admin->getKey(),
+            'admin_uuid' => $adminUuid,
+            'employee_number' => $employeeNumber,
             'first_name' => $this->pickFirstAvailableAdminHubValue($admin, ['first_name']) ?? '',
             'last_name' => $this->pickFirstAvailableAdminHubValue($admin, ['last_name']) ?? '',
             'suffix_name' => $this->pickFirstAvailableAdminHubValue($admin, ['suffix_name']),
@@ -366,6 +383,7 @@ class AdminProfileController extends Controller
     {
         return [
             'admin_id' => ['admin_id', 'id'],
+            'employee_number' => ['employee_number'],
             'first_name' => ['first_name'],
             'middle_name' => ['middle_name'],
             'last_name' => ['last_name'],
@@ -391,13 +409,22 @@ class AdminProfileController extends Controller
     {
         return [
             'admin_uuid' => ['admin_uuid'],
+            'employee_number' => ['employee_number'],
             'first_name' => ['first_name'],
             'middle_name' => ['middle_name'],
             'last_name' => ['last_name'],
             'suffix_name' => ['suffix_name'],
             'name' => ['name'],
             'email' => ['email'],
+            'birthday' => ['birthday'],
+            'age' => ['age'],
+            'gender' => ['gender'],
+            'civil_status' => ['civil_status'],
+            'address' => ['address'],
+            'emergency_contact_person' => ['emergency_contact_person'],
+            'emergency_contact_no' => ['emergency_contact_no'],
             'office' => ['office'],
+            'access_level' => ['access_level'],
             'role' => ['role'],
             'status' => ['status'],
         ];

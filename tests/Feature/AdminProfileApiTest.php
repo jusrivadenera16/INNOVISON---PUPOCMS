@@ -26,6 +26,7 @@ class AdminProfileApiTest extends TestCase
         Schema::create('admin_hub', function (Blueprint $table) {
             $table->id();
             $table->string('admin_uuid')->nullable()->unique();
+            $table->string('employee_number')->nullable()->index();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('first_name')->nullable();
             $table->string('middle_name')->nullable();
@@ -33,7 +34,15 @@ class AdminProfileApiTest extends TestCase
             $table->string('suffix_name')->nullable();
             $table->string('name')->nullable();
             $table->string('email')->nullable()->index();
+            $table->date('birthday')->nullable();
+            $table->unsignedSmallInteger('age')->nullable();
+            $table->string('gender')->nullable();
+            $table->string('civil_status')->nullable();
+            $table->text('address')->nullable();
+            $table->string('emergency_contact_person')->nullable();
+            $table->string('emergency_contact_no')->nullable();
             $table->string('office')->nullable();
+            $table->string('access_level')->nullable();
             $table->string('role', 50)->default('admin_designee');
             $table->string('status', 30)->default('active');
             $table->timestamps();
@@ -61,6 +70,7 @@ class AdminProfileApiTest extends TestCase
     {
         DB::table('admin_hub')->insert([
             'admin_uuid' => 'idp-admin-001',
+            'employee_number' => 'FA001TG2023',
             'first_name' => 'Ada',
             'middle_name' => 'Byron',
             'last_name' => 'Lovelace',
@@ -82,6 +92,7 @@ class AdminProfileApiTest extends TestCase
             ->assertJson([
                 'data' => [
                     'admin_uuid' => 'idp-admin-001',
+                    'employee_number' => 'FA001TG2023',
                     'email' => 'admin@example.com',
                     'first_name' => 'Ada',
                     'middle_name' => 'Byron',
@@ -146,17 +157,29 @@ class AdminProfileApiTest extends TestCase
                 'last_name' => 'Admin',
                 'email' => 'updated@example.com',
                 'office' => 'Medical Services',
+                'employee_number' => 'FA004TG2019',
+                'birthday' => '1987-03-14',
+                'age' => 39,
+                'gender' => 'Female',
+                'civil_status' => 'Married',
+                'address' => 'Taguig City',
+                'emergency_contact_person' => 'Grace Admin',
+                'emergency_contact_no' => '09123456789',
+                'access_level' => 'designee',
                 'role' => 'designee',
                 'status' => 'inactive',
             ])
             ->assertOk()
             ->assertJsonPath('data.name', 'Updated Admin')
+            ->assertJsonPath('data.employee_number', 'FA004TG2019')
+            ->assertJsonPath('data.access_level', 'designee')
             ->assertJsonPath('data.role', 'admin_designee')
             ->assertJsonPath('data.status', 'inactive');
 
         $this->assertDatabaseHas('admin_hub', [
             'admin_uuid' => 'idp-admin-004',
             'email' => 'updated@example.com',
+            'employee_number' => 'FA004TG2019',
             'office' => 'Medical Services',
             'status' => 'inactive',
         ]);

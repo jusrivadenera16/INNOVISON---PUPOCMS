@@ -1,5 +1,5 @@
 <div class="um-section-block account-access" id="accountAccessSection">
-    <h4 class="um-section-title">{{ ($managementView ?? '') === 'admin-hub' ? 'Admin Hub Access' : 'Account Access' }}</h4>
+    <h4 class="um-section-title"><x-outline-icon name="shield-check" />{{ ($managementView ?? '') === 'admin-hub' ? 'Admin Hub Access' : 'Account Access' }}</h4>
     <p class="um-section-copy">
         {{ ($managementView ?? '') === 'admin-hub'
             ? 'Classify this shared directory profile, remove designee access, or deactivate resigned accounts.'
@@ -10,7 +10,6 @@
         <select name="user_role" id="detailRole">
             @if(($managementView ?? '') === 'admin-hub')
                 <option value="admin_designee">Admin - Designee</option>
-                <option value="super_admin">Super Admin</option>
             @else
                 <option value="admin_clinic_staff">Admin - Clinic Staff</option>
                 <option value="student_assistant">Admin - Student Assistant</option>
@@ -19,6 +18,7 @@
         </select>
     </div>
     @if(($managementView ?? '') !== 'admin-hub')
+        <span id="moduleAccessPreviewAnchor" hidden></span>
         <section class="um-module-access-preview" id="moduleAccessPreview" hidden aria-labelledby="moduleAccessTitle">
             <div class="um-module-access-head">
                 <div>

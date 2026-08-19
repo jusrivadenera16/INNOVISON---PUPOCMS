@@ -347,6 +347,29 @@ class LoginController extends Controller
             return null;
         }
 
+        if (Schema::hasTable('admins') && $email !== '') {
+            $linkedAdmin = Admin::query()
+                ->where(function ($builder) use ($email) {
+                    if (Admin::hasColumn('email')) {
+                        $builder->orWhere('email', $email);
+                    }
+
+                    if (Admin::hasColumn('email_address')) {
+                        $builder->orWhere('email_address', $email);
+                    }
+                })
+                ->first();
+
+            $accountAccessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
+            if (in_array($accountAccessLevel, ['superadmin', 'super_admin'], true)) {
+                return $this->superAdminRoleValue();
+            }
+
+            if (in_array($accountAccessLevel, ['clinic_staff', 'clinic staff', 'staff'], true)) {
+                return $this->adminRoleValue();
+            }
+        }
+
         $linkedAdminHub = $this->findAdminHubProfileByIdentity($email, $adminUuid);
         if ($linkedAdminHub) {
             $hubStatus = strtolower(trim((string) ($linkedAdminHub->status ?? 'active')));
@@ -360,42 +383,25 @@ class LoginController extends Controller
             }
         }
 
-        if (!Schema::hasTable('admins')) {
-            return null;
-        }
+        return null;
+    }
 
-        $linkedAdmin = Admin::query()
-            ->where(function ($builder) use ($email) {
-                if (Admin::hasColumn('email')) {
-                    $builder->orWhere('email', $email);
-                }
+    private function resolveExistingAccountAccessRole(User $user): ?string
+    {
+        $linkedAdmin = Schema::hasTable('admins') ? $this->findLinkedAdminProfile($user) : null;
+        $accessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
 
-                if (Admin::hasColumn('email_address')) {
-                    $builder->orWhere('email_address', $email);
-                }
-            })
-            ->first();
-
-        if (!$linkedAdmin) {
-            return null;
-        }
-
-        $hubRole = strtolower(trim((string) (
-            $linkedAdmin->access_level
-            ?? $linkedAdmin->role
-            ?? $linkedAdmin->user_role
-            ?? ''
-        )));
-
-        if ($hubRole === 'superadmin' || $hubRole === 'super_admin') {
+        if (in_array($accessLevel, ['superadmin', 'super_admin'], true)) {
             return $this->superAdminRoleValue();
         }
 
-        if (in_array($hubRole, ['clinic_staff', 'clinic staff', 'staff'], true)) {
+        if (in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff'], true)) {
             return $this->adminRoleValue();
         }
 
-        return null;
+        return User::normalizeRole((string) ($user->user_role ?? '')) === User::ROLE_SUPERADMIN
+            ? $this->superAdminRoleValue()
+            : null;
     }
 
     private function findLinkedAdminHubProfile(User $user): ?AdminHub
@@ -427,6 +433,9 @@ class LoginController extends Controller
         }
 
         $adminUuid = trim($adminUuid);
+        if (!$this->isUuid($adminUuid)) {
+            $adminUuid = '';
+        }
         if ($adminUuid !== '' && AdminHub::hasColumn('admin_uuid')) {
             $matchedByUuid = AdminHub::query()->where('admin_uuid', $adminUuid)->first();
             if ($matchedByUuid) {
@@ -446,7 +455,7 @@ class LoginController extends Controller
 
         $storedUuid = trim((string) ($matchedByEmail->admin_uuid ?? ''));
 
-        return $storedUuid === '' || hash_equals($storedUuid, $adminUuid)
+        return $storedUuid === '' || !$this->isUuid($storedUuid) || hash_equals($storedUuid, $adminUuid)
             ? $matchedByEmail
             : null;
     }
@@ -454,12 +463,24 @@ class LoginController extends Controller
     private function syncAdminHubProfileFromIdp(User $user, string $adminUuid): ?AdminHub
     {
         $adminUuid = trim($adminUuid);
+        if (!$this->isUuid($adminUuid)) {
+            $adminUuid = '';
+        }
         $adminHub = $this->findAdminHubProfileByIdentity((string) ($user->email ?? ''), $adminUuid);
         if (!$adminHub) {
             return null;
         }
 
-        if (AdminHub::hasColumn('admin_uuid') && trim((string) ($adminHub->admin_uuid ?? '')) === '' && $adminUuid !== '') {
+        $storedIdentifier = trim((string) ($adminHub->admin_uuid ?? ''));
+        if (
+            AdminHub::hasColumn('employee_number')
+            && !$this->isUuid($storedIdentifier)
+            && $storedIdentifier !== ''
+            && trim((string) ($adminHub->employee_number ?? '')) === ''
+        ) {
+            $adminHub->employee_number = $storedIdentifier;
+        }
+        if (AdminHub::hasColumn('admin_uuid') && $adminUuid !== '') {
             $adminHub->admin_uuid = $adminUuid;
         }
         if (AdminHub::hasColumn('user_id')) {
@@ -476,6 +497,38 @@ class LoginController extends Controller
         }
         if (AdminHub::hasColumn('email') && trim((string) ($user->email ?? '')) !== '') {
             $adminHub->email = strtolower(trim((string) $user->email));
+        }
+
+        $employeeProfile = Schema::hasTable('health_profile_emp') ? $user->employeeHealthProfile : null;
+        $linkedAdmin = Schema::hasTable('admins') ? $this->findLinkedAdminProfile($user) : null;
+        $profileValues = [
+            'employee_number' => [
+                $adminHub->employee_number ?? null,
+                $user->employee_number ?? null,
+                $linkedAdmin?->employee_number,
+                $employeeProfile?->employee_number,
+            ],
+            'birthday' => [$adminHub->birthday ?? null, $linkedAdmin?->birthday, $user->DOB ?? null, $employeeProfile?->birthday],
+            'age' => [$adminHub->age ?? null, $linkedAdmin?->age, $employeeProfile?->age],
+            'gender' => [$adminHub->gender ?? null, $linkedAdmin?->gender, $user->gender ?? null, $employeeProfile?->sex],
+            'civil_status' => [$adminHub->civil_status ?? null, $linkedAdmin?->civil_status, $employeeProfile?->civil_status],
+            'address' => [$adminHub->address ?? null, $linkedAdmin?->address, $employeeProfile?->home_address],
+            'emergency_contact_person' => [$adminHub->emergency_contact_person ?? null, $linkedAdmin?->emergency_contact_person, $employeeProfile?->emergency_contact_person],
+            'emergency_contact_no' => [$adminHub->emergency_contact_no ?? null, $linkedAdmin?->emergency_contact_no, $employeeProfile?->emergency_contact_no],
+            'access_level' => ['designee'],
+        ];
+
+        foreach ($profileValues as $column => $values) {
+            if (!AdminHub::hasColumn($column)) {
+                continue;
+            }
+
+            foreach ($values as $value) {
+                if ($value !== null && trim((string) $value) !== '') {
+                    $adminHub->setAttribute($column, $value);
+                    break;
+                }
+            }
         }
 
         $adminHub->save();
@@ -1224,6 +1277,14 @@ class LoginController extends Controller
         return null;
     }
 
+    private function isUuid(?string $value): bool
+    {
+        return preg_match(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
+            trim((string) $value)
+        ) === 1;
+    }
+
     private function splitName(string $fullName): array
     {
         $clean = trim(preg_replace('/\s+/', ' ', $fullName));
@@ -1318,6 +1379,18 @@ class LoginController extends Controller
             'user.student_number',
             'user.studentNo',
             'data.user.student_number',
+        ]) ?? '';
+        $employeeNumberSeed = $this->firstNonEmptyScalar($profile, [
+            'employee_number',
+            'employee_no',
+            'faculty_code',
+            'user.employee_number',
+            'user.employee_no',
+            'user.faculty_code',
+            'data.employee_number',
+            'data.user.employee_number',
+            'profile.employee_number',
+            'profile.faculty_code',
         ]) ?? '';
         $referenceNumberSeed = $this->firstNonEmptyScalar($profile, [
             'reference_number',
@@ -1456,6 +1529,11 @@ class LoginController extends Controller
         }
 
         if ($existingUser) {
+            $existingAccountAccessRole = $this->resolveExistingAccountAccessRole($existingUser);
+            if ($forcedRole === null && $existingAccountAccessRole !== null) {
+                $role = $existingAccountAccessRole;
+            }
+
             $existingUser->email = $this->resolveUniqueEmail(
                 $normalizedEmailSeed !== '' ? $normalizedEmailSeed : (string) $existingUser->email,
                 (int) $existingUser->id
@@ -1471,6 +1549,9 @@ class LoginController extends Controller
             $existingUser->user_role = $role;
             if (Schema::hasColumn('users', 'idp_role')) {
                 $existingUser->idp_role = $idpRole;
+            }
+            if (Schema::hasColumn('users', 'employee_number') && $employeeNumberSeed !== '') {
+                $existingUser->employee_number = $employeeNumberSeed;
             }
 
             if (
@@ -1548,6 +1629,9 @@ class LoginController extends Controller
         ];
         if (Schema::hasColumn('users', 'idp_role')) {
             $newUserAttributes['idp_role'] = $idpRole;
+        }
+        if (Schema::hasColumn('users', 'employee_number')) {
+            $newUserAttributes['employee_number'] = $employeeNumberSeed !== '' ? $employeeNumberSeed : null;
         }
         $user = User::create($newUserAttributes);
 
@@ -1696,6 +1780,7 @@ class LoginController extends Controller
             $searchTerms = array_values(array_unique(array_filter(array_map('trim', [
                 (string) ($user->email ?? ''),
                 (string) ($user->student_id ?? ''),
+                (string) ($user->employee_number ?? ''),
             ]))));
 
             if ($searchTerms === []) {
@@ -1720,7 +1805,7 @@ class LoginController extends Controller
                         )));
                         $userIdentifiers = array_filter(array_map(
                             fn ($value) => strtolower(trim((string) $value)),
-                            [$user->student_id ?? '']
+                            [$user->student_id ?? '', $user->employee_number ?? '']
                         ));
 
                         return ($facultyEmail !== '' && $facultyEmail === $userEmail)
@@ -1747,11 +1832,18 @@ class LoginController extends Controller
                 $shouldUpdate = true;
             }
 
-            $facultyCode = trim((string) ($matchedFaculty['faculty_code'] ?? ''));
-            $facultyId = trim((string) ($matchedFaculty['faculty_id'] ?? $matchedFaculty['id'] ?? ''));
-            $facultyIdentifier = $facultyCode !== '' ? $facultyCode : $facultyId;
-            if ($facultyIdentifier !== '' && trim((string) ($user->student_id ?? '')) === '') {
-                $user->student_id = $facultyIdentifier;
+            $facultyIdentifier = trim((string) (
+                $matchedFaculty['faculty_code']
+                ?? $matchedFaculty['employee_number']
+                ?? $matchedFaculty['employee_no']
+                ?? ''
+            ));
+            if (
+                Schema::hasColumn('users', 'employee_number')
+                && $facultyIdentifier !== ''
+                && trim((string) ($user->employee_number ?? '')) === ''
+            ) {
+                $user->employee_number = $facultyIdentifier;
                 $shouldUpdate = true;
             }
 

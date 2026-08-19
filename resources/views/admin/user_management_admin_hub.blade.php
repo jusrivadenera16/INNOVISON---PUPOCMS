@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Admin Hub Profile')
+@section('title', 'Admin Hub Management')
 
 @push('styles')
 <style>
@@ -1008,13 +1008,164 @@
 @push('styles')
     @include('admin.user_management.modal-ui-styles')
 @endpush
+@push('styles')
+    @include('admin.user_management.access-console-styles')
+    <style>
+        .user-management-shell > .um-hero,
+        #admin-hub-panel { display: none; }
+    </style>
+@endpush
 
 @section('content')
 <div class="user-management-shell">
+    @php
+        $hubTotal = count($adminHubRecords);
+        $hubActive = collect($adminHubRecords)->where('status', 'active')->count();
+        $hubOffices = collect($adminHubRecords)->filter(fn ($record) => trim((string) data_get($record, 'meta.office', '')) !== '')->count();
+    @endphp
+    <div class="access-console access-console--hub">
+        <section class="access-console__hero">
+            <div>
+                <h1 class="access-console__hero-title">
+                    <span class="access-console__hero-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+                        </svg>
+                    </span>
+                    Admin Hub Management
+                </h1>
+                <p class="access-console__hero-copy">Manage Admin Designee profiles, office assignments, and directory-linked access without changing source account information.</p>
+            </div>
+            <div class="access-console__sync">
+                <span class="access-console__sync-icon"><x-outline-icon name="arrow-long-right" /></span>
+                <div>
+                    <span>API Sync Status</span>
+                    <strong>Connected</strong>
+                    <small>Shared directory profile sync is available</small>
+                </div>
+            </div>
+        </section>
+
+        <section class="access-console__stats" aria-label="Admin Hub summary">
+            <article class="access-console__stat access-console__summary-card" data-summary-popup data-summary-title="Admin Hub Profiles" data-summary-value="{{ number_format($hubTotal) }}" data-summary-copy="Administrator profiles currently recorded in Admin Hub.">
+                <span class="access-console__stat-icon"><x-outline-icon name="users" /></span>
+                <span><span class="access-console__stat-label">Total Administrators</span><strong class="access-console__stat-value">{{ number_format($hubTotal) }}</strong><small class="access-console__stat-note">Admin Hub profiles</small></span>
+            </article>
+            <article class="access-console__stat access-console__summary-card" data-summary-popup data-summary-title="Active Accounts" data-summary-value="{{ number_format($hubActive) }}" data-summary-copy="Admin Designee accounts currently active.">
+                <span class="access-console__stat-icon"><x-outline-icon name="user-plus" /></span>
+                <span><span class="access-console__stat-label">Active Accounts</span><strong class="access-console__stat-value">{{ number_format($hubActive) }}</strong><small class="access-console__stat-note">Current active designees</small></span>
+            </article>
+            <article class="access-console__stat access-console__summary-card" data-summary-popup data-summary-title="Assigned Offices" data-summary-value="{{ number_format($hubOffices) }}" data-summary-copy="Admin Designee profiles currently assigned to an office.">
+                <span class="access-console__stat-icon"><x-outline-icon name="briefcase" /></span>
+                <span><span class="access-console__stat-label">Assigned Offices</span><strong class="access-console__stat-value">{{ number_format($hubOffices) }}</strong><small class="access-console__stat-note">With office assignment</small></span>
+            </article>
+            <article class="access-console__stat access-console__summary-card" data-summary-popup data-summary-title="API Sync Status" data-summary-value="Connected" data-summary-copy="The shared directory connection is available for Admin Hub profile synchronization.">
+                <span class="access-console__stat-icon"><x-outline-icon name="arrow-long-right" /></span>
+                <span><span class="access-console__stat-label">API Sync Status</span><strong class="access-console__stat-value" style="font-size:.9rem; color:#12733d;">Connected</strong><small class="access-console__stat-note">Shared records up to date</small></span>
+            </article>
+        </section>
+
+        <section class="access-console__panel">
+            <div class="access-console__filters">
+                <label class="access-console__search">
+                    <x-outline-icon name="magnifying-glass" />
+                    <input type="search" placeholder="Search by name, email, or employee number" data-access-filter="search" aria-label="Search Admin Hub profiles">
+                </label>
+                <select class="access-console__filter" data-access-filter="office" aria-label="Filter by office">
+                    <option value="">All Offices</option>
+                    @foreach(collect($adminHubRecords)->map(fn ($record) => trim((string) data_get($record, 'meta.office', '')))->filter()->unique()->sort() as $office)
+                        <option value="{{ strtolower($office) }}">{{ $office }}</option>
+                    @endforeach
+                </select>
+                <select class="access-console__filter" data-access-filter="status" aria-label="Filter by status">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                <button type="button" class="access-console__add" data-open-lookup="admin-hub">
+                    <span aria-hidden="true">+</span> Add Admin Designee
+                </button>
+            </div>
+            <div class="access-console__list" data-access-list>
+                @forelse($adminHubRecords as $record)
+                    @php
+                        $office = trim((string) data_get($record, 'meta.office', ''));
+                        $lastSynced = data_get($record, 'meta.updated_at');
+                    @endphp
+                    <article
+                        class="access-console__row"
+                        data-user-card
+                        data-access-record
+                        data-update-url="{{ $record['update_url'] ?? ($record['can_edit'] ? route('admin.user-management.update', $record['id']) : '') }}"
+                        data-delete-url="{{ $record['delete_url'] ?? ($record['can_edit'] ? route('admin.user-management.destroy', $record['id']) : '') }}"
+                        data-delete-admin-hub-url="{{ $record['delete_admin_hub_url'] ?? '' }}"
+                        data-can-edit="{{ $record['can_edit'] ? '1' : '0' }}"
+                        data-id="{{ $record['record_id'] }}"
+                        data-name="{{ $record['name'] }}"
+                        data-first-name="{{ $record['first_name'] }}"
+                        data-last-name="{{ $record['last_name'] }}"
+                        data-email="{{ $record['email'] }}"
+                        data-role="{{ $record['raw_role'] }}"
+                        data-role-label="{{ $record['role'] }}"
+                        data-status="{{ $record['status'] }}"
+                        data-source="{{ $record['source'] }}"
+                        data-source-label="{{ $record['source_label'] }}"
+                        data-student-id="{{ $record['student_id'] }}"
+                        data-avatar-letter="{{ $record['avatar_letter'] }}"
+                        data-updated="{{ $record['meta']['updated_at'] ?? '' }}"
+                        data-management-view="admin-hub"
+                        data-office="{{ strtolower($office) }}"
+                        data-meta='@json($record["meta"])'
+                    >
+                        <span class="access-console__initial">{{ $record['avatar_letter'] }}</span>
+                        <div class="access-console__person">
+                            <span class="access-console__name">{{ $record['name'] }}</span>
+                            <span class="access-console__email"><x-outline-icon name="envelope" />{{ $record['email'] ?: 'No email assigned' }}</span>
+                        </div>
+                        <div class="access-console__meta">
+                            <span class="access-console__tag"><x-outline-icon name="briefcase" />{{ $office !== '' ? $office : 'Office unassigned' }}</span>
+                            <span class="access-console__role"><x-outline-icon name="shield-check" />Admin Designee</span>
+                        </div>
+                        <div class="access-console__state {{ $record['status'] === 'inactive' ? 'access-console__state--inactive' : '' }}">
+                            <strong>{{ ucfirst($record['status']) }}</strong>
+                            <small>{{ $lastSynced ? 'Last synced ' . \Carbon\Carbon::parse($lastSynced)->format('M j, g:i A') : 'Not synced yet' }}</small>
+                        </div>
+                        <button type="button" class="access-console__manage">Manage</button>
+                    </article>
+                @empty
+                    <div class="access-console__empty">No Admin Hub profiles are available yet.</div>
+                @endforelse
+            </div>
+            <footer class="access-console__footer">
+                <span data-access-result-count>Showing {{ $hubTotal }} administrator{{ $hubTotal === 1 ? '' : 's' }}</span>
+                <span>Admin Hub directory</span>
+            </footer>
+        </section>
+    </div>
+
+    <div class="access-summary-modal" id="accessSummaryModal" aria-hidden="true">
+        <section class="access-summary-modal__card" role="dialog" aria-modal="true" aria-labelledby="accessSummaryTitle">
+            <div class="access-summary-modal__head">
+                <div>
+                    <p class="access-summary-modal__eyebrow">Admin Hub Summary</p>
+                    <h2 class="access-summary-modal__title" id="accessSummaryTitle">Summary</h2>
+                </div>
+                <button type="button" class="access-summary-modal__close" data-close-summary-modal aria-label="Close summary popup">&times;</button>
+            </div>
+            <div class="access-summary-modal__value" id="accessSummaryValue"></div>
+            <p class="access-summary-modal__copy" id="accessSummaryCopy"></p>
+        </section>
+    </div>
+
     <div class="um-hero">
         <div>
-            <h1><x-outline-icon name="users" />Admin Hub Profile</h1>
-            <p>Manage clinic-only admin hub records and keep the original API-shared profile fields intact.</p>
+            <h1>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+                </svg>
+                Admin Hub Management
+            </h1>
+            <p>Manage Admin Designee profiles, office assignments, and directory-linked access without changing source account information.</p>
         </div>
     </div>
 
@@ -1022,7 +1173,7 @@
         <div class="um-card">
             <div class="um-panel-header">
                 <div>
-                    <h2>Admin Hub Profile</h2>
+                    <h2>Admin Hub Management</h2>
                 </div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     <a href="{{ route('admin.user-management') }}" class="um-btn um-btn-ghost">Back</a>
@@ -1106,26 +1257,35 @@
 </div>
 
 <div class="um-modal-backdrop {{ $lookupSearch !== '' ? 'show' : '' }}" id="lookupModal">
-    <div class="um-modal-content">
+    <div class="um-modal-content access-onboard-modal">
         <div class="um-modal-head">
             <div class="um-modal-head-main">
                 <div class="um-modal-head-badge">AR</div>
                 <div>
-                    <h3>Add User Roles</h3>
-                    <div class="um-note">Search across students, faculty, or admin profiles to add roles.</div>
+                    <h3>Add Admin Designee</h3>
+                    <div class="um-note">Select a faculty or directory profile and assign Admin Designee access.</div>
                 </div>
             </div>
             <button type="button" class="um-modal-close" data-close-lookup aria-label="Close role lookup">&times;</button>
         </div>
+        <div class="access-onboard-steps" aria-label="Add Admin Designee steps">
+            <div class="access-onboard-step is-current"><span class="access-onboard-step__number">1</span><span><strong>Search User</strong><small>Find a faculty or directory profile</small></span></div>
+            <div class="access-onboard-step"><span class="access-onboard-step__number">2</span><span><strong>Assign Access</strong><small>Admin Designee</small></span></div>
+            <div class="access-onboard-step"><span class="access-onboard-step__number">3</span><span><strong>Confirm</strong><small>Review before saving</small></span></div>
+        </div>
         <div class="um-modal-body">
+            <div class="access-onboard-layout">
+            <div class="access-onboard-search">
             <form class="um-search" method="GET" action="{{ route('admin.user-management.admin-hub') }}">
                 <input type="hidden" name="management_view" value="{{ $managementView ?: 'admin-hub' }}" id="lookupManagementViewField">
-                <input type="search" name="lookup_search" value="{{ $lookupSearch }}" placeholder="Search users by email, name, or ID" id="lookupSearchField">
+                <input type="search" name="lookup_search" value="{{ $lookupSearch }}" placeholder="Search by name, email, or employee number" id="lookupSearchField">
                 <button class="um-btn um-btn-primary" type="submit">Search</button>
             </form>
-            <div class="um-directory-toggle" style="padding: 14px 0 10px;">
-                <div class="hint">Type a search term to show matching users below, or find users from the list manually.</div>
+            <div class="access-onboard-filter-row">
+                <select id="lookupSourceFilter" aria-label="Filter lookup source"><option value="">All Sources</option><option value="faculty">Faculty</option><option value="admin">Admin Hub</option></select>
+                <select id="lookupStatusFilter" aria-label="Filter lookup status"><option value="">All Status</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
             </div>
+            <div class="access-onboard-count"><span data-lookup-result-count>{{ count($lookupRecords) }} result{{ count($lookupRecords) === 1 ? '' : 's' }} found</span><span>Employee number shown when available</span></div>
             <div style="margin-top: 16px;" class="um-directory-panel {{ $lookupSearch !== '' ? 'is-open' : '' }}" id="lookupDirectoryPanel">
             <div class="um-table-wrap">
                 <table class="um-table" style="min-width: 900px;">
@@ -1138,12 +1298,14 @@
                             <th>Source</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="lookupResultsBody">
                         @forelse($lookupRecords as $record)
                             <tr
                                 data-user-card
+                                data-lookup-result-row
                                 data-update-url="{{ $record['can_edit'] ? route('admin.user-management.update', $record['id']) : '' }}"
                                 data-delete-url="{{ $record['can_edit'] ? route('admin.user-management.destroy', $record['id']) : '' }}"
+                                data-delete-admin-hub-url="{{ $record['delete_admin_hub_url'] ?? '' }}"
                                 data-create-url="{{ !$record['can_edit'] && !empty($record['can_onboard']) ? route('admin.user-management.store-from-lookup') : '' }}"
                                 data-can-edit="{{ $record['can_edit'] ? '1' : '0' }}"
                                 data-can-onboard="{{ !empty($record['can_onboard']) ? '1' : '0' }}"
@@ -1166,11 +1328,7 @@
                                 <td>
                                     <div class="um-user">
                                         <div class="um-avatar">
-                                            @if(!empty($record['avatar_url']))
-                                                <img src="{{ $record['avatar_url'] }}" alt="{{ $record['name'] }}">
-                                            @else
-                                                {{ $record['avatar_letter'] }}
-                                            @endif
+                                            {{ $record['avatar_letter'] }}
                                         </div>
                                         <div>
                                             <div class="um-name">{{ $record['name'] }}</div>
@@ -1192,12 +1350,37 @@
                 </table>
             </div>
             </div>
+            </div>
+            <aside class="access-onboard-profile" id="lookupSelectedProfile">
+                <p class="access-onboard-profile__eyebrow">Selected Profile</p>
+                <div class="access-onboard-profile__empty">No User Selected Yet</div>
+                <div class="access-onboard-profile__identity">
+                    <span class="access-onboard-profile__avatar" id="lookupSelectedAvatar">U</span>
+                    <div><div class="access-onboard-profile__name" id="lookupSelectedName"></div><div class="access-onboard-profile__email" id="lookupSelectedEmail"></div></div>
+                </div>
+                <div class="access-onboard-profile__details">
+                    <span>Employee Number<strong id="lookupSelectedIdentifier">Not available</strong></span>
+                    <span>Source System<strong id="lookupSelectedSource">Not available</strong></span>
+                </div>
+                <div class="access-onboard-profile__access">
+                    <p class="access-onboard-role-title">Assign Admin Hub Access</p>
+                    <label class="access-onboard-role-option">
+                        <input type="radio" name="lookup_role" value="admin_designee" checked>
+                        <span><strong>Admin Designee</strong><small>Centralized directory access without clinic module permissions</small></span>
+                    </label>
+                </div>
+            </aside>
+            </div>
         </div>
+            <footer class="access-onboard-footer">
+                <small>Step 1 of 3</small>
+                <span class="access-onboard-footer__actions"><button type="button" class="access-onboard-cancel" data-close-lookup>Cancel</button><button type="button" class="access-onboard-continue" id="onboardContinue" disabled>Continue</button></span>
+            </footer>
     </div>
 </div>
 
 <div class="um-modal-backdrop" id="settingsModal">
-    <div class="um-modal-content">
+    <div class="um-modal-content um-settings-console">
         <div class="um-modal-head">
             <div class="um-modal-head-main">
                 <div class="um-modal-head-badge">AH</div>
@@ -1217,38 +1400,47 @@
                             <span class="um-profile-eyebrow">Admin Profile</span>
                             <h4 class="um-profile-heading">User Information</h4>
                             <p class="um-profile-copy">Identity details linked to the Admin Hub account.</p>
+                            <span class="um-profile-verified"><x-outline-icon name="check" />Verified</span>
                         </div>
                     </div>
                     <div class="um-profile-fields">
                         <div class="um-field">
+                            <span class="um-profile-field-icon"><x-outline-icon name="user-circle" /></span>
                             <label>Name</label>
                             <input type="text" id="detailName" readonly>
                         </div>
                         <div class="um-field">
+                            <span class="um-profile-field-icon"><x-outline-icon name="envelope" /></span>
                             <label>Email</label>
                             <input type="text" id="detailEmail" readonly>
                         </div>
                         <div class="um-field">
+                            <span class="um-profile-field-icon"><x-outline-icon name="identification" /></span>
                             <label id="detailIdentifierLabel">ID Number</label>
                             <input type="text" id="detailIdentifier" readonly>
                         </div>
                         <div class="um-field">
+                            <span class="um-profile-field-icon"><x-outline-icon name="calendar-days" /></span>
                             <label>DOB</label>
                             <input type="text" id="detailDob" readonly>
                         </div>
                         <div class="um-field">
+                            <span class="um-profile-field-icon"><x-outline-icon name="phone" /></span>
                             <label>Number</label>
                             <input type="text" id="detailContactNo" readonly>
                         </div>
                         <div class="um-field">
+                            <span class="um-profile-field-icon"><x-outline-icon name="home" /></span>
                             <label>Address</label>
                             <input type="text" id="detailAddress" readonly>
                         </div>
                         <div class="um-field">
+                            <span class="um-profile-field-icon"><x-outline-icon name="briefcase" /></span>
                             <label>Source</label>
                             <input type="text" id="detailSource" readonly>
                         </div>
                         <div class="um-field">
+                            <span class="um-profile-field-icon"><x-outline-icon name="clock" /></span>
                             <label>Last Updated</label>
                             <input type="text" id="detailUpdated" readonly>
                         </div>
@@ -1257,7 +1449,7 @@
                 <div class="um-detail-card um-settings-form-card">
                     <div class="um-settings-card-head">
                         <div>
-                            <h4>Admin Hub Configuration</h4>
+                            <h4><span class="um-settings-title-icon"><x-outline-icon name="shield-check" /></span>Admin Hub Configuration</h4>
                             <p>Manage the shared directory role, department or office, and status.</p>
                         </div>
                         <span class="um-settings-card-badge">AH</span>
@@ -1272,6 +1464,14 @@
                         <input type="hidden" name="last_name" id="detailLastName" value="">
                         <input type="hidden" name="full_name" id="detailFullName" value="">
                         <input type="hidden" name="admin_uuid" id="detailAdminUuid" value="">
+                        <input type="hidden" name="employee_number" id="detailEmployeeNumber" value="">
+                        <input type="hidden" name="birthday" id="detailBirthday" value="">
+                        <input type="hidden" name="age" id="detailAge" value="">
+                        <input type="hidden" name="gender" id="detailGenderValue" value="">
+                        <input type="hidden" name="civil_status" id="detailCivilStatus" value="">
+                        <input type="hidden" name="address" id="detailAddressValue" value="">
+                        <input type="hidden" name="emergency_contact_person" id="detailEmergencyContactPerson" value="">
+                        <input type="hidden" name="emergency_contact_no" id="detailEmergencyContactNo" value="">
                         @include('admin.user_management.account-access-section')
                         <div class="um-note" id="externalNote" style="display:none; margin-top: 6px;">
                             This profile comes from an external source. Saving here adds it to the Admin Hub and links an existing clinic account when available without changing the source system.
@@ -1319,8 +1519,6 @@
     </div>
 </div>
 
-<div class="um-cursor-hint" id="userHoverHint">Click to enter</div>
-
 @push('scripts')
 <script>
     const lookupModal = document.getElementById('lookupModal');
@@ -1353,6 +1551,14 @@
     const detailLastName = document.getElementById('detailLastName');
     const detailFullName = document.getElementById('detailFullName');
     const detailAdminUuid = document.getElementById('detailAdminUuid');
+    const detailEmployeeNumber = document.getElementById('detailEmployeeNumber');
+    const detailBirthday = document.getElementById('detailBirthday');
+    const detailAge = document.getElementById('detailAge');
+    const detailGenderValue = document.getElementById('detailGenderValue');
+    const detailCivilStatus = document.getElementById('detailCivilStatus');
+    const detailAddressValue = document.getElementById('detailAddressValue');
+    const detailEmergencyContactPerson = document.getElementById('detailEmergencyContactPerson');
+    const detailEmergencyContactNo = document.getElementById('detailEmergencyContactNo');
     const adminEmailWrap = document.getElementById('adminEmailWrap');
     const detailAdminEmail = document.getElementById('detailAdminEmail');
     const detailOffice = document.getElementById('detailOffice');
@@ -1372,8 +1578,19 @@
     const lookupDirectoryPanel = document.getElementById('lookupDirectoryPanel');
     const lookupSearchField = document.getElementById('lookupSearchField');
     const lookupManagementViewField = document.getElementById('lookupManagementViewField');
-    const userHoverHint = document.getElementById('userHoverHint');
     const currentLookupContext = 'admin-hub';
+    const lookupSelectedProfile = document.getElementById('lookupSelectedProfile');
+    const lookupSelectedAvatar = document.getElementById('lookupSelectedAvatar');
+    const lookupSelectedName = document.getElementById('lookupSelectedName');
+    const lookupSelectedEmail = document.getElementById('lookupSelectedEmail');
+    const lookupSelectedIdentifier = document.getElementById('lookupSelectedIdentifier');
+    const lookupSelectedSource = document.getElementById('lookupSelectedSource');
+    const lookupSourceFilter = document.getElementById('lookupSourceFilter');
+    const lookupStatusFilter = document.getElementById('lookupStatusFilter');
+    const lookupRoleFilter = document.getElementById('lookupRoleFilter');
+    const lookupResultCount = document.querySelector('[data-lookup-result-count]');
+    const onboardContinue = document.getElementById('onboardContinue');
+    let selectedLookupRow = null;
 
     const applySettingsSectionMode = (managementView, canEdit, canOnboard) => {
         const isAdminHubOnly = managementView === 'admin-hub';
@@ -1465,9 +1682,9 @@
 
         detailName.value = row.dataset.name || '';
         detailEmail.value = row.dataset.email || '';
-        detailIdentifier.value = displayValue(meta.faculty_identifier || row.dataset.studentId);
+        detailIdentifier.value = displayValue(meta.employee_number || meta.faculty_identifier || row.dataset.studentId);
         if (detailIdentifierLabel) {
-            detailIdentifierLabel.textContent = 'ID Number';
+            detailIdentifierLabel.textContent = 'Employee Number';
         }
         if (detailDob) {
             detailDob.value = displayValue(meta.DOB || meta.birthday);
@@ -1481,6 +1698,9 @@
         detailSource.value = row.dataset.sourceLabel || row.dataset.source || '';
         detailUpdated.value = row.dataset.updated || 'N/A';
         const normalizedRole = (() => {
+            if (managementView === 'admin-hub') {
+                return 'admin_designee';
+            }
             const raw = (row.dataset.role || 'student').toLowerCase();
             const source = (row.dataset.source || '').toLowerCase();
             if (source === 'student_assistant') {
@@ -1497,6 +1717,8 @@
         const adminLoginEmail = meta.admin_login_email || '';
         const office = meta.office || '';
         const adminProfileId = meta.admin_profile_id || '';
+        const adminHubProfileId = meta.admin_hub_profile_id || '';
+        const adminHubProfileName = meta.admin_hub_profile_name || '';
         const lookupSource = meta.lookup_source || '';
         if (deleteAdminProfileId) {
             deleteAdminProfileId.value = adminProfileId;
@@ -1530,9 +1752,33 @@
         if (detailAdminUuid) {
             detailAdminUuid.value = meta.admin_uuid || '';
         }
+        if (detailEmployeeNumber) {
+            detailEmployeeNumber.value = meta.employee_number || meta.faculty_identifier || '';
+        }
+        if (detailBirthday) {
+            detailBirthday.value = meta.birthday || meta.DOB || '';
+        }
+        if (detailAge) {
+            detailAge.value = meta.age || '';
+        }
+        if (detailGenderValue) {
+            detailGenderValue.value = meta.gender || '';
+        }
+        if (detailCivilStatus) {
+            detailCivilStatus.value = meta.civil_status || '';
+        }
+        if (detailAddressValue) {
+            detailAddressValue.value = meta.address || '';
+        }
+        if (detailEmergencyContactPerson) {
+            detailEmergencyContactPerson.value = meta.emergency_contact_person || '';
+        }
+        if (detailEmergencyContactNo) {
+            detailEmergencyContactNo.value = meta.emergency_contact_no || meta.contact_no || '';
+        }
         if (detailAdminProfileStatus) {
-            detailAdminProfileStatus.textContent = adminProfileId
-                ? `Linked to Admin Hub${meta.admin_profile_name ? ` | ${meta.admin_profile_name}` : ''}`
+            detailAdminProfileStatus.textContent = adminHubProfileId
+                ? `Linked to Admin Hub${adminHubProfileName ? ` | ${adminHubProfileName}` : ''}`
                 : (managementView === 'admin-hub'
                     ? 'No linked admin hub record yet. Saving here will create the selected Admin Hub role.'
                     : 'No linked admin hub record yet. One will be created when you save an admin-side role.');
@@ -1556,7 +1802,7 @@
             if (field.id === 'deactivateBtn') {
                 return;
             }
-            if (field.id === 'settingsMethod' || field.id === 'detailLookupSource' || field.id === 'detailFirstName' || field.id === 'detailLastName' || field.id === 'detailFullName' || field.id === 'detailAdminUuid') {
+            if (['settingsMethod', 'detailLookupSource', 'detailFirstName', 'detailLastName', 'detailFullName', 'detailAdminUuid', 'detailEmployeeNumber', 'detailBirthday', 'detailAge', 'detailGenderValue', 'detailCivilStatus', 'detailAddressValue', 'detailEmergencyContactPerson', 'detailEmergencyContactNo'].includes(field.id)) {
                 field.disabled = false;
                 return;
             }
@@ -1569,7 +1815,7 @@
 
         deleteForm.style.display = canEdit ? 'block' : 'none';
         if (deleteAdminHubBtn) {
-            const showDeleteAdminHub = managementView === 'admin-hub' && canEdit && adminProfileId;
+            const showDeleteAdminHub = managementView === 'admin-hub' && canEdit && adminHubProfileId;
             deleteAdminHubBtn.style.display = showDeleteAdminHub ? '' : 'none';
             deleteAdminHubBtn.disabled = !showDeleteAdminHub;
         }
@@ -1590,6 +1836,79 @@
         settingsModal.classList.add('show');
     };
 
+    const lookupRows = () => Array.from(document.querySelectorAll('[data-lookup-result-row]'));
+    const getLookupMeta = (row) => {
+        try {
+            return JSON.parse(row.dataset.meta || '{}');
+        } catch (error) {
+            return {};
+        }
+    };
+    const resetLookupSelection = () => {
+        selectedLookupRow = null;
+        lookupRows().forEach((row) => row.classList.remove('is-selected'));
+        lookupSelectedProfile?.classList.remove('has-selection');
+        if (onboardContinue) onboardContinue.disabled = true;
+    };
+    const selectLookupProfile = (row) => {
+        if (!row || (row.dataset.canEdit !== '1' && row.dataset.canOnboard !== '1')) {
+            return;
+        }
+
+        const meta = getLookupMeta(row);
+        const identifier = meta.employee_number || meta.faculty_identifier || meta.employee_id || row.dataset.studentId || 'Not available';
+        selectedLookupRow = row;
+        lookupRows().forEach((item) => item.classList.toggle('is-selected', item === row));
+        lookupSelectedProfile?.classList.add('has-selection');
+        if (lookupSelectedAvatar) lookupSelectedAvatar.textContent = row.dataset.avatarLetter || 'U';
+        if (lookupSelectedName) lookupSelectedName.textContent = row.dataset.name || 'Unnamed user';
+        if (lookupSelectedEmail) lookupSelectedEmail.textContent = row.dataset.email || 'No email assigned';
+        if (lookupSelectedIdentifier) lookupSelectedIdentifier.textContent = identifier;
+        if (lookupSelectedSource) lookupSelectedSource.textContent = row.dataset.sourceLabel || row.dataset.source || 'Not available';
+        if (onboardContinue) onboardContinue.disabled = false;
+    };
+    const applyLookupFilters = () => {
+        const source = (lookupSourceFilter?.value || '').toLowerCase();
+        const status = (lookupStatusFilter?.value || '').toLowerCase();
+        const role = (lookupRoleFilter?.value || '').toLowerCase();
+        let count = 0;
+
+        lookupRows().forEach((row) => {
+            const rowSource = (row.dataset.source || '').toLowerCase();
+            const rowStatus = (row.dataset.status || '').toLowerCase();
+            const rowRole = (row.dataset.roleLabel || row.dataset.role || '').toLowerCase();
+            const matches = (!source || rowSource.includes(source))
+                && (!status || rowStatus === status)
+                && (!role || rowRole === role);
+            row.hidden = !matches;
+            if (matches) count += 1;
+        });
+
+        if (lookupResultCount) {
+            lookupResultCount.textContent = `${count} result${count === 1 ? '' : 's'} found`;
+        }
+    };
+
+    [lookupSourceFilter, lookupStatusFilter, lookupRoleFilter].filter(Boolean).forEach((filter) => {
+        filter.addEventListener('change', applyLookupFilters);
+    });
+
+    document.querySelectorAll('[data-lookup-result-row]').forEach((row) => {
+        row.addEventListener('click', () => selectLookupProfile(row));
+    });
+
+    onboardContinue?.addEventListener('click', () => {
+        if (!selectedLookupRow) return;
+
+        const selectedRole = document.querySelector('input[name="lookup_role"]:checked')?.value;
+        lookupModal.classList.remove('show');
+        openSettingsFromRow(selectedLookupRow);
+        if (selectedRole && detailRole) {
+            detailRole.value = selectedRole;
+            detailRole.dispatchEvent(new Event('change'));
+        }
+    });
+
     if (lookupModal && lookupSearchField && lookupSearchField.value.trim() !== '') {
         lookupModal.classList.add('show');
     }
@@ -1599,45 +1918,26 @@
             if (lookupManagementViewField) {
                 lookupManagementViewField.value = currentLookupContext;
             }
+            resetLookupSelection();
             lookupModal.classList.add('show');
         });
     });
 
     document.querySelectorAll('[data-close-lookup]').forEach((button) => {
-        button.addEventListener('click', () => lookupModal.classList.remove('show'));
+        button.addEventListener('click', () => {
+            lookupModal.classList.remove('show');
+            resetLookupSelection();
+        });
     });
 
     document.querySelectorAll('[data-close-settings]').forEach((button) => {
         button.addEventListener('click', () => settingsModal.classList.remove('show'));
     });
 
-    document.querySelectorAll('tr[data-user-card]').forEach((row) => {
+    document.querySelectorAll('[data-user-card]:not([data-lookup-result-row])').forEach((row) => {
         if (row.dataset.canEdit !== '1' && row.dataset.canOnboard !== '1') {
             return;
         }
-
-        const moveHint = (event) => {
-            if (!userHoverHint) {
-                return;
-            }
-            userHoverHint.style.display = 'block';
-            const offsetX = 18;
-            const offsetY = 18;
-            const maxX = window.innerWidth - userHoverHint.offsetWidth - 12;
-            const maxY = window.innerHeight - userHoverHint.offsetHeight - 12;
-            const left = Math.min(event.clientX + offsetX, maxX);
-            const top = Math.min(event.clientY + offsetY, maxY);
-            userHoverHint.style.left = `${Math.max(left, 12)}px`;
-            userHoverHint.style.top = `${Math.max(top, 12)}px`;
-        };
-
-        row.addEventListener('mouseenter', moveHint);
-        row.addEventListener('mousemove', moveHint);
-        row.addEventListener('mouseleave', () => {
-            if (userHoverHint) {
-                userHoverHint.style.display = 'none';
-            }
-        });
 
         row.addEventListener('click', () => openSettingsFromRow(row));
     });
@@ -1667,6 +1967,34 @@
         if (event.target === this) {
             this.classList.remove('show');
         }
+    });
+
+    const accessSummaryModal = document.getElementById('accessSummaryModal');
+    const accessSummaryTitle = document.getElementById('accessSummaryTitle');
+    const accessSummaryValue = document.getElementById('accessSummaryValue');
+    const accessSummaryCopy = document.getElementById('accessSummaryCopy');
+    const closeAccessSummaryModal = () => {
+        if (!accessSummaryModal) return;
+        accessSummaryModal.classList.remove('is-open');
+        accessSummaryModal.setAttribute('aria-hidden', 'true');
+    };
+
+    document.querySelectorAll('[data-summary-popup]').forEach((card) => {
+        card.addEventListener('click', () => {
+            if (!accessSummaryModal) return;
+            accessSummaryTitle.textContent = card.dataset.summaryTitle || 'Summary';
+            accessSummaryValue.textContent = card.dataset.summaryValue || '';
+            accessSummaryCopy.textContent = card.dataset.summaryCopy || '';
+            accessSummaryModal.classList.add('is-open');
+            accessSummaryModal.setAttribute('aria-hidden', 'false');
+        });
+    });
+    document.querySelectorAll('[data-close-summary-modal]').forEach((button) => button.addEventListener('click', closeAccessSummaryModal));
+    accessSummaryModal?.addEventListener('click', (event) => {
+        if (event.target === accessSummaryModal) closeAccessSummaryModal();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && accessSummaryModal?.classList.contains('is-open')) closeAccessSummaryModal();
     });
 </script>
 @include('admin.user_management.modal-ui-script')

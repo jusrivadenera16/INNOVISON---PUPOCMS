@@ -4642,7 +4642,17 @@ public function inventorySummary()
 
         $actorRole = trim((string) $request->input('actor_role', ''));
         if ($actorRole !== '') {
-            $query->where('user_role', strtolower($actorRole));
+            $roleAliases = [
+                'admin' => ['admin', 'student_assistant', 'studentassistant', 'assistant', 'nurse'],
+                'superadmin' => ['superadmin', 'super_admin'],
+                'student' => ['student'],
+                'applicant' => ['applicant'],
+                'faculty' => ['faculty'],
+                'guest' => ['guest'],
+            ];
+
+            $normalizedActorRole = strtolower($actorRole);
+            $query->whereIn('user_role', $roleAliases[$normalizedActorRole] ?? [$normalizedActorRole]);
         }
 
         $eventType = trim((string) $request->input('event_type', ''));
@@ -4720,12 +4730,7 @@ public function inventorySummary()
             ->limit(6)
             ->get();
 
-        $roleOptions = ActivityLog::query()
-            ->whereNotNull('user_role')
-            ->where('user_role', '!=', '')
-            ->distinct()
-            ->orderBy('user_role')
-            ->pluck('user_role');
+        $roleOptions = collect(['admin', 'superadmin', 'student', 'applicant', 'faculty', 'guest']);
 
         $eventTypeOptions = ActivityLog::query()
             ->whereNotNull('event_type')

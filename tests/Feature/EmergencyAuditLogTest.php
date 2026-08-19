@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\Auth\EmergencyAuthController;
 use App\Models\ActivityLog;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use ReflectionMethod;
@@ -16,6 +17,10 @@ class EmergencyAuditLogTest extends TestCase
         DB::beginTransaction();
 
         try {
+            config()->set('services.emergency.email', 'audit-test@example.test');
+            config()->set('services.emergency.password', 'test-password');
+            config()->set('services.emergency.role', User::ROLE_SUPERADMIN);
+
             $session = app('session.store');
             $session->start();
             $session->put('emergency_mfa_pending_account', [
@@ -37,6 +42,7 @@ class EmergencyAuditLogTest extends TestCase
 
             $this->assertNotNull($entry);
             $this->assertSame('audit-test@example.test', $entry->user_name);
+            $this->assertSame(User::ROLE_SUPERADMIN, $entry->user_role);
             $this->assertSame('audit-test@example.test', $entry->metadata['email']);
             $this->assertSame(202, $entry->status_code);
         } finally {

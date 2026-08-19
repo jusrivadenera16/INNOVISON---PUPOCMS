@@ -4636,15 +4636,15 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         $profileReference = strtoupper(trim((string) (optional($profile)->reference_number ?? '')));
         $userReference = strtoupper(trim((string) ($profileUser->reference_number ?? '')));
         $studentNumber = trim((string) (optional($profile)->student_number ?: ($profileUser->student_number ?? '')));
-        $externalIdentifier = trim((string) ($adminProfile->external_identifier ?? ''));
+        $employeeNumber = trim((string) ($adminProfile->employee_number ?? $profileUser->employee_number ?? ''));
         $isStudent = in_array($role, ['student', 'enrolled', ''], true);
         $isApplicant = str_contains($role, 'applicant');
         $isStaffOrDependent = in_array($role, ['admin', 'superadmin', 'super_admin', 'faculty', 'dependent', 'dependents'], true)
             || str_contains($role, 'faculty')
             || str_contains($role, 'dependent');
 
-        if ($isStaffOrDependent && $externalIdentifier !== '') {
-            return ['ID Number', $externalIdentifier];
+        if ($isStaffOrDependent && $employeeNumber !== '') {
+            return ['Employee No', $employeeNumber];
         }
 
         if ($isStudent && $studentNumber !== '') {
@@ -4671,8 +4671,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             return ['Student No', $studentNumber];
         }
 
-        if ($externalIdentifier !== '') {
-            return ['ID Number', $externalIdentifier];
+        if ($employeeNumber !== '') {
+            return ['Employee No', $employeeNumber];
         }
 
         return ['Reference No', $profileReference ?: $userReference ?: 'N/A'];

@@ -528,6 +528,11 @@ class EmergencyAuthController extends Controller
         $pendingEmail = (string) $request->session()->get(self::MFA_PENDING_SESSION_KEY . '.email', '');
         $actorEmail = strtolower(trim((string) ($user?->email ?: $pendingEmail ?: $request->input('email', ''))));
         $actorName = trim((string) ($user?->name ?? ''));
+        $actorRole = User::normalizeRole((string) ($user?->user_role ?? ''));
+        if ($actorRole === '') {
+            $actorRole = $this->emergencyRoleForEmail($actorEmail);
+        }
+
         if ($actorName === '') {
             $actorName = $actorEmail !== '' ? $actorEmail : 'Emergency Account';
         }
@@ -536,7 +541,7 @@ class EmergencyAuthController extends Controller
             ActivityLog::create([
                 'user_id' => $user?->id,
                 'user_name' => $actorName,
-                'user_role' => $user ? strtolower((string) ($user->user_role ?? '')) : null,
+                'user_role' => $actorRole,
                 'action' => 'Emergency Login',
                 'module' => 'Authentication',
                 'event_type' => $statusCode === 200 ? 'auth' : 'error',
@@ -559,6 +564,26 @@ class EmergencyAuthController extends Controller
                 'message' => $exception->getMessage(),
             ]);
         }
+    }
+
+    private function emergencyRoleForEmail(string $email): ?string
+    {
+        if ($email === '') {
+            return null;
+        }
+
+        foreach ($this->emergencyConfig()['accounts'] ?? [] as $account) {
+            $accountEmail = strtolower(trim((string) ($account['email'] ?? '')));
+            if ($accountEmail !== $email) {
+                continue;
+            }
+
+            $role = User::normalizeRole((string) ($account['role'] ?? ''));
+
+            return $role !== '' ? $role : null;
+        }
+
+        return null;
     }
 
     private function emergencyConfig(): array

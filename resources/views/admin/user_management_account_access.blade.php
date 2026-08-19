@@ -1281,12 +1281,167 @@
 @push('styles')
     @include('admin.user_management.modal-ui-styles')
 @endpush
+@push('styles')
+    @include('admin.user_management.access-console-styles')
+    <style>
+        .user-management-shell > .um-hero,
+        #account-access-panel { display: none; }
+    </style>
+@endpush
 
 @section('content')
 <div class="user-management-shell">
+    @php
+        $clinicTotal = count($localRecords);
+        $clinicActive = collect($localRecords)->where('status', 'active')->count();
+        $clinicStaff = collect($localRecords)->filter(fn ($record) => in_array(strtolower((string) data_get($record, 'meta.access_level', '')), ['clinic_staff', 'clinic staff', 'staff'], true))->count();
+        $clinicAssistants = collect($localRecords)->where('source', 'student_assistant')->count();
+        $clinicLastUpdated = collect($localRecords)->pluck('meta.updated_at')->filter()->max();
+    @endphp
+    <div class="access-console access-console--clinic">
+        <section class="access-console__hero">
+            <div>
+                <h1 class="access-console__hero-title">
+                    <span class="access-console__hero-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+                        </svg>
+                    </span>
+                    Account Access
+                </h1>
+                <p class="access-console__hero-copy">Assign clinic roles and module permissions without changing the user&apos;s source identity.</p>
+            </div>
+            <div class="access-console__sync">
+                <span class="access-console__sync-icon"><x-outline-icon name="clock" /></span>
+                <div>
+                    <span>Last Updated</span>
+                    <strong>{{ $clinicLastUpdated ? \Carbon\Carbon::parse($clinicLastUpdated)->format('M j, Y') : 'No updates yet' }}</strong>
+                    @if($clinicLastUpdated)<small>{{ \Carbon\Carbon::parse($clinicLastUpdated)->format('g:i A') }}</small>@endif
+                </div>
+            </div>
+        </section>
+
+        <section class="access-console__stats" aria-label="Clinic access summary">
+            <article class="access-console__stat access-console__summary-card" data-summary-popup data-summary-title="Clinic Accounts" data-summary-value="{{ number_format($clinicTotal) }}" data-summary-copy="Accounts currently assigned to clinic access.">
+                <span class="access-console__stat-icon"><x-outline-icon name="users" /></span>
+                <span><span class="access-console__stat-label">Clinic Accounts</span><strong class="access-console__stat-value">{{ number_format($clinicTotal) }}</strong><small class="access-console__stat-note">Managed clinic accounts</small></span>
+            </article>
+            <article class="access-console__stat access-console__summary-card" data-summary-popup data-summary-title="Active Accounts" data-summary-value="{{ number_format($clinicActive) }}" data-summary-copy="Clinic access accounts currently active.">
+                <span class="access-console__stat-icon"><x-outline-icon name="user-plus" /></span>
+                <span><span class="access-console__stat-label">Active Accounts</span><strong class="access-console__stat-value">{{ number_format($clinicActive) }}</strong><small class="access-console__stat-note">Active clinic access</small></span>
+            </article>
+            <article class="access-console__stat access-console__summary-card" data-summary-popup data-summary-title="Clinic Staff" data-summary-value="{{ number_format($clinicStaff) }}" data-summary-copy="Accounts currently assigned as Clinic Staff.">
+                <span class="access-console__stat-icon"><x-outline-icon name="briefcase" /></span>
+                <span><span class="access-console__stat-label">Clinic Staff</span><strong class="access-console__stat-value">{{ number_format($clinicStaff) }}</strong><small class="access-console__stat-note">With staff access</small></span>
+            </article>
+            <article class="access-console__stat access-console__summary-card" data-summary-popup data-summary-title="Student Assistants" data-summary-value="{{ number_format($clinicAssistants) }}" data-summary-copy="Accounts currently assigned as Student Assistant.">
+                <span class="access-console__stat-icon"><x-outline-icon name="shield-check" /></span>
+                <span><span class="access-console__stat-label">Student Assistants</span><strong class="access-console__stat-value">{{ number_format($clinicAssistants) }}</strong><small class="access-console__stat-note">Module access managed</small></span>
+            </article>
+        </section>
+
+        <section class="access-console__panel">
+            <div class="access-console__filters">
+                <label class="access-console__search">
+                    <x-outline-icon name="magnifying-glass" />
+                    <input type="search" placeholder="Search by name, email, or ID" data-access-filter="search" aria-label="Search clinic accounts">
+                </label>
+                <select class="access-console__filter" data-access-filter="role" aria-label="Filter by role">
+                    <option value="">All Roles</option>
+                    @foreach(collect($localRecords)->pluck('role')->filter()->unique()->sort() as $role)
+                        <option value="{{ strtolower($role) }}">{{ $role }}</option>
+                    @endforeach
+                </select>
+                <select class="access-console__filter" data-access-filter="status" aria-label="Filter by status">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                <button type="button" class="access-console__add" data-open-lookup="account-access">
+                    <span aria-hidden="true">+</span> Add Clinic Access
+                </button>
+            </div>
+            <div class="access-console__list" data-access-list>
+                @forelse($localRecords as $record)
+                    @php
+                        $office = trim((string) data_get($record, 'meta.office', ''));
+                        $lastUpdated = data_get($record, 'meta.updated_at');
+                    @endphp
+                    <article
+                        class="access-console__row"
+                        data-user-card
+                        data-access-record
+                        data-update-url="{{ $record['can_edit'] ? route('admin.user-management.update', $record['id']) : '' }}"
+                        data-create-url="{{ !$record['can_edit'] && !empty($record['can_onboard']) ? route('admin.user-management.store-from-lookup') : '' }}"
+                        data-delete-url="{{ $record['can_edit'] ? route('admin.user-management.destroy', $record['id']) : '' }}"
+                        data-delete-account-url="{{ $record['can_edit'] ? route('admin.user-management.delete-account', $record['id']) : '' }}"
+                        data-can-edit="{{ $record['can_edit'] ? '1' : '0' }}"
+                        data-can-onboard="{{ !empty($record['can_onboard']) ? '1' : '0' }}"
+                        data-id="{{ $record['record_id'] }}"
+                        data-name="{{ $record['name'] }}"
+                        data-first-name="{{ $record['first_name'] }}"
+                        data-last-name="{{ $record['last_name'] }}"
+                        data-email="{{ $record['email'] }}"
+                        data-role="{{ $record['raw_role'] }}"
+                        data-role-label="{{ $record['role'] }}"
+                        data-status="{{ $record['status'] }}"
+                        data-source="{{ $record['source'] }}"
+                        data-source-label="{{ $record['source_label'] }}"
+                        data-student-id="{{ $record['student_id'] }}"
+                        data-avatar-letter="{{ $record['avatar_letter'] }}"
+                        data-updated="{{ $record['meta']['updated_at'] ?? '' }}"
+                        data-management-view="account-access"
+                        data-office="{{ strtolower($office) }}"
+                        data-meta='@json($record["meta"])'
+                    >
+                        <span class="access-console__initial">{{ $record['avatar_letter'] }}</span>
+                        <div class="access-console__person">
+                            <span class="access-console__name">{{ $record['name'] }}</span>
+                            <span class="access-console__email"><x-outline-icon name="envelope" />{{ $record['email'] ?: 'No email assigned' }}</span>
+                        </div>
+                        <div class="access-console__meta">
+                            <span class="access-console__tag"><x-outline-icon name="briefcase" />{{ $office !== '' ? $office : 'Clinic access' }}</span>
+                            <span class="access-console__role"><x-outline-icon name="shield-check" />{{ $record['role'] }}</span>
+                        </div>
+                        <div class="access-console__state {{ $record['status'] === 'inactive' ? 'access-console__state--inactive' : '' }}">
+                            <strong>{{ ucfirst($record['status']) }}</strong>
+                            <small>{{ $lastUpdated ? 'Updated ' . \Carbon\Carbon::parse($lastUpdated)->format('M j, g:i A') : 'No recent update' }}</small>
+                        </div>
+                        <button type="button" class="access-console__manage">Manage</button>
+                    </article>
+                @empty
+                    <div class="access-console__empty">No managed clinic accounts found yet.</div>
+                @endforelse
+            </div>
+            <footer class="access-console__footer">
+                <span data-access-result-count>Showing {{ $clinicTotal }} account{{ $clinicTotal === 1 ? '' : 's' }}</span>
+                <span>Clinic permission management</span>
+            </footer>
+        </section>
+    </div>
+
+    <div class="access-summary-modal" id="accessSummaryModal" aria-hidden="true">
+        <section class="access-summary-modal__card" role="dialog" aria-modal="true" aria-labelledby="accessSummaryTitle">
+            <div class="access-summary-modal__head">
+                <div>
+                    <p class="access-summary-modal__eyebrow">Account Access Summary</p>
+                    <h2 class="access-summary-modal__title" id="accessSummaryTitle">Summary</h2>
+                </div>
+                <button type="button" class="access-summary-modal__close" data-close-summary-modal aria-label="Close summary popup">&times;</button>
+            </div>
+            <div class="access-summary-modal__value" id="accessSummaryValue"></div>
+            <p class="access-summary-modal__copy" id="accessSummaryCopy"></p>
+        </section>
+    </div>
+
     <div class="um-hero">
         <div>
-            <h1><x-outline-icon name="users" />Account Access</h1>
+            <h1>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+                </svg>
+                Account Access
+            </h1>
             <p>Manage clinic login role, student-side email, and active or inactive access.</p>
         </div>
     </div>
@@ -1345,11 +1500,7 @@
                                 <td>
                                     <div class="um-user">
                                         <div class="um-avatar">
-                                            @if(!empty($record['avatar_url']))
-                                                <img src="{{ $record['avatar_url'] }}" alt="{{ $record['name'] }}">
-                                            @else
-                                                {{ $record['avatar_letter'] }}
-                                            @endif
+                                            {{ $record['avatar_letter'] }}
                                         </div>
                                         <div>
                                             <div class="um-name">{{ $record['name'] }}</div>
@@ -1380,26 +1531,50 @@
 </div>
 
 <div class="um-modal-backdrop {{ $lookupSearch !== '' ? 'show' : '' }}" id="lookupModal">
-    <div class="um-modal-content">
+    <div class="um-modal-content access-onboard-modal">
         <div class="um-modal-head">
             <div class="um-modal-head-main">
                 <div class="um-modal-head-badge">AR</div>
                 <div>
-                    <h3>Add User Roles</h3>
-                    <div class="um-note">Search across students, faculty, or admin profiles to add roles.</div>
+                    <h3>Add Clinic Access</h3>
+                    <div class="um-note">Select a directory profile, choose a clinic role, then configure module access.</div>
                 </div>
             </div>
             <button type="button" class="um-modal-close" data-close-lookup aria-label="Close role lookup">&times;</button>
         </div>
+        <div class="access-onboard-steps" aria-label="Add Clinic Access steps">
+            <div class="access-onboard-step is-current"><span class="access-onboard-step__number">1</span><span><strong>Search User</strong><small>Find a profile from connected systems</small></span></div>
+            <div class="access-onboard-step"><span class="access-onboard-step__number">2</span><span><strong>Assign Access</strong><small>Select a clinic role</small></span></div>
+            <div class="access-onboard-step"><span class="access-onboard-step__number">3</span><span><strong>Confirm</strong><small>Configure module access and save</small></span></div>
+        </div>
         <div class="um-modal-body">
+            <div class="access-onboard-layout">
+            <div class="access-onboard-search">
             <form class="um-search" method="GET" action="{{ route('admin.user-management.account-access') }}">
                 <input type="hidden" name="management_view" value="{{ $managementView ?: 'account-access' }}" id="lookupManagementViewField">
-                <input type="search" name="lookup_search" value="{{ $lookupSearch }}" placeholder="Search users by email, name, or ID" id="lookupSearchField">
+                <input type="search" name="lookup_search" value="{{ $lookupSearch }}" placeholder="Search by name, email, or employee number" id="lookupSearchField">
                 <button class="um-btn um-btn-primary" type="submit">Search</button>
             </form>
-            <div class="um-directory-toggle" style="padding: 14px 0 10px;">
-                <div class="hint">Type a search term to show matching users below, or find users from the list manually.</div>
+            <div class="access-onboard-filter-row">
+                <select id="lookupSourceFilter" aria-label="Filter lookup source">
+                    <option value="">All Sources</option>
+                    <option value="student">Students</option>
+                    <option value="faculty">Faculty</option>
+                    <option value="admin">Admin Hub</option>
+                </select>
+                <select id="lookupStatusFilter" aria-label="Filter lookup status">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                <select id="lookupRoleFilter" aria-label="Filter lookup role">
+                    <option value="">All Roles</option>
+                    @foreach(collect($lookupRecords)->pluck('role')->filter()->unique()->sort()->values() as $lookupRole)
+                        <option value="{{ $lookupRole }}">{{ $lookupRole }}</option>
+                    @endforeach
+                </select>
             </div>
+            <div class="access-onboard-count"><span data-lookup-result-count>{{ count($lookupRecords) }} result{{ count($lookupRecords) === 1 ? '' : 's' }} found</span><span>Student or employee number shown when available</span></div>
             <div style="margin-top: 16px;" class="um-directory-panel {{ $lookupSearch !== '' ? 'is-open' : '' }}" id="lookupDirectoryPanel">
             <div class="um-table-wrap">
                 <table class="um-table" style="min-width: 900px;">
@@ -1413,6 +1588,22 @@
                     </thead>
                     <tbody id="lookupResultsBody">
                         @forelse($lookupRecords as $record)
+                            @php
+                                $lookupMeta = (array) ($record['meta'] ?? []);
+                                $lookupSource = strtolower(trim((string) ($record['source'] ?? '')));
+                                $lookupUserType = strtolower(trim((string) ($lookupMeta['user_type'] ?? '')));
+                                $lookupRole = strtolower(trim((string) ($record['raw_role'] ?? '')));
+                                $isStudentLookup = in_array($lookupSource, ['student', 'student_assistant'], true)
+                                    || str_contains($lookupUserType, 'student')
+                                    || $lookupRole === 'student';
+                                $lookupIdentifier = $isStudentLookup
+                                    ? trim((string) ($lookupMeta['student_number'] ?? ''))
+                                    : trim((string) ($lookupMeta['employee_number'] ?? $lookupMeta['faculty_identifier'] ?? $lookupMeta['employee_id'] ?? ''));
+
+                                if (preg_match('/emergency[-_\\s]?(admin|login)/i', $lookupIdentifier)) {
+                                    $lookupIdentifier = '';
+                                }
+                            @endphp
                             <tr
                                 data-user-card
                                 data-lookup-result-row
@@ -1441,15 +1632,11 @@
                                 <td>
                                     <div class="um-user">
                                         <div class="um-avatar">
-                                            @if(!empty($record['avatar_url']))
-                                                <img src="{{ $record['avatar_url'] }}" alt="{{ $record['name'] }}">
-                                            @else
-                                                {{ $record['avatar_letter'] }}
-                                            @endif
+                                            {{ $record['avatar_letter'] }}
                                         </div>
                                         <div>
                                             <div class="um-name">{{ $record['name'] }}</div>
-                                            <div class="um-sub">{{ $record['student_id'] ?: 'ID not available' }}</div>
+                                            <div class="um-sub">{{ $lookupIdentifier ?: 'ID not available' }}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -1475,12 +1662,53 @@
                 </div>
             @endif
             </div>
+            </div>
+            <aside class="access-onboard-profile" id="lookupSelectedProfile">
+                <p class="access-onboard-profile__eyebrow">Selected Profile</p>
+                <div class="access-onboard-profile__empty">No User Selected Yet</div>
+                <div class="access-onboard-profile__identity">
+                    <span class="access-onboard-profile__avatar" id="lookupSelectedAvatar">U</span>
+                    <div>
+                        <div class="access-onboard-profile__name" id="lookupSelectedName"></div>
+                        <div class="access-onboard-profile__email" id="lookupSelectedEmail"></div>
+                        <div class="access-onboard-profile__identifier">
+                            <span id="lookupSelectedIdentifierLabel">Employee Number</span>
+                            <strong id="lookupSelectedIdentifier">Not available</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="access-onboard-profile__details">
+                    <span><span id="lookupSelectedPrimaryLabel">User Type</span><strong id="lookupSelectedPrimaryValue">Not available</strong></span>
+                    <span><span id="lookupSelectedSecondaryLabel">Source System</span><strong id="lookupSelectedSecondaryValue">Not available</strong></span>
+                </div>
+                <div class="access-onboard-profile__access">
+                    <p class="access-onboard-role-title">Assign Clinic Access</p>
+                    <label class="access-onboard-role-option">
+                        <input type="radio" name="lookup_role" value="admin_clinic_staff" checked>
+                        <span><strong>Clinic Staff</strong><small>Access clinic workflows and assigned modules</small></span>
+                    </label>
+                    <label class="access-onboard-role-option">
+                        <input type="radio" name="lookup_role" value="student_assistant">
+                        <span><strong>Student Assistant</strong><small>Access student-assistant clinic workflows</small></span>
+                    </label>
+                    <label class="access-onboard-role-option">
+                        <input type="radio" name="lookup_role" value="super_admin">
+                        <span><strong>Super Admin</strong><small>Full clinic access, including restricted actions</small></span>
+                    </label>
+                    <div class="access-onboard-module-slot" id="lookupModuleAccessSlot" hidden></div>
+                </div>
+            </aside>
+            </div>
         </div>
+            <footer class="access-onboard-footer">
+                <small>Step 1 of 3</small>
+                <span class="access-onboard-footer__actions"><button type="button" class="access-onboard-cancel" data-close-lookup>Cancel</button><button type="button" class="access-onboard-continue" id="onboardContinue" disabled>Continue</button></span>
+            </footer>
     </div>
 </div>
 
 <div class="um-modal-backdrop" id="settingsModal">
-    <div class="um-modal-content">
+    <div class="um-modal-content um-settings-console">
         <div class="um-modal-head">
             <div class="um-modal-head-main">
                 <div class="um-modal-head-badge">AA</div>
@@ -1500,31 +1728,58 @@
                             <span class="um-profile-eyebrow">Account Profile</span>
                             <h4 class="um-profile-heading">User Information</h4>
                             <p class="um-profile-copy">Identity details synchronized with the selected account.</p>
+                            <span class="um-profile-verified"><x-outline-icon name="check" />Verified</span>
                         </div>
                     </div>
                     <div class="um-profile-fields">
                         <div class="um-field">
+                            <span class="um-profile-field-icon"><x-outline-icon name="user-circle" /></span>
                             <label>Name</label>
                             <input type="text" id="detailName" readonly>
                         </div>
                         <div class="um-field">
+                            <span class="um-profile-field-icon"><x-outline-icon name="envelope" /></span>
                             <label>Email</label>
                             <input type="text" id="detailEmail" readonly>
                         </div>
                         <div class="um-field">
-                            <label id="detailIdentifierLabel">Student / Faculty ID</label>
+                            <span class="um-profile-field-icon"><x-outline-icon name="identification" /></span>
+                            <label id="detailIdentifierLabel">Student Number</label>
                             <input type="text" id="detailIdentifier" readonly>
                         </div>
                         <div class="um-field">
-                            <label>Source</label>
-                            <input type="text" id="detailSource" readonly>
+                            <span class="um-profile-field-icon"><x-outline-icon name="calendar-days" /></span>
+                            <label>Birthday</label>
+                            <input type="text" id="detailBirthday" readonly>
                         </div>
                         <div class="um-field">
-                            <label>Original Role</label>
-                            <input type="text" id="detailOriginalRole" readonly>
+                            <span class="um-profile-field-icon"><x-outline-icon name="clock" /></span>
+                            <label>Age</label>
+                            <input type="text" id="detailAge" readonly>
                         </div>
                         <div class="um-field">
-                            <label>Last Updated</label>
+                            <span class="um-profile-field-icon"><x-outline-icon name="user-circle" /></span>
+                            <label>Gender</label>
+                            <input type="text" id="detailGender" readonly>
+                        </div>
+                        <div class="um-field">
+                            <span class="um-profile-field-icon"><x-outline-icon name="home" /></span>
+                            <label>Address</label>
+                            <input type="text" id="detailAddress" readonly>
+                        </div>
+                        <div class="um-field">
+                            <span class="um-profile-field-icon"><x-outline-icon name="phone" /></span>
+                            <label>Contact Number</label>
+                            <input type="text" id="detailContactNumber" readonly>
+                        </div>
+                        <div class="um-field">
+                            <span class="um-profile-field-icon"><x-outline-icon name="shield-check" /></span>
+                            <label>Clinic Role</label>
+                            <input type="text" id="detailClinicRole" readonly>
+                        </div>
+                        <div class="um-field">
+                            <span class="um-profile-field-icon"><x-outline-icon name="clock" /></span>
+                            <label>Updated At</label>
                             <input type="text" id="detailUpdated" readonly>
                         </div>
                     </div>
@@ -1532,7 +1787,7 @@
                 <div class="um-detail-card um-settings-form-card">
                     <div class="um-settings-card-head">
                         <div>
-                            <h4>Access Configuration</h4>
+                            <h4><span class="um-settings-title-icon"><x-outline-icon name="shield-check" /></span>Access Configuration</h4>
                             <p>Set the clinic role, account email, and access status.</p>
                         </div>
                         <span class="um-settings-card-badge">AA</span>
@@ -1546,7 +1801,7 @@
                         <input type="hidden" name="first_name" id="detailFirstName" value="">
                         <input type="hidden" name="last_name" id="detailLastName" value="">
                         <input type="hidden" name="full_name" id="detailFullName" value="">
-                        <input type="hidden" name="external_identifier" id="detailExternalIdentifier" value="">
+                        <input type="hidden" name="employee_number" id="detailEmployeeNumber" value="">
                         @include('admin.user_management.account-access-section')
                         <div class="um-note" id="externalNote" style="display:none; margin-top: 6px;">
                             This faculty profile comes from the external source. Saving here will add a clinic-side user and admin hub record without changing the source system.
@@ -1554,37 +1809,6 @@
                         <div class="um-module-save-warning" id="moduleAccessSaveWarning" hidden>
                             <strong>Module access is saved with this account.</strong>
                             <span>Changes take effect on the user&apos;s next request.</span>
-                        </div>
-                        <div class="um-actions">
-                            <button type="button" class="um-settings-action um-action-neutral" id="deactivateBtn">Deactivate Account</button>
-                            <button
-                                type="submit"
-                                form="deleteForm"
-                                class="um-settings-action um-action-warning"
-                                onclick="return confirm('Remove this clinic access and restore the account role provided by the IDP?')"
-                            >
-                                Remove Access
-                            </button>
-                            <button
-                                type="submit"
-                                form="deleteAccountForm"
-                                class="um-settings-action um-action-danger"
-                                id="deleteAccountBtn"
-                                onclick="return confirm('Permanently delete this user account? Linked admin profile records will be removed and related clinic records may be deleted by database rules. This cannot be undone.')"
-                            >
-                                Delete User Account
-                            </button>
-                            <button
-                                type="submit"
-                                form="deleteAdminHubForm"
-                                class="um-settings-action um-action-danger"
-                                id="deleteAdminHubBtn"
-                                style="display:none;"
-                                onclick="return confirm('Delete this admin hub record from the admins table? This cannot be undone.')"
-                            >
-                                Delete Admin Record
-                            </button>
-                            <button type="submit" class="um-settings-action um-action-primary" id="saveSettingsBtn">Save Changes</button>
                         </div>
                     </form>
 
@@ -1607,13 +1831,43 @@
                         <input type="hidden" name="management_view" id="deleteAdminHubManagementView" value="account-access">
                     </form>
                     </div>
+                    <div class="um-actions um-settings-actions-footer">
+                        <button type="button" class="um-settings-action um-action-neutral" id="deactivateBtn">Deactivate Account</button>
+                        <button
+                            type="submit"
+                            form="deleteForm"
+                            class="um-settings-action um-action-warning"
+                            id="removeAccessBtn"
+                            onclick="return confirm('Remove this clinic access and restore the account role provided by the IDP?')"
+                        >
+                            Remove Access
+                        </button>
+                        <button
+                            type="submit"
+                            form="deleteAccountForm"
+                            class="um-settings-action um-action-danger"
+                            id="deleteAccountBtn"
+                            onclick="return confirm('Permanently delete this user account? Linked admin profile records will be removed and related clinic records may be deleted by database rules. This cannot be undone.')"
+                        >
+                            Delete User Account
+                        </button>
+                        <button
+                            type="submit"
+                            form="deleteAdminHubForm"
+                            class="um-settings-action um-action-danger"
+                            id="deleteAdminHubBtn"
+                            style="display:none;"
+                            onclick="return confirm('Delete this admin hub record from the admins table? This cannot be undone.')"
+                        >
+                            Delete Admin Record
+                        </button>
+                        <button type="submit" form="settingsForm" class="um-settings-action um-action-primary" id="saveSettingsBtn">Save Changes</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<div class="um-cursor-hint" id="userHoverHint">Click to enter</div>
 
 @push('scripts')
 <script>
@@ -1634,8 +1888,12 @@
     const detailAccessLevel = document.getElementById('detailAccessLevel');
     const detailAccessLevelLabel = document.getElementById('detailAccessLevelLabel');
     const detailIdentifier = document.getElementById('detailIdentifier');
-    const detailSource = document.getElementById('detailSource');
-    const detailOriginalRole = document.getElementById('detailOriginalRole');
+    const detailBirthday = document.getElementById('detailBirthday');
+    const detailAge = document.getElementById('detailAge');
+    const detailGender = document.getElementById('detailGender');
+    const detailAddress = document.getElementById('detailAddress');
+    const detailContactNumber = document.getElementById('detailContactNumber');
+    const detailClinicRole = document.getElementById('detailClinicRole');
     const detailUpdated = document.getElementById('detailUpdated');
     const detailRole = document.getElementById('detailRole');
     const detailStatus = document.getElementById('detailStatus');
@@ -1644,6 +1902,8 @@
     const moduleAccessSelectionSummary = document.getElementById('moduleAccessSelectionSummary');
     const resetModuleDefaultsButton = document.getElementById('resetModuleDefaultsButton');
     const moduleAccessSaveWarning = document.getElementById('moduleAccessSaveWarning');
+    const moduleAccessPreviewAnchor = document.getElementById('moduleAccessPreviewAnchor');
+    const lookupModuleAccessSlot = document.getElementById('lookupModuleAccessSlot');
     const modulePermissionInputs = Array.from(document.querySelectorAll('[data-module-permission]'));
     const moduleAccessItems = Array.from(document.querySelectorAll('[data-module-item]'));
     const detailManagementView = document.getElementById('detailManagementView');
@@ -1651,7 +1911,7 @@
     const detailFirstName = document.getElementById('detailFirstName');
     const detailLastName = document.getElementById('detailLastName');
     const detailFullName = document.getElementById('detailFullName');
-    const detailExternalIdentifier = document.getElementById('detailExternalIdentifier');
+    const detailEmployeeNumber = document.getElementById('detailEmployeeNumber');
     const adminEmailWrap = document.getElementById('adminEmailWrap');
     const detailAdminEmail = document.getElementById('detailAdminEmail');
     const detailOffice = document.getElementById('detailOffice');
@@ -1669,31 +1929,48 @@
     const deleteAdminHubBtn = document.getElementById('deleteAdminHubBtn');
     const externalNote = document.getElementById('externalNote');
     const deactivateBtn = document.getElementById('deactivateBtn');
+    const removeAccessBtn = document.getElementById('removeAccessBtn');
     const saveSettingsBtn = document.getElementById('saveSettingsBtn');
     const directoryPanel = document.getElementById('directoryPanel');
     const lookupDirectoryPanel = document.getElementById('lookupDirectoryPanel');
     const lookupSearchField = document.getElementById('lookupSearchField');
     const lookupManagementViewField = document.getElementById('lookupManagementViewField');
-    const userHoverHint = document.getElementById('userHoverHint');
     const currentLookupContext = 'account-access';
     const lookupResultsBody = document.getElementById('lookupResultsBody');
     const lookupPagination = document.getElementById('lookupPagination');
     const lookupPaginationSummary = document.getElementById('lookupPaginationSummary');
     const lookupPrevPage = document.getElementById('lookupPrevPage');
     const lookupNextPage = document.getElementById('lookupNextPage');
+    const lookupSelectedProfile = document.getElementById('lookupSelectedProfile');
+    const lookupSelectedAvatar = document.getElementById('lookupSelectedAvatar');
+    const lookupSelectedName = document.getElementById('lookupSelectedName');
+    const lookupSelectedEmail = document.getElementById('lookupSelectedEmail');
+    const lookupSelectedIdentifierLabel = document.getElementById('lookupSelectedIdentifierLabel');
+    const lookupSelectedIdentifier = document.getElementById('lookupSelectedIdentifier');
+    const lookupSelectedPrimaryLabel = document.getElementById('lookupSelectedPrimaryLabel');
+    const lookupSelectedPrimaryValue = document.getElementById('lookupSelectedPrimaryValue');
+    const lookupSelectedSecondaryLabel = document.getElementById('lookupSelectedSecondaryLabel');
+    const lookupSelectedSecondaryValue = document.getElementById('lookupSelectedSecondaryValue');
+    const lookupSourceFilter = document.getElementById('lookupSourceFilter');
+    const lookupStatusFilter = document.getElementById('lookupStatusFilter');
+    const lookupRoleFilter = document.getElementById('lookupRoleFilter');
+    const lookupResultCount = document.querySelector('[data-lookup-result-count]');
+    const onboardContinue = document.getElementById('onboardContinue');
     let lookupCurrentPage = 1;
+    let selectedLookupRow = null;
 
     const updateLookupPagination = () => {
         if (!lookupResultsBody || !lookupPagination) {
             return;
         }
 
-        const rows = Array.from(lookupResultsBody.querySelectorAll('[data-lookup-result-row]'));
+        const allRows = Array.from(lookupResultsBody.querySelectorAll('[data-lookup-result-row]'));
+        const rows = allRows.filter((row) => !row.hidden);
         const pageSize = Math.max(1, parseInt(lookupPagination.dataset.pageSize || '8', 10));
         const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
         lookupCurrentPage = Math.min(Math.max(lookupCurrentPage, 1), totalPages);
 
-        rows.forEach((row) => {
+        allRows.forEach((row) => {
             row.style.display = 'none';
         });
 
@@ -1840,6 +2117,14 @@
         const hasAdminHub = isStudentAssistant || isAdmin || isSuperAdmin;
         const usesSeparateAdminEmail = managementView !== 'admin-hub' && isStudentAssistant;
 
+        if (detailClinicRole) {
+            detailClinicRole.value = ({
+                admin_clinic_staff: 'Clinic Staff',
+                student_assistant: 'Student Assistant',
+                super_admin: 'Super Admin',
+            })[detailRole.value] || 'Not assigned';
+        }
+
         if (moduleAccessPreview) {
             const showsModuleAccess = managementView !== 'admin-hub' && (isStudentAssistant || isAdmin);
             moduleAccessPreview.hidden = !showsModuleAccess;
@@ -1945,11 +2230,6 @@
 
         detailName.value = row.dataset.name || '';
         detailEmail.value = row.dataset.email || '';
-        detailIdentifier.value = row.dataset.studentId || 'N/A';
-        if (detailIdentifierLabel) {
-            detailIdentifierLabel.textContent = managementView === 'admin-hub' ? 'Faculty / External ID' : 'Student / Faculty ID';
-        }
-        detailSource.value = row.dataset.sourceLabel || row.dataset.source || '';
         detailUpdated.value = row.dataset.updated || 'N/A';
         const normalizedRole = (() => {
             const raw = (row.dataset.role || 'student').toLowerCase();
@@ -1978,18 +2258,37 @@
             ? meta.module_permissions
             : null;
         const originalRole = String(meta.idp_role || '').trim();
-        detailOriginalRole.value = originalRole
-            ? originalRole.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
-            : 'N/A';
-        if (detailIdentifierLabel && managementView !== 'admin-hub') {
-            const normalizedOriginalRole = originalRole.toLowerCase();
-            const normalizedSource = String(row.dataset.source || '').toLowerCase();
-            detailIdentifierLabel.textContent = normalizedSource === 'student_assistant'
-                ? 'Student Number'
-                : (normalizedOriginalRole === 'faculty'
-                    ? 'Faculty Code'
-                    : (normalizedOriginalRole === 'admin' ? 'Admin ID' : 'Student Number'));
-        }
+        const normalizedOriginalRole = originalRole.toLowerCase();
+        const normalizedSource = String(row.dataset.source || '').toLowerCase();
+        const normalizedUserType = String(meta.user_type || '').toLowerCase();
+        const isStudentProfile = ['student', 'student_assistant'].includes(normalizedSource)
+            || normalizedOriginalRole === 'student'
+            || normalizedUserType.includes('student');
+        const rawIdentifier = isStudentProfile
+            ? meta.student_number
+            : (meta.employee_number || meta.faculty_identifier || meta.employee_id);
+        const identifier = String(rawIdentifier || '').trim() || 'Not available';
+        const birthday = String(meta.DOB || meta.dob || meta.birthday || '').trim();
+        const calculateAge = (dateValue) => {
+            if (!dateValue) return 'Not available';
+            const birthDate = new Date(`${String(dateValue).slice(0, 10)}T00:00:00`);
+            if (Number.isNaN(birthDate.getTime())) return 'Not available';
+
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const hasNotHadBirthday = today.getMonth() < birthDate.getMonth()
+                || (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate());
+
+            return hasNotHadBirthday ? age - 1 : age;
+        };
+
+        if (detailIdentifierLabel) detailIdentifierLabel.textContent = isStudentProfile ? 'Student Number' : 'Employee Number';
+        if (detailIdentifier) detailIdentifier.value = identifier;
+        if (detailBirthday) detailBirthday.value = birthday || 'Not available';
+        if (detailAge) detailAge.value = calculateAge(birthday);
+        if (detailGender) detailGender.value = String(meta.gender || '').trim() || 'Not available';
+        if (detailAddress) detailAddress.value = String(meta.address || '').trim() || 'Not available';
+        if (detailContactNumber) detailContactNumber.value = String(meta.contact_no || meta.contact_number || '').trim() || 'Not available';
         const accessLevel = (meta.access_level || '').toLowerCase();
         const adminLoginEmail = meta.admin_login_email || '';
         const office = meta.office || '';
@@ -2028,8 +2327,8 @@
         if (detailFullName) {
             detailFullName.value = row.dataset.name || '';
         }
-        if (detailExternalIdentifier) {
-            detailExternalIdentifier.value = row.dataset.studentId || row.dataset.id || '';
+        if (detailEmployeeNumber) {
+            detailEmployeeNumber.value = meta.employee_number || '';
         }
         if (detailAdminProfileStatus) {
             detailAdminProfileStatus.textContent = adminProfileId
@@ -2060,7 +2359,7 @@
             if (field.id === 'deactivateBtn') {
                 return;
             }
-            if (field.id === 'settingsMethod' || field.id === 'detailLookupSource' || field.id === 'detailFirstName' || field.id === 'detailLastName' || field.id === 'detailFullName' || field.id === 'detailExternalIdentifier') {
+            if (field.id === 'settingsMethod' || field.id === 'detailLookupSource' || field.id === 'detailFirstName' || field.id === 'detailLastName' || field.id === 'detailFullName' || field.id === 'detailEmployeeNumber') {
                 field.disabled = false;
                 return;
             }
@@ -2068,6 +2367,9 @@
         });
         deactivateBtn.disabled = !canEdit;
         deactivateBtn.style.display = canEdit ? '' : 'none';
+        if (removeAccessBtn) {
+            removeAccessBtn.disabled = !canEdit;
+        }
         externalNote.style.display = canOnboard ? 'block' : 'none';
         detailEditEmail.readOnly = !(canEdit || canOnboard);
 
@@ -2102,9 +2404,149 @@
         });
         if (saveSettingsBtn) {
             saveSettingsBtn.textContent = canEdit ? 'Save Changes' : 'Add to Clinic';
+            saveSettingsBtn.disabled = !(canEdit || canOnboard);
         }
         settingsModal.classList.add('show');
     };
+
+    const lookupRows = () => Array.from(document.querySelectorAll('[data-lookup-result-row]'));
+    const getLookupMeta = (row) => {
+        try {
+            return JSON.parse(row.dataset.meta || '{}');
+        } catch (error) {
+            return {};
+        }
+    };
+    const formatLookupLabel = (value) => String(value || '')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, (character) => character.toUpperCase())
+        .trim();
+    const isEmergencyLookupIdentifier = (value) => /emergency[-_\s]?(admin|login)/i.test(String(value || ''));
+    const restoreLookupModuleAccess = () => {
+        if (moduleAccessPreview && moduleAccessPreviewAnchor?.parentNode) {
+            moduleAccessPreviewAnchor.insertAdjacentElement('afterend', moduleAccessPreview);
+        }
+        if (lookupModuleAccessSlot) {
+            lookupModuleAccessSlot.hidden = true;
+        }
+    };
+    const syncLookupModuleAccess = () => {
+        if (!selectedLookupRow || !detailRole) {
+            return;
+        }
+
+        const selectedRole = document.querySelector('input[name="lookup_role"]:checked')?.value || 'admin_clinic_staff';
+        detailRole.value = selectedRole;
+
+        if (selectedRole === 'super_admin') {
+            syncRoleUi({ canEdit: false, canOnboard: true, resetModuleDefaults: true });
+            restoreLookupModuleAccess();
+            return;
+        }
+
+        syncRoleUi({ canEdit: false, canOnboard: true, resetModuleDefaults: true });
+        if (moduleAccessPreview && lookupModuleAccessSlot) {
+            lookupModuleAccessSlot.appendChild(moduleAccessPreview);
+            lookupModuleAccessSlot.hidden = false;
+        }
+    };
+    const resetLookupSelection = () => {
+        selectedLookupRow = null;
+        lookupRows().forEach((row) => row.classList.remove('is-selected'));
+        lookupSelectedProfile?.classList.remove('has-selection');
+        restoreLookupModuleAccess();
+        if (onboardContinue) onboardContinue.disabled = true;
+    };
+    const selectLookupProfile = (row) => {
+        if (!row || (row.dataset.canEdit !== '1' && row.dataset.canOnboard !== '1')) {
+            return;
+        }
+
+        const meta = getLookupMeta(row);
+        const source = String(row.dataset.source || '').toLowerCase();
+        const role = String(row.dataset.role || '').toLowerCase();
+        const userType = String(meta.user_type || '').toLowerCase();
+        const isStudent = ['student', 'student_assistant'].includes(source)
+            || userType.includes('student')
+            || role === 'student';
+        const rawIdentifier = isStudent
+            ? meta.student_number
+            : (meta.employee_number || meta.faculty_identifier || meta.employee_id);
+        const identifier = rawIdentifier && !isEmergencyLookupIdentifier(rawIdentifier) ? rawIdentifier : 'Not available';
+        const course = String(meta.course || '').trim() || 'Not available';
+        const year = String(meta.year || '').trim();
+        const section = String(meta.section || '').trim();
+        const yearAndSection = [
+            year ? `Year ${year}` : '',
+            section ? `Section ${section}` : '',
+        ].filter(Boolean).join(' · ') || 'Not available';
+        const profileUserType = formatLookupLabel(meta.user_type || meta.faculty_type || row.dataset.roleLabel || row.dataset.role || 'Employee');
+        const sourceSystem = row.dataset.sourceLabel || row.dataset.source || 'Not available';
+        selectedLookupRow = row;
+        lookupRows().forEach((item) => item.classList.toggle('is-selected', item === row));
+        lookupSelectedProfile?.classList.add('has-selection');
+        if (lookupSelectedAvatar) lookupSelectedAvatar.textContent = row.dataset.avatarLetter || 'U';
+        if (lookupSelectedName) lookupSelectedName.textContent = row.dataset.name || 'Unnamed user';
+        if (lookupSelectedEmail) lookupSelectedEmail.textContent = row.dataset.email || 'No email assigned';
+        if (lookupSelectedIdentifierLabel) lookupSelectedIdentifierLabel.textContent = isStudent ? 'Student Number' : 'Employee Number';
+        if (lookupSelectedIdentifier) lookupSelectedIdentifier.textContent = identifier;
+        if (lookupSelectedPrimaryLabel) lookupSelectedPrimaryLabel.textContent = isStudent ? 'Course' : 'User Type';
+        if (lookupSelectedPrimaryValue) lookupSelectedPrimaryValue.textContent = isStudent ? course : profileUserType;
+        if (lookupSelectedSecondaryLabel) lookupSelectedSecondaryLabel.textContent = isStudent ? 'Year & Section' : 'Source System';
+        if (lookupSelectedSecondaryValue) lookupSelectedSecondaryValue.textContent = isStudent ? yearAndSection : sourceSystem;
+        if (onboardContinue) onboardContinue.disabled = false;
+        if (lookupSelectedProfile) lookupSelectedProfile.scrollTop = 0;
+        syncLookupModuleAccess();
+        if (lookupSelectedProfile) lookupSelectedProfile.scrollTop = 0;
+    };
+    const applyLookupFilters = () => {
+        const source = (lookupSourceFilter?.value || '').toLowerCase();
+        const status = (lookupStatusFilter?.value || '').toLowerCase();
+        const role = (lookupRoleFilter?.value || '').toLowerCase();
+        let count = 0;
+
+        lookupRows().forEach((row) => {
+            const rowSource = (row.dataset.source || '').toLowerCase();
+            const rowStatus = (row.dataset.status || '').toLowerCase();
+            const rowRole = (row.dataset.roleLabel || row.dataset.role || '').toLowerCase();
+            const matches = (!source || rowSource.includes(source))
+                && (!status || rowStatus === status)
+                && (!role || rowRole === role);
+            row.hidden = !matches;
+            if (matches) count += 1;
+        });
+
+        if (lookupResultCount) {
+            lookupResultCount.textContent = `${count} result${count === 1 ? '' : 's'} found`;
+        }
+        lookupCurrentPage = 1;
+        updateLookupPagination();
+    };
+
+    [lookupSourceFilter, lookupStatusFilter, lookupRoleFilter].filter(Boolean).forEach((filter) => {
+        filter.addEventListener('change', applyLookupFilters);
+    });
+
+    document.querySelectorAll('[data-lookup-result-row]').forEach((row) => {
+        row.addEventListener('click', () => selectLookupProfile(row));
+    });
+
+    document.querySelectorAll('input[name="lookup_role"]').forEach((input) => {
+        input.addEventListener('change', syncLookupModuleAccess);
+    });
+
+    onboardContinue?.addEventListener('click', () => {
+        if (!selectedLookupRow) return;
+
+        const selectedRole = document.querySelector('input[name="lookup_role"]:checked')?.value;
+        restoreLookupModuleAccess();
+        lookupModal.classList.remove('show');
+        openSettingsFromRow(selectedLookupRow);
+        if (selectedRole && detailRole) {
+            detailRole.value = selectedRole;
+            detailRole.dispatchEvent(new Event('change'));
+        }
+    });
 
     if (lookupModal && lookupSearchField && lookupSearchField.value.trim() !== '') {
         lookupModal.classList.add('show');
@@ -2115,45 +2557,26 @@
             if (lookupManagementViewField) {
                 lookupManagementViewField.value = currentLookupContext;
             }
+            resetLookupSelection();
             lookupModal.classList.add('show');
         });
     });
 
     document.querySelectorAll('[data-close-lookup]').forEach((button) => {
-        button.addEventListener('click', () => lookupModal.classList.remove('show'));
+        button.addEventListener('click', () => {
+            lookupModal.classList.remove('show');
+            resetLookupSelection();
+        });
     });
 
     document.querySelectorAll('[data-close-settings]').forEach((button) => {
         button.addEventListener('click', () => settingsModal.classList.remove('show'));
     });
 
-    document.querySelectorAll('tr[data-user-card]').forEach((row) => {
+    document.querySelectorAll('[data-user-card]:not([data-lookup-result-row])').forEach((row) => {
         if (row.dataset.canEdit !== '1' && row.dataset.canOnboard !== '1') {
             return;
         }
-
-        const moveHint = (event) => {
-            if (!userHoverHint) {
-                return;
-            }
-            userHoverHint.style.display = 'block';
-            const offsetX = 18;
-            const offsetY = 18;
-            const maxX = window.innerWidth - userHoverHint.offsetWidth - 12;
-            const maxY = window.innerHeight - userHoverHint.offsetHeight - 12;
-            const left = Math.min(event.clientX + offsetX, maxX);
-            const top = Math.min(event.clientY + offsetY, maxY);
-            userHoverHint.style.left = `${Math.max(left, 12)}px`;
-            userHoverHint.style.top = `${Math.max(top, 12)}px`;
-        };
-
-        row.addEventListener('mouseenter', moveHint);
-        row.addEventListener('mousemove', moveHint);
-        row.addEventListener('mouseleave', () => {
-            if (userHoverHint) {
-                userHoverHint.style.display = 'none';
-            }
-        });
 
         row.addEventListener('click', () => openSettingsFromRow(row));
     });
@@ -2208,6 +2631,34 @@
         if (event.target === this) {
             this.classList.remove('show');
         }
+    });
+
+    const accessSummaryModal = document.getElementById('accessSummaryModal');
+    const accessSummaryTitle = document.getElementById('accessSummaryTitle');
+    const accessSummaryValue = document.getElementById('accessSummaryValue');
+    const accessSummaryCopy = document.getElementById('accessSummaryCopy');
+    const closeAccessSummaryModal = () => {
+        if (!accessSummaryModal) return;
+        accessSummaryModal.classList.remove('is-open');
+        accessSummaryModal.setAttribute('aria-hidden', 'true');
+    };
+
+    document.querySelectorAll('[data-summary-popup]').forEach((card) => {
+        card.addEventListener('click', () => {
+            if (!accessSummaryModal) return;
+            accessSummaryTitle.textContent = card.dataset.summaryTitle || 'Summary';
+            accessSummaryValue.textContent = card.dataset.summaryValue || '';
+            accessSummaryCopy.textContent = card.dataset.summaryCopy || '';
+            accessSummaryModal.classList.add('is-open');
+            accessSummaryModal.setAttribute('aria-hidden', 'false');
+        });
+    });
+    document.querySelectorAll('[data-close-summary-modal]').forEach((button) => button.addEventListener('click', closeAccessSummaryModal));
+    accessSummaryModal?.addEventListener('click', (event) => {
+        if (event.target === accessSummaryModal) closeAccessSummaryModal();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && accessSummaryModal?.classList.contains('is-open')) closeAccessSummaryModal();
     });
 </script>
 @include('admin.user_management.modal-ui-script')
