@@ -1332,7 +1332,8 @@
                                         </div>
                                         <div>
                                             <div class="um-name">{{ $record['name'] }}</div>
-                                            <div class="um-sub">{{ $record['student_id'] ?: 'ID not available' }}</div>
+                                            @php($employeeNumber = trim((string) ($record['meta']['employee_number'] ?? $record['meta']['faculty_identifier'] ?? '')))
+                                            <div class="um-sub">{{ $employeeNumber !== '' ? $employeeNumber : 'Employee number not available' }}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -1476,28 +1477,6 @@
                         <div class="um-note" id="externalNote" style="display:none; margin-top: 6px;">
                             This profile comes from an external source. Saving here adds it to the Admin Hub and links an existing clinic account when available without changing the source system.
                         </div>
-                        <div class="um-actions">
-                            <button type="button" class="um-settings-action um-action-neutral" id="deactivateBtn">Deactivate Account</button>
-                            <button
-                                type="submit"
-                                form="deleteForm"
-                                class="um-settings-action um-action-warning"
-                                onclick="return confirm('Remove only the Admin Designee role and restore the linked account to its base role?')"
-                            >
-                                Remove Admin Designee Role
-                            </button>
-                            <button
-                                type="submit"
-                                form="deleteAdminHubForm"
-                                class="um-settings-action um-action-danger"
-                                id="deleteAdminHubBtn"
-                                style="display:none;"
-                                onclick="return confirm('Delete this standalone directory record? Linked clinic accounts will be preserved and only removed from the Admin Hub.')"
-                            >
-                                Delete Directory Record
-                            </button>
-                            <button type="submit" class="um-settings-action um-action-primary" id="saveSettingsBtn">Save Changes</button>
-                        </div>
                     </form>
 
                     <form method="POST" id="deleteForm" style="margin-top: 10px;">
@@ -1512,6 +1491,28 @@
                         @method('DELETE')
                         <input type="hidden" name="management_view" id="deleteAdminHubManagementView" value="admin-hub">
                     </form>
+                    </div>
+                    <div class="um-actions um-settings-actions-footer">
+                        <button type="button" class="um-settings-action um-action-neutral" id="deactivateBtn">Deactivate Account</button>
+                        <button
+                            type="submit"
+                            form="deleteForm"
+                            class="um-settings-action um-action-warning"
+                            onclick="return confirm('Remove only the Admin Designee role and restore the linked account to its base role?')"
+                        >
+                            Remove Admin Designee Role
+                        </button>
+                        <button
+                            type="submit"
+                            form="deleteAdminHubForm"
+                            class="um-settings-action um-action-danger"
+                            id="deleteAdminHubBtn"
+                            style="display:none;"
+                            onclick="return confirm('Delete this standalone directory record? Linked clinic accounts will be preserved and only removed from the Admin Hub.')"
+                        >
+                            Delete Directory Record
+                        </button>
+                        <button type="submit" form="settingsForm" class="um-settings-action um-action-primary" id="saveSettingsBtn">Save Changes</button>
                     </div>
                 </div>
             </div>
@@ -1682,7 +1683,7 @@
 
         detailName.value = row.dataset.name || '';
         detailEmail.value = row.dataset.email || '';
-        detailIdentifier.value = displayValue(meta.employee_number || meta.faculty_identifier || row.dataset.studentId);
+        detailIdentifier.value = displayValue(meta.employee_number || meta.faculty_identifier);
         if (detailIdentifierLabel) {
             detailIdentifierLabel.textContent = 'Employee Number';
         }
@@ -1856,7 +1857,7 @@
         }
 
         const meta = getLookupMeta(row);
-        const identifier = meta.employee_number || meta.faculty_identifier || meta.employee_id || row.dataset.studentId || 'Not available';
+        const identifier = meta.employee_number || meta.faculty_identifier || meta.employee_id || 'Not available';
         selectedLookupRow = row;
         lookupRows().forEach((item) => item.classList.toggle('is-selected', item === row));
         lookupSelectedProfile?.classList.add('has-selection');

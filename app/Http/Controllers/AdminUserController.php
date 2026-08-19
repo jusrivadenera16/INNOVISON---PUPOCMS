@@ -903,7 +903,7 @@ class AdminUserController extends Controller
 
     private function collectLocalUsers(string $search): array
     {
-        $query = User::query()->with(['healthProfile', 'adminProfile']);
+        $query = User::query()->with(['healthProfile', 'employeeHealthProfile', 'adminProfile']);
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
@@ -1028,9 +1028,13 @@ class AdminUserController extends Controller
 
                 $studentPhotoProfile = $user->healthProfile;
                 $studentPhoto = $studentPhotoProfile?->student_photo;
+                $employeeHealthProfile = $user->employeeHealthProfile;
                 $studentNumber = trim((string) ($user->student_number ?? ''));
                 $studentId = trim((string) ($user->student_id ?? ''));
                 $resolvedIdentifier = $this->resolveUserDisplayIdentifier($user, $linkedAdmin);
+                // Employee health profiles are the source of truth for local employee numbers.
+                // Do not repurpose a local user ID or a stale admin profile value as an employee number.
+                $employeeNumber = trim((string) ($employeeHealthProfile?->employee_number ?? ''));
                 $adminUuid = trim((string) ($linkedAdminHub?->admin_uuid ?? ''));
                 if ($adminUuid === '' && $this->isUuid($studentId)) {
                     $adminUuid = $studentId;
@@ -1085,12 +1089,7 @@ class AdminUserController extends Controller
                         'admin_hub_profile_id' => $linkedAdminHub?->id,
                         'admin_hub_profile_name' => (string) ($linkedAdminHub?->name ?? ''),
                         'admin_uuid' => $adminUuid,
-                        'employee_number' => (string) (
-                            $linkedAdminHub?->employee_number
-                            ?? $linkedAdmin?->employee_number
-                            ?? $user->employee_number
-                            ?? ''
-                        ),
+                        'employee_number' => $employeeNumber,
                         'office' => (string) ($linkedAdmin?->office ?? ''),
                         'updated_at' => optional($user->updated_at)->toIso8601String(),
                     ],
