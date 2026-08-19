@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\AdminUserController;
+use App\Models\Admin;
 use App\Models\AdminHub;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
@@ -27,6 +29,7 @@ class AdminHubIdpLinkingTest extends TestCase
             $table->id();
             $table->string('student_id')->unique();
             $table->string('student_number')->nullable()->unique();
+            $table->string('employee_number')->nullable();
             $table->string('reference_number')->nullable();
             $table->string('first_name');
             $table->string('middle_name')->nullable();
@@ -50,6 +53,7 @@ class AdminHubIdpLinkingTest extends TestCase
             $table->string('last_name')->nullable();
             $table->string('name')->nullable();
             $table->string('email')->nullable();
+            $table->string('employee_number')->nullable();
             $table->string('email_address')->nullable();
             $table->string('access_level')->nullable();
             $table->string('status')->default('active');
@@ -59,6 +63,7 @@ class AdminHubIdpLinkingTest extends TestCase
         Schema::create('admin_hub', function (Blueprint $table) {
             $table->id();
             $table->string('admin_uuid')->nullable()->unique();
+            $table->string('employee_number')->nullable()->index();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('first_name')->nullable();
             $table->string('middle_name')->nullable();
@@ -66,7 +71,15 @@ class AdminHubIdpLinkingTest extends TestCase
             $table->string('suffix_name')->nullable();
             $table->string('name')->nullable();
             $table->string('email')->nullable()->index();
+            $table->date('birthday')->nullable();
+            $table->unsignedSmallInteger('age')->nullable();
+            $table->string('gender')->nullable();
+            $table->string('civil_status')->nullable();
+            $table->text('address')->nullable();
+            $table->string('emergency_contact_person')->nullable();
+            $table->string('emergency_contact_no')->nullable();
             $table->string('office')->nullable();
+            $table->string('access_level')->nullable();
             $table->string('role')->default('admin_designee');
             $table->string('status')->default('active');
             $table->timestamps();
@@ -161,6 +174,132 @@ class AdminHubIdpLinkingTest extends TestCase
             'email' => 'shared@example.test',
         ]);
         $this->assertDatabaseCount('admins', 0);
+    }
+
+    public function test_first_idp_login_moves_a_legacy_employee_code_out_of_admin_uuid(): void
+    {
+        $hub = AdminHub::create([
+            'admin_uuid' => 'FA001TG2023',
+            'email' => 'faculty@example.test',
+            'role' => 'admin_designee',
+            'status' => 'active',
+        ]);
+
+        $user = $this->upsertFromIdp([
+            'sub' => '6104038d-6449-4211-a248-318e1bbb452b',
+            'faculty_code' => 'FA001TG2023',
+            'email' => 'faculty@example.test',
+            'firstname' => 'Faculty',
+            'lastname' => 'Designee',
+            'role' => 'faculty',
+        ]);
+
+        $this->assertSame(User::ROLE_ADMIN, User::normalizeRole($user->user_role));
+        $this->assertSame('FA001TG2023', $user->employee_number);
+        $this->assertDatabaseHas('admin_hub', [
+            'id' => $hub->id,
+            'admin_uuid' => '6104038d-6449-4211-a248-318e1bbb452b',
+            'employee_number' => 'FA001TG2023',
+            'user_id' => $user->id,
+        ]);
+    }
+
+    public function test_account_access_superadmin_role_wins_over_admin_hub_designee_membership(): void
+    {
+        $user = User::create([
+            'student_id' => '922bf3cd-bde8-4fd2-a229-885e996ab577',
+            'first_name' => 'Clinic',
+            'last_name' => 'Owner',
+            'name' => 'Clinic Owner',
+            'email' => 'owner@example.test',
+            'user_role' => User::ROLE_SUPERADMIN,
+            'idp_role' => 'faculty',
+            'user_type' => 'Regular',
+            'status' => 'active',
+            'password' => bcrypt('secret'),
+        ]);
+
+        Admin::create([
+            'user_id' => $user->id,
+            'name' => 'Clinic Owner',
+            'email' => 'owner@example.test',
+            'access_level' => 'superadmin',
+            'status' => 'active',
+        ]);
+
+        AdminHub::create([
+            'admin_uuid' => '922bf3cd-bde8-4fd2-a229-885e996ab577',
+            'user_id' => $user->id,
+            'name' => 'Clinic Owner',
+            'email' => 'owner@example.test',
+            'role' => 'admin_designee',
+            'access_level' => 'designee',
+            'status' => 'active',
+        ]);
+
+        $syncedUser = $this->upsertFromIdp([
+            'sub' => '922bf3cd-bde8-4fd2-a229-885e996ab577',
+            'email' => 'owner@example.test',
+            'firstname' => 'Clinic',
+            'lastname' => 'Owner',
+            'role' => 'faculty',
+        ]);
+
+        $this->assertSame(User::ROLE_SUPERADMIN, User::normalizeRole($syncedUser->user_role));
+        $this->assertDatabaseHas('admins', [
+            'user_id' => $user->id,
+            'access_level' => 'superadmin',
+        ]);
+        $this->assertDatabaseHas('admin_hub', [
+            'user_id' => $user->id,
+            'role' => 'admin_designee',
+            'access_level' => 'designee',
+        ]);
+    }
+
+    public function test_activating_admin_hub_membership_does_not_demote_account_access_superadmin(): void
+    {
+        $user = User::create([
+            'student_id' => '7122a999-1377-48df-99ba-5d1b69b8555f',
+            'first_name' => 'Existing',
+            'last_name' => 'Superadmin',
+            'name' => 'Existing Superadmin',
+            'email' => 'existing-superadmin@example.test',
+            'user_role' => User::ROLE_SUPERADMIN,
+            'user_type' => 'Regular',
+            'status' => 'inactive',
+            'password' => bcrypt('secret'),
+        ]);
+
+        Admin::create([
+            'user_id' => $user->id,
+            'name' => 'Existing Superadmin',
+            'email' => 'existing-superadmin@example.test',
+            'access_level' => 'superadmin',
+            'status' => 'active',
+        ]);
+
+        $controller = new AdminUserController();
+        $method = new ReflectionMethod($controller, 'activateUserForAdminHub');
+        $method->setAccessible(true);
+        $method->invoke($controller, $user);
+
+        $this->assertSame(User::ROLE_SUPERADMIN, User::normalizeRole($user->fresh()->user_role));
+        $this->assertSame('inactive', $user->fresh()->status);
+    }
+
+    public function test_faculty_id_is_not_used_as_an_employee_number(): void
+    {
+        $user = $this->upsertFromIdp([
+            'sub' => 'd7ce50da-5c84-4817-975d-c1bf3b605340',
+            'faculty_id' => '12345',
+            'email' => 'faculty-without-number@example.test',
+            'firstname' => 'No',
+            'lastname' => 'Employee Number',
+            'role' => 'faculty',
+        ]);
+
+        $this->assertNull($user->employee_number);
     }
 
     private function upsertFromIdp(array $profile): User

@@ -192,7 +192,8 @@ class AdminUserController extends Controller
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'admin_email' => ['nullable', 'email', 'max:255'],
-            'admin_uuid' => ['nullable', 'string', 'max:255'],
+            'admin_uuid' => ['nullable', 'uuid', 'max:255'],
+            'employee_number' => ['nullable', 'string', 'max:255'],
             'access_level' => ['nullable', Rule::in(['clinic_staff', 'designee'])],
             'office' => ['nullable', 'string', 'max:255'],
             'module_permissions' => ['nullable', 'array'],
@@ -203,6 +204,11 @@ class AdminUserController extends Controller
             $linkedAdminHub = $this->findLinkedAdminHubProfile($user) ?? new AdminHub();
             $requestedStatus = strtolower(trim((string) $request->status));
             $adminUuid = trim((string) $request->input('admin_uuid', ''));
+
+            if (Schema::hasColumn('users', 'employee_number') && $request->filled('employee_number')) {
+                $user->employee_number = trim((string) $request->input('employee_number'));
+                $user->save();
+            }
 
             if ($adminUuid !== '' && AdminHub::hasColumn('admin_uuid')) {
                 $uuidConflict = AdminHub::query()
@@ -241,6 +247,7 @@ class AdminUserController extends Controller
             if (AdminHub::hasColumn('office')) {
                 $linkedAdminHub->office = $request->input('office');
             }
+            $this->fillAdminHubProfileDetails($linkedAdminHub, $user, $this->findLinkedAdminProfile($user), $request->all());
             if (AdminHub::hasColumn('role')) {
                 $linkedAdminHub->role = $request->user_role;
             }
@@ -309,6 +316,9 @@ class AdminUserController extends Controller
                 ? null
                 : app(ModulePermissionService::class)->normalize($request->input('module_permissions', []));
         }
+        if (Schema::hasColumn('users', 'employee_number') && $request->filled('employee_number')) {
+            $user->employee_number = trim((string) $request->input('employee_number'));
+        }
 
         $user->save();
 
@@ -345,6 +355,13 @@ class AdminUserController extends Controller
             }
             if (Admin::hasColumn('office')) {
                 $linkedAdmin->office = $request->input('office');
+            }
+            if (Admin::hasColumn('employee_number')) {
+                $linkedAdmin->employee_number = trim((string) (
+                    $request->input('employee_number')
+                    ?: $user->employee_number
+                    ?: $user->employeeHealthProfile?->employee_number
+                )) ?: null;
             }
 
             $linkedAdmin->save();
@@ -404,10 +421,18 @@ class AdminUserController extends Controller
             'module_permissions' => ['nullable', 'array'],
             'module_permissions.*' => ['string', Rule::in(app(ModulePermissionService::class)->all())],
             'first_name' => ['nullable', 'string', 'max:255'],
+            'middle_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['nullable', 'string', 'max:255'],
             'full_name' => ['nullable', 'string', 'max:255'],
-            'admin_uuid' => ['nullable', 'string', 'max:255'],
-            'external_identifier' => ['nullable', 'string', 'max:255'],
+            'admin_uuid' => ['nullable', 'uuid', 'max:255'],
+            'employee_number' => ['nullable', 'string', 'max:255'],
+            'birthday' => ['nullable', 'date'],
+            'age' => ['nullable', 'integer', 'min:0', 'max:150'],
+            'gender' => ['nullable', 'string', 'max:50'],
+            'civil_status' => ['nullable', 'string', 'max:50'],
+            'address' => ['nullable', 'string'],
+            'emergency_contact_person' => ['nullable', 'string', 'max:255'],
+            'emergency_contact_no' => ['nullable', 'string', 'max:50'],
         ]);
 
         $requestedRoleRaw = strtolower(trim((string) $request->user_role));
@@ -450,6 +475,7 @@ class AdminUserController extends Controller
             if (AdminHub::hasColumn('office')) {
                 $linkedAdminHub->office = $request->input('office');
             }
+            $this->fillAdminHubProfileDetails($linkedAdminHub, null, null, $request->all());
             if (AdminHub::hasColumn('role')) {
                 $linkedAdminHub->role = $requestedRoleRaw;
             }
@@ -490,7 +516,7 @@ class AdminUserController extends Controller
 
         if (!$user) {
             $lookupSource = trim((string) $request->input('lookup_source', 'faculty'));
-            $studentIdSeed = trim((string) $request->input('external_identifier', ''));
+            $studentIdSeed = trim((string) $request->input('employee_number', ''));
             if ($studentIdSeed === '') {
                 $studentIdSeed = ($lookupSource === 'admin_profile' ? 'admin-' : 'faculty-') . strtolower(substr(md5($baseEmail), 0, 10));
             }
@@ -502,6 +528,9 @@ class AdminUserController extends Controller
             $user->last_name = $lastName !== '' ? $lastName : 'User';
             $user->name = $fullName !== '' ? $fullName : trim($user->first_name . ' ' . $user->last_name);
             $user->email = $baseEmail;
+            if (Schema::hasColumn('users', 'employee_number')) {
+                $user->employee_number = trim((string) $request->input('employee_number', '')) ?: null;
+            }
             $user->password = bcrypt(\Illuminate\Support\Str::random(40));
             if (Schema::hasColumn('users', 'idp_role')) {
                 $user->idp_role = $lookupSource === 'admin_profile' ? 'admin' : 'faculty';
@@ -512,6 +541,10 @@ class AdminUserController extends Controller
             && !in_array(User::normalizeRole((string) $user->user_role), [User::ROLE_ADMIN, User::ROLE_SUPERADMIN], true)
         ) {
             $user->idp_role = $this->baseRoleTokenForUser($user);
+        }
+
+        if (Schema::hasColumn('users', 'employee_number') && $request->filled('employee_number')) {
+            $user->employee_number = trim((string) $request->input('employee_number'));
         }
 
         $user->user_role = $normalizedRequestedRole;
@@ -565,6 +598,12 @@ class AdminUserController extends Controller
             if (Admin::hasColumn('office')) {
                 $linkedAdmin->office = $request->input('office');
             }
+            if (Admin::hasColumn('employee_number')) {
+                $linkedAdmin->employee_number = trim((string) (
+                    $request->input('employee_number')
+                    ?: $user->employee_number
+                )) ?: null;
+            }
             $linkedAdmin->save();
         }
 
@@ -592,10 +631,18 @@ class AdminUserController extends Controller
             'email' => ['required', 'email', 'max:255'],
             'admin_uuid' => [
                 'nullable',
-                'string',
+                'uuid',
                 'max:255',
                 Rule::unique('admin_hub', 'admin_uuid')->ignore($admin->id),
             ],
+            'employee_number' => ['nullable', 'string', 'max:255'],
+            'birthday' => ['nullable', 'date'],
+            'age' => ['nullable', 'integer', 'min:0', 'max:150'],
+            'gender' => ['nullable', 'string', 'max:50'],
+            'civil_status' => ['nullable', 'string', 'max:50'],
+            'address' => ['nullable', 'string'],
+            'emergency_contact_person' => ['nullable', 'string', 'max:255'],
+            'emergency_contact_no' => ['nullable', 'string', 'max:50'],
             'office' => ['nullable', 'string', 'max:255'],
             'first_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['nullable', 'string', 'max:255'],
@@ -627,6 +674,12 @@ class AdminUserController extends Controller
         if (AdminHub::hasColumn('office')) {
             $admin->office = $request->input('office');
         }
+        $this->fillAdminHubProfileDetails(
+            $admin,
+            $this->resolveLinkedUserForAdminHubRecord($admin),
+            null,
+            $request->all()
+        );
         if (AdminHub::hasColumn('role')) {
             $admin->role = $request->input('user_role');
         }
@@ -883,7 +936,7 @@ class AdminUserController extends Controller
                 if (Schema::hasTable('admins')) {
                     $builder->orWhereHas('adminProfile', function ($adminQuery) use ($search) {
                         $adminQuery->where(function ($adminSearchQuery) use ($search) {
-                            foreach (['admin_id', 'external_identifier', 'name', 'first_name', 'middle_name', 'last_name', 'email', 'email_address'] as $column) {
+                            foreach (['admin_id', 'employee_number', 'name', 'first_name', 'middle_name', 'last_name', 'email', 'email_address'] as $column) {
                                 if (Admin::hasColumn($column)) {
                                     $adminSearchQuery->orWhere($column, 'like', '%' . $search . '%');
                                 }
@@ -926,7 +979,7 @@ class AdminUserController extends Controller
                                 }
                             })
                             ->where(function ($adminSearchQuery) use ($search) {
-                                foreach (['admin_id', 'external_identifier', 'name', 'first_name', 'middle_name', 'last_name', 'email', 'email_address', 'access_level'] as $column) {
+                                foreach (['admin_id', 'employee_number', 'name', 'first_name', 'middle_name', 'last_name', 'email', 'email_address', 'access_level'] as $column) {
                                     if (Admin::hasColumn($column)) {
                                         $adminSearchQuery->orWhere('admins.' . $column, 'like', '%' . $search . '%');
                                     }
@@ -1006,6 +1059,9 @@ class AdminUserController extends Controller
                     'avatar_letter' => strtoupper(substr($displayName !== '' ? $displayName : ($user->email ?? 'U'), 0, 1)),
                     'can_edit' => true,
                     'is_external' => false,
+                    'delete_admin_hub_url' => $linkedAdminHub
+                        ? route('admin.user-management.admin-hub.delete-record', $linkedAdminHub->id)
+                        : '',
                     'meta' => [
                         'email' => (string) ($user->email ?? ''),
                         'course' => (string) ($user->course ?? ''),
@@ -1026,8 +1082,15 @@ class AdminUserController extends Controller
                         'admin_login_email' => (string) ($linkedAdmin?->email_address ?? $linkedAdmin?->email ?? ''),
                         'admin_profile_id' => $linkedAdmin?->admin_id,
                         'admin_profile_name' => (string) ($linkedAdmin?->name ?? ''),
+                        'admin_hub_profile_id' => $linkedAdminHub?->id,
+                        'admin_hub_profile_name' => (string) ($linkedAdminHub?->name ?? ''),
                         'admin_uuid' => $adminUuid,
-                        'external_identifier' => (string) ($linkedAdmin?->external_identifier ?? ''),
+                        'employee_number' => (string) (
+                            $linkedAdminHub?->employee_number
+                            ?? $linkedAdmin?->employee_number
+                            ?? $user->employee_number
+                            ?? ''
+                        ),
                         'office' => (string) ($linkedAdmin?->office ?? ''),
                         'updated_at' => optional($user->updated_at)->toIso8601String(),
                     ],
@@ -1045,7 +1108,7 @@ class AdminUserController extends Controller
 
         $query = Admin::query()
             ->where(function ($builder) use ($search) {
-                foreach (['admin_id', 'external_identifier', 'name', 'first_name', 'middle_name', 'last_name', 'email', 'email_address', 'office', 'status', 'access_level'] as $column) {
+                foreach (['admin_id', 'employee_number', 'name', 'first_name', 'middle_name', 'last_name', 'email', 'email_address', 'office', 'status', 'access_level'] as $column) {
                     if (Admin::hasColumn($column)) {
                         $builder->orWhere($column, 'like', '%' . $search . '%');
                     }
@@ -1079,8 +1142,8 @@ class AdminUserController extends Controller
                 }
 
                 $adminId = trim((string) ($admin->admin_id ?? ''));
-                $externalIdentifier = trim((string) ($admin->external_identifier ?? ''));
-                $identifier = $adminId !== '' ? $adminId : ($externalIdentifier !== '' ? $externalIdentifier : $email);
+                $employeeNumber = trim((string) ($admin->employee_number ?? ''));
+                $identifier = $adminId !== '' ? $adminId : ($employeeNumber !== '' ? $employeeNumber : $email);
 
                 return [
                     'id' => $identifier,
@@ -1108,12 +1171,17 @@ class AdminUserController extends Controller
                         'admin_login_email' => $email,
                         'admin_profile_id' => $adminId,
                         'admin_profile_name' => $displayName,
-                        'admin_uuid' => $externalIdentifier,
-                        'external_identifier' => $identifier,
+                        'admin_uuid' => '',
+                        'employee_number' => $employeeNumber,
                         'DOB' => (string) ($admin->birthday ?? ''),
+                        'birthday' => (string) ($admin->birthday ?? ''),
+                        'age' => (string) ($admin->age ?? ''),
                         'gender' => (string) ($admin->gender ?? ''),
+                        'civil_status' => (string) ($admin->civil_status ?? ''),
                         'contact_no' => (string) ($admin->emergency_contact_no ?? ''),
                         'address' => (string) ($admin->address ?? ''),
+                        'emergency_contact_person' => (string) ($admin->emergency_contact_person ?? ''),
+                        'emergency_contact_no' => (string) ($admin->emergency_contact_no ?? ''),
                         'office' => (string) ($admin->office ?? ''),
                         'lookup_source' => 'admin_profile',
                         'updated_at' => optional($admin->updated_at)->toIso8601String(),
@@ -1149,10 +1217,23 @@ class AdminUserController extends Controller
                 $email = trim((string) ($faculty['email'] ?? ''));
                 $role = trim((string) ($faculty['faculty_type'] ?? $faculty['role'] ?? $faculty['access_level'] ?? 'Faculty'));
                 $status = strtolower(trim((string) ($faculty['status'] ?? 'active')));
-                $facultyCode = trim((string) ($faculty['faculty_code'] ?? ''));
+                $facultyCode = trim((string) ($faculty['faculty_code'] ?? $faculty['employee_number'] ?? $faculty['employee_no'] ?? ''));
                 $facultyNumericId = trim((string) ($faculty['faculty_id'] ?? $faculty['id'] ?? ''));
-                $facultyIdentifier = $facultyCode !== '' ? $facultyCode : $facultyNumericId;
-                $recordId = $facultyIdentifier !== '' ? $facultyIdentifier : ($email !== '' ? $email : 'faculty');
+                $employeeNumber = $facultyCode;
+                $adminUuid = $this->firstFilledValue([
+                    $faculty['admin_uuid'] ?? null,
+                    $faculty['idp_user_id'] ?? null,
+                    $faculty['user_uuid'] ?? null,
+                    $faculty['uuid'] ?? null,
+                    $faculty['student_id'] ?? null,
+                    data_get($profile, 'admin_uuid'),
+                    data_get($profile, 'idp_user_id'),
+                    data_get($profile, 'user_uuid'),
+                    data_get($profile, 'uuid'),
+                    data_get($profile, 'student_id'),
+                    $facultyNumericId,
+                ], fn ($value) => $this->isUuid((string) $value));
+                $recordId = $employeeNumber !== '' ? $employeeNumber : ($adminUuid ?: ($email !== '' ? $email : 'faculty'));
 
                 if (in_array($status, ['1', 'true', 'active', 'enabled'], true)) {
                     $status = 'active';
@@ -1170,7 +1251,7 @@ class AdminUserController extends Controller
                     'name' => $name !== '' ? $name : ($email !== '' ? $email : 'Faculty'),
                     'first_name' => (string) ($faculty['first_name'] ?? ''),
                     'last_name' => (string) ($faculty['last_name'] ?? ''),
-                    'student_id' => $facultyIdentifier,
+                    'student_id' => $employeeNumber,
                     'email' => $email,
                     'role' => $role !== '' ? $role : 'Faculty',
                     'raw_role' => $role,
@@ -1182,9 +1263,19 @@ class AdminUserController extends Controller
                     'is_external' => true,
                     'meta' => [
                         'faculty_id' => $faculty['faculty_id'] ?? null,
-                        'faculty_code' => $facultyCode !== '' ? $facultyCode : null,
+                        'faculty_code' => $employeeNumber !== '' ? $employeeNumber : null,
+                        'employee_number' => $employeeNumber !== '' ? $employeeNumber : null,
+                        'admin_uuid' => $adminUuid,
                         'faculty_type' => $faculty['faculty_type'] ?? null,
                         'department' => $faculty['department'] ?? null,
+                        'birthday' => $this->firstFilledValue([$faculty['birthday'] ?? null, $faculty['date_of_birth'] ?? null, data_get($profile, 'birthday'), data_get($profile, 'date_of_birth')]),
+                        'age' => $this->firstFilledValue([$faculty['age'] ?? null, data_get($profile, 'age')]),
+                        'gender' => $this->firstFilledValue([$faculty['gender'] ?? null, $faculty['sex'] ?? null, data_get($profile, 'gender'), data_get($profile, 'sex')]),
+                        'civil_status' => $this->firstFilledValue([$faculty['civil_status'] ?? null, data_get($profile, 'civil_status')]),
+                        'address' => $this->firstFilledValue([$faculty['address'] ?? null, $faculty['home_address'] ?? null, data_get($profile, 'address'), data_get($profile, 'home_address')]),
+                        'emergency_contact_person' => $this->firstFilledValue([$faculty['emergency_contact_person'] ?? null, data_get($profile, 'emergency_contact_person')]),
+                        'emergency_contact_no' => $this->firstFilledValue([$faculty['emergency_contact_no'] ?? null, data_get($profile, 'emergency_contact_no')]),
+                        'access_level' => 'designee',
                         'profile' => $profile,
                         'lookup_source' => 'faculty',
                         'updated_at' => $faculty['last_updated'] ?? null,
@@ -1228,7 +1319,7 @@ class AdminUserController extends Controller
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
-                foreach (['admin_uuid', 'name', 'first_name', 'last_name', 'email', 'office', 'status'] as $column) {
+                foreach (['admin_uuid', 'employee_number', 'name', 'first_name', 'last_name', 'email', 'office', 'status'] as $column) {
                     if (AdminHub::hasColumn($column)) {
                         $builder->orWhere($column, 'like', '%' . $search . '%');
                     }
@@ -1257,8 +1348,9 @@ class AdminUserController extends Controller
                     : ($normalizedName !== '' && isset($facultyByName[$normalizedName])
                         ? $facultyByName[$normalizedName]
                         : null);
-                if (!$matchedFaculty && $adminUuid !== '') {
-                    $matchedFaculty = $facultyByIdentifier[strtolower($adminUuid)] ?? null;
+                $employeeNumber = trim((string) ($admin->employee_number ?? ''));
+                if (!$matchedFaculty && $employeeNumber !== '') {
+                    $matchedFaculty = $facultyByIdentifier[strtolower($employeeNumber)] ?? null;
                 }
                 $facultyIdentifier = trim((string) (
                     data_get($matchedFaculty, 'meta.faculty_code')
@@ -1273,14 +1365,16 @@ class AdminUserController extends Controller
                     $status = 'active';
                 }
 
-                $resolvedIdentifier = $facultyIdentifier !== ''
+                $resolvedIdentifier = $employeeNumber !== ''
+                    ? $employeeNumber
+                    : ($facultyIdentifier !== ''
                     ? $facultyIdentifier
                     : ($linkedUser
                         ? $this->resolveDisplayIdentifier(
                             trim((string) ($linkedUser->student_number ?? '')),
                             trim((string) ($linkedUser->student_id ?? ''))
                         )
-                        : '');
+                        : ''));
 
                 return [
                     'id' => (string) $admin->id,
@@ -1312,12 +1406,20 @@ class AdminUserController extends Controller
                         'admin_login_email' => $email,
                         'admin_profile_id' => $admin->id,
                         'admin_profile_name' => $displayName,
+                        'admin_hub_profile_id' => $admin->id,
+                        'admin_hub_profile_name' => $displayName,
                         'admin_uuid' => $adminUuid,
+                        'employee_number' => $employeeNumber,
                         'faculty_identifier' => $facultyIdentifier,
-                        'DOB' => (string) ($linkedUser?->DOB ?? $admin->birthday ?? ''),
-                        'gender' => (string) ($linkedUser?->gender ?? $admin->gender ?? ''),
-                        'contact_no' => (string) ($linkedUser?->contact_no ?? $admin->emergency_contact_no ?? ''),
-                        'address' => (string) ($linkedUser?->healthProfile?->home_address ?? $admin->address ?? ''),
+                        'DOB' => (string) ($admin->birthday ?? $linkedUser?->DOB ?? ''),
+                        'birthday' => (string) ($admin->birthday ?? $linkedUser?->DOB ?? ''),
+                        'age' => (string) ($admin->age ?? ''),
+                        'gender' => (string) ($admin->gender ?? $linkedUser?->gender ?? ''),
+                        'civil_status' => (string) ($admin->civil_status ?? ''),
+                        'contact_no' => (string) ($admin->emergency_contact_no ?? $linkedUser?->contact_no ?? ''),
+                        'address' => (string) ($admin->address ?? $linkedUser?->employeeHealthProfile?->home_address ?? ''),
+                        'emergency_contact_person' => (string) ($admin->emergency_contact_person ?? ''),
+                        'emergency_contact_no' => (string) ($admin->emergency_contact_no ?? ''),
                         'office' => (string) ($admin->office ?? ''),
                         'lookup_source' => 'admin-hub',
                         'updated_at' => optional($admin->updated_at)->toIso8601String(),
@@ -1334,6 +1436,7 @@ class AdminUserController extends Controller
         $rawRole = strtolower(trim((string) ($user->user_role ?? 'student')));
         $normalizedRole = User::normalizeRole($rawRole);
         $userType = strtolower(trim((string) ($user->user_type ?? '')));
+        $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
         $accessLevel = $normalizedRole === User::ROLE_ADMIN
             ? $this->resolveEffectiveAdminAccessLevel($user, $linkedAdmin)
             : '';
@@ -1352,6 +1455,10 @@ class AdminUserController extends Controller
             return 'student_assistant';
         }
 
+        if ($normalizedRole === User::ROLE_STUDENT && ($idpRole === 'faculty' || $userType === 'faculty')) {
+            return 'faculty';
+        }
+
         return match ($normalizedRole) {
             User::ROLE_SUPERADMIN => 'superadmin',
             User::ROLE_ADMIN => 'admin',
@@ -1365,6 +1472,7 @@ class AdminUserController extends Controller
             'superadmin' => 'Super Admin',
             'admin' => 'Admin',
             'student_assistant' => 'Student Assistant',
+            'faculty' => 'Faculty',
             default => 'Student',
         };
     }
@@ -1374,6 +1482,7 @@ class AdminUserController extends Controller
         $rawRole = strtolower(trim((string) ($user->user_role ?? 'student')));
         $normalizedRole = User::normalizeRole($rawRole);
         $userType = strtolower(trim((string) ($user->user_type ?? '')));
+        $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
 
         if ($normalizedRole === User::ROLE_SUPERADMIN) {
             return 'Super Admin';
@@ -1393,6 +1502,10 @@ class AdminUserController extends Controller
             $accessLevel = $this->resolveEffectiveAdminAccessLevel($user, $linkedAdmin);
 
             return $this->adminRoleLabelForAccessLevel($accessLevel);
+        }
+
+        if ($normalizedRole === User::ROLE_STUDENT && ($idpRole === 'faculty' || $userType === 'faculty')) {
+            return 'Faculty';
         }
 
         return match ($normalizedRole) {
@@ -1516,7 +1629,7 @@ class AdminUserController extends Controller
         }
 
         if ($idpRole === 'faculty') {
-            $facultyCode = trim((string) ($linkedAdmin?->external_identifier ?? ''));
+            $facultyCode = trim((string) ($linkedAdmin?->employee_number ?? ''));
 
             return $this->resolveDisplayIdentifier('', $facultyCode !== '' ? $facultyCode : $studentId);
         }
@@ -1581,6 +1694,102 @@ class AdminUserController extends Controller
 
         if ($email !== '' && AdminHub::hasColumn('email')) {
             return AdminHub::query()->where('email', $email)->first();
+        }
+
+        return null;
+    }
+
+    private function fillAdminHubProfileDetails(
+        AdminHub $adminHub,
+        ?User $user = null,
+        ?Admin $admin = null,
+        array $input = []
+    ): void {
+        $employeeProfile = $user?->employeeHealthProfile;
+        $birthday = $this->firstFilledValue([
+            $input['birthday'] ?? null,
+            $input['DOB'] ?? null,
+            $adminHub->birthday ?? null,
+            $admin?->birthday,
+            $user?->DOB,
+            $employeeProfile?->birthday,
+        ]);
+        $age = $this->firstFilledValue([
+            $input['age'] ?? null,
+            $adminHub->age ?? null,
+            $admin?->age,
+            $employeeProfile?->age,
+        ]);
+
+        if (($age === null || $age === '') && $birthday) {
+            try {
+                $age = Carbon::parse($birthday)->age;
+            } catch (\Throwable) {
+                $age = null;
+            }
+        }
+
+        $values = [
+            'employee_number' => $this->firstFilledValue([
+                $input['employee_number'] ?? null,
+                $adminHub->employee_number ?? null,
+                $admin?->employee_number,
+                $user?->employee_number,
+                $employeeProfile?->employee_number,
+            ]),
+            'birthday' => $birthday,
+            'age' => $age,
+            'gender' => $this->firstFilledValue([
+                $input['gender'] ?? null,
+                $adminHub->gender ?? null,
+                $admin?->gender,
+                $user?->gender,
+                $employeeProfile?->sex,
+            ]),
+            'civil_status' => $this->firstFilledValue([
+                $input['civil_status'] ?? null,
+                $adminHub->civil_status ?? null,
+                $admin?->civil_status,
+                $employeeProfile?->civil_status,
+            ]),
+            'address' => $this->firstFilledValue([
+                $input['address'] ?? null,
+                $adminHub->address ?? null,
+                $admin?->address,
+                $employeeProfile?->home_address,
+            ]),
+            'emergency_contact_person' => $this->firstFilledValue([
+                $input['emergency_contact_person'] ?? null,
+                $adminHub->emergency_contact_person ?? null,
+                $admin?->emergency_contact_person,
+                $employeeProfile?->emergency_contact_person,
+            ]),
+            'emergency_contact_no' => $this->firstFilledValue([
+                $input['emergency_contact_no'] ?? null,
+                $adminHub->emergency_contact_no ?? null,
+                $admin?->emergency_contact_no,
+                $employeeProfile?->emergency_contact_no,
+            ]),
+            'access_level' => 'designee',
+        ];
+
+        foreach ($values as $column => $value) {
+            if (AdminHub::hasColumn($column)) {
+                $adminHub->setAttribute($column, $value !== '' ? $value : null);
+            }
+        }
+    }
+
+    private function firstFilledValue(array $values, ?callable $accept = null)
+    {
+        foreach ($values as $value) {
+            if ($value === null || (is_string($value) && trim($value) === '')) {
+                continue;
+            }
+
+            if ($accept === null || $accept($value)) {
+                return is_string($value) ? trim($value) : $value;
+            }
         }
 
         return null;
@@ -1775,6 +1984,11 @@ class AdminUserController extends Controller
 
     private function activateUserForAdminHub(User $user): void
     {
+        $linkedAdmin = $this->findLinkedAdminProfile($user);
+        if ($this->hasClinicAccountAccess($user, $linkedAdmin)) {
+            return;
+        }
+
         $user->user_role = User::ROLE_ADMIN;
 
         if (Schema::hasColumn('users', 'status')) {
@@ -1787,21 +2001,11 @@ class AdminUserController extends Controller
     private function reconcileUserAfterAdminHubDeactivation(User $user): void
     {
         $linkedAdmin = $this->findLinkedAdminProfile($user);
-        if (!$this->hasClinicAccountAccess($user, $linkedAdmin)) {
-            $this->restoreUserToBaseRole($user);
+        if ($this->hasClinicAccountAccess($user, $linkedAdmin)) {
             return;
         }
 
-        $accessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
-        $user->user_role = $accessLevel === 'superadmin'
-            ? User::ROLE_SUPERADMIN
-            : User::ROLE_ADMIN;
-
-        if (Schema::hasColumn('users', 'status')) {
-            $user->status = 'active';
-        }
-
-        $user->save();
+        $this->restoreUserToBaseRole($user);
     }
 
     private function deactivateUserAccess(User $user, ?Admin $linkedAdmin = null): void
