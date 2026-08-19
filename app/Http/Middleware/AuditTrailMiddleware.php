@@ -20,12 +20,47 @@ class AuditTrailMiddleware
         $response = $next($request);
 
         try {
-            $this->record($request, $response, $startedAt, $actor);
+            if (!$this->shouldSkipPassiveView($request)) {
+                $this->record($request, $response, $startedAt, $actor);
+            }
         } catch (\Throwable $exception) {
             report($exception);
         }
 
         return $response;
+    }
+
+    /**
+     * Avoid recording the high-frequency feeds themselves. State-changing
+     * notification actions and individual notification opens remain auditable.
+     */
+    private function shouldSkipPassiveView(Request $request): bool
+    {
+        if (!$request->isMethod('GET')) {
+            return false;
+        }
+
+        $routeName = strtolower((string) optional($request->route())->getName());
+        $path = '/' . ltrim(strtolower((string) $request->path()), '/');
+
+        if (in_array($routeName, [
+            'admin.notifications.feed',
+            'notifications.feed',
+            'admin.logs',
+        ], true)) {
+            return true;
+        }
+
+        if (in_array($path, [
+            '/admin/notifications/feed',
+            '/notifications/feed',
+            '/admin/activity-logs',
+        ], true)) {
+            return true;
+        }
+
+        return $path === '/student/account'
+            && strtolower(trim((string) $request->query('view', ''))) === 'notifications';
     }
 
     private function record(Request $request, Response $response, float $startedAt, $user): void
