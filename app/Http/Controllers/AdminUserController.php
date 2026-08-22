@@ -128,13 +128,6 @@ class AdminUserController extends Controller
             }
 
             $lookupRecords = $lookupRecords
-                ->map(function (array $record) use ($managementView) {
-                    if ($managementView === 'admin-hub' && ($record['source'] ?? '') !== 'faculty') {
-                        $record['can_edit'] = true;
-                    }
-
-                    return $record;
-                })
                 ->sortBy(fn (array $record) => sprintf(
                     '%02d-%s',
                     $this->recordSortWeight($record['source'] ?? 'student'),
@@ -1062,6 +1055,7 @@ class AdminUserController extends Controller
                         : null,
                     'avatar_letter' => strtoupper(substr($displayName !== '' ? $displayName : ($user->email ?? 'U'), 0, 1)),
                     'can_edit' => true,
+                    'is_local_user' => true,
                     'is_external' => false,
                     'delete_admin_hub_url' => $linkedAdminHub
                         ? route('admin.user-management.admin-hub.delete-record', $linkedAdminHub->id)
@@ -1161,6 +1155,7 @@ class AdminUserController extends Controller
                     'avatar_letter' => strtoupper(substr($displayName !== '' ? $displayName : ($email ?: 'A'), 0, 1)),
                     'can_edit' => false,
                     'can_onboard' => true,
+                    'is_local_user' => false,
                     'is_external' => false,
                     'meta' => [
                         'email' => $email,
@@ -1205,7 +1200,7 @@ class AdminUserController extends Controller
 
         return collect($faculties)
             ->filter(fn ($faculty) => is_array($faculty))
-            ->map(function (array $faculty) {
+            ->map(function (array $faculty) use ($facultySyncService) {
                 $profile = is_array($faculty['profile'] ?? null) ? $faculty['profile'] : [];
                 $name = trim((string) ($faculty['name'] ?? trim(implode(' ', array_filter([
                     $faculty['first_name'] ?? '',
@@ -1217,23 +1212,8 @@ class AdminUserController extends Controller
                 $role = trim((string) ($faculty['faculty_type'] ?? $faculty['role'] ?? $faculty['access_level'] ?? 'Faculty'));
                 $status = strtolower(trim((string) ($faculty['status'] ?? 'active')));
                 $facultyCode = trim((string) ($faculty['faculty_code'] ?? $faculty['employee_number'] ?? $faculty['employee_no'] ?? ''));
-                $facultyNumericId = trim((string) ($faculty['faculty_id'] ?? $faculty['id'] ?? ''));
                 $employeeNumber = $facultyCode;
-                $adminUuid = $this->firstFilledValue([
-                    $faculty['faculty_uuid'] ?? null,
-                    $faculty['admin_uuid'] ?? null,
-                    $faculty['idp_user_id'] ?? null,
-                    $faculty['user_uuid'] ?? null,
-                    $faculty['uuid'] ?? null,
-                    $faculty['student_id'] ?? null,
-                    data_get($profile, 'faculty_uuid'),
-                    data_get($profile, 'admin_uuid'),
-                    data_get($profile, 'idp_user_id'),
-                    data_get($profile, 'user_uuid'),
-                    data_get($profile, 'uuid'),
-                    data_get($profile, 'student_id'),
-                    $facultyNumericId,
-                ], fn ($value) => $this->isUuid((string) $value));
+                $adminUuid = $facultySyncService->resolveFacultyUuid($faculty);
                 $recordId = $employeeNumber !== '' ? $employeeNumber : ($adminUuid ?: ($email !== '' ? $email : 'faculty'));
 
                 if (in_array($status, ['1', 'true', 'active', 'enabled'], true)) {
@@ -1261,6 +1241,7 @@ class AdminUserController extends Controller
                     'avatar_letter' => strtoupper(substr($name !== '' ? $name : ($email ?: 'F'), 0, 1)),
                     'can_edit' => false,
                     'can_onboard' => true,
+                    'is_local_user' => false,
                     'is_external' => true,
                     'meta' => [
                         'faculty_id' => $faculty['faculty_id'] ?? null,

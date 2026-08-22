@@ -92,6 +92,34 @@ class FacultySyncService
         ];
     }
 
+    public function resolveFacultyUuid(array $faculty): ?string
+    {
+        $profile = is_array($faculty['profile'] ?? null) ? $faculty['profile'] : [];
+
+        foreach ([
+            $faculty['faculty_uuid'] ?? null,
+            $faculty['admin_uuid'] ?? null,
+            $faculty['idp_user_id'] ?? null,
+            $faculty['user_uuid'] ?? null,
+            $faculty['uuid'] ?? null,
+            $faculty['student_id'] ?? null,
+            $profile['faculty_uuid'] ?? null,
+            $profile['admin_uuid'] ?? null,
+            $profile['idp_user_id'] ?? null,
+            $profile['user_uuid'] ?? null,
+            $profile['uuid'] ?? null,
+            $profile['student_id'] ?? null,
+        ] as $candidate) {
+            $candidate = trim((string) $candidate);
+
+            if ($this->isUuid($candidate)) {
+                return strtolower($candidate);
+            }
+        }
+
+        return null;
+    }
+
     private function extractFaculties($payload): array
     {
         if (!is_array($payload)) {
@@ -123,5 +151,13 @@ class FacultySyncService
         }
 
         return array_keys($value) === range(0, count($value) - 1);
+    }
+
+    private function isUuid(string $value): bool
+    {
+        return preg_match(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
+            $value
+        ) === 1;
     }
 }

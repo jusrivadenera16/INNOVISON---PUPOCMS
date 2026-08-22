@@ -1300,15 +1300,19 @@
                     </thead>
                     <tbody id="lookupResultsBody">
                         @forelse($lookupRecords as $record)
+                            @php
+                                $canUpdateLocalUser = !empty($record['is_local_user']) && !empty($record['can_edit']);
+                                $canOnboardLookupRecord = !$canUpdateLocalUser && !empty($record['can_onboard']);
+                            @endphp
                             <tr
                                 data-user-card
                                 data-lookup-result-row
-                                data-update-url="{{ $record['can_edit'] ? route('admin.user-management.update', $record['id']) : '' }}"
-                                data-delete-url="{{ $record['can_edit'] ? route('admin.user-management.destroy', $record['id']) : '' }}"
+                                data-update-url="{{ $canUpdateLocalUser ? route('admin.user-management.update', $record['id']) : '' }}"
+                                data-delete-url="{{ $canUpdateLocalUser ? route('admin.user-management.destroy', $record['id']) : '' }}"
                                 data-delete-admin-hub-url="{{ $record['delete_admin_hub_url'] ?? '' }}"
-                                data-create-url="{{ !$record['can_edit'] && !empty($record['can_onboard']) ? route('admin.user-management.store-from-lookup') : '' }}"
-                                data-can-edit="{{ $record['can_edit'] ? '1' : '0' }}"
-                                data-can-onboard="{{ !empty($record['can_onboard']) ? '1' : '0' }}"
+                                data-create-url="{{ $canOnboardLookupRecord ? route('admin.user-management.store-from-lookup') : '' }}"
+                                data-can-edit="{{ $canUpdateLocalUser ? '1' : '0' }}"
+                                data-can-onboard="{{ $canOnboardLookupRecord ? '1' : '0' }}"
                                 data-id="{{ $record['record_id'] }}"
                                 data-name="{{ $record['name'] }}"
                                 data-first-name="{{ $record['first_name'] }}"
