@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Admin;
 use App\Models\AdminHub;
 use App\Models\Announcement;
+use App\Services\AnnouncementContent;
 use App\Models\Appointment;
 use App\Models\AppointmentFeedback;
 use App\Models\Consultation;
@@ -314,6 +315,18 @@ class AppointmentController extends Controller
         if (Schema::hasTable('announcements')) {
             $activeAnnouncements = Announcement::query()
                 ->where('status', Announcement::STATUS_ACTIVE)
+                ->when(
+                    Schema::hasColumn('announcements', 'show_in_portal'),
+                    function ($query): void {
+                        $query->where(function ($visibility): void {
+                            $visibility->where('show_in_portal', true);
+
+                            if (Schema::hasColumn('announcements', 'show_on_landing')) {
+                                $visibility->orWhere('show_on_landing', true);
+                            }
+                        });
+                    }
+                )
                 ->whereIn('target_audience', ['all', 'student', 'students'])
                 ->where(function ($query) {
                     $query->whereNull('expires_at')
@@ -324,7 +337,7 @@ class AppointmentController extends Controller
                 ->get();
 
             foreach ($activeAnnouncements as $announcement) {
-                $announcementMessage = trim(strip_tags((string) $announcement->message));
+                $announcementMessage = AnnouncementContent::toPlainText($announcement->message);
                 $notifications[] = [
                     'id' => $this->buildNotificationId('announcement', [
                         $announcement->id,
@@ -335,6 +348,8 @@ class AppointmentController extends Controller
                     'announcement_id' => $announcement->id,
                     'title' => trim((string) $announcement->title) ?: 'Clinic Announcement',
                     'message' => $announcementMessage !== '' ? $announcementMessage : 'A new clinic announcement is available.',
+                    'message_html' => AnnouncementContent::toHtml($announcement->message),
+                    'image_urls' => $announcement->image_urls,
                     'time' => $announcement->created_at
                         ? $announcement->created_at->diffForHumans()
                         : 'Clinic announcement',
@@ -713,6 +728,18 @@ class AppointmentController extends Controller
         $clinicHoursStatus = $this->buildClinicHoursStatus();
         $homeAnnouncements = Announcement::query()
             ->where('status', Announcement::STATUS_ACTIVE)
+            ->when(
+                Schema::hasColumn('announcements', 'show_in_portal'),
+                function ($query): void {
+                    $query->where(function ($visibility): void {
+                        $visibility->where('show_in_portal', true);
+
+                        if (Schema::hasColumn('announcements', 'show_on_landing')) {
+                            $visibility->orWhere('show_on_landing', true);
+                        }
+                    });
+                }
+            )
             ->whereIn('target_audience', ['all', 'student', 'students'])
             ->where(function ($query) {
                 $query->whereNull('expires_at')
@@ -724,7 +751,9 @@ class AppointmentController extends Controller
             ->map(fn (Announcement $announcement) => [
                 'id' => $announcement->id,
                 'title' => $announcement->title,
-                'message' => trim(strip_tags((string) $announcement->message)),
+                'message' => AnnouncementContent::toPlainText($announcement->message),
+                'message_html' => AnnouncementContent::toHtml($announcement->message),
+                'image_urls' => $announcement->image_urls,
                 'priority' => strtoupper((string) ($announcement->priority ?: 'Announcement')),
                 'date' => $announcement->created_at?->format('M j, Y') ?? now(config('app.timezone'))->format('M j, Y'),
             ])

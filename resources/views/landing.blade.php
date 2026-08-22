@@ -3282,6 +3282,71 @@
             line-height: 1.55;
         }
 
+        .landing-announcement-image {
+            display: block;
+            width: 100%;
+            max-height: 180px;
+            margin: 2px 0;
+            border: 1px solid rgba(255, 255, 255, .16);
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .landing-announcement-image-grid {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+        }
+
+        .landing-announcement-card.is-expanded .landing-announcement-image-grid {
+            display: grid;
+        }
+
+        .landing-announcement-image-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .landing-announcement-image-toggle {
+            display: block;
+            width: 100%;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .landing-announcement-image-open {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            opacity: 0;
+            pointer-events: none;
+            background: rgba(15, 23, 42, .58);
+            color: #690014;
+            text-decoration: none;
+            transition: opacity .18s ease;
+        }
+
+        .landing-announcement-image-open span {
+            min-height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 14px;
+            border-radius: 6px;
+            background: #ffd21f;
+            font-size: 12px;
+            font-weight: 950;
+        }
+
+        .landing-announcement-image-card.is-open .landing-announcement-image-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
         .landing-announcement-foot {
             color: #94a3b8;
         }
@@ -3345,6 +3410,10 @@
         body.landing-theme-light .landing-announcement-message,
         body.landing-theme-light .landing-announcement-meta {
             color: #475569;
+        }
+
+        body.landing-theme-light .landing-announcement-image {
+            border-color: rgba(112, 19, 27, .14);
         }
 
         body.landing-theme-light .landing-announcement-foot {
@@ -5472,7 +5541,19 @@
                                             <span class="landing-announcement-meta-right">{{ $announcement->created_at?->format('M j, Y · g:i A') ?? 'Just now' }}</span>
                                         </div>
                                         <h3 class="landing-announcement-title">{{ $announcement->title }}</h3>
-                                        <div class="landing-announcement-message">{!! $renderLandingAnnouncementMessage($announcement->message) !!}</div>
+                                        <div class="landing-announcement-message">{!! \App\Services\AnnouncementContent::toHtml($announcement->message) !!}</div>
+                                        @if($announcement->image_urls !== [])
+                                            <div class="landing-announcement-image-grid">
+                                                @foreach($announcement->image_urls as $imageIndex => $imageUrl)
+                                                    <div class="landing-announcement-image-card">
+                                                        <button type="button" class="landing-announcement-image-toggle" data-announcement-image-toggle aria-label="Show open option for announcement image {{ $imageIndex + 1 }}">
+                                                            <img class="landing-announcement-image" src="{{ $imageUrl }}" alt="Announcement image {{ $imageIndex + 1 }} for {{ $announcement->title }}">
+                                                        </button>
+                                                        <a class="landing-announcement-image-open" href="{{ $imageUrl }}" target="_blank" rel="noopener noreferrer"><span>Open</span></a>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                         <div class="landing-announcement-foot">
                                             <span>Target: {{ strtoupper($announcement->target_audience ?? 'All Users') }}</span>
                                             <button type="button" class="landing-announcement-read" data-announcement-read>Read More →</button>
@@ -6573,7 +6654,8 @@
                 card.classList.remove('is-expanded');
                 const isOverflowing = message.scrollHeight > message.clientHeight + 2;
                 card.classList.toggle('is-expanded', wasExpanded);
-                button.hidden = !isOverflowing && !wasExpanded;
+                const hasImages = Boolean(card.querySelector('.landing-announcement-image-grid'));
+                button.hidden = !isOverflowing && !wasExpanded && !hasImages;
                 button.textContent = wasExpanded ? 'Read Less ↑' : 'Read More →';
             });
         }
@@ -6588,6 +6670,12 @@
                         card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }, 40);
                 }
+            });
+        });
+
+        document.querySelectorAll('[data-announcement-image-toggle]').forEach(function (imageButton) {
+            imageButton.addEventListener('click', function () {
+                imageButton.closest('.landing-announcement-image-card')?.classList.toggle('is-open');
             });
         });
 

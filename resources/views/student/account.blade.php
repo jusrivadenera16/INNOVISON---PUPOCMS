@@ -5641,6 +5641,70 @@
         white-space: pre-line;
         -webkit-line-clamp: unset;
     }
+    .notification-announcement-content {
+        display: grid;
+        gap: 12px;
+        color: #4b5563;
+        font-size: 13px;
+        line-height: 1.55;
+    }
+    .notification-announcement-content p,
+    .notification-announcement-content ul { margin: 0; }
+    .notification-announcement-content ul { padding-left: 20px; }
+    .notification-announcement-content strong { color: #1f2937; font-weight: 900; }
+    .notification-announcement-images {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 8px;
+    }
+    .notification-announcement-image-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+    }
+    .notification-announcement-image-toggle {
+        display: block;
+        width: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+    }
+    .notification-announcement-images img {
+        display: block;
+        width: 100%;
+        height: 130px;
+        border: 1px solid rgba(36,100,173,.18);
+        border-radius: 8px;
+        object-fit: cover;
+    }
+    .notification-announcement-image-open {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        opacity: 0;
+        pointer-events: none;
+        background: rgba(15, 23, 42, .58);
+        color: #690014;
+        text-decoration: none;
+        transition: opacity .18s ease;
+    }
+    .notification-announcement-image-open span {
+        min-height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 13px;
+        border-radius: 6px;
+        background: #ffd21f;
+        font-size: 12px;
+        font-weight: 900;
+    }
+    .notification-announcement-image-card.is-open .notification-announcement-image-open {
+        opacity: 1;
+        pointer-events: auto;
+    }
     .notification-feed-meta {
         min-width: 0;
         display: grid;
@@ -5698,8 +5762,10 @@
         opacity: 1;
     }
     .notification-expanded-content {
-        display: flex;
-        justify-content: flex-end;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+        gap: 14px;
         margin-top: 10px;
         padding-top: 10px;
         border-top: 1px solid rgba(176,0,32,.12);
@@ -5709,6 +5775,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        justify-self: end;
         gap: 6px;
         padding: 8px 13px;
         border: 1px solid #8b0018;
@@ -6118,6 +6185,9 @@
     html[data-theme="dark"] .notification-center-list dt,
     html[data-theme="dark"] .notification-last-read,
     html[data-theme="dark"] .notification-empty-state { color: #aeb8c7; }
+    html[data-theme="dark"] .notification-announcement-content { color: #cbd5e1; }
+    html[data-theme="dark"] .notification-announcement-content strong { color: #f8fafc; }
+    html[data-theme="dark"] .notification-announcement-images img { border-color: rgba(96,165,250,.28); }
     html[data-theme="dark"] .notification-filter-chip,
     html[data-theme="dark"] .notification-feed-item,
     html[data-theme="dark"] .notification-page-number,
@@ -8784,6 +8854,23 @@ document.addEventListener('DOMContentLoaded', function () {
                             >
                                 <div class="notification-expanded-inner">
                                     <div class="notification-expanded-content">
+                                        @if(!empty($notif['announcement_id']))
+                                            <div class="notification-announcement-content">
+                                                <div>{!! $notif['message_html'] ?? nl2br(e($notificationMessage)) !!}</div>
+                                                @if(!empty($notif['image_urls']))
+                                                    <div class="notification-announcement-images">
+                                                        @foreach($notif['image_urls'] as $imageIndex => $imageUrl)
+                                                            <div class="notification-announcement-image-card">
+                                                                <button type="button" class="notification-announcement-image-toggle" data-announcement-notification-image-toggle aria-label="Show open option for announcement image {{ $imageIndex + 1 }}">
+                                                                    <img src="{{ $imageUrl }}" alt="Announcement image {{ $imageIndex + 1 }} for {{ $notif['title'] ?? 'clinic announcement' }}">
+                                                                </button>
+                                                                <a class="notification-announcement-image-open" href="{{ $imageUrl }}" target="_blank" rel="noopener noreferrer"><span>Open</span></a>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endif
                                         <a
                                             href="{{ route('student.notifications.open', ['notificationId' => $notif['id']]) }}"
                                             class="notification-open-link"
@@ -9105,6 +9192,12 @@ document.addEventListener('DOMContentLoaded', function () {
             item.classList.toggle('is-expanded', nextExpanded);
             details.setAttribute('aria-hidden', nextExpanded ? 'false' : 'true');
             details.toggleAttribute('inert', !nextExpanded);
+        });
+    });
+
+    document.querySelectorAll('[data-announcement-notification-image-toggle]').forEach(function (imageButton) {
+        imageButton.addEventListener('click', function () {
+            imageButton.closest('.notification-announcement-image-card')?.classList.toggle('is-open');
         });
     });
 

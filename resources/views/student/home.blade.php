@@ -847,6 +847,25 @@
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 4;
     }
+    .announcement-message p,
+    .announcement-message ul { margin: 0; }
+    .announcement-message ul { padding-left: 18px; }
+    .announcement-message strong { font-weight: 950; }
+    .home-announcement-image-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        width: calc(100% - 94px);
+        margin: 0 0 0 94px;
+    }
+    .home-announcement-image {
+        display: block;
+        width: 100%;
+        height: 62px;
+        border: 1px solid rgba(255,255,255,.18);
+        border-radius: 8px;
+        object-fit: cover;
+    }
     .announcement-date {
         display: inline-flex;
         align-items: center;
@@ -1034,6 +1053,68 @@
         border-radius: 999px;
         background: rgba(112, 19, 27, .55);
     }
+    .announcement-modal-image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        width: 100%;
+        margin: 20px 0 0;
+    }
+    .announcement-modal-image-grid[hidden] { display: none; }
+    .announcement-modal-image-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+    }
+    .announcement-modal-image-button {
+        display: block;
+        width: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+    }
+    .announcement-modal-image {
+        display: block;
+        width: 100%;
+        height: 150px;
+        border: 1px solid rgba(112, 19, 27, .16);
+        border-radius: 8px;
+        object-fit: cover;
+    }
+    .announcement-modal-image-open {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        opacity: 0;
+        pointer-events: none;
+        background: rgba(15, 23, 42, .58);
+        color: #690014;
+        text-decoration: none;
+        transition: opacity .18s ease;
+    }
+    .announcement-modal-image-open span {
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 14px;
+        border-radius: 6px;
+        background: #ffd21f;
+        font-size: 12px;
+        font-weight: 950;
+    }
+    .announcement-modal-image-card.is-open .announcement-modal-image-open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .announcement-rich-content { white-space: normal; }
+    .announcement-rich-content p,
+    .announcement-rich-content ul { margin: 0 0 12px; }
+    .announcement-rich-content p:last-child,
+    .announcement-rich-content ul:last-child { margin-bottom: 0; }
+    .announcement-rich-content ul { padding-left: 20px; }
     .announcement-modal-published {
         flex: 0 0 auto;
         display: flex;
@@ -2753,7 +2834,8 @@
               data-announcement-id="{{ $announcement['id'] ?? '' }}"
               data-priority="{{ e($announcement['priority'] ?: 'ANNOUNCEMENT') }}"
               data-title="{{ e($announcement['title']) }}"
-              data-message="{{ e($announcement['message']) }}"
+              data-message-html="{!! e($announcement['message_html'] ?? nl2br(e($announcement['message'] ?? ''))) !!}"
+              data-image-urls='@json($announcement['image_urls'] ?? [])'
               data-date="{{ e($announcement['date'] ?? now(config('app.timezone'))->format('M j, Y')) }}"
               role="button"
               tabindex="0"
@@ -2768,7 +2850,7 @@
                   <h3 class="announcement-title">{{ $announcement['title'] }}</h3>
                 </div>
               </div>
-              <p class="announcement-message">{{ \Illuminate\Support\Str::limit($announcement['message'], 175) }}</p>
+              <div class="announcement-message">{!! $announcement['message_html'] ?? nl2br(e(\Illuminate\Support\Str::limit($announcement['message'], 175))) !!}</div>
               <span class="announcement-date">
                 <x-outline-icon name="calendar-days" />
                 <span>{{ $announcement['date'] ?? now(config('app.timezone'))->format('M j, Y') }}</span>
@@ -3021,7 +3103,10 @@
             <x-outline-icon name="x-mark" />
           </button>
         </div>
-        <div class="announcement-modal-body" id="announcementDetailMessage"></div>
+        <div class="announcement-modal-body announcement-rich-content">
+          <div id="announcementDetailMessage"></div>
+          <div class="announcement-modal-image-grid" id="announcementDetailImages" hidden></div>
+        </div>
         <div class="announcement-modal-published">
           <x-outline-icon name="calendar-days" />
           <span>Published <time id="announcementDetailDate"></time></span>
@@ -3049,7 +3134,8 @@
               data-announcement-id="{{ $announcement['id'] ?? '' }}"
               data-priority="{{ e($announcement['priority'] ?: 'ANNOUNCEMENT') }}"
               data-title="{{ e($announcement['title']) }}"
-              data-message="{{ e($announcement['message']) }}"
+              data-message-html="{!! e($announcement['message_html'] ?? nl2br(e($announcement['message'] ?? ''))) !!}"
+              data-image-urls='@json($announcement['image_urls'] ?? [])'
               data-date="{{ e($announcement['date'] ?? now(config('app.timezone'))->format('M j, Y')) }}"
             >
               <span class="announcement-all-item-icon" aria-hidden="true">
@@ -3076,6 +3162,7 @@
         const announcementDetailPriority = document.getElementById('announcementDetailPriority');
         const announcementDetailTitle = document.getElementById('announcementDetailTitle');
         const announcementDetailMessage = document.getElementById('announcementDetailMessage');
+        const announcementDetailImages = document.getElementById('announcementDetailImages');
         const announcementDetailDate = document.getElementById('announcementDetailDate');
         const viewAllAnnouncementsBtn = document.getElementById('viewAllAnnouncementsBtn');
         const allAnnouncementsModal = document.getElementById('allAnnouncementsModal');
@@ -3235,7 +3322,42 @@
           if (trigger && isOpen) {
             if (announcementDetailPriority) announcementDetailPriority.textContent = trigger.dataset.priority || 'ANNOUNCEMENT';
             if (announcementDetailTitle) announcementDetailTitle.textContent = trigger.dataset.title || 'Announcement';
-            if (announcementDetailMessage) announcementDetailMessage.textContent = trigger.dataset.message || '';
+            if (announcementDetailMessage) announcementDetailMessage.innerHTML = trigger.dataset.messageHtml || '';
+            if (announcementDetailImages) {
+              let imageUrls = [];
+              try {
+                imageUrls = JSON.parse(trigger.dataset.imageUrls || '[]');
+              } catch (error) {
+                imageUrls = [];
+              }
+              announcementDetailImages.replaceChildren(...imageUrls.map((imageUrl, index) => {
+                const card = document.createElement('div');
+                card.className = 'announcement-modal-image-card';
+
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'announcement-modal-image-button';
+                button.setAttribute('aria-label', `Show open option for announcement image ${index + 1}`);
+
+                const image = document.createElement('img');
+                image.className = 'announcement-modal-image';
+                image.src = imageUrl;
+                image.alt = `Announcement image ${index + 1} for ${trigger.dataset.title || 'clinic announcement'}`;
+                button.append(image);
+                button.addEventListener('click', () => card.classList.toggle('is-open'));
+
+                const openLink = document.createElement('a');
+                openLink.className = 'announcement-modal-image-open';
+                openLink.href = imageUrl;
+                openLink.target = '_blank';
+                openLink.rel = 'noopener noreferrer';
+                openLink.innerHTML = '<span>Open</span>';
+
+                card.append(button, openLink);
+                return card;
+              }));
+              announcementDetailImages.hidden = imageUrls.length === 0;
+            }
             if (announcementDetailDate) announcementDetailDate.textContent = trigger.dataset.date || '';
           }
 

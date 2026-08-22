@@ -5224,7 +5224,9 @@
                         'physical_assessment_status' => $record->physical_assessment_status ?: 'Not Yet Conducted',
                         'documents_valid' => (bool) $record->documents_valid,
                         'approve_url' => $recordIsEmployee ? '' : route('admin.update_clearance', $record->id),
-                        'resubmission_url' => $recordIsEmployee ? '' : route('admin.health_profile.request_resubmission', $record->id),
+                        'resubmission_url' => $recordIsEmployee
+                            ? route('admin.employee_health_profile.request_resubmission', $record->id)
+                            : route('admin.health_profile.request_resubmission', $record->id),
                         'documents' => [
                             [
                                 'title' => '2x2 Photo',
@@ -5600,7 +5602,9 @@
                             'physical_assessment_status' => $readonlyRecord->physical_assessment_status ?: 'Not Yet Conducted',
                             'documents_valid' => (bool) $readonlyRecord->documents_valid,
                             'approve_url' => $readonlyIsEmployee ? '' : route('admin.update_clearance', $readonlyRecord->id),
-                            'resubmission_url' => $readonlyIsEmployee ? '' : route('admin.health_profile.request_resubmission', $readonlyRecord->id),
+                            'resubmission_url' => $readonlyIsEmployee
+                                ? route('admin.employee_health_profile.request_resubmission', $readonlyRecord->id)
+                                : route('admin.health_profile.request_resubmission', $readonlyRecord->id),
                             'documents' => [
                             [
                                 'title' => '2x2 Photo',
@@ -5681,7 +5685,7 @@
                                         data-review-course="{{ $readonlyCourseDisplay !== '' ? $readonlyCourseDisplay : '-' }}"
                                         data-review-student-id="{{ $readonlyRecord->student_id ?: optional($readonlyRecord->user)->student_id ?: optional($readonlyRecord->user)->student_number ?: '-' }}"
                                         data-review-approve-url="{{ $readonlyIsEmployee ? '' : route('admin.update_clearance', $readonlyRecord->id) }}"
-                                        data-review-resubmission-url="{{ $readonlyIsEmployee ? '' : route('admin.health_profile.request_resubmission', $readonlyRecord->id) }}"
+                                        data-review-resubmission-url="{{ $readonlyIsEmployee ? route('admin.employee_health_profile.request_resubmission', $readonlyRecord->id) : route('admin.health_profile.request_resubmission', $readonlyRecord->id) }}"
                                     >
                                         <span>View Info</span>
                                     </button>
@@ -6210,6 +6214,14 @@
             return value || '-';
         }
 
+        function filledActionUrl(primary, fallback) {
+            var value = String(primary == null ? '' : primary).trim();
+            if (value === '' || value === '-') {
+                value = String(fallback == null ? '' : fallback).trim();
+            }
+            return value === '-' ? '' : value;
+        }
+
         function markCopied(button) {
             var originalLabel = button.getAttribute('aria-label') || 'Copy reference number';
             button.classList.add('is-copied');
@@ -6288,8 +6300,8 @@
             payload.reference_number = filledValue(payload.reference_number, button.getAttribute('data-review-reference'));
             payload.course = filledValue(payload.course, button.getAttribute('data-review-course'));
             payload.student_id = filledValue(payload.student_id, button.getAttribute('data-review-student-id'));
-            payload.approve_url = filledValue(payload.approve_url, button.getAttribute('data-review-approve-url'));
-            payload.resubmission_url = filledValue(payload.resubmission_url, button.getAttribute('data-review-resubmission-url'));
+            payload.approve_url = filledActionUrl(payload.approve_url, button.getAttribute('data-review-approve-url'));
+            payload.resubmission_url = filledActionUrl(payload.resubmission_url, button.getAttribute('data-review-resubmission-url'));
 
             setText('verifyApprovalStudentName', payload.name || '-');
             setText('verifyApprovalStudentNumber', payload.email || '-');
@@ -7223,6 +7235,14 @@
         return value || '-';
     }
 
+    function reviewActionUrl(primary, fallback) {
+        let value = String(primary ?? '').trim();
+        if (value === '' || value === '-') {
+            value = String(fallback ?? '').trim();
+        }
+        return value === '-' ? '' : value;
+    }
+
     function openVerificationModalFromRow(row, button = null) {
         if (!row) return;
         const payload = getRecordPayloadFromRow(row);
@@ -7232,8 +7252,8 @@
             payload.reference_number = reviewFallbackValue(payload.reference_number, button.getAttribute('data-review-reference'));
             payload.course = reviewFallbackValue(payload.course, button.getAttribute('data-review-course'));
             payload.student_id = reviewFallbackValue(payload.student_id, button.getAttribute('data-review-student-id'));
-            payload.approve_url = reviewFallbackValue(payload.approve_url, button.getAttribute('data-review-approve-url'));
-            payload.resubmission_url = reviewFallbackValue(payload.resubmission_url, button.getAttribute('data-review-resubmission-url'));
+            payload.approve_url = reviewActionUrl(payload.approve_url, button.getAttribute('data-review-approve-url'));
+            payload.resubmission_url = reviewActionUrl(payload.resubmission_url, button.getAttribute('data-review-resubmission-url'));
         }
 
         if (verifyApprovalStudentName) {

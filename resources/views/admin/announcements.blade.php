@@ -321,6 +321,29 @@
         line-height: 1.55;
     }
 
+    .announcement-rich-editor {
+        overflow-y: auto;
+        resize: vertical;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-weight: 400;
+    }
+
+    .announcement-rich-editor:empty::before {
+        content: attr(data-placeholder);
+        color: #94a3b8;
+        pointer-events: none;
+    }
+
+    .announcement-rich-editor p,
+    .announcement-rich-editor ul {
+        margin: 0;
+    }
+
+    .announcement-rich-editor ul {
+        padding-left: 20px;
+    }
+
     .announcement-input:focus,
     .announcement-select:focus,
     .announcement-textarea:focus {
@@ -367,6 +390,109 @@
         outline: none;
     }
 
+    .announcement-tool.is-active,
+    .announcement-tool[aria-pressed="true"] {
+        border-color: #70131B;
+        background: #70131B;
+        color: #ffffff;
+        box-shadow: 0 4px 10px rgba(112, 19, 27, 0.18);
+    }
+
+    .announcement-tool svg {
+        width: 16px;
+        height: 16px;
+        stroke-width: 2;
+    }
+
+    .announcement-tool[data-announcement-link-tool] {
+        width: 25px;
+        height: 25px;
+        margin-left: -2px;
+    }
+
+    .announcement-tool[data-announcement-link-tool] svg {
+        width: 13px;
+        height: 13px;
+    }
+
+    .announcement-link-popover {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 7px;
+        padding: 8px 10px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        background: #fff8f8;
+    }
+
+    .announcement-link-popover[hidden] { display: none; }
+
+    .announcement-link-popover input {
+        min-width: 0;
+        height: 34px;
+        padding: 0 10px;
+        border: 1px solid rgba(112, 19, 27, 0.22);
+        border-radius: 6px;
+        color: #1f2937;
+        background: #ffffff;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .announcement-link-apply,
+    .announcement-link-cancel {
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        cursor: pointer;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        transition: background .18s ease, color .18s ease, border-color .18s ease;
+    }
+
+    .announcement-link-apply {
+        padding: 0 12px;
+        border: 1px solid #70131B;
+        color: #ffffff;
+        background: #70131B;
+    }
+
+    .announcement-link-cancel {
+        width: 34px;
+        padding: 0;
+        border: 1px solid rgba(112, 19, 27, 0.16);
+        color: #70131B;
+        background: #ffffff;
+    }
+
+    .announcement-link-cancel svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .announcement-link-apply:hover,
+    .announcement-link-apply:focus-visible,
+    .announcement-link-cancel:hover,
+    .announcement-link-cancel:focus-visible {
+        border-color: #f1bd00;
+        color: #690014;
+        background: #ffd21f;
+        outline: none;
+    }
+
+    .announcement-link-feedback {
+        grid-column: 1 / -1;
+        margin: 0;
+        color: #9b1225;
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .announcement-link-feedback[hidden] { display: none; }
+
     .announcement-editor .announcement-textarea {
         border: 0;
         border-radius: 0;
@@ -379,6 +505,190 @@
         font-size: 11px;
         font-weight: 800;
         text-align: right;
+    }
+
+    .announcement-image-input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .announcement-image-controls {
+        min-height: 52px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border: 1px dashed rgba(112, 19, 27, 0.34);
+        border-radius: 8px;
+        background: #fff8f8;
+    }
+
+    .announcement-image-add,
+    .announcement-image-clear {
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        border-radius: 6px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .announcement-image-add {
+        padding: 7px 11px;
+        border: 1px solid transparent;
+        color: #70131B;
+        background: #fde9ed;
+    }
+
+    .announcement-image-add svg,
+    .announcement-image-clear svg {
+        width: 15px;
+        height: 15px;
+        stroke-width: 2;
+    }
+
+    .announcement-image-add:hover,
+    .announcement-image-add:focus-visible,
+    .announcement-image-clear:hover,
+    .announcement-image-clear:focus-visible {
+        border-color: #f1bd00;
+        background: #ffd21f;
+        color: #690014;
+        outline: none;
+        transform: translateY(-1px);
+    }
+
+    .announcement-image-clear {
+        width: 34px;
+        padding: 0;
+        margin-left: auto;
+        border: 1px solid rgba(112, 19, 27, 0.16);
+        color: #9b1225;
+        background: #ffffff;
+    }
+
+    .announcement-image-clear[hidden] { display: none; }
+
+    .announcement-image-note {
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .announcement-image-feedback {
+        min-height: 16px;
+        color: #9b1225;
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .announcement-image-feedback[hidden] { display: none; }
+
+    .announcement-visibility-field {
+        display: grid;
+        gap: 10px;
+        padding: 12px 14px;
+        border: 1px solid rgba(112, 19, 27, 0.16);
+        border-radius: 8px;
+        background: #fffafa;
+    }
+
+    .announcement-visibility-title {
+        color: #70131B;
+        font-size: 13px;
+        font-weight: 950;
+    }
+
+    .announcement-visibility-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+    }
+
+    .announcement-visibility-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex: 0 0 auto;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    .announcement-visibility-toggle input {
+        width: 17px;
+        height: 17px;
+        margin: 0;
+        accent-color: #70131B;
+    }
+
+    .announcement-image-preview {
+        display: none;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        border: 1px solid rgba(112, 19, 27, 0.14);
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 8px;
+    }
+
+    .announcement-image-preview.is-visible { display: grid; }
+    .announcement-image-preview-card {
+        position: relative;
+        min-width: 0;
+    }
+
+    .announcement-image-preview img {
+        display: block;
+        width: 100%;
+        height: 96px;
+        border-radius: 6px;
+        object-fit: cover;
+    }
+
+    .announcement-image-remove {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 26px;
+        height: 26px;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.72);
+        border-radius: 50%;
+        color: #ffffff;
+        background: rgba(112, 19, 27, 0.92);
+        cursor: pointer;
+        box-shadow: 0 3px 8px rgba(36, 8, 12, 0.22);
+        transition: background .18s ease, color .18s ease, transform .18s ease;
+    }
+
+    .announcement-image-remove svg {
+        width: 14px;
+        height: 14px;
+        stroke-width: 2.4;
+    }
+
+    .announcement-image-remove:hover,
+    .announcement-image-remove:focus-visible {
+        background: #ffd21f;
+        color: #690014;
+        outline: none;
+        transform: scale(1.06);
     }
 
     .announcement-submit {
@@ -459,10 +769,110 @@
         gap: 14px;
     }
 
+    [data-active-bulletins-panel] {
+        transition: opacity .18s ease;
+    }
+
+    [data-active-bulletins-panel].is-loading {
+        pointer-events: none;
+        opacity: .54;
+    }
+
+    .announcement-pagination {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        gap: 16px;
+        margin-top: 16px;
+        padding: 14px 18px;
+        border: 1px solid #edf2f7;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .announcement-pagination-summary {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    .announcement-pagination-actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .announcement-pagination-control {
+        min-width: 34px;
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        color: #334155;
+        background: #ffffff;
+        font-size: 12px;
+        font-weight: 900;
+        line-height: 1;
+        text-decoration: none;
+        transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease;
+    }
+
+    .announcement-pagination-control:not(.is-disabled):hover,
+    .announcement-pagination-control:not(.is-disabled):focus-visible {
+        border-color: #f8cfd4;
+        background: #fff7ed;
+        color: #70131B;
+        outline: none;
+        transform: translateY(-2px) scale(1.04);
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .10);
+    }
+
+    .announcement-pagination-control.is-active,
+    .announcement-pagination-control.is-active:hover {
+        border-color: #7f0010;
+        color: #ffffff;
+        background: #7f0010;
+        box-shadow: 0 12px 24px rgba(127, 0, 16, 0.18);
+        transform: translateY(-1px);
+    }
+
+    .announcement-pagination-control.is-disabled {
+        color: #94a3b8;
+        background: #f8fafc;
+        cursor: not-allowed;
+        opacity: .45;
+    }
+
+    .announcement-pagination-spacer {
+        min-height: 1px;
+    }
+
+    @media (max-width: 640px) {
+        .announcement-pagination {
+            grid-template-columns: 1fr;
+            justify-items: center;
+        }
+
+        .announcement-pagination-summary {
+            text-align: center;
+        }
+
+        .announcement-pagination-spacer {
+            display: none;
+        }
+    }
+
     .announcement-item {
         position: relative;
         display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
         gap: 12px;
+        height: 224px;
         padding: 18px 16px 16px 20px;
         border-radius: 10px;
         border: 1px solid rgba(148, 163, 184, 0.26);
@@ -534,7 +944,8 @@
     }
 
     .announcement-delete,
-    .announcement-archive {
+    .announcement-archive,
+    .announcement-view {
         width: 34px;
         height: 34px;
         display: grid;
@@ -556,17 +967,26 @@
         color: #475569;
     }
 
+    .announcement-view {
+        border: 1px solid rgba(37, 99, 235, 0.2);
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
     .announcement-delete:hover,
     .announcement-delete:focus-visible,
     .announcement-archive:hover,
-    .announcement-archive:focus-visible {
+    .announcement-archive:focus-visible,
+    .announcement-view:hover,
+    .announcement-view:focus-visible {
         background: #70131B;
         color: #ffffff;
         outline: none;
     }
 
     .announcement-delete svg,
-    .announcement-archive svg {
+    .announcement-archive svg,
+    .announcement-view svg {
         width: 17px;
         height: 17px;
     }
@@ -577,6 +997,21 @@
         font-size: 17px;
         font-weight: 950;
         line-height: 1.25;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+    }
+
+    .announcement-preview {
+        overflow: hidden;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.55;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
     }
 
     .announcement-message {
@@ -604,6 +1039,119 @@
     .announcement-message strong {
         color: #111827;
         font-weight: 950;
+    }
+
+    .announcement-item-image {
+        display: block;
+        width: 100%;
+        max-height: 200px;
+        border: 1px solid rgba(112, 19, 27, 0.12);
+        border-radius: 8px;
+        object-fit: cover;
+    }
+
+    .announcement-item-image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 8px;
+    }
+
+    .announcement-detail-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+        margin-bottom: 18px;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .announcement-detail-body h4 {
+        margin: 0 0 12px;
+        color: #111827;
+        font-size: 20px;
+        font-weight: 950;
+        line-height: 1.3;
+    }
+
+    .announcement-detail-message {
+        color: #334155;
+        font-size: 14px;
+        font-weight: 650;
+        line-height: 1.65;
+    }
+
+    .announcement-detail-message p,
+    .announcement-detail-message ul {
+        margin: 0 0 12px;
+    }
+
+    .announcement-detail-message p:last-child,
+    .announcement-detail-message ul:last-child { margin-bottom: 0; }
+    .announcement-detail-message ul { padding-left: 22px; }
+
+    .announcement-detail-images {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .announcement-detail-images[hidden] { display: none; }
+
+    .announcement-detail-image-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+    }
+
+    .announcement-detail-image-button {
+        display: block;
+        width: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .announcement-detail-image-button img {
+        display: block;
+        width: 100%;
+        max-height: 300px;
+        border: 1px solid rgba(112, 19, 27, 0.14);
+        border-radius: 8px;
+        object-fit: contain;
+        background: #f8fafc;
+    }
+
+    .announcement-detail-image-open {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        opacity: 0;
+        pointer-events: none;
+        background: rgba(15, 23, 42, 0.58);
+        color: #690014;
+        text-decoration: none;
+        transition: opacity .18s ease;
+    }
+
+    .announcement-detail-image-open span {
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 14px;
+        border-radius: 6px;
+        background: #ffd21f;
+        font-size: 12px;
+        font-weight: 950;
+    }
+
+    .announcement-detail-image-card.is-open .announcement-detail-image-open {
+        opacity: 1;
+        pointer-events: auto;
     }
 
     .announcement-meta-row {
@@ -726,6 +1274,66 @@
     html[data-theme="dark"] .announcement-toolbar {
         border-bottom-color: rgba(250, 204, 21, 0.12);
         color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .announcement-image-controls,
+    html[data-theme="dark"] .announcement-image-preview {
+        border-color: rgba(250, 204, 21, .22);
+        color: #cbd5e1;
+        background: #172033;
+    }
+
+    html[data-theme="dark"] .announcement-image-clear {
+        border-color: rgba(250, 204, 21, .22);
+        color: #fecaca;
+        background: #1e293b;
+    }
+
+    html[data-theme="dark"] .announcement-link-popover,
+    html[data-theme="dark"] .announcement-visibility-field {
+        border-color: rgba(250, 204, 21, .2);
+        background: #172033;
+    }
+
+    html[data-theme="dark"] .announcement-link-popover input,
+    html[data-theme="dark"] .announcement-visibility-toggle {
+        color: #e5e7eb;
+        background: #1e293b;
+    }
+
+    html[data-theme="dark"] .announcement-visibility-title { color: #facc15; }
+
+    html[data-theme="dark"] .announcement-rich-editor:empty::before {
+        color: #94a3b8;
+    }
+
+    html[data-theme="dark"] .announcement-pagination {
+        border-color: rgba(250, 204, 21, .18);
+        background: rgba(17, 24, 39, .96);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, .26);
+    }
+
+    html[data-theme="dark"] .announcement-pagination-summary {
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .announcement-pagination-control {
+        border-color: rgba(250, 204, 21, .18);
+        color: #ffffff;
+        background: rgba(15, 23, 42, .96);
+    }
+
+    html[data-theme="dark"] .announcement-pagination-control.is-active,
+    html[data-theme="dark"] .announcement-pagination-control.is-active:hover {
+        border-color: #facc15;
+        color: #ffffff;
+        background: #7f0010;
+    }
+
+    html[data-theme="dark"] .announcement-pagination-control:not(.is-disabled):hover {
+        border-color: #facc15;
+        color: #70131B;
+        background: #facc15;
     }
 
     html[data-theme="dark"] .announcement-stat-value {
@@ -966,6 +1574,7 @@
 
     html:not([data-theme="dark"]) .announcement-delete,
     html:not([data-theme="dark"]) .announcement-archive,
+    html:not([data-theme="dark"]) .announcement-view,
     html:not([data-theme="dark"]) .announcement-archive-close,
     html:not([data-theme="dark"]) .announcement-submit,
     html:not([data-theme="dark"]) .announcement-form-submit,
@@ -1049,7 +1658,6 @@
     };
 
     $archivedAnnouncements = $announcements->where('status', \App\Models\Announcement::STATUS_ARCHIVED);
-    $activeBulletins = $announcements->reject(fn ($announcement) => $announcement->status === \App\Models\Announcement::STATUS_ARCHIVED);
     $canPublishAnnouncements = optional(auth()->user())->canAccessPermission('announcements.publish') ?? false;
     $canArchiveAnnouncements = optional(auth()->user())->canAccessPermission('announcements.archive') ?? false;
 @endphp
@@ -1140,7 +1748,7 @@
                 </h3>
             </div>
 
-            <form method="POST" action="{{ route('admin.announcements.store') }}" class="announcement-form">
+            <form method="POST" action="{{ route('admin.announcements.store') }}" class="announcement-form" enctype="multipart/form-data">
                 @csrf
 
                 <label class="announcement-field">
@@ -1157,18 +1765,74 @@
                     </select>
                 </label>
 
-                <label class="announcement-field">
+                <div class="announcement-field">
                     <span class="announcement-label">Message Content</span>
                     <div class="announcement-editor">
                         <div class="announcement-toolbar" aria-label="Message formatting tools">
-                            <button type="button" class="announcement-tool" data-wrap-before="**" data-wrap-after="**" title="Bold">B</button>
-                            <button type="button" class="announcement-tool" data-wrap-before="*" data-wrap-after="*" title="Italic"><em>I</em></button>
-                            <button type="button" class="announcement-tool" data-prefix="- " title="Bulleted line">&bull;</button>
+                            <button type="button" class="announcement-tool" data-command="bold" title="Bold" aria-pressed="false">B</button>
+                            <button type="button" class="announcement-tool" data-command="italic" title="Italic" aria-pressed="false"><em>I</em></button>
+                            <button type="button" class="announcement-tool" data-command="insertUnorderedList" title="Bulleted list" aria-pressed="false">&bull;</button>
+                            <button type="button" class="announcement-tool" data-announcement-link-tool title="Add link" aria-label="Add link">
+                                <x-outline-icon name="link" />
+                            </button>
                         </div>
-                        <textarea class="announcement-textarea" name="message" maxlength="2000" placeholder="Write the details of the update here..." required data-announcement-message>{{ old('message') }}</textarea>
+                        <div class="announcement-link-popover" data-announcement-link-popover hidden>
+                            <input type="url" data-announcement-link-input placeholder="Paste https:// link" aria-label="Announcement link">
+                            <button type="button" class="announcement-link-apply" data-announcement-link-apply>Apply</button>
+                            <button type="button" class="announcement-link-cancel" data-announcement-link-cancel aria-label="Cancel link"><x-outline-icon name="x-mark" /></button>
+                            <p class="announcement-link-feedback" data-announcement-link-feedback role="status" hidden></p>
+                        </div>
+                        <div
+                            class="announcement-textarea announcement-rich-editor"
+                            contenteditable="true"
+                            role="textbox"
+                            aria-multiline="true"
+                            aria-label="Announcement message"
+                            data-placeholder="Write the details of the update here..."
+                            data-announcement-message
+                        >{!! \App\Services\AnnouncementContent::toHtml(old('message')) !!}</div>
+                        <textarea name="message" data-announcement-message-input hidden required>{{ old('message') }}</textarea>
                     </div>
                     <span class="announcement-counter" data-announcement-counter>0 / 2000</span>
-                </label>
+                </div>
+
+                <div class="announcement-field">
+                    <span class="announcement-label">Announcement Image <small>(Optional)</small></span>
+                    <div class="announcement-image-controls">
+                        <input id="announcementImages" class="announcement-image-input" type="file" name="images[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-announcement-image>
+                        <label class="announcement-image-add" for="announcementImages">
+                            <x-outline-icon name="plus-circle" />
+                            <span>Add image</span>
+                        </label>
+                        <button type="button" class="announcement-image-clear" data-announcement-image-clear aria-label="Remove all selected announcement images" title="Remove all images" hidden>
+                            <x-outline-icon name="trash" />
+                        </button>
+                    </div>
+                    <span class="announcement-image-note">Up to 5 JPG, PNG, WebP, or GIF images. Maximum file size: 500 KB per image.</span>
+                    <span class="announcement-image-feedback" data-announcement-image-feedback role="status" hidden></span>
+                    <span class="announcement-image-preview" data-announcement-image-preview hidden></span>
+                    <template data-announcement-image-remove-template>
+                        <button type="button" class="announcement-image-remove" aria-label="Remove image" title="Remove image">
+                            <x-outline-icon name="x-mark" />
+                        </button>
+                    </template>
+                </div>
+
+                <div class="announcement-visibility-field">
+                    <strong class="announcement-visibility-title">Visibility</strong>
+                    <div class="announcement-visibility-options">
+                        <input type="hidden" name="show_on_landing" value="0">
+                        <label class="announcement-visibility-toggle">
+                            <input type="checkbox" name="show_on_landing" value="1" data-announcement-visibility @checked(old('show_on_landing', true))>
+                            <span>Show in General</span>
+                        </label>
+                        <input type="hidden" name="show_in_portal" value="0">
+                        <label class="announcement-visibility-toggle">
+                            <input type="checkbox" name="show_in_portal" value="1" data-announcement-visibility @checked(old('show_in_portal', true))>
+                            <span>Show in User Portal</span>
+                        </label>
+                    </div>
+                </div>
 
                 <label class="announcement-field">
                     <span class="announcement-label">Expiration Date (Optional)</span>
@@ -1190,6 +1854,7 @@
                 <h3 class="announcement-card-title">Active Bulletins</h3>
             </div>
 
+            <div data-active-bulletins-panel aria-live="polite">
             <div class="announcement-list">
                 @forelse($activeBulletins as $announcement)
                     @php
@@ -1199,6 +1864,7 @@
                         $isExpired = $announcement->is_expired;
                         $statusLabel = $isArchived ? 'Archived' : ($isExpired ? 'Expired' : 'Active');
                         $statusClass = $isArchived ? 'is-archived' : ($isExpired ? 'is-expired' : '');
+                        $announcementPreview = \Illuminate\Support\Str::limit(\App\Services\AnnouncementContent::toPlainText($announcement->message), 190);
                     @endphp
                     <article class="announcement-item priority-{{ $priority }}">
                         <div class="announcement-item-top">
@@ -1211,6 +1877,22 @@
                             </div>
                             <div class="announcement-actions">
                                 <span class="announcement-status {{ $statusClass }}">{{ $statusLabel }}</span>
+                                <button
+                                    type="button"
+                                    class="announcement-view"
+                                    data-announcement-view
+                                    data-title="{{ $announcement->title }}"
+                                    data-priority="{{ $priorityLabel }}"
+                                    data-status="{{ $statusLabel }}"
+                                    data-published="{{ $announcement->created_at?->format('M j, Y g:i A') ?? 'N/A' }}"
+                                    data-expires="{{ $announcement->expires_at?->format('M j, Y') ?? 'Never' }}"
+                                    data-message-html="{!! e(\App\Services\AnnouncementContent::toHtml($announcement->message)) !!}"
+                                    data-image-urls='@json($announcement->image_urls)'
+                                    aria-label="View full announcement"
+                                    title="View full announcement"
+                                >
+                                    <x-outline-icon name="eye" />
+                                </button>
                                 @if($canArchiveAnnouncements && ! $isArchived)
                                     <form method="POST" action="{{ route('admin.announcements.archive', $announcement) }}">
                                         @csrf
@@ -1237,7 +1919,7 @@
                         </div>
 
                         <h3>{{ $announcement->title }}</h3>
-                        <div class="announcement-message">{!! $renderAnnouncementMessage(\Illuminate\Support\Str::limit($announcement->message, 145)) !!}</div>
+                        <div class="announcement-preview">{{ $announcementPreview }}</div>
 
                         <div class="announcement-meta-row">
                             <span>Expires: {{ $announcement->expires_at ? $announcement->expires_at->format('M j, Y') : 'Never' }}</span>
@@ -1252,7 +1934,70 @@
                     </div>
                 @endforelse
             </div>
+            @if($activeBulletins->total() > 0)
+                @php
+                    $bulletinCurrentPage = $activeBulletins->currentPage();
+                    $bulletinLastPage = $activeBulletins->lastPage();
+                    $bulletinPageWindow = 5;
+                    $bulletinPageStart = max(1, min(
+                        $bulletinCurrentPage - intdiv($bulletinPageWindow, 2),
+                        max(1, $bulletinLastPage - $bulletinPageWindow + 1)
+                    ));
+                    $bulletinPageEnd = min($bulletinLastPage, $bulletinPageStart + $bulletinPageWindow - 1);
+                @endphp
+                <div class="announcement-pagination">
+                    <span class="announcement-pagination-summary">
+                        Showing {{ $activeBulletins->firstItem() }} to {{ $activeBulletins->lastItem() }} of {{ $activeBulletins->total() }} record{{ $activeBulletins->total() === 1 ? '' : 's' }}
+                    </span>
+                    <div class="announcement-pagination-actions" aria-label="Active bulletins pagination">
+                        @if($activeBulletins->onFirstPage())
+                            <span class="announcement-pagination-control is-disabled" aria-disabled="true" aria-label="Previous page">&larr;</span>
+                        @else
+                            <a class="announcement-pagination-control" href="{{ $activeBulletins->previousPageUrl() }}" aria-label="Previous page">&larr;</a>
+                        @endif
+
+                        @for($bulletinPage = $bulletinPageStart; $bulletinPage <= $bulletinPageEnd; $bulletinPage++)
+                            @if($bulletinPage === $bulletinCurrentPage)
+                                <span class="announcement-pagination-control is-active" aria-current="page">{{ $bulletinPage }}</span>
+                            @else
+                                <a class="announcement-pagination-control" href="{{ $activeBulletins->url($bulletinPage) }}" aria-label="Page {{ $bulletinPage }}">{{ $bulletinPage }}</a>
+                            @endif
+                        @endfor
+
+                        @if($activeBulletins->hasMorePages())
+                            <a class="announcement-pagination-control" href="{{ $activeBulletins->nextPageUrl() }}" aria-label="Next page">&rarr;</a>
+                        @else
+                            <span class="announcement-pagination-control is-disabled" aria-disabled="true" aria-label="Next page">&rarr;</span>
+                        @endif
+                    </div>
+                    <span class="announcement-pagination-spacer" aria-hidden="true"></span>
+                </div>
+            @endif
+            </div>
         </section>
+    </div>
+
+    <div class="announcement-archive-modal" id="announcementDetailModal" role="dialog" aria-modal="true" aria-labelledby="announcementDetailModalTitle" aria-hidden="true">
+        <div class="announcement-archive-shell" role="document">
+            <div class="announcement-archive-head">
+                <div class="announcement-archive-title">
+                    <span class="announcement-archive-badge" aria-hidden="true"><x-outline-icon name="eye" /></span>
+                    <div>
+                        <h3 id="announcementDetailModalTitle">Announcement Details</h3>
+                        <p>Complete bulletin information and attached images.</p>
+                    </div>
+                </div>
+                <button type="button" class="announcement-archive-close" id="closeAnnouncementDetailModal" aria-label="Close announcement details">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </div>
+            <div class="announcement-archive-body announcement-detail-body">
+                <div class="announcement-detail-meta" id="announcementDetailMeta"></div>
+                <h4 id="announcementDetailTitle"></h4>
+                <div class="announcement-detail-message" id="announcementDetailMessage"></div>
+                <div class="announcement-detail-images" id="announcementDetailImages" hidden></div>
+            </div>
+        </div>
     </div>
 
     <div class="announcement-archive-modal" id="archivedAnnouncementsModal" role="dialog" aria-modal="true" aria-labelledby="archivedAnnouncementsTitle" aria-hidden="true">
@@ -1301,7 +2046,14 @@
                                     <span class="announcement-status is-archived">Archived</span>
                                 </div>
                                 <h4>{{ $announcement->title }}</h4>
-                                <div class="announcement-message">{!! $renderAnnouncementMessage(\Illuminate\Support\Str::limit($announcement->message, 190)) !!}</div>
+                                @if($announcement->image_urls !== [])
+                                    <div class="announcement-item-image-grid">
+                                        @foreach($announcement->image_urls as $imageIndex => $imageUrl)
+                                            <img class="announcement-item-image" src="{{ $imageUrl }}" alt="Announcement image {{ $imageIndex + 1 }} for {{ $announcement->title }}">
+                                        @endforeach
+                                    </div>
+                                @endif
+                                <div class="announcement-message">{!! \App\Services\AnnouncementContent::toHtml(\Illuminate\Support\Str::limit($announcement->message, 190)) !!}</div>
                                 <div class="announcement-archive-meta">
                                     <span>Published: {{ $announcement->created_at ? $announcement->created_at->format('M j, Y') : 'N/A' }}</span>
                                     <span>Expires: {{ $announcement->expires_at ? $announcement->expires_at->format('M j, Y') : 'Never' }}</span>
@@ -1327,11 +2079,33 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const message = document.querySelector('[data-announcement-message]');
+        const messageInput = document.querySelector('[data-announcement-message-input]');
         const counter = document.querySelector('[data-announcement-counter]');
-        const tools = document.querySelectorAll('.announcement-tool');
+        const tools = document.querySelectorAll('[data-command]');
+        const linkTool = document.querySelector('[data-announcement-link-tool]');
+        const linkPopover = document.querySelector('[data-announcement-link-popover]');
+        const linkInput = document.querySelector('[data-announcement-link-input]');
+        const linkApply = document.querySelector('[data-announcement-link-apply]');
+        const linkCancel = document.querySelector('[data-announcement-link-cancel]');
+        const linkFeedback = document.querySelector('[data-announcement-link-feedback]');
+        const imageInput = document.querySelector('[data-announcement-image]');
+        const imagePreview = document.querySelector('[data-announcement-image-preview]');
+        const imageClear = document.querySelector('[data-announcement-image-clear]');
+        const imageFeedback = document.querySelector('[data-announcement-image-feedback]');
+        const imageRemoveTemplate = document.querySelector('[data-announcement-image-remove-template]');
+        const announcementForm = imageInput?.closest('form');
+        const visibilityInputs = Array.from(document.querySelectorAll('[data-announcement-visibility]'));
         const archiveButton = document.getElementById('openArchivedAnnouncements');
         const archiveModal = document.getElementById('archivedAnnouncementsModal');
         const archiveClose = document.getElementById('closeArchivedAnnouncements');
+        const activeBulletinsPanel = document.querySelector('[data-active-bulletins-panel]');
+        const detailModal = document.getElementById('announcementDetailModal');
+        const detailClose = document.getElementById('closeAnnouncementDetailModal');
+        const detailTitle = document.getElementById('announcementDetailTitle');
+        const detailMeta = document.getElementById('announcementDetailMeta');
+        const detailMessage = document.getElementById('announcementDetailMessage');
+        const detailImages = document.getElementById('announcementDetailImages');
+        let detailTrigger = null;
 
         const openArchiveModal = () => {
             if (!archiveModal) {
@@ -1355,6 +2129,73 @@
             archiveButton?.focus();
         };
 
+        const openDetailModal = (trigger) => {
+            if (!detailModal) return;
+
+            detailTrigger = trigger;
+            detailTitle.textContent = trigger.dataset.title || 'Announcement';
+            detailMessage.innerHTML = trigger.dataset.messageHtml || '';
+            detailMeta.replaceChildren(...[
+                `Priority: ${trigger.dataset.priority || 'Info'}`,
+                `Status: ${trigger.dataset.status || 'Active'}`,
+                `Published: ${trigger.dataset.published || 'N/A'}`,
+                `Expires: ${trigger.dataset.expires || 'Never'}`,
+            ].map((value) => {
+                const item = document.createElement('span');
+                item.textContent = value;
+                return item;
+            }));
+
+            let imageUrls = [];
+            try {
+                imageUrls = JSON.parse(trigger.dataset.imageUrls || '[]');
+            } catch (error) {
+                imageUrls = [];
+            }
+
+            detailImages.replaceChildren(...imageUrls.map((imageUrl, index) => {
+                const card = document.createElement('div');
+                card.className = 'announcement-detail-image-card';
+
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'announcement-detail-image-button';
+                button.setAttribute('aria-label', `Show open option for announcement image ${index + 1}`);
+
+                const image = document.createElement('img');
+                image.src = imageUrl;
+                image.alt = `Announcement image ${index + 1} for ${trigger.dataset.title || 'announcement'}`;
+                button.append(image);
+                button.addEventListener('click', () => card.classList.toggle('is-open'));
+
+                const openLink = document.createElement('a');
+                openLink.className = 'announcement-detail-image-open';
+                openLink.href = imageUrl;
+                openLink.target = '_blank';
+                openLink.rel = 'noopener noreferrer';
+                openLink.innerHTML = '<span>Open</span>';
+
+                card.append(button, openLink);
+                return card;
+            }));
+            detailImages.toggleAttribute('hidden', imageUrls.length === 0);
+
+            detailModal.classList.add('is-open');
+            detailModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            detailClose?.focus();
+        };
+
+        const closeDetailModal = () => {
+            if (!detailModal) return;
+
+            detailModal.classList.remove('is-open');
+            detailModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            detailTrigger?.focus();
+            detailTrigger = null;
+        };
+
         archiveButton?.addEventListener('click', openArchiveModal);
         archiveClose?.addEventListener('click', closeArchiveModal);
         archiveModal?.addEventListener('click', function (event) {
@@ -1362,64 +2203,315 @@
                 closeArchiveModal();
             }
         });
+        document.addEventListener('click', function (event) {
+            const viewButton = event.target.closest('[data-announcement-view]');
+            if (viewButton) {
+                event.preventDefault();
+                openDetailModal(viewButton);
+            }
+        });
+        detailClose?.addEventListener('click', closeDetailModal);
+        detailModal?.addEventListener('click', function (event) {
+            if (event.target === detailModal) {
+                closeDetailModal();
+            }
+        });
+
+        const loadActiveBulletinPage = async (url) => {
+            if (!activeBulletinsPanel || activeBulletinsPanel.classList.contains('is-loading')) {
+                return;
+            }
+
+            activeBulletinsPanel.classList.add('is-loading');
+            activeBulletinsPanel.setAttribute('aria-busy', 'true');
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Unable to load the next bulletin page.');
+                }
+
+                const documentFragment = new DOMParser().parseFromString(await response.text(), 'text/html');
+                const nextPanel = documentFragment.querySelector('[data-active-bulletins-panel]');
+                if (!nextPanel) {
+                    throw new Error('The bulletin list could not be found.');
+                }
+
+                activeBulletinsPanel.innerHTML = nextPanel.innerHTML;
+                window.history.replaceState({}, '', url);
+            } catch (error) {
+                window.location.assign(url);
+            } finally {
+                activeBulletinsPanel.classList.remove('is-loading');
+                activeBulletinsPanel.removeAttribute('aria-busy');
+            }
+        };
+
+        activeBulletinsPanel?.addEventListener('click', function (event) {
+            const pageLink = event.target.closest('.announcement-pagination-control[href]');
+            if (!pageLink || !activeBulletinsPanel.contains(pageLink)) {
+                return;
+            }
+
+            event.preventDefault();
+            loadActiveBulletinPage(pageLink.href);
+        });
 
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape' && archiveModal?.classList.contains('is-open')) {
                 closeArchiveModal();
             }
+            if (event.key === 'Escape' && detailModal?.classList.contains('is-open')) {
+                closeDetailModal();
+            }
         });
 
-        if (!message || !counter) {
+        if (!message || !messageInput || !counter) {
             return;
         }
 
         const syncCounter = () => {
-            counter.textContent = `${message.value.length} / ${message.maxLength || 2000}`;
+            const plainText = (message.innerText || '').replace(/\u00a0/g, ' ').trimEnd();
+            messageInput.value = message.innerHTML;
+            counter.textContent = `${plainText.length} / 2000`;
         };
 
-        message.addEventListener('input', syncCounter);
+        const syncVisibilityValidity = () => {
+            const hasSelection = visibilityInputs.some((input) => input.checked);
+            visibilityInputs.forEach((input) => {
+                input.setCustomValidity(hasSelection ? '' : 'Select at least one visibility option.');
+            });
+        };
+
+        visibilityInputs.forEach((input) => input.addEventListener('change', syncVisibilityValidity));
+        syncVisibilityValidity();
+
+        const syncToolbarState = () => {
+            if (document.activeElement !== message) return;
+
+            tools.forEach((tool) => {
+                const isActive = document.queryCommandState(tool.dataset.command);
+                tool.classList.toggle('is-active', isActive);
+                tool.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+        };
+
+        let savedSelection = null;
+
+        const rememberEditorSelection = () => {
+            const selection = window.getSelection();
+            if (!selection || selection.rangeCount === 0) return;
+
+            const range = selection.getRangeAt(0);
+            if (message.contains(range.commonAncestorContainer)) {
+                savedSelection = range.cloneRange();
+            }
+        };
+
+        const setLinkFeedback = (feedbackMessage = '') => {
+            if (!linkFeedback) return;
+            linkFeedback.textContent = feedbackMessage;
+            linkFeedback.toggleAttribute('hidden', !feedbackMessage);
+        };
+
+        const closeLinkPopover = () => {
+            linkPopover?.setAttribute('hidden', 'hidden');
+            linkTool?.setAttribute('aria-expanded', 'false');
+            setLinkFeedback();
+        };
+
+        const openLinkPopover = () => {
+            rememberEditorSelection();
+            linkPopover?.removeAttribute('hidden');
+            linkTool?.setAttribute('aria-expanded', 'true');
+            setLinkFeedback();
+            window.setTimeout(() => linkInput?.focus(), 0);
+        };
+
+        message.addEventListener('input', () => {
+            syncCounter();
+            syncToolbarState();
+        });
+        message.addEventListener('keyup', syncToolbarState);
+        message.addEventListener('mouseup', syncToolbarState);
+        message.addEventListener('keyup', rememberEditorSelection);
+        message.addEventListener('mouseup', rememberEditorSelection);
+        message.addEventListener('focus', () => {
+            rememberEditorSelection();
+            syncToolbarState();
+        });
+        message.addEventListener('paste', () => window.setTimeout(() => {
+            syncCounter();
+            syncToolbarState();
+            rememberEditorSelection();
+        }, 0));
+        message.addEventListener('click', (event) => {
+            if (event.target.closest('a')) event.preventDefault();
+        });
         syncCounter();
 
         const applyFormat = (tool) => {
-            const start = message.selectionStart ?? 0;
-            const end = message.selectionEnd ?? start;
-            const value = message.value;
-            const selected = value.slice(start, end);
-            const prefix = tool.dataset.prefix;
-            const before = tool.dataset.wrapBefore || '';
-            const after = tool.dataset.wrapAfter || '';
-            let nextValue;
-            let nextStart;
-            let nextEnd;
-
-            if (prefix) {
-                const lineStart = value.lastIndexOf('\n', Math.max(0, start - 1)) + 1;
-                const selectionEnd = end > start && value.charAt(end - 1) === '\n' ? end - 1 : end;
-                const lineEnd = value.indexOf('\n', selectionEnd);
-                const blockEnd = lineEnd === -1 ? value.length : lineEnd;
-                const block = value.slice(lineStart, blockEnd);
-                const formattedBlock = block
-                    .split('\n')
-                    .map((line) => line.trim() === '' || line.startsWith(prefix) ? line : `${prefix}${line}`)
-                    .join('\n');
-                nextValue = value.slice(0, lineStart) + formattedBlock + value.slice(blockEnd);
-                const addedLength = formattedBlock.length - block.length;
-                nextStart = start + (start === lineStart ? prefix.length : 0);
-                nextEnd = end + addedLength;
-            } else {
-                nextValue = value.slice(0, start) + before + selected + after + value.slice(end);
-                nextStart = start + before.length;
-                nextEnd = nextStart + selected.length;
-            }
-
-            message.value = nextValue.slice(0, Number(message.maxLength || 2000));
             message.focus();
-            message.setSelectionRange(nextStart, nextEnd);
+            document.execCommand(tool.dataset.command, false, null);
             syncCounter();
+            syncToolbarState();
         };
 
         tools.forEach((tool) => {
+            tool.addEventListener('mousedown', (event) => event.preventDefault());
             tool.addEventListener('click', () => applyFormat(tool));
+        });
+
+        linkTool?.addEventListener('mousedown', (event) => event.preventDefault());
+        linkTool?.addEventListener('click', openLinkPopover);
+        linkCancel?.addEventListener('click', closeLinkPopover);
+        linkApply?.addEventListener('mousedown', (event) => event.preventDefault());
+        linkApply?.addEventListener('click', () => {
+            const rawUrl = linkInput?.value.trim() || '';
+            let url;
+
+            try {
+                url = new URL(rawUrl);
+            } catch (error) {
+                setLinkFeedback('Paste a valid http or https link.');
+                return;
+            }
+
+            if (!['http:', 'https:'].includes(url.protocol)) {
+                setLinkFeedback('Only http and https links are allowed.');
+                return;
+            }
+
+            message.focus();
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            if (savedSelection && message.contains(savedSelection.commonAncestorContainer)) {
+                selection?.addRange(savedSelection);
+            } else {
+                const range = document.createRange();
+                range.selectNodeContents(message);
+                range.collapse(false);
+                selection?.addRange(range);
+            }
+
+            const activeRange = selection?.rangeCount ? selection.getRangeAt(0) : null;
+            if (!activeRange) {
+                setLinkFeedback('Place the cursor in the message before adding a link.');
+                return;
+            }
+
+            if (activeRange.collapsed) {
+                const anchor = document.createElement('a');
+                anchor.href = url.href;
+                anchor.textContent = url.href;
+                activeRange.insertNode(anchor);
+                activeRange.setStartAfter(anchor);
+                activeRange.collapse(true);
+                selection?.removeAllRanges();
+                selection?.addRange(activeRange);
+            } else {
+                document.execCommand('createLink', false, url.href);
+            }
+
+            rememberEditorSelection();
+            linkInput.value = '';
+            closeLinkPopover();
+            syncCounter();
+            syncToolbarState();
+        });
+
+        announcementForm?.addEventListener('submit', () => {
+            syncCounter();
+            syncVisibilityValidity();
+        });
+
+        const maxAnnouncementImages = 5;
+        const maxAnnouncementImageBytes = 500 * 1024;
+        let selectedAnnouncementImages = [];
+
+        const imageKey = (file) => [file.name, file.size, file.lastModified].join(':');
+
+        const setImageFeedback = (feedbackMessage = '') => {
+            if (!imageFeedback) return;
+            imageFeedback.textContent = feedbackMessage;
+            imageFeedback.toggleAttribute('hidden', !feedbackMessage);
+        };
+
+        const syncSelectedAnnouncementImages = () => {
+            if (!imageInput) return;
+
+            if (!imagePreview || selectedAnnouncementImages.length === 0) {
+                imagePreview?.replaceChildren();
+                imagePreview?.classList.remove('is-visible');
+                imagePreview?.setAttribute('hidden', 'hidden');
+                imageClear?.setAttribute('hidden', 'hidden');
+                return;
+            }
+
+            imagePreview.replaceChildren(...selectedAnnouncementImages.map((file, index) => {
+                const card = document.createElement('span');
+                card.className = 'announcement-image-preview-card';
+
+                const image = document.createElement('img');
+                image.src = URL.createObjectURL(file);
+                image.alt = `Selected announcement image ${index + 1}`;
+                card.append(image);
+
+                const removeButton = imageRemoveTemplate?.content.firstElementChild?.cloneNode(true);
+                if (removeButton) {
+                    removeButton.addEventListener('click', () => {
+                        selectedAnnouncementImages.splice(index, 1);
+                        imageInput.value = '';
+                        setImageFeedback();
+                        syncSelectedAnnouncementImages();
+                    });
+                    card.append(removeButton);
+                }
+
+                return card;
+            }));
+            imagePreview.classList.add('is-visible');
+            imagePreview.removeAttribute('hidden');
+            imageClear?.removeAttribute('hidden');
+        };
+
+        imageInput?.addEventListener('change', function () {
+            const incomingFiles = Array.from(imageInput.files || []);
+            const currentKeys = new Set(selectedAnnouncementImages.map(imageKey));
+            const tooLarge = incomingFiles.filter((file) => file.size > maxAnnouncementImageBytes);
+            const validFiles = incomingFiles.filter((file) => file.size <= maxAnnouncementImageBytes && !currentKeys.has(imageKey(file)));
+            const availableSlots = Math.max(0, maxAnnouncementImages - selectedAnnouncementImages.length);
+            const acceptedFiles = validFiles.slice(0, availableSlots);
+
+            selectedAnnouncementImages.push(...acceptedFiles);
+
+            const messages = [];
+            if (tooLarge.length > 0) messages.push('Each image must be 500 KB or smaller.');
+            if (validFiles.length > availableSlots) messages.push(`Only ${maxAnnouncementImages} images can be attached.`);
+            if (incomingFiles.length > 0 && acceptedFiles.length === 0 && messages.length === 0) messages.push('That image is already selected.');
+
+            setImageFeedback(messages.join(' '));
+            imageInput.value = '';
+            syncSelectedAnnouncementImages();
+        });
+
+        imageClear?.addEventListener('click', () => {
+            selectedAnnouncementImages = [];
+            imageInput.value = '';
+            setImageFeedback();
+            syncSelectedAnnouncementImages();
+        });
+
+        announcementForm?.addEventListener('submit', () => {
+            const transfer = new DataTransfer();
+            selectedAnnouncementImages.forEach((file) => transfer.items.add(file));
+            imageInput.files = transfer.files;
         });
     });
 </script>

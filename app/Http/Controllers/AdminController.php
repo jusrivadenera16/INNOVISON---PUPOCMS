@@ -18,6 +18,7 @@ use App\Models\Setting;
 use App\Models\SystemSetting;
 use App\Models\Admin;
 use App\Services\FacultySyncService;
+use App\Services\AnnouncementContent;
 use App\Services\GuisisApiService;
 use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
@@ -30,6 +31,8 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\File;
+use Illuminate\Validation\ValidationException;
 use App\Models\HealthProfile;
 use App\Models\EmployeeHealthProfile;
 use Carbon\Carbon;
@@ -758,6 +761,10 @@ class AdminController extends Controller
     public function announcements()
     {
         $announcements = Announcement::latest()->get();
+        $activeBulletins = Announcement::query()
+            ->where('status', '!=', Announcement::STATUS_ARCHIVED)
+            ->latest()
+            ->paginate(5, ['*'], 'bulletin_page');
         $totalAnnouncements = $announcements->count();
         $activeAnnouncements = $announcements->where('status', Announcement::STATUS_ACTIVE);
         $announcementStats = [
@@ -770,6 +777,7 @@ class AdminController extends Controller
 
         return view('admin.announcements', compact(
             'announcements',
+            'activeBulletins',
             'totalAnnouncements',
             'announcementStats',
             'lastUpdatedAnnouncement'
@@ -781,12 +789,46 @@ class AdminController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:140'],
             'priority' => ['required', Rule::in(['urgent', 'info', 'warning', 'health', 'event'])],
-            'message' => ['required', 'string', 'max:2000'],
+            'message' => ['required', 'string', 'max:10000'],
+            'show_on_landing' => ['nullable', 'boolean'],
+            'show_in_portal' => ['nullable', 'boolean'],
+            'images' => ['nullable', 'array', 'max:5'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp,gif', 'max:500'],
             'expires_at' => ['nullable', 'date'],
         ]);
 
+        $validated['message'] = AnnouncementContent::sanitizeEditorHtml($validated['message']);
+        $validated['show_on_landing'] = $request->boolean('show_on_landing');
+        $validated['show_in_portal'] = $request->boolean('show_in_portal');
+
+        if (! $validated['show_on_landing'] && ! $validated['show_in_portal']) {
+            throw ValidationException::withMessages([
+                'show_in_portal' => 'Select at least one announcement visibility option.',
+            ]);
+        }
+
+        if ($validated['message'] === '' || mb_strlen(AnnouncementContent::toPlainText($validated['message'])) > 2000) {
+            throw ValidationException::withMessages([
+                'message' => 'The announcement message must contain up to 2,000 characters.',
+            ]);
+        }
+
+        $imagePaths = [];
+        if ($request->hasFile('images')) {
+            $directory = public_path('images/announcements');
+            File::ensureDirectoryExists($directory);
+            foreach ($request->file('images') as $image) {
+                $filename = $image->hashName();
+                $image->move($directory, $filename);
+                $imagePaths[] = 'announcements/' . $filename;
+            }
+        }
+
+        unset($validated['images']);
+
         Announcement::create([
             ...$validated,
+            'image_paths' => $imagePaths,
             'target_audience' => 'all',
             'status' => Announcement::STATUS_ACTIVE,
             'created_by' => optional(Auth::user())->id,
@@ -804,7 +846,15 @@ class AdminController extends Controller
 
     public function destroyAnnouncement(Announcement $announcement)
     {
+        $imagePaths = $announcement->image_paths ?? [];
         $announcement->delete();
+
+        foreach ($imagePaths as $imagePath) {
+            $path = trim((string) $imagePath);
+            if ($path !== '') {
+                File::delete(public_path('images/' . ltrim($path, '/')));
+            }
+        }
 
         return back()->with('success', 'Announcement deleted.');
     }
@@ -2800,6 +2850,132 @@ public function updateClearance(Request $request, $id)
             : redirect()->route('admin.show_health', $record->id);
 
         return $redirect->with('success', $message);
+    }
+
+    public function requestEmployeeHealthProfileResubmission(Request $request, EmployeeHealthProfile $employeeProfile)
+    {
+        $validated = $request->validate([
+            'pending_reason' => ['required', 'string', 'max:2000'],
+            'needs_health_form_correction' => ['nullable', 'boolean'],
+            'resubmission_required_documents' => ['nullable', 'array'],
+            'resubmission_required_documents.*' => ['string', Rule::in([
+                'student_photo',
+                'health_declaration',
+                'medical_certificate',
+                'chest_xray_result',
+                'pwd_id_proof',
+            ])],
+            'clear_uploaded_documents' => ['nullable', 'boolean'],
+            'return_to' => ['nullable', 'string', Rule::in(['health_records'])],
+        ]);
+
+        $employeeProfile->loadMissing('user');
+        $wasAlreadyIssued = in_array($employeeProfile->clearance_status, ['Issued', 'Fully Cleared'], true)
+            || !empty($employeeProfile->verified_at);
+        $requestedDocuments = array_values(array_unique((array) ($validated['resubmission_required_documents'] ?? [])));
+        $needsHealthFormCorrection = $request->boolean('needs_health_form_correction')
+            || str_contains(strtolower((string) $validated['pending_reason']), 'health form correction');
+
+        if (!$needsHealthFormCorrection && empty($requestedDocuments)) {
+            return back()->withInput()->with('error', 'Select at least one file or Health Form Correction.');
+        }
+
+        $documentColumns = [
+            'student_photo' => 'student_photo',
+            'health_declaration' => 'health_declaration',
+            'medical_certificate' => 'medical_certificate',
+            'chest_xray_result' => 'chest_xray_document',
+            'pwd_id_proof' => 'pwd_id_proof',
+        ];
+
+        if (!$wasAlreadyIssued) {
+            $employeeProfile->clearance_status = 'Pending Resubmission';
+        }
+
+        $pendingReason = trim((string) $validated['pending_reason']);
+        if ($needsHealthFormCorrection && !str_contains(strtolower($pendingReason), 'health form correction')) {
+            $pendingReason = trim($pendingReason . "\nHealth Form Correction");
+        }
+
+        $employeeProfile->pending_reason = $pendingReason;
+        $employeeProfile->documents_valid = false;
+        $employeeProfile->resubmission_required_fields = $requestedDocuments;
+        $employeeProfile->resubmission_requested_at = now();
+        $employeeProfile->resubmitted_at = null;
+        $employeeProfile->verified_at = $wasAlreadyIssued ? $employeeProfile->verified_at : null;
+        $employeeProfile->approved_by_user_id = $wasAlreadyIssued ? $employeeProfile->approved_by_user_id : null;
+        $employeeProfile->submission_status = $wasAlreadyIssued ? $employeeProfile->submission_status : 'pending';
+
+        if ($request->boolean('clear_uploaded_documents')) {
+            foreach ($requestedDocuments as $documentKey) {
+                $column = $documentColumns[$documentKey] ?? null;
+                if ($column) {
+                    $employeeProfile->{$column} = null;
+                }
+            }
+        }
+
+        $employeeProfile->save();
+
+        if ($employeeProfile->user && !$wasAlreadyIssued) {
+            $employeeProfile->user->is_health_profile_completed = 0;
+            $employeeProfile->user->save();
+        }
+
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_name' => auth()->user()?->name ?? auth()->user()?->email ?? 'System',
+            'user_role' => strtolower((string) (auth()->user()?->user_role ?? '')),
+            'action' => 'Employee Health Profile Resubmission Requested',
+            'module' => 'Health Records',
+            'event_type' => 'employee_health_profile_resubmission_requested',
+            'description' => 'Requested correction for employee health profile #' . $employeeProfile->id . ': ' . implode(', ', array_filter([
+                empty($requestedDocuments) ? null : 'Files: ' . implode(', ', $requestedDocuments),
+                $needsHealthFormCorrection ? 'Health Form Correction' : null,
+            ])),
+            'route_name' => optional($request->route())->getName(),
+            'http_method' => $request->method(),
+            'request_path' => '/' . ltrim((string) $request->path(), '/'),
+            'status_code' => 200,
+            'subject_type' => EmployeeHealthProfile::class,
+            'subject_id' => (string) $employeeProfile->id,
+            'metadata' => [
+                'employee_profile_id' => $employeeProfile->id,
+                'employee_number' => $employeeProfile->employee_number,
+                'requested_documents' => $requestedDocuments,
+                'health_form_correction' => $needsHealthFormCorrection,
+                'cleared_document_references' => $request->boolean('clear_uploaded_documents'),
+            ],
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 255),
+        ]);
+
+        $emailStatus = 'skipped';
+        if ($employeeProfile->user) {
+            $emailResult = app(StudentNotificationMailer::class)->sendHealthRecordNotice(
+                $employeeProfile->user,
+                $needsHealthFormCorrection ? 'health_form_correction' : 'resubmission'
+            );
+            $emailStatus = $emailResult['status'];
+        }
+
+        $message = $needsHealthFormCorrection && empty($requestedDocuments)
+            ? 'Health form correction request sent. The employee can update their health form details.'
+            : ($request->boolean('clear_uploaded_documents')
+                ? 'Replacement file request sent. Selected uploaded document references were removed from the record.'
+                : 'Replacement file request sent. The employee will see the reupload prompt in Health Records.');
+
+        if ($emailStatus === 'sent') {
+            $message .= ' Email notification sent.';
+        } elseif ($emailStatus === 'failed') {
+            $message .= ' The employee will still see the request in the portal, but email delivery could not be confirmed.';
+        } elseif ($emailStatus === 'skipped') {
+            $message .= ' Email notification was not sent.';
+        }
+
+        return redirect()
+            ->route('admin.health_records', ['tab' => $wasAlreadyIssued ? 'approved' : 'pending_compliance'])
+            ->with('success', $message);
     }
 
     public function markHealthProfileForFinalReview(Request $request, $id)
