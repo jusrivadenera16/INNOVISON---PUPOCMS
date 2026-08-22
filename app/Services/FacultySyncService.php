@@ -98,12 +98,14 @@ class FacultySyncService
 
         foreach ([
             $faculty['faculty_uuid'] ?? null,
+            $faculty['faculty_id'] ?? null,
             $faculty['admin_uuid'] ?? null,
             $faculty['idp_user_id'] ?? null,
             $faculty['user_uuid'] ?? null,
             $faculty['uuid'] ?? null,
             $faculty['student_id'] ?? null,
             $profile['faculty_uuid'] ?? null,
+            $profile['faculty_id'] ?? null,
             $profile['admin_uuid'] ?? null,
             $profile['idp_user_id'] ?? null,
             $profile['user_uuid'] ?? null,

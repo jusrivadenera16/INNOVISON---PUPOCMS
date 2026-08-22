@@ -350,7 +350,9 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::middleware('role:superadmin')->group(function () {
             Route::get('/admin/user-management', [AdminUserController::class, 'index'])->name('admin.user-management');
             Route::get('/admin/user-management/account-access', [AdminUserController::class, 'accountAccess'])->name('admin.user-management.account-access');
+            Route::get('/admin/user-management/account-access/lookup', [AdminUserController::class, 'accountAccessLookup'])->name('admin.user-management.account-access.lookup');
             Route::get('/admin/user-management/admin-hub', [AdminUserController::class, 'adminHub'])->name('admin.user-management.admin-hub');
+            Route::get('/admin/user-management/admin-hub/lookup', [AdminUserController::class, 'adminHubLookup'])->name('admin.user-management.admin-hub.lookup');
             Route::post('/admin/user-management/from-lookup', [AdminUserController::class, 'storeFromLookup'])->name('admin.user-management.store-from-lookup');
             Route::put('/admin/user-management/{user}', [AdminUserController::class, 'update'])->name('admin.user-management.update');
             Route::delete('/admin/user-management/{user}/account', [AdminUserController::class, 'deleteAccount'])->name('admin.user-management.delete-account');

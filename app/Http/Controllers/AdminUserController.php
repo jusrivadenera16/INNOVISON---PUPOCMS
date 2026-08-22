@@ -90,52 +90,7 @@ class AdminUserController extends Controller
             ? []
             : $this->collectAdminHubProfiles($lookupSearch, $facultyDirectory);
 
-        $lookupRecords = [];
-
-        if ($lookupSearch !== '') {
-            $localLookupRecords = collect($this->collectLocalUsers($lookupSearch));
-            $localEmails = $localLookupRecords
-                ->pluck('email')
-                ->filter()
-                ->map(fn ($email) => strtolower(trim((string) $email)));
-            $linkedAdminProfileIds = $localLookupRecords
-                ->pluck('meta.admin_profile_id')
-                ->filter()
-                ->map(fn ($id) => (string) $id);
-
-            $standaloneAdminRecords = collect($this->collectStandaloneAdminLookupRecords($lookupSearch))
-                ->reject(function (array $record) use ($localEmails, $linkedAdminProfileIds) {
-                    $email = strtolower(trim((string) ($record['email'] ?? '')));
-                    $adminProfileId = (string) ($record['meta']['admin_profile_id'] ?? '');
-
-                    return ($email !== '' && $localEmails->contains($email))
-                        || ($adminProfileId !== '' && $linkedAdminProfileIds->contains($adminProfileId));
-                });
-
-            $lookupRecords = $localLookupRecords->merge($standaloneAdminRecords);
-
-            // A local match is enough for Account Access. Only fall back to
-            // FLSS when no local user/admin profile matched, and keep that
-            // interactive lookup bounded if the remote service is unavailable.
-            if ($managementView !== 'account-access' || $lookupRecords->isEmpty()) {
-                $lookupRecords = $lookupRecords->merge(
-                    $this->collectFacultyUsers(
-                        $facultySyncService,
-                        $lookupSearch,
-                        $managementView === 'account-access' ? 5 : null
-                    )
-                );
-            }
-
-            $lookupRecords = $lookupRecords
-                ->sortBy(fn (array $record) => sprintf(
-                    '%02d-%s',
-                    $this->recordSortWeight($record['source'] ?? 'student'),
-                    strtolower((string) ($record['name'] ?? ''))
-                ))
-                ->values()
-                ->all();
-        }
+        $lookupRecords = $this->buildLookupRecords($lookupSearch, $managementView, $facultySyncService);
 
         $stats = [
             'students' => collect($allLocalUsers)->where('source', 'student')->count(),
@@ -166,9 +121,89 @@ class AdminUserController extends Controller
         return view('admin.user_management_account_access', $this->buildManagementData($request, $facultySyncService, 'account-access'));
     }
 
+    public function accountAccessLookup(Request $request, FacultySyncService $facultySyncService)
+    {
+        $this->ensureCanManageUsers();
+
+        $lookupSearch = trim((string) $request->query('lookup_search', ''));
+        $lookupRecords = $this->buildLookupRecords($lookupSearch, 'account-access', $facultySyncService);
+
+        return response()->json([
+            'html' => view('admin.user_management.partials.account-access-lookup-results', compact('lookupRecords'))->render(),
+            'count' => count($lookupRecords),
+            'roles' => collect($lookupRecords)->pluck('role')->filter()->unique()->sort()->values(),
+        ]);
+    }
+
     public function adminHub(Request $request, FacultySyncService $facultySyncService)
     {
         return view('admin.user_management_admin_hub', $this->buildManagementData($request, $facultySyncService, 'admin-hub'));
+    }
+
+    public function adminHubLookup(Request $request, FacultySyncService $facultySyncService)
+    {
+        $this->ensureCanManageUsers();
+
+        $lookupSearch = trim((string) $request->query('lookup_search', ''));
+        $lookupRecords = $this->buildLookupRecords($lookupSearch, 'admin-hub', $facultySyncService);
+
+        return response()->json([
+            'html' => view('admin.user_management.partials.admin-hub-lookup-results', compact('lookupRecords'))->render(),
+            'count' => count($lookupRecords),
+        ]);
+    }
+
+    private function buildLookupRecords(
+        string $lookupSearch,
+        string $managementView,
+        FacultySyncService $facultySyncService
+    ): array {
+        if ($lookupSearch === '') {
+            return [];
+        }
+
+        $localLookupRecords = collect($this->collectLocalUsers($lookupSearch));
+        $localEmails = $localLookupRecords
+            ->pluck('email')
+            ->filter()
+            ->map(fn ($email) => strtolower(trim((string) $email)));
+        $linkedAdminProfileIds = $localLookupRecords
+            ->pluck('meta.admin_profile_id')
+            ->filter()
+            ->map(fn ($id) => (string) $id);
+
+        $standaloneAdminRecords = collect($this->collectStandaloneAdminLookupRecords($lookupSearch))
+            ->reject(function (array $record) use ($localEmails, $linkedAdminProfileIds) {
+                $email = strtolower(trim((string) ($record['email'] ?? '')));
+                $adminProfileId = (string) ($record['meta']['admin_profile_id'] ?? '');
+
+                return ($email !== '' && $localEmails->contains($email))
+                    || ($adminProfileId !== '' && $linkedAdminProfileIds->contains($adminProfileId));
+            });
+
+        $lookupRecords = $localLookupRecords->merge($standaloneAdminRecords);
+
+        // A local match is enough for Account Access. Only fall back to
+        // FLSS when no local user/admin profile matched, and keep that
+        // interactive lookup bounded if the remote service is unavailable.
+        if ($managementView !== 'account-access' || $lookupRecords->isEmpty()) {
+            $lookupRecords = $lookupRecords->merge(
+                $this->collectFacultyUsers(
+                    $facultySyncService,
+                    $lookupSearch,
+                    $managementView === 'account-access' ? 5 : null
+                )
+            );
+        }
+
+        return $lookupRecords
+            ->sortBy(fn (array $record) => sprintf(
+                '%02d-%s',
+                $this->recordSortWeight($record['source'] ?? 'student'),
+                strtolower((string) ($record['name'] ?? ''))
+            ))
+            ->values()
+            ->all();
     }
 
     public function update(Request $request, User $user)

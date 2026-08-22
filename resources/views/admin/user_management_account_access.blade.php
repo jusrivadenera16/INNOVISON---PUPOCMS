@@ -1550,7 +1550,7 @@
         <div class="um-modal-body">
             <div class="access-onboard-layout">
             <div class="access-onboard-search">
-            <form class="um-search" method="GET" action="{{ route('admin.user-management.account-access') }}">
+            <form class="um-search" method="GET" action="{{ route('admin.user-management.account-access') }}" id="lookupSearchForm" data-lookup-url="{{ route('admin.user-management.account-access.lookup') }}">
                 <input type="hidden" name="management_view" value="{{ $managementView ?: 'account-access' }}" id="lookupManagementViewField">
                 <input type="search" name="lookup_search" value="{{ $lookupSearch }}" placeholder="Search by name, email, or employee number" id="lookupSearchField">
                 <button class="um-btn um-btn-primary" type="submit">Search</button>
@@ -1586,81 +1586,16 @@
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody id="lookupResultsBody">
-                        @forelse($lookupRecords as $record)
-                            @php
-                                $lookupMeta = (array) ($record['meta'] ?? []);
-                                $lookupSource = strtolower(trim((string) ($record['source'] ?? '')));
-                                $lookupUserType = strtolower(trim((string) ($lookupMeta['user_type'] ?? '')));
-                                $lookupRole = strtolower(trim((string) ($record['raw_role'] ?? '')));
-                                $isStudentLookup = in_array($lookupSource, ['student', 'student_assistant'], true)
-                                    || str_contains($lookupUserType, 'student')
-                                    || $lookupRole === 'student';
-                                $lookupIdentifier = $isStudentLookup
-                                    ? trim((string) ($lookupMeta['student_number'] ?? ''))
-                                    : trim((string) ($lookupMeta['employee_number'] ?? $lookupMeta['faculty_identifier'] ?? $lookupMeta['employee_id'] ?? ''));
-
-                                if (preg_match('/emergency[-_\\s]?(admin|login)/i', $lookupIdentifier)) {
-                                    $lookupIdentifier = '';
-                                }
-                            @endphp
-                            <tr
-                                data-user-card
-                                data-lookup-result-row
-                                data-update-url="{{ $record['can_edit'] ? route('admin.user-management.update', $record['id']) : '' }}"
-                                data-delete-url="{{ $record['can_edit'] ? route('admin.user-management.destroy', $record['id']) : '' }}"
-                                data-delete-account-url="{{ $record['can_edit'] ? route('admin.user-management.delete-account', $record['id']) : '' }}"
-                                data-create-url="{{ !$record['can_edit'] && !empty($record['can_onboard']) ? route('admin.user-management.store-from-lookup') : '' }}"
-                                data-can-edit="{{ $record['can_edit'] ? '1' : '0' }}"
-                                data-can-onboard="{{ !empty($record['can_onboard']) ? '1' : '0' }}"
-                                data-id="{{ $record['record_id'] }}"
-                                data-name="{{ $record['name'] }}"
-                                data-first-name="{{ $record['first_name'] }}"
-                                data-last-name="{{ $record['last_name'] }}"
-                                data-email="{{ $record['email'] }}"
-                                data-role="{{ $record['raw_role'] }}"
-                                data-role-label="{{ $record['role'] }}"
-                                data-status="{{ $record['status'] }}"
-                                data-source="{{ $record['source'] }}"
-                                data-source-label="{{ $record['source_label'] }}"
-                                data-student-id="{{ $record['student_id'] }}"
-                                data-avatar-url="{{ $record['avatar_url'] ?? '' }}"
-                                data-avatar-letter="{{ $record['avatar_letter'] }}"
-                                data-updated="{{ $record['meta']['updated_at'] ?? '' }}"
-                                data-meta='@json($record["meta"])'
-                            >
-                                <td>
-                                    <div class="um-user">
-                                        <div class="um-avatar">
-                                            {{ $record['avatar_letter'] }}
-                                        </div>
-                                        <div>
-                                            <div class="um-name">{{ $record['name'] }}</div>
-                                            <div class="um-sub">{{ $lookupIdentifier ?: 'ID not available' }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>{{ $record['email'] ?: 'N/A' }}</td>
-                                <td>{{ $record['role'] }}</td>
-                                <td><span class="um-badge {{ $record['status'] === 'inactive' ? 'inactive' : 'active' }}">{{ ucfirst($record['status']) }}</span></td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4"><div class="um-empty">No Users matched the current search.</div></td>
-                            </tr>
-                        @endforelse
-                    </tbody>
+                    @include('admin.user_management.partials.account-access-lookup-results', ['lookupRecords' => $lookupRecords])
                 </table>
             </div>
-            @if($lookupSearch !== '' && count($lookupRecords) > 0)
-                <div class="um-lookup-pagination" id="lookupPagination" data-page-size="8">
-                    <span class="um-lookup-pagination-summary" id="lookupPaginationSummary">Showing 0-0 of 0</span>
-                    <div class="um-lookup-pagination-actions">
-                        <button type="button" class="um-lookup-page-btn" id="lookupPrevPage">Previous</button>
-                        <button type="button" class="um-lookup-page-btn" id="lookupNextPage">Next</button>
-                    </div>
+            <div class="um-lookup-pagination" id="lookupPagination" data-page-size="8">
+                <span class="um-lookup-pagination-summary" id="lookupPaginationSummary">Showing 0-0 of 0</span>
+                <div class="um-lookup-pagination-actions">
+                    <button type="button" class="um-lookup-page-btn" id="lookupPrevPage">Previous</button>
+                    <button type="button" class="um-lookup-page-btn" id="lookupNextPage">Next</button>
                 </div>
-            @endif
+            </div>
             </div>
             </div>
             <aside class="access-onboard-profile" id="lookupSelectedProfile">
@@ -1933,10 +1868,11 @@
     const saveSettingsBtn = document.getElementById('saveSettingsBtn');
     const directoryPanel = document.getElementById('directoryPanel');
     const lookupDirectoryPanel = document.getElementById('lookupDirectoryPanel');
+    const lookupSearchForm = document.getElementById('lookupSearchForm');
     const lookupSearchField = document.getElementById('lookupSearchField');
     const lookupManagementViewField = document.getElementById('lookupManagementViewField');
     const currentLookupContext = 'account-access';
-    const lookupResultsBody = document.getElementById('lookupResultsBody');
+    let lookupResultsBody = document.getElementById('lookupResultsBody');
     const lookupPagination = document.getElementById('lookupPagination');
     const lookupPaginationSummary = document.getElementById('lookupPaginationSummary');
     const lookupPrevPage = document.getElementById('lookupPrevPage');
@@ -2527,8 +2463,118 @@
         filter.addEventListener('change', applyLookupFilters);
     });
 
-    document.querySelectorAll('[data-lookup-result-row]').forEach((row) => {
-        row.addEventListener('click', () => selectLookupProfile(row));
+    const syncLookupRoleOptions = (roles) => {
+        if (!lookupRoleFilter) {
+            return;
+        }
+
+        const selectedRole = lookupRoleFilter.value;
+        const availableRoles = Array.isArray(roles)
+            ? roles.map((role) => String(role || '').trim()).filter(Boolean)
+            : [];
+
+        lookupRoleFilter.textContent = '';
+        const allRolesOption = document.createElement('option');
+        allRolesOption.value = '';
+        allRolesOption.textContent = 'All Roles';
+        lookupRoleFilter.appendChild(allRolesOption);
+
+        availableRoles.forEach((role) => {
+            const option = document.createElement('option');
+            option.value = role;
+            option.textContent = role;
+            lookupRoleFilter.appendChild(option);
+        });
+
+        lookupRoleFilter.value = availableRoles.includes(selectedRole) ? selectedRole : '';
+    };
+
+    const bindLookupRows = () => {
+        document.querySelectorAll('[data-lookup-result-row]').forEach((row) => {
+            row.addEventListener('click', () => selectLookupProfile(row));
+        });
+    };
+
+    bindLookupRows();
+
+    let lookupSearchRequest = 0;
+    lookupSearchForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const submitButton = lookupSearchForm.querySelector('button[type="submit"]');
+        const lookupUrl = lookupSearchForm.dataset.lookupUrl;
+        if (!lookupUrl || !lookupSearchField) {
+            return;
+        }
+
+        const requestId = ++lookupSearchRequest;
+        const defaultLabel = submitButton?.textContent || 'Search';
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Searching...';
+        }
+
+        lookupDirectoryPanel?.setAttribute('aria-busy', 'true');
+        resetLookupSelection();
+
+        try {
+            const url = new URL(lookupUrl, window.location.origin);
+            url.searchParams.set('lookup_search', lookupSearchField.value.trim());
+
+            const response = await fetch(url.toString(), {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            });
+
+            if (!response.ok) {
+                throw new Error('Lookup request failed.');
+            }
+
+            const payload = await response.json();
+            if (requestId !== lookupSearchRequest) {
+                return;
+            }
+
+            const template = document.createElement('template');
+            template.innerHTML = `<table>${String(payload.html || '').trim()}</table>`;
+            const replacementBody = template.content.querySelector('#lookupResultsBody');
+            if (!replacementBody || replacementBody.tagName !== 'TBODY' || !lookupResultsBody) {
+                throw new Error('Lookup results could not be displayed.');
+            }
+
+            lookupResultsBody.replaceWith(replacementBody);
+            lookupResultsBody = replacementBody;
+            lookupDirectoryPanel?.classList.add('is-open');
+            syncLookupRoleOptions(payload.roles);
+            lookupCurrentPage = 1;
+            bindLookupRows();
+            applyLookupFilters();
+        } catch (error) {
+            if (requestId !== lookupSearchRequest) {
+                return;
+            }
+
+            if (lookupResultsBody) {
+                lookupResultsBody.innerHTML = '<tr><td colspan="4"><div class="um-empty">Search could not be completed. Please try again.</div></td></tr>';
+            }
+            if (lookupResultCount) {
+                lookupResultCount.textContent = '0 results found';
+            }
+            lookupCurrentPage = 1;
+            lookupDirectoryPanel?.classList.add('is-open');
+            updateLookupPagination();
+        } finally {
+            if (requestId === lookupSearchRequest) {
+                lookupDirectoryPanel?.removeAttribute('aria-busy');
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = defaultLabel;
+                }
+            }
+        }
     });
 
     document.querySelectorAll('input[name="lookup_role"]').forEach((input) => {

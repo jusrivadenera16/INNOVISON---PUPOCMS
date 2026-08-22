@@ -87,4 +87,36 @@ class SyncAdminHubFacultyUuidsTest extends TestCase
             'status' => 'active',
         ]);
     }
+
+    public function test_it_backfills_a_missing_admin_hub_uuid_from_a_uuid_shaped_faculty_id(): void
+    {
+        $adminHubId = DB::table('admin_hub')->insertGetId([
+            'employee_number' => 'FA-0002',
+            'name' => 'Faculty ID Designee',
+            'email' => 'faculty-id.designee@example.test',
+            'role' => 'admin_designee',
+            'status' => 'active',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $facultyUuid = '2f5026c5-c90e-4e70-8d11-bce2258a2c43';
+
+        Http::fake([
+            'https://faculty.example.test/api/faculties' => Http::response([
+                'faculties' => [[
+                    'faculty_id' => $facultyUuid,
+                    'faculty_code' => 'FA-0002',
+                    'email' => 'faculty-id.designee@example.test',
+                ]],
+            ]),
+        ]);
+
+        $this->artisan('admin-hub:sync-faculty-uuids')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseHas('admin_hub', [
+            'id' => $adminHubId,
+            'admin_uuid' => $facultyUuid,
+        ]);
+    }
 }

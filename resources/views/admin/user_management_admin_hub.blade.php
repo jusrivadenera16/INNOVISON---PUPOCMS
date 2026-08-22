@@ -1276,7 +1276,7 @@
         <div class="um-modal-body">
             <div class="access-onboard-layout">
             <div class="access-onboard-search">
-            <form class="um-search" method="GET" action="{{ route('admin.user-management.admin-hub') }}">
+            <form class="um-search" method="GET" action="{{ route('admin.user-management.admin-hub') }}" id="lookupSearchForm" data-lookup-url="{{ route('admin.user-management.admin-hub.lookup') }}">
                 <input type="hidden" name="management_view" value="{{ $managementView ?: 'admin-hub' }}" id="lookupManagementViewField">
                 <input type="search" name="lookup_search" value="{{ $lookupSearch }}" placeholder="Search by name, email, or employee number" id="lookupSearchField">
                 <button class="um-btn um-btn-primary" type="submit">Search</button>
@@ -1298,60 +1298,7 @@
                             <th>Source</th>
                         </tr>
                     </thead>
-                    <tbody id="lookupResultsBody">
-                        @forelse($lookupRecords as $record)
-                            @php
-                                $canUpdateLocalUser = !empty($record['is_local_user']) && !empty($record['can_edit']);
-                                $canOnboardLookupRecord = !$canUpdateLocalUser && !empty($record['can_onboard']);
-                            @endphp
-                            <tr
-                                data-user-card
-                                data-lookup-result-row
-                                data-update-url="{{ $canUpdateLocalUser ? route('admin.user-management.update', $record['id']) : '' }}"
-                                data-delete-url="{{ $canUpdateLocalUser ? route('admin.user-management.destroy', $record['id']) : '' }}"
-                                data-delete-admin-hub-url="{{ $record['delete_admin_hub_url'] ?? '' }}"
-                                data-create-url="{{ $canOnboardLookupRecord ? route('admin.user-management.store-from-lookup') : '' }}"
-                                data-can-edit="{{ $canUpdateLocalUser ? '1' : '0' }}"
-                                data-can-onboard="{{ $canOnboardLookupRecord ? '1' : '0' }}"
-                                data-id="{{ $record['record_id'] }}"
-                                data-name="{{ $record['name'] }}"
-                                data-first-name="{{ $record['first_name'] }}"
-                                data-last-name="{{ $record['last_name'] }}"
-                                data-email="{{ $record['email'] }}"
-                                data-role="{{ $record['raw_role'] }}"
-                                data-role-label="{{ $record['role'] }}"
-                                data-status="{{ $record['status'] }}"
-                                data-source="{{ $record['source'] }}"
-                                data-source-label="{{ $record['source_label'] }}"
-                                data-student-id="{{ $record['student_id'] }}"
-                                data-avatar-url="{{ $record['avatar_url'] ?? '' }}"
-                                data-avatar-letter="{{ $record['avatar_letter'] }}"
-                                data-updated="{{ $record['meta']['updated_at'] ?? '' }}"
-                                data-meta='@json($record["meta"])'
-                            >
-                                <td>
-                                    <div class="um-user">
-                                        <div class="um-avatar">
-                                            {{ $record['avatar_letter'] }}
-                                        </div>
-                                        <div>
-                                            <div class="um-name">{{ $record['name'] }}</div>
-                                            @php($employeeNumber = trim((string) ($record['meta']['employee_number'] ?? $record['meta']['faculty_identifier'] ?? '')))
-                                            <div class="um-sub">{{ $employeeNumber !== '' ? $employeeNumber : 'Employee number not available' }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>{{ $record['email'] ?: 'N/A' }}</td>
-                                <td>{{ $record['role'] }}</td>
-                                <td><span class="um-badge {{ $record['status'] === 'inactive' ? 'inactive' : 'active' }}">{{ ucfirst($record['status']) }}</span></td>
-                                <td><span class="um-badge source">{{ $record['source_label'] }}</span></td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5"><div class="um-empty">No Users matched the current search.</div></td>
-                            </tr>
-                        @endforelse
-                    </tbody>
+                    @include('admin.user_management.partials.admin-hub-lookup-results', ['lookupRecords' => $lookupRecords])
                 </table>
             </div>
             </div>
@@ -1581,6 +1528,7 @@
     const saveSettingsBtn = document.getElementById('saveSettingsBtn');
     const directoryPanel = document.getElementById('directoryPanel');
     const lookupDirectoryPanel = document.getElementById('lookupDirectoryPanel');
+    const lookupSearchForm = document.getElementById('lookupSearchForm');
     const lookupSearchField = document.getElementById('lookupSearchField');
     const lookupManagementViewField = document.getElementById('lookupManagementViewField');
     const currentLookupContext = 'admin-hub';
@@ -1898,8 +1846,90 @@
         filter.addEventListener('change', applyLookupFilters);
     });
 
-    document.querySelectorAll('[data-lookup-result-row]').forEach((row) => {
-        row.addEventListener('click', () => selectLookupProfile(row));
+    const bindLookupRows = () => {
+        document.querySelectorAll('[data-lookup-result-row]').forEach((row) => {
+            row.addEventListener('click', () => selectLookupProfile(row));
+        });
+    };
+
+    bindLookupRows();
+
+    let lookupSearchRequest = 0;
+    lookupSearchForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const submitButton = lookupSearchForm.querySelector('button[type="submit"]');
+        const lookupUrl = lookupSearchForm.dataset.lookupUrl;
+        if (!lookupUrl || !lookupSearchField) {
+            return;
+        }
+
+        const requestId = ++lookupSearchRequest;
+        const defaultLabel = submitButton?.textContent || 'Search';
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Searching...';
+        }
+
+        lookupDirectoryPanel?.setAttribute('aria-busy', 'true');
+        resetLookupSelection();
+
+        try {
+            const url = new URL(lookupUrl, window.location.origin);
+            url.searchParams.set('lookup_search', lookupSearchField.value.trim());
+
+            const response = await fetch(url.toString(), {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            });
+
+            if (!response.ok) {
+                throw new Error('Lookup request failed.');
+            }
+
+            const payload = await response.json();
+            if (requestId !== lookupSearchRequest) {
+                return;
+            }
+
+            const template = document.createElement('template');
+            template.innerHTML = `<table>${String(payload.html || '').trim()}</table>`;
+            const replacementBody = template.content.querySelector('#lookupResultsBody');
+            const currentBody = document.getElementById('lookupResultsBody');
+
+            if (!replacementBody || replacementBody.tagName !== 'TBODY' || !currentBody) {
+                throw new Error('Lookup results could not be displayed.');
+            }
+
+            currentBody.replaceWith(replacementBody);
+            lookupDirectoryPanel?.classList.add('is-open');
+            bindLookupRows();
+            applyLookupFilters();
+        } catch (error) {
+            if (requestId !== lookupSearchRequest) {
+                return;
+            }
+
+            const currentBody = document.getElementById('lookupResultsBody');
+            if (currentBody) {
+                currentBody.innerHTML = '<tr><td colspan="5"><div class="um-empty">Search could not be completed. Please try again.</div></td></tr>';
+            }
+            if (lookupResultCount) {
+                lookupResultCount.textContent = '0 results found';
+            }
+            lookupDirectoryPanel?.classList.add('is-open');
+        } finally {
+            if (requestId === lookupSearchRequest) {
+                lookupDirectoryPanel?.removeAttribute('aria-busy');
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = defaultLabel;
+                }
+            }
+        }
     });
 
     onboardContinue?.addEventListener('click', () => {
