@@ -1220,11 +1220,13 @@ class AdminUserController extends Controller
                 $facultyNumericId = trim((string) ($faculty['faculty_id'] ?? $faculty['id'] ?? ''));
                 $employeeNumber = $facultyCode;
                 $adminUuid = $this->firstFilledValue([
+                    $faculty['faculty_uuid'] ?? null,
                     $faculty['admin_uuid'] ?? null,
                     $faculty['idp_user_id'] ?? null,
                     $faculty['user_uuid'] ?? null,
                     $faculty['uuid'] ?? null,
                     $faculty['student_id'] ?? null,
+                    data_get($profile, 'faculty_uuid'),
                     data_get($profile, 'admin_uuid'),
                     data_get($profile, 'idp_user_id'),
                     data_get($profile, 'user_uuid'),
@@ -1263,6 +1265,7 @@ class AdminUserController extends Controller
                     'meta' => [
                         'faculty_id' => $faculty['faculty_id'] ?? null,
                         'faculty_code' => $employeeNumber !== '' ? $employeeNumber : null,
+                        'faculty_uuid' => $faculty['faculty_uuid'] ?? data_get($profile, 'faculty_uuid'),
                         'employee_number' => $employeeNumber !== '' ? $employeeNumber : null,
                         'admin_uuid' => $adminUuid,
                         'faculty_type' => $faculty['faculty_type'] ?? null,

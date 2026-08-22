@@ -71,6 +71,10 @@ Route::get('/', function () {
     if (Schema::hasTable('announcements')) {
         $landingAnnouncements = Announcement::query()
             ->where('status', Announcement::STATUS_ACTIVE)
+            ->when(
+                Schema::hasColumn('announcements', 'show_on_landing'),
+                fn ($query) => $query->where('show_on_landing', true)
+            )
             ->where(function ($query) {
                 $query->whereNull('expires_at')
                     ->orWhereDate('expires_at', '>=', now()->toDateString());
@@ -244,6 +248,9 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
     Route::post('/health-profile/{id}/request-resubmission', [AdminController::class, 'requestHealthProfileResubmission'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
         ->name('admin.health_profile.request_resubmission');
+    Route::post('/employee-health-profile/{employeeProfile}/request-resubmission', [AdminController::class, 'requestEmployeeHealthProfileResubmission'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
+        ->name('admin.employee_health_profile.request_resubmission');
     Route::post('/health-profile/{id}/request-health-form', [AdminController::class, 'requestNewHealthForm'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
         ->name('admin.health_profile.request_health_form');
