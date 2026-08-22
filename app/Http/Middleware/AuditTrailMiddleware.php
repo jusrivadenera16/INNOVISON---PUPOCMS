@@ -47,6 +47,7 @@ class AuditTrailMiddleware
             'admin.notifications.feed',
             'notifications.feed',
             'admin.logs',
+            'admin.global-search',
         ], true)) {
             return true;
         }
@@ -55,6 +56,7 @@ class AuditTrailMiddleware
             '/admin/notifications/feed',
             '/notifications/feed',
             '/admin/activity-logs',
+            '/admin/global-search',
         ], true)) {
             return true;
         }

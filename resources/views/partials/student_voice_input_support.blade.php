@@ -109,7 +109,11 @@
         }
 
         function isEligibleField(field) {
-            return !!field && field.matches(supportedSelector) && !field.readOnly && !field.disabled;
+            return !!field
+                && field.matches(supportedSelector)
+                && !field.matches('[data-voice-skip]')
+                && !field.readOnly
+                && !field.disabled;
         }
 
         function micIconSvg() {

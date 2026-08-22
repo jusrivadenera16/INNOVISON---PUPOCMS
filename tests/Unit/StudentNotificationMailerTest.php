@@ -79,6 +79,36 @@ class StudentNotificationMailerTest extends TestCase
         Mail::assertNothingSent();
     }
 
+    public function test_notification_email_is_skipped_when_global_email_notifications_are_disabled(): void
+    {
+        config()->set('services.student_notifications.enabled', true);
+        Mail::fake();
+
+        $mailer = new class extends StudentNotificationMailer {
+            protected function globalEmailNotificationsEnabled(): bool
+            {
+                return false;
+            }
+        };
+
+        $student = new User([
+            'name' => 'Test Student',
+            'email' => 'student@example.test',
+        ]);
+
+        $result = $mailer->send(
+            $student,
+            'Appointment update - PUP Taguig Clinic',
+            'Appointment update',
+            'Please sign in to view the appointment update.',
+            'View Appointment',
+            url('/student/history')
+        );
+
+        $this->assertSame('skipped', $result['status']);
+        Mail::assertNothingSent();
+    }
+
     public function test_health_clearance_approval_uses_the_portal_health_record_message(): void
     {
         config()->set('services.student_notifications.enabled', true);
@@ -96,6 +126,26 @@ class StudentNotificationMailerTest extends TestCase
             return $mail->title === 'Your health clearance is approved!'
                 && $mail->actionLabel === 'Open Health Record'
                 && $mail->statusCard['tone'] === 'success';
+        });
+    }
+
+    public function test_pending_compliance_reminder_links_back_to_the_health_record(): void
+    {
+        config()->set('services.student_notifications.enabled', true);
+        Mail::fake();
+
+        $student = new User([
+            'name' => 'Test Student',
+            'email' => 'student@example.test',
+        ]);
+
+        $result = app(StudentNotificationMailer::class)
+            ->sendHealthRecordNotice($student, 'pending_compliance_reminder');
+
+        $this->assertSame('sent', $result['status']);
+        Mail::assertSent(StudentPortalNotificationMail::class, function (StudentPortalNotificationMail $mail) {
+            return $mail->title === 'Your health record still needs attention'
+                && $mail->actionLabel === 'Open Health Record';
         });
     }
 
@@ -121,7 +171,7 @@ class StudentNotificationMailerTest extends TestCase
 
         $this->assertSame('sent', $result['status']);
         Mail::assertSent(StudentPortalNotificationMail::class, function (StudentPortalNotificationMail $mail) {
-            return $mail->title === 'Your appointment is in about 15 minutes'
+            return $mail->title === 'Your appointment is coming up'
                 && str_contains($mail->messageText, 'Aug 19, 2026 10:15 AM')
                 && ($mail->statusCard['template'] ?? null) === 'appointment_reminder';
         });

@@ -67,11 +67,282 @@
     @media (max-width: 760px) {
         .settings-days-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     }
+
+    /* Clinic settings parity with the Personal Information surface. */
+    .clinic-settings-page {
+        --clinic-maroon: #7f0010;
+        --clinic-text: #172033;
+        --clinic-muted: #64748b;
+        --clinic-line: rgba(148, 163, 184, .22);
+        display: grid;
+        gap: 12px;
+    }
+    .clinic-settings-page .settings-section-hero {
+        align-items: center;
+        margin-bottom: 0;
+        padding: 14px 16px;
+        border-radius: 12px;
+        border-color: var(--clinic-line);
+        box-shadow: 0 8px 22px rgba(15, 23, 42, .05);
+    }
+    .clinic-settings-page .settings-section-hero > div:first-child {
+        display: grid;
+        grid-template-columns: 54px minmax(0, 1fr);
+        column-gap: 14px;
+        align-items: center;
+        min-width: 0;
+    }
+    .clinic-settings-page .settings-section-title { display: contents; }
+    .clinic-settings-page .clinic-title-icon {
+        grid-column: 1;
+        grid-row: 1 / span 2;
+        display: grid;
+        place-items: center;
+        width: 54px;
+        height: 54px;
+        border-radius: 14px;
+        background: #fff1f2;
+        color: #b91c1c;
+    }
+    .clinic-settings-page .clinic-title-icon svg {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        color: currentColor;
+    }
+    .clinic-settings-page .settings-section-title > span:not(.clinic-title-icon) {
+        grid-column: 2;
+        grid-row: 1;
+        color: var(--clinic-text);
+        font-size: 26px;
+        font-weight: 900;
+        line-height: 1.1;
+    }
+    .clinic-settings-page .settings-section-hero p {
+        grid-column: 2;
+        grid-row: 2;
+        margin: 6px 0 0;
+        color: var(--clinic-muted);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+    .clinic-settings-page .settings-back-link {
+        min-height: 34px;
+        border-radius: 8px;
+        padding: 0 12px;
+    }
+    .clinic-settings-page .settings-back-link svg { transform: rotate(180deg); }
+    .clinic-settings-page .settings-section-grid.two {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .clinic-settings-page .settings-panel {
+        overflow: hidden;
+        border-radius: 12px;
+        border: 1px solid var(--clinic-line);
+        background: rgba(255, 255, 255, .96);
+        box-shadow: 0 8px 22px rgba(15, 23, 42, .045);
+    }
+    .clinic-settings-page .settings-panel-head {
+        align-items: center;
+        min-height: 54px;
+        padding: 11px 12px;
+        border-bottom: 1px solid var(--clinic-line);
+        background: transparent;
+    }
+    .clinic-settings-page .settings-panel-head > div {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+    }
+    .clinic-settings-page .settings-panel-head h3 {
+        margin: 0;
+        color: var(--clinic-maroon);
+        font-size: 14px;
+        font-weight: 900;
+    }
+    .clinic-settings-page .settings-panel-head h3 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .clinic-settings-page .settings-panel-head h3 svg {
+        width: 24px;
+        height: 24px;
+        flex: 0 0 auto;
+        padding: 5px;
+        border-radius: 7px;
+        background: #fff1f2;
+        color: var(--clinic-maroon);
+    }
+    .clinic-settings-page .settings-panel-head p { display: none; }
+    .clinic-settings-page .settings-edit-btn {
+        width: 34px;
+        height: 34px;
+        min-height: 34px;
+        padding: 0;
+        border-radius: 7px;
+        background: #fff !important;
+        color: var(--clinic-maroon) !important;
+        border: 1px solid rgba(127, 0, 16, .25);
+    }
+    .clinic-settings-page .settings-edit-btn span { display: none; }
+    .clinic-settings-page .settings-edit-btn svg { width: 16px; height: 16px; }
+    .clinic-settings-page .settings-panel-body { padding: 0; }
+    .clinic-settings-page .settings-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0;
+        padding: 0 12px;
+        border-top: 0;
+    }
+    .clinic-settings-page .settings-field,
+    .clinic-settings-page .settings-days-field {
+        position: relative;
+        display: grid;
+        align-content: center;
+        gap: 4px;
+        min-width: 0;
+        min-height: 60px;
+        padding: 7px 12px;
+    }
+    .clinic-settings-page .settings-field.full,
+    .clinic-settings-page .settings-days-field { grid-column: 1 / -1; }
+    .clinic-settings-page .settings-field:not(.full):not(:nth-child(2n))::after {
+        content: "";
+        position: absolute;
+        top: 14px;
+        right: 0;
+        bottom: 14px;
+        width: 1px;
+        background: var(--clinic-line);
+    }
+    .clinic-settings-page .settings-field.full + .settings-field.full::before,
+    .clinic-settings-page .settings-days-field::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 10px;
+        right: 10px;
+        border-top: 1px solid var(--clinic-line);
+    }
+    .clinic-settings-page .settings-field label,
+    .clinic-settings-page .settings-days-label {
+        color: var(--clinic-text);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+    .clinic-settings-page .settings-field input {
+        width: 100%;
+        min-height: 28px;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        color: var(--clinic-text);
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: none !important;
+    }
+    .clinic-settings-page .settings-editable-form.is-editing .settings-field input {
+        border-bottom: 1px solid rgba(127, 0, 16, .28) !important;
+    }
+    .clinic-settings-page .settings-editable-form.is-editing .settings-field input:focus {
+        border-bottom-color: var(--clinic-maroon) !important;
+        outline: none;
+    }
+    .clinic-settings-page .settings-days-field { gap: 8px; }
+    .clinic-settings-page .settings-days-grid { padding-bottom: 7px; }
+    .clinic-settings-page .settings-day-option span {
+        min-height: 34px;
+        border-radius: 7px;
+        font-size: 12px;
+    }
+    .clinic-settings-page .settings-action-row {
+        margin: 0;
+        padding: 10px 12px 12px;
+        border-top: 1px solid var(--clinic-line);
+    }
+    .clinic-settings-page .settings-save-btn {
+        background-color: var(--clinic-maroon) !important;
+        color: #ffffff !important;
+    }
+    .clinic-settings-page .settings-save-btn::before {
+        background: rgba(255, 248, 205, .72);
+        transform: translateX(-110%);
+    }
+    .clinic-settings-page .settings-save-btn:hover,
+    .clinic-settings-page .settings-save-btn:focus-visible {
+        background-color: #facc15 !important;
+        color: var(--clinic-maroon) !important;
+        outline: none;
+    }
+    .clinic-settings-page .settings-save-btn:hover::before,
+    .clinic-settings-page .settings-save-btn:focus-visible::before {
+        animation: clinicSaveSweep .62s ease both;
+    }
+    @keyframes clinicSaveSweep {
+        from { transform: translateX(-110%); }
+        to { transform: translateX(110%); }
+    }
+    .clinic-settings-page .settings-cancel-btn:hover,
+    .clinic-settings-page .settings-cancel-btn:focus-visible {
+        background-color: #4b5563 !important;
+        color: #ffffff !important;
+    }
+    .clinic-settings-page .settings-cancel-btn:hover,
+    .clinic-settings-page .settings-cancel-btn:focus-visible {
+        background-color: #4b5563 !important;
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] .clinic-settings-page .settings-section-title > span:not(.clinic-title-icon),
+    html[data-theme="dark"] .clinic-settings-page .settings-panel-head h3,
+    html[data-theme="dark"] .clinic-settings-page .settings-field label,
+    html[data-theme="dark"] .clinic-settings-page .settings-days-label,
+    html[data-theme="dark"] .clinic-settings-page .settings-field input { color: #f8fafc; }
+    html[data-theme="dark"] .clinic-settings-page .clinic-title-icon,
+    html[data-theme="dark"] .clinic-settings-page .settings-panel-head h3 svg {
+        background: rgba(127, 0, 16, .35);
+        color: #fecdd3;
+    }
+    html[data-theme="dark"] .clinic-settings-page .settings-panel {
+        background: rgba(15, 23, 42, .94);
+        border-color: rgba(148, 163, 184, .2);
+    }
+    html[data-theme="dark"] .clinic-settings-page .settings-edit-btn {
+        background: rgba(15, 23, 42, .7) !important;
+        color: #fecdd3 !important;
+        border-color: rgba(250, 204, 21, .45);
+    }
+    html[data-theme="dark"] .clinic-settings-page .settings-section-hero,
+    html[data-theme="dark"] .clinic-settings-page .settings-panel {
+        box-shadow: 0 12px 28px rgba(0, 0, 0, .2);
+    }
+    html[data-theme="dark"] .clinic-settings-page .settings-section-hero p { color: #cbd5e1; }
+    html[data-theme="dark"] .clinic-settings-page .settings-field,
+    html[data-theme="dark"] .clinic-settings-page .settings-form-grid,
+    html[data-theme="dark"] .clinic-settings-page .settings-action-row { border-color: rgba(148, 163, 184, .16); }
+    @media (max-width: 560px) {
+        .clinic-settings-page .settings-section-hero > div:first-child { grid-template-columns: 44px minmax(0, 1fr); }
+        .clinic-settings-page .clinic-title-icon { width: 44px; height: 44px; }
+        .clinic-settings-page .clinic-title-icon svg { width: 24px; height: 24px; }
+        .clinic-settings-page .settings-section-title > span:not(.clinic-title-icon) { font-size: 22px; }
+        .clinic-settings-page .settings-form-grid { grid-template-columns: 1fr; }
+        .clinic-settings-page .settings-field:not(.full):not(:nth-child(2n))::after { display: none; }
+        .clinic-settings-page .settings-field.full + .settings-field.full::before,
+        .clinic-settings-page .settings-days-field::before { left: 10px; right: 10px; }
+    }
 </style>
 @endpush
 
 @section('content')
-<div class="settings-section-page">
+<div class="settings-section-page clinic-settings-page">
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -88,7 +359,7 @@
 
     <section class="settings-section-hero">
         <div>
-            <h1 class="settings-section-title"><x-outline-icon name="home" />Clinic Information</h1>
+            <h1 class="settings-section-title"><span class="clinic-title-icon"><x-outline-icon name="home" /></span><span>Clinic Information</span></h1>
             <p>Manage the clinic identity, location, operating hours, and service information shown across the system.</p>
         </div>
         <a href="{{ route('admin.settings') }}" class="settings-back-link"><x-outline-icon name="chevron-right" /> Settings Hub</a>
@@ -98,12 +369,11 @@
         <section class="settings-panel">
             <div class="settings-panel-head">
                 <div>
-                    <h3>Clinic Profile</h3>
+                    <h3><x-outline-icon name="home" />Clinic Profile</h3>
                     <p>Core clinic identity details.</p>
                 </div>
-                <button type="button" class="settings-edit-btn" data-edit-target="clinicProfileForm">
+                <button type="button" class="settings-edit-btn" data-edit-trigger data-edit-target="clinicProfileForm" aria-label="Edit clinic profile" title="Edit clinic profile">
                     <x-outline-icon name="pencil-square" />
-                    <span>Edit</span>
                 </button>
             </div>
             <div class="settings-panel-body">
@@ -133,12 +403,11 @@
         <section class="settings-panel">
             <div class="settings-panel-head">
                 <div>
-                    <h3>Clinic Hours</h3>
+                    <h3><x-outline-icon name="clock" />Clinic Hours</h3>
                     <p>Choose the operating days and opening hours used across the clinic system.</p>
                 </div>
-                <button type="button" class="settings-edit-btn" data-edit-target="clinicHoursForm">
+                <button type="button" class="settings-edit-btn" data-edit-trigger data-edit-target="clinicHoursForm" aria-label="Edit clinic hours" title="Edit clinic hours">
                     <x-outline-icon name="pencil-square" />
-                    <span>Edit</span>
                 </button>
             </div>
             <div class="settings-panel-body">

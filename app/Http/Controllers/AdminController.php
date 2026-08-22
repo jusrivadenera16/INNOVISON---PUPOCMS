@@ -4273,6 +4273,7 @@ public function deleteItem($id)
             $closureRequired = Rule::requiredIf($request->boolean('clinic_closure_enabled'));
             $request->validate([
                 'appointment_reminder_hours' => ['required', 'integer', 'in:0,1,3,24,48'],
+                'pending_compliance_reminder_days' => ['required', 'integer', 'in:0,1,3,7,14,30'],
                 'clinic_closure_starts_at' => [$closureRequired, 'nullable', 'date'],
                 'clinic_closure_ends_at' => [$closureRequired, 'nullable', 'date', 'after:clinic_closure_starts_at'],
                 'clinic_closure_reason' => ['nullable', 'string', 'max:100'],
@@ -4308,8 +4309,9 @@ public function deleteItem($id)
 
         if ($request->boolean('preferences_form')) {
             $settings->admin_live_notifications = $request->boolean('admin_live_notifications');
-            $settings->auto_approve = $request->boolean('auto_approve');
+            $settings->email_notifications = $request->boolean('email_notifications');
             $settings->appointment_reminder_hours = (int) $request->input('appointment_reminder_hours', 24);
+            $settings->pending_compliance_reminder_days = (int) $request->input('pending_compliance_reminder_days', 7);
             $settings->clinic_closure_enabled = $request->boolean('clinic_closure_enabled');
             $settings->clinic_closure_starts_at = $request->input('clinic_closure_starts_at') ?: null;
             $settings->clinic_closure_ends_at = $request->input('clinic_closure_ends_at') ?: null;

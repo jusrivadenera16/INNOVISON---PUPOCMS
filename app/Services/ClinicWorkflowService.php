@@ -24,6 +24,7 @@ class ClinicWorkflowService
             'student_assistant_open_time' => '08:00',
             'student_assistant_close_time' => '20:00',
             'appointment_reminder_hours' => 24,
+            'pending_compliance_reminder_days' => 7,
         ]);
 
         return $this->settings;

@@ -90,59 +90,7 @@ class AdminUserController extends Controller
             ? []
             : $this->collectAdminHubProfiles($lookupSearch, $facultyDirectory);
 
-        $lookupRecords = [];
-
-        if ($lookupSearch !== '') {
-            $localLookupRecords = collect($this->collectLocalUsers($lookupSearch));
-            $localEmails = $localLookupRecords
-                ->pluck('email')
-                ->filter()
-                ->map(fn ($email) => strtolower(trim((string) $email)));
-            $linkedAdminProfileIds = $localLookupRecords
-                ->pluck('meta.admin_profile_id')
-                ->filter()
-                ->map(fn ($id) => (string) $id);
-
-            $standaloneAdminRecords = collect($this->collectStandaloneAdminLookupRecords($lookupSearch))
-                ->reject(function (array $record) use ($localEmails, $linkedAdminProfileIds) {
-                    $email = strtolower(trim((string) ($record['email'] ?? '')));
-                    $adminProfileId = (string) ($record['meta']['admin_profile_id'] ?? '');
-
-                    return ($email !== '' && $localEmails->contains($email))
-                        || ($adminProfileId !== '' && $linkedAdminProfileIds->contains($adminProfileId));
-                });
-
-            $lookupRecords = $localLookupRecords->merge($standaloneAdminRecords);
-
-            // A local match is enough for Account Access. Only fall back to
-            // FLSS when no local user/admin profile matched, and keep that
-            // interactive lookup bounded if the remote service is unavailable.
-            if ($managementView !== 'account-access' || $lookupRecords->isEmpty()) {
-                $lookupRecords = $lookupRecords->merge(
-                    $this->collectFacultyUsers(
-                        $facultySyncService,
-                        $lookupSearch,
-                        $managementView === 'account-access' ? 5 : null
-                    )
-                );
-            }
-
-            $lookupRecords = $lookupRecords
-                ->map(function (array $record) use ($managementView) {
-                    if ($managementView === 'admin-hub' && ($record['source'] ?? '') !== 'faculty') {
-                        $record['can_edit'] = true;
-                    }
-
-                    return $record;
-                })
-                ->sortBy(fn (array $record) => sprintf(
-                    '%02d-%s',
-                    $this->recordSortWeight($record['source'] ?? 'student'),
-                    strtolower((string) ($record['name'] ?? ''))
-                ))
-                ->values()
-                ->all();
-        }
+        $lookupRecords = $this->buildLookupRecords($lookupSearch, $managementView, $facultySyncService);
 
         $stats = [
             'students' => collect($allLocalUsers)->where('source', 'student')->count(),
@@ -173,9 +121,89 @@ class AdminUserController extends Controller
         return view('admin.user_management_account_access', $this->buildManagementData($request, $facultySyncService, 'account-access'));
     }
 
+    public function accountAccessLookup(Request $request, FacultySyncService $facultySyncService)
+    {
+        $this->ensureCanManageUsers();
+
+        $lookupSearch = trim((string) $request->query('lookup_search', ''));
+        $lookupRecords = $this->buildLookupRecords($lookupSearch, 'account-access', $facultySyncService);
+
+        return response()->json([
+            'html' => view('admin.user_management.partials.account-access-lookup-results', compact('lookupRecords'))->render(),
+            'count' => count($lookupRecords),
+            'roles' => collect($lookupRecords)->pluck('role')->filter()->unique()->sort()->values(),
+        ]);
+    }
+
     public function adminHub(Request $request, FacultySyncService $facultySyncService)
     {
         return view('admin.user_management_admin_hub', $this->buildManagementData($request, $facultySyncService, 'admin-hub'));
+    }
+
+    public function adminHubLookup(Request $request, FacultySyncService $facultySyncService)
+    {
+        $this->ensureCanManageUsers();
+
+        $lookupSearch = trim((string) $request->query('lookup_search', ''));
+        $lookupRecords = $this->buildLookupRecords($lookupSearch, 'admin-hub', $facultySyncService);
+
+        return response()->json([
+            'html' => view('admin.user_management.partials.admin-hub-lookup-results', compact('lookupRecords'))->render(),
+            'count' => count($lookupRecords),
+        ]);
+    }
+
+    private function buildLookupRecords(
+        string $lookupSearch,
+        string $managementView,
+        FacultySyncService $facultySyncService
+    ): array {
+        if ($lookupSearch === '') {
+            return [];
+        }
+
+        $localLookupRecords = collect($this->collectLocalUsers($lookupSearch));
+        $localEmails = $localLookupRecords
+            ->pluck('email')
+            ->filter()
+            ->map(fn ($email) => strtolower(trim((string) $email)));
+        $linkedAdminProfileIds = $localLookupRecords
+            ->pluck('meta.admin_profile_id')
+            ->filter()
+            ->map(fn ($id) => (string) $id);
+
+        $standaloneAdminRecords = collect($this->collectStandaloneAdminLookupRecords($lookupSearch))
+            ->reject(function (array $record) use ($localEmails, $linkedAdminProfileIds) {
+                $email = strtolower(trim((string) ($record['email'] ?? '')));
+                $adminProfileId = (string) ($record['meta']['admin_profile_id'] ?? '');
+
+                return ($email !== '' && $localEmails->contains($email))
+                    || ($adminProfileId !== '' && $linkedAdminProfileIds->contains($adminProfileId));
+            });
+
+        $lookupRecords = $localLookupRecords->merge($standaloneAdminRecords);
+
+        // A local match is enough for Account Access. Only fall back to
+        // FLSS when no local user/admin profile matched, and keep that
+        // interactive lookup bounded if the remote service is unavailable.
+        if ($managementView !== 'account-access' || $lookupRecords->isEmpty()) {
+            $lookupRecords = $lookupRecords->merge(
+                $this->collectFacultyUsers(
+                    $facultySyncService,
+                    $lookupSearch,
+                    $managementView === 'account-access' ? 5 : null
+                )
+            );
+        }
+
+        return $lookupRecords
+            ->sortBy(fn (array $record) => sprintf(
+                '%02d-%s',
+                $this->recordSortWeight($record['source'] ?? 'student'),
+                strtolower((string) ($record['name'] ?? ''))
+            ))
+            ->values()
+            ->all();
     }
 
     public function update(Request $request, User $user)
@@ -1062,6 +1090,7 @@ class AdminUserController extends Controller
                         : null,
                     'avatar_letter' => strtoupper(substr($displayName !== '' ? $displayName : ($user->email ?? 'U'), 0, 1)),
                     'can_edit' => true,
+                    'is_local_user' => true,
                     'is_external' => false,
                     'delete_admin_hub_url' => $linkedAdminHub
                         ? route('admin.user-management.admin-hub.delete-record', $linkedAdminHub->id)
@@ -1161,6 +1190,7 @@ class AdminUserController extends Controller
                     'avatar_letter' => strtoupper(substr($displayName !== '' ? $displayName : ($email ?: 'A'), 0, 1)),
                     'can_edit' => false,
                     'can_onboard' => true,
+                    'is_local_user' => false,
                     'is_external' => false,
                     'meta' => [
                         'email' => $email,
@@ -1205,35 +1235,21 @@ class AdminUserController extends Controller
 
         return collect($faculties)
             ->filter(fn ($faculty) => is_array($faculty))
-            ->map(function (array $faculty) {
+            ->map(function (array $faculty) use ($facultySyncService) {
                 $profile = is_array($faculty['profile'] ?? null) ? $faculty['profile'] : [];
+                $fields = is_array($faculty['fields'] ?? null) ? $faculty['fields'] : [];
                 $name = trim((string) ($faculty['name'] ?? trim(implode(' ', array_filter([
-                    $faculty['first_name'] ?? '',
-                    $faculty['middle_name'] ?? '',
-                    $faculty['last_name'] ?? '',
-                    $faculty['suffix_name'] ?? '',
+                    $faculty['first_name'] ?? $fields['first_name'] ?? '',
+                    $faculty['middle_name'] ?? $fields['middle_name'] ?? '',
+                    $faculty['last_name'] ?? $fields['last_name'] ?? '',
+                    $faculty['suffix_name'] ?? $fields['suffix_name'] ?? '',
                 ])))));
-                $email = trim((string) ($faculty['email'] ?? ''));
-                $role = trim((string) ($faculty['faculty_type'] ?? $faculty['role'] ?? $faculty['access_level'] ?? 'Faculty'));
-                $status = strtolower(trim((string) ($faculty['status'] ?? 'active')));
-                $facultyCode = trim((string) ($faculty['faculty_code'] ?? $faculty['employee_number'] ?? $faculty['employee_no'] ?? ''));
-                $facultyNumericId = trim((string) ($faculty['faculty_id'] ?? $faculty['id'] ?? ''));
+                $email = trim((string) ($faculty['email'] ?? $fields['email'] ?? ''));
+                $role = trim((string) ($faculty['faculty_type'] ?? $fields['faculty_type'] ?? $faculty['role'] ?? $fields['role'] ?? $faculty['access_level'] ?? $fields['access_level'] ?? 'Faculty'));
+                $status = strtolower(trim((string) ($faculty['status'] ?? $fields['status'] ?? 'active')));
+                $facultyCode = trim((string) ($faculty['faculty_code'] ?? $fields['faculty_code'] ?? $faculty['identifier'] ?? $faculty['employee_number'] ?? $fields['employee_number'] ?? $faculty['employee_no'] ?? $fields['employee_no'] ?? ''));
                 $employeeNumber = $facultyCode;
-                $adminUuid = $this->firstFilledValue([
-                    $faculty['faculty_uuid'] ?? null,
-                    $faculty['admin_uuid'] ?? null,
-                    $faculty['idp_user_id'] ?? null,
-                    $faculty['user_uuid'] ?? null,
-                    $faculty['uuid'] ?? null,
-                    $faculty['student_id'] ?? null,
-                    data_get($profile, 'faculty_uuid'),
-                    data_get($profile, 'admin_uuid'),
-                    data_get($profile, 'idp_user_id'),
-                    data_get($profile, 'user_uuid'),
-                    data_get($profile, 'uuid'),
-                    data_get($profile, 'student_id'),
-                    $facultyNumericId,
-                ], fn ($value) => $this->isUuid((string) $value));
+                $adminUuid = $facultySyncService->resolveFacultyUuid($faculty);
                 $recordId = $employeeNumber !== '' ? $employeeNumber : ($adminUuid ?: ($email !== '' ? $email : 'faculty'));
 
                 if (in_array($status, ['1', 'true', 'active', 'enabled'], true)) {
@@ -1261,11 +1277,13 @@ class AdminUserController extends Controller
                     'avatar_letter' => strtoupper(substr($name !== '' ? $name : ($email ?: 'F'), 0, 1)),
                     'can_edit' => false,
                     'can_onboard' => true,
+                    'is_local_user' => false,
                     'is_external' => true,
                     'meta' => [
-                        'faculty_id' => $faculty['faculty_id'] ?? null,
+                        'faculty_id' => $faculty['faculty_id'] ?? $fields['faculty_id'] ?? null,
                         'faculty_code' => $employeeNumber !== '' ? $employeeNumber : null,
-                        'faculty_uuid' => $faculty['faculty_uuid'] ?? data_get($profile, 'faculty_uuid'),
+                        'faculty_uuid' => $faculty['faculty_uuid'] ?? $fields['faculty_uuid'] ?? data_get($profile, 'faculty_uuid'),
+                        'idp_user_id' => $faculty['idp_user_id'] ?? $fields['idp_user_id'] ?? data_get($profile, 'idp_user_id'),
                         'employee_number' => $employeeNumber !== '' ? $employeeNumber : null,
                         'admin_uuid' => $adminUuid,
                         'faculty_type' => $faculty['faculty_type'] ?? null,

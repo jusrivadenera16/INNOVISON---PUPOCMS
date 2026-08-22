@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminAssistantController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminGlobalSearchController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\Auth\EmergencyAuthController;
@@ -284,6 +285,7 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::post('/assistant/intent', [AdminAssistantController::class, 'handle'])
             ->middleware('assistant.schedule')
             ->name('assistant.intent');
+        Route::get('/admin/global-search', [AdminGlobalSearchController::class, 'search'])->name('admin.global-search');
 
         Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
         Route::get('/admin/appointments', [AdminController::class, 'appointments'])->middleware('module.permission:appointments.view')->name('admin.appointments');
@@ -350,7 +352,9 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::middleware('role:superadmin')->group(function () {
             Route::get('/admin/user-management', [AdminUserController::class, 'index'])->name('admin.user-management');
             Route::get('/admin/user-management/account-access', [AdminUserController::class, 'accountAccess'])->name('admin.user-management.account-access');
+            Route::get('/admin/user-management/account-access/lookup', [AdminUserController::class, 'accountAccessLookup'])->name('admin.user-management.account-access.lookup');
             Route::get('/admin/user-management/admin-hub', [AdminUserController::class, 'adminHub'])->name('admin.user-management.admin-hub');
+            Route::get('/admin/user-management/admin-hub/lookup', [AdminUserController::class, 'adminHubLookup'])->name('admin.user-management.admin-hub.lookup');
             Route::post('/admin/user-management/from-lookup', [AdminUserController::class, 'storeFromLookup'])->name('admin.user-management.store-from-lookup');
             Route::put('/admin/user-management/{user}', [AdminUserController::class, 'update'])->name('admin.user-management.update');
             Route::delete('/admin/user-management/{user}/account', [AdminUserController::class, 'deleteAccount'])->name('admin.user-management.delete-account');
