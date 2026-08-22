@@ -95,22 +95,27 @@ class FacultySyncService
     public function resolveFacultyUuid(array $faculty): ?string
     {
         $profile = is_array($faculty['profile'] ?? null) ? $faculty['profile'] : [];
+        $fields = is_array($faculty['fields'] ?? null) ? $faculty['fields'] : [];
 
         foreach ([
             $faculty['faculty_uuid'] ?? null,
-            $faculty['faculty_id'] ?? null,
             $faculty['admin_uuid'] ?? null,
             $faculty['idp_user_id'] ?? null,
             $faculty['user_uuid'] ?? null,
             $faculty['uuid'] ?? null,
             $faculty['student_id'] ?? null,
             $profile['faculty_uuid'] ?? null,
-            $profile['faculty_id'] ?? null,
             $profile['admin_uuid'] ?? null,
             $profile['idp_user_id'] ?? null,
             $profile['user_uuid'] ?? null,
             $profile['uuid'] ?? null,
             $profile['student_id'] ?? null,
+            $fields['idp_user_id'] ?? null,
+            $fields['faculty_uuid'] ?? null,
+            $fields['admin_uuid'] ?? null,
+            $fields['user_uuid'] ?? null,
+            $fields['uuid'] ?? null,
+            $fields['sub'] ?? null,
         ] as $candidate) {
             $candidate = trim((string) $candidate);
 

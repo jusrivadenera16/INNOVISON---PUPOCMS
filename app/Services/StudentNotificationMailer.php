@@ -8,9 +8,12 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 
 class StudentNotificationMailer
 {
+    private ?bool $globalEmailNotificationsEnabled = null;
+
     /**
      * Sends a transactional email for a student-facing portal notification.
      * Local testing may safely redirect delivery to one configured mailbox.
@@ -27,6 +30,10 @@ class StudentNotificationMailer
         array $statusCard = []
     ): array {
         if (!config('services.student_notifications.enabled', false)) {
+            return ['status' => 'skipped'];
+        }
+
+        if (!$this->globalEmailNotificationsEnabled()) {
             return ['status' => 'skipped'];
         }
 
@@ -92,6 +99,13 @@ class StudentNotificationMailer
                 'action_label' => 'Open Health Information Form',
                 'action_url' => route('health.form'),
             ],
+            'pending_compliance_reminder' => [
+                'subject' => 'Reminder: Complete your pending health record requirements',
+                'title' => 'Your health record still needs attention',
+                'message' => 'This is a reminder to complete the pending requirements requested by the PUP Taguig Clinic.',
+                'action_label' => 'Open Health Record',
+                'action_url' => url('/student/account?view=health-record'),
+            ],
             default => [
                 'subject' => 'Action needed: Update your PUP Taguig Clinic health record',
                 'title' => 'Health record update requested',
@@ -156,7 +170,7 @@ class StudentNotificationMailer
             ],
             'reminder' => [
                 'subject' => 'Appointment reminder - PUP Taguig Clinic',
-                'title' => 'Your appointment is in about 15 minutes',
+                'title' => 'Your appointment is coming up',
                 'message' => "Reminder: Your {$service} appointment is scheduled for {$schedule}.",
                 'action_label' => 'View Appointment Details',
                 'action_url' => url('/student/history'),
@@ -201,6 +215,21 @@ class StudentNotificationMailer
         }
 
         return $this->isValidEmail($recipient) ? $recipient : null;
+    }
+
+    protected function globalEmailNotificationsEnabled(): bool
+    {
+        if ($this->globalEmailNotificationsEnabled !== null) {
+            return $this->globalEmailNotificationsEnabled;
+        }
+
+        if (!Schema::hasTable('settings')) {
+            return $this->globalEmailNotificationsEnabled = true;
+        }
+
+        return $this->globalEmailNotificationsEnabled = app(ClinicWorkflowService::class)
+            ->settings()
+            ->email_notifications !== false;
     }
 
     private function isValidEmail(string $email): bool

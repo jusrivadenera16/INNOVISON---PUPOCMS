@@ -129,8 +129,10 @@ class SyncAdminHubFacultyUuids extends Command
             }
 
             $profile = is_array($faculty['profile'] ?? null) ? $faculty['profile'] : [];
+            $fields = is_array($faculty['fields'] ?? null) ? $faculty['fields'] : [];
             foreach ($this->uniqueNormalizedValues([
                 $faculty['email'] ?? null,
+                $fields['email'] ?? null,
                 $profile['email'] ?? null,
             ]) as $email) {
                 $this->addIndexCandidate($indexes['email'], $email, $uuid);
@@ -138,8 +140,12 @@ class SyncAdminHubFacultyUuids extends Command
 
             foreach ($this->uniqueNormalizedValues([
                 $faculty['faculty_code'] ?? null,
+                $faculty['identifier'] ?? null,
                 $faculty['employee_number'] ?? null,
                 $faculty['employee_no'] ?? null,
+                $fields['faculty_code'] ?? null,
+                $fields['employee_number'] ?? null,
+                $fields['employee_no'] ?? null,
                 $profile['faculty_code'] ?? null,
                 $profile['employee_number'] ?? null,
                 $profile['employee_no'] ?? null,

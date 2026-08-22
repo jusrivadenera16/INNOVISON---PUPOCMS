@@ -23,16 +23,51 @@
         box-shadow: 0 8px 22px rgba(15, 23, 42, .05);
     }
 
-    .personal-settings-page .settings-section-title { font-size: 26px; }
-    .personal-settings-page .settings-section-title > svg {
-        width: 44px;
-        height: 44px;
-        padding: 10px;
-        border-radius: 12px;
+    .personal-settings-page .settings-section-hero > div:first-child {
+        display: grid;
+        grid-template-columns: 54px minmax(0, 1fr);
+        column-gap: 14px;
+        align-items: center;
+        min-width: 0;
+    }
+    .personal-settings-page .settings-section-title {
+        display: contents;
+        font-size: 26px;
+    }
+    .personal-settings-page .personal-title-icon {
+        grid-column: 1;
+        grid-row: 1 / span 2;
+        display: grid;
+        place-items: center;
+        width: 54px;
+        height: 54px;
+        border-radius: 14px;
+        background: #fff1f2;
+        color: #b91c1c;
+    }
+    .personal-settings-page .personal-title-icon svg {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        color: currentColor;
+    }
+    .personal-settings-page .settings-section-title > span:not(.personal-title-icon) {
+        grid-column: 2;
+        grid-row: 1;
+        color: var(--personal-text);
+        font-size: 26px;
+        font-weight: 900;
+        line-height: 1.1;
     }
     .personal-settings-page .settings-section-hero p {
-        margin-top: 4px;
-        font-size: 12px;
+        grid-column: 2;
+        grid-row: 2;
+        margin: 6px 0 0;
+        color: var(--personal-muted);
+        font-size: 13px;
+        font-weight: 700;
         line-height: 1.45;
     }
     .personal-settings-page .settings-back-link {
@@ -107,12 +142,13 @@
 
     .personal-edit-button {
         flex: 0 0 auto;
+        width: 34px;
+        height: 34px;
         min-height: 34px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 7px;
-        padding: 0 13px;
+        padding: 0;
         border: 1px solid rgba(127, 0, 16, .42);
         border-radius: 7px;
         background: #fff;
@@ -127,9 +163,8 @@
         content: "";
         position: absolute;
         inset: 0;
-        background: #facc15;
-        transform: translateX(-102%);
-        transition: transform .46s ease;
+        background: rgba(255, 255, 255, .5);
+        transform: translateX(110%);
         z-index: 0;
     }
     .personal-edit-button > * { position: relative; z-index: 1; }
@@ -137,11 +172,19 @@
     .personal-edit-button:hover,
     .personal-edit-button:focus-visible {
         border-color: #facc15;
+        background: #facc15;
         color: var(--personal-maroon);
         outline: none;
     }
     .personal-edit-button:hover::before,
-    .personal-edit-button:focus-visible::before { transform: translateX(0); }
+    .personal-edit-button:focus-visible::before {
+        animation: personalEditSweep .7s ease both;
+    }
+
+    @keyframes personalEditSweep {
+        from { transform: translateX(110%); }
+        to { transform: translateX(-110%); }
+    }
 
     .personal-info-section { overflow: hidden; }
     .personal-section-heading {
@@ -206,8 +249,8 @@
 
     .personal-field label {
         color: var(--personal-text);
-        font-size: 11px;
-        font-weight: 700;
+        font-size: 12px;
+        font-weight: 900;
     }
     .personal-field input {
         width: 100%;
@@ -218,7 +261,7 @@
         background: transparent;
         color: var(--personal-text);
         font: inherit;
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 600;
     }
     .personal-field input:disabled {
@@ -271,16 +314,39 @@
         background: transparent;
         padding: 0;
         box-shadow: none;
+        color: #64748b;
+        opacity: .58;
         cursor: default;
     }
     .personal-settings-page .settings-save-btn {
         background-color: #7f0010 !important;
         color: #ffffff !important;
     }
+    .personal-settings-page .settings-save-btn::before {
+        background: rgba(255, 248, 205, .72);
+        transform: translateX(-110%);
+    }
     .personal-settings-page .settings-save-btn:hover,
     .personal-settings-page .settings-save-btn:focus-visible {
-        background-color: #7f0010 !important;
+        background-color: #facc15 !important;
         color: #7f0010 !important;
+        outline: none;
+    }
+    .personal-settings-page .settings-save-btn:hover::before,
+    .personal-settings-page .settings-save-btn:focus-visible::before {
+        animation: personalSaveSweep .62s ease both;
+    }
+
+    @keyframes personalSaveSweep {
+        from { transform: translateX(-110%); }
+        to { transform: translateX(110%); }
+    }
+
+    .personal-settings-page .settings-cancel-btn::before { display: none; }
+    .personal-settings-page .settings-cancel-btn:hover,
+    .personal-settings-page .settings-cancel-btn:focus-visible {
+        background-color: #4b5563 !important;
+        color: #ffffff !important;
         outline: none;
     }
 
@@ -317,8 +383,19 @@
         background: rgba(127, 0, 16, .35);
         color: #fecdd3;
     }
+    html[data-theme="dark"] .personal-settings-page .settings-section-title > span {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .personal-settings-page .personal-title-icon {
+        background: rgba(127, 0, 16, .35);
+        color: #fecdd3;
+    }
     html[data-theme="dark"] .personal-settings-page .personal-field,
     html[data-theme="dark"] .personal-settings-page .personal-fields-grid { border-color: rgba(148, 163, 184, .16); }
+    html[data-theme="dark"] .personal-settings-page .personal-settings-form.is-editing .personal-field input[readonly] {
+        color: #94a3b8;
+        opacity: .62;
+    }
     html[data-theme="dark"] .personal-settings-page .personal-edit-button {
         background: rgba(15, 23, 42, .7);
         color: #fecdd3;
@@ -395,7 +472,7 @@
 
     <section class="settings-section-hero">
         <div>
-            <h1 class="settings-section-title"><x-outline-icon name="user-circle" />Personal Information</h1>
+            <h1 class="settings-section-title"><span class="personal-title-icon"><x-outline-icon name="user-circle" /></span><span>Personal Information</span></h1>
             <p>View and manage your personal details and account credentials used in the clinic management workspace.</p>
         </div>
         <a href="{{ route('admin.settings') }}" class="settings-back-link"><x-outline-icon name="chevron-right" /> Back to Settings</a>
@@ -419,9 +496,8 @@
                     <span>{{ $cmsProfile['email'] ?? $admin->email ?? '—' }}</span>
                 </div>
             </div>
-            <button type="button" class="personal-edit-button" data-edit-trigger data-edit-target="personalSettingsForm">
+            <button type="button" class="personal-edit-button" data-edit-trigger data-edit-target="personalSettingsForm" aria-label="Edit information" title="Edit information">
                 <x-outline-icon name="pencil-square" />
-                <span>Edit Information</span>
             </button>
         </section>
 

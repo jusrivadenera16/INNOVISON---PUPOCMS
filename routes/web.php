@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminAssistantController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminGlobalSearchController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\Auth\EmergencyAuthController;
@@ -284,6 +285,7 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
         Route::post('/assistant/intent', [AdminAssistantController::class, 'handle'])
             ->middleware('assistant.schedule')
             ->name('assistant.intent');
+        Route::get('/admin/global-search', [AdminGlobalSearchController::class, 'search'])->name('admin.global-search');
 
         Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
         Route::get('/admin/appointments', [AdminController::class, 'appointments'])->middleware('module.permission:appointments.view')->name('admin.appointments');

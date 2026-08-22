@@ -15,6 +15,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('health-notifications:send-appointment-reminders')
             ->everyMinute()
             ->withoutOverlapping();
+
+        $schedule->command('health-notifications:send-pending-compliance-reminders')
+            ->dailyAt('08:00')
+            ->withoutOverlapping();
     }
 
     /**

@@ -88,12 +88,12 @@ class SyncAdminHubFacultyUuidsTest extends TestCase
         ]);
     }
 
-    public function test_it_backfills_a_missing_admin_hub_uuid_from_a_uuid_shaped_faculty_id(): void
+    public function test_it_backfills_a_missing_admin_hub_uuid_from_nested_faculty_idp_user_id(): void
     {
         $adminHubId = DB::table('admin_hub')->insertGetId([
-            'employee_number' => 'FA-0002',
-            'name' => 'Faculty ID Designee',
-            'email' => 'faculty-id.designee@example.test',
+            'employee_number' => 'FA0010TG2023',
+            'name' => 'Rhyan Molinar',
+            'email' => null,
             'role' => 'admin_designee',
             'status' => 'active',
             'created_at' => now(),
@@ -104,9 +104,13 @@ class SyncAdminHubFacultyUuidsTest extends TestCase
         Http::fake([
             'https://faculty.example.test/api/faculties' => Http::response([
                 'faculties' => [[
-                    'faculty_id' => $facultyUuid,
-                    'faculty_code' => 'FA-0002',
-                    'email' => 'faculty-id.designee@example.test',
+                    'identifier' => 'FA0010TG2023',
+                    'fields' => [
+                        'faculty_id' => '47',
+                        'idp_user_id' => $facultyUuid,
+                        'faculty_code' => 'FA0010TG2023',
+                        'email' => 'rvmolinar@pup.edu.ph',
+                    ],
                 ]],
             ]),
         ]);

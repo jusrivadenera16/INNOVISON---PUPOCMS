@@ -3017,6 +3017,207 @@
             stroke-width: 1.8;
         }
 
+        .global-search-form {
+            position: relative;
+            flex: 0 0 auto;
+            z-index: 1250;
+        }
+
+        /* From Uiverse.io by Yaya12085 */
+        #globalSearchForm .input-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            isolation: isolate;
+        }
+
+        #globalSearchForm .input {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            border: none;
+            outline: none;
+            padding: 18px 16px;
+            background-color: transparent;
+            cursor: pointer;
+            transition: all .5s ease-in-out;
+        }
+
+        #globalSearchForm .input::placeholder {
+            color: transparent;
+        }
+
+        #globalSearchForm .input:focus::placeholder {
+            color: rgb(131, 128, 128);
+        }
+
+        #globalSearchForm .input:focus,
+        #globalSearchForm .input:not(:placeholder-shown) {
+            background-color: #fff;
+            border: 1px solid rgb(91, 107, 255);
+            width: 290px;
+            cursor: text;
+            padding: 18px 16px 18px 45px;
+            z-index: 1;
+        }
+
+        #globalSearchForm .icon {
+            position: absolute;
+            left: 0;
+            height: 45px;
+            width: 45px;
+            background-color: #fff;
+            border-radius: 99px;
+            z-index: -1;
+            fill: #70131b;
+            border: 1px solid rgb(91, 107, 255);
+        }
+
+        #globalSearchForm .input:focus + .icon,
+        #globalSearchForm .input:not(:placeholder-shown) + .icon {
+            z-index: 2;
+            background-color: #fff;
+            border: 1px solid rgb(91, 107, 255);
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .global-search-results {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 0;
+            display: none;
+            width: 290px;
+            max-height: min(520px, calc(100vh - 120px));
+            overflow-y: auto;
+            padding: 8px;
+            border: 1px solid rgba(112, 19, 27, 0.18);
+            border-radius: 12px;
+            background: #fffdf6;
+            box-shadow: 0 22px 46px rgba(46, 13, 20, 0.24);
+        }
+
+        .global-search-results.is-open {
+            display: block;
+            animation: globalSearchResultsIn 0.18s ease-out;
+        }
+
+        @keyframes globalSearchResultsIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .global-search-empty,
+        .global-search-loading {
+            padding: 13px 16px;
+            color: #70565b;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .global-search-group + .global-search-group {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(112, 19, 27, 0.1);
+        }
+
+        .global-search-group-label {
+            display: block;
+            padding: 6px 9px;
+            color: #8b1020;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .global-search-result {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            color: #2c1720;
+            text-decoration: none;
+            transition: background 0.18s ease, color 0.18s ease;
+        }
+
+        .global-search-result:hover,
+        .global-search-result:focus-visible {
+            outline: 0;
+            background: #fff1aa;
+            color: #70131b;
+        }
+
+        .global-search-result-copy {
+            min-width: 0;
+        }
+
+        .global-search-result-title,
+        .global-search-result-description {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .global-search-result-title {
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .global-search-result-description {
+            margin-top: 3px;
+            color: #745a60;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .global-search-result-type {
+            padding: 4px 6px;
+            border-radius: 5px;
+            background: #fbe9ec;
+            color: #8b1020;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        html[data-theme="dark"] .global-search-results {
+            border-color: rgba(250, 204, 21, 0.36);
+            background: #1e1720;
+            box-shadow: 0 22px 46px rgba(0, 0, 0, 0.42);
+        }
+
+        html[data-theme="dark"] .global-search-empty,
+        html[data-theme="dark"] .global-search-loading,
+        html[data-theme="dark"] .global-search-result-description {
+            color: #d8bcc3;
+        }
+
+        html[data-theme="dark"] .global-search-group + .global-search-group {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        html[data-theme="dark"] .global-search-result {
+            color: #fff7fa;
+        }
+
+        html[data-theme="dark"] .global-search-result:hover,
+        html[data-theme="dark"] .global-search-result:focus-visible {
+            background: rgba(250, 204, 21, 0.16);
+            color: #fff7fa;
+        }
+
         .theme-toggle-admin {
             box-shadow: none;
         }
@@ -3909,6 +4110,7 @@
             .assistant-launch {
                 display: none;
             }
+
         }
 
         @media (max-width: 620px) {
@@ -4863,6 +5065,20 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         <button type="button" class="sidebar-toggle" aria-label="Toggle sidebar" onclick="toggleSidebar()">
             <x-outline-icon name="bars-3" />
         </button>
+        <form class="global-search-form" id="globalSearchForm" role="search" novalidate>
+            <div class="input-container">
+                <input type="text" name="text" class="input" placeholder="Search something..." data-voice-skip aria-label="Global search">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="" viewBox="0 0 24 24" class="icon">
+                    <g stroke-width="0" id="SVGRepo_bgCarrier"></g>
+                    <g stroke-linejoin="round" stroke-linecap="round" id="SVGRepo_tracerCarrier"></g>
+                    <g id="SVGRepo_iconCarrier">
+                        <rect fill="white" height="24" width="24"></rect>
+                        <path fill="" d="M2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12ZM9 11.5C9 10.1193 10.1193 9 11.5 9C12.8807 9 14 10.1193 14 11.5C14 12.8807 12.8807 14 11.5 14C10.1193 14 9 12.8807 9 11.5ZM11.5 7C9.01472 7 7 9.01472 7 11.5C7 13.9853 9.01472 16 11.5 16C12.3805 16 13.202 15.7471 13.8957 15.31L15.2929 16.7071C15.6834 17.0976 16.3166 17.0976 16.7071 16.7071C17.0976 16.3166 17.0976 15.6834 16.7071 15.2929L15.31 13.8957C15.7471 13.202 16 12.3805 16 11.5C16 9.01472 13.9853 7 11.5 7Z" clip-rule="evenodd" fill-rule="evenodd"></path>
+                    </g>
+                </svg>
+            </div>
+            <div id="globalSearchResults" class="global-search-results" role="status" aria-live="polite"></div>
+        </form>
         <button type="button" class="assistant-launch" id="assistantLaunchBtn" onclick="toggleAssistantPanel()">
             <x-outline-icon name="sparkles" />
             <span>AI Assistant</span>
@@ -5370,6 +5586,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
 <script>
     const assistantEndpoint = @json($assistantEndpoint);
+    const globalSearchEndpoint = @json(route('admin.global-search'));
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
     function toggleSidebar() {
@@ -6384,6 +6601,192 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         panel.classList.remove('open');
     }
 
+    function initGlobalSearch() {
+        const form = document.getElementById('globalSearchForm');
+        const input = form?.querySelector('.input');
+        const results = document.getElementById('globalSearchResults');
+        if (!form || !input || !results || form.dataset.globalSearchBound === '1') {
+            return;
+        }
+
+        form.dataset.globalSearchBound = '1';
+        let searchTimer = null;
+        let activeRequest = null;
+
+        const typeLabels = {
+            page: 'Page',
+            appointment: 'Appointment',
+            health: 'Health record',
+            inventory: 'Inventory',
+            announcement: 'Announcement',
+        };
+
+        const setExpanded = function (isExpanded) {
+            results.classList.toggle('is-open', isExpanded);
+            input.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        };
+
+        const renderMessage = function (message, className = 'global-search-empty') {
+            results.textContent = '';
+            const messageElement = document.createElement('div');
+            messageElement.className = className;
+            messageElement.textContent = message;
+            results.appendChild(messageElement);
+            setExpanded(true);
+        };
+
+        const renderResults = function (groups) {
+            results.textContent = '';
+            if (!Array.isArray(groups) || groups.length === 0) {
+                renderMessage('No accessible results found.');
+                return;
+            }
+
+            groups.forEach(function (group) {
+                const groupElement = document.createElement('section');
+                groupElement.className = 'global-search-group';
+
+                const label = document.createElement('span');
+                label.className = 'global-search-group-label';
+                label.textContent = group.label || 'Results';
+                groupElement.appendChild(label);
+
+                (group.results || []).forEach(function (result) {
+                    const link = document.createElement('a');
+                    link.className = 'global-search-result';
+                    link.href = result.url || '#';
+
+                    const copy = document.createElement('span');
+                    copy.className = 'global-search-result-copy';
+
+                    const title = document.createElement('span');
+                    title.className = 'global-search-result-title';
+                    title.textContent = result.title || 'Result';
+                    copy.appendChild(title);
+
+                    if (result.description) {
+                        const description = document.createElement('span');
+                        description.className = 'global-search-result-description';
+                        description.textContent = result.description;
+                        copy.appendChild(description);
+                    }
+
+                    const type = document.createElement('span');
+                    type.className = 'global-search-result-type';
+                    type.textContent = typeLabels[result.type] || 'Result';
+
+                    link.append(copy, type);
+                    groupElement.appendChild(link);
+                });
+
+                results.appendChild(groupElement);
+            });
+
+            setExpanded(true);
+        };
+
+        const search = function () {
+            const query = input.value.trim();
+            form.classList.toggle('has-query', query !== '');
+
+            if (query.length < 2) {
+                if (activeRequest) {
+                    activeRequest.abort();
+                    activeRequest = null;
+                }
+                if (query === '') {
+                    results.textContent = '';
+                    setExpanded(false);
+                    return;
+                }
+
+                renderMessage('Enter at least 2 characters.');
+                return;
+            }
+
+            if (activeRequest) {
+                activeRequest.abort();
+            }
+
+            activeRequest = new AbortController();
+            renderMessage('Searching...', 'global-search-loading');
+
+            const url = new URL(globalSearchEndpoint, window.location.origin);
+            url.searchParams.set('q', query);
+
+            fetch(url.toString(), {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+                signal: activeRequest.signal,
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Unable to search right now.');
+                    }
+
+                    return response.json();
+                })
+                .then(function (payload) {
+                    if (input.value.trim() !== query) {
+                        return;
+                    }
+
+                    renderResults(payload.groups || []);
+                })
+                .catch(function (error) {
+                    if (error.name !== 'AbortError') {
+                        renderMessage('Unable to search right now.');
+                    }
+                })
+                .finally(function () {
+                    activeRequest = null;
+                });
+        };
+
+        input.addEventListener('focus', function () {
+            search();
+        });
+
+        input.addEventListener('input', function () {
+            window.clearTimeout(searchTimer);
+            searchTimer = window.setTimeout(search, 220);
+        });
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const firstResult = results.querySelector('.global-search-result');
+            if (firstResult) {
+                firstResult.focus();
+            } else {
+                search();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+                event.preventDefault();
+                input.focus();
+                return;
+            }
+
+            if (event.key === 'Escape' && document.activeElement === input) {
+                input.value = '';
+                form.classList.remove('has-query');
+                setExpanded(false);
+                input.blur();
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!form.contains(event.target)) {
+                setExpanded(false);
+            }
+        });
+    }
+
     function appendAssistantMessage(role, text) {
         const messages = document.getElementById('assistantMessages');
         if (!messages) return;
@@ -6585,6 +6988,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
     document.addEventListener('DOMContentLoaded', function () {
         initAssistantUi();
+        initGlobalSearch();
         initThemeToggle();
         initSidebarScrollIndicator();
         initSidebarDropdowns();

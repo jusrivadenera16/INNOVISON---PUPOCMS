@@ -1237,16 +1237,17 @@ class AdminUserController extends Controller
             ->filter(fn ($faculty) => is_array($faculty))
             ->map(function (array $faculty) use ($facultySyncService) {
                 $profile = is_array($faculty['profile'] ?? null) ? $faculty['profile'] : [];
+                $fields = is_array($faculty['fields'] ?? null) ? $faculty['fields'] : [];
                 $name = trim((string) ($faculty['name'] ?? trim(implode(' ', array_filter([
-                    $faculty['first_name'] ?? '',
-                    $faculty['middle_name'] ?? '',
-                    $faculty['last_name'] ?? '',
-                    $faculty['suffix_name'] ?? '',
+                    $faculty['first_name'] ?? $fields['first_name'] ?? '',
+                    $faculty['middle_name'] ?? $fields['middle_name'] ?? '',
+                    $faculty['last_name'] ?? $fields['last_name'] ?? '',
+                    $faculty['suffix_name'] ?? $fields['suffix_name'] ?? '',
                 ])))));
-                $email = trim((string) ($faculty['email'] ?? ''));
-                $role = trim((string) ($faculty['faculty_type'] ?? $faculty['role'] ?? $faculty['access_level'] ?? 'Faculty'));
-                $status = strtolower(trim((string) ($faculty['status'] ?? 'active')));
-                $facultyCode = trim((string) ($faculty['faculty_code'] ?? $faculty['employee_number'] ?? $faculty['employee_no'] ?? ''));
+                $email = trim((string) ($faculty['email'] ?? $fields['email'] ?? ''));
+                $role = trim((string) ($faculty['faculty_type'] ?? $fields['faculty_type'] ?? $faculty['role'] ?? $fields['role'] ?? $faculty['access_level'] ?? $fields['access_level'] ?? 'Faculty'));
+                $status = strtolower(trim((string) ($faculty['status'] ?? $fields['status'] ?? 'active')));
+                $facultyCode = trim((string) ($faculty['faculty_code'] ?? $fields['faculty_code'] ?? $faculty['identifier'] ?? $faculty['employee_number'] ?? $fields['employee_number'] ?? $faculty['employee_no'] ?? $fields['employee_no'] ?? ''));
                 $employeeNumber = $facultyCode;
                 $adminUuid = $facultySyncService->resolveFacultyUuid($faculty);
                 $recordId = $employeeNumber !== '' ? $employeeNumber : ($adminUuid ?: ($email !== '' ? $email : 'faculty'));
@@ -1279,9 +1280,10 @@ class AdminUserController extends Controller
                     'is_local_user' => false,
                     'is_external' => true,
                     'meta' => [
-                        'faculty_id' => $faculty['faculty_id'] ?? null,
+                        'faculty_id' => $faculty['faculty_id'] ?? $fields['faculty_id'] ?? null,
                         'faculty_code' => $employeeNumber !== '' ? $employeeNumber : null,
-                        'faculty_uuid' => $faculty['faculty_uuid'] ?? data_get($profile, 'faculty_uuid'),
+                        'faculty_uuid' => $faculty['faculty_uuid'] ?? $fields['faculty_uuid'] ?? data_get($profile, 'faculty_uuid'),
+                        'idp_user_id' => $faculty['idp_user_id'] ?? $fields['idp_user_id'] ?? data_get($profile, 'idp_user_id'),
                         'employee_number' => $employeeNumber !== '' ? $employeeNumber : null,
                         'admin_uuid' => $adminUuid,
                         'faculty_type' => $faculty['faculty_type'] ?? null,

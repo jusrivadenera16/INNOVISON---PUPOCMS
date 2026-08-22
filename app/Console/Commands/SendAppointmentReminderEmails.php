@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Appointment;
+use App\Services\ClinicWorkflowService;
 use App\Services\StudentNotificationMailer;
 use Illuminate\Console\Command;
 
@@ -10,9 +11,9 @@ class SendAppointmentReminderEmails extends Command
 {
     protected $signature = 'health-notifications:send-appointment-reminders';
 
-    protected $description = 'Send one appointment reminder email about 15 minutes before an approved consultation.';
+    protected $description = 'Send appointment reminder emails using the configured reminder timing.';
 
-    public function handle(StudentNotificationMailer $mailer): int
+    public function handle(StudentNotificationMailer $mailer, ClinicWorkflowService $workflow): int
     {
         if (!config('services.student_notifications.enabled', false)) {
             $this->info('Student notification emails are disabled.');
@@ -20,7 +21,20 @@ class SendAppointmentReminderEmails extends Command
             return self::SUCCESS;
         }
 
-        $reminderMinutes = max(1, (int) config('services.student_notifications.appointment_reminder_minutes', 15));
+        if ($workflow->settings()->email_notifications === false) {
+            $this->info('Email notifications are disabled in System Preferences.');
+
+            return self::SUCCESS;
+        }
+
+        $reminderHours = max(0, (int) ($workflow->settings()->appointment_reminder_hours ?? 0));
+        if ($reminderHours === 0) {
+            $this->info('Appointment reminder emails are disabled.');
+
+            return self::SUCCESS;
+        }
+
+        $reminderMinutes = $reminderHours * 60;
         $windowStart = now()->addMinutes($reminderMinutes)->startOfMinute();
         $windowEnd = $windowStart->copy()->addMinute()->endOfMinute();
 
