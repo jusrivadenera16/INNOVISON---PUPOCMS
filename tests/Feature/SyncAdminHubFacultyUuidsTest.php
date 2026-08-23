@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Services\FacultySyncService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -122,5 +123,30 @@ class SyncAdminHubFacultyUuidsTest extends TestCase
             'id' => $adminHubId,
             'admin_uuid' => $facultyUuid,
         ]);
+    }
+
+    public function test_it_resolves_a_nested_idp_user_id_by_exact_faculty_identity(): void
+    {
+        $facultyUuid = '4f9ac4c0-61f5-43f4-b9b4-9a89482091a7';
+
+        Http::fake([
+            'https://faculty.example.test/api/faculties*' => Http::response([
+                'faculties' => [[
+                    'identifier' => 'FA0010TG2023',
+                    'fields' => [
+                        'faculty_code' => 'FA0010TG2023',
+                        'idp_user_id' => $facultyUuid,
+                        'email' => 'rvmolinar@pup.edu.ph',
+                    ],
+                ]],
+            ]),
+        ]);
+
+        $resolvedUuid = app(FacultySyncService::class)->resolveFacultyUuidByIdentity(
+            'rvmolinar@pup.edu.ph',
+            'FA0010TG2023'
+        );
+
+        $this->assertSame($facultyUuid, $resolvedUuid);
     }
 }

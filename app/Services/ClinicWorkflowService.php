@@ -25,9 +25,34 @@ class ClinicWorkflowService
             'student_assistant_close_time' => '20:00',
             'appointment_reminder_hours' => 24,
             'pending_compliance_reminder_days' => 7,
+            'pending_compliance_reminder_max_count' => 3,
+            'notification_quiet_hours_enabled' => false,
+            'notification_quiet_hours_start' => '20:00',
+            'notification_quiet_hours_end' => '07:00',
         ]);
 
         return $this->settings;
+    }
+
+    public function notificationsAreQuiet(?Carbon $at = null): bool
+    {
+        $settings = $this->settings();
+        if (!$settings->notification_quiet_hours_enabled) {
+            return false;
+        }
+
+        $at = ($at ?: now(config('app.timezone')))->copy();
+        $current = ((int) $at->format('H') * 60) + (int) $at->format('i');
+        $start = $this->timeToMinutes(substr((string) ($settings->notification_quiet_hours_start ?: '20:00'), 0, 5));
+        $end = $this->timeToMinutes(substr((string) ($settings->notification_quiet_hours_end ?: '07:00'), 0, 5));
+
+        if ($start === $end) {
+            return true;
+        }
+
+        return $start < $end
+            ? $current >= $start && $current < $end
+            : $current >= $start || $current < $end;
     }
 
     public function studentAssistantWorkspaceAvailable(?Carbon $at = null): bool

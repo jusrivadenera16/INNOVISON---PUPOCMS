@@ -127,6 +127,90 @@ class FacultySyncService
         return null;
     }
 
+    public function resolveFacultyUuidByIdentity(
+        string $email = '',
+        string $employeeNumber = '',
+        ?int $timeoutOverride = null
+    ): ?string {
+        $email = $this->normalize($email);
+        $employeeNumber = $this->normalize($employeeNumber);
+        $searchTerms = array_values(array_unique(array_filter([
+            $employeeNumber,
+            $email,
+        ])));
+
+        foreach ($searchTerms as $searchTerm) {
+            $matches = [];
+
+            foreach ($this->fetchFaculties($searchTerm, $timeoutOverride) as $faculty) {
+                if (!is_array($faculty) || !$this->facultyMatchesIdentity($faculty, $email, $employeeNumber)) {
+                    continue;
+                }
+
+                $uuid = $this->resolveFacultyUuid($faculty);
+                if ($uuid !== null) {
+                    $matches[$uuid] = true;
+                }
+            }
+
+            $uuids = array_keys($matches);
+            if (count($uuids) === 1) {
+                return $uuids[0];
+            }
+
+            if (count($uuids) > 1) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    private function facultyMatchesIdentity(array $faculty, string $email, string $employeeNumber): bool
+    {
+        $profile = is_array($faculty['profile'] ?? null) ? $faculty['profile'] : [];
+        $fields = is_array($faculty['fields'] ?? null) ? $faculty['fields'] : [];
+
+        if ($email !== '' && in_array($email, $this->uniqueNormalizedValues([
+            $faculty['email'] ?? null,
+            $faculty['email_address'] ?? null,
+            $fields['email'] ?? null,
+            $fields['email_address'] ?? null,
+            $profile['email'] ?? null,
+            $profile['email_address'] ?? null,
+        ]), true)) {
+            return true;
+        }
+
+        return $employeeNumber !== '' && in_array($employeeNumber, $this->uniqueNormalizedValues([
+            $faculty['faculty_code'] ?? null,
+            $faculty['identifier'] ?? null,
+            $faculty['employee_number'] ?? null,
+            $faculty['employee_no'] ?? null,
+            $fields['faculty_code'] ?? null,
+            $fields['identifier'] ?? null,
+            $fields['employee_number'] ?? null,
+            $fields['employee_no'] ?? null,
+            $profile['faculty_code'] ?? null,
+            $profile['identifier'] ?? null,
+            $profile['employee_number'] ?? null,
+            $profile['employee_no'] ?? null,
+        ]), true);
+    }
+
+    private function uniqueNormalizedValues(array $values): array
+    {
+        return array_values(array_unique(array_filter(array_map(
+            fn ($value) => $this->normalize($value),
+            $values
+        ))));
+    }
+
+    private function normalize($value): string
+    {
+        return strtolower(trim((string) $value));
+    }
+
     private function extractFaculties($payload): array
     {
         if (!is_array($payload)) {

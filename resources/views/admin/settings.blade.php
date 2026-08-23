@@ -2324,6 +2324,10 @@
                 <input type="hidden" name="preferences_form" value="1">
                 <input type="hidden" name="email_notifications" value="{{ $settings->email_notifications !== false ? '1' : '0' }}">
                 <input type="hidden" name="pending_compliance_reminder_days" value="{{ (int) ($settings->pending_compliance_reminder_days ?? 7) }}">
+                <input type="hidden" name="pending_compliance_reminder_max_count" value="{{ (int) ($settings->pending_compliance_reminder_max_count ?? 3) }}">
+                <input type="hidden" name="notification_quiet_hours_enabled" value="{{ $settings->notification_quiet_hours_enabled ? '1' : '0' }}">
+                <input type="hidden" name="notification_quiet_hours_start" value="{{ substr((string) ($settings->notification_quiet_hours_start ?: '20:00'), 0, 5) }}">
+                <input type="hidden" name="notification_quiet_hours_end" value="{{ substr((string) ($settings->notification_quiet_hours_end ?: '07:00'), 0, 5) }}">
                 <div class="modal-body">
                     <div class="workflow-settings">
                         <section class="workflow-setting-group">

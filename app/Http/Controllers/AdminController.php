@@ -27,6 +27,7 @@ use App\Services\InventoryDataNormalizer;
 use App\Services\PuptasWebhookService;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Response; 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -315,6 +316,15 @@ class AdminController extends Controller
         }
 
         file_put_contents($path, $content);
+    }
+
+    private function clearConfigurationCacheAfterEnvironmentWrite(): void
+    {
+        try {
+            Artisan::call('config:clear');
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
     }
 
     private function formatEnvironmentValue(string $value): string
@@ -2638,6 +2648,10 @@ public function updateClearance(Request $request, $id)
         ? array_values(array_unique((array) $request->input('resubmission_required_documents', [])))
         : null;
     $record->resubmission_requested_at = $requestedStatus === 'Pending Resubmission' ? now() : null;
+    if ($requestedStatus === 'Pending Resubmission') {
+        $record->pending_compliance_reminder_sent_at = null;
+        $record->pending_compliance_reminder_count = 0;
+    }
     $record->resubmitted_at = $requestedStatus === 'Pending Resubmission' ? null : $record->resubmitted_at;
 
     if ($record->save()) {
@@ -2761,6 +2775,8 @@ public function updateClearance(Request $request, $id)
         $record->documents_valid = false;
         $record->resubmission_required_documents = $requestedDocuments;
         $record->resubmission_requested_at = now();
+        $record->pending_compliance_reminder_sent_at = null;
+        $record->pending_compliance_reminder_count = 0;
         $record->resubmitted_at = null;
 
         if ($request->boolean('clear_uploaded_documents')) {
@@ -2901,6 +2917,8 @@ public function updateClearance(Request $request, $id)
         $employeeProfile->documents_valid = false;
         $employeeProfile->resubmission_required_fields = $requestedDocuments;
         $employeeProfile->resubmission_requested_at = now();
+        $employeeProfile->pending_compliance_reminder_sent_at = null;
+        $employeeProfile->pending_compliance_reminder_count = 0;
         $employeeProfile->resubmitted_at = null;
         $employeeProfile->verified_at = $wasAlreadyIssued ? $employeeProfile->verified_at : null;
         $employeeProfile->approved_by_user_id = $wasAlreadyIssued ? $employeeProfile->approved_by_user_id : null;
@@ -4274,6 +4292,9 @@ public function deleteItem($id)
             $request->validate([
                 'appointment_reminder_hours' => ['required', 'integer', 'in:0,1,3,24,48'],
                 'pending_compliance_reminder_days' => ['required', 'integer', 'in:0,1,3,7,14,30'],
+                'pending_compliance_reminder_max_count' => ['required', 'integer', 'between:1,10'],
+                'notification_quiet_hours_start' => ['required', 'date_format:H:i'],
+                'notification_quiet_hours_end' => ['required', 'date_format:H:i'],
                 'clinic_closure_starts_at' => [$closureRequired, 'nullable', 'date'],
                 'clinic_closure_ends_at' => [$closureRequired, 'nullable', 'date', 'after:clinic_closure_starts_at'],
                 'clinic_closure_reason' => ['nullable', 'string', 'max:100'],
@@ -4292,6 +4313,18 @@ public function deleteItem($id)
 
         $settings = Setting::first();
         if(!$settings) { $settings = new Setting(); }
+
+        $auditedPreferenceFields = [
+            'admin_live_notifications', 'email_notifications', 'appointment_reminder_hours',
+            'pending_compliance_reminder_days', 'pending_compliance_reminder_max_count',
+            'notification_quiet_hours_enabled', 'notification_quiet_hours_start',
+            'notification_quiet_hours_end', 'clinic_closure_enabled',
+            'clinic_closure_starts_at', 'clinic_closure_ends_at',
+            'clinic_closure_reason', 'clinic_closure_message',
+        ];
+        $settingsBefore = $request->boolean('preferences_form')
+            ? collect($auditedPreferenceFields)->mapWithKeys(fn ($field) => [$field => $settings->{$field}])->all()
+            : [];
 
         $settings->clinic_name = $request->input('clinic_name', $settings->clinic_name ?: 'PUP Taguig Clinic');
         $settings->clinic_location = $request->input('clinic_location', $settings->clinic_location ?: 'Santos Ave, Lower Bicutan, Taguig');
@@ -4312,6 +4345,12 @@ public function deleteItem($id)
             $settings->email_notifications = $request->boolean('email_notifications');
             $settings->appointment_reminder_hours = (int) $request->input('appointment_reminder_hours', 24);
             $settings->pending_compliance_reminder_days = (int) $request->input('pending_compliance_reminder_days', 7);
+            $settings->pending_compliance_reminder_max_count = (int) $request->input('pending_compliance_reminder_max_count', 3);
+            $settings->notification_quiet_hours_enabled = $request->boolean('notification_quiet_hours_enabled');
+            $settings->notification_quiet_hours_start = $request->input('notification_quiet_hours_start', '20:00');
+            $settings->notification_quiet_hours_end = $request->input('notification_quiet_hours_end', '07:00');
+            $settings->workflow_preferences_saved_at = now();
+            $settings->workflow_preferences_saved_by = auth()->user()->name ?? auth()->user()->email ?? 'Administrator';
             $settings->clinic_closure_enabled = $request->boolean('clinic_closure_enabled');
             $settings->clinic_closure_starts_at = $request->input('clinic_closure_starts_at') ?: null;
             $settings->clinic_closure_ends_at = $request->input('clinic_closure_ends_at') ?: null;
@@ -4343,12 +4382,43 @@ public function deleteItem($id)
             ? 'Modified ' . implode(', ', $logParts)
             : 'Updated system settings';
 
+        $settingsAfter = $request->boolean('preferences_form')
+            ? collect($auditedPreferenceFields)->mapWithKeys(fn ($field) => [$field => $settings->{$field}])->all()
+            : [];
+        $changedSettings = collect($settingsAfter)
+            ->filter(fn ($value, $field) => (string) ($settingsBefore[$field] ?? '') !== (string) $value)
+            ->mapWithKeys(fn ($value, $field) => [$field => [
+                'from' => $settingsBefore[$field] ?? null,
+                'to' => $value,
+            ]])
+            ->all();
+        if ($changedSettings !== []) {
+            $changedLabels = collect(array_keys($changedSettings))
+                ->map(fn ($field) => ucwords(str_replace('_', ' ', $field)))
+                ->implode(', ');
+            $logDescription .= '. Changed: ' . $changedLabels;
+        }
+
         // --- LOGS CODES ---
     \App\Models\ActivityLog::create([
         'user_id'     => auth()->id(),
         'user_name'   => auth()->user()->name,
-        'action'      => 'System Settings Updated',
+        'user_role'   => strtolower((string) (auth()->user()->user_role ?? '')),
+        'action'      => $request->boolean('closure_form') ? 'Clinic Closure Updated' : 'System Preferences Updated',
+        'module'      => 'Settings',
+        'event_type'  => 'update',
         'description' => $logDescription,
+        'route_name'  => optional($request->route())->getName(),
+        'http_method' => $request->method(),
+        'request_path'=> '/' . ltrim($request->path(), '/'),
+        'status_code' => 200,
+        'subject_type'=> 'settings',
+        'subject_id'  => (string) $settings->getKey(),
+        'metadata'    => [
+            'changed_settings' => $changedSettings,
+            'cancelled_appointments' => $cancelledForClosure,
+            'save_mode' => $request->expectsJson() ? 'automatic' : 'manual',
+        ],
         'ip_address'  => request()->ip(),
         'user_agent'  => request()->userAgent(),
     ]);
@@ -4356,6 +4426,15 @@ public function deleteItem($id)
         $successMessage = 'System settings saved.';
         if ($cancelledForClosure > 0) {
             $successMessage .= " {$cancelledForClosure} affected appointment(s) were cancelled and students were asked to rebook.";
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $successMessage,
+                'saved_at' => optional($settings->workflow_preferences_saved_at)->toIso8601String(),
+                'saved_at_label' => optional($settings->workflow_preferences_saved_at)->format('M d, Y g:i:s A'),
+                'saved_by' => $settings->workflow_preferences_saved_by,
+            ]);
         }
 
         return redirect()->back()->with('success', $successMessage);
@@ -5174,50 +5253,23 @@ public function inventorySummary()
 
         $settings = $this->emergencyAccessSettings();
         $isConfigured = (bool) ($settings['configured'] ?? false);
-        $action = (string) $request->input('emergency_action', 'update');
+        $action = (string) $request->input('emergency_action', 'reset');
 
         $rules = [
-            'emergency_action' => ['nullable', Rule::in(['update', 'add', 'reset'])],
+            'emergency_action' => ['nullable', Rule::in(['reset'])],
             'emergency_role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_SUPERADMIN, 'super_admin'])],
+            'emergency_email' => ['required', 'email', 'max:255'],
+            'new_emergency_password' => [$action === 'reset' || ! $isConfigured ? 'required' : 'nullable', 'confirmed', 'min:8', 'max:255', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'],
+            'emergency_password_reset_key' => [$action === 'reset' ? 'required' : 'nullable', 'string', 'max:255'],
         ];
-
-        if ($action === 'add') {
-            $rules['additional_emergency_email'] = ['required', 'email', 'max:255'];
-            $rules['additional_emergency_password'] = ['required', 'confirmed', 'min:8', 'max:255', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'];
-        } else {
-            $rules['emergency_email'] = ['required', 'email', 'max:255'];
-            $rules['new_emergency_password'] = [$action === 'reset' || ! $isConfigured ? 'required' : 'nullable', 'confirmed', 'min:8', 'max:255', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'];
-            $rules['emergency_password_reset_key'] = [$action === 'reset' ? 'required' : 'nullable', 'string', 'max:255'];
-        }
 
         $validated = $request->validate($rules, [
             'new_emergency_password.regex' => 'Emergency password must contain at least one letter and one number.',
-            'additional_emergency_password.regex' => 'Emergency password must contain at least one letter and one number.',
         ]);
 
         $role = User::normalizeRole((string) $validated['emergency_role']);
         if (!in_array($role, [User::ROLE_ADMIN, User::ROLE_SUPERADMIN], true)) {
             $role = User::ROLE_ADMIN;
-        }
-
-        if ($action === 'add') {
-            $additionalEmail = strtolower(trim((string) $validated['additional_emergency_email']));
-            $accounts = $this->emergencyAdditionalAccounts();
-            $accounts = array_values(array_filter($accounts, fn ($account) => strtolower(trim((string) ($account['email'] ?? ''))) !== $additionalEmail));
-            $accounts[] = [
-                'email' => $additionalEmail,
-                'password_hash' => Hash::make((string) $validated['additional_emergency_password']),
-                'role' => $role,
-            ];
-
-            $this->writeEnvironmentValues([
-                'EMERGENCY_ACCESS_ENABLED' => 'true',
-                'EMERGENCY_ADMIN_ADDITIONAL_ACCOUNTS' => base64_encode(json_encode($accounts)),
-            ]);
-
-            $this->logDeveloperSecurityAction($user, 'Emergency Credentials Updated', 'A secondary emergency login account was added.', 200);
-
-            return back()->with('success', 'Emergency email account added.');
         }
 
         $newPassword = trim((string) ($validated['new_emergency_password'] ?? ''));
@@ -5239,6 +5291,7 @@ public function inventorySummary()
             'EMERGENCY_ACCESS_ENABLED' => 'true',
             'EMERGENCY_ADMIN_EMAIL' => strtolower(trim((string) $validated['emergency_email'])),
             'EMERGENCY_ADMIN_ROLE' => $role,
+            'EMERGENCY_ADMIN_ADDITIONAL_ACCOUNTS' => '',
         ];
 
         if ($newPassword !== '') {
@@ -5247,6 +5300,7 @@ public function inventorySummary()
         }
 
         $this->writeEnvironmentValues($environmentValues);
+        $this->clearConfigurationCacheAfterEnvironmentWrite();
 
         $this->logDeveloperSecurityAction(
             $user,

@@ -182,17 +182,21 @@ class AdminUserController extends Controller
             });
 
         $lookupRecords = $localLookupRecords->merge($standaloneAdminRecords);
+        $facultyLookupRecords = collect();
 
         // A local match is enough for Account Access. Only fall back to
         // FLSS when no local user/admin profile matched, and keep that
         // interactive lookup bounded if the remote service is unavailable.
         if ($managementView !== 'account-access' || $lookupRecords->isEmpty()) {
-            $lookupRecords = $lookupRecords->merge(
-                $this->collectFacultyUsers(
-                    $facultySyncService,
-                    $lookupSearch,
-                    $managementView === 'account-access' ? 5 : null
-                )
+            $facultyLookupRecords = collect($this->collectFacultyUsers(
+                $facultySyncService,
+                $lookupSearch,
+                $managementView === 'account-access' ? 5 : null
+            ));
+
+            $lookupRecords = $this->mergeFacultyLookupRecords(
+                $lookupRecords,
+                $facultyLookupRecords
             );
         }
 
@@ -206,7 +210,125 @@ class AdminUserController extends Controller
             ->all();
     }
 
-    public function update(Request $request, User $user)
+    private function mergeFacultyLookupRecords($lookupRecords, $facultyRecords)
+    {
+        $remainingFacultyRecords = collect($facultyRecords)->values();
+
+        $enrichedRecords = collect($lookupRecords)->map(function (array $record) use ($remainingFacultyRecords) {
+            $matchIndex = $remainingFacultyRecords->search(
+                fn (array $facultyRecord) => $this->lookupRecordsShareIdentity($record, $facultyRecord)
+            );
+
+            if ($matchIndex === false) {
+                return $record;
+            }
+
+            $facultyRecord = $remainingFacultyRecords->get($matchIndex);
+            $remainingFacultyRecords->forget($matchIndex);
+            $recordMeta = is_array($record['meta'] ?? null) ? $record['meta'] : [];
+            $facultyMeta = is_array($facultyRecord['meta'] ?? null) ? $facultyRecord['meta'] : [];
+
+            foreach (['admin_uuid', 'idp_user_id', 'faculty_uuid'] as $key) {
+                if (trim((string) ($recordMeta[$key] ?? '')) === '') {
+                    $recordMeta[$key] = $facultyMeta[$key] ?? null;
+                }
+            }
+
+            if (trim((string) ($recordMeta['faculty_identifier'] ?? '')) === '') {
+                $recordMeta['faculty_identifier'] = $facultyMeta['faculty_code']
+                    ?? ($facultyRecord['student_id'] ?? null);
+            }
+
+            $record['meta'] = $recordMeta;
+
+            return $record;
+        });
+
+        return $enrichedRecords->merge($remainingFacultyRecords->values());
+    }
+
+    private function lookupRecordsShareIdentity(array $record, array $facultyRecord): bool
+    {
+        $recordEmail = strtolower(trim((string) ($record['email'] ?? '')));
+        $facultyEmail = strtolower(trim((string) ($facultyRecord['email'] ?? '')));
+        if ($recordEmail !== '' && $facultyEmail !== '' && $recordEmail === $facultyEmail) {
+            return true;
+        }
+
+        $recordMeta = is_array($record['meta'] ?? null) ? $record['meta'] : [];
+        $facultyMeta = is_array($facultyRecord['meta'] ?? null) ? $facultyRecord['meta'] : [];
+        $recordIdentifiers = $this->normalizedIdentityValues([
+            $recordMeta['employee_number'] ?? null,
+            $recordMeta['faculty_identifier'] ?? null,
+            $recordMeta['faculty_code'] ?? null,
+            $record['student_id'] ?? null,
+        ]);
+        $facultyIdentifiers = $this->normalizedIdentityValues([
+            $facultyMeta['employee_number'] ?? null,
+            $facultyMeta['faculty_identifier'] ?? null,
+            $facultyMeta['faculty_code'] ?? null,
+            $facultyRecord['student_id'] ?? null,
+        ]);
+
+        if (array_intersect($recordIdentifiers, $facultyIdentifiers) !== []) {
+            return true;
+        }
+
+        $recordUuid = strtolower(trim((string) ($recordMeta['admin_uuid'] ?? '')));
+        $facultyUuid = strtolower(trim((string) ($facultyMeta['admin_uuid'] ?? '')));
+
+        return $recordUuid !== '' && $facultyUuid !== '' && $recordUuid === $facultyUuid;
+    }
+
+    private function normalizedIdentityValues(array $values): array
+    {
+        return array_values(array_unique(array_filter(array_map(
+            fn ($value) => strtolower(trim((string) $value)),
+            $values
+        ))));
+    }
+
+    private function resolveAdminUuidForIdentity(
+        FacultySyncService $facultySyncService,
+        string $requestedUuid,
+        string $storedUuid,
+        string $email,
+        string $employeeNumber
+    ): string {
+        foreach ([$requestedUuid, $storedUuid] as $candidate) {
+            $candidate = strtolower(trim($candidate));
+            if ($this->isUuid($candidate)) {
+                return $candidate;
+            }
+        }
+
+        try {
+            return $facultySyncService->resolveFacultyUuidByIdentity(
+                $email,
+                $employeeNumber,
+                5
+            ) ?? '';
+        } catch (\Throwable $exception) {
+            return '';
+        }
+    }
+
+    private function adminUuidBelongsToAnotherRecord(string $adminUuid, AdminHub $adminHub): bool
+    {
+        if ($adminUuid === '' || !AdminHub::hasColumn('admin_uuid')) {
+            return false;
+        }
+
+        return AdminHub::query()
+            ->where('admin_uuid', $adminUuid)
+            ->when(
+                $adminHub->exists,
+                fn ($query) => $query->where($adminHub->getKeyName(), '!=', $adminHub->getKey())
+            )
+            ->exists();
+    }
+
+    public function update(Request $request, User $user, FacultySyncService $facultySyncService)
     {
         $this->ensureCanManageUsers();
         $managementView = trim((string) $request->input('management_view', 'account-access'));
@@ -231,7 +353,13 @@ class AdminUserController extends Controller
         if ($managementView === 'admin-hub') {
             $linkedAdminHub = $this->findLinkedAdminHubProfile($user) ?? new AdminHub();
             $requestedStatus = strtolower(trim((string) $request->status));
-            $adminUuid = trim((string) $request->input('admin_uuid', ''));
+            $adminUuid = $this->resolveAdminUuidForIdentity(
+                $facultySyncService,
+                (string) $request->input('admin_uuid', ''),
+                (string) ($linkedAdminHub->admin_uuid ?? ''),
+                (string) $request->input('email', $user->email),
+                (string) $request->input('employee_number', $user->employeeHealthProfile?->employee_number)
+            );
 
             if (Schema::hasColumn('users', 'employee_number') && $request->filled('employee_number')) {
                 $user->employee_number = trim((string) $request->input('employee_number'));
@@ -239,15 +367,7 @@ class AdminUserController extends Controller
             }
 
             if ($adminUuid !== '' && AdminHub::hasColumn('admin_uuid')) {
-                $uuidConflict = AdminHub::query()
-                    ->where('admin_uuid', $adminUuid)
-                    ->when(
-                        $linkedAdminHub->exists,
-                        fn ($query) => $query->where($linkedAdminHub->getKeyName(), '!=', $linkedAdminHub->getKey())
-                    )
-                    ->exists();
-
-                if ($uuidConflict) {
+                if ($this->adminUuidBelongsToAnotherRecord($adminUuid, $linkedAdminHub)) {
                     return $this->redirectToManagementView($request, 'error', 'That IDP Admin UUID is already assigned to another Admin Hub profile.');
                 }
 
@@ -429,7 +549,7 @@ class AdminUserController extends Controller
         return $this->redirectToManagementView($request, 'success', 'User account updated successfully.');
     }
 
-    public function storeFromLookup(Request $request)
+    public function storeFromLookup(Request $request, FacultySyncService $facultySyncService)
     {
         $this->ensureCanManageUsers();
         $managementView = trim((string) $request->input('management_view', 'account-access'));
@@ -479,8 +599,18 @@ class AdminUserController extends Controller
 
         if ($managementView === 'admin-hub') {
             $adminEmail = $baseEmail;
-            $adminUuid = trim((string) $request->input('admin_uuid', ''));
-            $linkedAdminHub = $this->findAdminHubProfileByEmailOrUuid($adminEmail, $adminUuid) ?? new AdminHub();
+            $linkedAdminHub = $this->findAdminHubProfileByEmailOrUuid($adminEmail, '') ?? new AdminHub();
+            $adminUuid = $this->resolveAdminUuidForIdentity(
+                $facultySyncService,
+                (string) $request->input('admin_uuid', ''),
+                (string) ($linkedAdminHub->admin_uuid ?? ''),
+                $adminEmail,
+                (string) $request->input('employee_number', '')
+            );
+
+            if ($adminUuid !== '' && $this->adminUuidBelongsToAnotherRecord($adminUuid, $linkedAdminHub)) {
+                return $this->redirectToManagementView($request, 'error', 'That IDP Admin UUID is already assigned to another Admin Hub profile.');
+            }
 
             if (AdminHub::hasColumn('admin_uuid') && $adminUuid !== '') {
                 $linkedAdminHub->admin_uuid = $adminUuid;
@@ -649,7 +779,7 @@ class AdminUserController extends Controller
         return $this->redirectToManagementView($request, 'success', 'Lookup user added to the clinic system successfully.');
     }
 
-    public function updateAdminHub(Request $request, AdminHub $admin)
+    public function updateAdminHub(Request $request, AdminHub $admin, FacultySyncService $facultySyncService)
     {
         $this->ensureCanManageUsers();
 
@@ -691,8 +821,18 @@ class AdminUserController extends Controller
             $admin->email = trim((string) $request->input('email'));
         }
         if (AdminHub::hasColumn('admin_uuid')) {
-            $incomingUuid = trim((string) $request->input('admin_uuid', ''));
+            $incomingUuid = $this->resolveAdminUuidForIdentity(
+                $facultySyncService,
+                (string) $request->input('admin_uuid', ''),
+                (string) ($admin->admin_uuid ?? ''),
+                (string) $request->input('email', $admin->email),
+                (string) $request->input('employee_number', $admin->employee_number)
+            );
             if ($incomingUuid !== '') {
+                if ($this->adminUuidBelongsToAnotherRecord($incomingUuid, $admin)) {
+                    return $this->redirectToManagementView($request, 'error', 'That IDP Admin UUID is already assigned to another Admin Hub profile.');
+                }
+
                 $admin->admin_uuid = $incomingUuid;
             }
         }
@@ -1376,6 +1516,10 @@ class AdminUserController extends Controller
                     data_get($matchedFaculty, 'meta.faculty_code')
                     ?: ($matchedFaculty['student_id'] ?? '')
                 ));
+                $matchedFacultyUuid = strtolower(trim((string) data_get($matchedFaculty, 'meta.admin_uuid', '')));
+                if ($adminUuid === '' && $this->isUuid($matchedFacultyUuid)) {
+                    $adminUuid = $matchedFacultyUuid;
+                }
                 $status = strtolower(trim((string) ($admin->status ?? 'active')));
                 $hubRole = strtolower(trim((string) ($admin->role ?? 'admin_designee')));
                 if (!in_array($hubRole, ['admin_designee', 'designee'], true)) {

@@ -27,6 +27,12 @@ class SendAppointmentReminderEmails extends Command
             return self::SUCCESS;
         }
 
+        if ($workflow->notificationsAreQuiet()) {
+            $this->info('Appointment reminders are paused during notification quiet hours.');
+
+            return self::SUCCESS;
+        }
+
         $reminderHours = max(0, (int) ($workflow->settings()->appointment_reminder_hours ?? 0));
         if ($reminderHours === 0) {
             $this->info('Appointment reminder emails are disabled.');
@@ -34,9 +40,8 @@ class SendAppointmentReminderEmails extends Command
             return self::SUCCESS;
         }
 
-        $reminderMinutes = $reminderHours * 60;
-        $windowStart = now()->addMinutes($reminderMinutes)->startOfMinute();
-        $windowEnd = $windowStart->copy()->addMinute()->endOfMinute();
+        $now = now();
+        $windowEnd = $now->copy()->addHours($reminderHours)->endOfMinute();
 
         $appointments = Appointment::query()
             ->with('user')
@@ -44,8 +49,8 @@ class SendAppointmentReminderEmails extends Command
             ->whereNotNull('date')
             ->whereNotNull('time')
             ->whereNull('appointment_reminder_email_sent_at')
-            ->whereRaw('TIMESTAMP(`date`, `time`) >= ? AND TIMESTAMP(`date`, `time`) <= ?', [
-                $windowStart->format('Y-m-d H:i:s'),
+            ->whereRaw('TIMESTAMP(`date`, `time`) > ? AND TIMESTAMP(`date`, `time`) <= ?', [
+                $now->format('Y-m-d H:i:s'),
                 $windowEnd->format('Y-m-d H:i:s'),
             ])
             ->orderBy('id')
