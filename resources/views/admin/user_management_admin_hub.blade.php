@@ -1103,6 +1103,7 @@
                         data-id="{{ $record['record_id'] }}"
                         data-name="{{ $record['name'] }}"
                         data-first-name="{{ $record['first_name'] }}"
+                        data-middle-name="{{ $record['middle_name'] ?? '' }}"
                         data-last-name="{{ $record['last_name'] }}"
                         data-email="{{ $record['email'] }}"
                         data-role="{{ $record['raw_role'] }}"
@@ -1205,6 +1206,7 @@
                                 data-id="{{ $record['record_id'] }}"
                                 data-name="{{ $record['name'] }}"
                                 data-first-name="{{ $record['first_name'] }}"
+                                data-middle-name="{{ $record['middle_name'] ?? '' }}"
                                 data-last-name="{{ $record['last_name'] }}"
                                 data-email="{{ $record['email'] }}"
                                 data-role="{{ $record['raw_role'] }}"
@@ -1413,6 +1415,7 @@
                         <input type="hidden" name="management_view" id="detailManagementView" value="admin-hub">
                         <input type="hidden" name="lookup_source" id="detailLookupSource" value="">
                         <input type="hidden" name="first_name" id="detailFirstName" value="">
+                        <input type="hidden" name="middle_name" id="detailMiddleName" value="">
                         <input type="hidden" name="last_name" id="detailLastName" value="">
                         <input type="hidden" name="full_name" id="detailFullName" value="">
                         <input type="hidden" name="admin_uuid" id="detailAdminUuid" value="">
@@ -1500,6 +1503,7 @@
     const detailManagementView = document.getElementById('detailManagementView');
     const detailLookupSource = document.getElementById('detailLookupSource');
     const detailFirstName = document.getElementById('detailFirstName');
+    const detailMiddleName = document.getElementById('detailMiddleName');
     const detailLastName = document.getElementById('detailLastName');
     const detailFullName = document.getElementById('detailFullName');
     const detailAdminUuid = document.getElementById('detailAdminUuid');
@@ -1696,6 +1700,9 @@
         if (detailFirstName) {
             detailFirstName.value = row.dataset.firstName || '';
         }
+        if (detailMiddleName) {
+            detailMiddleName.value = row.dataset.middleName || '';
+        }
         if (detailLastName) {
             detailLastName.value = row.dataset.lastName || '';
         }
@@ -1755,7 +1762,7 @@
             if (field.id === 'deactivateBtn') {
                 return;
             }
-            if (['settingsMethod', 'detailLookupSource', 'detailFirstName', 'detailLastName', 'detailFullName', 'detailAdminUuid', 'detailEmployeeNumber', 'detailBirthday', 'detailAge', 'detailGenderValue', 'detailCivilStatus', 'detailAddressValue', 'detailEmergencyContactPerson', 'detailEmergencyContactNo'].includes(field.id)) {
+            if (['settingsMethod', 'detailLookupSource', 'detailFirstName', 'detailMiddleName', 'detailLastName', 'detailFullName', 'detailAdminUuid', 'detailEmployeeNumber', 'detailBirthday', 'detailAge', 'detailGenderValue', 'detailCivilStatus', 'detailAddressValue', 'detailEmergencyContactPerson', 'detailEmergencyContactNo'].includes(field.id)) {
                 field.disabled = false;
                 return;
             }

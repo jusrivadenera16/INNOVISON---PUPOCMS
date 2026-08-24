@@ -43,6 +43,28 @@ class ClinicWorkflowServiceTest extends TestCase
         $this->assertSame('Mon, Wed, Fri, 8:00 AM - 5:00 PM', $service->clinicScheduleLabel());
     }
 
+    public function test_notification_quiet_hours_support_an_overnight_window(): void
+    {
+        $service = $this->serviceWithSchedule([1, 2, 3, 4, 5], '08:00', '17:00');
+        $settings = $service->settings();
+        $settings->notification_quiet_hours_enabled = true;
+        $settings->notification_quiet_hours_start = '20:00';
+        $settings->notification_quiet_hours_end = '07:00';
+
+        $this->assertTrue($service->notificationsAreQuiet(Carbon::parse('2026-08-05 22:30:00', 'Asia/Manila')));
+        $this->assertTrue($service->notificationsAreQuiet(Carbon::parse('2026-08-06 06:59:00', 'Asia/Manila')));
+        $this->assertFalse($service->notificationsAreQuiet(Carbon::parse('2026-08-06 07:00:00', 'Asia/Manila')));
+        $this->assertFalse($service->notificationsAreQuiet(Carbon::parse('2026-08-06 12:00:00', 'Asia/Manila')));
+    }
+
+    public function test_disabled_notification_quiet_hours_never_pause_delivery(): void
+    {
+        $service = $this->serviceWithSchedule([1, 2, 3, 4, 5], '08:00', '17:00');
+        $service->settings()->notification_quiet_hours_enabled = false;
+
+        $this->assertFalse($service->notificationsAreQuiet(Carbon::parse('2026-08-05 23:30:00', 'Asia/Manila')));
+    }
+
     private function serviceWithSchedule(array $days, string $openTime, string $closeTime): ClinicWorkflowService
     {
         $settings = new Setting();

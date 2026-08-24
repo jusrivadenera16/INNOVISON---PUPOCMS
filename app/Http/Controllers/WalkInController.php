@@ -2679,6 +2679,10 @@ PROMPT;
                 ? $resubmissionRequiredDocuments
                 : null;
             $employeeProfile->resubmission_requested_at = $hasIncompleteRequirements ? now() : null;
+            if ($hasIncompleteRequirements) {
+                $employeeProfile->pending_compliance_reminder_sent_at = null;
+                $employeeProfile->pending_compliance_reminder_count = 0;
+            }
             $employeeProfile->verified_at = $hasPendingFinding ? null : now();
             $employeeProfile->approved_by_user_id = $hasPendingFinding ? null : auth()->id();
             $employeeProfile->certified_at = $hasPendingFinding ? $employeeProfile->certified_at : ($employeeProfile->certified_at ?: now());

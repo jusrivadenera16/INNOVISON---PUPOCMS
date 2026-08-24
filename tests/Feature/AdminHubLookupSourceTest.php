@@ -80,6 +80,9 @@ class AdminHubLookupSourceTest extends TestCase
             $table->string('employee_number')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('name')->nullable();
+            $table->string('first_name')->nullable();
+            $table->string('middle_name')->nullable();
+            $table->string('last_name')->nullable();
             $table->string('email')->nullable();
             $table->string('office')->nullable();
             $table->string('role')->nullable();
@@ -131,5 +134,105 @@ class AdminHubLookupSourceTest extends TestCase
         $this->assertFalse($record['can_edit']);
         $this->assertTrue($record['can_onboard']);
         $this->assertFalse($record['is_local_user']);
+    }
+
+    public function test_a_matching_faculty_record_enriches_the_admin_profile_without_creating_a_duplicate(): void
+    {
+        DB::table('admins')->insert([
+            'admin_id' => 51,
+            'employee_number' => 'FA0010TG2023',
+            'name' => 'Rhyan Molinar',
+            'email' => 'rvmolinar@pup.edu.ph',
+            'status' => 'active',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $facultyUuid = '4f9ac4c0-61f5-43f4-b9b4-9a89482091a7';
+
+        Http::fake([
+            'https://faculty.example.test/api/faculties*' => Http::response([
+                'faculties' => [[
+                    'identifier' => 'FA0010TG2023',
+                    'name' => 'Rhyan Molinar',
+                    'fields' => [
+                        'faculty_code' => 'FA0010TG2023',
+                        'idp_user_id' => $facultyUuid,
+                        'first_name' => 'Rhyan',
+                        'middle_name' => 'Santos',
+                        'last_name' => 'Molinar',
+                        'email' => 'rvmolinar@pup.edu.ph',
+                    ],
+                ]],
+            ]),
+        ]);
+
+        $request = Request::create('/admin/user-management/admin-hub', 'GET', [
+            'lookup_search' => 'Rhyan',
+            'management_view' => 'admin-hub',
+        ]);
+        $controller = new AdminUserController();
+        $method = new ReflectionMethod($controller, 'buildManagementData');
+        $method->setAccessible(true);
+        $data = $method->invoke($controller, $request, app(FacultySyncService::class), 'admin-hub');
+        $matches = collect($data['lookupRecords'])
+            ->where('email', 'rvmolinar@pup.edu.ph')
+            ->values();
+
+        $this->assertCount(1, $matches);
+        $this->assertSame('admin_profile', $matches->first()['source']);
+        $this->assertSame('Santos', $matches->first()['middle_name']);
+        $this->assertSame('Rhyan Santos Molinar', $matches->first()['name']);
+        $this->assertSame($facultyUuid, $matches->first()['meta']['admin_uuid']);
+        $this->assertSame($facultyUuid, $matches->first()['meta']['idp_user_id']);
+    }
+
+    public function test_an_existing_admin_hub_record_receives_the_matching_faculty_uuid_as_a_display_and_save_fallback(): void
+    {
+        DB::table('admin_hub')->insert([
+            'employee_number' => 'FA0010TG2023',
+            'name' => 'Rhyan Molinar',
+            'first_name' => 'Rhyan',
+            'last_name' => 'Molinar',
+            'email' => 'rvmolinar@pup.edu.ph',
+            'role' => 'admin_designee',
+            'status' => 'active',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $facultyUuid = '4f9ac4c0-61f5-43f4-b9b4-9a89482091a7';
+
+        Http::fake([
+            'https://faculty.example.test/api/faculties*' => Http::response([
+                'faculties' => [[
+                    'identifier' => 'FA0010TG2023',
+                    'fields' => [
+                        'faculty_code' => 'FA0010TG2023',
+                        'idp_user_id' => $facultyUuid,
+                        'first_name' => 'Rhyan',
+                        'middle_name' => 'Santos',
+                        'last_name' => 'Molinar',
+                        'email' => 'rvmolinar@pup.edu.ph',
+                    ],
+                ]],
+            ]),
+        ]);
+
+        $request = Request::create('/admin/user-management/admin-hub', 'GET', [
+            'management_view' => 'admin-hub',
+        ]);
+        $controller = new AdminUserController();
+        $method = new ReflectionMethod($controller, 'buildManagementData');
+        $method->setAccessible(true);
+        $data = $method->invoke($controller, $request, app(FacultySyncService::class), 'admin-hub');
+        $record = collect($data['adminHubRecords'])->firstWhere('email', 'rvmolinar@pup.edu.ph');
+
+        $this->assertNotNull($record);
+        $this->assertSame('Santos', $record['middle_name']);
+        $this->assertSame('Rhyan Santos Molinar', $record['name']);
+        $this->assertSame($facultyUuid, $record['meta']['admin_uuid']);
+        $this->assertDatabaseHas('admin_hub', [
+            'email' => 'rvmolinar@pup.edu.ph',
+            'admin_uuid' => null,
+        ]);
     }
 }

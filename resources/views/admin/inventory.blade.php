@@ -575,59 +575,6 @@
         }
     }
 
-    body.admin-inventory-page .admin-header {
-        padding-block: 10px;
-    }
-
-    body.admin-inventory-page .header-brand-avatar {
-        width: 46px;
-        height: 46px;
-    }
-
-    body.admin-inventory-page .header-title {
-        font-size: clamp(22px, 1.8vw, 28px);
-        line-height: 1.08;
-    }
-
-    body.admin-inventory-page .header-kicker {
-        font-size: 12px;
-        line-height: 1.2;
-    }
-
-    body.admin-inventory-page .header-subtitle {
-        font-size: 14px;
-        line-height: 1.35;
-        margin-top: 3px;
-    }
-
-    body.admin-inventory-page .admin-layout {
-        gap: 14px;
-        padding: 14px 26px 26px;
-    }
-
-    body.admin-inventory-page .sidebar {
-        padding: 16px 12px;
-    }
-
-    body.admin-inventory-page .sidebar-logo {
-        margin-bottom: 14px;
-        padding-bottom: 14px;
-    }
-
-    body.admin-inventory-page .sidebar-nav a {
-        min-height: 52px;
-        padding: 9px 12px;
-    }
-
-    body.admin-inventory-page .sidebar-short {
-        width: 38px;
-        height: 38px;
-    }
-
-    body.admin-inventory-page .sidebar-logout {
-        padding-top: 12px;
-    }
-
     body.admin-inventory-page .controls {
         margin-bottom: 10px;
         padding: 12px 16px;
@@ -674,15 +621,15 @@
     }
 
     body.admin-inventory-page th {
-        padding: 10px 12px;
-        font-size: 11px;
+        padding: 12px 16px;
+        font-size: 12px;
         line-height: 1.35;
         letter-spacing: 0.04em;
     }
 
     body.admin-inventory-page td {
-        padding: 12px;
-        font-size: 13px;
+        padding: 16px;
+        font-size: 14px;
         line-height: 1.35;
         vertical-align: middle;
     }
@@ -735,11 +682,6 @@
     body.admin-inventory-page .status {
         padding: 4px 9px;
         font-size: 10.5px;
-    }
-
-    body.admin-inventory-page .system-footer__inner {
-        min-height: 38px;
-        padding-block: 6px;
     }
 
     .inventory-meta-pill {
@@ -894,6 +836,9 @@
         border-bottom: 4px solid #facc15 !important;
         border-radius: 18px !important;
     }
+    #restockModal .modal-box {
+        height: auto;
+    }
     .modal-box .inventory-modal-head {
         display: flex;
         align-items: center;
@@ -908,22 +853,6 @@
         z-index: 10;
         backdrop-filter: blur(8px);
         overflow: hidden;
-    }
-    .item-modal-head-icon {
-        position: absolute;
-        right: 56px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 72px;
-        height: 72px;
-        color: rgba(255, 255, 255, 0.07);
-        pointer-events: none;
-        flex: 0 0 auto;
-        z-index: 0;
-    }
-    .item-modal-head-icon svg {
-        width: 100%;
-        height: 100%;
     }
     .inventory-modal-title-row {
         display: flex;
@@ -2098,6 +2027,10 @@
         flex: 1 1 auto;
         align-items: stretch;
     }
+    #restockModal .restock-stock-frames,
+    #issueModal .restock-stock-frames {
+        display: none;
+    }
     .restock-stock-frame {
         display: flex;
         flex-direction: column;
@@ -2271,6 +2204,117 @@
     #issueModal textarea.form-control::placeholder {
         color: #6b7280;
         font-weight: 600;
+    }
+    #restockModal .restock-quantity-control {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 112px;
+        min-height: 42px;
+        margin-top: 3px;
+        overflow: hidden;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #ffffff;
+        transition: border-color .18s ease, box-shadow .18s ease;
+    }
+    #restockModal .restock-quantity-control:focus-within {
+        border-color: #8f2230;
+        box-shadow: 0 0 0 3px rgba(143, 34, 48, .10);
+    }
+    #restockModal .restock-quantity-control #restockQuantity {
+        min-width: 0;
+        min-height: 42px;
+        padding: 9px 12px;
+        border: 0 !important;
+        border-radius: 0;
+        background: transparent;
+    }
+    #restockModal .restock-quantity-unit {
+        width: 100%;
+        min-height: 42px;
+        padding: 9px 32px 9px 14px;
+        border: 0;
+        border-radius: 0;
+        color: #70131B;
+        background-color: transparent;
+        font: inherit;
+        font-weight: 700;
+        text-transform: capitalize;
+        opacity: 1;
+        cursor: default;
+        appearance: none;
+        -webkit-appearance: none;
+        position: relative;
+        z-index: 2;
+        pointer-events: none;
+    }
+    #restockModal .restock-quantity-unit:focus {
+        outline: none;
+    }
+    #restockModal .restock-unit-shell {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        border-left: 1px solid #cbd5e1;
+        background: #ffffff;
+        transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    #restockModal .restock-unit-shell::before {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(255, 247, 181, 0) 0%, rgba(255, 247, 181, .72) 45%, rgba(255, 247, 181, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.05s ease;
+        pointer-events: none;
+        z-index: 1;
+    }
+    #restockModal .restock-unit-shell:hover {
+        border-left-color: #facc15;
+        background: #facc15;
+    }
+    #restockModal .restock-unit-shell:hover .restock-quantity-unit {
+        color: #70131B;
+    }
+    #restockModal .restock-unit-shell:hover::before {
+        left: 125%;
+    }
+    #restockModal .restock-unit-arrow {
+        position: absolute;
+        top: 50%;
+        right: 11px;
+        z-index: 3;
+        width: 15px;
+        height: 15px;
+        color: #70131B;
+        transform: translateY(-50%);
+        pointer-events: none;
+    }
+    html[data-theme="dark"] #restockModal .restock-quantity-control {
+        border-color: rgba(148, 163, 184, .42);
+        background: #111827;
+    }
+    html[data-theme="dark"] #restockModal .restock-quantity-unit {
+        color: #f8fafc;
+        background-color: transparent;
+        color-scheme: dark;
+    }
+    html[data-theme="dark"] #restockModal .restock-unit-shell {
+        border-left-color: rgba(250, 204, 21, .20);
+        background: #182334;
+    }
+    html[data-theme="dark"] #restockModal .restock-unit-arrow {
+        color: #facc15;
+    }
+    html[data-theme="dark"] #restockModal .restock-unit-shell:hover {
+        border-left-color: #facc15;
+        background: #facc15;
+    }
+    html[data-theme="dark"] #restockModal .restock-unit-shell:hover .restock-quantity-unit,
+    html[data-theme="dark"] #restockModal .restock-unit-shell:hover .restock-unit-arrow {
+        color: #70131B;
     }
     html[data-theme="dark"] #restockModal .form-group,
     html[data-theme="dark"] #issueModal .form-group {
@@ -2591,7 +2635,7 @@
         background: linear-gradient(180deg, #fffdfb 0%, #fff8f2 100%);
     }
     .inventory-import-drop input[type="file"] {
-        min-height: 48px;
+        min-height: 42px;
         padding: 10px;
         border-radius: 12px;
         border: 1px solid rgba(112, 19, 27, 0.18);
@@ -2649,7 +2693,7 @@
         border: 1px solid rgba(112, 19, 27, 0.12);
         background: #fffaf0;
         color: #475569;
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 800;
         line-height: 1.5;
     }
@@ -2893,7 +2937,7 @@
     }
 
     #inventoryImportCategoryOptions {
-        display: flex !important;
+        align-items: center;
     }
 
     .inventory-category-option {
@@ -3367,6 +3411,10 @@
     body.admin-inventory-page .inventory-title-block .inventory-page-title svg {
         grid-column: 1 !important;
         grid-row: 1 / span 2 !important;
+        width: 54px !important;
+        height: 54px !important;
+        padding: 13px !important;
+        border-radius: 14px !important;
         margin-right: 0 !important;
         align-self: center !important;
     }
@@ -3635,45 +3683,327 @@
     }
     body.admin-inventory-page .inventory-modern-summary-container {
         gap: 10px !important;
-        padding: 12px 20px 14px !important;
+        padding: 12px 20px 18px !important;
     }
     body.admin-inventory-page .inventory-modern-card,
     body.admin-inventory-page .inventory-modern-card.is-clickable,
     body.admin-inventory-page .inventory-toolbar-actions > .btn-add.inventory-action-card {
-        min-height: 108px !important;
-        padding: 12px !important;
-        grid-template-columns: 40px minmax(0, 1fr) auto !important;
-        gap: 12px !important;
+        height: 118px !important;
+        min-height: 118px !important;
+        max-height: 118px !important;
+        padding: 14px !important;
+        grid-template-columns: 44px minmax(0, 1fr) auto !important;
+        gap: 14px !important;
+        align-self: stretch;
+        box-sizing: border-box;
     }
     body.admin-inventory-page .inventory-action-icon {
-        width: 40px !important;
-        height: 40px !important;
+        width: 44px !important;
+        height: 44px !important;
     }
     body.admin-inventory-page .inventory-action-icon svg {
-        width: 21px !important;
-        height: 21px !important;
+        width: 24px !important;
+        height: 24px !important;
     }
     body.admin-inventory-page .inventory-action-label {
         font-size: 11px !important;
     }
     body.admin-inventory-page .inventory-action-copy strong {
-        margin-top: 4px !important;
-        font-size: 22px !important;
-        line-height: 1 !important;
+        margin-top: 6px !important;
+        font-size: 24px !important;
+        line-height: 1.05 !important;
     }
     body.admin-inventory-page .inventory-modern-card.is-clickable .inventory-action-copy strong {
         font-size: 20px !important;
+        white-space: nowrap;
+    }
+    body.admin-inventory-page .inventory-modern-card:not(.is-clickable) {
+        grid-template-columns: 44px minmax(0, 1fr) !important;
     }
     body.admin-inventory-page .inventory-action-copy span:last-child {
-        margin-top: 5px !important;
+        margin-top: 7px !important;
         font-size: 12px !important;
-        line-height: 1.18 !important;
+        line-height: 1.2 !important;
+    }
+    body.admin-inventory-page .inventory-modern-card.is-clickable .inventory-action-copy span:last-child {
+        font-size: 11px !important;
+        white-space: nowrap;
     }
     body.admin-inventory-page .inventory-action-arrow {
-        width: 34px !important;
-        height: 34px !important;
-        border-radius: 11px !important;
-        font-size: 21px !important;
+        width: 38px !important;
+        height: 38px !important;
+        border-radius: 10px !important;
+        font-size: 19px !important;
+    }
+
+    body.admin-inventory-page .inventory-summary-card {
+        overflow: visible;
+        padding: 18px 20px 20px;
+    }
+    body.admin-inventory-page .inventory-table-scroll {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(127, 29, 45, .28) transparent;
+    }
+    body.admin-inventory-page .inventory-summary-head {
+        position: relative;
+        align-items: center;
+        flex-wrap: nowrap;
+        padding: 0;
+        margin-bottom: 12px;
+        overflow: visible;
+    }
+    body.admin-inventory-page .inventory-summary-title {
+        color: #0f172a !important;
+        font-size: 18px;
+        font-weight: 900;
+        line-height: 1.1;
+        white-space: nowrap;
+    }
+    body.admin-inventory-page .inventory-summary-tools {
+        width: min(100%, 440px);
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        margin-left: auto;
+    }
+    body.admin-inventory-page .inventory-search-shell {
+        width: 100%;
+        min-width: 0;
+    }
+    body.admin-inventory-page .inventory-search-wrap,
+    body.admin-inventory-page .inventory-search-shell.is-open .inventory-search-wrap {
+        width: 100%;
+        flex: 1 1 auto;
+    }
+    body.admin-inventory-page .inventory-filter-shell {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+    }
+    body.admin-inventory-page .inventory-filter-toggle {
+        position: relative;
+        min-width: 106px;
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        overflow: hidden;
+        border: 1px solid #7f1d2d;
+        border-radius: 12px;
+        background: #7f1d2d;
+        color: #ffffff !important;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .18);
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+        z-index: 1;
+    }
+    body.admin-inventory-page .inventory-filter-toggle::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(250, 204, 21, 0) 0%, rgba(255, 247, 181, .58) 45%, rgba(250, 204, 21, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.5s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+    body.admin-inventory-page .inventory-filter-toggle > * {
+        position: relative;
+        z-index: 1;
+        color: inherit !important;
+    }
+    body.admin-inventory-page .inventory-filter-toggle:hover::after,
+    body.admin-inventory-page .inventory-filter-toggle:focus-visible::after {
+        left: 125%;
+    }
+    body.admin-inventory-page .inventory-filter-toggle:hover,
+    body.admin-inventory-page .inventory-filter-toggle:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B !important;
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow: 0 12px 22px rgba(112, 19, 27, .16);
+    }
+    body.admin-inventory-page .inventory-filter-shell.is-open .inventory-filter-toggle:not(:hover):not(:focus-visible) {
+        background: #7f1d2d;
+        border-color: #7f1d2d;
+        color: #ffffff !important;
+    }
+    body.admin-inventory-page .inventory-filter-toggle svg {
+        width: 17px;
+        height: 17px;
+        color: #ffffff !important;
+        stroke: #ffffff !important;
+    }
+    body.admin-inventory-page .inventory-filter-toggle:hover svg,
+    body.admin-inventory-page .inventory-filter-toggle:focus-visible svg {
+        color: #70131B !important;
+        stroke: #70131B !important;
+    }
+    body.admin-inventory-page .inventory-filter-panel {
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        width: min(280px, calc(100vw - 40px));
+        display: none;
+        padding: 14px;
+        border: 1px solid #ead3d7;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 22px 48px rgba(15, 23, 42, .18);
+        z-index: 80;
+    }
+    body.admin-inventory-page .inventory-filter-shell.is-open .inventory-filter-panel {
+        display: block;
+    }
+    body.admin-inventory-page .inventory-filter-panel-title {
+        margin: 0 0 10px;
+        color: #70131B !important;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+    body.admin-inventory-page .inventory-filter-panel .inventory-filter-bar {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin: 0;
+    }
+    body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill,
+    body.admin-inventory-page .inventory-filter-panel .inventory-filter-option {
+        position: relative;
+        width: 100%;
+        min-height: 38px;
+        display: inline-flex;
+        overflow: hidden;
+        isolation: isolate;
+        opacity: 1;
+        justify-content: flex-start;
+        border-radius: 8px;
+        padding: 0 12px;
+        animation: none;
+        border-color: #ead3d7;
+        background: #ffffff;
+        color: #70131B !important;
+        font-size: 13px;
+        box-shadow: none;
+    }
+    body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(255, 247, 181, 0) 0%, rgba(255, 247, 181, .72) 45%, rgba(255, 247, 181, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.05s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+    body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill > span {
+        position: relative;
+        z-index: 1;
+        color: inherit !important;
+    }
+    body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill:hover,
+    body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B !important;
+        outline: none;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .24);
+    }
+    body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill:hover::after,
+    body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill:focus-visible::after {
+        left: 125%;
+    }
+    body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill.is-active,
+    body.admin-inventory-page .inventory-filter-panel #inventoryFilterAllBtn.is-active {
+        border-color: #70131B;
+        background: #70131B;
+        color: #ffffff !important;
+    }
+    body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill.is-active:hover,
+    body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill.is-active:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B !important;
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-summary-title {
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-filter-panel {
+        background: #182334;
+        border-color: rgba(255, 255, 255, .16);
+        box-shadow: 0 22px 48px rgba(0, 0, 0, .34);
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-filter-panel-title {
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill {
+        border-color: rgba(255, 255, 255, .16);
+        background: #223044;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B !important;
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill.is-active,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-filter-panel #inventoryFilterAllBtn.is-active {
+        border-color: #9f1d2d;
+        background: #9f1d2d;
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill.is-active:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-filter-panel .inventory-filter-pill.is-active:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B !important;
+    }
+    @media (max-width: 768px) {
+        body.admin-inventory-page .inventory-modern-card,
+        body.admin-inventory-page .inventory-modern-card.is-clickable,
+        body.admin-inventory-page .inventory-toolbar-actions > .btn-add.inventory-action-card {
+            height: auto !important;
+            min-height: 118px !important;
+            max-height: none !important;
+        }
+        body.admin-inventory-page .inventory-summary-head {
+            align-items: stretch;
+            flex-direction: column;
+        }
+        body.admin-inventory-page .inventory-summary-title {
+            white-space: normal;
+        }
+        body.admin-inventory-page .inventory-summary-tools {
+            width: 100%;
+            grid-template-columns: 1fr;
+            margin-left: 0;
+        }
+        body.admin-inventory-page .inventory-filter-shell,
+        body.admin-inventory-page .inventory-filter-toggle {
+            width: 100%;
+        }
+        body.admin-inventory-page .inventory-filter-panel {
+            width: 100%;
+        }
     }
     @media (max-width: 560px) {
         body.admin-inventory-page .inventory-title-block .inventory-page-description {
@@ -3779,6 +4109,1706 @@
         box-shadow: 0 0 0 3px rgba(250, 204, 21, .18), 0 14px 24px rgba(112, 19, 27, .16) !important;
     }
 
+    /* Appointments interaction parity: cards, controls, and dropdowns */
+    body.admin-inventory-page .inventory-modern-card {
+        box-shadow:
+            0 15px 30px rgba(15, 23, 42, .14),
+            0 5px 12px rgba(15, 23, 42, .08),
+            0 0 0 1px rgba(15, 23, 42, .025) !important;
+    }
+
+    body.admin-inventory-page .inventory-modern-card.is-clickable {
+        box-shadow: 0 16px 30px rgba(112, 19, 27, .24) !important;
+    }
+
+    body.admin-inventory-page .inventory-modern-card:hover,
+    body.admin-inventory-page .inventory-modern-card:focus-visible,
+    body.admin-inventory-page .inventory-modern-card.is-clickable:hover,
+    body.admin-inventory-page .inventory-modern-card.is-clickable:focus-visible {
+        box-shadow:
+            0 18px 34px rgba(112, 19, 27, .22),
+            0 0 0 1px rgba(250, 204, 21, .28) !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card.is-clickable {
+        box-shadow:
+            0 18px 36px rgba(0, 0, 0, .42),
+            0 7px 16px rgba(0, 0, 0, .30),
+            0 0 0 1px rgba(250, 204, 21, .08) !important;
+    }
+
+    body.admin-inventory-page .inventory-search-wrap,
+    body.admin-inventory-page .inventory-search-shell.is-open .inventory-search-wrap {
+        cursor: text;
+        transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease !important;
+        box-shadow:
+            0 15px 30px rgba(15, 23, 42, .16),
+            0 5px 12px rgba(15, 23, 42, .08) !important;
+    }
+
+    body.admin-inventory-page .inventory-search-wrap:hover,
+    body.admin-inventory-page .inventory-search-wrap:focus-within {
+        border-color: #facc15 !important;
+        transform: translateY(-1px);
+        box-shadow:
+            0 0 0 3px rgba(250, 204, 21, .14),
+            0 16px 30px rgba(112, 19, 27, .16) !important;
+    }
+
+    body.admin-inventory-page .inventory-filter-toggle,
+    body.admin-inventory-page .inventory-actions-toggle {
+        width: 118px !important;
+        min-width: 118px !important;
+        max-width: 118px !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        padding: 0 14px !important;
+        border-radius: 12px !important;
+        gap: 8px !important;
+        font-size: 12px !important;
+        line-height: 1 !important;
+        box-shadow:
+            0 16px 30px rgba(15, 23, 42, .24),
+            0 5px 12px rgba(15, 23, 42, .12) !important;
+    }
+
+    body.admin-inventory-page .inventory-filter-toggle {
+        height: 48px !important;
+        min-height: 48px !important;
+    }
+
+    body.admin-inventory-page .btn-add:not(.inventory-action-card),
+    body.admin-inventory-page .inventory-manage-btn {
+        min-height: 42px !important;
+        height: 42px !important;
+        padding: 0 18px !important;
+        border-radius: 12px !important;
+        border: 1px solid #7f1d2d !important;
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+        color: #ffffff !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        line-height: 1 !important;
+        box-shadow:
+            0 16px 30px rgba(15, 23, 42, .24),
+            0 5px 12px rgba(15, 23, 42, .12) !important;
+    }
+
+    body.admin-inventory-page .btn-add:not(.inventory-action-card):hover,
+    body.admin-inventory-page .btn-add:not(.inventory-action-card):focus-visible,
+    body.admin-inventory-page .inventory-manage-btn:hover,
+    body.admin-inventory-page .inventory-manage-btn:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-1px) !important;
+        outline: none;
+        box-shadow:
+            0 0 0 3px rgba(250, 204, 21, .18),
+            0 16px 30px rgba(112, 19, 27, .18) !important;
+    }
+
+    body.admin-inventory-page .inventory-btn-cancel:not(.inventory-modal-close):not(.inventory-category-option) {
+        min-height: 42px !important;
+        height: 42px !important;
+        padding: 0 18px !important;
+        border-radius: 12px !important;
+        border: 1px solid #e4c8ce !important;
+        background: #ffffff !important;
+        color: #70131B !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        line-height: 1 !important;
+        box-shadow:
+            0 12px 24px rgba(112, 19, 27, .10),
+            0 3px 10px rgba(15, 23, 42, .05) !important;
+    }
+
+    body.admin-inventory-page .inventory-btn-cancel:not(.inventory-modal-close):not(.inventory-category-option):hover,
+    body.admin-inventory-page .inventory-btn-cancel:not(.inventory-modal-close):not(.inventory-category-option):focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-1px) !important;
+        outline: none;
+        box-shadow:
+            0 0 0 3px rgba(250, 204, 21, .16),
+            0 14px 26px rgba(112, 19, 27, .14) !important;
+    }
+
+    body.admin-inventory-page .inventory-actions-toggle {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        border-color: #e4c8ce !important;
+        background: #ffffff !important;
+        color: #70131B !important;
+    }
+
+    body.admin-inventory-page .inventory-actions-toggle::after,
+    body.admin-inventory-page .inventory-actions-menu-item::after,
+    body.admin-inventory-page .inventory-subfilter-pill::after,
+    body.admin-inventory-page .restock-quick-btn::after,
+    body.admin-inventory-page .inventory-category-menu .inventory-category-option::after,
+    body.admin-inventory-page .inventory-medicine-type-option::after,
+    body.admin-inventory-page .inventory-unit-option::after,
+    body.admin-inventory-page .inventory-dispensing-unit-option::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(255, 247, 181, 0) 0%, rgba(255, 247, 181, .72) 45%, rgba(255, 247, 181, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.05s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    body.admin-inventory-page .inventory-actions-toggle > *,
+    body.admin-inventory-page .inventory-actions-menu-item > * {
+        position: relative;
+        z-index: 1;
+        color: inherit !important;
+    }
+
+    body.admin-inventory-page .inventory-actions-toggle:hover,
+    body.admin-inventory-page .inventory-actions-toggle:focus-visible,
+    body.admin-inventory-page .inventory-actions-dropdown.is-open .inventory-actions-toggle {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow:
+            0 0 0 3px rgba(250, 204, 21, .16),
+            0 14px 26px rgba(112, 19, 27, .14) !important;
+    }
+
+    body.admin-inventory-page .inventory-actions-toggle:hover::after,
+    body.admin-inventory-page .inventory-actions-toggle:focus-visible::after,
+    body.admin-inventory-page .inventory-actions-menu-item:hover::after,
+    body.admin-inventory-page .inventory-actions-menu-item:focus-visible::after,
+    body.admin-inventory-page .inventory-subfilter-pill:hover::after,
+    body.admin-inventory-page .inventory-subfilter-pill:focus-visible::after,
+    body.admin-inventory-page .restock-quick-btn:hover::after,
+    body.admin-inventory-page .restock-quick-btn:focus-visible::after,
+    body.admin-inventory-page .inventory-category-menu .inventory-category-option:hover::after,
+    body.admin-inventory-page .inventory-category-menu .inventory-category-option:focus-visible::after,
+    body.admin-inventory-page .inventory-medicine-type-option:hover::after,
+    body.admin-inventory-page .inventory-medicine-type-option:focus-visible::after,
+    body.admin-inventory-page .inventory-unit-option:hover::after,
+    body.admin-inventory-page .inventory-unit-option:focus-visible::after,
+    body.admin-inventory-page .inventory-dispensing-unit-option:hover::after,
+    body.admin-inventory-page .inventory-dispensing-unit-option:focus-visible::after {
+        left: 125%;
+    }
+
+    body.admin-inventory-page .inventory-actions-menu {
+        width: 220px;
+        gap: 8px;
+        padding: 8px;
+        border: 1px solid #ead3d7;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 22px 48px rgba(15, 23, 42, .18);
+    }
+
+    body.admin-inventory-page .inventory-actions-menu-item {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        min-height: 38px;
+        padding: 0 12px;
+        border: 1px solid #ead3d7;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #70131B;
+        font-size: 13px;
+        font-weight: 900;
+        box-shadow: none;
+    }
+
+    body.admin-inventory-page #restockModal .inventory-modal-title-icon svg,
+    body.admin-inventory-page #issueModal .inventory-modal-title-icon svg {
+        stroke-width: 1.5;
+    }
+
+    body.admin-inventory-page .inventory-actions-menu-item:hover,
+    body.admin-inventory-page .inventory-actions-menu-item:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .24);
+    }
+
+    body.admin-inventory-page .inventory-subfilter-bar {
+        border-radius: 12px;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, .08);
+    }
+
+    body.admin-inventory-page .inventory-subfilter-pill,
+    body.admin-inventory-page .restock-quick-btn {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        min-height: 38px;
+        padding: 0 12px;
+        border-radius: 8px;
+        border: 1px solid #ead3d7;
+        background: #ffffff;
+        color: #70131B !important;
+        font-size: 12px;
+        font-weight: 900;
+        box-shadow: none;
+    }
+
+    body.admin-inventory-page .inventory-subfilter-pill.is-active {
+        border-color: #70131B;
+        background: #70131B;
+        color: #ffffff !important;
+    }
+
+    body.admin-inventory-page .inventory-subfilter-pill:hover,
+    body.admin-inventory-page .inventory-subfilter-pill:focus-visible,
+    body.admin-inventory-page .inventory-subfilter-pill.is-active:hover,
+    body.admin-inventory-page .inventory-subfilter-pill.is-active:focus-visible,
+    body.admin-inventory-page .restock-quick-btn:hover,
+    body.admin-inventory-page .restock-quick-btn:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B !important;
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .24);
+    }
+
+    body.admin-inventory-page .inventory-category-display,
+    body.admin-inventory-page .inventory-medicine-type-display,
+    body.admin-inventory-page .inventory-unit-display,
+    body.admin-inventory-page .inventory-dispensing-unit-display,
+    body.admin-inventory-page .inventory-import-select {
+        min-height: 42px !important;
+        height: 42px !important;
+        padding: 0 42px 0 12px !important;
+        border: 1px solid #e4c8ce !important;
+        border-radius: 10px !important;
+        background-color: #ffffff !important;
+        background-image: none !important;
+        color: #70131B !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        box-shadow:
+            0 10px 20px rgba(112, 19, 27, .08),
+            0 2px 7px rgba(15, 23, 42, .04) !important;
+        transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease !important;
+    }
+
+    body.admin-inventory-page .inventory-category-display,
+    body.admin-inventory-page .inventory-medicine-type-display,
+    body.admin-inventory-page .inventory-unit-display,
+    body.admin-inventory-page .inventory-dispensing-unit-display {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+    }
+
+    body.admin-inventory-page .inventory-category-display::before,
+    body.admin-inventory-page .inventory-medicine-type-display::before,
+    body.admin-inventory-page .inventory-unit-display::before,
+    body.admin-inventory-page .inventory-dispensing-unit-display::before,
+    body.admin-inventory-page #inventoryImportCategoryOptions .inventory-category-option::before {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(255, 247, 181, 0) 0%, rgba(255, 247, 181, .72) 45%, rgba(255, 247, 181, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.05s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    body.admin-inventory-page .inventory-import-select {
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m6 8 4 4 4-4' stroke='%2370131B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 12px center !important;
+        background-size: 16px !important;
+    }
+
+    body.admin-inventory-page .inventory-category-display:hover,
+    body.admin-inventory-page .inventory-category-display:focus,
+    body.admin-inventory-page .inventory-category-display.is-open,
+    body.admin-inventory-page .inventory-medicine-type-display:hover,
+    body.admin-inventory-page .inventory-medicine-type-display:focus,
+    body.admin-inventory-page .inventory-medicine-type-display.is-open,
+    body.admin-inventory-page .inventory-unit-display:hover,
+    body.admin-inventory-page .inventory-unit-display:focus,
+    body.admin-inventory-page .inventory-unit-display.is-open,
+    body.admin-inventory-page .inventory-dispensing-unit-display:hover,
+    body.admin-inventory-page .inventory-dispensing-unit-display:focus,
+    body.admin-inventory-page .inventory-dispensing-unit-display.is-open,
+    body.admin-inventory-page .inventory-import-select:hover,
+    body.admin-inventory-page .inventory-import-select:focus {
+        border-color: #facc15 !important;
+        background-color: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow:
+            0 0 0 3px rgba(250, 204, 21, .14),
+            0 14px 26px rgba(112, 19, 27, .12) !important;
+    }
+
+    body.admin-inventory-page .inventory-category-display:hover::before,
+    body.admin-inventory-page .inventory-category-display:focus::before,
+    body.admin-inventory-page .inventory-medicine-type-display:hover::before,
+    body.admin-inventory-page .inventory-medicine-type-display:focus::before,
+    body.admin-inventory-page .inventory-unit-display:hover::before,
+    body.admin-inventory-page .inventory-unit-display:focus::before,
+    body.admin-inventory-page .inventory-dispensing-unit-display:hover::before,
+    body.admin-inventory-page .inventory-dispensing-unit-display:focus::before,
+    body.admin-inventory-page #inventoryImportCategoryOptions .inventory-category-option:hover::before,
+    body.admin-inventory-page #inventoryImportCategoryOptions .inventory-category-option:focus-visible::before {
+        left: 125%;
+    }
+
+    body.admin-inventory-page .inventory-category-menu,
+    body.admin-inventory-page .inventory-medicine-type-menu,
+    body.admin-inventory-page .inventory-unit-menu,
+    body.admin-inventory-page .inventory-dispensing-unit-menu,
+    body > .inventory-medicine-type-menu,
+    body > .inventory-unit-menu,
+    body > .inventory-dispensing-unit-menu {
+        gap: 8px;
+        padding: 8px;
+        border: 1px solid #ead3d7;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 22px 48px rgba(15, 23, 42, .18);
+    }
+
+    body.admin-inventory-page .inventory-medicine-type-search,
+    body.admin-inventory-page .inventory-unit-search,
+    body.admin-inventory-page .inventory-dispensing-unit-search,
+    body > .inventory-medicine-type-menu .inventory-medicine-type-search,
+    body > .inventory-unit-menu .inventory-unit-search,
+    body > .inventory-dispensing-unit-menu .inventory-dispensing-unit-search {
+        min-height: 40px;
+        padding: 0 12px;
+        border: 1px solid #e4c8ce;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #0f172a;
+        box-shadow: none;
+    }
+
+    body.admin-inventory-page .inventory-medicine-type-options,
+    body.admin-inventory-page .inventory-unit-options,
+    body.admin-inventory-page .inventory-dispensing-unit-options,
+    body > .inventory-medicine-type-menu .inventory-medicine-type-options,
+    body > .inventory-unit-menu .inventory-unit-options,
+    body > .inventory-dispensing-unit-menu .inventory-dispensing-unit-options {
+        gap: 8px;
+    }
+
+    body.admin-inventory-page .inventory-category-menu .inventory-category-option,
+    body.admin-inventory-page .inventory-medicine-type-option,
+    body.admin-inventory-page .inventory-unit-option,
+    body.admin-inventory-page .inventory-dispensing-unit-option,
+    body > .inventory-medicine-type-menu .inventory-medicine-type-option,
+    body > .inventory-unit-menu .inventory-unit-option,
+    body > .inventory-dispensing-unit-menu .inventory-dispensing-unit-option {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        min-height: 38px;
+        padding: 0 12px;
+        border: 1px solid #ead3d7;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #70131B !important;
+        font-size: 13px;
+        font-weight: 900;
+        box-shadow: none;
+        transform: none;
+    }
+
+    body.admin-inventory-page .inventory-category-menu .inventory-category-option.is-selected,
+    body.admin-inventory-page .inventory-medicine-type-option.is-selected,
+    body.admin-inventory-page .inventory-unit-option.is-selected,
+    body.admin-inventory-page .inventory-dispensing-unit-option.is-selected,
+    body > .inventory-medicine-type-menu .inventory-medicine-type-option.is-selected,
+    body > .inventory-unit-menu .inventory-unit-option.is-selected,
+    body > .inventory-dispensing-unit-menu .inventory-dispensing-unit-option.is-selected {
+        border-color: #70131B;
+        background: #70131B;
+        color: #ffffff !important;
+    }
+
+    body.admin-inventory-page .inventory-category-menu .inventory-category-option:hover,
+    body.admin-inventory-page .inventory-category-menu .inventory-category-option:focus-visible,
+    body.admin-inventory-page .inventory-medicine-type-option:hover,
+    body.admin-inventory-page .inventory-medicine-type-option:focus-visible,
+    body.admin-inventory-page .inventory-unit-option:hover,
+    body.admin-inventory-page .inventory-unit-option:focus-visible,
+    body.admin-inventory-page .inventory-dispensing-unit-option:hover,
+    body.admin-inventory-page .inventory-dispensing-unit-option:focus-visible,
+    body > .inventory-medicine-type-menu .inventory-medicine-type-option:hover,
+    body > .inventory-unit-menu .inventory-unit-option:hover,
+    body > .inventory-dispensing-unit-menu .inventory-dispensing-unit-option:hover {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B !important;
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .24);
+    }
+
+    body.admin-inventory-page .inventory-import-select option {
+        background: #ffffff;
+        color: #70131B;
+        font-weight: 800;
+    }
+
+    body.admin-inventory-page .inventory-import-select option:checked {
+        background: #70131B;
+        color: #ffffff;
+    }
+
+    body.admin-inventory-page #issueModal .issue-reason-group {
+        position: relative;
+        z-index: 12;
+        overflow: visible;
+    }
+
+    body.admin-inventory-page .issue-reason-wrap {
+        position: relative;
+        width: 100%;
+    }
+
+    body.admin-inventory-page .issue-reason-native {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    body.admin-inventory-page .issue-reason-display {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        min-height: 42px;
+        padding: 0 12px;
+        border: 1px solid #e4c8ce;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #70131B;
+        font-size: 13px;
+        font-weight: 800;
+        text-align: left;
+        cursor: pointer;
+        box-shadow:
+            0 10px 20px rgba(112, 19, 27, .08),
+            0 2px 7px rgba(15, 23, 42, .04);
+        transition: border-color .18s ease, background-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    body.admin-inventory-page .issue-reason-display::before,
+    body.admin-inventory-page .issue-reason-option::before {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(255, 247, 181, 0) 0%, rgba(255, 247, 181, .72) 45%, rgba(255, 247, 181, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.05s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    body.admin-inventory-page .issue-reason-display > span,
+    body.admin-inventory-page .issue-reason-display > svg,
+    body.admin-inventory-page .issue-reason-option > span {
+        position: relative;
+        z-index: 1;
+    }
+
+    body.admin-inventory-page .issue-reason-arrow {
+        width: 15px;
+        height: 15px;
+        flex: 0 0 15px;
+        transition: transform .18s ease;
+    }
+
+    body.admin-inventory-page .issue-reason-wrap.is-open .issue-reason-arrow {
+        transform: rotate(180deg);
+    }
+
+    body.admin-inventory-page .issue-reason-display:hover,
+    body.admin-inventory-page .issue-reason-display:focus-visible,
+    body.admin-inventory-page .issue-reason-wrap.is-open .issue-reason-display {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow:
+            0 0 0 3px rgba(250, 204, 21, .14),
+            0 14px 26px rgba(112, 19, 27, .12);
+    }
+
+    body.admin-inventory-page .issue-reason-display:hover::before,
+    body.admin-inventory-page .issue-reason-display:focus-visible::before,
+    body.admin-inventory-page .issue-reason-option:hover::before,
+    body.admin-inventory-page .issue-reason-option:focus-visible::before {
+        left: 125%;
+    }
+
+    body.admin-inventory-page .issue-reason-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        z-index: 40;
+        display: none;
+        gap: 8px;
+        padding: 8px;
+        border: 1px solid #ead3d7;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 22px 48px rgba(15, 23, 42, .18);
+    }
+
+    body.admin-inventory-page .issue-reason-wrap.is-open .issue-reason-menu {
+        display: grid;
+        animation: inventoryIssueReasonOpen .18s ease-out;
+    }
+
+    body.admin-inventory-page .issue-reason-option {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        min-height: 38px;
+        padding: 0 12px;
+        border: 1px solid #ead3d7;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #70131B;
+        font-size: 13px;
+        font-weight: 900;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color .18s ease, background-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    body.admin-inventory-page .issue-reason-option.is-selected {
+        border-color: #70131B;
+        background: #70131B;
+        color: #ffffff;
+    }
+
+    body.admin-inventory-page .issue-reason-option:hover,
+    body.admin-inventory-page .issue-reason-option:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .24);
+    }
+
+    @keyframes inventoryIssueReasonOpen {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .issue-reason-display {
+        border-color: rgba(250, 204, 21, .20);
+        background: #182334;
+        color: #ffffff;
+        box-shadow: 0 14px 28px rgba(0, 0, 0, .32);
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .issue-reason-menu {
+        border-color: rgba(255, 255, 255, .16);
+        background: #182334;
+        box-shadow: 0 22px 48px rgba(0, 0, 0, .38);
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .issue-reason-option {
+        border-color: rgba(255, 255, 255, .16);
+        background: #223044;
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .issue-reason-option.is-selected {
+        border-color: #9f1d2d;
+        background: #9f1d2d;
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .issue-reason-display:hover,
+    html[data-theme="dark"] body.admin-inventory-page .issue-reason-display:focus-visible,
+    html[data-theme="dark"] body.admin-inventory-page .issue-reason-wrap.is-open .issue-reason-display,
+    html[data-theme="dark"] body.admin-inventory-page .issue-reason-option:hover,
+    html[data-theme="dark"] body.admin-inventory-page .issue-reason-option:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+    }
+
+    body.admin-inventory-page #inventoryImportCategoryOptions .inventory-category-option {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        min-height: 38px !important;
+        padding: 0 12px !important;
+        border: 1px solid #ead3d7 !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+        color: #70131B !important;
+        font-size: 12px !important;
+        font-weight: 900 !important;
+        box-shadow: none !important;
+    }
+
+    body.admin-inventory-page #inventoryImportCategoryOptions .inventory-category-option:hover,
+    body.admin-inventory-page #inventoryImportCategoryOptions .inventory-category-option:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .24) !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-search-wrap,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-filter-toggle,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-actions-toggle,
+    html[data-theme="dark"] body.admin-inventory-page .btn-add:not(.inventory-action-card),
+    html[data-theme="dark"] body.admin-inventory-page .inventory-manage-btn {
+        box-shadow:
+            0 16px 30px rgba(0, 0, 0, .44),
+            0 5px 14px rgba(0, 0, 0, .28) !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-btn-cancel:not(.inventory-modal-close):not(.inventory-category-option),
+    html[data-theme="dark"] body.admin-inventory-page .inventory-actions-toggle,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-category-display,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-medicine-type-display,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-unit-display,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-dispensing-unit-display,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-import-select {
+        border-color: rgba(250, 204, 21, .20) !important;
+        background-color: #182334 !important;
+        color: #ffffff !important;
+        box-shadow: 0 14px 28px rgba(0, 0, 0, .32) !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-import-select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m6 8 4 4 4-4' stroke='%23FACC15' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-actions-menu,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-category-menu,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-medicine-type-menu,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-unit-menu,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-dispensing-unit-menu,
+    html[data-theme="dark"] body > .inventory-medicine-type-menu,
+    html[data-theme="dark"] body > .inventory-unit-menu,
+    html[data-theme="dark"] body > .inventory-dispensing-unit-menu {
+        border-color: rgba(255, 255, 255, .16);
+        background: #182334;
+        box-shadow: 0 22px 48px rgba(0, 0, 0, .38);
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-actions-menu-item,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-subfilter-pill,
+    html[data-theme="dark"] body.admin-inventory-page .restock-quick-btn,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-category-menu .inventory-category-option,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-medicine-type-option,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-unit-option,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-dispensing-unit-option,
+    html[data-theme="dark"] body > .inventory-medicine-type-menu .inventory-medicine-type-option,
+    html[data-theme="dark"] body > .inventory-unit-menu .inventory-unit-option,
+    html[data-theme="dark"] body > .inventory-dispensing-unit-menu .inventory-dispensing-unit-option {
+        border-color: rgba(255, 255, 255, .16);
+        background: #223044;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-subfilter-pill.is-active,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-category-menu .inventory-category-option.is-selected,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-medicine-type-option.is-selected,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-unit-option.is-selected,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-dispensing-unit-option.is-selected,
+    html[data-theme="dark"] body > .inventory-medicine-type-menu .inventory-medicine-type-option.is-selected,
+    html[data-theme="dark"] body > .inventory-unit-menu .inventory-unit-option.is-selected,
+    html[data-theme="dark"] body > .inventory-dispensing-unit-menu .inventory-dispensing-unit-option.is-selected {
+        border-color: #9f1d2d;
+        background: #9f1d2d;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-actions-menu-item:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-actions-menu-item:focus-visible,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-subfilter-pill:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-subfilter-pill:focus-visible,
+    html[data-theme="dark"] body.admin-inventory-page .restock-quick-btn:hover,
+    html[data-theme="dark"] body.admin-inventory-page .restock-quick-btn:focus-visible,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-category-menu .inventory-category-option:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-medicine-type-option:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-unit-option:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-dispensing-unit-option:hover,
+    html[data-theme="dark"] body > .inventory-medicine-type-menu .inventory-medicine-type-option:hover,
+    html[data-theme="dark"] body > .inventory-unit-menu .inventory-unit-option:hover,
+    html[data-theme="dark"] body > .inventory-dispensing-unit-menu .inventory-dispensing-unit-option:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-btn-cancel:not(.inventory-modal-close):not(.inventory-category-option):hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-btn-cancel:not(.inventory-modal-close):not(.inventory-category-option):focus-visible,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-actions-toggle:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-actions-toggle:focus-visible,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-actions-dropdown.is-open .inventory-actions-toggle {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-category-display:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-category-display:focus,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-category-display.is-open,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-medicine-type-display:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-medicine-type-display:focus,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-medicine-type-display.is-open,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-unit-display:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-unit-display:focus,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-unit-display.is-open,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-dispensing-unit-display:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-dispensing-unit-display:focus,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-dispensing-unit-display.is-open,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-import-select:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-import-select:focus {
+        border-color: #facc15 !important;
+        background-color: #facc15 !important;
+        color: #70131B !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-medicine-type-search,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-unit-search,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-dispensing-unit-search,
+    html[data-theme="dark"] body > .inventory-medicine-type-menu .inventory-medicine-type-search,
+    html[data-theme="dark"] body > .inventory-unit-menu .inventory-unit-search,
+    html[data-theme="dark"] body > .inventory-dispensing-unit-menu .inventory-dispensing-unit-search {
+        border-color: rgba(255, 255, 255, .16);
+        background: #223044;
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-import-select option {
+        background: #182334;
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #inventoryImportCategoryOptions .inventory-category-option {
+        border-color: rgba(255, 255, 255, .16) !important;
+        background: #223044 !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #inventoryImportCategoryOptions .inventory-category-option:hover,
+    html[data-theme="dark"] body.admin-inventory-page #inventoryImportCategoryOptions .inventory-category-option:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+
+    /* Final dark-mode surfaces for Import Inventory and Add Item */
+    #inventoryImportModal .modal-box {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: calc(100dvh - clamp(18px, 3vw, 40px)) !important;
+    }
+
+    #inventoryImportModal form {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    html[data-theme="dark"] #inventoryImportModal .modal-box,
+    html[data-theme="dark"] #itemModal .modal-box {
+        background: #0f172a !important;
+        border-left-color: rgba(250, 204, 21, .18) !important;
+        border-right-color: rgba(250, 204, 21, .18) !important;
+        box-shadow: 0 26px 64px rgba(0, 0, 0, .48) !important;
+    }
+
+    html[data-theme="dark"] #inventoryImportModal .inventory-modal-body,
+    html[data-theme="dark"] #itemModal .inventory-modal-body,
+    html[data-theme="dark"] #inventoryImportModal .modal-actions-row,
+    html[data-theme="dark"] #itemModal .modal-actions-row {
+        background: #0f172a !important;
+        border-color: rgba(250, 204, 21, .16) !important;
+    }
+
+    html[data-theme="dark"] #inventoryImportModal .modal-actions-row,
+    html[data-theme="dark"] #itemModal .modal-actions-row {
+        border-top: 1px solid rgba(250, 204, 21, .16) !important;
+    }
+
+    html[data-theme="dark"] #inventoryImportModal .inventory-import-drop {
+        border-color: rgba(250, 204, 21, .32) !important;
+        background: #1f2937 !important;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, .04),
+            0 16px 32px rgba(0, 0, 0, .24) !important;
+    }
+
+    html[data-theme="dark"] #inventoryImportModal .inventory-import-drop label,
+    html[data-theme="dark"] #inventoryImportModal .inventory-import-note {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #inventoryImportModal .inventory-import-note {
+        color: #cbd5e1 !important;
+    }
+
+    html[data-theme="dark"] #inventoryImportModal input[type="file"] {
+        border-color: rgba(250, 204, 21, .22) !important;
+        background: #111827 !important;
+        color: #f8fafc !important;
+        color-scheme: dark;
+    }
+
+    html[data-theme="dark"] #inventoryImportModal input[type="file"]::file-selector-button {
+        min-height: 32px;
+        margin-right: 12px;
+        padding: 0 12px;
+        border: 1px solid rgba(250, 204, 21, .28);
+        border-radius: 8px;
+        background: #223044;
+        color: #ffffff;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    html[data-theme="dark"] #inventoryImportModal input[type="file"]::file-selector-button:hover {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+    }
+
+    html[data-theme="dark"] #itemModal .modal-form-panel,
+    html[data-theme="dark"] #itemModal .inventory-subgroup {
+        border-color: rgba(250, 204, 21, .18) !important;
+        background: #111827 !important;
+    }
+
+    html[data-theme="dark"] #itemModal .form-group,
+    html[data-theme="dark"] #itemModal .inventory-subgroup .form-group {
+        border-color: rgba(148, 163, 184, .24) !important;
+        background: #1f2937 !important;
+    }
+
+    html[data-theme="dark"] #itemModal .form-group label,
+    html[data-theme="dark"] #itemModal .modal-panel-title,
+    html[data-theme="dark"] #itemModal .form-control,
+    html[data-theme="dark"] #itemModal .form-select {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #itemModal .form-control::placeholder,
+    html[data-theme="dark"] #itemModal .form-select::placeholder,
+    html[data-theme="dark"] #itemModal .form-note {
+        color: #cbd5e1 !important;
+        opacity: 1 !important;
+    }
+
+    html[data-theme="dark"] #itemModal input[type="date"],
+    html[data-theme="dark"] #itemModal input[type="number"] {
+        color-scheme: dark;
+    }
+
+    html[data-theme="dark"] #itemModal #minimumStockUnitLabel,
+    html[data-theme="dark"] #itemModal #restockUnitLabel,
+    html[data-theme="dark"] #itemModal #issueUnitLabel {
+        color: #facc15 !important;
+    }
+
+    body.admin-inventory-page .inventory-category-wrap::after,
+    body.admin-inventory-page .inventory-medicine-type-wrap::after,
+    body.admin-inventory-page .inventory-unit-wrap::after,
+    body.admin-inventory-page .inventory-dispensing-unit-wrap::after {
+        top: 21px;
+        right: 16px;
+        width: 7px;
+        height: 7px;
+        border-right-width: 1.75px;
+        border-bottom-width: 1.75px;
+        transform: translateY(-65%) rotate(45deg);
+    }
+
+    body.admin-inventory-page .inventory-category-wrap::before,
+    body.admin-inventory-page .inventory-medicine-type-wrap::before,
+    body.admin-inventory-page .inventory-unit-wrap::before,
+    body.admin-inventory-page .inventory-dispensing-unit-wrap::before {
+        top: 21px;
+        right: 36px;
+        height: 18px;
+    }
+
+    body.admin-inventory-page .inventory-category-wrap.is-open::after,
+    body.admin-inventory-page .inventory-medicine-type-wrap.is-open::after,
+    body.admin-inventory-page .inventory-unit-wrap.is-open::after,
+    body.admin-inventory-page .inventory-dispensing-unit-wrap.is-open::after {
+        transform: translateY(-25%) rotate(225deg);
+    }
+
+    body.admin-inventory-page #itemModal .modal-box {
+        width: min(100%, 1080px) !important;
+    }
+
+    body.admin-inventory-page #itemModal input.form-control,
+    body.admin-inventory-page #itemModal textarea.form-control {
+        min-height: 38px !important;
+        padding: 8px 0 5px !important;
+        border: 0 !important;
+        border-bottom: 1px solid #cbd5e1 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    body.admin-inventory-page #itemModal input.form-control:hover,
+    body.admin-inventory-page #itemModal textarea.form-control:hover {
+        border-bottom-color: #d9a9b4 !important;
+    }
+
+    body.admin-inventory-page #itemModal input.form-control:focus,
+    body.admin-inventory-page #itemModal textarea.form-control:focus {
+        border: 0 !important;
+        border-bottom: 2px solid #8f2230 !important;
+        border-radius: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #itemModal input.form-control,
+    html[data-theme="dark"] body.admin-inventory-page #itemModal textarea.form-control {
+        border-bottom-color: rgba(203, 213, 225, .34) !important;
+        background: transparent !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #itemModal input.form-control:hover,
+    html[data-theme="dark"] body.admin-inventory-page #itemModal textarea.form-control:hover {
+        border-bottom-color: rgba(250, 204, 21, .58) !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #itemModal input.form-control:focus,
+    html[data-theme="dark"] body.admin-inventory-page #itemModal textarea.form-control:focus {
+        border-bottom-color: #facc15 !important;
+    }
+
+    body.admin-inventory-page #inventoryImportModal .inventory-modal-head-main,
+    body.admin-inventory-page #inventoryImportReviewModal .inventory-modal-head-main,
+    body.admin-inventory-page #itemModal .inventory-modal-head-main {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        column-gap: 12px;
+        row-gap: 3px;
+        align-items: center;
+    }
+
+    body.admin-inventory-page #inventoryImportModal .inventory-modal-title-row,
+    body.admin-inventory-page #inventoryImportReviewModal .inventory-modal-title-row,
+    body.admin-inventory-page #itemModal .inventory-modal-title-row {
+        display: contents;
+    }
+
+    body.admin-inventory-page #inventoryImportModal .inventory-modal-title-icon,
+    body.admin-inventory-page #inventoryImportReviewModal .inventory-modal-title-icon,
+    body.admin-inventory-page #itemModal .inventory-modal-title-icon {
+        grid-column: 1;
+        grid-row: 1 / span 2;
+        align-self: center;
+    }
+
+    body.admin-inventory-page #inventoryImportModal .inventory-modal-title,
+    body.admin-inventory-page #inventoryImportReviewModal .inventory-modal-title,
+    body.admin-inventory-page #itemModal .inventory-modal-title {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: end;
+    }
+
+    body.admin-inventory-page #inventoryImportModal .inventory-modal-copy,
+    body.admin-inventory-page #inventoryImportReviewModal .inventory-modal-copy,
+    body.admin-inventory-page #itemModal .inventory-modal-copy {
+        grid-column: 2;
+        grid-row: 2;
+        align-self: start;
+        margin: 0 !important;
+    }
+
+    @media (max-width: 768px) {
+        body.admin-inventory-page .inventory-filter-toggle,
+        body.admin-inventory-page .inventory-actions-toggle {
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: none !important;
+        }
+
+        body.admin-inventory-page .inventory-actions-dropdown,
+        body.admin-inventory-page .inventory-actions {
+            width: 100%;
+        }
+
+        body.admin-inventory-page .inventory-actions-menu {
+            right: 0;
+            top: calc(100% + 8px);
+            transform: none;
+            width: min(220px, calc(100vw - 40px));
+        }
+    }
+
+    /* Keep Issue Stock actions visible while only the form fields scroll. */
+    body.admin-inventory-page #issueModal .modal-box {
+        overflow: hidden !important;
+    }
+
+    body.admin-inventory-page #issueModal #issueForm {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    body.admin-inventory-page #issueModal .inventory-modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none !important;
+        overflow-y: auto !important;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(112, 19, 27, .52) transparent;
+    }
+
+    body.admin-inventory-page #issueModal .inventory-modal-body::-webkit-scrollbar {
+        width: 7px;
+        height: 7px;
+    }
+
+    body.admin-inventory-page #issueModal .inventory-modal-body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    body.admin-inventory-page #issueModal .inventory-modal-body::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(112, 19, 27, .52);
+    }
+
+    body.admin-inventory-page #issueModal .modal-actions-row {
+        position: relative;
+        z-index: 14;
+        flex: 0 0 auto;
+        margin: 0;
+        padding: 12px clamp(18px, 2.2vw, 26px);
+        border-top: 1px solid rgba(112, 19, 27, .12);
+        background: rgba(255, 255, 255, .98);
+        box-shadow: 0 -12px 28px rgba(15, 23, 42, .07);
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #issueModal .inventory-modal-body {
+        scrollbar-color: rgba(250, 204, 21, .52) transparent;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #issueModal .inventory-modal-body::-webkit-scrollbar-thumb {
+        background: rgba(250, 204, 21, .52);
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #issueModal .modal-actions-row {
+        border-top-color: rgba(250, 204, 21, .16);
+        background: #0f172a;
+        box-shadow: 0 -12px 28px rgba(0, 0, 0, .28);
+    }
+
+    @media (max-width: 768px) {
+        body.admin-inventory-page #issueModal .modal-box {
+            height: calc(100dvh - 20px) !important;
+            max-height: calc(100dvh - 20px) !important;
+            overflow: hidden !important;
+        }
+
+        body.admin-inventory-page #issueModal .inventory-modal-body {
+            max-height: none !important;
+            padding: 14px !important;
+        }
+
+        body.admin-inventory-page #issueModal .modal-actions-row {
+            padding: 10px 14px;
+        }
+    }
+
+</style>
+@endpush
+
+@push('late-styles')
+<style>
+    body.admin-inventory-page .inventory-summary-head,
+    body.admin-inventory-page .inventory-summary-tools {
+        position: static !important;
+        inset: auto !important;
+    }
+
+    body.admin-inventory-page .inventory-table-scroll #inventoryTable thead th {
+        position: sticky;
+        top: 0;
+        z-index: 12;
+        background: #fbf2f3 !important;
+        box-shadow: 0 1px 0 rgba(112, 19, 27, .16);
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-table-scroll #inventoryTable thead th {
+        background: #2b1720 !important;
+        box-shadow: 0 1px 0 rgba(250, 204, 21, .20);
+    }
+
+    body.admin-inventory-page .inventory-table-pagination {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(140px, auto);
+        align-items: center;
+        gap: 16px;
+        margin-top: 16px;
+        padding: 14px 16px;
+        box-sizing: border-box;
+        border: 1px solid rgba(250, 204, 21, .28);
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, .10), 0 3px 10px rgba(15, 23, 42, .05);
+    }
+
+    body.admin-inventory-page .inventory-pagination-summary {
+        min-width: 0;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    body.admin-inventory-page .inventory-pagination-actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    body.admin-inventory-page .inventory-pagination-pages {
+        display: contents;
+    }
+
+    body.admin-inventory-page .inventory-pagination-btn {
+        min-width: 38px;
+        min-height: 38px;
+        padding: 0 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #ead8dc;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #70131B;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, .05);
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+
+    body.admin-inventory-page .inventory-pagination-btn:hover:not(:disabled),
+    body.admin-inventory-page .inventory-pagination-btn:focus-visible:not(:disabled),
+    body.admin-inventory-page .inventory-page-size-trigger:hover,
+    body.admin-inventory-page .inventory-page-size-trigger:focus-visible,
+    body.admin-inventory-page .inventory-page-size-option:hover,
+    body.admin-inventory-page .inventory-page-size-option:focus-visible,
+    body.admin-inventory-page .inventory-page-size-option.is-selected:hover,
+    body.admin-inventory-page .inventory-page-size-option.is-selected:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow: 0 10px 20px rgba(250, 204, 21, .22);
+    }
+
+    body.admin-inventory-page .inventory-pagination-btn.is-active,
+    body.admin-inventory-page .inventory-page-size-option.is-selected {
+        border-color: #8f0015;
+        background: #8f0015;
+        color: #ffffff;
+        cursor: default;
+    }
+
+    body.admin-inventory-page .inventory-pagination-btn:disabled:not(.is-active) {
+        opacity: .45;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    body.admin-inventory-page .inventory-page-size {
+        position: relative;
+        justify-self: end;
+        width: 148px;
+        min-width: 0;
+    }
+
+    body.admin-inventory-page .inventory-page-size-trigger {
+        position: relative;
+        width: 100%;
+        min-height: 42px;
+        padding: 0 34px 0 13px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        border: 1px solid #ead3d7;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #70131B;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .10);
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+
+    body.admin-inventory-page .inventory-page-size-trigger::after {
+        content: "";
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        width: 7px;
+        height: 7px;
+        border-right: 1.7px solid currentColor;
+        border-bottom: 1.7px solid currentColor;
+        transform: translateY(-65%) rotate(45deg);
+        transition: transform .18s ease;
+    }
+
+    body.admin-inventory-page .inventory-page-size.is-open .inventory-page-size-trigger::after {
+        transform: translateY(-35%) rotate(225deg);
+    }
+
+    body.admin-inventory-page .inventory-page-size-menu {
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 8px);
+        z-index: 90;
+        display: none;
+        width: 170px;
+        gap: 8px;
+        padding: 8px;
+        border: 1px solid #ead3d7;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 18px 36px rgba(15, 23, 42, .18);
+    }
+
+    body.admin-inventory-page .inventory-page-size.is-open .inventory-page-size-menu {
+        display: grid;
+    }
+
+    body.admin-inventory-page .inventory-page-size-option {
+        width: 100%;
+        min-height: 38px;
+        padding: 0 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        border: 1px solid #ead3d7;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #70131B;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-table-pagination,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-size-menu {
+        border-color: rgba(250, 204, 21, .18);
+        background: #111827;
+        box-shadow: 0 16px 32px rgba(0, 0, 0, .30);
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-pagination-summary {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-pagination-btn,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-size-trigger,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-size-option {
+        border-color: rgba(255, 255, 255, .16);
+        background: #182334;
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-pagination-btn.is-active,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-size-option.is-selected {
+        border-color: #9f1d2d;
+        background: #9f1d2d;
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-pagination-btn:hover:not(:disabled),
+    html[data-theme="dark"] body.admin-inventory-page .inventory-pagination-btn:focus-visible:not(:disabled),
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-size-trigger:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-size-trigger:focus-visible,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-size-option:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-size-option:focus-visible,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-size-option.is-selected:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-size-option.is-selected:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+    }
+
+    @media (max-width: 768px) {
+        body.admin-inventory-page .inventory-table-pagination {
+            grid-template-columns: 1fr;
+            justify-items: center;
+            padding: 12px;
+        }
+
+        body.admin-inventory-page .inventory-pagination-summary {
+            text-align: center;
+        }
+
+        body.admin-inventory-page .inventory-page-size {
+            justify-self: center;
+            width: min(100%, 180px);
+        }
+    }
+
+    /* Match the compact pagination used by the appointments table. */
+    body.admin-inventory-page .inventory-table-pagination {
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        gap: 10px;
+        position: static;
+        margin-top: 10px;
+        padding: 8px 10px;
+        border-radius: 10px;
+    }
+
+    body.admin-inventory-page .inventory-table-pagination[hidden] {
+        display: none !important;
+    }
+
+    body.admin-inventory-page .inventory-pagination-summary {
+        justify-self: start;
+        font-size: 11px;
+    }
+
+    body.admin-inventory-page .inventory-pagination-actions {
+        justify-self: center;
+        gap: 6px;
+    }
+
+    body.admin-inventory-page .inventory-pagination-btn {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        min-height: 34px;
+        padding: 0 8px;
+        border-radius: 7px;
+        font-size: 11px;
+    }
+
+    body.admin-inventory-page .inventory-page-size {
+        width: 132px;
+    }
+
+    body.admin-inventory-page .inventory-page-size-trigger {
+        isolation: isolate;
+        overflow: hidden;
+        height: 36px;
+        min-height: 36px;
+        font-size: 11px;
+        text-align: left;
+    }
+
+    body.admin-inventory-page .inventory-page-size-trigger > span,
+    body.admin-inventory-page .inventory-page-size-option {
+        position: relative;
+        z-index: 1;
+    }
+
+    body.admin-inventory-page .inventory-page-size-option {
+        isolation: isolate;
+        overflow: hidden;
+    }
+
+    body.admin-inventory-page .inventory-pagination-btn::before,
+    body.admin-inventory-page .inventory-page-size-trigger::before,
+    body.admin-inventory-page .inventory-page-size-option::before {
+        content: "";
+        position: absolute;
+        top: -45%;
+        left: -135%;
+        width: 72%;
+        height: 190%;
+        transform: skewX(-20deg);
+        background: rgba(255, 247, 178, .72);
+        transition: left .72s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    body.admin-inventory-page .inventory-pagination-btn:hover:not(:disabled)::before,
+    body.admin-inventory-page .inventory-pagination-btn:focus-visible:not(:disabled)::before,
+    body.admin-inventory-page .inventory-page-size-trigger:hover::before,
+    body.admin-inventory-page .inventory-page-size-trigger:focus-visible::before,
+    body.admin-inventory-page .inventory-page-size-option:hover::before,
+    body.admin-inventory-page .inventory-page-size-option:focus-visible::before {
+        left: 135%;
+    }
+
+    body.admin-inventory-page .inventory-pagination-btn.is-active,
+    body.admin-inventory-page .inventory-page-size-option.is-selected,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-pagination-btn.is-active,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-size-option.is-selected {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    body.admin-inventory-page .inventory-page-size-option.is-selected:hover,
+    body.admin-inventory-page .inventory-page-size-option.is-selected:focus-visible,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-size-option.is-selected:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-page-size-option.is-selected:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+        cursor: pointer;
+    }
+
+    /* Final inventory dark-mode pass: keep every page surface and interaction legible. */
+    html[data-theme="dark"] body.admin-inventory-page .controls,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-summary-card {
+        border-color: rgba(250, 204, 21, .20) !important;
+        background: #0f172a !important;
+        box-shadow:
+            0 18px 38px rgba(0, 0, 0, .38),
+            0 0 0 1px rgba(250, 204, 21, .04) !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-overview-head {
+        min-height: 84px;
+        border-bottom-color: rgba(250, 204, 21, .14) !important;
+        background: #111827;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-title-block .inventory-page-title span,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-summary-title {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-title-block .inventory-page-title span {
+        line-height: 1.18;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-title-block .inventory-page-title svg {
+        border: 1px solid rgba(248, 113, 113, .20);
+        background: #2b1720 !important;
+        color: #f87171 !important;
+        box-shadow: 0 10px 22px rgba(0, 0, 0, .24);
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-summary-container {
+        background: #0f172a;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card:not(.is-clickable) {
+        background: #111c2e !important;
+        color: #f8fafc !important;
+        box-shadow:
+            0 16px 30px rgba(0, 0, 0, .34),
+            0 0 0 1px rgba(255, 255, 255, .025) !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card:not(.is-clickable):hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card:not(.is-clickable):focus-visible {
+        border-color: rgba(250, 204, 21, .46) !important;
+        background: #19263a !important;
+        color: #ffffff !important;
+        box-shadow:
+            0 20px 38px rgba(0, 0, 0, .42),
+            0 0 0 1px rgba(250, 204, 21, .12) !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card.is-clickable {
+        border-color: rgba(250, 204, 21, .55) !important;
+        background: linear-gradient(135deg, #7f1725, #97182a) !important;
+        color: #ffffff !important;
+        box-shadow:
+            0 18px 36px rgba(0, 0, 0, .42),
+            0 7px 16px rgba(112, 19, 27, .30) !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card.is-clickable:hover,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-modern-card.is-clickable:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-search-wrap,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-search-shell.is-open .inventory-search-wrap {
+        border-color: rgba(250, 204, 21, .28) !important;
+        background: #111827 !important;
+        box-shadow:
+            0 14px 28px rgba(0, 0, 0, .32),
+            0 0 0 1px rgba(250, 204, 21, .04) !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-search-wrap::before {
+        color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-search-input,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-search-input::placeholder {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-filter-toggle,
+    html[data-theme="dark"] body.admin-inventory-page .inventory-filter-shell.is-open .inventory-filter-toggle:not(:hover):not(:focus-visible) {
+        border-color: #9f1d2d !important;
+        background: #9f1d2d !important;
+        color: #ffffff !important;
+        box-shadow:
+            0 16px 30px rgba(0, 0, 0, .38),
+            0 5px 14px rgba(112, 19, 27, .26) !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-summary-card::before {
+        background: #facc15 !important;
+        box-shadow: 0 0 18px rgba(250, 204, 21, .24);
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-table-scroll {
+        border-radius: 10px;
+        background: #111827;
+        scrollbar-color: rgba(250, 204, 21, .46) transparent;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #inventoryTable {
+        background: #111827 !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-table-scroll #inventoryTable thead th {
+        border-bottom-color: rgba(250, 204, 21, .22) !important;
+        background: #2b1720 !important;
+        color: #fecdd3 !important;
+        box-shadow: 0 1px 0 rgba(250, 204, 21, .18);
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #inventoryTable tbody tr:not(.inventory-row-highlight):not(.inventory-row-highlight-expired) {
+        background: #111827 !important;
+        transition: background-color .18s ease;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #inventoryTable tbody tr:nth-child(even):not(.inventory-row-highlight):not(.inventory-row-highlight-expired) {
+        background: #142033 !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #inventoryTable tbody tr:not(.inventory-row-highlight):not(.inventory-row-highlight-expired):hover {
+        background: #1b2940 !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #inventoryTable tbody tr.inventory-row-highlight {
+        background: #3a3218 !important;
+        outline-color: #facc15;
+        box-shadow: inset 0 0 0 1px rgba(250, 204, 21, .28);
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #inventoryTable tbody tr.inventory-row-highlight-expired {
+        background: #3b1820 !important;
+        outline-color: #f87171;
+        box-shadow: inset 0 0 0 1px rgba(248, 113, 113, .28);
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #inventoryTable tbody td {
+        border-bottom-color: rgba(148, 163, 184, .15) !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page #inventoryTable tbody td small,
+    html[data-theme="dark"] body.admin-inventory-page #inventoryTable .inventory-unit-note {
+        color: #cbd5e1 !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-unit-pill {
+        border-color: rgba(250, 204, 21, .34) !important;
+        background: rgba(250, 204, 21, .10) !important;
+        color: #fde68a !important;
+    }
+
+    html[data-theme="dark"] body.admin-inventory-page .inventory-table-pagination {
+        border-color: rgba(250, 204, 21, .18) !important;
+        background: #111827 !important;
+        box-shadow: 0 14px 28px rgba(0, 0, 0, .30) !important;
+    }
+
+    @media (max-width: 768px) {
+        body.admin-inventory-page .inventory-table-pagination {
+            grid-template-columns: 1fr;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        body.admin-inventory-page .inventory-page-size {
+            justify-self: center;
+            width: 132px;
+        }
+    }
 </style>
 @endpush
 
@@ -3872,7 +5902,7 @@
                     <span class="inventory-action-icon"><x-outline-icon name="plus-circle" /></span>
                     <span class="inventory-action-copy">
                         <span class="inventory-action-label">Stock Record</span>
-                        <strong>Add New Item</strong>
+                        <strong>Add Item</strong>
                         <span>Create manually</span>
                     </span>
                     <span class="inventory-action-arrow">&rarr;</span>
@@ -3901,22 +5931,31 @@
 
     <div class="card inventory-summary-card">
         <div class="inventory-summary-head">
-            <div class="inventory-filter-bar" id="inventoryFilterBar" aria-label="Inventory filters">
-                <button type="button" class="inventory-filter-pill is-active" data-inventory-filter="all" id="inventoryFilterAllBtn">
-                    <span id="inventoryFilterAllLabel">All</span>
-                    <svg class="inventory-filter-all-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 18 15 12 9 6"/>
-                    </svg>
-                </button>
-                <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="medicine">Medicines</button>
-                <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="supplies">Supplies</button>
-                <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="equipment">Equipment</button>
-                <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="low">Low Stock</button>
-                <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="out">Out of Stock</button>
-            </div>
-            <div class="inventory-search-shell" id="inventorySearchShell">
-                <div class="inventory-search-wrap">
-                    <input type="text" id="inventorySearchInput" class="inventory-search-input" placeholder="Search inventory...">
+            <div class="inventory-summary-title">Inventory Summary</div>
+            <div class="inventory-summary-tools">
+                <div class="inventory-search-shell" id="inventorySearchShell">
+                    <div class="inventory-search-wrap">
+                        <input type="text" id="inventorySearchInput" class="inventory-search-input" placeholder="Search inventory...">
+                    </div>
+                </div>
+                <div class="inventory-filter-shell" id="inventoryFilterShell">
+                    <button type="button" class="inventory-filter-toggle" id="inventoryFilterToggle" aria-label="Open inventory filters" aria-expanded="false" aria-controls="inventoryFilterMenu">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+                        </svg>
+                        <span>Filter</span>
+                    </button>
+                    <div class="inventory-filter-panel" id="inventoryFilterMenu" aria-hidden="true">
+                        <div class="inventory-filter-panel-title">Inventory Filter</div>
+                        <div class="inventory-filter-bar" id="inventoryFilterBar" aria-label="Inventory filters">
+                            <button type="button" class="inventory-filter-pill is-active" data-inventory-filter="all" id="inventoryFilterAllBtn"><span>All</span></button>
+                            <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="medicine"><span>Medicines</span></button>
+                            <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="supplies"><span>Supplies</span></button>
+                            <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="equipment"><span>Equipment</span></button>
+                            <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="low"><span>Low Stock</span></button>
+                            <button type="button" class="inventory-filter-pill inventory-filter-option" data-inventory-filter="out"><span>Out of Stock</span></button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3932,6 +5971,7 @@
                 </button>
             @endforeach
         </div>
+        <div class="inventory-table-scroll">
         <table id="inventoryTable">
             <thead>
                 <tr>    
@@ -4122,6 +6162,27 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
+        <div class="inventory-table-pagination" id="inventoryTablePagination" aria-label="Inventory pagination">
+            <span class="inventory-pagination-summary" id="inventoryPaginationSummary" aria-live="polite"></span>
+            <div class="inventory-pagination-actions">
+                <button type="button" class="inventory-pagination-btn" id="inventoryPaginationPrevious" aria-label="Previous page">&larr;</button>
+                <div class="inventory-pagination-pages" id="inventoryPaginationPages"></div>
+                <button type="button" class="inventory-pagination-btn" id="inventoryPaginationNext" aria-label="Next page">&rarr;</button>
+            </div>
+            <div class="inventory-page-size" id="inventoryPageSize">
+                <button type="button" class="inventory-page-size-trigger" id="inventoryPageSizeTrigger" aria-haspopup="listbox" aria-expanded="false">
+                    <span id="inventoryPageSizeLabel">20 per page</span>
+                </button>
+                <div class="inventory-page-size-menu" id="inventoryPageSizeMenu" role="listbox" aria-label="Inventory records per page">
+                    <button type="button" class="inventory-page-size-option is-selected" data-inventory-page-size="20" role="option" aria-selected="true">20 per page</button>
+                    <button type="button" class="inventory-page-size-option" data-inventory-page-size="40" role="option" aria-selected="false">40 per page</button>
+                    <button type="button" class="inventory-page-size-option" data-inventory-page-size="80" role="option" aria-selected="false">80 per page</button>
+                    <button type="button" class="inventory-page-size-option" data-inventory-page-size="100" role="option" aria-selected="false">100 per page</button>
+                    <button type="button" class="inventory-page-size-option" data-inventory-page-size="all" role="option" aria-selected="false">Show all</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     @if($canManageInventory)
@@ -4382,13 +6443,6 @@
                             <h3 id="modalTitle" class="inventory-modal-title" style="font-size:clamp(17px,1.6vw,22px); margin:0; font-weight:900;">Add New Item</h3>
                         </div>
                         <p class="inventory-modal-copy" style="margin:5px 0 0; font-size:13.5px; line-height:1.5;">Provide inventory details and save to update clinic stock records.</p>
-                    </div>
-                    <div class="item-modal-head-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                            <line x1="12" y1="22.08" x2="12" y2="12"/>
-                        </svg>
                     </div>
                     <button type="button" class="inventory-btn-cancel inventory-modal-close" onclick="closeModal()" aria-label="Close modal">
                         <x-outline-icon name="x-mark" />
@@ -4666,10 +6720,8 @@
                     <div class="inventory-modal-head-main">
                         <div class="inventory-modal-title-row">
                             <span class="inventory-modal-title-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 5v14" />
-                                    <path d="M5 12h14" />
-                                    <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z" />
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
                                 </svg>
                             </span>
                             <h3 class="inventory-modal-title">Restock Item</h3>
@@ -4705,8 +6757,18 @@
                         </div>
                         <div class="inventory-inline-grid">
                             <div class="form-group">
-                                <label>Quantity to Add &mdash; <span id="restockUnitLabel" style="font-weight:800;color:#70131B;text-transform:none;">pcs</span></label>
-                                <input type="number" name="restock_quantity" id="restockQuantity" class="form-control" min="0.01" step="0.01" required placeholder="e.g. 5">
+                                <label for="restockQuantity">Quantity to Add</label>
+                                <div class="restock-quantity-control">
+                                    <input type="number" name="restock_quantity" id="restockQuantity" class="form-control" min="0.01" step="0.01" required placeholder="e.g. 5">
+                                    <div class="restock-unit-shell">
+                                        <select id="restockUnitSelect" class="restock-quantity-unit" aria-label="Stock unit" disabled>
+                                            <option value="pcs">pcs</option>
+                                        </select>
+                                        <svg class="restock-unit-arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                            <path d="m6 8 4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </div>
+                                </div>
                                 <small class="form-note">Or click a preset above to fill quickly.</small>
                             </div>
                             <div class="form-group">
@@ -4732,10 +6794,8 @@
                     <div class="inventory-modal-head-main">
                         <div class="inventory-modal-title-row">
                             <span class="inventory-modal-title-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z" />
-                                    <path d="M9 12h10" />
-                                    <path d="m15 8 4 4-4 4" />
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m-6 3.75 3 3m0 0 3-3m-3 3V1.5m6 9h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-.75" />
                                 </svg>
                             </span>
                             <h3 class="inventory-modal-title">Issue Stock</h3>
@@ -4760,6 +6820,7 @@
                 </div>
                 <form id="issueForm" method="POST" action="#">
                     @csrf
+                    <input type="hidden" name="issue_request_token" id="issueRequestToken" value="">
                     <div class="inventory-modal-body">
                         <div class="form-group">
                             <label>Item Name</label>
@@ -4776,22 +6837,36 @@
                                 <input type="date" name="date_consumed" id="issueDateConsumed" class="form-control" required>
                             </div>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group issue-reason-group">
                             <label>Reason / Purpose</label>
-                            <select name="issue_reason" id="issueReason" class="form-control" required>
-                                <option value="Dispensed to Patient">Dispensed to Patient</option>
-                                <option value="Clinic Usage">Clinic Usage</option>
-                                <option value="Damaged/Expired">Damaged/Expired</option>
-                                <option value="Other">Other</option>
-                            </select>
+                            <div class="issue-reason-wrap" id="issueReasonWrap">
+                                <select name="issue_reason" id="issueReason" class="issue-reason-native" required aria-hidden="true" tabindex="-1">
+                                    <option value="Dispensed to Patient">Dispensed to Patient</option>
+                                    <option value="Clinic Usage">Clinic Usage</option>
+                                    <option value="Damaged/Expired">Damaged/Expired</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <button type="button" class="issue-reason-display" id="issueReasonDisplay" aria-haspopup="listbox" aria-expanded="false">
+                                    <span>Dispensed to Patient</span>
+                                    <svg class="issue-reason-arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                        <path d="m6 8 4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </button>
+                                <div class="issue-reason-menu" id="issueReasonMenu" role="listbox" aria-label="Issue reason options">
+                                    <button type="button" class="issue-reason-option is-selected" data-issue-reason-value="Dispensed to Patient" role="option" aria-selected="true"><span>Dispensed to Patient</span></button>
+                                    <button type="button" class="issue-reason-option" data-issue-reason-value="Clinic Usage" role="option" aria-selected="false"><span>Clinic Usage</span></button>
+                                    <button type="button" class="issue-reason-option" data-issue-reason-value="Damaged/Expired" role="option" aria-selected="false"><span>Damaged/Expired</span></button>
+                                    <button type="button" class="issue-reason-option" data-issue-reason-value="Other" role="option" aria-selected="false"><span>Other</span></button>
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Remarks</label>
                             <textarea name="issue_remarks" id="issueRemarks" class="form-control" rows="3" placeholder="Optional note for the inventory log"></textarea>
                         </div>
-                        <div class="modal-actions-row">
-                            <button type="submit" class="btn-add" id="issueSubmitBtn">Save Issuance</button>
-                        </div>
+                    </div>
+                    <div class="modal-actions-row">
+                        <button type="submit" class="btn-add" id="issueSubmitBtn">Save Issuance</button>
                     </div>
                 </form>
             </div>
@@ -4874,8 +6949,27 @@
     const inventoryFilterToggle = document.getElementById('inventoryFilterToggle');
     const inventoryFilterMenu = document.getElementById('inventoryFilterMenu');
     const inventoryFilterItems = Array.from(document.querySelectorAll('.inventory-filter-pill'));
+    const inventoryPagination = document.getElementById('inventoryTablePagination');
+    const inventoryPaginationSummary = document.getElementById('inventoryPaginationSummary');
+    const inventoryPaginationPrevious = document.getElementById('inventoryPaginationPrevious');
+    const inventoryPaginationNext = document.getElementById('inventoryPaginationNext');
+    const inventoryPaginationPages = document.getElementById('inventoryPaginationPages');
+    const inventoryPageSize = document.getElementById('inventoryPageSize');
+    const inventoryPageSizeTrigger = document.getElementById('inventoryPageSizeTrigger');
+    const inventoryPageSizeLabel = document.getElementById('inventoryPageSizeLabel');
+    const inventoryPageSizeOptions = Array.from(document.querySelectorAll('[data-inventory-page-size]'));
     let activeInventoryFilter = 'all';
     let activeMedicineTypeFilter = 'all';
+    let currentInventoryPage = 1;
+    let currentInventoryPageSize = '20';
+
+    const highlightedInventoryIndex = inventoryRows.findIndex(function(row) {
+        return row === highlightedRow || row === highlightedExpiredRow;
+    });
+
+    if (highlightedInventoryIndex >= 0) {
+        currentInventoryPage = Math.floor(highlightedInventoryIndex / 20) + 1;
+    }
     const categorySelect = document.getElementById('iCategory');
     const categoryWrap = document.getElementById('inventoryCategoryWrap');
     const categoryDisplay = document.getElementById('inventoryCategoryDisplay');
@@ -4920,6 +7014,12 @@
     const issuePreviewLine = document.getElementById('issuePreviewLine');
     const issueSubmitBtn = document.getElementById('issueSubmitBtn');
     const issueQuantityNote = document.getElementById('issueQuantityNote');
+    const issueRequestToken = document.getElementById('issueRequestToken');
+    const issueReasonSelect = document.getElementById('issueReason');
+    const issueReasonWrap = document.getElementById('issueReasonWrap');
+    const issueReasonDisplay = document.getElementById('issueReasonDisplay');
+    const issueReasonDisplayText = issueReasonDisplay ? issueReasonDisplay.querySelector('span') : null;
+    const issueReasonOptions = Array.from(document.querySelectorAll('.issue-reason-option'));
     const historyMovementCount = document.getElementById('historyMovementCount');
     const historyNetChange = document.getElementById('historyNetChange');
     const historyList = document.getElementById('historyList');
@@ -4927,6 +7027,35 @@
     let restockCurrentUnit = 'pcs';
     let issueCurrentQuantity = 0;
     let issueCurrentUnit = 'pcs';
+    let issueFormSubmitting = false;
+    let issueConversionReady = true;
+
+    function formatInventoryNumber(value) {
+        const rounded = Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+        return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+    }
+
+    function localIsoDate() {
+        const now = new Date();
+        const localTime = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+        return localTime.toISOString().split('T')[0];
+    }
+
+    function createIssueRequestToken() {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+            return window.crypto.randomUUID();
+        }
+
+        const bytes = new Uint8Array(16);
+        window.crypto.getRandomValues(bytes);
+        bytes[6] = (bytes[6] & 0x0f) | 0x40;
+        bytes[8] = (bytes[8] & 0x3f) | 0x80;
+        const hex = Array.from(bytes, function(byte) {
+            return byte.toString(16).padStart(2, '0');
+        }).join('');
+
+        return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+    }
 
     function updateRestockPreview() {
         if (!restockCurrentStockDisplay || !restockPreviewLine || !restockQuantityInput) return;
@@ -4948,25 +7077,95 @@
         const isTooHigh = requested > issueCurrentQuantity;
         const newQty = Math.max(0, issueCurrentQuantity - requested);
 
-        issueCurrentStockDisplay.textContent = `${issueCurrentQuantity} ${issueCurrentUnit}`;
+        issueCurrentStockDisplay.textContent = `${formatInventoryNumber(issueCurrentQuantity)} ${issueCurrentUnit}`;
         issuePreviewLine.textContent = requested > 0 && !isTooHigh
-            ? `${newQty} ${issueCurrentUnit}`
+            ? `${formatInventoryNumber(newQty)} ${issueCurrentUnit}`
             : '-';
 
         issueQuantityInput.setCustomValidity(isTooHigh ? 'Quantity to issue cannot exceed available stock.' : '');
         if (issueQuantityNote) {
             issueQuantityNote.textContent = isTooHigh
-                ? `Only ${issueCurrentQuantity} ${issueCurrentUnit} available.`
-                : 'Cannot exceed available stock.';
+                ? `Only ${formatInventoryNumber(issueCurrentQuantity)} ${issueCurrentUnit} available.`
+                : `Maximum available: ${formatInventoryNumber(issueCurrentQuantity)} ${issueCurrentUnit}.`;
             issueQuantityNote.style.color = isTooHigh ? '#b91c1c' : '';
         }
         if (issueSubmitBtn) {
-            issueSubmitBtn.disabled = isTooHigh || requested <= 0;
+            issueSubmitBtn.disabled = !issueConversionReady || issueFormSubmitting || isTooHigh || requested <= 0;
         }
     }
 
     if (issueQuantityInput) {
         issueQuantityInput.addEventListener('input', updateIssuePreview);
+    }
+
+    if (issueForm) {
+        issueForm.addEventListener('submit', function(event) {
+            if (issueFormSubmitting) {
+                event.preventDefault();
+                return;
+            }
+
+            issueFormSubmitting = true;
+            if (issueSubmitBtn) {
+                issueSubmitBtn.disabled = true;
+                issueSubmitBtn.textContent = 'Saving...';
+            }
+        });
+    }
+
+    function syncIssueReasonDisplay() {
+        if (!issueReasonSelect || !issueReasonDisplayText) return;
+
+        const selectedOption = issueReasonSelect.options[issueReasonSelect.selectedIndex];
+        issueReasonDisplayText.textContent = selectedOption ? selectedOption.text : 'Select a reason';
+
+        issueReasonOptions.forEach(function(option) {
+            const isSelected = option.dataset.issueReasonValue === issueReasonSelect.value;
+            option.classList.toggle('is-selected', isSelected);
+            option.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+        });
+    }
+
+    function setIssueReasonOpenState(isOpen) {
+        if (!issueReasonWrap || !issueReasonDisplay) return;
+
+        issueReasonWrap.classList.toggle('is-open', isOpen);
+        issueReasonDisplay.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    if (issueReasonDisplay && issueReasonSelect) {
+        issueReasonDisplay.addEventListener('click', function(event) {
+            event.preventDefault();
+            setIssueReasonOpenState(!issueReasonWrap.classList.contains('is-open'));
+        });
+
+        issueReasonOptions.forEach(function(option) {
+            option.addEventListener('click', function(event) {
+                event.preventDefault();
+                issueReasonSelect.value = option.dataset.issueReasonValue || 'Dispensed to Patient';
+                issueReasonSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                syncIssueReasonDisplay();
+                setIssueReasonOpenState(false);
+                issueReasonDisplay.focus();
+            });
+        });
+
+        issueReasonSelect.addEventListener('change', syncIssueReasonDisplay);
+
+        document.addEventListener('click', function(event) {
+            if (issueReasonWrap && !issueReasonWrap.contains(event.target)) {
+                setIssueReasonOpenState(false);
+            }
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && issueReasonWrap.classList.contains('is-open')) {
+                setIssueReasonOpenState(false);
+                issueReasonDisplay.focus();
+            }
+        });
+
+        syncIssueReasonDisplay();
     }
 
     function syncCategoryDisplay() {
@@ -5665,10 +7864,12 @@
         restockCurrentQuantity = Number(item.quantity || 0);
         restockCurrentUnit = item.unit || 'pcs';
         document.getElementById('restockQuantity').value = '';
-        document.getElementById('restockDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('restockDate').value = localIsoDate();
 
-        const unitLabel = document.getElementById('restockUnitLabel');
-        if (unitLabel) unitLabel.textContent = restockCurrentUnit;
+        const unitSelect = document.getElementById('restockUnitSelect');
+        if (unitSelect) {
+            unitSelect.replaceChildren(new Option(restockCurrentUnit, restockCurrentUnit, true, true));
+        }
 
         updateRestockPreview();
         if (restockQuantityInput) restockQuantityInput.focus();
@@ -5695,8 +7896,18 @@
         if (!issueModal || !issueForm) return;
         issueModal.style.display = 'flex';
         issueForm.action = `/admin/inventory/${item.id}/issue`;
-        issueCurrentQuantity = Number(item.quantity || 0);
-        issueCurrentUnit = item.unit || 'pcs';
+        const stockQuantity = Number(item.quantity || 0);
+        const unitsPerStockUnit = Math.max(1, Number.parseInt(item.units_per_stock_unit, 10) || 1);
+        const dispensingUnit = String(item.dispensing_unit || '').trim();
+        const hasDispensingConversion = dispensingUnit !== '' && unitsPerStockUnit > 1;
+        const packagedStockUnits = ['box', 'boxes', 'pack', 'packs', 'bottle', 'vial', 'ampule', 'ampoule', 'tube', 'sachet'];
+        issueConversionReady = !packagedStockUnits.includes(String(item.unit || '').trim().toLowerCase())
+            || hasDispensingConversion;
+        issueCurrentQuantity = hasDispensingConversion
+            ? stockQuantity * unitsPerStockUnit
+            : stockQuantity;
+        issueCurrentUnit = hasDispensingConversion ? dispensingUnit : (item.unit || 'pcs');
+        issueFormSubmitting = false;
 
         const itemNameInput = document.getElementById('issueItemReadonly');
         const itemNameCopy = document.getElementById('issueItemName');
@@ -5706,22 +7917,42 @@
         const remarksInput = document.getElementById('issueRemarks');
 
         if (itemNameInput) itemNameInput.value = item.name || '';
-        if (itemNameCopy) itemNameCopy.textContent = `Record consumed stock for ${item.name || 'this item'}.`;
+        if (itemNameCopy) {
+            itemNameCopy.textContent = !issueConversionReady
+                ? `Set the dispensing unit and units per ${item.unit || 'stock unit'} before issuing ${item.name || 'this item'}.`
+                : hasDispensingConversion
+                ? `Issue ${item.name || 'this item'} in ${issueCurrentUnit}; stock is tracked in ${item.unit || 'pcs'}.`
+                : `Record consumed stock for ${item.name || 'this item'}.`;
+        }
         if (unitLabel) unitLabel.textContent = issueCurrentUnit;
-        if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
-        if (reasonInput) reasonInput.value = 'Dispensed to Patient';
+        if (dateInput) dateInput.value = localIsoDate();
+        if (issueRequestToken) issueRequestToken.value = createIssueRequestToken();
+        if (reasonInput) {
+            reasonInput.value = 'Dispensed to Patient';
+            syncIssueReasonDisplay();
+        }
         if (remarksInput) remarksInput.value = '';
         if (issueQuantityInput) {
             issueQuantityInput.value = '';
             issueQuantityInput.max = issueCurrentQuantity;
-            issueQuantityInput.focus();
+            issueQuantityInput.disabled = !issueConversionReady;
+            if (issueConversionReady) issueQuantityInput.focus();
+        }
+        if (issueSubmitBtn) {
+            issueSubmitBtn.disabled = true;
+            issueSubmitBtn.textContent = 'Save Issuance';
         }
 
         updateIssuePreview();
+        if (!issueConversionReady && issueQuantityNote) {
+            issueQuantityNote.textContent = 'Edit this item and configure its dispensing conversion first.';
+            issueQuantityNote.style.color = '#b91c1c';
+        }
     }
 
     function closeIssueModal() {
         if (!issueModal) return;
+        setIssueReasonOpenState(false);
         issueModal.style.display = 'none';
     }
 
@@ -6152,39 +8383,132 @@
     }
 
     if (inventorySearchInput) {
-        function applyInventoryFilters() {
+        function inventoryRowMatchesFilters(row) {
             const searchTerm = inventorySearchInput.value.trim().toLowerCase();
+            const rowText = row.innerText.toLowerCase();
+            const category = row.dataset.category || '';
+            const medicineType = row.dataset.medicineType || '';
+            const stock = Number(row.dataset.stock || 0);
+            const effectiveQty = Number(row.dataset.effectiveQty ?? row.dataset.stock ?? 0);
+            const minimumStock = Number(row.dataset.minimumStock || 10);
+            const matchesSearch = rowText.includes(searchTerm);
+            const matchesFilter = activeInventoryFilter === 'all'
+                || activeInventoryFilter === category
+                || (activeInventoryFilter === 'low' && stock > 0 && effectiveQty <= minimumStock)
+                || (activeInventoryFilter === 'out' && stock <= 0);
+            const matchesMedicineType = activeInventoryFilter !== 'medicine'
+                || activeMedicineTypeFilter === 'all'
+                || medicineType === activeMedicineTypeFilter;
 
-            inventoryRows.forEach(function (row) {
-                const rowText = row.innerText.toLowerCase();
-                const category     = row.dataset.category || '';
-                const medicineType = row.dataset.medicineType || '';
-                const stock        = Number(row.dataset.stock || 0);
-                const effectiveQty = Number(row.dataset.effectiveQty ?? row.dataset.stock ?? 0);
-                const minimumStock = Number(row.dataset.minimumStock || 10);
-                const matchesSearch = rowText.includes(searchTerm);
-                const matchesFilter = activeInventoryFilter === 'all'
-                    || activeInventoryFilter === category
-                    || (activeInventoryFilter === 'low' && stock > 0 && effectiveQty <= minimumStock)
-                    || (activeInventoryFilter === 'out' && stock <= 0);
-                const matchesMedicineType = activeInventoryFilter !== 'medicine'
-                    || activeMedicineTypeFilter === 'all'
-                    || medicineType === activeMedicineTypeFilter;
+            return matchesSearch && matchesFilter && matchesMedicineType;
+        }
 
-                row.style.display = matchesSearch && matchesFilter && matchesMedicineType ? '' : 'none';
+        function inventoryPaginationRange(totalPages) {
+            if (totalPages <= 5) {
+                return Array.from({ length: totalPages }, function(_, index) { return index + 1; });
+            }
+
+            let start = Math.max(1, currentInventoryPage - 2);
+            let end = Math.min(totalPages, start + 4);
+            start = Math.max(1, end - 4);
+
+            return Array.from({ length: end - start + 1 }, function(_, index) { return start + index; });
+        }
+
+        function syncInventoryPageSize() {
+            const selectedOption = inventoryPageSizeOptions.find(function(option) {
+                return (option.dataset.inventoryPageSize || '') === currentInventoryPageSize;
+            });
+
+            if (inventoryPageSizeLabel) {
+                inventoryPageSizeLabel.textContent = selectedOption ? selectedOption.textContent.trim() : '20 per page';
+            }
+
+            inventoryPageSizeOptions.forEach(function(option) {
+                const isSelected = (option.dataset.inventoryPageSize || '') === currentInventoryPageSize;
+                option.classList.toggle('is-selected', isSelected);
+                option.setAttribute('aria-selected', isSelected ? 'true' : 'false');
             });
         }
 
-        inventorySearchInput.addEventListener('input', applyInventoryFilters);
+        function applyInventoryFilters(resetPage = true) {
+            if (resetPage) {
+                currentInventoryPage = 1;
+            }
+
+            const matchingRows = inventoryRows.filter(inventoryRowMatchesFilters);
+            const numericPageSize = currentInventoryPageSize === 'all'
+                ? Math.max(matchingRows.length, 1)
+                : Math.max(1, Number.parseInt(currentInventoryPageSize, 10) || 20);
+            const totalPages = Math.max(1, Math.ceil(matchingRows.length / numericPageSize));
+            currentInventoryPage = Math.min(Math.max(1, currentInventoryPage), totalPages);
+
+            const firstVisibleIndex = (currentInventoryPage - 1) * numericPageSize;
+            const visibleRows = new Set(matchingRows.slice(firstVisibleIndex, firstVisibleIndex + numericPageSize));
+
+            inventoryRows.forEach(function(row) {
+                row.style.display = visibleRows.has(row) ? '' : 'none';
+            });
+
+            if (inventoryPaginationSummary) {
+                if (matchingRows.length === 0) {
+                    inventoryPaginationSummary.textContent = 'Showing 0 of 0 records';
+                } else {
+                    const firstRecord = firstVisibleIndex + 1;
+                    const lastRecord = Math.min(firstVisibleIndex + numericPageSize, matchingRows.length);
+                    inventoryPaginationSummary.textContent = 'Showing ' + firstRecord + ' to ' + lastRecord + ' of ' + matchingRows.length + ' records';
+                }
+            }
+
+            if (inventoryPaginationPrevious) {
+                inventoryPaginationPrevious.disabled = currentInventoryPage <= 1;
+            }
+
+            if (inventoryPaginationNext) {
+                inventoryPaginationNext.disabled = currentInventoryPage >= totalPages;
+            }
+
+            if (inventoryPaginationPages) {
+                inventoryPaginationPages.replaceChildren();
+                inventoryPaginationRange(totalPages).forEach(function(pageNumber) {
+                    const pageButton = document.createElement('button');
+                    pageButton.type = 'button';
+                    pageButton.className = 'inventory-pagination-btn' + (pageNumber === currentInventoryPage ? ' is-active' : '');
+                    pageButton.textContent = String(pageNumber);
+                    pageButton.setAttribute('aria-label', 'Page ' + pageNumber);
+
+                    if (pageNumber === currentInventoryPage) {
+                        pageButton.disabled = true;
+                        pageButton.setAttribute('aria-current', 'page');
+                    } else {
+                        pageButton.addEventListener('click', function() {
+                            currentInventoryPage = pageNumber;
+                            applyInventoryFilters(false);
+                        });
+                    }
+
+                    inventoryPaginationPages.appendChild(pageButton);
+                });
+            }
+
+            if (inventoryPagination) {
+                inventoryPagination.hidden = matchingRows.length === 0;
+            }
+
+            syncInventoryPageSize();
+        }
+
+        inventorySearchInput.addEventListener('input', function() {
+            applyInventoryFilters();
+        });
 
         const inventoryFilterBar    = document.getElementById('inventoryFilterBar');
         const inventoryFilterAllBtn = document.getElementById('inventoryFilterAllBtn');
+        const inventoryFilterShell  = document.getElementById('inventoryFilterShell');
 
         function updateMedicineTypeFilterBarVisibility() {
             if (!inventoryMedicineTypeBar) return;
-            const shouldShow = activeInventoryFilter === 'medicine'
-                && activeMedicineTypeFilter === 'all'
-                && inventoryFilterBar?.classList.contains('is-expanded');
+            const shouldShow = activeInventoryFilter === 'medicine';
             inventoryMedicineTypeBar.classList.toggle('is-visible', shouldShow);
         }
 
@@ -6193,13 +8517,6 @@
             inventoryMedicineTypeItems.forEach(function(item) {
                 item.classList.toggle('is-active', item.dataset.medicineFilter === activeMedicineTypeFilter);
             });
-            const medicineLabel = document.getElementById('inventoryFilterAllLabel');
-            if (medicineLabel && activeInventoryFilter === 'medicine') {
-                const activeMedicine = inventoryMedicineTypeItems.find(function(item) {
-                    return item.dataset.medicineFilter === activeMedicineTypeFilter;
-                });
-                medicineLabel.textContent = activeMedicine ? activeMedicine.textContent.trim() : 'Medicines';
-            }
             updateMedicineTypeFilterBarVisibility();
             applyInventoryFilters();
         }
@@ -6209,18 +8526,6 @@
             inventoryFilterItems.forEach(function(item) {
                 item.classList.toggle('is-active', item.dataset.inventoryFilter === activeInventoryFilter);
             });
-
-            const allLabel = document.getElementById('inventoryFilterAllLabel');
-            if (allLabel) {
-                if (activeInventoryFilter === 'all') {
-                    allLabel.textContent = 'All';
-                } else {
-                    const activeItem = inventoryFilterItems.find(function(item) {
-                        return item.dataset.inventoryFilter === activeInventoryFilter;
-                    });
-                    allLabel.textContent = activeItem ? activeItem.textContent.trim() : 'All';
-                }
-            }
 
             if (activeInventoryFilter !== 'medicine') {
                 setMedicineTypeFilter('all');
@@ -6240,34 +8545,79 @@
         });
 
         function collapseFilterBar() {
-            if (inventoryFilterBar) inventoryFilterBar.classList.remove('is-expanded');
+            if (inventoryFilterShell) inventoryFilterShell.classList.remove('is-open');
+            if (inventoryFilterToggle) inventoryFilterToggle.setAttribute('aria-expanded', 'false');
+            if (inventoryFilterMenu) inventoryFilterMenu.setAttribute('aria-hidden', 'true');
         }
 
         // All pill — toggles the option pills open/closed
-        if (inventoryFilterAllBtn) {
-            inventoryFilterAllBtn.addEventListener('click', function() {
-                if (!inventoryFilterBar) return;
-                const expanding = !inventoryFilterBar.classList.contains('is-expanded');
-                inventoryFilterBar.classList.toggle('is-expanded', expanding);
-                setInventoryFilter('all');
+        if (inventoryFilterToggle && inventoryFilterShell) {
+            inventoryFilterToggle.addEventListener('click', function(event) {
+                event.stopPropagation();
+                const opening = !inventoryFilterShell.classList.contains('is-open');
+                inventoryFilterShell.classList.toggle('is-open', opening);
+                inventoryFilterToggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
+                if (inventoryFilterMenu) {
+                    inventoryFilterMenu.setAttribute('aria-hidden', opening ? 'false' : 'true');
+                }
             });
         }
 
         // Option pills — apply filter then collapse
         inventoryFilterItems.forEach(function(item) {
-            if (item === inventoryFilterAllBtn) return;
             item.addEventListener('click', function() {
                 setInventoryFilter(item.dataset.inventoryFilter || 'all');
                 collapseFilterBar();
             });
         });
 
+        if (inventoryPaginationPrevious) {
+            inventoryPaginationPrevious.addEventListener('click', function() {
+                if (currentInventoryPage <= 1) return;
+                currentInventoryPage -= 1;
+                applyInventoryFilters(false);
+            });
+        }
+
+        if (inventoryPaginationNext) {
+            inventoryPaginationNext.addEventListener('click', function() {
+                currentInventoryPage += 1;
+                applyInventoryFilters(false);
+            });
+        }
+
+        if (inventoryPageSizeTrigger && inventoryPageSize) {
+            inventoryPageSizeTrigger.addEventListener('click', function(event) {
+                event.stopPropagation();
+                const opening = !inventoryPageSize.classList.contains('is-open');
+                inventoryPageSize.classList.toggle('is-open', opening);
+                inventoryPageSizeTrigger.setAttribute('aria-expanded', opening ? 'true' : 'false');
+            });
+        }
+
+        inventoryPageSizeOptions.forEach(function(option) {
+            option.addEventListener('click', function() {
+                currentInventoryPageSize = option.dataset.inventoryPageSize || '20';
+                currentInventoryPage = 1;
+                inventoryPageSize?.classList.remove('is-open');
+                inventoryPageSizeTrigger?.setAttribute('aria-expanded', 'false');
+                applyInventoryFilters(false);
+            });
+        });
+
         // Click outside — collapse
         document.addEventListener('click', function(event) {
-            if (inventoryFilterBar && !inventoryFilterBar.contains(event.target)) {
+            if (inventoryFilterShell && !inventoryFilterShell.contains(event.target)) {
                 collapseFilterBar();
             }
+
+            if (inventoryPageSize && !inventoryPageSize.contains(event.target)) {
+                inventoryPageSize.classList.remove('is-open');
+                inventoryPageSizeTrigger?.setAttribute('aria-expanded', 'false');
+            }
         });
+
+        applyInventoryFilters(false);
     }
 
     if (inventorySearchShell && inventorySearchInput) {

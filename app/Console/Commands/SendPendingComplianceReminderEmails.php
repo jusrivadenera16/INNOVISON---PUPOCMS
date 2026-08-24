@@ -30,6 +30,12 @@ class SendPendingComplianceReminderEmails extends Command
             return self::SUCCESS;
         }
 
+        if ($workflow->notificationsAreQuiet()) {
+            $this->info('Pending compliance reminders are paused during notification quiet hours.');
+
+            return self::SUCCESS;
+        }
+
         $intervalDays = max(0, (int) ($workflow->settings()->pending_compliance_reminder_days ?? 0));
         if ($intervalDays === 0) {
             $this->info('Pending compliance reminders are disabled.');
@@ -37,9 +43,11 @@ class SendPendingComplianceReminderEmails extends Command
             return self::SUCCESS;
         }
 
+        $maxCount = max(1, (int) ($workflow->settings()->pending_compliance_reminder_max_count ?? 3));
+
         $dueBefore = now()->subDays($intervalDays);
-        [$studentSent, $studentNotSent] = $this->sendHealthProfileReminders($mailer, $dueBefore);
-        [$employeeSent, $employeeNotSent] = $this->sendEmployeeProfileReminders($mailer, $dueBefore);
+        [$studentSent, $studentNotSent] = $this->sendHealthProfileReminders($mailer, $dueBefore, $maxCount);
+        [$employeeSent, $employeeNotSent] = $this->sendEmployeeProfileReminders($mailer, $dueBefore, $maxCount);
 
         $this->info(sprintf(
             'Pending compliance reminders sent: %d. Not sent: %d.',
@@ -50,11 +58,12 @@ class SendPendingComplianceReminderEmails extends Command
         return self::SUCCESS;
     }
 
-    private function sendHealthProfileReminders(StudentNotificationMailer $mailer, Carbon $dueBefore): array
+    private function sendHealthProfileReminders(StudentNotificationMailer $mailer, Carbon $dueBefore, int $maxCount): array
     {
         $profiles = HealthProfile::query()
             ->with('user')
             ->whereHas('user')
+            ->where('pending_compliance_reminder_count', '<', $maxCount)
             ->where(function (Builder $query): void {
                 $query->whereIn('clearance_status', ['Pending/Conditional', 'Pending Resubmission'])
                     ->orWhere(function (Builder $resubmission): void {
@@ -76,14 +85,15 @@ class SendPendingComplianceReminderEmails extends Command
             ->orderBy('id')
             ->get();
 
-        return $this->sendReminders($profiles, HealthProfile::class, $mailer, $dueBefore);
+        return $this->sendReminders($profiles, HealthProfile::class, $mailer, $dueBefore, $maxCount);
     }
 
-    private function sendEmployeeProfileReminders(StudentNotificationMailer $mailer, Carbon $dueBefore): array
+    private function sendEmployeeProfileReminders(StudentNotificationMailer $mailer, Carbon $dueBefore, int $maxCount): array
     {
         $profiles = EmployeeHealthProfile::query()
             ->with('user')
             ->whereHas('user')
+            ->where('pending_compliance_reminder_count', '<', $maxCount)
             ->where(function (Builder $query): void {
                 $query->whereIn('clearance_status', ['Pending/Conditional', 'Pending Resubmission'])
                     ->orWhere(function (Builder $resubmission): void {
@@ -105,10 +115,10 @@ class SendPendingComplianceReminderEmails extends Command
             ->orderBy('id')
             ->get();
 
-        return $this->sendReminders($profiles, EmployeeHealthProfile::class, $mailer, $dueBefore);
+        return $this->sendReminders($profiles, EmployeeHealthProfile::class, $mailer, $dueBefore, $maxCount);
     }
 
-    private function sendReminders($profiles, string $modelClass, StudentNotificationMailer $mailer, Carbon $dueBefore): array
+    private function sendReminders($profiles, string $modelClass, StudentNotificationMailer $mailer, Carbon $dueBefore, int $maxCount): array
     {
         $sent = 0;
         $notSent = 0;
@@ -118,12 +128,16 @@ class SendPendingComplianceReminderEmails extends Command
             $claimedAt = now();
             $claimed = $modelClass::query()
                 ->whereKey($profile->id)
+                ->where('pending_compliance_reminder_count', '<', $maxCount)
                 ->where(function (Builder $query) use ($dueBefore): void {
                     $query->whereNull('pending_compliance_reminder_sent_at')
                         ->orWhere('pending_compliance_reminder_sent_at', '<=', $dueBefore);
                 })
                 ->toBase()
-                ->update(['pending_compliance_reminder_sent_at' => $claimedAt]);
+                ->update([
+                    'pending_compliance_reminder_sent_at' => $claimedAt,
+                    'pending_compliance_reminder_count' => ((int) $profile->pending_compliance_reminder_count) + 1,
+                ]);
 
             if ($claimed !== 1) {
                 continue;
@@ -139,7 +153,10 @@ class SendPendingComplianceReminderEmails extends Command
                 ->whereKey($profile->id)
                 ->where('pending_compliance_reminder_sent_at', $claimedAt)
                 ->toBase()
-                ->update(['pending_compliance_reminder_sent_at' => $previousSentAt]);
+                ->update([
+                    'pending_compliance_reminder_sent_at' => $previousSentAt,
+                    'pending_compliance_reminder_count' => (int) $profile->pending_compliance_reminder_count,
+                ]);
             $notSent++;
         }
 

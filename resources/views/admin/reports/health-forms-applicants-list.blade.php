@@ -441,9 +441,15 @@
         box-shadow: inset 4px 0 0 #facc15;
     }
     .logbook-record-link {
+        border: 0;
+        background: transparent;
+        padding: 0;
         color: #70131B;
         font-weight: 900;
         text-decoration: none;
+        cursor: pointer;
+        font: inherit;
+        text-align: left;
     }
     .logbook-record-link:hover,
     .logbook-record-link:focus-visible {
@@ -474,6 +480,159 @@
         color: #70131B !important;
         transform: translateY(-1px);
         outline: none;
+    }
+    .logbook-report-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 2400;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, 0.62);
+        backdrop-filter: blur(6px);
+    }
+    .logbook-report-modal.is-open {
+        display: flex;
+    }
+    .logbook-report-card {
+        width: min(860px, 100%);
+        max-height: min(760px, calc(100dvh - 36px));
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid rgba(250, 204, 21, 0.32);
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 28px 74px rgba(15, 23, 42, 0.30);
+    }
+    .logbook-report-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 22px 24px;
+        background: linear-gradient(135deg, #70131B, #9f1d2d);
+        color: #ffffff;
+    }
+    .logbook-report-head-main {
+        min-width: 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+    }
+    .logbook-report-icon {
+        width: 46px;
+        height: 46px;
+        flex: 0 0 46px;
+        display: grid;
+        place-items: center;
+        border-radius: 14px;
+        border: 1px solid rgba(250, 204, 21, 0.36);
+        background: rgba(255, 255, 255, 0.11);
+        color: #facc15;
+    }
+    .logbook-report-icon svg {
+        width: 23px;
+        height: 23px;
+    }
+    .logbook-report-title {
+        margin: 0;
+        color: #ffffff;
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+    }
+    .logbook-report-copy {
+        margin: 5px 0 0;
+        color: rgba(255,255,255,.86);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.5;
+    }
+    .logbook-report-close {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(250, 204, 21, .44);
+        border-radius: 999px;
+        background: rgba(112, 19, 27, .28);
+        color: #ffffff;
+        cursor: pointer;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+    }
+    .logbook-report-close:hover,
+    .logbook-report-close:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .logbook-report-close svg {
+        width: 20px;
+        height: 20px;
+    }
+    .logbook-report-body {
+        overflow-y: auto;
+        padding: 22px 24px 24px;
+    }
+    .logbook-report-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+    .logbook-report-field,
+    .logbook-report-conditions {
+        padding: 15px 16px;
+        border: 1px solid #ead8dc;
+        border-radius: 14px;
+        background: linear-gradient(180deg, #ffffff 0%, #fffafa 100%);
+        box-shadow: 0 10px 22px rgba(112, 19, 27, .05);
+    }
+    .logbook-report-field span,
+    .logbook-report-conditions span {
+        display: block;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+    .logbook-report-field strong,
+    .logbook-report-conditions strong {
+        display: block;
+        margin-top: 6px;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+    .logbook-report-conditions {
+        grid-column: 1 / -1;
+    }
+    .logbook-report-condition-list {
+        display: grid;
+        gap: 8px;
+        margin: 12px 0 0;
+        padding: 0;
+        list-style: none;
+    }
+    .logbook-report-condition-list li {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #fff7ed;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+    .logbook-report-condition-list b {
+        color: #70131B;
+        font-weight: 900;
     }
     .status-badge {
         display: inline-flex;
@@ -746,6 +905,33 @@
     html[data-theme="dark"] .logbook-record-link {
         color: #facc15;
     }
+    html[data-theme="dark"] .logbook-report-card,
+    html[data-theme="dark"] .logbook-report-body,
+    html[data-theme="dark"] .logbook-report-field,
+    html[data-theme="dark"] .logbook-report-conditions {
+        background: #0f172a;
+        border-color: rgba(250, 204, 21, .18);
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .logbook-report-field,
+    html[data-theme="dark"] .logbook-report-conditions {
+        box-shadow: 0 18px 34px rgba(0, 0, 0, .24);
+    }
+    html[data-theme="dark"] .logbook-report-field span,
+    html[data-theme="dark"] .logbook-report-conditions span {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .logbook-report-field strong,
+    html[data-theme="dark"] .logbook-report-conditions strong {
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .logbook-report-condition-list li {
+        background: rgba(250, 204, 21, .08);
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .logbook-report-condition-list b {
+        color: #facc15;
+    }
     html[data-theme="dark"] .filter-group label,
     html[data-theme="dark"] .logbook-pagination-meta,
     html[data-theme="dark"] .logbook-empty,
@@ -778,10 +964,178 @@
         border-color: #facc15 !important;
         color: #facc15 !important;
     }
+
+    /* Shared compact table pagination. */
+    .logbook-pagination {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        padding: 8px 10px;
+        box-sizing: border-box;
+        border-color: rgba(250, 204, 21, .28);
+        border-radius: 10px;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, .10), 0 3px 10px rgba(15, 23, 42, .05);
+    }
+
+    .logbook-pagination-meta {
+        justify-self: start;
+        font-size: 11px;
+        color: #334155;
+    }
+
+    .logbook-pagination-pages {
+        justify-self: center;
+        gap: 6px;
+    }
+
+    .logbook-page-link {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        min-height: 34px;
+        padding: 0 8px;
+        border-color: #ead8dc;
+        border-radius: 7px;
+        color: #70131B;
+        font-size: 11px;
+    }
+
+    .logbook-page-link::before,
+    .logbook-pagination .premium-select-button::before,
+    .logbook-pagination .premium-select-option::before {
+        content: "";
+        position: absolute;
+        top: -45%;
+        left: -135%;
+        width: 72%;
+        height: 190%;
+        transform: skewX(-20deg);
+        background: rgba(255, 247, 178, .72);
+        transition: left .72s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .logbook-page-link:hover:not(.is-disabled)::before,
+    .logbook-page-link:focus-visible:not(.is-disabled)::before,
+    .logbook-pagination .premium-select-button:hover::before,
+    .logbook-pagination .premium-select-button:focus-visible::before,
+    .logbook-pagination .premium-select-option:hover::before,
+    .logbook-pagination .premium-select-option:focus-visible::before {
+        left: 135%;
+    }
+
+    .logbook-page-link:hover:not(.is-disabled),
+    .logbook-page-link:focus-visible:not(.is-disabled),
+    .logbook-pagination .premium-select-button:hover,
+    .logbook-pagination .premium-select-button:focus-visible,
+    .logbook-pagination .premium-select-option:hover,
+    .logbook-pagination .premium-select-option:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow: 0 10px 20px rgba(250, 204, 21, .22);
+    }
+
+    .logbook-page-link.is-active,
+    .logbook-pagination .premium-select-option.is-selected,
+    html[data-theme="dark"] .logbook-page-link.is-active,
+    html[data-theme="dark"] .logbook-pagination .premium-select-option.is-selected {
+        border-color: #8f0015 !important;
+        background: #8f0015 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    .logbook-pagination .premium-select-option.is-selected:hover,
+    .logbook-pagination .premium-select-option.is-selected:focus-visible,
+    html[data-theme="dark"] .logbook-pagination .premium-select-option.is-selected:hover,
+    html[data-theme="dark"] .logbook-pagination .premium-select-option.is-selected:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+    }
+
+    .logbook-page-link.is-disabled {
+        opacity: .45;
+    }
+
+    .logbook-per-page-form {
+        justify-self: end;
+        width: 132px;
+    }
+
+    .logbook-per-page-form .premium-select-shell,
+    .logbook-per-page-form .premium-select-button {
+        width: 132px;
+    }
+
+    .logbook-per-page-form .premium-select-button {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        min-height: 36px;
+        height: 36px;
+        border-radius: 10px;
+        font-size: 11px;
+        text-align: left;
+    }
+
+    .logbook-per-page-form .premium-select-menu {
+        top: auto;
+        right: 0;
+        bottom: calc(100% + 8px);
+        left: auto;
+        width: 170px;
+    }
+
+    .logbook-per-page-form .premium-select-option {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        min-height: 38px;
+        border-radius: 8px;
+        font-size: 12px;
+    }
+
+    html[data-theme="dark"] .logbook-pagination {
+        border-color: rgba(250, 204, 21, .18);
+        background: #111827 !important;
+        box-shadow: 0 16px 32px rgba(0, 0, 0, .30);
+    }
+
+    html[data-theme="dark"] .logbook-pagination-meta {
+        color: #f8fafc;
+    }
+
     @media (max-width: 720px) {
         .logbook-pagination {
-            align-items: stretch;
-            flex-direction: column;
+            grid-template-columns: 1fr;
+            justify-items: center;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        .logbook-pagination-meta,
+        .logbook-per-page-form {
+            justify-self: center;
+        }
+    }
+
+    @media (max-width: 720px) {
+        .logbook-pagination {
+            align-items: center;
         }
         .logbook-pagination-side {
             justify-content: flex-start;
@@ -925,7 +1279,6 @@
             <tbody>
                 @forelse($logbookRecords as $record)
                     @php
-                        $recordDetailsUrl = route('admin.show_health', $record->id);
                         $user = $record->user;
                         $approver = $record->approvedBy;
                         $reviewer = $record->reviewStartedBy;
@@ -973,17 +1326,40 @@
                                 ]);
                             }
                         }
+                        $patientName = $record->formatted_patient_name ?? $user->name ?? 'N/A';
+                        $submittedAt = $record->created_at ? \Carbon\Carbon::parse($record->created_at)->format('M d, Y g:i A') : 'N/A';
+                        $reviewedAt = $record->review_started_at ? \Carbon\Carbon::parse($record->review_started_at)->format('M d, Y g:i A') : 'N/A';
+                        $approvedAt = $isApproved && $record->verified_at ? \Carbon\Carbon::parse($record->verified_at)->format('M d, Y g:i A') : 'N/A';
+                        $conditionPayload = $conditionDetails
+                            ->map(fn ($detail) => $detail['label'] . '::' . $detail['value'])
+                            ->implode('||');
                     @endphp
-                    <tr data-logbook-row data-view-url="{{ $recordDetailsUrl }}" data-search="{{ strtolower(($record->formatted_patient_name ?? $user->name ?? 'N/A') . ' ' . ($user->name ?? '') . ' ' . ($user->email ?? '') . ' ' . ($record->sex ?: ($user->gender ?? 'N/A')) . ' ' . ($record->course_college ?? $user->course ?? 'N/A') . ' ' . ($user->user_type ?? 'N/A') . ' ' . $statusLabel . ' ' . ($hasCondition ? 'yes with condition medical condition' : 'no condition')) }}" tabindex="0" aria-label="View health record for {{ $record->formatted_patient_name ?? $user->name ?? 'N/A' }}">
+                    <tr
+                        data-logbook-row
+                        data-report-name="{{ e($patientName) }}"
+                        data-report-email="{{ e($user->email ?? 'N/A') }}"
+                        data-report-gender="{{ e($record->sex ?: ($user->gender ?? 'N/A')) }}"
+                        data-report-course="{{ e($record->course_college ?? $user->course ?? 'N/A') }}"
+                        data-report-type="{{ e($user->user_type ?? 'N/A') }}"
+                        data-report-submitted="{{ e($submittedAt) }}"
+                        data-report-reviewed-by="{{ e($reviewer?->name ?? 'N/A') }}"
+                        data-report-reviewed-at="{{ e($reviewedAt) }}"
+                        data-report-approved-by="{{ e(($isApproved && $approver) ? $approver->name : ($isApproved ? 'Not recorded' : 'N/A')) }}"
+                        data-report-approved-at="{{ e($approvedAt) }}"
+                        data-report-status="{{ e($statusLabel) }}"
+                        data-report-condition="{{ e($hasCondition ? 'Yes' : 'No') }}"
+                        data-report-conditions="{{ e($conditionPayload) }}"
+                        data-search="{{ strtolower($patientName . ' ' . ($user->name ?? '') . ' ' . ($user->email ?? '') . ' ' . ($record->sex ?: ($user->gender ?? 'N/A')) . ' ' . ($record->course_college ?? $user->course ?? 'N/A') . ' ' . ($user->user_type ?? 'N/A') . ' ' . $statusLabel . ' ' . ($hasCondition ? 'yes with condition medical condition' : 'no condition')) }}"
+                        tabindex="0"
+                        aria-label="View report details for {{ $patientName }}"
+                    >
                         <td>
-                            <a href="{{ $recordDetailsUrl }}" class="logbook-record-link">
-                                {{ $record->formatted_patient_name ?? $user->name ?? 'N/A' }}
-                            </a>
+                            <button type="button" class="logbook-record-link" data-open-report-details>{{ $patientName }}</button>
                         </td>
                         <td>{{ $record->sex ?: ($user->gender ?? 'N/A') }}</td>
                         <td>{{ $record->course_college ?? $user->course ?? 'N/A' }}</td>
                         <td>{{ $user->user_type ?? 'N/A' }}</td>
-                        <td>{{ \Carbon\Carbon::parse($record->created_at)->format('M d, Y g:i A') }}</td>
+                        <td>{{ $submittedAt }}</td>
                         <td>
                             @if($reviewer)
                                 <strong>{{ $reviewer->name }}</strong>
@@ -1025,7 +1401,7 @@
                             @endif
                         </td>
                         <td>
-                            <a href="{{ $recordDetailsUrl }}" class="logbook-view-link">View</a>
+                            <button type="button" class="logbook-view-link" data-open-report-details>View</button>
                         </td>
                     </tr>
                 @empty
@@ -1046,62 +1422,127 @@
         @php
             $currentPage = $logbookRecords->currentPage();
             $lastPage = $logbookRecords->lastPage();
-            $visiblePages = collect(range(1, $lastPage))
-                ->filter(fn ($page) => $page === 1 || $page === $lastPage || abs($page - $currentPage) <= 1)
-                ->values();
-            $previousVisiblePage = null;
+            $pageStart = max(1, min($currentPage - 2, $lastPage - 4));
+            $pageEnd = min($lastPage, $pageStart + 4);
+            $visiblePages = range($pageStart, $pageEnd);
         @endphp
         <div class="logbook-pagination">
             <span class="logbook-pagination-meta">
                 Showing {{ $logbookRecords->firstItem() }} to {{ $logbookRecords->lastItem() }} of {{ $logbookRecords->total() }} records
             </span>
-            <div class="logbook-pagination-side">
-                <nav class="logbook-pagination-pages" aria-label="Applicants list pagination">
-                    @if($logbookRecords->onFirstPage())
-                        <span class="logbook-page-link is-disabled" aria-disabled="true">&larr;</span>
+            <nav class="logbook-pagination-pages" aria-label="Applicants list pagination">
+                @if($logbookRecords->onFirstPage())
+                    <span class="logbook-page-link is-disabled" aria-disabled="true">&larr;</span>
+                @else
+                    <a class="logbook-page-link" href="{{ $logbookRecords->previousPageUrl() }}" rel="prev">&larr;</a>
+                @endif
+
+                @foreach($visiblePages as $page)
+                    @if($page === $currentPage)
+                        <span class="logbook-page-link is-active" aria-current="page">{{ $page }}</span>
                     @else
-                        <a class="logbook-page-link" href="{{ $logbookRecords->previousPageUrl() }}" rel="prev">&larr;</a>
+                        <a class="logbook-page-link" href="{{ $logbookRecords->url($page) }}">{{ $page }}</a>
                     @endif
+                @endforeach
 
-                    @foreach($visiblePages as $page)
-                        @if($previousVisiblePage !== null && $page > $previousVisiblePage + 1)
-                            <span class="logbook-page-ellipsis">...</span>
-                        @endif
-
-                        @if($page === $currentPage)
-                            <span class="logbook-page-link is-active" aria-current="page">{{ $page }}</span>
-                        @else
-                            <a class="logbook-page-link" href="{{ $logbookRecords->url($page) }}">{{ $page }}</a>
-                        @endif
-
-                        @php($previousVisiblePage = $page)
-                    @endforeach
-
-                    @if($logbookRecords->hasMorePages())
-                        <a class="logbook-page-link" href="{{ $logbookRecords->nextPageUrl() }}" rel="next">&rarr;</a>
-                    @else
-                        <span class="logbook-page-link is-disabled" aria-disabled="true">&rarr;</span>
-                    @endif
-                </nav>
-                <form method="GET" class="logbook-per-page-form">
-                    @foreach(request()->except(['page', 'per_page']) as $queryKey => $queryValue)
-                        @if(is_array($queryValue))
-                            @foreach($queryValue as $nestedValue)
-                                <input type="hidden" name="{{ $queryKey }}[]" value="{{ $nestedValue }}">
-                            @endforeach
-                        @else
-                            <input type="hidden" name="{{ $queryKey }}" value="{{ $queryValue }}">
-                        @endif
-                    @endforeach
-                    <select name="per_page" class="logbook-per-page-select" onchange="this.form.submit()" aria-label="Applicants list records per page">
-                        @foreach(['20' => '20 per page', '40' => '40 per page', '80' => '80 per page', '100' => '100 per page', 'all' => 'Show all'] as $optionValue => $optionLabel)
-                            <option value="{{ $optionValue }}" @selected(($perPage ?? '20') === $optionValue)>{{ $optionLabel }}</option>
+                @if($logbookRecords->hasMorePages())
+                    <a class="logbook-page-link" href="{{ $logbookRecords->nextPageUrl() }}" rel="next">&rarr;</a>
+                @else
+                    <span class="logbook-page-link is-disabled" aria-disabled="true">&rarr;</span>
+                @endif
+            </nav>
+            <form method="GET" class="logbook-per-page-form">
+                @foreach(request()->except(['page', 'per_page']) as $queryKey => $queryValue)
+                    @if(is_array($queryValue))
+                        @foreach($queryValue as $nestedValue)
+                            <input type="hidden" name="{{ $queryKey }}[]" value="{{ $nestedValue }}">
                         @endforeach
-                    </select>
-                </form>
-            </div>
+                    @else
+                        <input type="hidden" name="{{ $queryKey }}" value="{{ $queryValue }}">
+                    @endif
+                @endforeach
+                <select name="per_page" class="logbook-per-page-select" onchange="this.form.submit()" aria-label="Applicants list records per page">
+                    @foreach(['20' => '20 per page', '40' => '40 per page', '80' => '80 per page', '100' => '100 per page', 'all' => 'Show all'] as $optionValue => $optionLabel)
+                        <option value="{{ $optionValue }}" @selected(($perPage ?? '20') === $optionValue)>{{ $optionLabel }}</option>
+                    @endforeach
+                </select>
+            </form>
         </div>
     @endif
+</div>
+
+<div class="logbook-report-modal" id="logbookReportModal" aria-hidden="true">
+    <div class="logbook-report-card" role="dialog" aria-modal="true" aria-labelledby="logbookReportTitle">
+        <header class="logbook-report-head">
+            <div class="logbook-report-head-main">
+                <span class="logbook-report-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span>
+                <div>
+                    <h2 class="logbook-report-title" id="logbookReportTitle">Health Form Report Details</h2>
+                    <p class="logbook-report-copy">Read-only report information from the Health Forms applicants list.</p>
+                </div>
+            </div>
+            <button type="button" class="logbook-report-close" id="logbookReportClose" aria-label="Close report details">
+                <x-outline-icon name="x-mark" />
+            </button>
+        </header>
+        <div class="logbook-report-body">
+            <div class="logbook-report-grid">
+                <div class="logbook-report-field">
+                    <span>Patient Name</span>
+                    <strong id="reportDetailName">N/A</strong>
+                </div>
+                <div class="logbook-report-field">
+                    <span>Email</span>
+                    <strong id="reportDetailEmail">N/A</strong>
+                </div>
+                <div class="logbook-report-field">
+                    <span>Gender</span>
+                    <strong id="reportDetailGender">N/A</strong>
+                </div>
+                <div class="logbook-report-field">
+                    <span>Course</span>
+                    <strong id="reportDetailCourse">N/A</strong>
+                </div>
+                <div class="logbook-report-field">
+                    <span>User Type</span>
+                    <strong id="reportDetailType">N/A</strong>
+                </div>
+                <div class="logbook-report-field">
+                    <span>Status</span>
+                    <strong id="reportDetailStatus">N/A</strong>
+                </div>
+                <div class="logbook-report-field">
+                    <span>Submitted At</span>
+                    <strong id="reportDetailSubmitted">N/A</strong>
+                </div>
+                <div class="logbook-report-field">
+                    <span>Reviewed By</span>
+                    <strong id="reportDetailReviewedBy">N/A</strong>
+                </div>
+                <div class="logbook-report-field">
+                    <span>Reviewed At</span>
+                    <strong id="reportDetailReviewedAt">N/A</strong>
+                </div>
+                <div class="logbook-report-field">
+                    <span>Approved By</span>
+                    <strong id="reportDetailApprovedBy">N/A</strong>
+                </div>
+                <div class="logbook-report-field">
+                    <span>Approved At</span>
+                    <strong id="reportDetailApprovedAt">N/A</strong>
+                </div>
+                <div class="logbook-report-field">
+                    <span>Medical Condition</span>
+                    <strong id="reportDetailCondition">N/A</strong>
+                </div>
+                <div class="logbook-report-conditions">
+                    <span>Condition Details</span>
+                    <strong id="reportDetailConditionSummary">No condition details recorded.</strong>
+                    <ul class="logbook-report-condition-list" id="reportDetailConditionList"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -1118,17 +1559,88 @@ const logbookSearchInput = document.getElementById('searchInput');
 const logbookRows = Array.from(document.querySelectorAll('[data-logbook-row]'));
 const logbookEmptyRow = document.querySelector('[data-logbook-empty-row]');
 const logbookTotalCardValue = document.querySelector('.logbook-total-card span');
+const logbookReportModal = document.getElementById('logbookReportModal');
+const logbookReportClose = document.getElementById('logbookReportClose');
+
+function setReportText(id, value) {
+    const target = document.getElementById(id);
+    if (target) target.textContent = value && value.trim() ? value : 'N/A';
+}
+
+function closeLogbookReportModal() {
+    logbookReportModal?.classList.remove('is-open');
+    logbookReportModal?.setAttribute('aria-hidden', 'true');
+}
+
+function openLogbookReportModal(row) {
+    if (!row || !logbookReportModal) return;
+
+    setReportText('reportDetailName', row.dataset.reportName);
+    setReportText('reportDetailEmail', row.dataset.reportEmail);
+    setReportText('reportDetailGender', row.dataset.reportGender);
+    setReportText('reportDetailCourse', row.dataset.reportCourse);
+    setReportText('reportDetailType', row.dataset.reportType);
+    setReportText('reportDetailStatus', row.dataset.reportStatus);
+    setReportText('reportDetailSubmitted', row.dataset.reportSubmitted);
+    setReportText('reportDetailReviewedBy', row.dataset.reportReviewedBy);
+    setReportText('reportDetailReviewedAt', row.dataset.reportReviewedAt);
+    setReportText('reportDetailApprovedBy', row.dataset.reportApprovedBy);
+    setReportText('reportDetailApprovedAt', row.dataset.reportApprovedAt);
+    setReportText('reportDetailCondition', row.dataset.reportCondition);
+
+    const conditionList = document.getElementById('reportDetailConditionList');
+    const conditionSummary = document.getElementById('reportDetailConditionSummary');
+    const details = (row.dataset.reportConditions || '')
+        .split('||')
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((item) => {
+            const parts = item.split('::');
+            return {
+                label: (parts.shift() || '').trim(),
+                value: parts.join('::').trim()
+            };
+        })
+        .filter((item) => item.label || item.value);
+
+    if (conditionList) {
+        conditionList.innerHTML = '';
+        details.forEach((detail) => {
+            const item = document.createElement('li');
+            const label = document.createElement('b');
+            label.textContent = detail.label ? detail.label + ': ' : '';
+            item.appendChild(label);
+            item.append(document.createTextNode(detail.value || 'N/A'));
+            conditionList.appendChild(item);
+        });
+    }
+
+    if (conditionSummary) {
+        conditionSummary.textContent = details.length
+            ? `${details.length} condition detail${details.length === 1 ? '' : 's'} recorded.`
+            : 'No condition details recorded.';
+    }
+
+    logbookReportModal.classList.add('is-open');
+    logbookReportModal.setAttribute('aria-hidden', 'false');
+    logbookReportClose?.focus();
+}
 
 logbookRows.forEach(function (row) {
+    row.querySelectorAll('[data-open-report-details]').forEach(function (trigger) {
+        trigger.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            openLogbookReportModal(row);
+        });
+    });
+
     row.addEventListener('click', function (event) {
         if (event.target.closest('a, button, input, select, textarea, [tabindex]:not([data-logbook-row])')) {
             return;
         }
 
-        const viewUrl = row.getAttribute('data-view-url');
-        if (viewUrl) {
-            window.location.href = viewUrl;
-        }
+        openLogbookReportModal(row);
     });
 
     row.addEventListener('keydown', function (event) {
@@ -1140,12 +1652,16 @@ logbookRows.forEach(function (row) {
             return;
         }
 
-        const viewUrl = row.getAttribute('data-view-url');
-        if (viewUrl) {
-            event.preventDefault();
-            window.location.href = viewUrl;
-        }
+        event.preventDefault();
+        openLogbookReportModal(row);
     });
+});
+
+logbookReportClose?.addEventListener('click', closeLogbookReportModal);
+logbookReportModal?.addEventListener('click', function (event) {
+    if (event.target === logbookReportModal) {
+        closeLogbookReportModal();
+    }
 });
 
 function filterVisibleLogbookRows() {
@@ -1199,6 +1715,7 @@ document.getElementById('filterForm').addEventListener('submit', function(e) {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeFilterModal();
+        closeLogbookReportModal();
     }
 });
 

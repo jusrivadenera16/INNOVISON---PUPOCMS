@@ -1852,6 +1852,7 @@
             @php
                 $facultyFields = $result['fields'] ?? [];
                 $facultyFirstName = $result['first_name'] ?? ($facultyFields['first_name'] ?? '');
+                $facultyMiddleName = $result['middle_name'] ?? ($facultyFields['middle_name'] ?? '');
                 $facultyLastName = $result['last_name'] ?? ($facultyFields['last_name'] ?? '');
                 $facultySuffixName = $result['suffix_name'] ?? ($facultyFields['suffix_name'] ?? '');
                 $facultyEmail = $result['email'] ?? ($facultyFields['email'] ?? 'N/A');
@@ -1863,6 +1864,7 @@
                 type="button"
                 class="faculty-option-item"
                 data-first-name="{{ $facultyFirstName }}"
+                data-middle-name="{{ ($facultyMiddleName ?? '') === 'N/A' ? '' : ($facultyMiddleName ?? '') }}"
                 data-last-name="{{ $facultyLastName }}"
                 data-suffix-name="{{ ($facultySuffixName ?? '') === 'N/A' ? '' : ($facultySuffixName ?? '') }}"
                 data-email="{{ $facultyEmail }}"
@@ -1892,6 +1894,7 @@
         <div class="faculty-autofill-grid">
             <div class="faculty-autofill-field"><label>Faculty ID</label><input type="text" id="selectedFacultyIdentifier" readonly></div>
             <div class="faculty-autofill-field"><label>First Name</label><input type="text" id="selectedFacultyFirstName" readonly></div>
+            <div class="faculty-autofill-field"><label>Middle Name</label><input type="text" id="selectedFacultyMiddleName" readonly></div>
             <div class="faculty-autofill-field"><label>Last Name</label><input type="text" id="selectedFacultyLastName" readonly></div>
             <div class="faculty-autofill-field"><label>Suffix Name</label><input type="text" id="selectedFacultySuffixName" readonly></div>
             <div class="faculty-autofill-field"><label>Email</label><input type="text" id="selectedFacultyEmail" readonly></div>
@@ -2790,6 +2793,7 @@ Request: ${escapeApiLogValue(err.request_payload || 'N/A')}</pre>
             const fields = {
                 'selectedFacultyIdentifier': button.dataset.identifier,
                 'selectedFacultyFirstName': button.dataset.firstName,
+                'selectedFacultyMiddleName': button.dataset.middleName,
                 'selectedFacultyLastName': button.dataset.lastName,
                 'selectedFacultySuffixName': button.dataset.suffixName,
                 'selectedFacultyEmail': button.dataset.email,

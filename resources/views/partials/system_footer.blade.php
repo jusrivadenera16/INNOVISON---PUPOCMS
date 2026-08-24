@@ -87,10 +87,20 @@
             }
 
             .system-footer__inner {
-                flex-direction: column;
-                gap: 8px;
+                flex-direction: row;
+                column-gap: 16px;
+                row-gap: 6px;
                 min-height: auto;
-                padding: 10px 16px;
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            .system-footer__inner > span:first-child {
+                flex: 1 0 100%;
+            }
+
+            .system-footer__inner > a {
+                white-space: nowrap;
             }
 
             .system-footer__separator {

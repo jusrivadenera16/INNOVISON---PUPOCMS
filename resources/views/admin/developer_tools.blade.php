@@ -2116,7 +2116,7 @@
                     <form method="POST" action="{{ route('admin.emergency-credentials.update') }}" class="dev-compact-settings" id="devEmergencyCredentialsForm" data-pin-required="0">
                         @csrf
                         @method('PUT')
-                        <input type="hidden" name="emergency_action" id="devEmergencyAction" value="update">
+                        <input type="hidden" name="emergency_action" id="devEmergencyAction" value="reset">
 
                         <div class="dev-setting-row">
                             <div class="dev-setting-row-head">
@@ -2124,16 +2124,6 @@
                                     <span class="dev-setting-label">Emergency Email</span>
                                     <div class="dev-setting-value">{{ $emergencyEmail !== '' ? $emergencyEmail : 'No emergency email set' }}</div>
                                 </div>
-                                <div class="dev-setting-actions">
-                                    <button type="button" class="dev-mini-action" id="devToggleEmergencyEmail" data-closed-label="Update">Update</button>
-                                </div>
-                            </div>
-                            <div class="dev-collapsible-fields" id="devEmergencyEmailFields" {{ $emergencyEmail !== '' ? 'hidden' : '' }}>
-                                <div class="dev-password-field">
-                                    <label for="devEmergencyEmail">Email Address</label>
-                                    <input type="email" id="devEmergencyEmail" name="emergency_email" value="{{ old('emergency_email', $emergencyEmail) }}" placeholder="system-admin@example.com" required>
-                                </div>
-                                <button type="submit" class="dev-mini-action">Save Email</button>
                             </div>
                         </div>
 
@@ -2148,46 +2138,6 @@
                             </div>
                         </div>
 
-                        <div class="dev-setting-row">
-                            <div class="dev-setting-row-head">
-                                <div>
-                                    <span class="dev-setting-label">Add Emergency Email</span>
-                                    <div class="dev-setting-subtext">Add another emergency login account.</div>
-                                </div>
-                                <button type="button" class="dev-mini-action" id="devToggleEmergencyAdd" data-closed-label="Add Email">Add Email</button>
-                            </div>
-                            <div class="dev-collapsible-fields" id="devEmergencyAddFields" hidden>
-                                <div class="dev-password-field">
-                                    <label for="devAdditionalEmergencyEmail">Email Address</label>
-                                    <input type="email" id="devAdditionalEmergencyEmail" name="additional_emergency_email" placeholder="another-admin@example.com">
-                                </div>
-                                <div class="dev-password-field">
-                                    <label for="devAdditionalEmergencyPassword">Password</label>
-                                    <div class="dev-password-input-wrap">
-                                        <input type="password" id="devAdditionalEmergencyPassword" name="additional_emergency_password" placeholder="Create emergency password" autocomplete="new-password">
-                                        <button type="button" class="dev-password-toggle" data-toggle-password="devAdditionalEmergencyPassword" aria-label="Show additional emergency password">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <path d="M2.25 12s3.5-6.75 9.75-6.75S21.75 12 21.75 12 18.25 18.75 12 18.75 2.25 12 2.25 12Z"/>
-                                                <path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="dev-password-field">
-                                    <label for="devAdditionalEmergencyPasswordConfirm">Confirm Password</label>
-                                    <div class="dev-password-input-wrap">
-                                        <input type="password" id="devAdditionalEmergencyPasswordConfirm" name="additional_emergency_password_confirmation" placeholder="Confirm emergency password" autocomplete="new-password">
-                                        <button type="button" class="dev-password-toggle" data-toggle-password="devAdditionalEmergencyPasswordConfirm" aria-label="Show confirmed additional emergency password">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <path d="M2.25 12s3.5-6.75 9.75-6.75S21.75 12 21.75 12 18.25 18.75 12 18.75 2.25 12 2.25 12Z"/>
-                                                <path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                                <button type="submit" class="dev-mini-action">Save New Email</button>
-                            </div>
-                        </div>
                         @error('new_emergency_password')
                             <div class="dev-pin-error">{{ $message }}</div>
                         @enderror
@@ -2710,11 +2660,6 @@
         const pinForm = pinMasterToggle?.closest('form');
         const pinCurrentInput = document.getElementById('devApiCurrentPin');
         const emergencyForm = document.getElementById('devEmergencyCredentialsForm');
-        const emergencyActionInput = document.getElementById('devEmergencyAction');
-        const emergencyEmailToggle = document.getElementById('devToggleEmergencyEmail');
-        const emergencyEmailFields = document.getElementById('devEmergencyEmailFields');
-        const emergencyAddToggle = document.getElementById('devToggleEmergencyAdd');
-        const emergencyAddFields = document.getElementById('devEmergencyAddFields');
         const emergencyResetButton = document.getElementById('openEmergencyPasswordReset');
         const emergencyPasswordResetModal = document.getElementById('resetEmergencyPasswordModal');
         const closeEmergencyPasswordResetButton = document.getElementById('closeEmergencyPasswordReset');
@@ -2853,48 +2798,6 @@
             } finally {
                 submitDisablePinButton.disabled = false;
             }
-        });
-
-        const setFieldsRequired = (wrapper, required) => {
-            wrapper?.querySelectorAll('input, select, textarea').forEach((field) => {
-                field.required = required;
-            });
-        };
-
-        setFieldsRequired(emergencyEmailFields, !emergencyEmailFields?.hidden);
-        setFieldsRequired(emergencyAddFields, false);
-
-        emergencyEmailToggle?.addEventListener('click', () => {
-            if (!emergencyEmailFields) {
-                return;
-            }
-            if (emergencyActionInput) {
-                emergencyActionInput.value = 'update';
-            }
-            if (emergencyAddFields) {
-                emergencyAddFields.hidden = true;
-                setFieldsRequired(emergencyAddFields, false);
-            }
-            emergencyEmailFields.hidden = !emergencyEmailFields.hidden;
-            setFieldsRequired(emergencyEmailFields, !emergencyEmailFields.hidden);
-            emergencyEmailToggle.textContent = emergencyEmailFields.hidden ? (emergencyEmailToggle.dataset.closedLabel || 'Update') : 'Done';
-        });
-
-        emergencyAddToggle?.addEventListener('click', () => {
-            if (!emergencyAddFields) {
-                return;
-            }
-            if (emergencyActionInput) {
-                emergencyActionInput.value = 'add';
-            }
-            if (emergencyEmailFields) {
-                emergencyEmailFields.hidden = true;
-                setFieldsRequired(emergencyEmailFields, false);
-                emergencyEmailToggle.textContent = emergencyEmailToggle.dataset.closedLabel || 'Update';
-            }
-            emergencyAddFields.hidden = !emergencyAddFields.hidden;
-            setFieldsRequired(emergencyAddFields, !emergencyAddFields.hidden);
-            emergencyAddToggle.textContent = emergencyAddFields.hidden ? (emergencyAddToggle.dataset.closedLabel || 'Add Email') : 'Done';
         });
 
         maintenanceToggle?.addEventListener('change', () => {

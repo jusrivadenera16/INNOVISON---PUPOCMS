@@ -1329,10 +1329,202 @@
     }
 
     .audit-pagination {
-        margin: 0;
-        border: 0;
-        border-radius: 0;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        margin: 10px 0 0;
+        padding: 8px 10px;
+        box-sizing: border-box;
+        border: 1px solid rgba(250, 204, 21, .28);
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, .10), 0 3px 10px rgba(15, 23, 42, .05);
+    }
+
+    .audit-pagination-summary {
+        justify-self: start;
+        min-width: 0;
+        color: #334155;
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+    .audit-pagination-actions {
+        justify-self: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .audit-pagination-link {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        min-height: 34px;
+        padding: 0 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #ead8dc;
+        border-radius: 7px;
+        background: #ffffff;
+        color: #70131B;
+        font-size: 11px;
+        font-weight: 900;
+        line-height: 1;
+        text-decoration: none;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, .05);
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+
+    .audit-pagination-link::before,
+    .audit-pagination .premium-select-button::before,
+    .audit-pagination .premium-select-option::before {
+        content: "";
+        position: absolute;
+        top: -45%;
+        left: -135%;
+        width: 72%;
+        height: 190%;
+        transform: skewX(-20deg);
+        background: rgba(255, 247, 178, .72);
+        transition: left .72s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .audit-pagination-link:hover:not(.is-disabled)::before,
+    .audit-pagination-link:focus-visible:not(.is-disabled)::before,
+    .audit-pagination .premium-select-button:hover::before,
+    .audit-pagination .premium-select-button:focus-visible::before,
+    .audit-pagination .premium-select-option:hover::before,
+    .audit-pagination .premium-select-option:focus-visible::before {
+        left: 135%;
+    }
+
+    .audit-pagination-link:hover:not(.is-disabled),
+    .audit-pagination-link:focus-visible:not(.is-disabled),
+    .audit-pagination .premium-select-button:hover,
+    .audit-pagination .premium-select-button:focus-visible,
+    .audit-pagination .premium-select-option:hover,
+    .audit-pagination .premium-select-option:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow: 0 10px 20px rgba(250, 204, 21, .22);
+    }
+
+    .audit-pagination-link.is-active,
+    .audit-pagination .premium-select-option.is-selected {
+        border-color: #8f0015 !important;
+        background: #8f0015 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    .audit-pagination-link.is-disabled {
+        opacity: .45;
+        cursor: not-allowed;
+        pointer-events: none;
         box-shadow: none;
+    }
+
+    .audit-pagination-per-page-form {
+        justify-self: end;
+        width: 132px;
+        margin: 0;
+    }
+
+    .audit-pagination-per-page-form .premium-select-shell,
+    .audit-pagination-per-page-form .premium-select-button {
+        width: 132px;
+    }
+
+    .audit-pagination-per-page-form .premium-select-button {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        min-height: 36px;
+        height: 36px;
+        border-radius: 10px;
+        font-size: 11px;
+        text-align: left;
+    }
+
+    .audit-pagination-per-page-form .premium-select-menu {
+        top: auto;
+        right: 0;
+        bottom: calc(100% + 8px);
+        left: auto;
+        width: 170px;
+    }
+
+    .audit-pagination-per-page-form .premium-select-option {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        min-height: 38px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    html[data-theme="dark"] .audit-pagination {
+        border-color: rgba(250, 204, 21, .18);
+        background: #111827;
+        box-shadow: 0 16px 32px rgba(0, 0, 0, .30);
+    }
+
+    html[data-theme="dark"] .audit-pagination-summary {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .audit-pagination-link {
+        border-color: rgba(255, 255, 255, .16);
+        background: #182334;
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .audit-pagination-link.is-active,
+    html[data-theme="dark"] .audit-pagination .premium-select-option.is-selected {
+        border-color: #9f1d2d !important;
+        background: #9f1d2d !important;
+        color: #ffffff !important;
+    }
+
+    .audit-pagination .premium-select-option.is-selected:hover,
+    .audit-pagination .premium-select-option.is-selected:focus-visible,
+    html[data-theme="dark"] .audit-pagination .premium-select-option.is-selected:hover,
+    html[data-theme="dark"] .audit-pagination .premium-select-option.is-selected:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+    }
+
+    @media (max-width: 760px) {
+        .audit-pagination {
+            grid-template-columns: 1fr;
+            justify-items: center;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        .audit-pagination-summary,
+        .audit-pagination-per-page-form {
+            justify-self: center;
+        }
     }
 
     html[data-theme="dark"] .audit-card,
@@ -1785,9 +1977,55 @@
             </table>
         </div>
 
-        @if($logs->hasPages())
+        @if($logs->total() >= 5)
+            @php
+                $auditCurrentPage = $logs->currentPage();
+                $auditLastPage = $logs->lastPage();
+                $auditPageStart = max(1, min($auditCurrentPage - 2, $auditLastPage - 4));
+                $auditPageEnd = min($auditLastPage, $auditPageStart + 4);
+                $auditPages = range($auditPageStart, $auditPageEnd);
+            @endphp
             <div class="audit-pagination">
-                {{ $logs->links() }}
+                <span class="audit-pagination-summary">
+                    Showing {{ $logs->firstItem() }} to {{ $logs->lastItem() }} of {{ $logs->total() }} records
+                </span>
+                <div class="audit-pagination-actions" role="navigation" aria-label="Audit trail pagination">
+                    @if($logs->onFirstPage())
+                        <span class="audit-pagination-link is-disabled" aria-disabled="true">&larr;</span>
+                    @else
+                        <a class="audit-pagination-link" href="{{ $logs->previousPageUrl() }}" rel="prev" aria-label="Previous page">&larr;</a>
+                    @endif
+
+                    @foreach($auditPages as $page)
+                        @if($page === $auditCurrentPage)
+                            <span class="audit-pagination-link is-active" aria-current="page">{{ $page }}</span>
+                        @else
+                            <a class="audit-pagination-link" href="{{ $logs->url($page) }}" aria-label="Page {{ $page }}">{{ $page }}</a>
+                        @endif
+                    @endforeach
+
+                    @if($logs->hasMorePages())
+                        <a class="audit-pagination-link" href="{{ $logs->nextPageUrl() }}" rel="next" aria-label="Next page">&rarr;</a>
+                    @else
+                        <span class="audit-pagination-link is-disabled" aria-disabled="true">&rarr;</span>
+                    @endif
+                </div>
+                <form method="GET" action="{{ url()->current() }}" class="audit-pagination-per-page-form">
+                    @foreach(request()->except(['page', 'per_page']) as $queryKey => $queryValue)
+                        @if(is_array($queryValue))
+                            @foreach($queryValue as $nestedValue)
+                                <input type="hidden" name="{{ $queryKey }}[]" value="{{ $nestedValue }}">
+                            @endforeach
+                        @else
+                            <input type="hidden" name="{{ $queryKey }}" value="{{ $queryValue }}">
+                        @endif
+                    @endforeach
+                    <select name="per_page" class="audit-select audit-pagination-per-page-select" onchange="this.form.submit()" aria-label="Audit records per page">
+                        @foreach(['25' => '25 per page', '50' => '50 per page', '100' => '100 per page', 'all' => 'Show all'] as $optionValue => $optionLabel)
+                            <option value="{{ $optionValue }}" @selected(($perPageInput ?? '25') === $optionValue)>{{ $optionLabel }}</option>
+                        @endforeach
+                    </select>
+                </form>
             </div>
         @endif
     </section>

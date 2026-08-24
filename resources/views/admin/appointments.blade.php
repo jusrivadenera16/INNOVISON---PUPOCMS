@@ -883,6 +883,7 @@
         color: #111827;
     }
     .timeline-dot {
+        position: relative;
         width: 38px;
         height: 38px;
         border-radius: 999px;
@@ -2075,11 +2076,35 @@
         border-color: #facc15;
     }
 
+    html[data-theme="dark"] .appointments-status-display,
+    html[data-theme="dark"] .appointments-status-option,
+    html[data-theme="dark"] .appointments-filter-reset,
+    html[data-theme="dark"] .appointments-filter-close {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .appointments-status-option:hover,
+    html[data-theme="dark"] .appointments-status-option.is-selected {
+        color: #facc15 !important;
+        -webkit-text-fill-color: #facc15 !important;
+    }
+
     html[data-theme="dark"] .appointments-filter-reset,
     html[data-theme="dark"] .appointments-filter-close {
         background: rgba(30, 41, 59, 0.92);
         color: #e2e8f0;
         border-color: rgba(148, 163, 184, 0.18);
+    }
+
+    html[data-theme="dark"] .appointments-filter-reset:hover,
+    html[data-theme="dark"] .appointments-filter-reset:focus-visible,
+    html[data-theme="dark"] .appointments-filter-close:hover,
+    html[data-theme="dark"] .appointments-filter-close:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
     }
 
     .appointments-search-toggle:focus-visible {
@@ -2865,11 +2890,12 @@
         border: 1px solid #e5e7eb;
         box-shadow: 0 14px 34px rgba(15, 23, 42, .06);
         overflow: visible;
+        padding: 18px 20px 20px;
     }
     .appointments-summary-head {
         align-items: center;
-        padding: 12px 20px 8px;
-        margin-bottom: 6px;
+        padding: 0;
+        margin-bottom: 12px;
     }
     .appointments-summary-title {
         color: #0f172a;
@@ -2882,7 +2908,7 @@
         display: grid;
         grid-template-columns: minmax(220px, 1fr) auto;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
     }
     .appointments-search-shell,
     .appointments-search-wrap,
@@ -3393,6 +3419,53 @@
         box-shadow: 0 26px 70px rgba(0, 0, 0, .48) !important;
     }
 
+    html[data-theme="dark"] #infoModal .appointment-detail-card,
+    html[data-theme="dark"] #infoModal .appointment-notes-panel,
+    html[data-theme="dark"] #infoModal .appointment-timeline-panel,
+    html[data-theme="dark"] #statusActionModal .appointment-detail-card,
+    html[data-theme="dark"] #statusActionModal .appointment-notes-panel,
+    html[data-theme="dark"] #statusActionModal .appointment-timeline-panel,
+    html[data-theme="dark"] #rescheduleModal .appointment-detail-card,
+    html[data-theme="dark"] #rescheduleModal .appointment-notes-panel,
+    html[data-theme="dark"] #rescheduleModal .appointment-timeline-panel {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, .16) !important;
+        box-shadow: 0 18px 36px rgba(0, 0, 0, .34) !important;
+    }
+
+    html[data-theme="dark"] #infoModal .appointment-detail-card h4,
+    html[data-theme="dark"] #infoModal .appointment-student-info > strong,
+    html[data-theme="dark"] #infoModal .appointment-info-list strong,
+    html[data-theme="dark"] #infoModal .appointment-notes-title,
+    html[data-theme="dark"] #infoModal .appointment-clinical-findings > span,
+    html[data-theme="dark"] #infoModal .appointment-clinical-findings p,
+    html[data-theme="dark"] #infoModal .appointment-timeline-panel h4,
+    html[data-theme="dark"] #infoModal .timeline-step strong,
+    html[data-theme="dark"] #infoModal .appointment-detail-footer strong {
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] #infoModal .appointment-student-info p,
+    html[data-theme="dark"] #infoModal .appointment-student-info p span,
+    html[data-theme="dark"] #infoModal .appointment-info-list span,
+    html[data-theme="dark"] #infoModal .appointment-notes-panel p,
+    html[data-theme="dark"] #infoModal .timeline-step small,
+    html[data-theme="dark"] #infoModal .appointment-detail-footer {
+        color: #cbd5e1 !important;
+    }
+
+    html[data-theme="dark"] #infoModal .appointment-info-list > div,
+    html[data-theme="dark"] #infoModal .appointment-clinical-findings {
+        border-color: rgba(250, 204, 21, .14) !important;
+    }
+
+    html[data-theme="dark"] #infoModal .appointment-detail-card svg,
+    html[data-theme="dark"] #infoModal .appointment-notes-panel svg,
+    html[data-theme="dark"] #infoModal .appointment-timeline-panel svg {
+        color: #facc15 !important;
+        stroke: #facc15 !important;
+    }
+
     .appointment-inline-pill.is-view,
     .appointment-action-menu-item.is-view {
         background: linear-gradient(135deg, #ffffff, #fff3f5) !important;
@@ -3471,6 +3544,36 @@
     html:not([data-theme="dark"]) .modal-header-close {
         border: 1px solid rgba(250, 204, 21, 0.22) !important;
         box-shadow: 0 12px 24px rgba(112, 19, 27, 0.10), 0 3px 10px rgba(15, 23, 42, 0.05) !important;
+    }
+
+    html[data-theme="dark"] .appointments-filter-panel,
+    html[data-theme="dark"] .appointments-status-menu {
+        background: rgba(35, 17, 25, .98) !important;
+        border-color: rgba(250, 204, 21, .22) !important;
+    }
+    html[data-theme="dark"] .appointments-status-option,
+    html[data-theme="dark"] .appointments-filter-reset,
+    html[data-theme="dark"] .appointments-filter-close {
+        background: #1f2937 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        border-color: rgba(148, 163, 184, .28) !important;
+    }
+    html[data-theme="dark"] .appointments-status-option:hover,
+    html[data-theme="dark"] .appointments-status-option.is-selected {
+        background: #8B0000 !important;
+        color: #facc15 !important;
+        -webkit-text-fill-color: #facc15 !important;
+        border-color: #facc15 !important;
+    }
+    html[data-theme="dark"] .appointments-filter-reset:hover,
+    html[data-theme="dark"] .appointments-filter-reset:focus-visible,
+    html[data-theme="dark"] .appointments-filter-close:hover,
+    html[data-theme="dark"] .appointments-filter-close:focus-visible {
+        background: #facc15 !important;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+        border-color: #facc15 !important;
     }
 
     /* Standard modal chrome: view, approve/reject, and reschedule */
@@ -3750,6 +3853,12 @@
             0 7px 15px rgba(15, 23, 42, .18),
             0 2px 4px rgba(15, 23, 42, .12) !important;
     }
+    html:not([data-theme="dark"]) #apptTable .appointment-inline-pill.is-view {
+        box-shadow:
+            0 10px 18px rgba(15, 23, 42, .16),
+            0 4px 9px rgba(15, 23, 42, .10),
+            0 1px 2px rgba(15, 23, 42, .08) !important;
+    }
 
     html[data-theme="dark"] .appointments-toolbar-actions .appointments-search-wrap,
     html[data-theme="dark"] .appointments-toolbar-actions .appointments-filter-toggle,
@@ -3845,6 +3954,12 @@
     }
     html[data-theme="dark"] .appointments-modern-card:not(.is-workflow) .appointments-modern-copy span:last-child {
         color: #cbd5e1 !important;
+    }
+    html[data-theme="dark"] .appointments-modern-summary .appointments-modern-card {
+        box-shadow:
+            0 18px 36px rgba(0, 0, 0, .42),
+            0 7px 16px rgba(0, 0, 0, .30),
+            0 0 0 1px rgba(250, 204, 21, .08) !important;
     }
 
     .appointment-queue-modal {
@@ -4124,7 +4239,7 @@
         gap: 8px;
     }
     .appointment-queue-page-actions button,
-    .appointment-queue-pagination select {
+    .appointment-queue-page-size-trigger {
         height: 38px;
         border: 1px solid #ead8dc;
         border-radius: 9px;
@@ -4147,9 +4262,121 @@
         cursor: not-allowed;
     }
     .appointment-queue-pagination select {
-        min-width: 112px;
+        position: absolute;
+        inline-size: 1px;
+        block-size: 1px;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .appointment-queue-page-size {
+        position: relative;
         justify-self: end;
-        padding: 0 10px;
+        min-width: 112px;
+    }
+    .appointment-queue-page-size-trigger {
+        position: relative;
+        width: 100%;
+        min-width: 112px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        overflow: hidden;
+        padding: 0 28px 0 12px;
+        cursor: pointer;
+        text-align: left;
+        box-shadow: none;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
+    }
+    .appointment-queue-page-size-trigger::after {
+        content: "";
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        width: 7px;
+        height: 7px;
+        border-right: 1.8px solid currentColor;
+        border-bottom: 1.8px solid currentColor;
+        transform: translateY(-65%) rotate(45deg);
+        transition: transform .18s ease;
+        pointer-events: none;
+    }
+    .appointment-queue-page-size.is-open .appointment-queue-page-size-trigger::after {
+        transform: translateY(-35%) rotate(225deg);
+    }
+    .appointment-queue-page-size-menu {
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 8px);
+        z-index: 30;
+        display: none;
+        width: 150px;
+        padding: 8px;
+        border: 1px solid #ead3d7;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 22px 48px rgba(15, 23, 42, .18);
+    }
+    .appointment-queue-page-size.is-open .appointment-queue-page-size-menu {
+        display: grid;
+        gap: 8px;
+    }
+    .appointment-queue-page-size-option {
+        position: relative;
+        isolation: isolate;
+        width: 100%;
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        overflow: hidden;
+        padding: 0 12px;
+        border: 1px solid #ead3d7;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #70131B;
+        font-size: 13px;
+        font-weight: 900;
+        text-align: left;
+        cursor: pointer;
+        box-shadow: none;
+    }
+    .appointment-queue-page-size-option::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(255, 247, 181, 0) 0%, rgba(255, 247, 181, .72) 45%, rgba(255, 247, 181, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.05s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+    .appointment-queue-page-size-option > span {
+        position: relative;
+        z-index: 1;
+        color: inherit;
+    }
+    .appointment-queue-page-size-option:hover,
+    .appointment-queue-page-size-option:focus-visible,
+    .appointment-queue-page-size-option.is-selected:hover,
+    .appointment-queue-page-size-option.is-selected:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        outline: none;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .24);
+    }
+    .appointment-queue-page-size-option:hover::after,
+    .appointment-queue-page-size-option:focus-visible::after {
+        left: 125%;
+    }
+    .appointment-queue-page-size-option.is-selected {
+        border-color: #70131B;
+        background: #70131B;
+        color: #ffffff;
     }
 
     #infoModal .appointment-detail-actions {
@@ -4406,9 +4633,27 @@
     html[data-theme="dark"] .appointment-action-field input,
     html[data-theme="dark"] .appointment-action-field textarea,
     html[data-theme="dark"] .appointment-queue-page-actions button,
-    html[data-theme="dark"] .appointment-queue-pagination select {
+    html[data-theme="dark"] .appointment-queue-page-size-trigger,
+    html[data-theme="dark"] .appointment-queue-page-size-menu,
+    html[data-theme="dark"] .appointment-queue-page-size-option {
         border-color: rgba(250, 204, 21, .18);
         background: #0f172a;
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .appointment-queue-page-size-menu {
+        box-shadow: 0 22px 48px rgba(0, 0, 0, .34);
+    }
+    html[data-theme="dark"] .appointment-queue-page-size-option:hover,
+    html[data-theme="dark"] .appointment-queue-page-size-option:focus-visible,
+    html[data-theme="dark"] .appointment-queue-page-size-option.is-selected:hover,
+    html[data-theme="dark"] .appointment-queue-page-size-option.is-selected:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+    }
+    html[data-theme="dark"] .appointment-queue-page-size-option.is-selected {
+        border-color: #9f1d2d;
+        background: #9f1d2d;
         color: #ffffff;
     }
     .appointment-queue-header,
@@ -4418,6 +4663,13 @@
     .appointment-queue-header .modal-header-close,
     .appointment-queue-header .modal-header-close svg {
         color: #ffffff !important;
+    }
+    .appointment-queue-header .modal-header-close:hover,
+    .appointment-queue-header .modal-header-close:focus-visible,
+    .appointment-queue-header .modal-header-close:hover svg,
+    .appointment-queue-header .modal-header-close:focus-visible svg {
+        color: #70131B !important;
+        stroke: #70131B !important;
     }
     #infoModal .modal-header,
     #statusActionModal .modal-header,
@@ -4482,7 +4734,681 @@
         .appointment-reschedule-grid .is-full { grid-column: 1; }
     }
 
+    /* Inventory-style appointment filter popover */
+    .appointments-summary-card {
+        position: relative !important;
+        display: block !important;
+        overflow: visible !important;
+    }
+    .appointments-summary-head {
+        position: relative !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 16px !important;
+        overflow: visible !important;
+    }
+    .appointments-toolbar-actions {
+        position: relative !important;
+        width: min(100%, 440px) !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 106px !important;
+        align-items: center !important;
+        gap: 12px !important;
+        margin-left: auto !important;
+        overflow: visible !important;
+    }
+    .appointments-filter-shell {
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        overflow: visible !important;
+    }
+    .appointments-filter-toggle {
+        position: relative !important;
+        min-width: 106px !important;
+        min-height: 48px !important;
+        padding: 0 16px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        overflow: hidden !important;
+        border: 1px solid #7f1d2d !important;
+        border-radius: 12px !important;
+        background: #7f1d2d !important;
+        color: #ffffff !important;
+        font: inherit !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        cursor: pointer !important;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .18) !important;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease !important;
+        z-index: 1 !important;
+    }
+    .appointments-filter-toggle::after {
+        content: "" !important;
+        position: absolute !important;
+        top: -40% !important;
+        left: -130% !important;
+        width: 120% !important;
+        height: 180% !important;
+        background: linear-gradient(115deg, rgba(250, 204, 21, 0) 0%, rgba(255, 247, 181, .58) 45%, rgba(250, 204, 21, 0) 100%) !important;
+        transform: skewX(-20deg) !important;
+        transition: left 1.5s ease !important;
+        pointer-events: none !important;
+        z-index: 0 !important;
+    }
+    .appointments-filter-toggle > * {
+        position: relative !important;
+        z-index: 1 !important;
+        color: inherit !important;
+    }
+    .appointments-filter-toggle svg {
+        width: 17px !important;
+        height: 17px !important;
+        color: #ffffff !important;
+        stroke: #ffffff !important;
+    }
+    .appointments-filter-toggle:hover::after,
+    .appointments-filter-toggle:focus-visible::after {
+        left: 125% !important;
+    }
+    .appointments-filter-toggle:hover,
+    .appointments-filter-toggle:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-1px) !important;
+        outline: none !important;
+        box-shadow: 0 12px 22px rgba(112, 19, 27, .16) !important;
+    }
+    .appointments-filter-shell.is-open .appointments-filter-toggle:not(:hover):not(:focus-visible) {
+        background: #7f1d2d !important;
+        border-color: #7f1d2d !important;
+        color: #ffffff !important;
+    }
+    .appointments-filter-toggle:hover svg,
+    .appointments-filter-toggle:focus-visible svg,
+    .appointments-filter-toggle:hover .btn-text,
+    .appointments-filter-toggle:focus-visible .btn-text {
+        color: #70131B !important;
+        stroke: #70131B !important;
+    }
+    .appointments-filter-panel {
+        position: absolute !important;
+        top: calc(100% + 10px) !important;
+        right: 0 !important;
+        width: min(280px, calc(100vw - 40px)) !important;
+        display: none !important;
+        padding: 14px !important;
+        border: 1px solid #ead3d7 !important;
+        border-radius: 12px !important;
+        background: #ffffff !important;
+        box-shadow: 0 22px 48px rgba(15, 23, 42, .18) !important;
+        overflow: visible !important;
+        z-index: 80 !important;
+    }
+    .appointments-filter-shell.is-open .appointments-filter-panel {
+        display: block !important;
+    }
+    .appointments-filter-panel-title {
+        margin: 0 0 10px !important;
+        color: #70131B !important;
+        font-size: 12px !important;
+        font-weight: 900 !important;
+        letter-spacing: .06em !important;
+        text-transform: uppercase !important;
+    }
+    .appointments-status-display,
+    .appointments-filter-actions {
+        display: none !important;
+    }
+    .appointments-status-wrap,
+    .appointments-status-menu,
+    .appointments-status-options {
+        position: static !important;
+        width: 100% !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+    .appointments-status-menu {
+        display: block !important;
+    }
+    .appointments-status-options {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+    .appointments-status-option {
+        position: relative !important;
+        isolation: isolate;
+        width: 100% !important;
+        min-height: 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        overflow: hidden !important;
+        padding: 0 12px !important;
+        border: 1px solid #ead3d7 !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+        color: #70131B !important;
+        font-size: 13px !important;
+        font-weight: 900 !important;
+        text-align: left !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+    .appointments-status-option::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(255, 247, 181, 0) 0%, rgba(255, 247, 181, .72) 45%, rgba(255, 247, 181, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.05s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+    .appointments-status-option > span {
+        position: relative;
+        z-index: 1;
+        color: inherit !important;
+    }
+    .appointments-status-option:hover,
+    .appointments-status-option:focus-visible,
+    .appointments-status-option.is-selected:hover,
+    .appointments-status-option.is-selected:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        outline: none !important;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .24) !important;
+    }
+    .appointments-status-option:hover::after,
+    .appointments-status-option:focus-visible::after {
+        left: 125%;
+    }
+    .appointments-status-option.is-selected {
+        border-color: #70131B !important;
+        background: #70131B !important;
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] .appointments-filter-panel {
+        border-color: rgba(255, 255, 255, .16) !important;
+        background: #182334 !important;
+        box-shadow: 0 22px 48px rgba(0, 0, 0, .34) !important;
+    }
+    html[data-theme="dark"] .appointments-filter-panel-title {
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] .appointments-status-option {
+        border-color: rgba(255, 255, 255, .16) !important;
+        background: #223044 !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .appointments-status-option.is-selected {
+        border-color: #9f1d2d !important;
+        background: #9f1d2d !important;
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] .appointments-status-option:hover,
+    html[data-theme="dark"] .appointments-status-option:focus-visible,
+    html[data-theme="dark"] .appointments-status-option.is-selected:hover,
+    html[data-theme="dark"] .appointments-status-option.is-selected:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+    @media (max-width: 768px) {
+        .appointments-summary-head {
+            align-items: stretch !important;
+            flex-direction: column !important;
+        }
+        .appointments-toolbar-actions {
+            width: 100% !important;
+            grid-template-columns: 1fr !important;
+            margin-left: 0 !important;
+        }
+        .appointments-filter-shell,
+        .appointments-filter-toggle {
+            width: 100% !important;
+        }
+        .appointments-filter-panel {
+            width: 100% !important;
+        }
+    }
+
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+@endpush
+
+@push('late-styles')
+<style>
+    .appointments-summary-card {
+        min-width: 0 !important;
+    }
+
+    .appointments-table-scroll {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: auto !important;
+        overflow-y: hidden;
+        overscroll-behavior-inline: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(127, 29, 45, .38) transparent;
+    }
+
+    .appointments-table-scroll::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .appointments-table-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .appointments-table-scroll::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(127, 29, 45, .38);
+    }
+
+    .appointments-table-scroll #apptTable {
+        display: table !important;
+        width: 100% !important;
+        min-width: 980px !important;
+        max-width: none !important;
+        margin-top: 15px;
+    }
+
+    .appointments-table-scroll #apptTable thead {
+        display: table-header-group !important;
+        width: auto !important;
+    }
+
+    .appointments-table-scroll #apptTable tbody {
+        display: table-row-group !important;
+        width: auto !important;
+    }
+
+    .appointments-table-scroll #apptTable tr {
+        display: table-row !important;
+        width: auto !important;
+    }
+
+    .appointments-table-scroll #apptTable th,
+    .appointments-table-scroll #apptTable td {
+        display: table-cell !important;
+        white-space: normal;
+    }
+
+    .appointments-table-scroll #apptTable .appointment-inline-pill.is-view {
+        width: 92px !important;
+        min-width: 92px !important;
+        max-width: 92px !important;
+        min-height: 38px !important;
+        height: 38px !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        gap: 6px !important;
+        box-sizing: border-box;
+    }
+
+    .appointments-table-scroll #apptTable .appointment-inline-pill.is-view svg {
+        width: 14px !important;
+        height: 14px !important;
+    }
+
+    .appointments-summary-head,
+    .appointments-toolbar-actions {
+        position: static !important;
+        inset: auto !important;
+    }
+
+    .appointments-table-scroll #apptTable thead th {
+        position: sticky;
+        top: 0;
+        z-index: 12;
+        background: #fbf2f3 !important;
+        box-shadow: 0 1px 0 rgba(112, 19, 27, .16);
+    }
+
+    html[data-theme="dark"] .appointments-table-scroll #apptTable thead th {
+        background: #2b1720 !important;
+        box-shadow: 0 1px 0 rgba(250, 204, 21, .20);
+    }
+
+    html[data-theme="dark"] .appointments-table-scroll {
+        scrollbar-color: rgba(250, 204, 21, .42) transparent;
+    }
+
+    html[data-theme="dark"] .appointments-table-scroll::-webkit-scrollbar-thumb {
+        background: rgba(250, 204, 21, .42);
+    }
+
+    .appointments-table-pagination {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        position: static;
+        margin-top: 10px;
+        padding: 8px 10px;
+        box-sizing: border-box;
+        border: 1px solid rgba(250, 204, 21, .28);
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, .10), 0 3px 10px rgba(15, 23, 42, .05);
+    }
+
+    .appointments-table-pagination[hidden] {
+        display: none !important;
+    }
+
+    .appointments-pagination-summary {
+        justify-self: start;
+        min-width: 0;
+        color: #334155;
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+    .appointments-pagination-actions {
+        justify-self: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .appointments-pagination-pages {
+        display: contents;
+    }
+
+    .appointments-pagination-btn {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        min-width: 34px;
+        width: 34px;
+        min-height: 34px;
+        height: 34px;
+        padding: 0 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #ead8dc;
+        border-radius: 7px;
+        background: #ffffff;
+        color: #70131B;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, .05);
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+
+    .appointments-pagination-btn::before,
+    .appointments-page-size-trigger::before,
+    .appointments-page-size-option::before {
+        content: "";
+        position: absolute;
+        top: -45%;
+        left: -135%;
+        width: 72%;
+        height: 190%;
+        transform: skewX(-20deg);
+        background: rgba(255, 247, 178, .72);
+        transition: left .72s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .appointments-pagination-btn:hover:not(:disabled)::before,
+    .appointments-pagination-btn:focus-visible:not(:disabled)::before,
+    .appointments-page-size-trigger:hover::before,
+    .appointments-page-size-trigger:focus-visible::before,
+    .appointments-page-size-option:hover::before,
+    .appointments-page-size-option:focus-visible::before {
+        left: 135%;
+    }
+
+    .appointments-pagination-btn:hover:not(:disabled),
+    .appointments-pagination-btn:focus-visible:not(:disabled) {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow: 0 10px 20px rgba(250, 204, 21, .22);
+    }
+
+    .appointments-pagination-btn.is-active {
+        border-color: #8f0015;
+        background: #8f0015;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        cursor: default;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .20);
+    }
+
+    .appointments-pagination-btn:disabled:not(.is-active) {
+        opacity: .45;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .appointments-page-size {
+        position: relative;
+        justify-self: end;
+        width: 132px;
+        min-width: 0;
+    }
+
+    .appointments-page-size-trigger {
+        position: relative;
+        isolation: isolate;
+        width: 100%;
+        min-height: 36px;
+        height: 36px;
+        padding: 0 34px 0 13px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        overflow: hidden;
+        border: 1px solid #ead3d7;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #70131B;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 900;
+        cursor: pointer;
+        text-align: left;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .10);
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+
+    .appointments-page-size-trigger > span {
+        position: relative;
+        z-index: 1;
+        color: inherit;
+    }
+
+    .appointments-page-size-trigger::after {
+        content: "";
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        width: 7px;
+        height: 7px;
+        border-right: 1.7px solid currentColor;
+        border-bottom: 1.7px solid currentColor;
+        transform: translateY(-65%) rotate(45deg);
+        transition: transform .18s ease;
+    }
+
+    .appointments-page-size.is-open .appointments-page-size-trigger::after {
+        transform: translateY(-35%) rotate(225deg);
+    }
+
+    .appointments-page-size-trigger:hover,
+    .appointments-page-size-trigger:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        outline: none;
+        box-shadow: 0 12px 22px rgba(250, 204, 21, .20);
+    }
+
+    .appointments-page-size-menu {
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 8px);
+        z-index: 90;
+        display: none;
+        width: 170px;
+        gap: 8px;
+        padding: 8px;
+        border: 1px solid #ead3d7;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 18px 36px rgba(15, 23, 42, .18);
+    }
+
+    .appointments-page-size.is-open .appointments-page-size-menu {
+        display: grid;
+    }
+
+    .appointments-page-size-option {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        width: 100%;
+        min-height: 38px;
+        padding: 0 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        border: 1px solid #ead3d7;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #70131B;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
+    }
+
+    .appointments-page-size-option.is-selected {
+        border-color: #8f0015;
+        background: #8f0015;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    .appointments-page-size-option:hover,
+    .appointments-page-size-option:focus-visible,
+    .appointments-page-size-option.is-selected:hover,
+    .appointments-page-size-option.is-selected:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        outline: none;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .24);
+    }
+
+    html[data-theme="dark"] .appointments-table-pagination,
+    html[data-theme="dark"] .appointments-page-size-menu {
+        border-color: rgba(250, 204, 21, .18);
+        background: #111827;
+        box-shadow: 0 16px 32px rgba(0, 0, 0, .30);
+    }
+
+    html[data-theme="dark"] .appointments-pagination-summary {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .appointments-pagination-btn,
+    html[data-theme="dark"] .appointments-page-size-trigger,
+    html[data-theme="dark"] .appointments-page-size-option {
+        border-color: rgba(255, 255, 255, .16);
+        background: #182334;
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .appointments-pagination-btn.is-active,
+    html[data-theme="dark"] .appointments-page-size-option.is-selected {
+        border-color: #9f1d2d;
+        background: #9f1d2d;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .appointments-pagination-btn:hover:not(:disabled),
+    html[data-theme="dark"] .appointments-pagination-btn:focus-visible:not(:disabled),
+    html[data-theme="dark"] .appointments-page-size-trigger:hover,
+    html[data-theme="dark"] .appointments-page-size-trigger:focus-visible,
+    html[data-theme="dark"] .appointments-page-size-option:hover,
+    html[data-theme="dark"] .appointments-page-size-option:focus-visible,
+    html[data-theme="dark"] .appointments-page-size-option.is-selected:hover,
+    html[data-theme="dark"] .appointments-page-size-option.is-selected:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+    }
+
+    @media (max-width: 768px) {
+        .appointments-summary-card {
+            padding-inline: 12px !important;
+            overflow: visible !important;
+        }
+
+        .appointments-summary-head {
+            padding-inline: 8px !important;
+        }
+
+        .appointments-table-scroll {
+            touch-action: pan-x pan-y;
+        }
+
+        .appointments-table-pagination {
+            grid-template-columns: minmax(0, 1fr) auto;
+            padding: 8px;
+        }
+
+        .appointments-pagination-summary {
+            grid-column: 1 / -1;
+            justify-self: center;
+            text-align: center;
+        }
+
+        .appointments-pagination-actions {
+            justify-self: start;
+        }
+
+        .appointments-page-size {
+            justify-self: end;
+            width: 132px;
+        }
+    }
 </style>
 @endpush
 
@@ -4530,6 +5456,14 @@
             $usesEmployeeNumber = collect(['faculty', 'admin', 'staff', 'employee', 'dependent'])
                 ->contains(fn ($needle) => str_contains($roleMarkers, $needle));
             $profile = $usesEmployeeNumber ? ($employeeProfile ?: $studentProfile) : ($studentProfile ?: $employeeProfile);
+            $firstName = trim((string) ($user?->first_name ?: $profile?->first_name ?: ''));
+            $middleName = trim((string) ($user?->middle_name ?: $profile?->middle_name ?: ''));
+            $lastName = trim((string) ($user?->last_name ?: $profile?->last_name ?: ''));
+            $middleInitial = $middleName !== '' ? mb_strtoupper(mb_substr($middleName, 0, 1)) . '.' : '';
+            $displayName = $lastName !== '' && $firstName !== ''
+                ? $lastName . ', ' . $firstName . ($middleInitial !== '' ? ' ' . $middleInitial : '')
+                : trim(implode(' ', array_filter([$lastName, $firstName, $middleInitial])));
+            $displayName = $displayName !== '' ? $displayName : trim((string) $appointment->name);
             $idNumber = $usesEmployeeNumber
                 ? ($employeeProfile?->employee_number ?: $user?->employee_number ?: $appointment->student_number)
                 : ($appointment->student_number ?: $studentProfile?->student_number ?: $user?->student_number);
@@ -4568,6 +5502,7 @@
             $consultEligibleAt = $scheduledAt?->copy()->subMinutes(10);
 
             return [
+                'display_name' => $displayName ?: 'N/A',
                 'id_number' => $idNumber ?: '',
                 'id_label' => $idLabel,
                 'contact' => $user?->contact_no ?: $profile?->contact_no ?: $profile?->cellphone ?: '',
@@ -4659,7 +5594,9 @@
                 </div>
                 <div class="appointments-filter-shell" id="appointmentsFilterShell">
                     <button type="button" class="btn-add-walkin appointments-filter-toggle" id="appointmentsFilterToggle" aria-label="Open status filter" aria-expanded="false" aria-controls="appointmentsFilterPanel">
-                        <x-outline-icon name="funnel" />
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+                        </svg>
                         <span class="btn-text">Filter</span>
                     </button>
                     <div class="appointments-filter-panel" id="appointmentsFilterPanel" aria-hidden="true">
@@ -4678,12 +5615,12 @@
                             </button>
                             <div class="appointments-status-menu" id="appointmentsStatusMenu" role="listbox" aria-label="Appointment status options">
                                 <div class="appointments-status-options">
-                                    <button type="button" class="appointments-status-option is-selected" data-status-value="">All Statuses</button>
-                                    <button type="button" class="appointments-status-option" data-status-value="Approved">Approved</button>
-                                    <button type="button" class="appointments-status-option" data-status-value="Cancelled">Cancelled</button>
-                                    <button type="button" class="appointments-status-option" data-status-value="Rejected">Rejected</button>
-                                    <button type="button" class="appointments-status-option" data-status-value="Rescheduled">Rescheduled</button>
-                                    <button type="button" class="appointments-status-option" data-status-value="Missed">Missed</button>
+                                    <button type="button" class="appointments-status-option is-selected" data-status-value=""><span>All Statuses</span></button>
+                                    <button type="button" class="appointments-status-option" data-status-value="Approved"><span>Approved</span></button>
+                                    <button type="button" class="appointments-status-option" data-status-value="Cancelled"><span>Cancelled</span></button>
+                                    <button type="button" class="appointments-status-option" data-status-value="Rejected"><span>Rejected</span></button>
+                                    <button type="button" class="appointments-status-option" data-status-value="Rescheduled"><span>Rescheduled</span></button>
+                                    <button type="button" class="appointments-status-option" data-status-value="Missed"><span>Missed</span></button>
                                 </div>
                             </div>
                         </div>
@@ -4695,6 +5632,7 @@
                 </div>
             </div>
         </div>
+        <div class="appointments-table-scroll" tabindex="0" aria-label="Appointments table. Scroll horizontally to view all columns.">
         <table id="apptTable">
             <thead>
                 <tr>
@@ -4718,7 +5656,7 @@
                         data-appointment-row
                         data-appointment-id="{{ $appt->id }}"
                         data-view-apt-id="{{ $appt->apt_id ?: '' }}"
-                        data-view-name="{{ $appt->name }}"
+                        data-view-name="{{ $appointmentMeta['display_name'] }}"
                         data-view-service="{{ $appt->service }}"
                         data-view-date="{{ $appt->date }}"
                         data-view-time="{{ $appt->time }}"
@@ -4741,7 +5679,7 @@
                         ])) }}"
                     >
                         <td>
-                            <div style="font-weight: 700;" class="student-name">{{ $appt->name }}</div>
+                            <div style="font-weight: 700;" class="student-name">{{ $appointmentMeta['display_name'] }}</div>
                             <div style="font-size: 12px; color: #111827;">{{ $appointmentIdNumber ?: 'N/A' }}</div>
                         </td>
                         <td>{{ $appt->apt_id ?: 'N/A' }}</td>
@@ -4787,7 +5725,7 @@
                                     type="button"
                                     class="appointment-inline-pill is-view"
                                     title="Click to view"
-                                    data-name="{{ $appt->name }}"
+                                    data-name="{{ $appointmentMeta['display_name'] }}"
                                     data-service="{{ $appt->service }}"
                                     data-date="{{ $appt->date }}"
                                     data-time="{{ $appt->time }}"
@@ -4811,7 +5749,7 @@
                                             type="button"
                                             class="appointment-action-menu-item is-view"
                                             title="View Details"
-                                            data-name="{{ $appt->name }}"
+                                            data-name="{{ $appointmentMeta['display_name'] }}"
                                             data-service="{{ $appt->service }}"
                                             data-date="{{ $appt->date }}"
                                             data-time="{{ $appt->time }}"
@@ -4827,19 +5765,19 @@
 
                                         @if($appt->status == 'Pending')
                                             @if($canApproveAppointments)
-                                            <a href="{{ url($basePrefix . '/appointments/' . $appt->id . '/Approved') }}" class="appointment-action-menu-item is-approve btn-approve" title="Approve" data-id="{{ $appt->id }}" data-name="{{ $appt->name }}" data-service="{{ $appt->service }}" data-date="{{ $appt->date }}" data-time="{{ $appt->time }}" data-status-target="Approved">
+                                            <a href="{{ url($basePrefix . '/appointments/' . $appt->id . '/Approved') }}" class="appointment-action-menu-item is-approve btn-approve" title="Approve" data-id="{{ $appt->id }}" data-name="{{ $appointmentMeta['display_name'] }}" data-service="{{ $appt->service }}" data-date="{{ $appt->date }}" data-time="{{ $appt->time }}" data-status-target="Approved">
                                                 <x-outline-icon name="check" />
                                                 Approve
                                             </a>
                                             @endif
                                             @if($canRescheduleAppointments)
-                                            <button type="button" class="appointment-action-menu-item is-reschedule btn-reschedule" title="Reschedule" data-id="{{ $appt->id }}" data-date="{{ $appt->date }}" data-time="{{ $appt->time }}" data-name="{{ $appt->name }}" data-service="{{ $appt->service }}">
+                                            <button type="button" class="appointment-action-menu-item is-reschedule btn-reschedule" title="Reschedule" data-id="{{ $appt->id }}" data-date="{{ $appt->date }}" data-time="{{ $appt->time }}" data-name="{{ $appointmentMeta['display_name'] }}" data-service="{{ $appt->service }}">
                                                 <x-outline-icon name="calendar-days" />
                                                 Reschedule
                                             </button>
                                             @endif
                                             @if($canRejectAppointments)
-                                            <a href="{{ url($basePrefix . '/appointments/' . $appt->id . '/Cancelled') }}" class="appointment-action-menu-item is-reject btn-reject btn-cancel" title="Reject" data-id="{{ $appt->id }}" data-name="{{ $appt->name }}" data-service="{{ $appt->service }}" data-date="{{ $appt->date }}" data-time="{{ $appt->time }}" data-status-target="Cancelled">
+                                            <a href="{{ url($basePrefix . '/appointments/' . $appt->id . '/Cancelled') }}" class="appointment-action-menu-item is-reject btn-reject btn-cancel" title="Reject" data-id="{{ $appt->id }}" data-name="{{ $appointmentMeta['display_name'] }}" data-service="{{ $appt->service }}" data-date="{{ $appt->date }}" data-time="{{ $appt->time }}" data-status-target="Cancelled">
                                                 <x-outline-icon name="x-mark" />
                                                 Reject
                                             </a>
@@ -4857,6 +5795,27 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
+        <div class="appointments-table-pagination" id="appointmentsTablePagination" aria-label="Appointments pagination">
+            <span class="appointments-pagination-summary" id="appointmentsPaginationSummary" aria-live="polite"></span>
+            <div class="appointments-pagination-actions">
+                <button type="button" class="appointments-pagination-btn" id="appointmentsPaginationPrevious" aria-label="Previous page">&larr;</button>
+                <div class="appointments-pagination-pages" id="appointmentsPaginationPages"></div>
+                <button type="button" class="appointments-pagination-btn" id="appointmentsPaginationNext" aria-label="Next page">&rarr;</button>
+            </div>
+            <div class="appointments-page-size" id="appointmentsPageSize">
+                <button type="button" class="appointments-page-size-trigger" id="appointmentsPageSizeTrigger" aria-haspopup="listbox" aria-expanded="false">
+                    <span id="appointmentsPageSizeLabel">20 per page</span>
+                </button>
+                <div class="appointments-page-size-menu" id="appointmentsPageSizeMenu" role="listbox" aria-label="Appointments per page">
+                    <button type="button" class="appointments-page-size-option is-selected" data-appointments-page-size="20" role="option" aria-selected="true">20 per page</button>
+                    <button type="button" class="appointments-page-size-option" data-appointments-page-size="40" role="option" aria-selected="false">40 per page</button>
+                    <button type="button" class="appointments-page-size-option" data-appointments-page-size="80" role="option" aria-selected="false">80 per page</button>
+                    <button type="button" class="appointments-page-size-option" data-appointments-page-size="100" role="option" aria-selected="false">100 per page</button>
+                    <button type="button" class="appointments-page-size-option" data-appointments-page-size="all" role="option" aria-selected="false">Show all</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     @foreach([
@@ -4904,10 +5863,10 @@
                             <article
                                 class="appointment-queue-record"
                                 data-queue-record
-                                data-search-text="{{ strtolower(implode(' ', array_filter([$queueAppointment->name, $queueAppointment->email, $queueAppointment->apt_id, $queueMeta['id_number'], $queueAppointment->service]))) }}"
+                                data-search-text="{{ strtolower(implode(' ', array_filter([$queueMeta['display_name'], $queueAppointment->name, $queueAppointment->email, $queueAppointment->apt_id, $queueMeta['id_number'], $queueAppointment->service]))) }}"
                             >
                                 <div class="appointment-queue-identity">
-                                    <strong>{{ $queueAppointment->name }}</strong>
+                                    <strong>{{ $queueMeta['display_name'] }}</strong>
                                     <span>{{ $queueAppointment->email ?: 'No email available' }}</span>
                                     <small>{{ $queueMeta['id_label'] }}: {{ $queueMeta['id_number'] ?: 'N/A' }}</small>
                                 </div>
@@ -4928,7 +5887,7 @@
                                     data-show-timeline="0"
                                     data-consult-url="{{ $queueMeta['consult_url'] }}"
                                     data-consult-locked="{{ $queueMeta['consult_locked'] ? '1' : '0' }}"
-                                    data-name="{{ $queueAppointment->name }}"
+                                    data-name="{{ $queueMeta['display_name'] }}"
                                     data-service="{{ $queueAppointment->service }}"
                                     data-date="{{ $queueAppointment->date }}"
                                     data-time="{{ $queueAppointment->time }}"
@@ -4963,12 +5922,23 @@
                             <button type="button" class="is-current" data-queue-current>1</button>
                             <button type="button" data-queue-next aria-label="Next page">&rarr;</button>
                         </div>
-                        <select data-queue-page-size aria-label="Appointments per page">
-                            <option value="5">5 per page</option>
-                            <option value="10">10 per page</option>
-                            <option value="15">15 per page</option>
-                            <option value="all">Show all</option>
-                        </select>
+                        <div class="appointment-queue-page-size" data-queue-page-size-shell>
+                            <select data-queue-page-size aria-label="Appointments per page">
+                                <option value="5">5 per page</option>
+                                <option value="10">10 per page</option>
+                                <option value="15">15 per page</option>
+                                <option value="all">Show all</option>
+                            </select>
+                            <button type="button" class="appointment-queue-page-size-trigger" data-queue-page-size-trigger aria-haspopup="listbox" aria-expanded="false">
+                                <span data-queue-page-size-label>5 per page</span>
+                            </button>
+                            <div class="appointment-queue-page-size-menu" data-queue-page-size-menu role="listbox" aria-label="Appointments per page">
+                                <button type="button" class="appointment-queue-page-size-option is-selected" data-queue-page-size-option data-value="5" role="option" aria-selected="true"><span>5 per page</span></button>
+                                <button type="button" class="appointment-queue-page-size-option" data-queue-page-size-option data-value="10" role="option" aria-selected="false"><span>10 per page</span></button>
+                                <button type="button" class="appointment-queue-page-size-option" data-queue-page-size-option data-value="15" role="option" aria-selected="false"><span>15 per page</span></button>
+                                <button type="button" class="appointment-queue-page-size-option" data-queue-page-size-option data-value="all" role="option" aria-selected="false"><span>Show all</span></button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -5440,6 +6410,15 @@
 
         const timeline = document.getElementById('mTimeline');
         const timelineSteps = ['submitted', 'pending', 'approved', 'scheduled', 'completed'];
+        const timelineIconMarkup = {
+            check: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>',
+            x: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>'
+        };
+        const setTimelineIcon = (step, icon) => {
+            const dot = timeline?.querySelector(`[data-timeline-step="${step}"] .timeline-dot`);
+            if (!dot) return;
+            dot.innerHTML = icon ? timelineIconMarkup[icon] : '';
+        };
         const normalizedTimelineStatus = statusText.toLowerCase();
         const isRejectedTimeline = ['rejected', 'cancelled', 'canceled', 'declined'].includes(normalizedTimelineStatus);
         const isExpiredTimeline = normalizedTimelineStatus === 'expired';
@@ -5464,6 +6443,7 @@
 
             stepEl.style.display = '';
             stepEl.classList.remove('is-done', 'is-current', 'is-muted', 'is-rejected');
+            setTimelineIcon(step, (step === 'submitted' || step === 'completed') ? 'check' : '');
 
             if (lineEl) {
                 lineEl.style.display = '';
@@ -5473,6 +6453,7 @@
             if (isRejectedTimeline) {
                 if (step === 'approved') {
                     stepEl.classList.add('is-rejected');
+                    setTimelineIcon(step, 'x');
                     document.getElementById('mTimelineApprovedLabel').innerText = 'Rejected';
                     document.getElementById('mTimelineApproved').innerText = timelineDate(payload.updated);
                 } else if (index < currentIndex) {
@@ -5497,6 +6478,7 @@
                     stepEl.classList.add('is-done');
                 } else if (step === 'completed') {
                     stepEl.classList.add('is-rejected');
+                    setTimelineIcon(step, 'x');
                     stepEl.querySelector('strong').innerText = isExpiredTimeline ? 'Expired' : 'Missed';
                     document.getElementById('mTimelineCompleted').innerText = timelineDate(payload.updated);
                 } else {
@@ -5624,7 +6606,24 @@
         const current = modal.querySelector('[data-queue-current]');
         const next = modal.querySelector('[data-queue-next]');
         const pageSizeSelect = modal.querySelector('[data-queue-page-size]');
+        const pageSizeShell = modal.querySelector('[data-queue-page-size-shell]');
+        const pageSizeTrigger = modal.querySelector('[data-queue-page-size-trigger]');
+        const pageSizeLabel = modal.querySelector('[data-queue-page-size-label]');
+        const pageSizeOptions = Array.from(modal.querySelectorAll('[data-queue-page-size-option]'));
         let page = 1;
+
+        const syncPageSizePicker = function () {
+            if (!pageSizeSelect) return;
+            const selected = pageSizeOptions.find((option) => option.dataset.value === pageSizeSelect.value);
+            if (pageSizeLabel) {
+                pageSizeLabel.textContent = selected?.textContent?.trim() || pageSizeSelect.selectedOptions?.[0]?.textContent || '5 per page';
+            }
+            pageSizeOptions.forEach((option) => {
+                const isSelected = option.dataset.value === pageSizeSelect.value;
+                option.classList.toggle('is-selected', isSelected);
+                option.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+            });
+        };
 
         const render = function () {
             const term = (search?.value || '').trim().toLowerCase();
@@ -5649,6 +6648,7 @@
             if (previous) previous.disabled = page <= 1;
             if (next) next.disabled = page >= pages;
             if (pagination) pagination.classList.toggle('has-records', records.length > 0);
+            syncPageSizePicker();
         };
 
         search?.addEventListener('input', () => {
@@ -5659,6 +6659,23 @@
             page = 1;
             render();
         });
+        pageSizeTrigger?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const isOpen = !pageSizeShell?.classList.contains('is-open');
+            pageSizeShell?.classList.toggle('is-open', isOpen);
+            pageSizeTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+        pageSizeOptions.forEach((option) => {
+            option.addEventListener('click', (event) => {
+                event.stopPropagation();
+                if (pageSizeSelect) {
+                    pageSizeSelect.value = option.dataset.value || '5';
+                    pageSizeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                pageSizeShell?.classList.remove('is-open');
+                pageSizeTrigger?.setAttribute('aria-expanded', 'false');
+            });
+        });
         previous?.addEventListener('click', () => {
             page -= 1;
             render();
@@ -5666,6 +6683,12 @@
         next?.addEventListener('click', () => {
             page += 1;
             render();
+        });
+        modal.addEventListener('click', (event) => {
+            if (!pageSizeShell?.contains(event.target)) {
+                pageSizeShell?.classList.remove('is-open');
+                pageSizeTrigger?.setAttribute('aria-expanded', 'false');
+            }
         });
 
         modal.dataset.queueReady = '1';
@@ -6002,8 +7025,29 @@
         const filterReset = document.getElementById('appointmentsFilterReset');
         const filterClose = document.getElementById('appointmentsFilterClose');
         const appointmentRows = Array.from(document.querySelectorAll('[data-appointment-row]'));
+        const appointmentPagination = document.getElementById('appointmentsTablePagination');
+        const appointmentPaginationSummary = document.getElementById('appointmentsPaginationSummary');
+        const appointmentPaginationPrevious = document.getElementById('appointmentsPaginationPrevious');
+        const appointmentPaginationNext = document.getElementById('appointmentsPaginationNext');
+        const appointmentPaginationPages = document.getElementById('appointmentsPaginationPages');
+        const appointmentPageSize = document.getElementById('appointmentsPageSize');
+        const appointmentPageSizeTrigger = document.getElementById('appointmentsPageSizeTrigger');
+        const appointmentPageSizeLabel = document.getElementById('appointmentsPageSizeLabel');
+        const appointmentPageSizeOptions = Array.from(document.querySelectorAll('[data-appointments-page-size]'));
         let currentSearchTerm = '';
         let currentStatusFilter = '';
+        let currentAppointmentPage = 1;
+        let currentAppointmentPageSize = '20';
+
+        if (highlightedAppointmentId) {
+            const highlightedIndex = appointmentRows.findIndex(function(row) {
+                return String(row.dataset.appointmentId || '') === String(highlightedAppointmentId);
+            });
+
+            if (highlightedIndex >= 0) {
+                currentAppointmentPage = Math.floor(highlightedIndex / 20) + 1;
+            }
+        }
 
         function setSearchOpenState(isOpen) {
             if (!searchShell || !searchToggle) {
@@ -6055,8 +7099,7 @@
             });
         }
 
-        function applyAppointmentFilters() {
-            appointmentRows.forEach(function(row) {
+        function appointmentRowMatchesFilters(row) {
                 const nameCell = row.getElementsByTagName('td')[0];
                 const nameNode = nameCell ? nameCell.getElementsByClassName('student-name')[0] : null;
                 const rowName = nameNode ? (nameNode.textContent || nameNode.innerText || '') : '';
@@ -6065,8 +7108,102 @@
                 const matchesSearch = currentSearchTerm === '' || rowName.toLowerCase().indexOf(currentSearchTerm) > -1;
                 const matchesStatus = currentStatusFilter === '' || rowStatus === currentStatusFilter.toLowerCase();
 
-                row.style.display = matchesSearch && matchesStatus ? '' : 'none';
+                return matchesSearch && matchesStatus;
+        }
+
+        function appointmentPaginationRange(totalPages) {
+            if (totalPages <= 5) {
+                return Array.from({ length: totalPages }, function(_, index) { return index + 1; });
+            }
+
+            let start = Math.max(1, currentAppointmentPage - 2);
+            let end = Math.min(totalPages, start + 4);
+            start = Math.max(1, end - 4);
+
+            return Array.from({ length: end - start + 1 }, function(_, index) { return start + index; });
+        }
+
+        function syncAppointmentPageSize() {
+            const selectedOption = appointmentPageSizeOptions.find(function(option) {
+                return (option.dataset.appointmentsPageSize || '') === currentAppointmentPageSize;
             });
+
+            if (appointmentPageSizeLabel) {
+                appointmentPageSizeLabel.textContent = selectedOption ? selectedOption.textContent.trim() : '20 per page';
+            }
+
+            appointmentPageSizeOptions.forEach(function(option) {
+                const isSelected = (option.dataset.appointmentsPageSize || '') === currentAppointmentPageSize;
+                option.classList.toggle('is-selected', isSelected);
+                option.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+            });
+        }
+
+        function applyAppointmentFilters(resetPage = true) {
+            if (resetPage) {
+                currentAppointmentPage = 1;
+            }
+
+            const matchingRows = appointmentRows.filter(appointmentRowMatchesFilters);
+            const numericPageSize = currentAppointmentPageSize === 'all'
+                ? Math.max(matchingRows.length, 1)
+                : Math.max(1, Number.parseInt(currentAppointmentPageSize, 10) || 20);
+            const totalPages = Math.max(1, Math.ceil(matchingRows.length / numericPageSize));
+            currentAppointmentPage = Math.min(Math.max(1, currentAppointmentPage), totalPages);
+
+            const firstVisibleIndex = (currentAppointmentPage - 1) * numericPageSize;
+            const visibleRows = new Set(matchingRows.slice(firstVisibleIndex, firstVisibleIndex + numericPageSize));
+
+            appointmentRows.forEach(function(row) {
+                row.style.display = visibleRows.has(row) ? '' : 'none';
+            });
+
+            if (appointmentPaginationSummary) {
+                if (matchingRows.length === 0) {
+                    appointmentPaginationSummary.textContent = 'Showing 0 of 0 records';
+                } else {
+                    const firstRecord = firstVisibleIndex + 1;
+                    const lastRecord = Math.min(firstVisibleIndex + numericPageSize, matchingRows.length);
+                    appointmentPaginationSummary.textContent = 'Showing ' + firstRecord + ' to ' + lastRecord + ' of ' + matchingRows.length + ' records';
+                }
+            }
+
+            if (appointmentPaginationPrevious) {
+                appointmentPaginationPrevious.disabled = currentAppointmentPage <= 1;
+            }
+
+            if (appointmentPaginationNext) {
+                appointmentPaginationNext.disabled = currentAppointmentPage >= totalPages;
+            }
+
+            if (appointmentPaginationPages) {
+                appointmentPaginationPages.replaceChildren();
+                appointmentPaginationRange(totalPages).forEach(function(pageNumber) {
+                    const pageButton = document.createElement('button');
+                    pageButton.type = 'button';
+                    pageButton.className = 'appointments-pagination-btn' + (pageNumber === currentAppointmentPage ? ' is-active' : '');
+                    pageButton.textContent = String(pageNumber);
+                    pageButton.setAttribute('aria-label', 'Page ' + pageNumber);
+
+                    if (pageNumber === currentAppointmentPage) {
+                        pageButton.disabled = true;
+                        pageButton.setAttribute('aria-current', 'page');
+                    } else {
+                        pageButton.addEventListener('click', function() {
+                            currentAppointmentPage = pageNumber;
+                            applyAppointmentFilters(false);
+                        });
+                    }
+
+                    appointmentPaginationPages.appendChild(pageButton);
+                });
+            }
+
+            if (appointmentPagination) {
+                appointmentPagination.hidden = matchingRows.length < 5;
+            }
+
+            syncAppointmentPageSize();
         }
 
         if (searchInput && searchInput.value.trim() !== '') {
@@ -6132,6 +7269,7 @@
                     statusFilter.dispatchEvent(new Event('change', { bubbles: true }));
                 }
                 setStatusDropdownOpen(false);
+                setFilterOpenState(false);
             });
         });
 
@@ -6154,6 +7292,44 @@
             });
         }
 
+        if (appointmentPaginationPrevious) {
+            appointmentPaginationPrevious.addEventListener('click', function() {
+                if (currentAppointmentPage <= 1) {
+                    return;
+                }
+
+                currentAppointmentPage -= 1;
+                applyAppointmentFilters(false);
+            });
+        }
+
+        if (appointmentPaginationNext) {
+            appointmentPaginationNext.addEventListener('click', function() {
+                currentAppointmentPage += 1;
+                applyAppointmentFilters(false);
+            });
+        }
+
+        if (appointmentPageSizeTrigger && appointmentPageSize) {
+            appointmentPageSizeTrigger.addEventListener('click', function(event) {
+                event.stopPropagation();
+                const shouldOpen = !appointmentPageSize.classList.contains('is-open');
+                appointmentPageSize.classList.toggle('is-open', shouldOpen);
+                appointmentPageSizeTrigger.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+            });
+        }
+
+        appointmentPageSizeOptions.forEach(function(option) {
+            option.addEventListener('click', function(event) {
+                event.stopPropagation();
+                currentAppointmentPageSize = option.dataset.appointmentsPageSize || '20';
+                currentAppointmentPage = 1;
+                appointmentPageSize?.classList.remove('is-open');
+                appointmentPageSizeTrigger?.setAttribute('aria-expanded', 'false');
+                applyAppointmentFilters(false);
+            });
+        });
+
         document.addEventListener('click', function(event) {
             if (filterShell && !filterShell.contains(event.target)) {
                 setFilterOpenState(false);
@@ -6162,9 +7338,15 @@
             if (statusWrap && !statusWrap.contains(event.target)) {
                 setStatusDropdownOpen(false);
             }
+
+            if (appointmentPageSize && !appointmentPageSize.contains(event.target)) {
+                appointmentPageSize.classList.remove('is-open');
+                appointmentPageSizeTrigger?.setAttribute('aria-expanded', 'false');
+            }
         });
 
         syncStatusDisplay();
+        applyAppointmentFilters(false);
 
         const actionMenus = document.querySelectorAll('[data-appointment-action-menu]');
         const closeActionMenus = function(exceptMenu = null) {

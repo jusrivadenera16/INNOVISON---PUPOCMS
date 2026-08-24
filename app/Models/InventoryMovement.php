@@ -26,9 +26,9 @@ class InventoryMovement extends Model
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:2',
-        'stock_before' => 'decimal:2',
-        'stock_after' => 'decimal:2',
+        'quantity' => 'decimal:6',
+        'stock_before' => 'decimal:6',
+        'stock_after' => 'decimal:6',
         'movement_date' => 'date',
     ];
 

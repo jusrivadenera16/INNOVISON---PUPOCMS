@@ -23,6 +23,7 @@ use App\Services\ClinicWorkflowService;
 use App\Services\EmployeeHealthFormPdfService;
 use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
+use App\Services\HealthProfileSnapshotService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -232,34 +233,61 @@ class AppointmentController extends Controller
         $healthProfile = $user->healthProfile;
         $healthProfileStatus = optional($healthProfile)->clearance_status;
         $puptasSyncStatus = optional($healthProfile)->puptas_sync_status;
+        $pulloutStatus = optional($healthProfile)->pullout_status;
         $isHealthProfileIssued = in_array($healthProfileStatus, ['Issued', 'Fully Cleared'], true);
         $isHealthProfileResubmission = $healthProfileStatus === 'Pending Resubmission';
         $needsHealthFormCorrection = $this->healthProfileNeedsFormCorrection($healthProfile);
 
         if ($healthProfile) {
+            $pulloutNotification = match ($pulloutStatus) {
+                HealthProfile::PULLOUT_PENDING => [
+                    'type' => 'warning',
+                    'icon' => '!',
+                    'message' => 'Your approved health record has a pending manual pullout request. Your health information and files remain preserved while the clinic reviews it.',
+                    'time' => $healthProfile->pullout_requested_at?->diffForHumans() ?? 'Pullout pending',
+                ],
+                HealthProfile::PULLOUT_COMPLETED => [
+                    'type' => 'warning',
+                    'icon' => '!',
+                    'message' => 'Your health record was marked as pulled out. Your health information and submitted files remain archived by the clinic.',
+                    'time' => $healthProfile->pullout_completed_at?->diffForHumans() ?? 'Pulled out',
+                ],
+                HealthProfile::PULLOUT_RESTORED => [
+                    'type' => 'success',
+                    'icon' => 'OK',
+                    'message' => 'Your pulled-out health record was restored to active access. Your original clearance and medical information were preserved.',
+                    'time' => $healthProfile->pullout_restored_at?->diffForHumans() ?? 'Health record restored',
+                ],
+                default => null,
+            };
+
             $notifications[] = [
                 'id' => $this->buildNotificationId(
-                    $needsHealthFormCorrection ? 'health-form-correction' : 'health-record',
+                    $pulloutNotification ? 'health-record-pullout' : ($needsHealthFormCorrection ? 'health-form-correction' : 'health-record'),
                     [
                         $healthProfile->id,
                         $healthProfileStatus,
+                        $pulloutStatus,
                         $needsHealthFormCorrection ? $healthProfile->pending_reason : null,
                         optional($healthProfile->resubmission_requested_at)->timestamp,
+                        optional($healthProfile->pullout_requested_at)->timestamp,
+                        optional($healthProfile->pullout_completed_at)->timestamp,
+                        optional($healthProfile->pullout_restored_at)->timestamp,
                         optional($healthProfile->updated_at)->timestamp,
                     ]
                 ),
-                'type' => $needsHealthFormCorrection ? 'warning' : ($isHealthProfileIssued ? 'success' : 'warning'),
-                'icon' => $needsHealthFormCorrection ? '!' : ($isHealthProfileIssued ? 'OK' : '...'),
-                'message' => $needsHealthFormCorrection
+                'type' => $pulloutNotification['type'] ?? ($needsHealthFormCorrection ? 'warning' : ($isHealthProfileIssued ? 'success' : 'warning')),
+                'icon' => $pulloutNotification['icon'] ?? ($needsHealthFormCorrection ? '!' : ($isHealthProfileIssued ? 'OK' : '...')),
+                'message' => $pulloutNotification['message'] ?? ($needsHealthFormCorrection
                     ? 'The clinic requested corrections to your Health Information Form. You may now edit and resubmit it.'
                     : ($isHealthProfileIssued
                     ? 'Your health profile has been approved by the clinic.'
                     : ($isHealthProfileResubmission
                         ? 'The clinic requested replacement files for your health profile.'
-                        : 'Your health profile was submitted and is awaiting medical review.')),
-                'time' => $needsHealthFormCorrection && $healthProfile->resubmission_requested_at
+                        : 'Your health profile was submitted and is awaiting medical review.'))),
+                'time' => $pulloutNotification['time'] ?? ($needsHealthFormCorrection && $healthProfile->resubmission_requested_at
                     ? $healthProfile->resubmission_requested_at->diffForHumans()
-                    : 'Health profile status',
+                    : 'Health profile status'),
                 'link' => $needsHealthFormCorrection
                     ? route('health.form')
                     : url('/student/account?view=health-record'),
@@ -4999,6 +5027,13 @@ public function storeHealthForm(Request $request)
     $oldPaths = [];
 
     try {
+        if ($pendingHealthFormRequest && $existingHealthProfile) {
+            app(HealthProfileSnapshotService::class)->preserveCurrentBeforeNewSubmission(
+                $existingHealthProfile->fresh('user') ?: $existingHealthProfile,
+                $pendingHealthFormRequest
+            );
+        }
+
         $photoPath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'student_photo', 'health_profiles/photos', $oldPaths);
         $chestXrayPath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'chest_xray_result', 'health_profiles/chest_xray_results', $oldPaths);
         $pwdIdProofPath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'pwd_id_proof', 'health_profiles/pwd_id_proofs', $oldPaths);
@@ -5078,10 +5113,12 @@ public function storeHealthForm(Request $request)
             $healthProfileData
         );
 
-        foreach ($oldPaths as $oldPath) {
-            $oldPath = preg_replace('#^(?:public/)?storage/#', '', $oldPath) ?? $oldPath;
-            if ($oldPath !== '' && $this->healthFiles()->exists($oldPath)) {
-                $this->healthFiles()->delete($oldPath);
+        if (!$pendingHealthFormRequest) {
+            foreach ($oldPaths as $oldPath) {
+                $oldPath = preg_replace('#^(?:public/)?storage/#', '', $oldPath) ?? $oldPath;
+                if ($oldPath !== '' && $this->healthFiles()->exists($oldPath)) {
+                    $this->healthFiles()->delete($oldPath);
+                }
             }
         }
 

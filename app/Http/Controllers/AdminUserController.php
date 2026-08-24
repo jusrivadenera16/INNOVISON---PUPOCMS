@@ -182,17 +182,21 @@ class AdminUserController extends Controller
             });
 
         $lookupRecords = $localLookupRecords->merge($standaloneAdminRecords);
+        $facultyLookupRecords = collect();
 
         // A local match is enough for Account Access. Only fall back to
         // FLSS when no local user/admin profile matched, and keep that
         // interactive lookup bounded if the remote service is unavailable.
         if ($managementView !== 'account-access' || $lookupRecords->isEmpty()) {
-            $lookupRecords = $lookupRecords->merge(
-                $this->collectFacultyUsers(
-                    $facultySyncService,
-                    $lookupSearch,
-                    $managementView === 'account-access' ? 5 : null
-                )
+            $facultyLookupRecords = collect($this->collectFacultyUsers(
+                $facultySyncService,
+                $lookupSearch,
+                $managementView === 'account-access' ? 5 : null
+            ));
+
+            $lookupRecords = $this->mergeFacultyLookupRecords(
+                $lookupRecords,
+                $facultyLookupRecords
             );
         }
 
@@ -206,7 +210,140 @@ class AdminUserController extends Controller
             ->all();
     }
 
-    public function update(Request $request, User $user)
+    private function mergeFacultyLookupRecords($lookupRecords, $facultyRecords)
+    {
+        $remainingFacultyRecords = collect($facultyRecords)->values();
+
+        $enrichedRecords = collect($lookupRecords)->map(function (array $record) use ($remainingFacultyRecords) {
+            $matchIndex = $remainingFacultyRecords->search(
+                fn (array $facultyRecord) => $this->lookupRecordsShareIdentity($record, $facultyRecord)
+            );
+
+            if ($matchIndex === false) {
+                return $record;
+            }
+
+            $facultyRecord = $remainingFacultyRecords->get($matchIndex);
+            $remainingFacultyRecords->forget($matchIndex);
+            $recordMeta = is_array($record['meta'] ?? null) ? $record['meta'] : [];
+            $facultyMeta = is_array($facultyRecord['meta'] ?? null) ? $facultyRecord['meta'] : [];
+
+            foreach (['admin_uuid', 'idp_user_id', 'faculty_uuid'] as $key) {
+                if (trim((string) ($recordMeta[$key] ?? '')) === '') {
+                    $recordMeta[$key] = $facultyMeta[$key] ?? null;
+                }
+            }
+
+            if (trim((string) ($recordMeta['faculty_identifier'] ?? '')) === '') {
+                $recordMeta['faculty_identifier'] = $facultyMeta['faculty_code']
+                    ?? ($facultyRecord['student_id'] ?? null);
+            }
+
+            foreach (['first_name', 'middle_name', 'last_name'] as $namePart) {
+                if (trim((string) ($record[$namePart] ?? '')) === '') {
+                    $record[$namePart] = $facultyRecord[$namePart] ?? '';
+                }
+            }
+
+            $resolvedName = trim(implode(' ', array_filter([
+                $record['first_name'] ?? '',
+                $record['middle_name'] ?? '',
+                $record['last_name'] ?? '',
+            ])));
+            if ($resolvedName !== '') {
+                $record['name'] = $resolvedName;
+            }
+
+            $record['meta'] = $recordMeta;
+
+            return $record;
+        });
+
+        return $enrichedRecords->merge($remainingFacultyRecords->values());
+    }
+
+    private function lookupRecordsShareIdentity(array $record, array $facultyRecord): bool
+    {
+        $recordEmail = strtolower(trim((string) ($record['email'] ?? '')));
+        $facultyEmail = strtolower(trim((string) ($facultyRecord['email'] ?? '')));
+        if ($recordEmail !== '' && $facultyEmail !== '' && $recordEmail === $facultyEmail) {
+            return true;
+        }
+
+        $recordMeta = is_array($record['meta'] ?? null) ? $record['meta'] : [];
+        $facultyMeta = is_array($facultyRecord['meta'] ?? null) ? $facultyRecord['meta'] : [];
+        $recordIdentifiers = $this->normalizedIdentityValues([
+            $recordMeta['employee_number'] ?? null,
+            $recordMeta['faculty_identifier'] ?? null,
+            $recordMeta['faculty_code'] ?? null,
+            $record['student_id'] ?? null,
+        ]);
+        $facultyIdentifiers = $this->normalizedIdentityValues([
+            $facultyMeta['employee_number'] ?? null,
+            $facultyMeta['faculty_identifier'] ?? null,
+            $facultyMeta['faculty_code'] ?? null,
+            $facultyRecord['student_id'] ?? null,
+        ]);
+
+        if (array_intersect($recordIdentifiers, $facultyIdentifiers) !== []) {
+            return true;
+        }
+
+        $recordUuid = strtolower(trim((string) ($recordMeta['admin_uuid'] ?? '')));
+        $facultyUuid = strtolower(trim((string) ($facultyMeta['admin_uuid'] ?? '')));
+
+        return $recordUuid !== '' && $facultyUuid !== '' && $recordUuid === $facultyUuid;
+    }
+
+    private function normalizedIdentityValues(array $values): array
+    {
+        return array_values(array_unique(array_filter(array_map(
+            fn ($value) => strtolower(trim((string) $value)),
+            $values
+        ))));
+    }
+
+    private function resolveAdminUuidForIdentity(
+        FacultySyncService $facultySyncService,
+        string $requestedUuid,
+        string $storedUuid,
+        string $email,
+        string $employeeNumber
+    ): string {
+        foreach ([$requestedUuid, $storedUuid] as $candidate) {
+            $candidate = strtolower(trim($candidate));
+            if ($this->isUuid($candidate)) {
+                return $candidate;
+            }
+        }
+
+        try {
+            return $facultySyncService->resolveFacultyUuidByIdentity(
+                $email,
+                $employeeNumber,
+                5
+            ) ?? '';
+        } catch (\Throwable $exception) {
+            return '';
+        }
+    }
+
+    private function adminUuidBelongsToAnotherRecord(string $adminUuid, AdminHub $adminHub): bool
+    {
+        if ($adminUuid === '' || !AdminHub::hasColumn('admin_uuid')) {
+            return false;
+        }
+
+        return AdminHub::query()
+            ->where('admin_uuid', $adminUuid)
+            ->when(
+                $adminHub->exists,
+                fn ($query) => $query->where($adminHub->getKeyName(), '!=', $adminHub->getKey())
+            )
+            ->exists();
+    }
+
+    public function update(Request $request, User $user, FacultySyncService $facultySyncService)
     {
         $this->ensureCanManageUsers();
         $managementView = trim((string) $request->input('management_view', 'account-access'));
@@ -231,7 +368,13 @@ class AdminUserController extends Controller
         if ($managementView === 'admin-hub') {
             $linkedAdminHub = $this->findLinkedAdminHubProfile($user) ?? new AdminHub();
             $requestedStatus = strtolower(trim((string) $request->status));
-            $adminUuid = trim((string) $request->input('admin_uuid', ''));
+            $adminUuid = $this->resolveAdminUuidForIdentity(
+                $facultySyncService,
+                (string) $request->input('admin_uuid', ''),
+                (string) ($linkedAdminHub->admin_uuid ?? ''),
+                (string) $request->input('email', $user->email),
+                (string) $request->input('employee_number', $user->employeeHealthProfile?->employee_number)
+            );
 
             if (Schema::hasColumn('users', 'employee_number') && $request->filled('employee_number')) {
                 $user->employee_number = trim((string) $request->input('employee_number'));
@@ -239,15 +382,7 @@ class AdminUserController extends Controller
             }
 
             if ($adminUuid !== '' && AdminHub::hasColumn('admin_uuid')) {
-                $uuidConflict = AdminHub::query()
-                    ->where('admin_uuid', $adminUuid)
-                    ->when(
-                        $linkedAdminHub->exists,
-                        fn ($query) => $query->where($linkedAdminHub->getKeyName(), '!=', $linkedAdminHub->getKey())
-                    )
-                    ->exists();
-
-                if ($uuidConflict) {
+                if ($this->adminUuidBelongsToAnotherRecord($adminUuid, $linkedAdminHub)) {
                     return $this->redirectToManagementView($request, 'error', 'That IDP Admin UUID is already assigned to another Admin Hub profile.');
                 }
 
@@ -429,7 +564,7 @@ class AdminUserController extends Controller
         return $this->redirectToManagementView($request, 'success', 'User account updated successfully.');
     }
 
-    public function storeFromLookup(Request $request)
+    public function storeFromLookup(Request $request, FacultySyncService $facultySyncService)
     {
         $this->ensureCanManageUsers();
         $managementView = trim((string) $request->input('management_view', 'account-access'));
@@ -479,8 +614,18 @@ class AdminUserController extends Controller
 
         if ($managementView === 'admin-hub') {
             $adminEmail = $baseEmail;
-            $adminUuid = trim((string) $request->input('admin_uuid', ''));
-            $linkedAdminHub = $this->findAdminHubProfileByEmailOrUuid($adminEmail, $adminUuid) ?? new AdminHub();
+            $linkedAdminHub = $this->findAdminHubProfileByEmailOrUuid($adminEmail, '') ?? new AdminHub();
+            $adminUuid = $this->resolveAdminUuidForIdentity(
+                $facultySyncService,
+                (string) $request->input('admin_uuid', ''),
+                (string) ($linkedAdminHub->admin_uuid ?? ''),
+                $adminEmail,
+                (string) $request->input('employee_number', '')
+            );
+
+            if ($adminUuid !== '' && $this->adminUuidBelongsToAnotherRecord($adminUuid, $linkedAdminHub)) {
+                return $this->redirectToManagementView($request, 'error', 'That IDP Admin UUID is already assigned to another Admin Hub profile.');
+            }
 
             if (AdminHub::hasColumn('admin_uuid') && $adminUuid !== '') {
                 $linkedAdminHub->admin_uuid = $adminUuid;
@@ -649,7 +794,7 @@ class AdminUserController extends Controller
         return $this->redirectToManagementView($request, 'success', 'Lookup user added to the clinic system successfully.');
     }
 
-    public function updateAdminHub(Request $request, AdminHub $admin)
+    public function updateAdminHub(Request $request, AdminHub $admin, FacultySyncService $facultySyncService)
     {
         $this->ensureCanManageUsers();
 
@@ -673,6 +818,7 @@ class AdminUserController extends Controller
             'emergency_contact_no' => ['nullable', 'string', 'max:50'],
             'office' => ['nullable', 'string', 'max:255'],
             'first_name' => ['nullable', 'string', 'max:255'],
+            'middle_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['nullable', 'string', 'max:255'],
             'full_name' => ['nullable', 'string', 'max:255'],
         ]);
@@ -680,19 +826,36 @@ class AdminUserController extends Controller
         if (AdminHub::hasColumn('first_name')) {
             $admin->first_name = trim((string) $request->input('first_name', ''));
         }
+        if (AdminHub::hasColumn('middle_name')) {
+            $admin->middle_name = trim((string) $request->input('middle_name', '')) ?: null;
+        }
         if (AdminHub::hasColumn('last_name')) {
             $admin->last_name = trim((string) $request->input('last_name', ''));
         }
         if (AdminHub::hasColumn('name')) {
             $fullName = trim((string) $request->input('full_name', ''));
-            $admin->name = $fullName !== '' ? $fullName : trim(implode(' ', array_filter([$admin->first_name, $admin->last_name])));
+            $admin->name = $fullName !== '' ? $fullName : trim(implode(' ', array_filter([
+                $admin->first_name,
+                $admin->middle_name,
+                $admin->last_name,
+            ])));
         }
         if (AdminHub::hasColumn('email')) {
             $admin->email = trim((string) $request->input('email'));
         }
         if (AdminHub::hasColumn('admin_uuid')) {
-            $incomingUuid = trim((string) $request->input('admin_uuid', ''));
+            $incomingUuid = $this->resolveAdminUuidForIdentity(
+                $facultySyncService,
+                (string) $request->input('admin_uuid', ''),
+                (string) ($admin->admin_uuid ?? ''),
+                (string) $request->input('email', $admin->email),
+                (string) $request->input('employee_number', $admin->employee_number)
+            );
             if ($incomingUuid !== '') {
+                if ($this->adminUuidBelongsToAnotherRecord($incomingUuid, $admin)) {
+                    return $this->redirectToManagementView($request, 'error', 'That IDP Admin UUID is already assigned to another Admin Hub profile.');
+                }
+
                 $admin->admin_uuid = $incomingUuid;
             }
         }
@@ -1050,6 +1213,7 @@ class AdminUserController extends Controller
                 if ($displayName === '') {
                     $displayName = trim(implode(' ', array_filter([
                         $user->first_name ?? '',
+                        $user->middle_name ?? '',
                         $user->last_name ?? '',
                     ])));
                 }
@@ -1075,6 +1239,7 @@ class AdminUserController extends Controller
                     'source_label' => $this->resolveUserSourceLabel($user, $linkedAdmin),
                     'name' => $displayName !== '' ? $displayName : ($user->email ?? 'Unknown User'),
                     'first_name' => (string) ($user->first_name ?? ''),
+                    'middle_name' => (string) ($user->middle_name ?? ''),
                     'last_name' => (string) ($user->last_name ?? ''),
                     'student_id' => $resolvedIdentifier,
                     'email' => (string) ($user->email ?? ''),
@@ -1159,6 +1324,7 @@ class AdminUserController extends Controller
                 if ($displayName === '') {
                     $displayName = trim(implode(' ', array_filter([
                         $admin->first_name ?? '',
+                        $admin->middle_name ?? '',
                         $admin->last_name ?? '',
                     ])));
                 }
@@ -1180,6 +1346,7 @@ class AdminUserController extends Controller
                     'source_label' => 'Admin Profile',
                     'name' => $displayName !== '' ? $displayName : ($email !== '' ? $email : 'Admin Profile'),
                     'first_name' => (string) ($admin->first_name ?? ''),
+                    'middle_name' => (string) ($admin->middle_name ?? ''),
                     'last_name' => (string) ($admin->last_name ?? ''),
                     'student_id' => $identifier,
                     'email' => $email,
@@ -1238,12 +1405,18 @@ class AdminUserController extends Controller
             ->map(function (array $faculty) use ($facultySyncService) {
                 $profile = is_array($faculty['profile'] ?? null) ? $faculty['profile'] : [];
                 $fields = is_array($faculty['fields'] ?? null) ? $faculty['fields'] : [];
-                $name = trim((string) ($faculty['name'] ?? trim(implode(' ', array_filter([
-                    $faculty['first_name'] ?? $fields['first_name'] ?? '',
-                    $faculty['middle_name'] ?? $fields['middle_name'] ?? '',
-                    $faculty['last_name'] ?? $fields['last_name'] ?? '',
+                $firstName = trim((string) ($faculty['first_name'] ?? $fields['first_name'] ?? data_get($profile, 'first_name') ?? ''));
+                $middleName = trim((string) ($faculty['middle_name'] ?? $fields['middle_name'] ?? data_get($profile, 'middle_name') ?? ''));
+                $lastName = trim((string) ($faculty['last_name'] ?? $fields['last_name'] ?? data_get($profile, 'last_name') ?? ''));
+                $structuredName = trim(implode(' ', array_filter([
+                    $firstName,
+                    $middleName,
+                    $lastName,
                     $faculty['suffix_name'] ?? $fields['suffix_name'] ?? '',
-                ])))));
+                ])));
+                $name = $structuredName !== ''
+                    ? $structuredName
+                    : trim((string) ($faculty['name'] ?? ''));
                 $email = trim((string) ($faculty['email'] ?? $fields['email'] ?? ''));
                 $role = trim((string) ($faculty['faculty_type'] ?? $fields['faculty_type'] ?? $faculty['role'] ?? $fields['role'] ?? $faculty['access_level'] ?? $fields['access_level'] ?? 'Faculty'));
                 $status = strtolower(trim((string) ($faculty['status'] ?? $fields['status'] ?? 'active')));
@@ -1266,8 +1439,9 @@ class AdminUserController extends Controller
                     'source' => 'faculty',
                     'source_label' => 'Faculty',
                     'name' => $name !== '' ? $name : ($email !== '' ? $email : 'Faculty'),
-                    'first_name' => (string) ($faculty['first_name'] ?? ''),
-                    'last_name' => (string) ($faculty['last_name'] ?? ''),
+                    'first_name' => $firstName,
+                    'middle_name' => $middleName,
+                    'last_name' => $lastName,
                     'student_id' => $employeeNumber,
                     'email' => $email,
                     'role' => $role !== '' ? $role : 'Faculty',
@@ -1339,7 +1513,7 @@ class AdminUserController extends Controller
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
-                foreach (['admin_uuid', 'employee_number', 'name', 'first_name', 'last_name', 'email', 'office', 'status'] as $column) {
+                foreach (['admin_uuid', 'employee_number', 'name', 'first_name', 'middle_name', 'last_name', 'email', 'office', 'status'] as $column) {
                     if (AdminHub::hasColumn($column)) {
                         $builder->orWhere($column, 'like', '%' . $search . '%');
                     }
@@ -1372,10 +1546,37 @@ class AdminUserController extends Controller
                 if (!$matchedFaculty && $employeeNumber !== '') {
                     $matchedFaculty = $facultyByIdentifier[strtolower($employeeNumber)] ?? null;
                 }
+                $firstName = trim((string) ($admin->first_name ?? ''));
+                $middleName = trim((string) ($admin->middle_name ?? ''));
+                $lastName = trim((string) ($admin->last_name ?? ''));
+                if ($matchedFaculty) {
+                    $firstName = $firstName !== ''
+                        ? $firstName
+                        : trim((string) ($matchedFaculty['first_name'] ?? ''));
+                    $middleName = $middleName !== ''
+                        ? $middleName
+                        : trim((string) ($matchedFaculty['middle_name'] ?? ''));
+                    $lastName = $lastName !== ''
+                        ? $lastName
+                        : trim((string) ($matchedFaculty['last_name'] ?? ''));
+
+                    $matchedDisplayName = trim(implode(' ', array_filter([
+                        $firstName,
+                        $middleName,
+                        $lastName,
+                    ])));
+                    if ($matchedDisplayName !== '') {
+                        $displayName = $matchedDisplayName;
+                    }
+                }
                 $facultyIdentifier = trim((string) (
                     data_get($matchedFaculty, 'meta.faculty_code')
                     ?: ($matchedFaculty['student_id'] ?? '')
                 ));
+                $matchedFacultyUuid = strtolower(trim((string) data_get($matchedFaculty, 'meta.admin_uuid', '')));
+                if ($adminUuid === '' && $this->isUuid($matchedFacultyUuid)) {
+                    $adminUuid = $matchedFacultyUuid;
+                }
                 $status = strtolower(trim((string) ($admin->status ?? 'active')));
                 $hubRole = strtolower(trim((string) ($admin->role ?? 'admin_designee')));
                 if (!in_array($hubRole, ['admin_designee', 'designee'], true)) {
@@ -1402,8 +1603,9 @@ class AdminUserController extends Controller
                     'source' => 'admin',
                     'source_label' => 'Admin Hub',
                     'name' => $displayName !== '' ? $displayName : ($email !== '' ? $email : 'Admin Hub Record'),
-                    'first_name' => (string) ($admin->first_name ?? ''),
-                    'last_name' => (string) ($admin->last_name ?? ''),
+                    'first_name' => $firstName,
+                    'middle_name' => $middleName,
+                    'last_name' => $lastName,
                     'student_id' => $resolvedIdentifier,
                     'email' => $email,
                     'role' => 'Admin - Designee',

@@ -67,6 +67,7 @@ class Kernel extends HttpKernel
         'audit' => \App\Http\Middleware\AuditTrailMiddleware::class,
         'external.api' => \App\Http\Middleware\AuthenticateExternalApiRequest::class,
         'idp.session' => \App\Http\Middleware\EnsureIdpSessionIsActive::class,
+        'account.active' => \App\Http\Middleware\EnsureAccountIsActive::class,
         'assistant.schedule' => \App\Http\Middleware\EnsureStudentAssistantWorkspaceAvailable::class,
         'superadmin.export' => \App\Http\Middleware\EnsureSuperAdminExportAccess::class,
         'module.permission' => \App\Http\Middleware\EnsureModulePermission::class,

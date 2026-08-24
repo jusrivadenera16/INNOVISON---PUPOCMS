@@ -106,6 +106,27 @@ class StudentNotificationMailer
                 'action_label' => 'Open Health Record',
                 'action_url' => url('/student/account?view=health-record'),
             ],
+            'pullout_pending' => [
+                'subject' => 'Health record pullout request received - PUP Taguig Clinic',
+                'title' => 'Your health record pullout is pending',
+                'message' => 'The clinic recorded a manual pullout request for your approved health record. Your medical information and submitted files remain securely preserved while the request is reviewed.',
+                'action_label' => 'Open Health Record',
+                'action_url' => url('/student/account?view=health-record'),
+            ],
+            'pulled_out' => [
+                'subject' => 'Health record marked as pulled out - PUP Taguig Clinic',
+                'title' => 'Your health record was marked as pulled out',
+                'message' => 'The clinic completed the manual pullout process for your health record. Your medical information and submitted files were not deleted and remain archived by the clinic.',
+                'action_label' => 'Open Health Record',
+                'action_url' => url('/student/account?view=health-record'),
+            ],
+            'pullout_restored' => [
+                'subject' => 'Health record restored - PUP Taguig Clinic',
+                'title' => 'Your health record was restored',
+                'message' => 'The clinic restored your pulled-out health record to active access. Your original clearance and medical information were preserved.',
+                'action_label' => 'Open Health Record',
+                'action_url' => url('/student/account?view=health-record'),
+            ],
             default => [
                 'subject' => 'Action needed: Update your PUP Taguig Clinic health record',
                 'title' => 'Health record update requested',

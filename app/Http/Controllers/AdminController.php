@@ -22,11 +22,14 @@ use App\Services\AnnouncementContent;
 use App\Services\GuisisApiService;
 use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
+use App\Services\HealthProfileSnapshotService;
 use App\Services\InventoryImportAnalyzer;
 use App\Services\InventoryDataNormalizer;
 use App\Services\PuptasWebhookService;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Response; 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -51,14 +54,44 @@ class AdminController extends Controller
         return app(HealthFileStorage::class);
     }
 
+    private function updateCurrentHealthFormSubmissionStatus(HealthProfile $profile, string $status): ?HealthFormSubmission
+    {
+        $submission = HealthFormSubmission::query()
+            ->where(function ($query) use ($profile) {
+                $query->where('health_profile_id', $profile->id)
+                    ->orWhere('user_id', $profile->user_id);
+            })
+            ->whereIn('status', [
+                HealthFormSubmission::STATUS_SUBMITTED,
+                HealthFormSubmission::STATUS_APPROVED,
+                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+            ])
+            ->latest('submitted_at')
+            ->latest('approved_at')
+            ->latest('id')
+            ->first();
+
+        if (!$submission) {
+            return null;
+        }
+
+        $submission->status = $status;
+        if ($status !== HealthFormSubmission::STATUS_APPROVED) {
+            $submission->approved_at = null;
+        }
+        $submission->save();
+
+        return $submission->fresh();
+    }
+
     private function formatInventoryQuantity(float $value): string
     {
-        $rounded = round($value, 2);
+        $rounded = round($value, 6);
         if (abs($rounded - round($rounded)) < 0.00001) {
             return (string) (int) round($rounded);
         }
 
-        return rtrim(rtrim(number_format($rounded, 2, '.', ''), '0'), '.');
+        return rtrim(rtrim(number_format($rounded, 6, '.', ''), '0'), '.');
     }
 
     private function applyHealthProfileUserTypeFilter($query, string $userTypeFilter): void
@@ -315,6 +348,15 @@ class AdminController extends Controller
         }
 
         file_put_contents($path, $content);
+    }
+
+    private function clearConfigurationCacheAfterEnvironmentWrite(): void
+    {
+        try {
+            Artisan::call('config:clear');
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
     }
 
     private function formatEnvironmentValue(string $value): string
@@ -1700,10 +1742,25 @@ class AdminController extends Controller
             $profile = isset($item['profile']) && is_array($item['profile'])
                 ? $item['profile']
                 : [];
+            $itemFields = isset($item['fields']) && is_array($item['fields'])
+                ? $item['fields']
+                : [];
             $profileAddress = isset($profile['address']) && is_array($profile['address'])
                 ? $profile['address']
                 : [];
-            $name = trim((string) ($item['name'] ?? trim(($item['first_name'] ?? '') . ' ' . ($item['middle_name'] ?? '') . ' ' . ($item['last_name'] ?? '') . ' ' . ($item['suffix_name'] ?? ''))));
+            $firstName = trim((string) ($item['first_name'] ?? $itemFields['first_name'] ?? $profile['first_name'] ?? ''));
+            $middleName = trim((string) ($item['middle_name'] ?? $itemFields['middle_name'] ?? $profile['middle_name'] ?? ''));
+            $lastName = trim((string) ($item['last_name'] ?? $itemFields['last_name'] ?? $profile['last_name'] ?? ''));
+            $suffixName = trim((string) ($item['suffix_name'] ?? $itemFields['suffix_name'] ?? $profile['suffix_name'] ?? ''));
+            $structuredName = trim(implode(' ', array_filter([
+                $firstName,
+                $middleName,
+                $lastName,
+                $suffixName,
+            ])));
+            $name = $structuredName !== ''
+                ? $structuredName
+                : trim((string) ($item['name'] ?? ''));
             $email = trim((string) ($item['email'] ?? $item['email_address'] ?? ''));
             $identifier = trim((string) ($item['faculty_code'] ?? $item['faculty_id'] ?? $item['id'] ?? $item['admin_id'] ?? $item['student_number'] ?? $item['student_id'] ?? $item['employee_id'] ?? ''));
             $birthday = trim((string) ($item['birthday'] ?? $profile['birthday'] ?? $item['dob'] ?? $item['date_of_birth'] ?? ''));
@@ -1728,10 +1785,10 @@ class AdminController extends Controller
                 'identifier' => $identifier !== '' ? $identifier : 'N/A',
                 'admin_id' => trim((string) ($item['admin_id'] ?? $item['id'] ?? '')) ?: 'N/A',
                 'name' => $name !== '' ? $name : 'N/A',
-                'first_name' => trim((string) ($item['first_name'] ?? '')) ?: 'N/A',
-                'middle_name' => trim((string) ($item['middle_name'] ?? '')) ?: 'N/A',
-                'last_name' => trim((string) ($item['last_name'] ?? '')) ?: 'N/A',
-                'suffix_name' => trim((string) ($item['suffix_name'] ?? '')) ?: 'N/A',
+                'first_name' => $firstName !== '' ? $firstName : 'N/A',
+                'middle_name' => $middleName !== '' ? $middleName : 'N/A',
+                'last_name' => $lastName !== '' ? $lastName : 'N/A',
+                'suffix_name' => $suffixName !== '' ? $suffixName : 'N/A',
                 'email' => $email !== '' ? $email : 'N/A',
                 'birthday' => $birthday !== '' ? $birthday : 'N/A',
                 'age' => trim((string) ($item['age'] ?? '')) ?: 'N/A',
@@ -1821,7 +1878,7 @@ class AdminController extends Controller
         $allowedPerPage = ['20', '40', '80', '100', 'all'];
         $issuedPerPage = in_array($perPageInput, $allowedPerPage, true) ? $perPageInput : '20';
 
-        $query = HealthProfile::with('user');
+        $query = HealthProfile::with('user')->notPulledOut();
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
@@ -2050,6 +2107,7 @@ class AdminController extends Controller
             ->values();
 
         $courseOptions = HealthProfile::query()
+            ->notPulledOut()
             ->with('user:id,course')
             ->get()
             ->map(function (HealthProfile $profile) {
@@ -2101,7 +2159,7 @@ class AdminController extends Controller
         $yearFilter = trim((string) $request->query('year', ''));
         $userTypeFilter = strtolower(trim((string) $request->query('user_type', '')));
 
-        $query = HealthProfile::with('user');
+        $query = HealthProfile::with('user')->notPulledOut();
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
@@ -2285,7 +2343,18 @@ class AdminController extends Controller
     public function showHealth($id)
     {
 
-        $profile = HealthProfile::with('user')->findOrFail($id);
+        $profile = HealthProfile::with([
+            'user',
+            'pulloutRequestedBy',
+            'pulloutCompletedBy',
+            'pulloutRestoredBy',
+        ])->findOrFail($id);
+
+        if ($profile->pullout_status === HealthProfile::PULLOUT_COMPLETED) {
+            abort_unless(optional(Auth::user())->hasRole(User::ROLE_SUPERADMIN), 404);
+
+            return redirect()->route('reports.pulled-out-records.show', $profile);
+        }
 
 
         $calculatedAge = Carbon::parse($profile->user->DOB)->age;
@@ -2307,7 +2376,59 @@ class AdminController extends Controller
             ->latest('id')
             ->get();
 
-        return view('admin.show_health', compact('profile', 'calculatedAge', 'pendingHealthFormRequest', 'healthFormCategories', 'healthFormSubmissions'));
+        $versionNumbers = $healthFormSubmissions
+            ->sortBy(function (HealthFormSubmission $submission) {
+                return sprintf(
+                    '%020d-%020d',
+                    optional($submission->requested_at ?: $submission->submitted_at ?: $submission->created_at)->timestamp ?? 0,
+                    $submission->id
+                );
+            })
+            ->values()
+            ->mapWithKeys(fn (HealthFormSubmission $submission, int $index) => [
+                $submission->id => $index + 1,
+            ]);
+
+        $currentHealthFormSubmission = $healthFormSubmissions
+            ->first(fn (HealthFormSubmission $submission) => in_array($submission->status, [
+                HealthFormSubmission::STATUS_SUBMITTED,
+                HealthFormSubmission::STATUS_APPROVED,
+                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+            ], true));
+
+        $healthProfileHistory = $healthFormSubmissions
+            ->map(function (HealthFormSubmission $submission) use ($profile, $versionNumbers, $currentHealthFormSubmission) {
+                $isCurrent = $currentHealthFormSubmission
+                    && (int) $submission->id === (int) $currentHealthFormSubmission->id;
+                $profileData = $submission->snapshotProfile();
+                $usesCurrentFallback = false;
+
+                if ($profileData === [] && $isCurrent) {
+                    $profileData = $profile->attributesToArray();
+                    $usesCurrentFallback = true;
+                }
+
+                return [
+                    'submission' => $submission,
+                    'version' => (int) ($versionNumbers->get($submission->id) ?? 1),
+                    'is_current' => $isCurrent,
+                    'profile' => $profileData,
+                    'user' => $submission->snapshotUser(),
+                    'has_snapshot' => $profileData !== [],
+                    'uses_current_fallback' => $usesCurrentFallback,
+                ];
+            })
+            ->values();
+
+        return view('admin.show_health', compact(
+            'profile',
+            'calculatedAge',
+            'pendingHealthFormRequest',
+            'healthFormCategories',
+            'healthFormSubmissions',
+            'healthProfileHistory',
+            'currentHealthFormSubmission'
+        ));
     }
 
     public function requestNewHealthForm(Request $request, $id)
@@ -2376,6 +2497,7 @@ class AdminController extends Controller
         $profile->verified_at = null;
         $profile->approved_by_user_id = null;
         $profile->save();
+        $this->updateCurrentHealthFormSubmissionStatus($profile, HealthFormSubmission::STATUS_SUBMITTED);
         $this->updatePuptasSyncState($profile, null, null);
 
         if ($profile->user) {
@@ -2413,6 +2535,226 @@ class AdminController extends Controller
         return redirect()
             ->route('admin.health_records', ['tab' => 'pending_approval'])
             ->with('success', 'Approved health record returned to Pending Approval.');
+    }
+
+    public function requestHealthProfilePullout(Request $request, $id)
+    {
+        $actor = Auth::user();
+        abort_unless($actor && $actor->hasRole(User::ROLE_SUPERADMIN), 403);
+
+        $validated = $request->validate([
+            'pullout_reason' => ['required', 'string', 'max:255'],
+            'pullout_request_remarks' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $profile = DB::transaction(function () use ($id, $validated, $actor) {
+            $profile = HealthProfile::with('user')->lockForUpdate()->findOrFail($id);
+            $clearanceStatus = trim((string) $profile->clearance_status);
+
+            if (!in_array($clearanceStatus, ['Issued', 'Fully Cleared'], true)) {
+                throw ValidationException::withMessages([
+                    'pullout_reason' => 'Only approved health records can be requested for pullout.',
+                ]);
+            }
+
+            if (in_array($profile->pullout_status, [
+                HealthProfile::PULLOUT_PENDING,
+                HealthProfile::PULLOUT_COMPLETED,
+            ], true)) {
+                throw ValidationException::withMessages([
+                    'pullout_reason' => 'This health record already has an active pullout workflow.',
+                ]);
+            }
+
+            if ((int) $profile->user_id === (int) $actor->id) {
+                throw ValidationException::withMessages([
+                    'pullout_reason' => 'You cannot pull out your own clinic system account.',
+                ]);
+            }
+
+            $previousUserStatus = $this->blockHealthProfileUserAccess($profile);
+
+            $profile->forceFill([
+                'pullout_status' => HealthProfile::PULLOUT_COMPLETED,
+                'pullout_reason' => trim((string) $validated['pullout_reason']),
+                'pullout_request_remarks' => trim((string) ($validated['pullout_request_remarks'] ?? '')) ?: null,
+                'pullout_requested_by_user_id' => $actor?->id,
+                'pullout_requested_at' => now(),
+                'pullout_reference' => null,
+                'pullout_completion_remarks' => null,
+                'pullout_completed_by_user_id' => $actor->id,
+                'pullout_completed_at' => now(),
+                'pullout_previous_user_status' => $previousUserStatus,
+                'pullout_restore_reason' => null,
+                'pullout_restored_by_user_id' => null,
+                'pullout_restored_at' => null,
+            ])->save();
+
+            return $profile->fresh('user');
+        });
+
+        $this->logHealthProfilePulloutActivity(
+            $request,
+            $profile,
+            'Health Profile Marked as Pulled Out',
+            'health_profile_pulled_out',
+            'Health profile #' . $profile->id . ' was directly marked as pulled out by a Super Admin. No medical data or files were deleted.',
+            ['reason' => $profile->pullout_reason, 'direct_superadmin_action' => true]
+        );
+
+        if ($profile->user) {
+            app(StudentNotificationMailer::class)->sendHealthRecordNotice($profile->user, 'pulled_out');
+        }
+
+        return redirect()->route('reports.pulled-out-records.show', $profile)
+            ->with('success', 'Health record and clinic system access were marked as pulled out.');
+    }
+
+    public function completeHealthProfilePullout(Request $request, $id)
+    {
+        $actor = Auth::user();
+        abort_unless($actor && $actor->hasRole(User::ROLE_SUPERADMIN), 403);
+
+        $validated = $request->validate([
+            'pullout_reference' => ['nullable', 'string', 'max:120'],
+            'pullout_completion_remarks' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $profile = DB::transaction(function () use ($id, $validated, $actor) {
+            $profile = HealthProfile::with('user')->lockForUpdate()->findOrFail($id);
+
+            if ($profile->pullout_status !== HealthProfile::PULLOUT_PENDING) {
+                throw ValidationException::withMessages([
+                    'pullout_reference' => 'Only a pending pullout request can be marked as pulled out.',
+                ]);
+            }
+
+            $previousUserStatus = $this->blockHealthProfileUserAccess($profile);
+
+            $profile->forceFill([
+                'pullout_status' => HealthProfile::PULLOUT_COMPLETED,
+                'pullout_reference' => trim((string) ($validated['pullout_reference'] ?? '')) ?: null,
+                'pullout_completion_remarks' => trim((string) ($validated['pullout_completion_remarks'] ?? '')) ?: null,
+                'pullout_completed_by_user_id' => $actor->id,
+                'pullout_completed_at' => now(),
+                'pullout_previous_user_status' => $previousUserStatus,
+            ])->save();
+
+            return $profile->fresh('user');
+        });
+
+        $this->logHealthProfilePulloutActivity(
+            $request,
+            $profile,
+            'Health Profile Marked as Pulled Out',
+            'health_profile_pulled_out',
+            'Health profile #' . $profile->id . ' was manually marked as pulled out after external coordination. No medical data or files were deleted.',
+            ['pullout_reference' => $profile->pullout_reference]
+        );
+
+        if ($profile->user) {
+            app(StudentNotificationMailer::class)->sendHealthRecordNotice($profile->user, 'pulled_out');
+        }
+
+        return redirect()->route('reports.pulled-out-records.show', $profile)
+            ->with('success', 'Health record and clinic system access were marked as pulled out.');
+    }
+
+    public function restoreHealthProfilePullout(Request $request, $id)
+    {
+        $actor = Auth::user();
+        abort_unless($actor && $actor->hasRole(User::ROLE_SUPERADMIN), 403);
+
+        $validated = $request->validate([
+            'pullout_restore_reason' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $profile = DB::transaction(function () use ($id, $validated, $actor) {
+            $profile = HealthProfile::with('user')->lockForUpdate()->findOrFail($id);
+
+            if ($profile->pullout_status !== HealthProfile::PULLOUT_COMPLETED) {
+                throw ValidationException::withMessages([
+                    'pullout_restore_reason' => 'Only a pulled-out health record can be restored.',
+                ]);
+            }
+
+            $this->restoreHealthProfileUserAccess($profile);
+
+            $profile->forceFill([
+                'pullout_status' => HealthProfile::PULLOUT_RESTORED,
+                'pullout_restore_reason' => trim((string) $validated['pullout_restore_reason']),
+                'pullout_restored_by_user_id' => $actor->id,
+                'pullout_restored_at' => now(),
+            ])->save();
+
+            return $profile->fresh('user');
+        });
+
+        $this->logHealthProfilePulloutActivity(
+            $request,
+            $profile,
+            'Pulled-Out Health Profile Restored',
+            'health_profile_pullout_restored',
+            'Health profile #' . $profile->id . ' was restored to active access. Its original clearance and medical data were preserved.',
+            ['restore_reason' => $profile->pullout_restore_reason]
+        );
+
+        if ($profile->user) {
+            app(StudentNotificationMailer::class)->sendHealthRecordNotice($profile->user, 'pullout_restored');
+        }
+
+        return redirect()->route('reports.pulled-out-records')
+            ->with('success', 'Health record and clinic system access were restored.');
+    }
+
+    private function blockHealthProfileUserAccess(HealthProfile $profile): string
+    {
+        $user = $profile->user_id
+            ? User::query()->lockForUpdate()->find($profile->user_id)
+            : null;
+        $previousStatus = strtolower(trim((string) ($user?->status ?? 'active')));
+        $previousStatus = in_array($previousStatus, ['active', 'inactive'], true)
+            ? $previousStatus
+            : 'active';
+
+        if (!$user) {
+            return $previousStatus;
+        }
+
+        if (Schema::hasColumn('users', 'status')) {
+            $user->status = 'inactive';
+        }
+        if (Schema::hasColumn('users', 'remember_token')) {
+            $user->remember_token = null;
+        }
+        $user->save();
+
+        if (Schema::hasTable('personal_access_tokens')) {
+            DB::table('personal_access_tokens')
+                ->where('tokenable_type', User::class)
+                ->where('tokenable_id', $user->id)
+                ->delete();
+        }
+
+        return $previousStatus;
+    }
+
+    private function restoreHealthProfileUserAccess(HealthProfile $profile): void
+    {
+        if (!$profile->user_id) {
+            return;
+        }
+
+        $user = User::query()->lockForUpdate()->find($profile->user_id);
+        if (!$user || !Schema::hasColumn('users', 'status')) {
+            return;
+        }
+
+        $previousStatus = strtolower(trim((string) ($profile->pullout_previous_user_status ?? 'active')));
+        $user->status = in_array($previousStatus, ['active', 'inactive'], true)
+            ? $previousStatus
+            : 'active';
+        $user->save();
     }
 
     public function updateHealthFormSubmissionStatus(Request $request, HealthFormSubmission $submission)
@@ -2460,6 +2802,80 @@ class AdminController extends Controller
 
         return response()->file($this->healthFiles()->path($path), [
             'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+        ]);
+    }
+
+    private function logHealthProfilePulloutActivity(
+        Request $request,
+        HealthProfile $profile,
+        string $action,
+        string $eventType,
+        string $description,
+        array $metadata = []
+    ): void {
+        $actor = Auth::user();
+
+        ActivityLog::create([
+            'user_id' => $actor?->id,
+            'user_name' => $actor?->name ?? $actor?->email ?? 'System',
+            'user_role' => strtolower((string) ($actor?->user_role ?? '')),
+            'action' => $action,
+            'module' => 'Health Records',
+            'event_type' => $eventType,
+            'description' => $description,
+            'route_name' => optional($request->route())->getName(),
+            'http_method' => 'POST',
+            'request_path' => '/' . ltrim((string) $request->path(), '/'),
+            'status_code' => 200,
+            'subject_type' => HealthProfile::class,
+            'subject_id' => (string) $profile->id,
+            'metadata' => array_merge([
+                'health_profile_id' => $profile->id,
+                'user_id' => $profile->user_id,
+                'reference_number' => $profile->reference_number,
+                'pullout_status' => $profile->pullout_status,
+            ], $metadata),
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 255),
+        ]);
+    }
+
+    public function showHealthFormSubmissionDocument(HealthFormSubmission $submission, string $document)
+    {
+        abort_unless(in_array($document, HealthProfileSnapshotService::DOCUMENT_FIELDS, true), 404);
+
+        $profileData = $submission->snapshotProfile();
+        if ($profileData === []) {
+            $latestSubmission = HealthFormSubmission::query()
+                ->where('user_id', $submission->user_id)
+                ->whereIn('status', [
+                    HealthFormSubmission::STATUS_SUBMITTED,
+                    HealthFormSubmission::STATUS_APPROVED,
+                    HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                ])
+                ->latest('submitted_at')
+                ->latest('approved_at')
+                ->latest('id')
+                ->first();
+
+            if ($latestSubmission && (int) $latestSubmission->id === (int) $submission->id) {
+                $profileData = $submission->healthProfile?->attributesToArray() ?? [];
+            }
+        }
+
+        $path = ltrim((string) ($profileData[$document] ?? ''), '/');
+        $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+        abort_if($path === '' || !$this->healthFiles()->exists($path), 404, 'Historical document not found.');
+
+        $disk = $this->healthFiles();
+        $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
+
+        return response()->file($disk->path($path), [
+            'Content-Type' => $mimeType,
             'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
             'X-Content-Type-Options' => 'nosniff',
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
@@ -2638,6 +3054,10 @@ public function updateClearance(Request $request, $id)
         ? array_values(array_unique((array) $request->input('resubmission_required_documents', [])))
         : null;
     $record->resubmission_requested_at = $requestedStatus === 'Pending Resubmission' ? now() : null;
+    if ($requestedStatus === 'Pending Resubmission') {
+        $record->pending_compliance_reminder_sent_at = null;
+        $record->pending_compliance_reminder_count = 0;
+    }
     $record->resubmitted_at = $requestedStatus === 'Pending Resubmission' ? null : $record->resubmitted_at;
 
     if ($record->save()) {
@@ -2761,6 +3181,8 @@ public function updateClearance(Request $request, $id)
         $record->documents_valid = false;
         $record->resubmission_required_documents = $requestedDocuments;
         $record->resubmission_requested_at = now();
+        $record->pending_compliance_reminder_sent_at = null;
+        $record->pending_compliance_reminder_count = 0;
         $record->resubmitted_at = null;
 
         if ($request->boolean('clear_uploaded_documents')) {
@@ -2901,6 +3323,8 @@ public function updateClearance(Request $request, $id)
         $employeeProfile->documents_valid = false;
         $employeeProfile->resubmission_required_fields = $requestedDocuments;
         $employeeProfile->resubmission_requested_at = now();
+        $employeeProfile->pending_compliance_reminder_sent_at = null;
+        $employeeProfile->pending_compliance_reminder_count = 0;
         $employeeProfile->resubmitted_at = null;
         $employeeProfile->verified_at = $wasAlreadyIssued ? $employeeProfile->verified_at : null;
         $employeeProfile->approved_by_user_id = $wasAlreadyIssued ? $employeeProfile->approved_by_user_id : null;
@@ -2987,6 +3411,7 @@ public function updateClearance(Request $request, $id)
         $record->verified_at = null;
         $record->approved_by_user_id = null;
         $record->save();
+        $this->updateCurrentHealthFormSubmissionStatus($record, HealthFormSubmission::STATUS_SUBMITTED);
 
         ActivityLog::create([
             'user_id' => auth()->id(),
@@ -3035,6 +3460,7 @@ public function updateClearance(Request $request, $id)
         $record->verified_at = null;
         $record->approved_by_user_id = null;
         $record->save();
+        $this->updateCurrentHealthFormSubmissionStatus($record, HealthFormSubmission::STATUS_SUBMITTED);
 
         ActivityLog::create([
             'user_id' => auth()->id(),
@@ -3856,39 +4282,77 @@ public function restockItem($id, Request $request)
 
 public function issueStock($id, Request $request)
 {
-    $item = Item::find($id);
-    if (!$item) {
-        return redirect()->back()->with('error', 'Item not found.');
-    }
-
     $validated = $request->validate([
         'issue_quantity' => ['required', 'numeric', 'min:0.01'],
-        'date_consumed' => ['required', 'date'],
+        'date_consumed' => ['required', 'date', 'before_or_equal:today'],
         'issue_reason' => ['required', Rule::in(['Dispensed to Patient', 'Clinic Usage', 'Damaged/Expired', 'Other'])],
         'issue_remarks' => ['nullable', 'string', 'max:1000'],
+        'issue_request_token' => ['required', 'uuid'],
     ]);
 
     $issueQuantity = (float) $validated['issue_quantity'];
-    $stockBefore = (float) $item->quantity;
+    $requestTokenKey = 'inventory:issue:' . (auth()->id() ?: 'guest') . ':' . $validated['issue_request_token'];
 
-    if ($issueQuantity > $stockBefore) {
-        return redirect()->back()
-            ->withInput()
-            ->with('error', 'Quantity to issue cannot exceed the current available stock.');
+    if (!Cache::add($requestTokenKey, 'processing', now()->addMinutes(10))) {
+        throw ValidationException::withMessages([
+            'issue_quantity' => ['This stock issuance was already submitted. Refresh the inventory before trying again.'],
+        ]);
     }
 
-    DB::transaction(function () use ($item, $validated, $issueQuantity, $stockBefore) {
-        $item->quantity = max(0, $stockBefore - $issueQuantity);
-        $item->consumed = max(0, (float) ($item->consumed ?? 0)) + $issueQuantity;
+    try {
+        $issueResult = DB::transaction(function () use ($id, $validated, $issueQuantity) {
+        $item = Item::query()->lockForUpdate()->find($id);
+
+        if (!$item) {
+            throw ValidationException::withMessages([
+                'issue_quantity' => ['The selected inventory item no longer exists.'],
+            ]);
+        }
+
+        if ($item->requiresDispensingConversion() && !$item->hasDispensingConversion()) {
+            throw ValidationException::withMessages([
+                'issue_quantity' => ['Set the dispensing unit and units per stock unit before issuing this item.'],
+            ]);
+        }
+
+        $availableIssueQuantity = $item->availableDispensingQuantity();
+        if ($issueQuantity - $availableIssueQuantity > 0.00001) {
+            $issueUnit = $item->hasDispensingConversion()
+                ? ($item->dispensing_unit ?: $item->unit)
+                : ($item->unit ?: 'pcs');
+
+            throw ValidationException::withMessages([
+                'issue_quantity' => [
+                    'Only ' . $this->formatInventoryQuantity($availableIssueQuantity) . " {$issueUnit} are currently available.",
+                ],
+            ]);
+        }
+
+        $stockBefore = (float) $item->quantity;
+        $stockDeduction = $item->convertDispensingQuantityToStockQuantity($issueQuantity);
+        $stockAfter = max(0, $stockBefore - $stockDeduction);
+        $issueUnit = $item->hasDispensingConversion()
+            ? ($item->dispensing_unit ?: $item->unit)
+            : ($item->unit ?: 'pcs');
+        $stockUnit = $item->unit ?: 'pcs';
+        $remarks = trim((string) ($validated['issue_remarks'] ?? ''));
+        $conversionNote = $item->hasDispensingConversion()
+            ? 'Issued ' . $this->formatInventoryQuantity($issueQuantity) . " {$issueUnit}; deducted "
+                . $this->formatInventoryQuantity($stockDeduction) . " {$stockUnit} from stock."
+            : null;
+        $movementNotes = implode(' ', array_filter([$remarks !== '' ? $remarks : null, $conversionNote]));
+
+        $item->quantity = $stockAfter;
+        $item->consumed = max(0, (float) ($item->consumed ?? 0)) + $stockDeduction;
         $item->save();
 
         $this->recordInventoryMovement(
             $item,
             'issued',
-            -1 * $issueQuantity,
+            -1 * $stockDeduction,
             $stockBefore,
-            (float) $item->quantity,
-            $validated['issue_remarks'] ?? null,
+            $stockAfter,
+            $movementNotes !== '' ? $movementNotes : null,
             $validated['date_consumed'],
             $validated['issue_reason']
         );
@@ -3899,15 +4363,15 @@ public function issueStock($id, Request $request)
                 'item_id' => $item->id,
                 'user_id' => auth()->id(),
                 'type' => 'issued',
-                'quantity' => $issueQuantity,
+                'quantity' => $stockDeduction,
                 'stock_before' => $stockBefore,
-                'stock_after' => (float) $item->quantity,
+                'stock_after' => $stockAfter,
                 'date_consumed' => $validated['date_consumed'],
                 'movement_date' => $validated['date_consumed'],
                 'reason' => $validated['issue_reason'],
                 'purpose' => $validated['issue_reason'],
-                'remarks' => $validated['issue_remarks'] ?? null,
-                'notes' => $validated['issue_remarks'] ?? null,
+                'remarks' => $movementNotes !== '' ? $movementNotes : null,
+                'notes' => $movementNotes !== '' ? $movementNotes : null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -3922,13 +4386,30 @@ public function issueStock($id, Request $request)
                 DB::table('inventory_logs')->insert($legacyLog);
             }
         }
-    });
+
+            return [
+                'item_name' => $item->name,
+                'issued_quantity' => $issueQuantity,
+                'issue_unit' => $issueUnit,
+                'remaining_quantity' => $item->availableDispensingQuantity(),
+                'reason' => $validated['issue_reason'],
+            ];
+        });
+    } catch (\Throwable $exception) {
+        Cache::forget($requestTokenKey);
+        throw $exception;
+    }
+
+    Cache::put($requestTokenKey, 'completed', now()->addDay());
 
     ActivityLog::create([
         'user_id' => auth()->id(),
         'user_name' => auth()->user()->name,
         'action' => 'Inventory Stock Issued',
-        'description' => "Issued " . $this->formatInventoryQuantity($issueQuantity) . " {$item->unit} of {$item->name}. Reason: {$validated['issue_reason']}.",
+        'description' => 'Issued ' . $this->formatInventoryQuantity((float) $issueResult['issued_quantity'])
+            . " {$issueResult['issue_unit']} of {$issueResult['item_name']}. Remaining: "
+            . $this->formatInventoryQuantity((float) $issueResult['remaining_quantity'])
+            . " {$issueResult['issue_unit']}. Reason: {$issueResult['reason']}.",
         'ip_address' => request()->ip(),
         'user_agent' => request()->userAgent(),
     ]);
@@ -4274,6 +4755,9 @@ public function deleteItem($id)
             $request->validate([
                 'appointment_reminder_hours' => ['required', 'integer', 'in:0,1,3,24,48'],
                 'pending_compliance_reminder_days' => ['required', 'integer', 'in:0,1,3,7,14,30'],
+                'pending_compliance_reminder_max_count' => ['required', 'integer', 'between:1,10'],
+                'notification_quiet_hours_start' => ['required', 'date_format:H:i'],
+                'notification_quiet_hours_end' => ['required', 'date_format:H:i'],
                 'clinic_closure_starts_at' => [$closureRequired, 'nullable', 'date'],
                 'clinic_closure_ends_at' => [$closureRequired, 'nullable', 'date', 'after:clinic_closure_starts_at'],
                 'clinic_closure_reason' => ['nullable', 'string', 'max:100'],
@@ -4292,6 +4776,18 @@ public function deleteItem($id)
 
         $settings = Setting::first();
         if(!$settings) { $settings = new Setting(); }
+
+        $auditedPreferenceFields = [
+            'admin_live_notifications', 'email_notifications', 'appointment_reminder_hours',
+            'pending_compliance_reminder_days', 'pending_compliance_reminder_max_count',
+            'notification_quiet_hours_enabled', 'notification_quiet_hours_start',
+            'notification_quiet_hours_end', 'clinic_closure_enabled',
+            'clinic_closure_starts_at', 'clinic_closure_ends_at',
+            'clinic_closure_reason', 'clinic_closure_message',
+        ];
+        $settingsBefore = $request->boolean('preferences_form')
+            ? collect($auditedPreferenceFields)->mapWithKeys(fn ($field) => [$field => $settings->{$field}])->all()
+            : [];
 
         $settings->clinic_name = $request->input('clinic_name', $settings->clinic_name ?: 'PUP Taguig Clinic');
         $settings->clinic_location = $request->input('clinic_location', $settings->clinic_location ?: 'Santos Ave, Lower Bicutan, Taguig');
@@ -4312,6 +4808,12 @@ public function deleteItem($id)
             $settings->email_notifications = $request->boolean('email_notifications');
             $settings->appointment_reminder_hours = (int) $request->input('appointment_reminder_hours', 24);
             $settings->pending_compliance_reminder_days = (int) $request->input('pending_compliance_reminder_days', 7);
+            $settings->pending_compliance_reminder_max_count = (int) $request->input('pending_compliance_reminder_max_count', 3);
+            $settings->notification_quiet_hours_enabled = $request->boolean('notification_quiet_hours_enabled');
+            $settings->notification_quiet_hours_start = $request->input('notification_quiet_hours_start', '20:00');
+            $settings->notification_quiet_hours_end = $request->input('notification_quiet_hours_end', '07:00');
+            $settings->workflow_preferences_saved_at = now();
+            $settings->workflow_preferences_saved_by = auth()->user()->name ?? auth()->user()->email ?? 'Administrator';
             $settings->clinic_closure_enabled = $request->boolean('clinic_closure_enabled');
             $settings->clinic_closure_starts_at = $request->input('clinic_closure_starts_at') ?: null;
             $settings->clinic_closure_ends_at = $request->input('clinic_closure_ends_at') ?: null;
@@ -4343,12 +4845,43 @@ public function deleteItem($id)
             ? 'Modified ' . implode(', ', $logParts)
             : 'Updated system settings';
 
+        $settingsAfter = $request->boolean('preferences_form')
+            ? collect($auditedPreferenceFields)->mapWithKeys(fn ($field) => [$field => $settings->{$field}])->all()
+            : [];
+        $changedSettings = collect($settingsAfter)
+            ->filter(fn ($value, $field) => (string) ($settingsBefore[$field] ?? '') !== (string) $value)
+            ->mapWithKeys(fn ($value, $field) => [$field => [
+                'from' => $settingsBefore[$field] ?? null,
+                'to' => $value,
+            ]])
+            ->all();
+        if ($changedSettings !== []) {
+            $changedLabels = collect(array_keys($changedSettings))
+                ->map(fn ($field) => ucwords(str_replace('_', ' ', $field)))
+                ->implode(', ');
+            $logDescription .= '. Changed: ' . $changedLabels;
+        }
+
         // --- LOGS CODES ---
     \App\Models\ActivityLog::create([
         'user_id'     => auth()->id(),
         'user_name'   => auth()->user()->name,
-        'action'      => 'System Settings Updated',
+        'user_role'   => strtolower((string) (auth()->user()->user_role ?? '')),
+        'action'      => $request->boolean('closure_form') ? 'Clinic Closure Updated' : 'System Preferences Updated',
+        'module'      => 'Settings',
+        'event_type'  => 'update',
         'description' => $logDescription,
+        'route_name'  => optional($request->route())->getName(),
+        'http_method' => $request->method(),
+        'request_path'=> '/' . ltrim($request->path(), '/'),
+        'status_code' => 200,
+        'subject_type'=> 'settings',
+        'subject_id'  => (string) $settings->getKey(),
+        'metadata'    => [
+            'changed_settings' => $changedSettings,
+            'cancelled_appointments' => $cancelledForClosure,
+            'save_mode' => $request->expectsJson() ? 'automatic' : 'manual',
+        ],
         'ip_address'  => request()->ip(),
         'user_agent'  => request()->userAgent(),
     ]);
@@ -4356,6 +4889,15 @@ public function deleteItem($id)
         $successMessage = 'System settings saved.';
         if ($cancelledForClosure > 0) {
             $successMessage .= " {$cancelledForClosure} affected appointment(s) were cancelled and students were asked to rebook.";
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $successMessage,
+                'saved_at' => optional($settings->workflow_preferences_saved_at)->toIso8601String(),
+                'saved_at_label' => optional($settings->workflow_preferences_saved_at)->format('M d, Y g:i:s A'),
+                'saved_by' => $settings->workflow_preferences_saved_by,
+            ]);
         }
 
         return redirect()->back()->with('success', $successMessage);
@@ -5174,50 +5716,23 @@ public function inventorySummary()
 
         $settings = $this->emergencyAccessSettings();
         $isConfigured = (bool) ($settings['configured'] ?? false);
-        $action = (string) $request->input('emergency_action', 'update');
+        $action = (string) $request->input('emergency_action', 'reset');
 
         $rules = [
-            'emergency_action' => ['nullable', Rule::in(['update', 'add', 'reset'])],
+            'emergency_action' => ['nullable', Rule::in(['reset'])],
             'emergency_role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_SUPERADMIN, 'super_admin'])],
+            'emergency_email' => ['required', 'email', 'max:255'],
+            'new_emergency_password' => [$action === 'reset' || ! $isConfigured ? 'required' : 'nullable', 'confirmed', 'min:8', 'max:255', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'],
+            'emergency_password_reset_key' => [$action === 'reset' ? 'required' : 'nullable', 'string', 'max:255'],
         ];
-
-        if ($action === 'add') {
-            $rules['additional_emergency_email'] = ['required', 'email', 'max:255'];
-            $rules['additional_emergency_password'] = ['required', 'confirmed', 'min:8', 'max:255', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'];
-        } else {
-            $rules['emergency_email'] = ['required', 'email', 'max:255'];
-            $rules['new_emergency_password'] = [$action === 'reset' || ! $isConfigured ? 'required' : 'nullable', 'confirmed', 'min:8', 'max:255', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'];
-            $rules['emergency_password_reset_key'] = [$action === 'reset' ? 'required' : 'nullable', 'string', 'max:255'];
-        }
 
         $validated = $request->validate($rules, [
             'new_emergency_password.regex' => 'Emergency password must contain at least one letter and one number.',
-            'additional_emergency_password.regex' => 'Emergency password must contain at least one letter and one number.',
         ]);
 
         $role = User::normalizeRole((string) $validated['emergency_role']);
         if (!in_array($role, [User::ROLE_ADMIN, User::ROLE_SUPERADMIN], true)) {
             $role = User::ROLE_ADMIN;
-        }
-
-        if ($action === 'add') {
-            $additionalEmail = strtolower(trim((string) $validated['additional_emergency_email']));
-            $accounts = $this->emergencyAdditionalAccounts();
-            $accounts = array_values(array_filter($accounts, fn ($account) => strtolower(trim((string) ($account['email'] ?? ''))) !== $additionalEmail));
-            $accounts[] = [
-                'email' => $additionalEmail,
-                'password_hash' => Hash::make((string) $validated['additional_emergency_password']),
-                'role' => $role,
-            ];
-
-            $this->writeEnvironmentValues([
-                'EMERGENCY_ACCESS_ENABLED' => 'true',
-                'EMERGENCY_ADMIN_ADDITIONAL_ACCOUNTS' => base64_encode(json_encode($accounts)),
-            ]);
-
-            $this->logDeveloperSecurityAction($user, 'Emergency Credentials Updated', 'A secondary emergency login account was added.', 200);
-
-            return back()->with('success', 'Emergency email account added.');
         }
 
         $newPassword = trim((string) ($validated['new_emergency_password'] ?? ''));
@@ -5239,6 +5754,7 @@ public function inventorySummary()
             'EMERGENCY_ACCESS_ENABLED' => 'true',
             'EMERGENCY_ADMIN_EMAIL' => strtolower(trim((string) $validated['emergency_email'])),
             'EMERGENCY_ADMIN_ROLE' => $role,
+            'EMERGENCY_ADMIN_ADDITIONAL_ACCOUNTS' => '',
         ];
 
         if ($newPassword !== '') {
@@ -5247,6 +5763,7 @@ public function inventorySummary()
         }
 
         $this->writeEnvironmentValues($environmentValues);
+        $this->clearConfigurationCacheAfterEnvironmentWrite();
 
         $this->logDeveloperSecurityAction(
             $user,

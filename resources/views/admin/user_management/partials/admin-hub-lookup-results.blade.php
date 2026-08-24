@@ -16,6 +16,7 @@
             data-id="{{ $record['record_id'] }}"
             data-name="{{ $record['name'] }}"
             data-first-name="{{ $record['first_name'] }}"
+            data-middle-name="{{ $record['middle_name'] ?? '' }}"
             data-last-name="{{ $record['last_name'] }}"
             data-email="{{ $record['email'] }}"
             data-role="{{ $record['raw_role'] }}"

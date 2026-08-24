@@ -94,6 +94,7 @@ class EmployeeHealthProfile extends Model
         'resubmission_required_fields',
         'resubmission_requested_at',
         'pending_compliance_reminder_sent_at',
+        'pending_compliance_reminder_count',
         'resubmitted_at',
         'staff_health_form_pdf_path',
         'draft_data',
@@ -123,6 +124,7 @@ class EmployeeHealthProfile extends Model
         'resubmission_required_fields' => 'array',
         'resubmission_requested_at' => 'datetime',
         'pending_compliance_reminder_sent_at' => 'datetime',
+        'pending_compliance_reminder_count' => 'integer',
         'resubmitted_at' => 'datetime',
         'draft_data' => 'array',
     ];

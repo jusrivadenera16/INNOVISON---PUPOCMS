@@ -721,6 +721,97 @@
         .preferences-modal .preferences-modal-footer { flex-direction: column-reverse; }
         .preferences-modal .preferences-modal-footer button { width: 100%; }
     }
+    .preferences-settings-page .preferences-general-grid .settings-field:nth-child(n + 5) {
+        border-top: 1px solid var(--preferences-line);
+    }
+    .preferences-settings-page .preferences-general-grid .settings-field:nth-child(4n)::after {
+        display: none;
+    }
+    .preferences-settings-page .preferences-general-grid .settings-field:nth-child(5)::after,
+    .preferences-settings-page .preferences-general-grid .settings-field:nth-child(6)::after,
+    .preferences-settings-page .preferences-general-grid .settings-field:nth-child(7)::after {
+        content: "";
+        position: absolute;
+        top: 14px;
+        right: 0;
+        bottom: 14px;
+        width: 1px;
+        background: var(--preferences-line);
+    }
+    .preferences-settings-page .preferences-autosave-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+        color: var(--preferences-muted);
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .preferences-settings-page .preferences-autosave-status.is-saving { color: #a16207; }
+    .preferences-settings-page .preferences-autosave-status.is-saved { color: #15803d; }
+    .preferences-settings-page .preferences-autosave-status.is-error { color: #b91c1c; }
+    .preferences-settings-page .preferences-reminder-preview {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding: 12px 10px 15px;
+        border-bottom: 1px solid var(--preferences-line);
+    }
+    .preferences-settings-page .preferences-preview-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        min-height: 64px;
+        padding: 11px 12px;
+        border: 1px solid rgba(127, 0, 16, .12);
+        border-radius: 9px;
+        background: rgba(255, 247, 237, .55);
+    }
+    .preferences-settings-page .preferences-preview-item svg {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+        color: var(--preferences-maroon);
+    }
+    .preferences-settings-page .preferences-preview-item strong,
+    .preferences-settings-page .preferences-preview-item span { display: block; }
+    .preferences-settings-page .preferences-preview-item strong { color: var(--preferences-text); font-size: 12px; }
+    .preferences-settings-page .preferences-preview-item span { margin-top: 3px; color: var(--preferences-muted); font-size: 11px; line-height: 1.4; }
+    .preferences-modal .preferences-preset-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-bottom: 14px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(148, 163, 184, .2);
+    }
+    .preferences-modal .preferences-preset-row button {
+        min-height: 32px;
+        padding: 0 11px;
+        border: 1px solid rgba(127, 0, 16, .2);
+        border-radius: 7px;
+        background: #fff;
+        color: #7f0010;
+        font-size: 11px;
+        font-weight: 850;
+        cursor: pointer;
+    }
+    .preferences-modal .preferences-preset-row button:hover { background: #fef3c7; }
+    html[data-theme="dark"] .preferences-settings-page .preferences-preview-item,
+    html[data-theme="dark"] .preferences-modal .preferences-preset-row button {
+        background: rgba(30, 41, 59, .72);
+        color: #f8fafc;
+        border-color: rgba(250, 204, 21, .2);
+    }
+    html[data-theme="dark"] .preferences-settings-page .preferences-preview-item strong { color: #f8fafc; }
+    html[data-theme="dark"] .preferences-settings-page .preferences-preview-item span { color: #cbd5e1; }
+    @media (max-width: 1080px) {
+        .preferences-settings-page .preferences-general-grid .settings-field:nth-child(n)::after { display: none; }
+    }
+    @media (max-width: 640px) {
+        .preferences-settings-page .preferences-reminder-preview { grid-template-columns: 1fr; }
+        .preferences-settings-page .preferences-autosave-meta { width: 100%; margin-left: 0; }
+    }
 </style>
 @endpush
 
@@ -730,6 +821,10 @@
     $complianceReminderOptions = [0 => 'Disabled', 1 => 'Every day', 3 => 'Every 3 days', 7 => 'Every 7 days', 14 => 'Every 14 days', 30 => 'Every 30 days'];
     $currentReminderHours = (int) ($settings->appointment_reminder_hours ?? 24);
     $currentComplianceReminderDays = (int) ($settings->pending_compliance_reminder_days ?? 7);
+    $currentComplianceReminderMax = (int) ($settings->pending_compliance_reminder_max_count ?? 3);
+    $quietHoursEnabled = (bool) ($settings->notification_quiet_hours_enabled ?? false);
+    $quietHoursStart = substr((string) ($settings->notification_quiet_hours_start ?: '20:00'), 0, 5);
+    $quietHoursEnd = substr((string) ($settings->notification_quiet_hours_end ?: '07:00'), 0, 5);
     $adminNotificationsEnabled = (string) old('admin_live_notifications', $settings->admin_live_notifications !== false ? '1' : '0') === '1';
     $emailNotificationsEnabled = (string) old('email_notifications', $settings->email_notifications !== false ? '1' : '0') === '1';
     $closureEnabled = (bool) $settings->clinic_closure_enabled;
@@ -780,7 +875,16 @@
                 <div class="preferences-workflow-content">
                     <div class="preferences-subheading">
                         <span>General Preferences</span>
-                        <span class="preferences-autosave-status" data-preferences-autosave-status aria-live="polite"></span>
+                        <span class="preferences-autosave-meta">
+                            <span class="preferences-autosave-status" data-preferences-autosave-status aria-live="polite"></span>
+                            <span data-preferences-last-saved>
+                                @if($settings->workflow_preferences_saved_at)
+                                    Last saved {{ $settings->workflow_preferences_saved_at->format('M d, Y g:i A') }} by {{ $settings->workflow_preferences_saved_by ?: 'Administrator' }}
+                                @else
+                                    Not saved yet
+                                @endif
+                            </span>
+                        </span>
                     </div>
                     <div class="settings-form-grid preferences-general-grid">
                         <div class="settings-field">
@@ -818,6 +922,44 @@
                                     <option value="{{ $days }}" {{ (int) old('pending_compliance_reminder_days', $currentComplianceReminderDays) === $days ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
                             </select>
+                        </div>
+                        <div class="settings-field">
+                            <label for="pending_compliance_reminder_max_count">Maximum Compliance Reminders</label>
+                            <select id="pending_compliance_reminder_max_count" name="pending_compliance_reminder_max_count" required>
+                                @foreach([1, 2, 3, 5, 7, 10] as $count)
+                                    <option value="{{ $count }}" {{ $currentComplianceReminderMax === $count ? 'selected' : '' }}>{{ $count }} reminder{{ $count === 1 ? '' : 's' }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="settings-field">
+                            <label for="notification_quiet_hours_enabled">Notification Quiet Hours</label>
+                            <input type="hidden" name="notification_quiet_hours_enabled" value="0">
+                            <label class="switch preferences-switch-row" for="notification_quiet_hours_enabled">
+                                <input type="checkbox" id="notification_quiet_hours_enabled" name="notification_quiet_hours_enabled" value="1" {{ $quietHoursEnabled ? 'checked' : '' }}>
+                                <span class="slider" aria-hidden="true"></span>
+                                <span class="preferences-switch-label is-on">Enabled</span>
+                                <span class="preferences-switch-label is-off">Disabled</span>
+                            </label>
+                        </div>
+                        <div class="settings-field">
+                            <label for="notification_quiet_hours_start">Quiet Hours Start</label>
+                            <input id="notification_quiet_hours_start" name="notification_quiet_hours_start" type="time" value="{{ $quietHoursStart }}" required>
+                        </div>
+                        <div class="settings-field">
+                            <label for="notification_quiet_hours_end">Quiet Hours End</label>
+                            <input id="notification_quiet_hours_end" name="notification_quiet_hours_end" type="time" value="{{ $quietHoursEnd }}" required>
+                        </div>
+                    </div>
+
+                    <div class="preferences-subheading">Reminder Preview</div>
+                    <div class="preferences-reminder-preview" aria-live="polite">
+                        <div class="preferences-preview-item">
+                            <x-outline-icon name="calendar" />
+                            <div><strong>Appointment reminder</strong><span data-appointment-preview></span></div>
+                        </div>
+                        <div class="preferences-preview-item">
+                            <x-outline-icon name="bell" />
+                            <div><strong>Pending compliance reminder</strong><span data-compliance-preview></span></div>
                         </div>
                     </div>
 
@@ -865,11 +1007,22 @@
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="preferences_form" value="1">
+                <input type="hidden" name="closure_form" value="1">
                 <input type="hidden" name="admin_live_notifications" value="{{ $settings->admin_live_notifications !== false ? '1' : '0' }}">
                 <input type="hidden" name="email_notifications" value="{{ $settings->email_notifications !== false ? '1' : '0' }}">
                 <input type="hidden" name="appointment_reminder_hours" value="{{ $currentReminderHours }}">
                 <input type="hidden" name="pending_compliance_reminder_days" value="{{ $currentComplianceReminderDays }}">
+                <input type="hidden" name="pending_compliance_reminder_max_count" value="{{ $currentComplianceReminderMax }}">
+                <input type="hidden" name="notification_quiet_hours_enabled" value="{{ $quietHoursEnabled ? '1' : '0' }}">
+                <input type="hidden" name="notification_quiet_hours_start" value="{{ $quietHoursStart }}">
+                <input type="hidden" name="notification_quiet_hours_end" value="{{ $quietHoursEnd }}">
                 <div class="preferences-modal-body">
+                    <div class="preferences-preset-row" aria-label="Closure presets">
+                        <button type="button" data-closure-preset="staff-meeting">Staff meeting - 2 hours</button>
+                        <button type="button" data-closure-preset="early-closure">Early closure - today</button>
+                        <button type="button" data-closure-preset="emergency">Emergency - 4 hours</button>
+                        <button type="button" data-closure-preset="clear">Clear</button>
+                    </div>
                     <div class="preferences-modal-grid">
                         <div class="preferences-modal-field full">
                             <label for="modal_clinic_closure_enabled">Closure Status</label>
@@ -914,6 +1067,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const generalPreferencesForm = document.querySelector('#systemPreferencesForm');
     const closurePreferencesForm = document.querySelector('#temporaryClosureForm');
     const autosaveStatus = document.querySelector('[data-preferences-autosave-status]');
+    const lastSaved = document.querySelector('[data-preferences-last-saved]');
+    const pendingStorageKey = 'pup-clinic-workflow-preferences-pending';
     let autosaveTimer = null;
     let autosaveRunning = false;
     let autosaveQueued = false;
@@ -931,10 +1086,108 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function syncClosurePreferences() {
         if (!closurePreferencesForm) return;
-        ['admin_live_notifications', 'email_notifications', 'appointment_reminder_hours', 'pending_compliance_reminder_days'].forEach(function (name) {
+        [
+            'admin_live_notifications', 'email_notifications', 'appointment_reminder_hours',
+            'pending_compliance_reminder_days', 'pending_compliance_reminder_max_count',
+            'notification_quiet_hours_enabled', 'notification_quiet_hours_start',
+            'notification_quiet_hours_end'
+        ].forEach(function (name) {
             const preservedField = closurePreferencesForm.querySelector(`[name="${name}"]`);
             if (preservedField) preservedField.value = preferenceValue(name);
         });
+    }
+
+    function preferenceSnapshot() {
+        const snapshot = {};
+        if (!generalPreferencesForm) return snapshot;
+        generalPreferencesForm.querySelectorAll('input[type="checkbox"], select, input[type="time"]').forEach(function (field) {
+            snapshot[field.name] = field.type === 'checkbox' ? field.checked : field.value;
+        });
+        return snapshot;
+    }
+
+    function storePendingPreferences() {
+        try {
+            window.localStorage.setItem(pendingStorageKey, JSON.stringify(preferenceSnapshot()));
+        } catch (error) {
+            // Auto-save still works when local storage is unavailable.
+        }
+    }
+
+    function restorePendingPreferences() {
+        if (!generalPreferencesForm) return false;
+        let snapshot = null;
+        try {
+            snapshot = JSON.parse(window.localStorage.getItem(pendingStorageKey) || 'null');
+        } catch (error) {
+            snapshot = null;
+        }
+        if (!snapshot || typeof snapshot !== 'object') return false;
+
+        Object.entries(snapshot).forEach(function ([name, value]) {
+            const field = generalPreferencesForm.querySelector(`[name="${name}"]:not([type="hidden"])`);
+            if (!field) return;
+            if (field.type === 'checkbox') field.checked = Boolean(value);
+            else field.value = value;
+        });
+        return true;
+    }
+
+    function updateReminderPreview() {
+        const appointmentField = document.querySelector('#appointment_reminder_hours');
+        const complianceField = document.querySelector('#pending_compliance_reminder_days');
+        const maxField = document.querySelector('#pending_compliance_reminder_max_count');
+        const quietEnabled = document.querySelector('#notification_quiet_hours_enabled')?.checked;
+        const quietStart = document.querySelector('#notification_quiet_hours_start')?.value || '20:00';
+        const quietEnd = document.querySelector('#notification_quiet_hours_end')?.value || '07:00';
+        const appointmentPreview = document.querySelector('[data-appointment-preview]');
+        const compliancePreview = document.querySelector('[data-compliance-preview]');
+        const quietText = quietEnabled ? ` Delivery pauses from ${quietStart} to ${quietEnd}.` : '';
+
+        if (appointmentPreview) {
+            const label = appointmentField?.selectedOptions[0]?.textContent || 'Disabled';
+            appointmentPreview.textContent = appointmentField?.value === '0'
+                ? 'No appointment reminder will be sent.'
+                : `One email is sent ${label.toLowerCase()}.${quietText}`;
+        }
+        if (compliancePreview) {
+            const label = complianceField?.selectedOptions[0]?.textContent || 'Disabled';
+            compliancePreview.textContent = complianceField?.value === '0'
+                ? 'No pending compliance reminder will be sent.'
+                : `${label}, up to ${maxField?.value || 3} reminder(s).${quietText}`;
+        }
+    }
+
+    function delay(milliseconds) {
+        return new Promise(function (resolve) { window.setTimeout(resolve, milliseconds); });
+    }
+
+    async function postPreferencesWithRetry(formData) {
+        let lastError = null;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+                const response = await fetch(generalPreferencesForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    credentials: 'same-origin',
+                });
+                if (!response.ok) {
+                    const validation = response.status >= 400 && response.status < 500;
+                    throw Object.assign(new Error('Unable to save preferences.'), { retryable: !validation });
+                }
+                return await response.json();
+            } catch (error) {
+                lastError = error;
+                if (error.retryable === false || attempt === 3) break;
+                showAutosaveStatus(`Connection interrupted. Retrying ${attempt}/3...`, 'saving');
+                await delay(500 * (2 ** (attempt - 1)));
+            }
+        }
+        throw lastError || new Error('Unable to save preferences.');
     }
 
     function showAutosaveStatus(message, state) {
@@ -965,21 +1218,15 @@ document.addEventListener('DOMContentLoaded', function () {
             syncClosurePreferences();
 
             try {
-                const response = await fetch(generalPreferencesForm.action, {
-                    method: 'POST',
-                    body: new FormData(generalPreferencesForm),
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    credentials: 'same-origin',
-                });
-
-                if (!response.ok) throw new Error('Unable to save preferences.');
+                const result = await postPreferencesWithRetry(new FormData(generalPreferencesForm));
+                window.localStorage.removeItem(pendingStorageKey);
+                if (lastSaved && result.saved_at_label) {
+                    lastSaved.textContent = `Last saved ${result.saved_at_label} by ${result.saved_by || 'Administrator'}`;
+                }
                 if (!autosaveQueued) showAutosaveStatus('Saved', 'saved');
             } catch (error) {
                 autosaveQueued = false;
-                showAutosaveStatus('Could not save', 'error');
+                showAutosaveStatus('Not saved - changes will retry after reconnection', 'error');
             }
         } while (autosaveQueued);
 
@@ -989,9 +1236,75 @@ document.addEventListener('DOMContentLoaded', function () {
     generalPreferencesForm?.addEventListener('change', function (event) {
         if (!event.target.matches('input[type="checkbox"], select')) return;
 
+        storePendingPreferences();
         syncClosurePreferences();
+        updateReminderPreview();
         window.clearTimeout(autosaveTimer);
         autosaveTimer = window.setTimeout(saveGeneralPreferences, 180);
+    });
+
+    generalPreferencesForm?.addEventListener('input', function (event) {
+        if (!event.target.matches('input[type="time"]')) return;
+        storePendingPreferences();
+        syncClosurePreferences();
+        updateReminderPreview();
+        window.clearTimeout(autosaveTimer);
+        autosaveTimer = window.setTimeout(saveGeneralPreferences, 500);
+    });
+
+    window.addEventListener('online', function () {
+        if (window.localStorage.getItem(pendingStorageKey)) saveGeneralPreferences();
+    });
+
+    if (restorePendingPreferences()) {
+        syncClosurePreferences();
+        window.setTimeout(saveGeneralPreferences, 250);
+    }
+    updateReminderPreview();
+
+    function toLocalDateTimeValue(date) {
+        const pad = value => String(value).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    document.querySelectorAll('[data-closure-preset]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const preset = button.dataset.closurePreset;
+            const status = document.querySelector('#modal_clinic_closure_enabled');
+            const starts = document.querySelector('#modal_clinic_closure_starts_at');
+            const ends = document.querySelector('#modal_clinic_closure_ends_at');
+            const reason = document.querySelector('#modal_clinic_closure_reason');
+            const message = document.querySelector('#modal_clinic_closure_message');
+            if (!status || !starts || !ends || !reason || !message) return;
+
+            if (preset === 'clear') {
+                status.value = '0';
+                starts.value = '';
+                ends.value = '';
+                message.value = '';
+                return;
+            }
+
+            const start = new Date();
+            start.setSeconds(0, 0);
+            const end = new Date(start);
+            status.value = '1';
+            if (preset === 'staff-meeting') {
+                end.setHours(end.getHours() + 2);
+                reason.value = 'Staff Meeting';
+                message.value = 'The clinic is temporarily closed for an official staff meeting. Services will resume after the scheduled closure.';
+            } else if (preset === 'early-closure') {
+                end.setHours(23, 59, 0, 0);
+                reason.value = 'Early Closure';
+                message.value = 'The clinic is closing early today. Please schedule your visit after the clinic reopens.';
+            } else {
+                end.setHours(end.getHours() + 4);
+                reason.value = 'Emergency';
+                message.value = 'The clinic is temporarily closed due to an emergency. Please check back after the scheduled reopening time.';
+            }
+            starts.value = toLocalDateTimeValue(start);
+            ends.value = toLocalDateTimeValue(end);
+        });
     });
 
     document.querySelectorAll('[data-preferences-modal-open]').forEach(function (button) {
