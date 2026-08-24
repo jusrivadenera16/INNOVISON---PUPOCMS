@@ -5988,18 +5988,27 @@
             if (str_contains($rawType, 'faculty')) {
                 return 'Faculty';
             }
-            if (str_contains($rawType, 'student')) {
-                return 'Student';
-            }
             if (in_array((string) ($record->record_source ?? 'health'), ['employee', 'staff'], true)) {
                 return 'Faculty';
             }
 
-            $studentNumber = strtoupper(trim((string) ($record->student_number ?: $user->student_number)));
-            return $studentNumber !== ''
-                && !\Illuminate\Support\Str::startsWith($studentNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
-                    ? 'Student'
-                    : 'Applicant';
+            $referenceNumbers = collect([
+                $record->reference_number ?? null,
+                $user->reference_number,
+            ])->map(fn ($value) => strtoupper(trim((string) $value)))
+                ->filter()
+                ->unique();
+            $hasStudentNumber = collect([
+                $record->student_number ?? null,
+                $user->student_number,
+            ])->map(fn ($value) => strtoupper(trim((string) $value)))
+                ->filter()
+                ->contains(function ($studentNumber) use ($referenceNumbers) {
+                    return !\Illuminate\Support\Str::startsWith($studentNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
+                        && !$referenceNumbers->contains($studentNumber);
+                });
+
+            return $hasStudentNumber ? 'Student' : 'Applicant';
         };
     @endphp
 
@@ -7128,7 +7137,7 @@
                 <div class="health-filter-select-wrap is-sort-order">
                     <select id="sortFilter" name="sort" class="health-filter-select health-filter-custom-source">
                         <option value="approved_date" {{ ($sortFilter ?? 'approved_date') === 'approved_date' ? 'selected' : '' }}>Approved Date</option>
-                        <option value="alphabetical" {{ ($sortFilter ?? '') === 'alphabetical' ? 'selected' : '' }}>Alphabetical (A-Z)</option>
+                        <option value="alphabetical" {{ ($sortFilter ?? '') === 'alphabetical' ? 'selected' : '' }}>Last Name (A-Z)</option>
                         <option value="course" {{ ($sortFilter ?? '') === 'course' ? 'selected' : '' }}>Course (A-Z)</option>
                     </select>
                 </div>

@@ -131,14 +131,24 @@ class AdminController extends Controller
                     ->where('student_number', '!=', '')
                     ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
                     ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
-                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%']);
+                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%'])
+                    ->where(function ($identityQuery) {
+                        $identityQuery->whereNull('reference_number')
+                            ->orWhere('reference_number', '')
+                            ->orWhereColumn('student_number', '!=', 'reference_number');
+                    });
             })
                 ->orWhereHas('user', function ($userQuery) {
                     $userQuery->whereNotNull('student_number')
                         ->where('student_number', '!=', '')
                         ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
                         ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
-                        ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%']);
+                        ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%'])
+                        ->where(function ($identityQuery) {
+                            $identityQuery->whereNull('reference_number')
+                                ->orWhere('reference_number', '')
+                                ->orWhereColumn('student_number', '!=', 'reference_number');
+                        });
                 });
         };
 
@@ -156,14 +166,20 @@ class AdminController extends Controller
                             ->orWhere('student_number', '')
                             ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
                             ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
-                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%']);
+                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
+                            ->orWhereColumn('student_number', 'reference_number');
                     })
                         ->whereDoesntHave('user', function ($userQuery) {
                             $userQuery->whereNotNull('student_number')
                                 ->where('student_number', '!=', '')
                                 ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
                                 ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
-                                ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%']);
+                                ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%'])
+                                ->where(function ($identityQuery) {
+                                    $identityQuery->whereNull('reference_number')
+                                        ->orWhere('reference_number', '')
+                                        ->orWhereColumn('student_number', '!=', 'reference_number');
+                                });
                         });
                 })
                     ->orWhereHas('user', function ($userQuery) {
@@ -2044,7 +2060,15 @@ class AdminController extends Controller
         $issuedEmployeeRecords = $issuedEmployeeQuery->get()
             ->map(fn ($record) => $decorateHealthRecord($record, 'employee'));
         $healthRecordName = static function ($record): string {
-            return trim((string) (optional($record->user)->name ?: $record->name ?: ''));
+            $user = optional($record->user);
+            $lastName = trim((string) $user->last_name);
+            $firstName = trim((string) $user->first_name);
+            $middleName = trim((string) $user->middle_name);
+            $fallbackName = trim((string) ($user->name ?: $record->name ?: ''));
+
+            return $lastName !== ''
+                ? trim(implode(' ', array_filter([$lastName, $firstName, $middleName])))
+                : $fallbackName;
         };
         $healthRecordCourse = static function ($record): string {
             return trim((string) (

@@ -7200,7 +7200,7 @@
             }
 
             if (appointmentPagination) {
-                appointmentPagination.hidden = matchingRows.length < 5;
+                appointmentPagination.hidden = matchingRows.length === 0;
             }
 
             syncAppointmentPageSize();
