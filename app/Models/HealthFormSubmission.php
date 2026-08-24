@@ -18,6 +18,8 @@ class HealthFormSubmission extends Model
         'school_year',
         'status',
         'pdf_path',
+        'profile_snapshot',
+        'snapshot_captured_at',
         'requested_by_user_id',
         'requested_at',
         'submitted_at',
@@ -26,6 +28,8 @@ class HealthFormSubmission extends Model
     ];
 
     protected $casts = [
+        'profile_snapshot' => 'array',
+        'snapshot_captured_at' => 'datetime',
         'requested_at' => 'datetime',
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',
@@ -44,5 +48,21 @@ class HealthFormSubmission extends Model
     public function requestedBy()
     {
         return $this->belongsTo(User::class, 'requested_by_user_id');
+    }
+
+    public function snapshotProfile(): array
+    {
+        $snapshot = is_array($this->profile_snapshot) ? $this->profile_snapshot : [];
+        $profile = $snapshot['profile'] ?? $snapshot;
+
+        return is_array($profile) ? $profile : [];
+    }
+
+    public function snapshotUser(): array
+    {
+        $snapshot = is_array($this->profile_snapshot) ? $this->profile_snapshot : [];
+        $user = $snapshot['user'] ?? [];
+
+        return is_array($user) ? $user : [];
     }
 }

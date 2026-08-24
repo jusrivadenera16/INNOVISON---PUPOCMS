@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class HealthProfile extends Model
 {
+    public const PULLOUT_PENDING = 'pending';
+    public const PULLOUT_COMPLETED = 'pulled_out';
+    public const PULLOUT_RESTORED = 'restored';
+
     protected $fillable = [
         'user_id', 
         'student_id', 'student_number', 'reference_number',
@@ -56,6 +60,19 @@ class HealthProfile extends Model
         'puptas_synced_at',
         'puptas_sync_message',
         'final_review_draft_data',
+        'pullout_status',
+        'pullout_reason',
+        'pullout_request_remarks',
+        'pullout_requested_by_user_id',
+        'pullout_requested_at',
+        'pullout_reference',
+        'pullout_completion_remarks',
+        'pullout_completed_by_user_id',
+        'pullout_completed_at',
+        'pullout_previous_user_status',
+        'pullout_restore_reason',
+        'pullout_restored_by_user_id',
+        'pullout_restored_at',
 
     ];
 
@@ -80,6 +97,9 @@ class HealthProfile extends Model
         'review_started_at' => 'datetime',
         'verified_at' => 'datetime',
         'final_review_draft_data' => 'array',
+        'pullout_requested_at' => 'datetime',
+        'pullout_completed_at' => 'datetime',
+        'pullout_restored_at' => 'datetime',
 
     ];
 
@@ -96,6 +116,21 @@ class HealthProfile extends Model
     public function reviewStartedBy()
     {
         return $this->belongsTo(User::class, 'review_started_by_user_id');
+    }
+
+    public function pulloutRequestedBy()
+    {
+        return $this->belongsTo(User::class, 'pullout_requested_by_user_id');
+    }
+
+    public function pulloutCompletedBy()
+    {
+        return $this->belongsTo(User::class, 'pullout_completed_by_user_id');
+    }
+
+    public function pulloutRestoredBy()
+    {
+        return $this->belongsTo(User::class, 'pullout_restored_by_user_id');
     }
 
     public function healthFormSubmissions()
@@ -144,6 +179,19 @@ class HealthProfile extends Model
                     $this->whereFilledProfileColumn($q, 'medical_condition_remarks');
                 });
         });
+    }
+
+    public function scopeNotPulledOut($query)
+    {
+        return $query->where(function ($builder) {
+            $builder->whereNull('pullout_status')
+                ->orWhere('pullout_status', '!=', self::PULLOUT_COMPLETED);
+        });
+    }
+
+    public function scopePulledOut($query)
+    {
+        return $query->where('pullout_status', self::PULLOUT_COMPLETED);
     }
 
     public function scopeWithoutMedicalCondition($query)

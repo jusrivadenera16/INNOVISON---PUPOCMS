@@ -4931,6 +4931,925 @@
         left: 128% !important;
     }
 
+    /* Inventory-style Health Records filter popup */
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit {
+        min-width: 106px !important;
+        min-height: 48px !important;
+        height: 48px !important;
+        padding: 0 16px !important;
+        gap: 8px !important;
+        border: 1px solid #7f1d2d !important;
+        border-radius: 12px !important;
+        background: #7f1d2d !important;
+        color: #ffffff !important;
+        font: inherit !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .18) !important;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease !important;
+        z-index: 1;
+    }
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit.is-open:not(:hover):not(:focus-visible) {
+        border-color: #7f1d2d !important;
+        background: #7f1d2d !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit::after {
+        z-index: 0;
+    }
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit > * {
+        position: relative;
+        z-index: 1;
+        color: inherit !important;
+    }
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit svg {
+        width: 17px !important;
+        height: 17px !important;
+        color: #ffffff !important;
+        stroke: #ffffff !important;
+        fill: none !important;
+    }
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit svg *,
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit path {
+        fill: none !important;
+        stroke: currentColor !important;
+    }
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:hover,
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+    }
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:hover svg,
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:focus-visible svg,
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:hover span,
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:focus-visible span {
+        color: #70131B !important;
+        stroke: #70131B !important;
+        fill: none !important;
+        -webkit-text-fill-color: #70131B !important;
+    }
+    .health-summary-card,
+    .health-table-head,
+    .health-table-tools {
+        overflow: visible !important;
+    }
+    .health-table-tools {
+        position: relative;
+    }
+    #healthFilterModal {
+        position: absolute !important;
+        inset: auto 0 auto auto !important;
+        top: calc(100% + 10px) !important;
+        width: min(280px, calc(100vw - 32px)) !important;
+        height: auto !important;
+        padding: 0 !important;
+        align-items: initial !important;
+        justify-content: initial !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        z-index: 1200;
+    }
+    #healthFilterModal.is-open {
+        display: block !important;
+    }
+    #healthFilterModal .health-filter-modal-card {
+        width: 100% !important;
+        max-height: none !important;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+        border: 1px solid #ead3d7 !important;
+        border-radius: 12px !important;
+        background: #ffffff !important;
+        box-shadow: 0 22px 48px rgba(15, 23, 42, .24) !important;
+    }
+    #healthFilterModal .health-filter-modal-head {
+        min-height: 0 !important;
+        padding: 14px 14px 0 !important;
+        border-bottom: 0 !important;
+        border-radius: 12px 12px 0 0 !important;
+        background: #ffffff !important;
+        color: #70131B !important;
+    }
+    #healthFilterModal .health-filter-modal-badge,
+    #healthFilterModal .health-filter-modal-copy {
+        display: none !important;
+    }
+    #healthFilterModal .health-filter-modal-title {
+        margin: 0 !important;
+        color: #70131B !important;
+        font-size: 12px !important;
+        font-weight: 900 !important;
+        letter-spacing: .06em !important;
+        text-transform: uppercase !important;
+    }
+    #healthFilterModal .health-filter-modal-close {
+        display: none !important;
+    }
+    #healthFilterModal .health-filter-form {
+        gap: 8px !important;
+        padding: 14px !important;
+    }
+    #healthFilterModal .health-filter-field {
+        gap: 5px !important;
+    }
+    #healthFilterModal .health-filter-field label {
+        color: #70131B !important;
+        font-size: 10px !important;
+        font-weight: 900 !important;
+    }
+    #healthFilterModal .health-filter-custom-trigger,
+    #healthFilterModal .health-filter-date {
+        min-height: 36px !important;
+        height: 36px !important;
+        border: 1px solid #ead3d7 !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+        color: #70131B !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        box-shadow: none !important;
+    }
+    #healthFilterModal .health-filter-custom-trigger::after {
+        right: 14px !important;
+        width: 7px !important;
+        height: 7px !important;
+        border-right-width: 1.6px !important;
+        border-bottom-width: 1.6px !important;
+    }
+    #healthFilterModal .health-filter-custom-menu {
+        gap: 8px !important;
+        padding: 8px !important;
+        border: 1px solid #ead3d7 !important;
+        border-radius: 10px !important;
+        background: #ffffff !important;
+        box-shadow: 0 18px 34px rgba(15, 23, 42, .16) !important;
+    }
+    #healthFilterModal .health-filter-custom-option {
+        position: relative;
+        isolation: isolate;
+        width: 100%;
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        overflow: hidden;
+        padding: 0 12px;
+        border: 1px solid #ead3d7;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #70131B;
+        font-size: 13px;
+        font-weight: 900;
+        text-align: left;
+        transform: none;
+    }
+    #healthFilterModal .health-filter-custom-option::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(255, 247, 181, 0) 0%, rgba(255, 247, 181, .72) 45%, rgba(255, 247, 181, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.05s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+    #healthFilterModal .health-filter-custom-option > span {
+        position: relative;
+        z-index: 1;
+        color: inherit !important;
+    }
+    #healthFilterModal .health-filter-custom-option:hover,
+    #healthFilterModal .health-filter-custom-option:focus-visible,
+    #healthFilterModal .health-filter-custom-option.is-selected:hover,
+    #healthFilterModal .health-filter-custom-option.is-selected:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        outline: none !important;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .24) !important;
+    }
+    #healthFilterModal .health-filter-custom-option:hover::after,
+    #healthFilterModal .health-filter-custom-option:focus-visible::after {
+        left: 125%;
+    }
+    #healthFilterModal .health-filter-custom-option.is-selected {
+        border-color: #70131B !important;
+        background: #70131B !important;
+        color: #ffffff !important;
+    }
+    #healthFilterModal .health-filter-actions {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px !important;
+        margin-top: 2px;
+    }
+    #healthFilterModal .health-filter-btn {
+        width: 100% !important;
+        min-height: 36px !important;
+        padding: 0 10px !important;
+        border-radius: 8px !important;
+        font-size: 12px !important;
+    }
+    html[data-theme="dark"] #healthFilterModal .health-filter-modal-card,
+    html[data-theme="dark"] #healthFilterModal .health-filter-modal-head,
+    html[data-theme="dark"] #healthFilterModal .health-filter-custom-menu {
+        border-color: rgba(255, 255, 255, .16) !important;
+        background: #182334 !important;
+    }
+    html[data-theme="dark"] #healthFilterModal .health-filter-modal-head {
+        border-bottom-color: rgba(255, 255, 255, .12) !important;
+    }
+    html[data-theme="dark"] #healthFilterModal .health-filter-modal-title,
+    html[data-theme="dark"] #healthFilterModal .health-filter-field label {
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] #healthFilterModal .health-filter-custom-trigger,
+    html[data-theme="dark"] #healthFilterModal .health-filter-date,
+    html[data-theme="dark"] #healthFilterModal .health-filter-custom-option {
+        border-color: rgba(255, 255, 255, .16) !important;
+        background: #223044 !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] #healthFilterModal .health-filter-custom-option.is-selected {
+        border-color: #9f1d2d !important;
+        background: #9f1d2d !important;
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] #healthFilterModal .health-filter-custom-option:hover,
+    html[data-theme="dark"] #healthFilterModal .health-filter-custom-option:focus-visible,
+    html[data-theme="dark"] #healthFilterModal .health-filter-custom-option.is-selected:hover,
+    html[data-theme="dark"] #healthFilterModal .health-filter-custom-option.is-selected:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+    html[data-theme="dark"] #healthFilterModal .health-filter-modal-close {
+        border-color: rgba(255, 255, 255, .16) !important;
+        background: #223044 !important;
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] #healthFilterModal .health-filter-modal-close:hover,
+    html[data-theme="dark"] #healthFilterModal .health-filter-modal-close:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+
+    /* Final Appointments/Inventory parity pass for Health Records */
+    .health-records-overview {
+        margin-bottom: 16px !important;
+        border-radius: 16px !important;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, .06) !important;
+    }
+    .health-summary-modern-container {
+        grid-auto-rows: 1fr;
+        padding: 12px 20px 18px !important;
+    }
+    .health-summary-modern-container .health-summary-modern-card {
+        min-height: 118px !important;
+        height: 100%;
+        padding: 14px !important;
+        border-radius: 14px !important;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, .04) !important;
+    }
+    .health-summary-modern-container .health-summary-modern-card:hover,
+    .health-summary-modern-container .health-summary-modern-card:focus-visible {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 18px 34px rgba(112, 19, 27, .14) !important;
+        outline: none;
+    }
+    .health-summary-card {
+        padding: 18px 20px 20px !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 16px !important;
+        background: #ffffff !important;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, .06) !important;
+    }
+    .health-table-head {
+        align-items: center !important;
+        margin: 0 0 14px !important;
+        padding: 0 !important;
+    }
+    .health-table-tools {
+        width: min(100%, 440px) !important;
+        align-items: center !important;
+    }
+    .health-table-tools .health-records-search-wrap {
+        min-height: 48px !important;
+    }
+    .health-table-tools .health-records-search {
+        min-height: 46px !important;
+        height: 46px !important;
+    }
+    .health-table-scroll {
+        width: 100%;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(112, 19, 27, .42) transparent;
+    }
+    .health-table-scroll::-webkit-scrollbar {
+        height: 8px;
+    }
+    .health-table-scroll::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(112, 19, 27, .42);
+    }
+    #healthTable {
+        min-width: 900px;
+        margin-top: 0 !important;
+    }
+    #healthTable th {
+        padding: 14px 12px !important;
+        font-size: 12px !important;
+        line-height: 1.25;
+    }
+    #healthTable td {
+        padding: 14px 12px !important;
+        font-size: 14px !important;
+        line-height: 1.4;
+    }
+    #healthTable .student-name {
+        font-size: 14px !important;
+        line-height: 1.35;
+    }
+    #healthTable .health-record-name {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+    }
+    #healthTable .health-record-name-last,
+    #healthTable .health-record-name-given {
+        display: block;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+    #healthTable .health-record-name-last {
+        color: #111827;
+        font-size: 14px;
+        font-weight: 900;
+    }
+    #healthTable .health-record-name-given {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    html[data-theme="dark"] #healthTable .health-record-name-last {
+        color: #ffffff;
+    }
+    html[data-theme="dark"] #healthTable .health-record-name-given {
+        color: #cbd5e1;
+    }
+    #healthTable .btn-action {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        min-width: 96px;
+        min-height: 42px;
+        border-radius: 10px !important;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .12) !important;
+    }
+    #healthTable .btn-action::before {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(255, 247, 181, 0) 0%, rgba(255, 247, 181, .72) 45%, rgba(255, 247, 181, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.05s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+    #healthTable .btn-action svg {
+        position: relative;
+        z-index: 1;
+    }
+    #healthTable .btn-action > span {
+        position: relative;
+        z-index: 1;
+    }
+    #healthTable .btn-action:hover,
+    #healthTable .btn-action:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        outline: none;
+    }
+    #healthTable .btn-action:hover::before,
+    #healthTable .btn-action:focus-visible::before {
+        left: 125%;
+    }
+    .awaiting-links-modal-shell,
+    .verify-approval-modal-card {
+        max-height: calc(100dvh - 40px) !important;
+    }
+    .awaiting-links-modal-body,
+    .verify-approval-modal-body {
+        min-height: 0;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(112, 19, 27, .42) transparent;
+    }
+    .readonly-record-identity {
+        min-width: 0;
+    }
+    .readonly-record-name-line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        flex-wrap: wrap;
+    }
+    .health-user-type-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 24px;
+        padding: 4px 9px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: .03em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .health-user-type-badge.is-student {
+        border-color: #bbf7d0;
+        background: #dcfce7;
+        color: #166534;
+    }
+    .health-user-type-badge.is-applicant {
+        border-color: #bfdbfe;
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+    .health-user-type-badge.is-faculty {
+        border-color: #fde68a;
+        background: #fef3c7;
+        color: #92400e;
+    }
+    .health-user-type-badge.is-admin {
+        border-color: #fecdd3;
+        background: #fff1f2;
+        color: #9f1239;
+    }
+    .health-user-type-badge.is-dependent {
+        border-color: #99f6e4;
+        background: #ccfbf1;
+        color: #0f766e;
+    }
+    .readonly-modal-pagination .premium-select-shell,
+    .readonly-pagination-per-page-form .premium-select-shell {
+        min-width: 132px;
+        z-index: 70;
+    }
+    .readonly-modal-pagination .premium-select-button,
+    .readonly-pagination-per-page-form .premium-select-button {
+        min-height: 42px;
+        padding: 0 14px;
+        border: 1px solid #ead3d7 !important;
+        border-radius: 10px !important;
+        background: #ffffff !important;
+        color: #70131B !important;
+        font-size: 12px;
+        font-weight: 900;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .10) !important;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .readonly-modal-pagination .premium-select-button::after,
+    .readonly-pagination-per-page-form .premium-select-button::after {
+        width: 7px;
+        height: 7px;
+        border-right: 1.7px solid currentColor;
+        border-bottom: 1.7px solid currentColor;
+    }
+    .readonly-modal-pagination .premium-select-button:hover,
+    .readonly-modal-pagination .premium-select-button:focus-visible,
+    .readonly-pagination-per-page-form .premium-select-button:hover,
+    .readonly-pagination-per-page-form .premium-select-button:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-1px);
+        box-shadow: 0 12px 22px rgba(250, 204, 21, .20) !important;
+        outline: none;
+    }
+    .readonly-modal-pagination .premium-select-menu,
+    .readonly-pagination-per-page-form .premium-select-menu {
+        gap: 8px;
+        padding: 8px;
+        border: 1px solid #ead3d7 !important;
+        border-radius: 12px !important;
+        background: #ffffff !important;
+        box-shadow: 0 18px 36px rgba(15, 23, 42, .18) !important;
+    }
+    .readonly-modal-pagination .premium-select-option,
+    .readonly-pagination-per-page-form .premium-select-option {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        min-height: 38px;
+        padding: 0 12px;
+        border: 1px solid #ead3d7 !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+        color: #70131B !important;
+        font-size: 12px;
+        font-weight: 900;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
+    }
+    .readonly-modal-pagination .premium-select-option::before,
+    .readonly-pagination-per-page-form .premium-select-option::before {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(255, 247, 181, 0) 0%, rgba(255, 247, 181, .76) 45%, rgba(255, 247, 181, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.05s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+    .readonly-modal-pagination .premium-select-option > span,
+    .readonly-pagination-per-page-form .premium-select-option > span {
+        position: relative;
+        z-index: 1;
+        color: inherit !important;
+    }
+    .readonly-modal-pagination .premium-select-option.is-selected,
+    .readonly-pagination-per-page-form .premium-select-option.is-selected {
+        border-color: #70131B !important;
+        background: #70131B !important;
+        color: #ffffff !important;
+    }
+    .readonly-modal-pagination .premium-select-option:hover,
+    .readonly-modal-pagination .premium-select-option:focus-visible,
+    .readonly-modal-pagination .premium-select-option.is-selected:hover,
+    .readonly-modal-pagination .premium-select-option.is-selected:focus-visible,
+    .readonly-pagination-per-page-form .premium-select-option:hover,
+    .readonly-pagination-per-page-form .premium-select-option:focus-visible,
+    .readonly-pagination-per-page-form .premium-select-option.is-selected:hover,
+    .readonly-pagination-per-page-form .premium-select-option.is-selected:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .24) !important;
+        outline: none;
+    }
+    .readonly-modal-pagination .premium-select-option:hover::before,
+    .readonly-modal-pagination .premium-select-option:focus-visible::before,
+    .readonly-pagination-per-page-form .premium-select-option:hover::before,
+    .readonly-pagination-per-page-form .premium-select-option:focus-visible::before {
+        left: 125%;
+    }
+    .verification-doc-card:not(a) {
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center;
+    }
+    .verification-doc-card:not(a) > svg {
+        display: block;
+        align-self: center;
+        margin: 0 auto 10px !important;
+    }
+    html[data-theme="dark"] .health-records-overview,
+    html[data-theme="dark"] .health-summary-card {
+        border-color: rgba(250, 204, 21, .18) !important;
+        background: rgba(15, 23, 42, .98) !important;
+        box-shadow: 0 18px 36px rgba(0, 0, 0, .24) !important;
+    }
+    html[data-theme="dark"] .health-table-scroll {
+        scrollbar-color: rgba(250, 204, 21, .46) transparent;
+    }
+    html[data-theme="dark"] .health-table-scroll::-webkit-scrollbar-thumb {
+        background: rgba(250, 204, 21, .46);
+    }
+    html[data-theme="dark"] .health-user-type-badge.is-student {
+        border-color: rgba(74, 222, 128, .38);
+        background: rgba(22, 101, 52, .32);
+        color: #bbf7d0 !important;
+    }
+    html[data-theme="dark"] .health-user-type-badge.is-applicant {
+        border-color: rgba(96, 165, 250, .42);
+        background: rgba(30, 64, 175, .30);
+        color: #bfdbfe !important;
+    }
+    html[data-theme="dark"] .health-user-type-badge.is-faculty {
+        border-color: rgba(250, 204, 21, .42);
+        background: rgba(146, 64, 14, .30);
+        color: #fde68a !important;
+    }
+    html[data-theme="dark"] .health-user-type-badge.is-admin {
+        border-color: rgba(251, 113, 133, .42);
+        background: rgba(159, 18, 57, .30);
+        color: #fecdd3 !important;
+    }
+    html[data-theme="dark"] .health-user-type-badge.is-dependent {
+        border-color: rgba(45, 212, 191, .42);
+        background: rgba(15, 118, 110, .30);
+        color: #99f6e4 !important;
+    }
+    html[data-theme="dark"] .readonly-modal-pagination .premium-select-button,
+    html[data-theme="dark"] .readonly-pagination-per-page-form .premium-select-button,
+    html[data-theme="dark"] .readonly-modal-pagination .premium-select-menu,
+    html[data-theme="dark"] .readonly-pagination-per-page-form .premium-select-menu,
+    html[data-theme="dark"] .readonly-modal-pagination .premium-select-option,
+    html[data-theme="dark"] .readonly-pagination-per-page-form .premium-select-option {
+        border-color: rgba(255, 255, 255, .16) !important;
+        background: #182334 !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .readonly-modal-pagination .premium-select-option.is-selected,
+    html[data-theme="dark"] .readonly-pagination-per-page-form .premium-select-option.is-selected {
+        border-color: #9f1d2d !important;
+        background: #9f1d2d !important;
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] .readonly-modal-pagination .premium-select-button:hover,
+    html[data-theme="dark"] .readonly-modal-pagination .premium-select-button:focus-visible,
+    html[data-theme="dark"] .readonly-modal-pagination .premium-select-option:hover,
+    html[data-theme="dark"] .readonly-modal-pagination .premium-select-option:focus-visible,
+    html[data-theme="dark"] .readonly-modal-pagination .premium-select-option.is-selected:hover,
+    html[data-theme="dark"] .readonly-modal-pagination .premium-select-option.is-selected:focus-visible,
+    html[data-theme="dark"] .readonly-pagination-per-page-form .premium-select-button:hover,
+    html[data-theme="dark"] .readonly-pagination-per-page-form .premium-select-button:focus-visible,
+    html[data-theme="dark"] .readonly-pagination-per-page-form .premium-select-option:hover,
+    html[data-theme="dark"] .readonly-pagination-per-page-form .premium-select-option:focus-visible,
+    html[data-theme="dark"] .readonly-pagination-per-page-form .premium-select-option.is-selected:hover,
+    html[data-theme="dark"] .readonly-pagination-per-page-form .premium-select-option.is-selected:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+    html[data-theme="dark"] .health-summary-modern-container .health-summary-modern-card,
+    html[data-theme="dark"] .health-summary-modern-container .health-summary-modern-card.is-approved,
+    html[data-theme="dark"] .health-summary-modern-container .health-summary-modern-card.is-condition,
+    html[data-theme="dark"] .health-summary-modern-container .health-summary-modern-card.is-pending,
+    html[data-theme="dark"] .health-summary-modern-container .health-summary-modern-card.is-compliance {
+        box-shadow:
+            0 16px 30px rgba(0, 0, 0, .48),
+            0 5px 14px rgba(0, 0, 0, .34),
+            0 0 0 1px rgba(250, 204, 21, .08) !important;
+    }
+    html[data-theme="dark"] .health-summary-modern-container .health-summary-modern-card:hover,
+    html[data-theme="dark"] .health-summary-modern-container .health-summary-modern-card:focus-visible {
+        box-shadow:
+            0 22px 40px rgba(0, 0, 0, .58),
+            0 7px 18px rgba(112, 19, 27, .32),
+            0 0 0 1px rgba(250, 204, 21, .20) !important;
+    }
+    html[data-theme="dark"] button#healthRecordsOverviewFilterBtn.health-records-search-submit {
+        box-shadow:
+            0 14px 28px rgba(0, 0, 0, .52),
+            0 5px 14px rgba(112, 19, 27, .36),
+            0 0 0 1px rgba(250, 204, 21, .08) !important;
+    }
+    html[data-theme="dark"] button#healthRecordsOverviewFilterBtn.health-records-search-submit:hover,
+    html[data-theme="dark"] button#healthRecordsOverviewFilterBtn.health-records-search-submit:focus-visible {
+        box-shadow:
+            0 16px 30px rgba(0, 0, 0, .50),
+            0 7px 18px rgba(250, 204, 21, .22),
+            0 0 0 1px rgba(250, 204, 21, .28) !important;
+    }
+    html[data-theme="dark"] #healthTable .btn-action.btn-view {
+        box-shadow:
+            0 12px 24px rgba(0, 0, 0, .52),
+            0 4px 12px rgba(0, 0, 0, .34),
+            0 0 0 1px rgba(250, 204, 21, .10) !important;
+    }
+    html[data-theme="dark"] #healthTable .btn-action.btn-view:hover,
+    html[data-theme="dark"] #healthTable .btn-action.btn-view:focus-visible {
+        box-shadow:
+            0 16px 28px rgba(0, 0, 0, .50),
+            0 6px 16px rgba(250, 204, 21, .22),
+            0 0 0 1px rgba(250, 204, 21, .30) !important;
+    }
+    @media (max-width: 768px) {
+        .health-records-overview-head {
+            padding: 16px !important;
+        }
+        .health-summary-modern-container {
+            padding: 12px 16px 16px !important;
+        }
+        .health-summary-card {
+            padding: 16px !important;
+        }
+        .health-table-head,
+        .health-table-tools {
+            width: 100% !important;
+            align-items: stretch !important;
+        }
+        .health-table-head {
+            flex-direction: column;
+        }
+        .health-table-tools {
+            grid-template-columns: 1fr !important;
+        }
+        button#healthRecordsOverviewFilterBtn.health-records-search-submit {
+            width: 100% !important;
+        }
+        #healthFilterModal {
+            right: auto !important;
+            left: 0 !important;
+            width: 100% !important;
+        }
+        #pendingApprovalInfoModal,
+        #pendingConditionalInfoModal,
+        #verifyApprovalModal {
+            padding: 10px !important;
+        }
+        .awaiting-links-modal-head,
+        .verify-approval-modal-head {
+            padding: 16px !important;
+        }
+        .awaiting-links-modal-body,
+        .verify-approval-modal-body {
+            padding: 16px !important;
+        }
+    }
+
+</style>
+@endpush
+
+@push('late-styles')
+<style>
+    .main .health-summary-card {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        display: flex !important;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .main .health-summary-card > .health-table-head,
+    .main .health-summary-card > .health-table-scroll {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+    .main .health-summary-card > .health-table-scroll {
+        flex: 0 1 auto;
+        overflow: visible !important;
+        overscroll-behavior: auto;
+    }
+    .main .health-summary-card #healthTable {
+        width: 100%;
+        min-width: 0 !important;
+    }
+    .main .health-summary-card > .readonly-modal-pagination {
+        align-self: stretch;
+        flex: 0 0 auto;
+        order: 3;
+        position: static !important;
+        inset: auto !important;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        margin: 10px 0 0;
+        padding: 8px 10px;
+        border-radius: 10px;
+        box-sizing: border-box;
+        overflow: visible;
+    }
+    .main .health-summary-card > .health-table-head,
+    .main .health-summary-card .health-table-tools {
+        position: static !important;
+        inset: auto !important;
+    }
+    .main .health-summary-card > .health-table-scroll {
+        order: 2;
+    }
+    .main .health-summary-card #healthTable thead th {
+        position: static !important;
+        top: auto !important;
+        z-index: auto;
+        background: #fbf2f3 !important;
+        box-shadow: 0 1px 0 rgba(112, 19, 27, .16);
+    }
+    html[data-theme="dark"] .main .health-summary-card #healthTable thead th {
+        background: #2b1720 !important;
+        box-shadow: 0 1px 0 rgba(250, 204, 21, .20);
+    }
+    .main .health-summary-card > .readonly-modal-pagination .readonly-pagination-summary {
+        justify-self: start;
+        min-width: 0;
+        font-size: 11px;
+        overflow-wrap: anywhere;
+    }
+    .main .health-summary-card > .readonly-modal-pagination .readonly-pagination-actions {
+        justify-self: center;
+        display: flex;
+        gap: 6px;
+        min-width: 0;
+        max-width: 100%;
+    }
+    .main .health-summary-card > .readonly-modal-pagination .readonly-pagination-btn {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        min-width: 34px;
+        width: 34px;
+        height: 34px;
+        min-height: 34px;
+        padding: 0 8px;
+        border-radius: 7px;
+        font-size: 11px;
+    }
+    .main .health-summary-card > .readonly-modal-pagination .readonly-pagination-btn::before,
+    .main .health-summary-card > .readonly-modal-pagination .premium-select-button::before {
+        content: "";
+        position: absolute;
+        top: -45%;
+        left: -135%;
+        width: 72%;
+        height: 190%;
+        transform: skewX(-20deg);
+        background: rgba(255, 247, 178, .72);
+        transition: left .72s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+    .main .health-summary-card > .readonly-modal-pagination .readonly-pagination-btn:hover:not(:disabled)::before,
+    .main .health-summary-card > .readonly-modal-pagination .readonly-pagination-btn:focus-visible:not(:disabled)::before,
+    .main .health-summary-card > .readonly-modal-pagination .premium-select-button:hover::before,
+    .main .health-summary-card > .readonly-modal-pagination .premium-select-button:focus-visible::before {
+        left: 135%;
+    }
+    .main .health-summary-card > .readonly-modal-pagination .readonly-pagination-btn.is-active {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    .main .health-summary-card > .readonly-modal-pagination .readonly-pagination-per-page-form {
+        justify-self: end;
+        width: 132px;
+        min-width: 0;
+        max-width: 100%;
+    }
+    .main .health-summary-card > .readonly-modal-pagination .premium-select-shell,
+    .main .health-summary-card > .readonly-modal-pagination .premium-select-button {
+        width: 100%;
+        max-width: 100%;
+        min-height: 36px;
+        height: 36px;
+        font-size: 11px;
+        box-sizing: border-box;
+    }
+    .main .health-summary-card > .readonly-modal-pagination .premium-select-button {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+    }
+    .main .health-summary-card > .readonly-modal-pagination .premium-select-button > span {
+        position: relative;
+        z-index: 1;
+        color: inherit !important;
+    }
+    @media (max-width: 900px) {
+        .main .health-summary-card > .health-table-scroll {
+            overflow-x: auto !important;
+            overflow-y: visible !important;
+            -webkit-overflow-scrolling: touch;
+        }
+        .main .health-summary-card #healthTable {
+            min-width: 900px !important;
+        }
+    }
+    @media (max-width: 560px) {
+        .main .health-summary-card > .readonly-modal-pagination {
+            grid-template-columns: minmax(0, 1fr) auto;
+            padding: 8px;
+        }
+        .main .health-summary-card > .readonly-modal-pagination .readonly-pagination-summary {
+            grid-column: 1 / -1;
+            justify-self: center;
+            text-align: center;
+        }
+        .main .health-summary-card > .readonly-modal-pagination .readonly-pagination-actions {
+            justify-self: start;
+        }
+        .main .health-summary-card > .readonly-modal-pagination .readonly-pagination-per-page-form {
+            justify-self: end;
+        }
+    }
 </style>
 @endpush
 
@@ -5033,19 +5952,30 @@
         };
         $resolveHealthRecordUserType = function ($record) {
             $user = optional($record->user);
-            $rawType = strtolower(trim((string) ($user->user_type ?: $user->user_role ?: '')));
+            $rawType = strtolower(trim((string) (
+                $user->user_type
+                ?: $user->idp_role
+                ?: $user->user_role
+                ?: ''
+            )));
 
-            if (str_contains($rawType, 'faculty')) {
-                return 'Faculty';
-            }
             if (str_contains($rawType, 'dependent')) {
                 return 'Dependent';
             }
-            if (str_contains($rawType, 'admin') || str_contains($rawType, 'nurse')) {
+            if (str_contains($rawType, 'admin') || str_contains($rawType, 'nurse') || str_contains($rawType, 'clinic staff') || str_contains($rawType, 'clinic_staff')) {
                 return 'Admin';
             }
             if (str_contains($rawType, 'applicant')) {
                 return 'Applicant';
+            }
+            if (str_contains($rawType, 'faculty')) {
+                return 'Faculty';
+            }
+            if (str_contains($rawType, 'student')) {
+                return 'Student';
+            }
+            if (in_array((string) ($record->record_source ?? 'health'), ['employee', 'staff'], true)) {
+                return 'Faculty';
             }
 
             $studentNumber = strtoupper(trim((string) ($record->student_number ?: $user->student_number)));
@@ -5145,12 +6075,15 @@
                     >
                 </div>
             </form>
-            <button type="button" class="health-records-search-submit" id="healthRecordsOverviewFilterBtn">
-                <x-outline-icon name="funnel" />
-                Filter
+            <button type="button" class="health-records-search-submit" id="healthRecordsOverviewFilterBtn" aria-expanded="false" aria-controls="healthFilterModal">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+                </svg>
+                <span>Filter</span>
             </button>
         </div>
     </div>
+    <div class="health-table-scroll">
     <table id="healthTable">
         <thead>
             <tr>
@@ -5173,6 +6106,7 @@
                         && filled($record->student_photo);
                     $recordStatus = trim((string) ($record->clearance_status ?? ''));
                     $recordStatusNormalized = strtolower($recordStatus);
+                    $recordPulloutStatus = $recordIsEmployee ? '' : trim((string) ($record->pullout_status ?? ''));
                     $isConditional = in_array($recordStatus, ['Pending/Conditional', 'Rejected'], true)
                         || trim((string) ($record->pending_reason ?? '')) !== ''
                         || trim((string) ($record->medical_condition_remarks ?? '')) !== '';
@@ -5187,6 +6121,17 @@
                         optional($record->user)->section
                     );
                     $recordUserType = $resolveHealthRecordUserType($record);
+                    $recordUser = $record->user;
+                    $recordFirstName = trim((string) optional($recordUser)->first_name);
+                    $recordMiddleName = trim((string) optional($recordUser)->middle_name);
+                    $recordLastName = trim((string) optional($recordUser)->last_name);
+                    $recordMiddleInitial = $recordMiddleName !== ''
+                        ? \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($recordMiddleName, 0, 1)) . '.'
+                        : '';
+                    $recordGivenName = trim(implode(' ', array_filter([$recordFirstName, $recordMiddleInitial])));
+                    $recordFamilyName = $recordLastName !== ''
+                        ? $recordLastName
+                        : trim((string) optional($recordUser)->name);
                     $puptasStatusRaw = strtolower(trim((string) ($record->puptas_sync_status ?? '')));
                     $puptasReference = strtoupper(trim((string) ($record->reference_number ?: $record->student_number ?: optional($record->user)->student_number)));
                     $isLocalPuptasReference = $puptasReference === ''
@@ -5218,7 +6163,11 @@
                         'student_id' => $record->student_id ?: optional($record->user)->student_id ?: '-',
                         'student_number' => optional($record->user)->student_number ?: optional($record->user)->student_id ?: '-',
                         'course' => $recordCourseDisplay !== '' ? $recordCourseDisplay : '-',
-                        'status' => $recordStatus ?: 'For Verification',
+                        'status' => $recordPulloutStatus === \App\Models\HealthProfile::PULLOUT_PENDING
+                            ? 'Pullout Pending'
+                            : ($recordPulloutStatus === \App\Models\HealthProfile::PULLOUT_COMPLETED
+                                ? 'Pulled Out'
+                                : ($recordStatus ?: 'For Verification')),
                         'pending_reason' => $record->pending_reason ?: '',
                         'medical_condition_remarks' => $record->medical_condition_remarks ?: '',
                         'physical_assessment_status' => $record->physical_assessment_status ?: 'Not Yet Conducted',
@@ -5312,7 +6261,12 @@
                     ])) }}"
                 >
                     <td>
-                        <div class="student-name" style="font-weight: 700;">{{ $record->user->name }}</div>
+                        <div class="student-name health-record-name">
+                            <span class="health-record-name-last">{{ $recordFamilyName !== '' ? $recordFamilyName : '-' }}</span>
+                            @if($recordGivenName !== '')
+                                <span class="health-record-name-given">{{ $recordGivenName }}</span>
+                            @endif
+                        </div>
                     </td>
                     <td>
                         <span class="status {{ $recordUserType === 'Student' ? 'issued' : 'submitted' }}">{{ $recordUserType }}</span>
@@ -5330,7 +6284,11 @@
 
                     {{-- Column 2: Clearance Issuance Status --}}
                     <td>
-                        @if(in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true))
+                        @if($recordPulloutStatus === \App\Models\HealthProfile::PULLOUT_PENDING)
+                            <span class="status pending">Pullout Pending</span>
+                        @elseif($recordPulloutStatus === \App\Models\HealthProfile::PULLOUT_COMPLETED)
+                            <span class="status review">Pulled Out</span>
+                        @elseif(in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true))
                             @if($puptasStatusRaw === 'synced')
                                 <span class="status issued"><i class="fas fa-check-circle me-1"></i> Issued</span>
                             @else
@@ -5356,12 +6314,12 @@
                             @if($recordIsEmployee)
                                 <a href="{{ route('walkin.employeeHealthForm', ['employeeProfile' => $record->id, 'fresh' => 1]) }}" class="btn-action btn-view" target="_blank" rel="noopener noreferrer">
                                     <x-outline-icon name="eye" />
-                                    View
+                                    <span>View</span>
                                 </a>
                             @else
                                 <a href="{{ route('admin.show_health', $record->id) }}" class="btn-action btn-view">
                                     <x-outline-icon name="eye" />
-                                    View
+                                    <span>View</span>
                                 </a>
                             @endif
                         </div>
@@ -5374,14 +6332,14 @@
             @endforelse
         </tbody>
     </table>
+    </div>
     @if($healthProfileSummaryRecords->total() > 0)
         @php
             $issuedCurrentPage = $healthProfileSummaryRecords->currentPage();
             $issuedLastPage = $healthProfileSummaryRecords->lastPage();
-            $issuedPages = collect([1, $issuedCurrentPage - 1, $issuedCurrentPage, $issuedCurrentPage + 1, $issuedLastPage])
-                ->filter(fn ($page) => $page >= 1 && $page <= $issuedLastPage)
-                ->unique()
-                ->values();
+            $issuedPageStart = max(1, min($issuedCurrentPage - 2, $issuedLastPage - 4));
+            $issuedPageEnd = min($issuedLastPage, $issuedPageStart + 4);
+            $issuedPages = collect(range($issuedPageStart, $issuedPageEnd));
             $issuedPerPageOptions = [
                 '20' => '20 per page',
                 '40' => '40 per page',
@@ -5402,9 +6360,6 @@
                 @endif
 
                 @foreach($issuedPages as $page)
-                    @if($loop->index > 0 && $page - $issuedPages[$loop->index - 1] > 1)
-                        <span class="readonly-pagination-btn" aria-hidden="true">...</span>
-                    @endif
                     @if($page === $issuedCurrentPage)
                         <button type="button" class="readonly-pagination-btn is-active" disabled>{{ $page }}</button>
                     @else
@@ -5445,7 +6400,7 @@
                 <div class="awaiting-links-modal-badge">PA</div>
                 <div class="awaiting-links-modal-copy">
                     <h3>Pending Approval</h3>
-                    <p>Students in this state have uploaded clinic requirements and are waiting for nurse review.</p>
+                    <p>Users in this state have uploaded clinic requirements and are waiting for nurse review.</p>
                 </div>
             </div>
             <button type="button" class="awaiting-links-modal-close" id="closePendingApprovalInfoModal" aria-label="Close pending approval modal" onclick="document.getElementById('pendingApprovalInfoModal').style.display='none';">
@@ -5543,6 +6498,8 @@
                         }
 
                         $readonlyHasCondition = $readonlyRecord->hasMedicalCondition();
+                        $readonlyUserType = $resolveHealthRecordUserType($readonlyRecord);
+                        $readonlyUserTypeClass = strtolower($readonlyUserType);
                         $readonlyMedicalHistory = is_array($readonlyRecord->medical_history)
                             ? implode(', ', array_filter($readonlyRecord->medical_history))
                             : trim((string) $readonlyRecord->medical_history);
@@ -5655,8 +6612,13 @@
                         data-search-text="{{ strtolower(trim((string) (optional($readonlyRecord->user)->name . ' ' . optional($readonlyRecord->user)->email . ' ' . $readonlyReference))) }}"
                     >
                         <div class="readonly-record-head">
-                            <div>
-                                <h4 class="readonly-record-name">{{ optional($readonlyRecord->user)->name ?: 'Unnamed Student' }}</h4>
+                            <div class="readonly-record-identity">
+                                <div class="readonly-record-name-line">
+                                    <h4 class="readonly-record-name">{{ optional($readonlyRecord->user)->name ?: 'Unnamed User' }}</h4>
+                                    @if(($userTypeFilter ?? '') === '')
+                                        <span class="health-user-type-badge is-{{ $readonlyUserTypeClass }}">{{ $readonlyUserType }}</span>
+                                    @endif
+                                </div>
                                 <p class="readonly-record-sub">{{ optional($readonlyRecord->user)->email ?: '-' }}</p>
                             </div>
                             <div class="readonly-record-meta">
@@ -6088,7 +7050,7 @@
                     </svg>
                 </span>
                 <div>
-                    <h3 class="health-filter-modal-title">Filter Health Records</h3>
+                    <h3 class="health-filter-modal-title">Health Records Filter</h3>
                     <p class="health-filter-modal-copy">Narrow and arrange the issued medical clearance list by user type, course, year level, approval date, or sort order.</p>
                 </div>
             </div>
@@ -6476,6 +7438,10 @@
     const healthFilterModal = document.getElementById('healthFilterModal');
     const healthFilterCloseBtn = document.getElementById('healthFilterCloseBtn');
     const healthFilterForm = document.getElementById('healthFilterForm');
+    const healthTableTools = healthRecordsOverviewFilterBtn?.closest('.health-table-tools');
+    if (healthTableTools && healthFilterModal) {
+        healthTableTools.appendChild(healthFilterModal);
+    }
     const highlightedHealthId = @json($highlightHealthId);
     const healthRecordsSearchInput = document.getElementById('recordSearch');
     const healthRecordsSearchShell = document.getElementById('healthRecordsSearchShell');
@@ -6524,6 +7490,8 @@
         healthFilterModal.classList.toggle('is-open', isOpen);
         healthFilterModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
         healthFilterToggle?.classList.toggle('is-open', isOpen);
+        healthRecordsOverviewFilterBtn?.classList.toggle('is-open', isOpen);
+        healthRecordsOverviewFilterBtn?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         if (!isOpen) {
             document.querySelectorAll('.health-filter-select-wrap.is-open').forEach(function (wrap) {
                 wrap.classList.remove('is-open');
@@ -6566,7 +7534,9 @@
             button.type = 'button';
             button.className = 'health-filter-custom-option';
             button.dataset.value = option.value;
-            button.textContent = option.textContent.trim();
+            const buttonLabel = document.createElement('span');
+            buttonLabel.textContent = option.textContent.trim();
+            button.appendChild(buttonLabel);
             button.setAttribute('role', 'option');
             button.addEventListener('click', function () {
                 select.value = option.value;
@@ -6608,7 +7578,7 @@
     });
 
     healthRecordsOverviewFilterBtn?.addEventListener('click', function () {
-        setHealthFilterModalOpen(true);
+        setHealthFilterModalOpen(!healthFilterModal?.classList.contains('is-open'));
     });
 
     healthFilterToggle?.addEventListener('click', function () {
@@ -6623,6 +7593,13 @@
         if (event.target === healthFilterModal) {
             setHealthFilterModalOpen(false);
         }
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!healthFilterModal?.classList.contains('is-open')) return;
+        if (healthFilterModal.contains(event.target)) return;
+        if (healthRecordsOverviewFilterBtn?.contains(event.target)) return;
+        setHealthFilterModalOpen(false);
     });
 
     function syncDocumentResubmissionReason() {
@@ -7598,8 +8575,10 @@
                     const item = document.createElement('button');
                     item.type = 'button';
                     item.className = 'premium-select-option';
-                    item.textContent = option.textContent.trim();
                     item.dataset.value = option.value;
+                    const itemLabel = document.createElement('span');
+                    itemLabel.textContent = option.textContent.trim();
+                    item.appendChild(itemLabel);
                     item.classList.toggle('is-selected', option.selected);
                     item.addEventListener('click', function() {
                         select.value = option.value;

@@ -778,22 +778,24 @@
         .admin-header::after {
             content: "";
             position: absolute;
-            top: 10%;
+            top: 0;
             left: -24%;
-            width: 36%;
-            height: 80%;
-            border-radius: 999px;
+            width: 38%;
+            height: 100%;
+            border-radius: 0;
             pointer-events: none;
             opacity: 0;
             background: linear-gradient(
                 105deg,
                 rgba(255, 255, 255, 0) 0%,
-                rgba(145, 42, 68, 0.10) 18%,
-                rgba(188, 70, 98, 0.38) 50%,
-                rgba(145, 42, 68, 0.14) 80%,
+                rgba(145, 42, 68, 0.08) 18%,
+                rgba(188, 70, 98, 0.28) 50%,
+                rgba(145, 42, 68, 0.10) 80%,
                 rgba(255, 255, 255, 0) 100%
             );
-            filter: blur(1px);
+            filter: blur(1.5px);
+            mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
+            -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
             transform: translateX(-150%) skewX(-24deg);
             transform-origin: center;
             animation: adminHeaderReflection 9s ease-in-out infinite;
@@ -805,10 +807,10 @@
                 transform: translateX(-150%) skewX(-24deg);
             }
             8% {
-                opacity: 0.28;
+                opacity: 0.22;
             }
             56% {
-                opacity: 0.48;
+                opacity: 0.34;
                 transform: translateX(360%) skewX(-24deg);
             }
             62% {
@@ -1356,13 +1358,14 @@
         }
 
         .admin-user {
-            border: 1px solid rgba(255, 255, 255, 0.24);
-            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(139, 16, 32, 0.14);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(255, 248, 249, 0.88));
             border-radius: 14px;
-            width: 60px;
-            min-width: 60px;
-            min-height: 58px;
-            padding: 9px 10px;
+            width: 58px;
+            min-width: 58px;
+            height: 44px;
+            min-height: 44px;
+            padding: 6px 10px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1370,6 +1373,10 @@
             overflow: hidden;
             cursor: pointer;
             user-select: none;
+            box-shadow:
+                inset 8px 8px 18px rgba(112, 19, 27, 0.09),
+                inset -9px -9px 18px rgba(255, 255, 255, 0.86),
+                0 14px 24px rgba(95, 0, 18, 0.10);
             transition: width 0.24s ease, min-width 0.24s ease, padding 0.24s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
         }
 
@@ -1383,25 +1390,28 @@
         }
 
         .profile-wrap.is-click-collapsed:hover .admin-user {
-            width: 60px;
-            min-width: 60px;
-            padding: 9px 10px;
+            width: 58px;
+            min-width: 58px;
+            padding: 6px 10px;
             justify-content: center;
             gap: 0;
         }
 
         .admin-user:hover,
         .profile-wrap.is-expanded .admin-user {
-            border-color: rgba(255, 255, 255, 0.4);
-            box-shadow: var(--shadow-soft);
+            border-color: rgba(139, 16, 32, 0.2);
+            box-shadow:
+                inset 9px 9px 20px rgba(112, 19, 27, 0.1),
+                inset -10px -10px 20px rgba(255, 255, 255, 0.9),
+                0 18px 30px rgba(95, 0, 18, 0.14);
             transform: translateY(-1px);
         }
 
         .user-avatar {
-            width: 38px;
-            height: 38px;
-            flex: 0 0 38px;
-            border-radius: 12px;
+            width: 34px;
+            height: 34px;
+            flex: 0 0 34px;
+            border-radius: 10px;
             background: linear-gradient(145deg, var(--pup-maroon), var(--pup-maroon-dark));
             color: #fff;
             display: flex;
@@ -2494,6 +2504,29 @@
                 height: 44px;
             }
 
+            .admin-header {
+                flex-wrap: wrap;
+            }
+
+            .header-left {
+                flex: 1 1 auto;
+            }
+
+            .header-right {
+                flex: 1 1 auto;
+                justify-content: flex-end;
+                min-width: min(100%, 320px);
+            }
+
+            #globalSearchForm .input:focus,
+            #globalSearchForm .input:not(:placeholder-shown) {
+                width: min(260px, calc(100vw - 190px));
+            }
+
+            .global-search-results {
+                width: min(290px, calc(100vw - 36px));
+            }
+
             .admin-user-meta {
                 width: 0;
                 max-width: 0;
@@ -2529,8 +2562,73 @@
                 display: none;
             }
 
-            .header-title {
-                font-size: 18px;
+            .admin-header {
+                min-height: 72px;
+                align-items: center;
+                flex-wrap: nowrap;
+                gap: 0;
+                padding: 10px 14px;
+            }
+
+            .header-left {
+                display: none;
+            }
+
+            .header-copy {
+                display: none;
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+                gap: 8px;
+                min-width: 0;
+            }
+
+            .sidebar {
+                top: 72px;
+            }
+
+            #globalSearchForm {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+
+            #globalSearchForm .input-container {
+                width: 100%;
+            }
+
+            #globalSearchForm .input:focus,
+            #globalSearchForm .input:not(:placeholder-shown) {
+                width: 100%;
+            }
+
+            .global-search-results {
+                left: 0;
+                width: 100%;
+            }
+
+            .profile-wrap:hover .admin-user,
+            .profile-wrap.is-expanded .admin-user,
+            .profile-wrap.is-click-collapsed:hover .admin-user {
+                width: 58px;
+                min-width: 58px;
+                height: 44px;
+                min-height: 44px;
+                padding: 6px 10px;
+                justify-content: center;
+                gap: 0;
+            }
+
+            .profile-wrap:hover .admin-user-meta,
+            .profile-wrap.is-expanded .admin-user-meta,
+            .profile-wrap.is-click-collapsed:hover .admin-user-meta,
+            .profile-wrap:hover .admin-user-chevron,
+            .profile-wrap.is-expanded .admin-user-chevron,
+            .profile-wrap.is-click-collapsed:hover .admin-user-chevron {
+                width: 0;
+                max-width: 0;
+                opacity: 0;
             }
 
             .medicine-alert-fab {
@@ -2548,8 +2646,9 @@
             }
         }
 
-        @stack('styles')
     </style>
+
+    @stack('styles')
 
     <style>
         /* Global Admin Theme Overrides */
@@ -2989,24 +3088,33 @@
         }
 
         .assistant-launch {
-            border: 1px solid rgba(255, 255, 255, 0.28);
-            background: rgba(255, 255, 255, 0.12);
-            color: #ffffff;
-            border-radius: 12px;
-            padding: 9px 12px;
-            font-size: 12px;
+            border: 1px solid rgba(139, 16, 32, 0.14);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(255, 248, 249, 0.88));
+            color: #5f0012;
+            border-radius: 14px;
+            height: 44px;
+            padding: 0 18px;
+            font-size: 13px;
             font-weight: 800;
             cursor: pointer;
             letter-spacing: 0.03em;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+            gap: 9px;
+            box-shadow:
+                inset 8px 8px 18px rgba(112, 19, 27, 0.09),
+                inset -9px -9px 18px rgba(255, 255, 255, 0.86),
+                0 14px 24px rgba(95, 0, 18, 0.10);
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .assistant-launch:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.42);
+            background: linear-gradient(145deg, #ffffff, #fff6f8);
+            border-color: rgba(139, 16, 32, 0.2);
+            box-shadow:
+                inset 9px 9px 20px rgba(112, 19, 27, 0.1),
+                inset -10px -10px 20px rgba(255, 255, 255, 0.9),
+                0 18px 30px rgba(95, 0, 18, 0.14);
             transform: translateY(-1px);
         }
 
@@ -3023,24 +3131,57 @@
             z-index: 1250;
         }
 
-        /* From Uiverse.io by Yaya12085 */
+        /* Adapted from Uiverse.io by vnuny */
         #globalSearchForm .input-container {
             position: relative;
             display: flex;
             align-items: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(255, 248, 249, 0.88));
+            border: 1px solid rgba(139, 16, 32, 0.12);
+            box-shadow:
+                inset 9px 9px 19px rgba(112, 19, 27, 0.10),
+                inset -10px -10px 20px rgba(255, 255, 255, 0.9),
+                0 16px 28px rgba(95, 0, 18, 0.10);
             isolation: isolate;
+            overflow: hidden;
+            transition: width .3s ease, background .2s ease, box-shadow .2s ease, transform .2s ease;
+        }
+
+        #globalSearchForm .input-container:hover {
+            background: linear-gradient(145deg, #ffffff, #fff6f8);
+            border-color: rgba(139, 16, 32, 0.18);
+            box-shadow:
+                inset 10px 10px 21px rgba(112, 19, 27, 0.11),
+                inset -11px -11px 21px rgba(255, 255, 255, 0.92),
+                0 18px 32px rgba(95, 0, 18, 0.14);
+            transform: translateY(-1px);
+        }
+
+        #globalSearchForm .input-container:focus-within,
+        #globalSearchForm .input-container:has(.input:not(:placeholder-shown)) {
+            width: min(260px, calc(100vw - 220px));
         }
 
         #globalSearchForm .input {
-            width: 40px;
-            height: 40px;
-            border-radius: 20px;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            min-width: 44px;
+            height: 100%;
+            border-radius: 999px;
             border: none;
             outline: none;
-            padding: 18px 16px;
+            padding: 0 18px 0 54px;
             background-color: transparent;
+            color: #70131b;
+            font-size: 14px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all .5s ease-in-out;
+            opacity: 0;
+            transition: opacity .18s ease;
         }
 
         #globalSearchForm .input::placeholder {
@@ -3048,37 +3189,43 @@
         }
 
         #globalSearchForm .input:focus::placeholder {
-            color: rgb(131, 128, 128);
+            color: rgba(112, 19, 27, 0.64);
         }
 
         #globalSearchForm .input:focus,
         #globalSearchForm .input:not(:placeholder-shown) {
-            background-color: #fff;
-            border: 1px solid rgb(91, 107, 255);
-            width: 290px;
+            background-color: transparent;
+            border: 0;
+            width: 100%;
             cursor: text;
-            padding: 18px 16px 18px 45px;
             z-index: 1;
+            opacity: 1;
+            box-shadow: none;
         }
 
         #globalSearchForm .icon {
             position: absolute;
-            left: 0;
-            height: 45px;
-            width: 45px;
-            background-color: #fff;
-            border-radius: 99px;
-            z-index: -1;
-            fill: #70131b;
-            border: 1px solid rgb(91, 107, 255);
+            left: 50%;
+            top: 50%;
+            width: 21px;
+            height: 21px;
+            z-index: 2;
+            color: #8b1020;
+            fill: currentColor;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+
+        #globalSearchForm .input-container:focus-within .icon,
+        #globalSearchForm .input-container:has(.input:not(:placeholder-shown)) .icon {
+            left: 20px;
+            transform: translateY(-50%);
         }
 
         #globalSearchForm .input:focus + .icon,
         #globalSearchForm .input:not(:placeholder-shown) + .icon {
             z-index: 2;
-            background-color: #fff;
-            border: 1px solid rgb(91, 107, 255);
-            overflow: hidden;
+            box-shadow: none;
             pointer-events: none;
         }
 
@@ -3216,6 +3363,72 @@
         html[data-theme="dark"] .global-search-result:focus-visible {
             background: rgba(250, 204, 21, 0.16);
             color: #fff7fa;
+        }
+
+        html[data-theme="dark"] #globalSearchForm .input-container,
+        html[data-theme="dark"] .assistant-launch,
+        html[data-theme="dark"] .admin-user {
+            border-color: rgba(250, 204, 21, 0.18);
+            background: linear-gradient(145deg, rgba(73, 18, 29, 0.92), rgba(31, 11, 18, 0.96));
+            color: #fff7fa;
+            box-shadow:
+                inset 7px 7px 16px rgba(0, 0, 0, 0.34),
+                inset -7px -7px 16px rgba(255, 255, 255, 0.04),
+                0 14px 24px rgba(0, 0, 0, 0.28);
+        }
+
+        html[data-theme="dark"] #globalSearchForm .input-container:hover,
+        html[data-theme="dark"] .assistant-launch:hover,
+        html[data-theme="dark"] .admin-user:hover,
+        html[data-theme="dark"] .profile-wrap.is-expanded .admin-user {
+            border-color: rgba(250, 204, 21, 0.28);
+            background: linear-gradient(145deg, rgba(88, 22, 35, 0.95), rgba(43, 12, 20, 0.98));
+            box-shadow:
+                inset 8px 8px 18px rgba(0, 0, 0, 0.38),
+                inset -8px -8px 18px rgba(255, 255, 255, 0.05),
+                0 18px 30px rgba(0, 0, 0, 0.34);
+        }
+
+        html[data-theme="dark"] #globalSearchForm .input,
+        html[data-theme="dark"] #globalSearchForm .icon,
+        html[data-theme="dark"] .assistant-launch {
+            color: #fff7fa;
+        }
+
+        html[data-theme="dark"] #globalSearchForm .input:focus::placeholder {
+            color: rgba(255, 247, 250, 0.7);
+        }
+
+        @media (max-width: 860px) {
+            #globalSearchForm .input-container:focus-within,
+            #globalSearchForm .input-container:has(.input:not(:placeholder-shown)) {
+                width: min(260px, calc(100vw - 190px));
+            }
+
+            .global-search-results {
+                width: min(290px, calc(100vw - 36px));
+            }
+        }
+
+        @media (max-width: 560px) {
+            #globalSearchForm {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+
+            #globalSearchForm .input-container {
+                width: 46px;
+            }
+
+            #globalSearchForm .input-container:focus-within,
+            #globalSearchForm .input-container:has(.input:not(:placeholder-shown)) {
+                width: 100%;
+            }
+
+            .global-search-results {
+                left: 0;
+                width: 100%;
+            }
         }
 
         .theme-toggle-admin {
@@ -4572,6 +4785,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             }
         }
     </style>
+    @stack('late-styles')
 </head>
 <body class="{{ (request()->routeIs('admin.inventory*') || request()->routeIs('assistant.inventory*')) ? 'admin-inventory-page' : '' }} {{ request()->boolean('embed') ? 'admin-embedded-view' : '' }}">
 @php
@@ -4656,7 +4870,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         ['label' => 'Inventory Summary', 'url' => $reportNavUrl('inventory-summary'), 'active' => request()->routeIs('reports.inventory-summary'), 'icon' => 'cube', 'permission' => 'reports.inventory_summary'],
         ['label' => 'Health Forms', 'url' => $reportNavUrl('health-forms'), 'active' => request()->routeIs('reports.health-forms') || request()->routeIs('reports.health-forms.applicants-list'), 'icon' => 'document-text', 'permission' => 'reports.health_forms'],
         ['label' => 'Appointment Statistics', 'url' => $reportNavUrl('appointment-statistics'), 'active' => request()->routeIs('reports.appointment-statistics'), 'icon' => 'calendar-days', 'permission' => 'reports.appointment_statistics'],
-        ['label' => 'Digital Logbook', 'url' => $reportNavUrl('digital-logbook'), 'active' => request()->routeIs('reports.digital-logbook'), 'icon' => 'clipboard-document-list', 'permission' => 'reports.digital_logbook'],
+        ['label' => 'Digital Logbook', 'url' => $reportNavUrl('digital-logbook'), 'active' => request()->routeIs('reports.digital-logbook') || request()->routeIs('reports.pulled-out-records*'), 'icon' => 'clipboard-document-list', 'permission' => 'reports.digital_logbook'],
         ['label' => 'Feedbacks', 'url' => $reportNavUrl('feedbacks'), 'active' => request()->routeIs('reports.feedbacks'), 'icon' => 'megaphone', 'permission' => 'reports.feedbacks'],
         ['label' => 'Export Reports', 'url' => $reportNavUrl('export-hub'), 'active' => request()->routeIs('reports.exportHub*'), 'icon' => 'arrow-down-tray', 'permission' => 'reports.export_reports'],
         ['label' => 'Audit Trail', 'url' => $isStudentAssistant ? url('/assistant/logs') : url('/admin/activity-logs'), 'active' => request()->routeIs('admin.logs') || Request::is('admin/activity-logs') || Request::is('assistant/logs'), 'icon' => 'clock', 'superadmin' => true],
@@ -4675,6 +4889,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         }
 
         return \App\Models\HealthProfile::query()
+            ->notPulledOut()
             ->where(function ($builder) {
                 $builder->where(function ($numberQuery) {
                     $numberQuery->whereNotNull('student_number')
@@ -4699,6 +4914,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         }
 
         return \App\Models\HealthProfile::query()
+            ->notPulledOut()
             ->where(function ($builder) {
                 $builder->where(function ($missingNumberQuery) {
                     $missingNumberQuery->where(function ($profileNumberQuery) {
@@ -4736,7 +4952,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
         $count = 0;
         if ($healthRecordsHasHealthProfiles) {
-            $query = \App\Models\HealthProfile::query();
+            $query = \App\Models\HealthProfile::query()->notPulledOut();
             $applyRoleAliases($query);
             $count += $query->count();
         }
@@ -5068,13 +5284,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         <form class="global-search-form" id="globalSearchForm" role="search" novalidate>
             <div class="input-container">
                 <input type="text" name="text" class="input" placeholder="Search something..." data-voice-skip aria-label="Global search">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="" viewBox="0 0 24 24" class="icon">
-                    <g stroke-width="0" id="SVGRepo_bgCarrier"></g>
-                    <g stroke-linejoin="round" stroke-linecap="round" id="SVGRepo_tracerCarrier"></g>
-                    <g id="SVGRepo_iconCarrier">
-                        <rect fill="white" height="24" width="24"></rect>
-                        <path fill="" d="M2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12ZM9 11.5C9 10.1193 10.1193 9 11.5 9C12.8807 9 14 10.1193 14 11.5C14 12.8807 12.8807 14 11.5 14C10.1193 14 9 12.8807 9 11.5ZM11.5 7C9.01472 7 7 9.01472 7 11.5C7 13.9853 9.01472 16 11.5 16C12.3805 16 13.202 15.7471 13.8957 15.31L15.2929 16.7071C15.6834 17.0976 16.3166 17.0976 16.7071 16.7071C17.0976 16.3166 17.0976 15.6834 16.7071 15.2929L15.31 13.8957C15.7471 13.202 16 12.3805 16 11.5C16 9.01472 13.9853 7 11.5 7Z" clip-rule="evenodd" fill-rule="evenodd"></path>
-                    </g>
+                <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false" class="icon">
+                    <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0s208 93.1 208 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z" />
                 </svg>
             </div>
             <div id="globalSearchResults" class="global-search-results" role="status" aria-live="polite"></div>

@@ -1380,6 +1380,7 @@
                         data-id="{{ $record['record_id'] }}"
                         data-name="{{ $record['name'] }}"
                         data-first-name="{{ $record['first_name'] }}"
+                        data-middle-name="{{ $record['middle_name'] ?? '' }}"
                         data-last-name="{{ $record['last_name'] }}"
                         data-email="{{ $record['email'] }}"
                         data-role="{{ $record['raw_role'] }}"
@@ -1483,6 +1484,7 @@
                             data-id="{{ $record['record_id'] }}"
                             data-name="{{ $record['name'] }}"
                             data-first-name="{{ $record['first_name'] }}"
+                            data-middle-name="{{ $record['middle_name'] ?? '' }}"
                             data-last-name="{{ $record['last_name'] }}"
                             data-email="{{ $record['email'] }}"
                                 data-role="{{ $record['raw_role'] }}"
@@ -1734,6 +1736,7 @@
                         <input type="hidden" name="management_view" id="detailManagementView" value="account-access">
                         <input type="hidden" name="lookup_source" id="detailLookupSource" value="">
                         <input type="hidden" name="first_name" id="detailFirstName" value="">
+                        <input type="hidden" name="middle_name" id="detailMiddleName" value="">
                         <input type="hidden" name="last_name" id="detailLastName" value="">
                         <input type="hidden" name="full_name" id="detailFullName" value="">
                         <input type="hidden" name="employee_number" id="detailEmployeeNumber" value="">
@@ -1844,6 +1847,7 @@
     const detailManagementView = document.getElementById('detailManagementView');
     const detailLookupSource = document.getElementById('detailLookupSource');
     const detailFirstName = document.getElementById('detailFirstName');
+    const detailMiddleName = document.getElementById('detailMiddleName');
     const detailLastName = document.getElementById('detailLastName');
     const detailFullName = document.getElementById('detailFullName');
     const detailEmployeeNumber = document.getElementById('detailEmployeeNumber');
@@ -2257,6 +2261,9 @@
         if (detailFirstName) {
             detailFirstName.value = row.dataset.firstName || '';
         }
+        if (detailMiddleName) {
+            detailMiddleName.value = row.dataset.middleName || '';
+        }
         if (detailLastName) {
             detailLastName.value = row.dataset.lastName || '';
         }
@@ -2295,7 +2302,7 @@
             if (field.id === 'deactivateBtn') {
                 return;
             }
-            if (field.id === 'settingsMethod' || field.id === 'detailLookupSource' || field.id === 'detailFirstName' || field.id === 'detailLastName' || field.id === 'detailFullName' || field.id === 'detailEmployeeNumber') {
+            if (field.id === 'settingsMethod' || field.id === 'detailLookupSource' || field.id === 'detailFirstName' || field.id === 'detailMiddleName' || field.id === 'detailLastName' || field.id === 'detailFullName' || field.id === 'detailEmployeeNumber') {
                 field.disabled = false;
                 return;
             }

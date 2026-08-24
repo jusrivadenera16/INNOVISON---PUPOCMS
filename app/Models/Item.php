@@ -34,10 +34,10 @@ class Item extends Model
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:2',
-        'starting_stock' => 'decimal:2',
-        'consumed' => 'decimal:2',
-        'minimum_stock' => 'decimal:2',
+        'quantity' => 'decimal:6',
+        'starting_stock' => 'decimal:6',
+        'consumed' => 'decimal:6',
+        'minimum_stock' => 'decimal:6',
         'units_per_stock_unit' => 'integer',
         'date_added' => 'date',
         'expiration_date' => 'date',
@@ -100,18 +100,18 @@ class Item extends Model
         $stockQuantity = (float) $this->quantity;
 
         if ($this->hasDispensingConversion()) {
-            return $stockQuantity * $this->unitsPerStockUnit();
+            return round($stockQuantity * $this->unitsPerStockUnit(), 6);
         }
 
-        return $stockQuantity;
+        return round($stockQuantity, 6);
     }
 
     public function convertDispensingQuantityToStockQuantity(float $dispensingQuantity): float
     {
         if ($this->hasDispensingConversion()) {
-            return $dispensingQuantity / $this->unitsPerStockUnit();
+            return round($dispensingQuantity / $this->unitsPerStockUnit(), 6);
         }
 
-        return $dispensingQuantity;
+        return round($dispensingQuantity, 6);
     }
 }

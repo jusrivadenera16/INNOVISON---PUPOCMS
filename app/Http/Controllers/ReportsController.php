@@ -21,6 +21,86 @@ use Illuminate\Support\Str;
 
 class ReportsController extends Controller
 {
+    public function pulledOutRecords(Request $request)
+    {
+        $search = trim((string) $request->query('q', ''));
+        $userType = strtolower(trim((string) $request->query('user_type', '')));
+        $dateFrom = trim((string) $request->query('date_from', ''));
+        $dateTo = trim((string) $request->query('date_to', ''));
+
+        $query = HealthProfile::query()
+            ->pulledOut()
+            ->with(['user', 'pulloutCompletedBy'])
+            ->orderByDesc('pullout_completed_at')
+            ->orderByDesc('id');
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                $like = '%' . $search . '%';
+                $builder->where('reference_number', 'like', $like)
+                    ->orWhere('student_number', 'like', $like)
+                    ->orWhere('pullout_reason', 'like', $like)
+                    ->orWhereHas('user', function ($userQuery) use ($like) {
+                        $userQuery->where('name', 'like', $like)
+                            ->orWhere('email', 'like', $like)
+                            ->orWhere('student_number', 'like', $like)
+                            ->orWhere('employee_number', 'like', $like);
+                    });
+            });
+        }
+
+        if ($userType !== '') {
+            $query->whereHas('user', function ($userQuery) use ($userType) {
+                $userQuery->where(function ($builder) use ($userType) {
+                    $like = '%' . $userType . '%';
+                    $builder->whereRaw("LOWER(COALESCE(user_type, '')) LIKE ?", [$like])
+                        ->orWhereRaw("LOWER(COALESCE(idp_role, '')) LIKE ?", [$like])
+                        ->orWhereRaw("LOWER(COALESCE(user_role, '')) LIKE ?", [$like]);
+                });
+            });
+        }
+
+        if ($dateFrom !== '') {
+            $query->whereDate('pullout_completed_at', '>=', $dateFrom);
+        }
+        if ($dateTo !== '') {
+            $query->whereDate('pullout_completed_at', '<=', $dateTo);
+        }
+
+        $records = $query->paginate(20)->withQueryString();
+        $totalPulledOut = HealthProfile::query()->pulledOut()->count();
+        $pulledOutThisMonth = HealthProfile::query()
+            ->pulledOut()
+            ->whereBetween('pullout_completed_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->count();
+
+        return view('admin.reports.pulled-out-records', compact(
+            'records',
+            'search',
+            'userType',
+            'dateFrom',
+            'dateTo',
+            'totalPulledOut',
+            'pulledOutThisMonth'
+        ));
+    }
+
+    public function showPulledOutRecord(HealthProfile $healthProfile)
+    {
+        abort_unless($healthProfile->pullout_status === HealthProfile::PULLOUT_COMPLETED, 404);
+
+        $healthProfile->load([
+            'user',
+            'pulloutRequestedBy',
+            'pulloutCompletedBy',
+            'healthFormSubmissions',
+        ]);
+
+        return view('admin.reports.pulled-out-record', [
+            'profile' => $healthProfile,
+        ]);
+    }
+
     private function formatInventoryQuantity(float $value): string
     {
         if (abs($value - round($value)) < 0.00001) {

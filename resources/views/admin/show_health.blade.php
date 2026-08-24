@@ -5,11 +5,11 @@
 @push('styles')
 <style>
     .health-profile-wrap {
+        width: 100%;
         max-width: 1120px;
         margin: 0 auto;
         display: grid;
         gap: 16px;
-        padding-right: 116px;
         padding-bottom: 124px;
         box-sizing: border-box;
     }
@@ -318,6 +318,23 @@
         gap: 12px;
         flex-wrap: wrap;
     }
+    .profile-content-card {
+        --profile-version-sticky-top: 78px;
+        margin-top: 8px;
+        padding: 0;
+        overflow: visible;
+    }
+    .profile-switch-sticky {
+        position: sticky;
+        top: -10px;
+        z-index: 60;
+        padding: 16px 18px;
+        border-bottom: 1px solid #e2e8f0;
+        border-radius: 14px 14px 0 0;
+        background: #ffffff;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, .08);
+        backdrop-filter: blur(12px);
+    }
     .profile-actions-menu-wrap {
         position: relative;
         margin-left: auto;
@@ -602,7 +619,7 @@
         background: #ffffff;
         border: 1px solid #fecaca;
         border-bottom: 4px solid #70131B;
-        overflow: hidden;
+        overflow: visible;
         box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
     }
     .correction-head {
@@ -613,6 +630,7 @@
         padding: 18px 20px;
         background: linear-gradient(135deg, #7f1d1d, #b91c1c);
         color: #ffffff;
+        border-radius: 17px 17px 0 0;
     }
     .correction-head-title {
         display: flex;
@@ -959,6 +977,163 @@
         border-color: #8f2230;
         box-shadow: 0 0 0 3px rgba(112, 19, 27, 0.12);
     }
+    .correction-custom-select-wrap {
+        position: relative;
+        z-index: 35;
+    }
+    .correction-custom-select-wrap::after {
+        display: none;
+    }
+    .correction-custom-source {
+        position: absolute !important;
+        inset: auto auto 0 0;
+        width: 1px !important;
+        min-height: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        border: 0 !important;
+        opacity: 0;
+        pointer-events: none;
+    }
+    body .main button.correction-custom-trigger {
+        position: relative;
+        width: 100%;
+        min-height: 48px;
+        padding: 0 46px 0 12px;
+        border: 1px solid #f3c7c7 !important;
+        border-radius: 12px;
+        background: #ffffff !important;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1.35;
+        text-align: left;
+        cursor: pointer;
+        box-shadow: none;
+        transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    body .main button.correction-custom-trigger::after {
+        content: "";
+        position: absolute;
+        right: 17px;
+        top: 50%;
+        width: 9px;
+        height: 9px;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: translateY(-68%) rotate(45deg);
+        transition: transform .18s ease;
+    }
+    body .main .correction-custom-select-wrap.is-open .correction-custom-trigger {
+        border-color: #8f2230 !important;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, 0.12);
+    }
+    body .main .correction-custom-select-wrap.is-open .correction-custom-trigger::after {
+        transform: translateY(-30%) rotate(225deg);
+    }
+    .correction-custom-menu {
+        position: absolute;
+        z-index: 90;
+        top: calc(100% + 7px);
+        left: 0;
+        right: 0;
+        display: none;
+        max-height: 250px;
+        overflow-y: auto;
+        padding: 8px;
+        border: 1px solid #f0caca;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 18px 36px rgba(58, 12, 18, 0.2);
+        scrollbar-width: thin;
+        scrollbar-color: #8f2230 transparent;
+    }
+    .correction-custom-menu::-webkit-scrollbar {
+        width: 6px;
+    }
+    .correction-custom-menu::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .correction-custom-menu::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: #8f2230;
+    }
+    .correction-custom-select-wrap.is-open .correction-custom-menu {
+        display: grid;
+        gap: 7px;
+        animation: correctionDropdownIn .18s ease both;
+    }
+    .correction-custom-select-wrap.is-dropup .correction-custom-menu {
+        top: auto;
+        bottom: calc(100% + 7px);
+        transform-origin: bottom center;
+    }
+    body .main button.correction-custom-option {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        width: 100%;
+        min-height: 40px;
+        padding: 9px 12px;
+        border: 1px solid #efcaca !important;
+        border-radius: 8px;
+        background: #ffffff !important;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.3;
+        text-align: left;
+        cursor: pointer;
+        box-shadow: none;
+        transition: border-color .2s ease, color .2s ease;
+    }
+    body .main button.correction-custom-option::after {
+        content: "";
+        position: absolute;
+        z-index: 0;
+        top: -45%;
+        left: -130%;
+        width: 120%;
+        height: 190%;
+        background: linear-gradient(115deg, rgba(255,247,181,0) 0%, rgba(255,247,181,.78) 46%, rgba(255,247,181,0) 100%);
+        transform: skewX(-20deg);
+        transition: left .9s ease;
+    }
+    body .main button.correction-custom-option > span {
+        position: relative;
+        z-index: 1;
+    }
+    body .main button.correction-custom-option:hover,
+    body .main button.correction-custom-option:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+        outline: none;
+    }
+    body .main button.correction-custom-option:hover::after,
+    body .main button.correction-custom-option:focus-visible::after {
+        left: 125%;
+    }
+    body .main button.correction-custom-option.is-selected {
+        border-color: #70131B !important;
+        background: #70131B !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    body .main button.correction-custom-option.is-selected:hover,
+    body .main button.correction-custom-option.is-selected:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+    }
+    @keyframes correctionDropdownIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
     .correction-other-field {
         display: none;
         margin-top: 10px;
@@ -983,31 +1158,454 @@
         font-weight: 900;
         cursor: pointer;
     }
-    .profile-panel { display: none; }
+    .profile-panel {
+        display: none;
+        margin: 0;
+        padding: 18px;
+        border: 0;
+        border-radius: 0 0 14px 14px;
+        background: transparent;
+        box-shadow: none;
+    }
     .profile-panel.is-active { display: block; }
-    .health-form-history-table-wrap { overflow-x: auto; border: 1px solid rgba(112, 19, 27, .12); border-radius: 12px; background: #fff; }
-    .health-form-history-table { width: 100%; border-collapse: collapse; min-width: 640px; }
-    .health-form-history-table th { background: #f8eeee; color: #70131B; padding: 12px; text-align: left; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
-    .health-form-history-table td { padding: 12px; border-top: 1px solid #f1dada; color: #111827; font-size: 13px; font-weight: 800; vertical-align: middle; }
-    .health-form-history-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .health-form-history-actions form { margin: 0; }
-    .health-form-history-pill,
-    .health-form-history-btn { border-radius: 999px; padding: 7px 11px; font-size: 11px; font-weight: 900; text-decoration: none; border: 1px solid #fecaca; background: #fff7ed; color: #70131B; cursor: pointer; }
-    .health-form-history-btn.is-primary { background: #70131B; color: #fff; border-color: #70131B; }
-    #healthFormHistoryModal .correction-card {
-        max-width: min(940px, calc(100vw - 28px));
+    .profile-version-shell {
+        display: grid;
+        grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
     }
-    #healthFormHistoryModal .correction-body {
-        gap: 14px;
-    }
-    #healthFormHistoryModal .health-form-history-table-wrap {
-        max-height: min(58vh, 520px);
-        overflow: auto;
-    }
-    .health-form-history-footer {
+    .profile-version-sidebar {
+        position: sticky;
+        top: var(--profile-version-sticky-top);
+        z-index: 35;
         display: flex;
+        flex-direction: column;
+        min-width: 0;
+        max-height: calc(100vh - var(--profile-version-sticky-top) - 22px);
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 14px;
+    }
+    .profile-version-sidebar-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .profile-version-sidebar-head h3,
+    .profile-version-pane-head h3 {
+        margin: 0;
+        color: #0f172a;
+        font-size: 16px;
+        font-weight: 900;
+    }
+    .profile-version-sidebar-head p,
+    .profile-version-pane-head p {
+        margin: 4px 0 0;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+    .profile-version-nav {
+        display: grid;
+        gap: 8px;
+        min-height: 0;
+        overflow-y: auto;
+        padding-right: 4px;
+        scrollbar-width: thin;
+        scrollbar-color: #8f2230 transparent;
+    }
+    .profile-version-nav::-webkit-scrollbar {
+        width: 6px;
+    }
+    .profile-version-nav::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .profile-version-nav::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: #8f2230;
+    }
+    .profile-version-choice {
+        width: 100%;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #111827;
+        padding: 10px;
+        text-align: left;
+        font: inherit;
+        cursor: pointer;
+        box-shadow: 0 7px 16px rgba(15, 23, 42, .05);
+        transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+    .profile-version-choice:hover,
+    .profile-version-choice:focus-visible {
+        transform: translateY(-1px);
+        border-color: #facc15;
+        background: #fffbea;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, .10);
+        outline: none;
+    }
+    .profile-version-choice.is-active {
+        border-color: #70131B;
+        background: #70131B;
+        color: #ffffff;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, .20);
+    }
+    .profile-version-choice-number {
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        border-radius: 8px;
+        background: #fff1f2;
+        color: #70131B;
+        font-size: 11px;
+        font-weight: 900;
+    }
+    .profile-version-choice.is-active .profile-version-choice-number {
+        background: rgba(255, 255, 255, .14);
+        color: #facc15;
+    }
+    .profile-version-choice-copy {
+        min-width: 0;
+    }
+    .profile-version-choice-copy strong,
+    .profile-version-choice-copy small {
+        display: block;
+    }
+    .profile-version-choice-copy strong {
+        overflow: hidden;
+        color: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        line-height: 1.3;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .profile-version-choice-copy small {
+        margin-top: 3px;
+        overflow: hidden;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 1.35;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .profile-version-choice.is-active .profile-version-choice-copy small {
+        color: rgba(255, 255, 255, .78);
+    }
+    .profile-version-choice.is-active .profile-version-choice-copy strong {
+        color: #ffffff;
+    }
+    .profile-version-content {
+        min-width: 0;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 14px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .04);
+    }
+    .profile-version-pane {
+        display: none;
+        min-width: 0;
+    }
+    .profile-version-pane.is-active {
+        display: block;
+        animation: profile-version-reveal .24s ease both;
+    }
+    .profile-version-pane-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 14px;
+        padding-bottom: 13px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .profile-version-pane-badges {
+        display: flex;
+        align-items: center;
         justify-content: flex-end;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+    @keyframes profile-version-reveal {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .profile-history-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    .profile-history-heading h3,
+    .profile-history-section-head h4 {
+        margin: 0;
+        color: #0f172a;
+        font-size: 16px;
+        font-weight: 900;
+    }
+    .profile-history-heading p,
+    .profile-history-section-head p {
+        margin: 4px 0 0;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    .profile-history-count {
+        flex: 0 0 auto;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        background: #fff7f7;
+        color: #70131B;
+        padding: 7px 11px;
+        font-size: 11px;
+        font-weight: 900;
+    }
+    .profile-history-list {
+        display: grid;
+        gap: 12px;
+    }
+    .profile-history-item {
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .06);
+    }
+    .profile-history-item.is-current {
+        border-color: rgba(112, 19, 27, .45);
+        box-shadow: 0 10px 24px rgba(112, 19, 27, .10);
+    }
+    .profile-history-toggle {
+        width: 100%;
+        min-height: 78px;
+        display: grid;
+        grid-template-columns: 48px minmax(170px, 1fr) minmax(180px, .85fr) auto 34px;
+        align-items: center;
+        gap: 14px;
+        border: 0;
+        background: #ffffff;
+        padding: 14px 16px;
+        color: #111827;
+        text-align: left;
+        font: inherit;
+        cursor: pointer;
+        transition: background .18s ease, box-shadow .18s ease;
+    }
+    .profile-history-toggle:hover,
+    .profile-history-toggle:focus-visible {
+        background: #fffbea;
+        outline: none;
+        box-shadow: inset 4px 0 0 #facc15;
+    }
+    .profile-history-version {
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        border-radius: 8px;
+        background: #70131B;
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 900;
+    }
+    .profile-history-primary,
+    .profile-history-date {
+        min-width: 0;
+    }
+    .profile-history-primary strong,
+    .profile-history-date strong {
+        display: block;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 900;
+        line-height: 1.3;
+    }
+    .profile-history-primary small,
+    .profile-history-date small {
+        display: block;
+        margin-bottom: 3px;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .profile-history-badges {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+    .profile-history-badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 25px;
+        border-radius: 999px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        color: #475569;
+        padding: 4px 9px;
+        font-size: 10px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+    .profile-history-badge.is-current,
+    .profile-history-badge.is-approved {
+        border-color: #86efac;
+        background: #dcfce7;
+        color: #166534;
+    }
+    .profile-history-badge.is-requested,
+    .profile-history-badge.is-needs-correction {
+        border-color: #fde68a;
+        background: #fef3c7;
+        color: #92400e;
+    }
+    .profile-history-badge.is-submitted {
+        border-color: #bfdbfe;
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+    .profile-history-chevron {
+        width: 32px;
+        height: 32px;
+        display: grid;
+        place-items: center;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        color: #70131B;
+        transition: transform .2s ease, background .2s ease;
+    }
+    .profile-history-chevron svg {
+        width: 16px;
+        height: 16px;
+    }
+    .profile-history-toggle[aria-expanded="true"] .profile-history-chevron {
+        transform: rotate(180deg);
+        background: #facc15;
+    }
+    .profile-history-details {
+        padding: 18px;
+        border-top: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+    .profile-history-meta {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+    .profile-history-meta > div {
+        min-width: 0;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 10px 12px;
+    }
+    .profile-history-meta span,
+    .profile-history-meta strong {
+        display: block;
+    }
+    .profile-history-meta span {
+        margin-bottom: 4px;
+        color: #64748b;
+        font-size: 9px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    .profile-history-meta strong {
+        color: #111827;
+        font-size: 12px;
+        font-weight: 900;
+        overflow-wrap: anywhere;
+    }
+    .profile-history-section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin: 18px 0 12px;
+    }
+    .profile-history-notice,
+    .profile-history-empty-detail,
+    .profile-history-no-documents {
+        border: 1px solid #fde68a;
+        border-radius: 8px;
+        background: #fffbeb;
+        color: #92400e;
+        padding: 12px 14px;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.5;
+    }
+    .profile-history-documents {
+        margin-top: 18px;
         padding-top: 2px;
+        border-top: 1px solid #e2e8f0;
+    }
+    .profile-history-document-links {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .profile-history-document-links a {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 38px;
+        border: 1px solid #8f2230;
+        border-radius: 8px;
+        background: #70131B;
+        color: #ffffff;
+        padding: 8px 12px;
+        text-decoration: none;
+        font-size: 11px;
+        font-weight: 900;
+        box-shadow: 0 8px 16px rgba(112, 19, 27, .12);
+        transition: color .12s ease, transform .18s ease;
+    }
+    .profile-history-document-links a::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: #facc15;
+        transform: translateX(-102%);
+        transition: transform .24s ease;
+    }
+    .profile-history-document-links a:hover,
+    .profile-history-document-links a:focus-visible {
+        color: #70131B;
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .profile-history-document-links a:hover::before,
+    .profile-history-document-links a:focus-visible::before {
+        transform: translateX(0);
+    }
+    .profile-history-document-links svg {
+        width: 15px;
+        height: 15px;
     }
     .pullout-static-note {
         border: 1px solid #facc15;
@@ -1018,6 +1616,101 @@
         font-size: 14px;
         font-weight: 900;
         line-height: 1.5;
+    }
+    .pullout-form {
+        display: grid;
+        gap: 14px;
+    }
+    .pullout-status-summary {
+        display: grid;
+        gap: 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        background: #f8fafc;
+        padding: 16px;
+    }
+    .pullout-status-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        color: #334155;
+        font-size: 13px;
+    }
+    .pullout-status-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin: 0;
+    }
+    .pullout-status-grid > div {
+        min-width: 0;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 11px 12px;
+    }
+    .pullout-status-grid dt {
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+    .pullout-status-grid dd {
+        margin: 5px 0 0;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+    .pullout-summary-note {
+        margin: 0;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 11px;
+        color: #475569;
+        font-size: 13px;
+        line-height: 1.55;
+    }
+    .pullout-confirmation {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        border: 1px solid #f3c7c7;
+        border-radius: 12px;
+        background: #fff7f7;
+        padding: 13px 14px;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.45;
+        cursor: pointer;
+    }
+    .pullout-confirmation input {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+        margin-top: 1px;
+        accent-color: #70131B;
+    }
+    .pullout-error {
+        border: 1px solid #fca5a5;
+        border-radius: 12px;
+        background: #fef2f2;
+        color: #991b1b;
+        padding: 12px 14px;
+        font-size: 13px;
+        font-weight: 800;
+    }
+    .profile-status-card.is-pulled-out {
+        background: #fff1f2;
+        border-color: #fda4af;
+    }
+    .profile-status-card.is-pullout-pending {
+        background: #fff7ed;
+        border-color: #fdba74;
     }
 
     .profile-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
@@ -1078,6 +1771,17 @@
         font-weight: 900;
         text-transform: uppercase;
         letter-spacing: .05em;
+    }
+    .profile-timeline-subtitle {
+        margin: 4px 0 0;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    #healthPanel .profile-timeline-card {
+        border: 1px solid rgba(112, 19, 27, .12);
+        border-radius: 12px;
+        background: #f8fafc;
     }
     .profile-timeline {
         display: grid;
@@ -1263,6 +1967,11 @@
     }
     [data-theme="dark"] .profile-tab { background: #111827; border-color: #475569; color: #f8fafc; }
     [data-theme="dark"] .profile-tab.is-active { background: #70131B; border-color: #8f2230; color: #fff; }
+    [data-theme="dark"] .profile-switch-sticky {
+        background: #0f172a;
+        border-color: #334155;
+        box-shadow: 0 12px 26px rgba(0, 0, 0, .28);
+    }
     [data-theme="dark"] .profile-actions-toggle,
     [data-theme="dark"] .profile-actions-menu {
         background: #111827;
@@ -1274,22 +1983,133 @@
         border-color: #475569;
         color: #f8fafc;
     }
-    [data-theme="dark"] .health-form-history-table-wrap {
-        background: #0f172a;
+    [data-theme="dark"] #healthPanel .profile-timeline-card,
+    [data-theme="dark"] .profile-version-sidebar,
+    [data-theme="dark"] .profile-version-choice,
+    [data-theme="dark"] .profile-history-item,
+    [data-theme="dark"] .profile-history-toggle,
+    [data-theme="dark"] .profile-history-meta > div {
+        background: #111827;
         border-color: #334155;
     }
-    [data-theme="dark"] .health-form-history-table th {
+    [data-theme="dark"] .profile-version-sidebar-head,
+    [data-theme="dark"] .profile-version-pane-head {
+        border-color: #334155;
+    }
+    [data-theme="dark"] .profile-version-content {
+        background: #0b1220;
+        border-color: #334155;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, .20);
+    }
+    [data-theme="dark"] .profile-version-nav {
+        scrollbar-color: #facc15 transparent;
+    }
+    [data-theme="dark"] .profile-version-nav::-webkit-scrollbar-thumb {
+        background: #facc15;
+    }
+    [data-theme="dark"] .profile-version-sidebar-head h3,
+    [data-theme="dark"] .profile-version-pane-head h3,
+    [data-theme="dark"] .profile-version-choice {
+        color: #f8fafc;
+    }
+    [data-theme="dark"] .profile-version-sidebar-head p,
+    [data-theme="dark"] .profile-version-pane-head p,
+    [data-theme="dark"] .profile-version-choice-copy small {
+        color: #cbd5e1;
+    }
+    [data-theme="dark"] .profile-version-choice-number {
         background: #1f2937;
         color: #facc15;
     }
-    [data-theme="dark"] .health-form-history-table td {
+    [data-theme="dark"] .profile-version-choice:hover,
+    [data-theme="dark"] .profile-version-choice:focus-visible {
+        background: #1f2937;
+        border-color: #facc15;
+    }
+    [data-theme="dark"] .profile-version-choice.is-active {
+        background: #70131B;
+        border-color: #facc15;
+        color: #ffffff;
+    }
+    [data-theme="dark"] .profile-history-details {
+        background: #0b1220;
         border-color: #334155;
+    }
+    [data-theme="dark"] .profile-history-heading h3,
+    [data-theme="dark"] .profile-history-section-head h4,
+    [data-theme="dark"] .profile-history-primary strong,
+    [data-theme="dark"] .profile-history-date strong,
+    [data-theme="dark"] .profile-history-meta strong {
         color: #f8fafc;
+    }
+    [data-theme="dark"] .profile-history-heading p,
+    [data-theme="dark"] .profile-history-section-head p,
+    [data-theme="dark"] .profile-history-primary small,
+    [data-theme="dark"] .profile-history-date small,
+    [data-theme="dark"] .profile-history-meta span,
+    [data-theme="dark"] .profile-timeline-subtitle {
+        color: #cbd5e1;
+    }
+    [data-theme="dark"] .profile-history-count {
+        background: #1f2937;
+        border-color: #475569;
+        color: #facc15;
+    }
+    [data-theme="dark"] .profile-history-toggle:hover,
+    [data-theme="dark"] .profile-history-toggle:focus-visible {
+        background: #1f2937;
+    }
+    [data-theme="dark"] .profile-history-notice,
+    [data-theme="dark"] .profile-history-empty-detail,
+    [data-theme="dark"] .profile-history-no-documents {
+        background: rgba(146, 64, 14, .22);
+        border-color: rgba(250, 204, 21, .38);
+        color: #fde68a;
+    }
+    [data-theme="dark"] .profile-history-documents {
+        border-color: #334155;
     }
     [data-theme="dark"] .pullout-static-note {
         background: rgba(250, 204, 21, .14);
         border-color: rgba(250, 204, 21, .45);
         color: #f8fafc;
+    }
+    [data-theme="dark"] .pullout-status-summary,
+    [data-theme="dark"] .pullout-status-grid > div {
+        background: #0f172a;
+        border-color: #334155;
+    }
+    [data-theme="dark"] .pullout-status-heading,
+    [data-theme="dark"] .pullout-status-grid dd,
+    [data-theme="dark"] .pullout-confirmation {
+        color: #f8fafc;
+    }
+    [data-theme="dark"] .pullout-status-grid dt,
+    [data-theme="dark"] .pullout-summary-note {
+        color: #cbd5e1;
+    }
+    [data-theme="dark"] .pullout-summary-note {
+        border-color: #334155;
+    }
+    [data-theme="dark"] .pullout-confirmation {
+        background: #111827;
+        border-color: #475569;
+    }
+    [data-theme="dark"] .pullout-error {
+        background: rgba(153, 27, 27, .24);
+        border-color: rgba(248, 113, 113, .55);
+        color: #fecaca;
+    }
+    [data-theme="dark"] .profile-status-card.is-pulled-out {
+        background: rgba(127, 29, 29, .3);
+        border-color: rgba(248, 113, 113, .45);
+    }
+    [data-theme="dark"] .profile-status-card.is-pullout-pending {
+        background: rgba(124, 45, 18, .3);
+        border-color: rgba(251, 146, 60, .45);
+    }
+    @media (max-width: 720px) {
+        .pullout-status-grid { grid-template-columns: 1fr; }
     }
     [data-theme="dark"] .profile-actions-toggle:hover,
     [data-theme="dark"] .profile-actions-toggle:focus,
@@ -1370,6 +2190,36 @@
     [data-theme="dark"] .correction-select-wrap::after {
         border-color: #facc15;
     }
+    [data-theme="dark"] .correction-custom-menu {
+        border-color: #475569;
+        background: #111827;
+        box-shadow: 0 18px 38px rgba(0, 0, 0, 0.48);
+    }
+    [data-theme="dark"] body .main button.correction-custom-trigger,
+    [data-theme="dark"] body .main button.correction-custom-option {
+        border-color: #475569 !important;
+        background: #182334 !important;
+        color: #f8fafc !important;
+        -webkit-text-fill-color: #f8fafc !important;
+    }
+    [data-theme="dark"] body .main button.correction-custom-option {
+        border-bottom-width: 1px !important;
+    }
+    [data-theme="dark"] body .main button.correction-custom-option.is-selected {
+        border-color: #be3445 !important;
+        background: #9f1d2d !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    [data-theme="dark"] body .main button.correction-custom-option:hover,
+    [data-theme="dark"] body .main button.correction-custom-option:focus-visible,
+    [data-theme="dark"] body .main button.correction-custom-option.is-selected:hover,
+    [data-theme="dark"] body .main button.correction-custom-option.is-selected:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+    }
     [data-theme="dark"] .profile-sync-title,
     [data-theme="dark"] .profile-sync-message {
         color: #cbd5e1;
@@ -1383,6 +2233,22 @@
             grid-template-columns: repeat(3, minmax(0, 1fr));
         }
         .profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .profile-version-shell {
+            grid-template-columns: minmax(200px, 230px) minmax(0, 1fr);
+        }
+        .profile-history-toggle {
+            grid-template-columns: 48px minmax(150px, 1fr) minmax(150px, .85fr) 34px;
+        }
+        .profile-history-badges {
+            grid-column: 2 / 4;
+            grid-row: 2;
+            justify-content: flex-start;
+        }
+        .profile-history-chevron {
+            grid-column: 4;
+            grid-row: 1 / 3;
+        }
+        .profile-history-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 768px) {
         .health-profile-wrap {
@@ -1412,36 +2278,94 @@
         }
         .profile-grid,
         .doc-grid { grid-template-columns: 1fr; }
+        .profile-switch-sticky {
+            padding: 12px;
+        }
+        .profile-switch {
+            flex: 1 1 auto;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 3px;
+            scrollbar-width: thin;
+        }
+        .profile-tab {
+            flex: 0 0 auto;
+        }
+        .profile-version-shell {
+            grid-template-columns: 1fr;
+        }
+        .profile-version-sidebar {
+            padding: 12px;
+            max-height: none;
+            overflow: visible;
+        }
+        .profile-version-nav {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 4px;
+            padding-right: 0;
+            scrollbar-width: thin;
+        }
+        .profile-version-choice {
+            flex: 0 0 230px;
+        }
+        .profile-version-pane-head {
+            align-items: flex-start;
+        }
         .profile-meta.is-wide,
         .profile-meta.is-full { grid-column: auto; }
+        .profile-history-heading {
+            align-items: flex-start;
+        }
+        .profile-history-toggle {
+            grid-template-columns: 44px minmax(0, 1fr) 34px;
+            gap: 10px;
+            padding: 12px;
+        }
+        .profile-history-version {
+            width: 40px;
+            height: 40px;
+        }
+        .profile-history-date,
+        .profile-history-badges {
+            grid-column: 2;
+        }
+        .profile-history-date { grid-row: 2; }
+        .profile-history-badges {
+            grid-row: 3;
+            justify-content: flex-start;
+        }
+        .profile-history-chevron {
+            grid-column: 3;
+            grid-row: 1 / 4;
+        }
+        .profile-history-meta { grid-template-columns: 1fr; }
+        .profile-history-details { padding: 14px; }
     }
 
-    /* Standard modal chrome: new form, correction, history, and pullout */
+    /* Standard modal chrome: new form, correction, and pullout */
     #newHealthFormModal .correction-card,
     #correctionModal .correction-card,
-    #healthFormHistoryModal .correction-card,
     #pulloutRequestModal .correction-card,
     [data-theme="dark"] #newHealthFormModal .correction-card,
     [data-theme="dark"] #correctionModal .correction-card,
-    [data-theme="dark"] #healthFormHistoryModal .correction-card,
     [data-theme="dark"] #pulloutRequestModal .correction-card {
         border: 1px solid rgba(250, 204, 21, .34) !important;
     }
 
     #newHealthFormModal .correction-head,
     #correctionModal .correction-head,
-    #healthFormHistoryModal .correction-head,
     #pulloutRequestModal .correction-head {
         background: linear-gradient(135deg, #70131B, #8f2230) !important;
     }
 
     #newHealthFormModal .correction-head-icon,
     #correctionModal .correction-head-icon,
-    #healthFormHistoryModal .correction-head-icon,
     #pulloutRequestModal .correction-head-icon,
     #newHealthFormModal .correction-head-icon svg,
     #correctionModal .correction-head-icon svg,
-    #healthFormHistoryModal .correction-head-icon svg,
     #pulloutRequestModal .correction-head-icon svg {
         color: #ffffff !important;
         stroke: currentColor !important;
@@ -1449,7 +2373,6 @@
 
     #newHealthFormModal .correction-close,
     #correctionModal .correction-close,
-    #healthFormHistoryModal .correction-close,
     #pulloutRequestModal .correction-close {
         position: relative !important;
         overflow: hidden !important;
@@ -1468,7 +2391,6 @@
 
     #newHealthFormModal .correction-close::after,
     #correctionModal .correction-close::after,
-    #healthFormHistoryModal .correction-close::after,
     #pulloutRequestModal .correction-close::after {
         content: "" !important;
         position: absolute !important;
@@ -1486,7 +2408,6 @@
 
     #newHealthFormModal .correction-close svg,
     #correctionModal .correction-close svg,
-    #healthFormHistoryModal .correction-close svg,
     #pulloutRequestModal .correction-close svg {
         position: relative !important;
         z-index: 1 !important;
@@ -1500,8 +2421,6 @@
     #newHealthFormModal .correction-close:focus-visible,
     #correctionModal .correction-close:hover,
     #correctionModal .correction-close:focus-visible,
-    #healthFormHistoryModal .correction-close:hover,
-    #healthFormHistoryModal .correction-close:focus-visible,
     #pulloutRequestModal .correction-close:hover,
     #pulloutRequestModal .correction-close:focus-visible {
         border-color: #facc15 !important;
@@ -1516,8 +2435,6 @@
     #newHealthFormModal .correction-close:focus-visible::after,
     #correctionModal .correction-close:hover::after,
     #correctionModal .correction-close:focus-visible::after,
-    #healthFormHistoryModal .correction-close:hover::after,
-    #healthFormHistoryModal .correction-close:focus-visible::after,
     #pulloutRequestModal .correction-close:hover::after,
     #pulloutRequestModal .correction-close:focus-visible::after {
         left: 128% !important;
@@ -1525,8 +2442,69 @@
 </style>
 @endpush
 
+@push('late-styles')
+<style>
+    .main .profile-tab {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+    }
+    .main .profile-tab::before {
+        content: "";
+        position: absolute;
+        z-index: 0;
+        top: -45%;
+        left: -130%;
+        width: 120%;
+        height: 190%;
+        background: linear-gradient(115deg, rgba(255, 247, 181, 0) 0%, rgba(255, 247, 181, .78) 46%, rgba(255, 247, 181, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left .9s ease;
+        pointer-events: none;
+    }
+    .main .profile-tab > svg,
+    .main .profile-tab > .profile-tab-label {
+        position: relative;
+        z-index: 1;
+    }
+    .main .profile-tab:hover,
+    .main .profile-tab:focus-visible,
+    .main .profile-tab.is-active:hover,
+    .main .profile-tab.is-active:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(112, 19, 27, .14) !important;
+        outline: none;
+    }
+    .main .profile-tab:hover::before,
+    .main .profile-tab:focus-visible::before {
+        left: 125%;
+    }
+    .main .profile-tab:hover > svg,
+    .main .profile-tab:focus-visible > svg,
+    .main .profile-tab.is-active:hover > svg,
+    .main .profile-tab.is-active:focus-visible > svg {
+        color: #70131B !important;
+        stroke: currentColor !important;
+    }
+    html[data-theme="dark"] .main .profile-tab:hover,
+    html[data-theme="dark"] .main .profile-tab:focus-visible,
+    html[data-theme="dark"] .main .profile-tab.is-active:hover,
+    html[data-theme="dark"] .main .profile-tab.is-active:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+</style>
+@endpush
+
 @section('content')
 @php
+    $pulloutValidationErrors = isset($errors)
+        ? $errors
+        : new \Illuminate\Support\ViewErrorBag();
     $formatProfileDate = function ($value) {
         if (blank($value)) {
             return 'N/A';
@@ -1555,41 +2533,22 @@
         return (string) $value;
     };
 
-    $medicineAllergies = $formatProfileList($profile->medicine_allergies);
-    $medicalHistory = $formatProfileList($profile->medical_history);
-    $vaccineHistory = collect($profile->vaccine_history ?? [])
-        ->map(function ($dose, $key) use ($formatProfileDate) {
-            if (!is_array($dose)) {
-                return filled($dose) ? (string) $dose : null;
-            }
-
-            $label = \Illuminate\Support\Str::of((string) $key)->replace('_', ' ')->title();
-            $date = $formatProfileDate($dose['date'] ?? null);
-            $brand = trim((string) ($dose['brand'] ?? ''));
-            $details = collect([$date !== 'N/A' ? $date : null, $brand !== '' ? $brand : null])
-                ->filter()
-                ->implode(' - ');
-
-            return $details !== '' ? "{$label}: {$details}" : null;
-        })
-        ->filter()
-        ->values()
-        ->implode('; ');
-    $vaccineHistory = $vaccineHistory !== '' ? $vaccineHistory : 'N/A';
-
-    $medicalConditionValue = trim((string) ($profile->medical_condition_remarks ?? ''));
-    if ($medicalConditionValue === '') {
-        $medicalConditionValue = $profile->hasMedicalCondition()
-            ? 'With Condition'
-            : 'No Medical Condition Recorded';
-    }
-
     $profileStatusRaw = trim((string) ($profile->clearance_status ?? ''));
-    $profileStatusNormalized = in_array($profileStatusRaw, ['Pending', 'For Verification'], true) ? 'Pending' : $profileStatusRaw;
+    $pulloutStatus = trim((string) ($profile->pullout_status ?? ''));
+    $isPulloutPending = $pulloutStatus === \App\Models\HealthProfile::PULLOUT_PENDING;
+    $isPulledOut = $pulloutStatus === \App\Models\HealthProfile::PULLOUT_COMPLETED;
+    $isPulloutRestored = $pulloutStatus === \App\Models\HealthProfile::PULLOUT_RESTORED;
+    $currentAdmin = auth()->user();
+    $isSuperAdmin = $currentAdmin && $currentAdmin->hasRole(\App\Models\User::ROLE_SUPERADMIN);
+    $profileStatusNormalized = $isPulloutPending
+        ? 'Pullout Pending'
+        : ($isPulledOut
+            ? 'Pulled Out'
+            : (in_array($profileStatusRaw, ['Pending', 'For Verification'], true) ? 'Pending' : $profileStatusRaw));
     $profileStatusClass = match ($profileStatusNormalized) {
         'Issued', 'Fully Cleared' => 'profile-status-issued',
-        'Pending' => 'profile-status-pending',
-        'Rejected' => 'profile-status-rejected',
+        'Pending', 'Pullout Pending' => 'profile-status-pending',
+        'Rejected', 'Pulled Out' => 'profile-status-rejected',
         default => 'profile-status-default',
     };
     $profileStatusLabel = $profileStatusNormalized !== '' ? $profileStatusNormalized : 'Not Processed';
@@ -1638,13 +2597,27 @@
         'not_applicable' => 'profile-status-default',
         default => 'profile-status-pending',
     };
-    $canResyncPuptas = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
+    $canResyncPuptas = !$isPulloutPending && !$isPulledOut
+        && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && !in_array($puptasSyncRaw, ['synced', 'not_applicable'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
-    $canRequestFileCorrection = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
+    $canRequestFileCorrection = !$isPulloutPending && !$isPulledOut
+        && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false);
-    $canReturnToPending = in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
+    $canReturnToPending = !$isPulloutPending && !$isPulledOut
+        && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false);
+    $canRequestPullout = in_array($profileStatusRaw, ['Issued', 'Fully Cleared'], true)
+        && !$isPulloutPending
+        && !$isPulledOut
+        && $isSuperAdmin;
+    $canViewPullout = $isSuperAdmin
+        && ($canRequestPullout || $isPulloutPending || $isPulledOut || $isPulloutRestored);
+    $pulloutActionLabel = $isPulloutPending
+        ? 'Mark as Pulled Out'
+        : ($isPulledOut
+            ? 'Restore Health Record'
+            : 'Mark as Pulled Out');
     $hasCorrectionRequest = !empty($profile->resubmission_required_documents) || !empty($profile->resubmission_requested_at);
     $correctionStatusLabel = !$hasCorrectionRequest
         ? 'None'
@@ -1665,12 +2638,6 @@
                     <p class="profile-sub">Issued health profile details and submitted documents.</p>
                 </div>
                 <div class="profile-head-actions">
-                @if($canReturnToPending)
-                    <button type="button" class="profile-top-btn profile-top-btn-warning" id="openReturnToPendingModal">
-                        <span aria-hidden="true">&crarr;</span>
-                        Return to Pending
-                    </button>
-                @endif
                 <a href="{{ route('admin.health_records') }}" class="profile-top-btn">
                     <span aria-hidden="true">&larr;</span>
                     Back
@@ -1718,8 +2685,16 @@
                 </div>
             </div>
 
-            <div class="profile-status-card">
-                <div class="profile-status-shield"><x-outline-icon name="check" /></div>
+            <div class="profile-status-card {{ $isPulledOut ? 'is-pulled-out' : ($isPulloutPending ? 'is-pullout-pending' : '') }}">
+                <div class="profile-status-shield">
+                    @if($isPulledOut)
+                        <x-outline-icon name="exclamation-circle" />
+                    @elseif($isPulloutPending)
+                        <x-outline-icon name="clock" />
+                    @else
+                        <x-outline-icon name="check" />
+                    @endif
+                </div>
                 <div>
                     <p class="profile-status-card-title">Health Record Status</p>
                     <p class="profile-status-card-value">{{ $profileStatusLabel }}</p>
@@ -1750,20 +2725,20 @@
 
     </div>
 
-    <div class="profile-card">
-        <div class="profile-switch-head">
+    <div class="profile-card profile-content-card">
+        <div class="profile-switch-head profile-switch-sticky">
             <div class="profile-switch" role="tablist" aria-label="Health profile sections">
                 <button type="button" class="profile-tab is-active" data-profile-tab-target="summaryPanel">
                     <x-outline-icon name="user-circle" />
-                    Personal Information
+                    <span class="profile-tab-label">Personal Information</span>
                 </button>
                 <button type="button" class="profile-tab" data-profile-tab-target="healthPanel">
                     <x-outline-icon name="information-circle" />
-                    Health Profile
+                    <span class="profile-tab-label">Health Profile</span>
                 </button>
                 <button type="button" class="profile-tab" data-profile-tab-target="docsPanel">
                     <x-outline-icon name="document-text" />
-                    Uploaded Documents
+                    <span class="profile-tab-label">Uploaded Documents</span>
                 </button>
             </div>
             <div class="profile-actions-menu-wrap">
@@ -1783,20 +2758,23 @@
                             <span aria-hidden="true">&rarr;</span>
                         </button>
                     @endif
-                    <button type="button" id="openHealthFormHistoryModal">
-                        Health Form History
-                        <span aria-hidden="true">&rarr;</span>
-                    </button>
-                    <button type="button" id="openPulloutRequestModal">
-                        Request for Pullout
-                        <span aria-hidden="true">&minus;</span>
-                    </button>
+                    @if($canViewPullout)
+                        <button type="button" id="openPulloutRequestModal">
+                            {{ $pulloutActionLabel }}
+                            <span aria-hidden="true">&minus;</span>
+                        </button>
+                    @endif
+                    @if($canReturnToPending)
+                        <button type="button" id="openReturnToPendingModal">
+                            Return to Pending
+                            <span aria-hidden="true">&crarr;</span>
+                        </button>
+                    @endif
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="profile-card profile-panel is-active" id="summaryPanel">
+    <div class="profile-panel is-active" id="summaryPanel">
         <div class="profile-grid">
             <div class="profile-meta"><div class="profile-meta-k">Student Name</div><div class="profile-meta-v">{{ $profile->user->name ?? 'N/A' }}</div></div>
             <div class="profile-meta"><div class="profile-meta-k">Student Number</div><div class="profile-meta-v">{{ $displayStudentNumber }}</div></div>
@@ -1820,58 +2798,219 @@
         </div>
     </div>
 
-    <div class="profile-card profile-panel" id="healthPanel">
-        <div class="profile-grid">
-            <div class="profile-meta"><div class="profile-meta-k">Medical Condition</div><div class="profile-meta-v">{{ $medicalConditionValue }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Physical Assessment</div><div class="profile-meta-v">{{ $profile->physical_assessment_status ?: 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Documents Valid</div><div class="profile-meta-v">{{ $profile->documents_valid ? 'Yes' : 'No' }}</div></div>
+    <div class="profile-panel" id="healthPanel">
+        @php
+            $profileHistory = $healthProfileHistory ?? collect();
+            $currentProfileHistory = $profileHistory->firstWhere('is_current', true);
+            $previousProfileHistory = $profileHistory
+                ->reject(fn ($history) => !empty($history['is_current']))
+                ->values();
+            $currentProfileVersion = $currentProfileHistory['version'] ?? null;
+            $profileVersionCount = $previousProfileHistory->count() + 1;
+            $currentProfileDate = optional($currentHealthFormSubmission)->submitted_at ?: $profile->updated_at;
+        @endphp
 
-            <div class="profile-meta"><div class="profile-meta-k">Assessment Date</div><div class="profile-meta-v">{{ $formatProfileDate($profile->assessment_date) }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Verified At</div><div class="profile-meta-v">{{ $formatProfileDate($profile->verified_at) }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Pending Reason</div><div class="profile-meta-v">{{ $profile->pending_reason ?: 'N/A' }}</div></div>
+        <div class="profile-version-shell">
+            <aside class="profile-version-sidebar" aria-label="Health Profile versions">
+                <div class="profile-version-sidebar-head">
+                    <div>
+                        <h3>Profile Versions</h3>
+                        <p>Select a version to review its saved health information.</p>
+                    </div>
+                    <span class="profile-history-count">{{ $profileVersionCount }}</span>
+                </div>
 
-            <div class="profile-meta"><div class="profile-meta-k">Blood Pressure</div><div class="profile-meta-v">{{ $profile->blood_pressure ?: 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Pulse Rate</div><div class="profile-meta-v">{{ $profile->pulse_rate ?: 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Respiratory Rate</div><div class="profile-meta-v">{{ $profile->respiratory_rate ?: 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Temperature</div><div class="profile-meta-v">{{ $profile->temperature ?: 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">COVID Positive</div><div class="profile-meta-v">{{ $profile->covid_positive ?: 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">COVID Positive Date</div><div class="profile-meta-v">{{ $formatProfileDate($profile->covid_positive_date) }}</div></div>
+                <div class="profile-version-nav" role="tablist" aria-label="Health Profile versions">
+                    <button
+                        type="button"
+                        class="profile-version-choice is-active"
+                        data-profile-version-target="currentHealthProfileVersion"
+                        role="tab"
+                        aria-selected="true"
+                    >
+                        <span class="profile-version-choice-number">{{ $currentProfileVersion ? 'V' . $currentProfileVersion : 'LIVE' }}</span>
+                        <span class="profile-version-choice-copy">
+                            <strong>Current Health Profile</strong>
+                            <small>{{ $currentProfileDate ? $currentProfileDate->format('M d, Y') : 'Latest saved information' }}</small>
+                        </span>
+                    </button>
 
-            <div class="profile-meta"><div class="profile-meta-k">Known Medical Illness</div><div class="profile-meta-v">{{ $profile->has_illness ?: 'N/A' }}</div></div>
-            <div class="profile-meta is-wide"><div class="profile-meta-k">Medical History</div><div class="profile-meta-v">{{ $medicalHistory }}</div></div>
-            <div class="profile-meta is-full"><div class="profile-meta-k">Other Illness / Medical Notes</div><div class="profile-meta-v">{{ $profile->other_illness ?: 'N/A' }}</div></div>
+                    @foreach($previousProfileHistory as $history)
+                        @php
+                            $historySubmission = $history['submission'];
+                            $historyDate = $historySubmission->submitted_at
+                                ?: $historySubmission->requested_at
+                                ?: $historySubmission->created_at;
+                        @endphp
+                        <button
+                            type="button"
+                            class="profile-version-choice"
+                            data-profile-version-target="healthProfileVersion{{ $historySubmission->id }}"
+                            role="tab"
+                            aria-selected="false"
+                        >
+                            <span class="profile-version-choice-number">V{{ $history['version'] }}</span>
+                            <span class="profile-version-choice-copy">
+                                <strong>{{ $historySubmission->category ?: 'General Health Form' }}</strong>
+                                <small>{{ $historyDate ? $historyDate->format('M d, Y') : 'Date unavailable' }}</small>
+                            </span>
+                        </button>
+                    @endforeach
+                </div>
+            </aside>
 
-            <div class="profile-meta"><div class="profile-meta-k">Has Disability</div><div class="profile-meta-v">{{ $profile->has_disability ?: 'N/A' }}</div></div>
-            <div class="profile-meta is-wide"><div class="profile-meta-k">Disability Type</div><div class="profile-meta-v">{{ $profile->disability_type ?: 'N/A' }}</div></div>
+            <div class="profile-version-content">
+                <section class="profile-version-pane is-active" id="currentHealthProfileVersion" role="tabpanel">
+                    <div class="profile-version-pane-head">
+                        <div>
+                            <h3>Current Health Profile</h3>
+                            <p>Latest medical information used for the active health record.</p>
+                        </div>
+                        <div class="profile-version-pane-badges">
+                            <span class="profile-history-badge is-current">Current</span>
+                            <span class="profile-history-badge is-approved">{{ $profileStatusLabel }}</span>
+                        </div>
+                    </div>
 
-            <div class="profile-meta"><div class="profile-meta-k">No Known Allergies</div><div class="profile-meta-v">{{ $profile->no_allergies ? 'Yes' : 'No' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Food Allergies</div><div class="profile-meta-v">{{ $profile->food_allergies ?: 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Medicine Allergies</div><div class="profile-meta-v">{{ $medicineAllergies }}</div></div>
-            <div class="profile-meta is-full"><div class="profile-meta-k">Other Medicine Allergies</div><div class="profile-meta-v">{{ $profile->other_med_allergies ?: 'N/A' }}</div></div>
+                    @include('admin.partials.health-profile-detail-grid', [
+                        'healthData' => $profile->attributesToArray(),
+                    ])
 
-            <div class="profile-meta"><div class="profile-meta-k">Smoker</div><div class="profile-meta-v">{{ $profile->is_smoker ?: 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Alcohol Drinker</div><div class="profile-meta-v">{{ $profile->is_drinker ?: 'N/A' }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">COVID Vaccinated</div><div class="profile-meta-v">{{ $profile->covid_vaccinated ?: 'N/A' }}</div></div>
-            <div class="profile-meta is-full"><div class="profile-meta-k">Vaccination History</div><div class="profile-meta-v">{{ $vaccineHistory }}</div></div>
+                    <div class="profile-timeline-card">
+                        <div class="profile-timeline-head">
+                            <div>
+                                <h3 class="profile-timeline-title">Current Health Record Timeline</h3>
+                                <p class="profile-timeline-subtitle">Events for the current Health Profile only.</p>
+                            </div>
+                        </div>
+                        <div class="profile-timeline">
+                            <div class="profile-timeline-step">
+                                <span class="timeline-node"><x-outline-icon name="check" /></span>
+                                <strong>Profile Submitted</strong>
+                                <span>{{ optional(optional($currentHealthFormSubmission)->submitted_at ?: $profile->created_at)->format('M d, Y h:i A') ?: 'N/A' }}</span>
+                                <small>Student submitted current health requirements</small>
+                            </div>
+                            <div class="profile-timeline-step">
+                                <span class="timeline-node"><x-outline-icon name="check" /></span>
+                                <strong>Assessment Completed</strong>
+                                <span>{{ $formatProfileDate($profile->assessment_date ?: $profile->verified_at) }}</span>
+                                <small>Current assessment and review completed</small>
+                            </div>
+                            <div class="profile-timeline-step {{ $puptasSyncRaw === 'synced' ? '' : 'is-unsynced' }}">
+                                <span class="timeline-node">
+                                    @if($puptasSyncRaw === 'synced')
+                                        <x-outline-icon name="check" />
+                                    @else
+                                        <x-outline-icon name="exclamation-circle" />
+                                    @endif
+                                </span>
+                                <strong>Synced to PUPTAS</strong>
+                                <span>{{ $profile->puptas_synced_at ? $profile->puptas_synced_at->format('M d, Y h:i A') : $puptasSyncLabel }}</span>
+                                <small>Current health record sync status</small>
+                            </div>
+                            <div class="profile-timeline-step">
+                                <span class="timeline-node"><x-outline-icon name="check" /></span>
+                                <strong>{{ $profileStatusLabel }}</strong>
+                                <span>{{ $formatProfileDate($profile->verified_at ?: $profile->updated_at) }}</span>
+                                <small>Current clearance state</small>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-            <div class="profile-meta"><div class="profile-meta-k">Medical Certificate Doctor</div><div class="profile-meta-v">{{ $profile->doctor_name ?: ($profile->medical_certificate_issued_by ?: 'N/A') }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Medical Certificate Date</div><div class="profile-meta-v">{{ $formatProfileDate($profile->med_cert_date ?: $profile->medical_certificate_issued_at) }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Medical Certificate Result</div><div class="profile-meta-v">{{ $profile->med_cert_findings ?: 'N/A' }}</div></div>
-            <div class="profile-meta is-full"><div class="profile-meta-k">Student Declared Medical Findings</div><div class="profile-meta-v">{{ $profile->med_cert_findings_details ?: 'N/A' }}</div></div>
+                @foreach($previousProfileHistory as $history)
+                    @php
+                        $historySubmission = $history['submission'];
+                        $historyStatus = strtolower((string) $historySubmission->status);
+                        $historyStatusLabel = ucwords(str_replace('_', ' ', $historyStatus));
+                        $historyDocuments = [
+                            'student_photo' => '2x2 Student Photo',
+                            'health_declaration' => 'Health Declaration',
+                            'medical_certificate' => 'Medical Certificate',
+                            'medical_assessment_upload' => 'Medical Assessment Copy',
+                            'chest_xray_result' => 'Chest X-ray Result',
+                            'pwd_id_proof' => 'PWD ID Proof',
+                        ];
+                        $historyDocumentCount = collect($historyDocuments)
+                            ->keys()
+                            ->filter(fn ($key) => filled($history['profile'][$key] ?? null))
+                            ->count();
+                    @endphp
+                    <section class="profile-version-pane" id="healthProfileVersion{{ $historySubmission->id }}" role="tabpanel">
+                        <div class="profile-version-pane-head">
+                            <div>
+                                <h3>Version {{ $history['version'] }} - {{ $historySubmission->category ?: 'General Health Form' }}</h3>
+                                <p>Frozen health information saved for this submission.</p>
+                            </div>
+                            <div class="profile-version-pane-badges">
+                                <span class="profile-history-badge is-{{ str_replace('_', '-', $historyStatus) }}">{{ $historyStatusLabel }}</span>
+                            </div>
+                        </div>
 
-            <div class="profile-meta"><div class="profile-meta-k">Chest X-ray Date</div><div class="profile-meta-v">{{ $formatProfileDate($profile->xray_date ?: $profile->chest_xray_date) }}</div></div>
-            <div class="profile-meta is-wide"><div class="profile-meta-k">Chest X-ray Result</div><div class="profile-meta-v">{{ $profile->xray_findings ?: ($profile->chest_xray_result_text ?: 'N/A') }}</div></div>
-            <div class="profile-meta is-full"><div class="profile-meta-k">Student Declared X-ray Findings</div><div class="profile-meta-v">{{ $profile->xray_findings_details ?: 'N/A' }}</div></div>
+                        <div class="profile-history-meta">
+                            <div><span>Requested At</span><strong>{{ optional($historySubmission->requested_at)->format('M d, Y h:i A') ?: 'N/A' }}</strong></div>
+                            <div><span>Submitted At</span><strong>{{ optional($historySubmission->submitted_at)->format('M d, Y h:i A') ?: 'N/A' }}</strong></div>
+                            <div><span>Approved At</span><strong>{{ optional($historySubmission->approved_at)->format('M d, Y h:i A') ?: 'N/A' }}</strong></div>
+                            <div><span>Remarks</span><strong>{{ $historySubmission->remarks ?: 'N/A' }}</strong></div>
+                        </div>
 
-            <div class="profile-meta is-full"><div class="profile-meta-k">Assessment Remarks</div><div class="profile-meta-v">{{ $profile->assessment_remarks ?: 'N/A' }}</div></div>
+                        @if($history['has_snapshot'])
+                            @if($history['uses_current_fallback'])
+                                <div class="profile-history-notice">This legacy entry is showing the current profile because a frozen snapshot was not available when it was created.</div>
+                            @endif
+                            @include('admin.partials.health-profile-detail-grid', [
+                                'healthData' => $history['profile'],
+                            ])
+                        @else
+                            <div class="profile-history-empty-detail">
+                                @if($historyStatus === \App\Models\HealthFormSubmission::STATUS_REQUESTED)
+                                    This Health Profile version is awaiting submission.
+                                @else
+                                    Detailed fields are unavailable for this legacy version. Its saved Health Form PDF remains available below when present.
+                                @endif
+                            </div>
+                        @endif
+
+                        <div class="profile-history-documents">
+                            <div class="profile-history-section-head">
+                                <div>
+                                    <h4>Saved Documents</h4>
+                                    <p>{{ $historyDocumentCount }} uploaded documents linked to this version.</p>
+                                </div>
+                            </div>
+                            <div class="profile-history-document-links">
+                                @if(filled($historySubmission->pdf_path))
+                                    <a href="{{ route('admin.health_form_submissions.pdf', $historySubmission) }}" target="_blank" rel="noopener">
+                                        <x-outline-icon name="document-text" />
+                                        Health Form PDF
+                                    </a>
+                                @endif
+                                @foreach($historyDocuments as $documentKey => $documentLabel)
+                                    @if(filled($history['profile'][$documentKey] ?? null))
+                                        <a href="{{ route('admin.health_form_submissions.document', ['submission' => $historySubmission, 'document' => $documentKey]) }}" target="_blank" rel="noopener">
+                                            <x-outline-icon name="eye" />
+                                            {{ $documentLabel }}
+                                        </a>
+                                    @endif
+                                @endforeach
+                                @if(blank($historySubmission->pdf_path) && $historyDocumentCount === 0)
+                                    <span class="profile-history-no-documents">No saved documents for this version.</span>
+                                @endif
+                            </div>
+                        </div>
+                    </section>
+                @endforeach
+            </div>
         </div>
     </div>
 
-    <div class="profile-card profile-panel" id="docsPanel">
+    <div class="profile-panel" id="docsPanel">
         <div class="doc-grid">
             <div class="doc-file">
                 <h4>Health Information Form</h4>
-                @php($healthInformationFormUrl = route('walkin.healthForm', ['healthProfile' => $profile->id]))
+                @php
+                    $healthInformationFormUrl = route('walkin.healthForm', ['healthProfile' => $profile->id]);
+                @endphp
                 @if(!empty($pendingHealthFormRequest))
                     <div class="doc-missing" style="margin-bottom:10px;">
                         New form requested: {{ $pendingHealthFormRequest->category }}{{ $pendingHealthFormRequest->requested_at ? ' on ' . $pendingHealthFormRequest->requested_at->format('M d, Y h:i A') : '' }}
@@ -1894,7 +3033,9 @@
             <div class="doc-file">
                 <h4>Medical Certificate (PDF)</h4>
                 @if(!empty($profile->medical_certificate))
-                    @php($medicalCertificateUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'medical_certificate']))
+                    @php
+                        $medicalCertificateUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'medical_certificate']);
+                    @endphp
                     <div class="doc-actions">
                         <a class="doc-link" href="{{ $medicalCertificateUrl }}" target="_blank" rel="noopener">
                             <x-outline-icon name="document-text" /> Open
@@ -1915,7 +3056,9 @@
             <div class="doc-file">
                 <h4>Medical Assessment Copy</h4>
                 @if(!empty($profile->medical_assessment_upload))
-                    @php($medicalAssessmentUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'medical_assessment_upload']))
+                    @php
+                        $medicalAssessmentUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'medical_assessment_upload']);
+                    @endphp
                     <div class="doc-actions">
                         <a class="doc-link" href="{{ $medicalAssessmentUrl }}" target="_blank" rel="noopener">
                             <x-outline-icon name="document-text" /> Open
@@ -1936,7 +3079,9 @@
             <div class="doc-file">
                 <h4>Health Declaration</h4>
                 @if(!empty($profile->health_declaration))
-                    @php($healthDeclarationUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'health_declaration']))
+                    @php
+                        $healthDeclarationUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'health_declaration']);
+                    @endphp
                     <div class="doc-actions">
                         <a class="doc-link" href="{{ $healthDeclarationUrl }}" target="_blank" rel="noopener">
                             <x-outline-icon name="document-text" /> Open
@@ -1957,7 +3102,9 @@
             <div class="doc-file">
                 <h4>Chest X-ray Result (PDF)</h4>
                 @if(!empty($profile->chest_xray_result))
-                    @php($chestXrayUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'chest_xray_result']))
+                    @php
+                        $chestXrayUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'chest_xray_result']);
+                    @endphp
                     <div class="doc-actions">
                         <a class="doc-link" href="{{ $chestXrayUrl }}" target="_blank" rel="noopener">
                             <x-outline-icon name="document-text" /> Open
@@ -1979,7 +3126,9 @@
                 <div class="doc-file">
                     <h4>PWD ID Proof (PDF)</h4>
                     @if(!empty($profile->pwd_id_proof))
-                        @php($pwdIdProofUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'pwd_id_proof']))
+                        @php
+                            $pwdIdProofUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'pwd_id_proof']);
+                        @endphp
                         <div class="doc-actions">
                             <a class="doc-link" href="{{ $pwdIdProofUrl }}" target="_blank" rel="noopener">
                                 <x-outline-icon name="document-text" /> Open
@@ -1995,7 +3144,9 @@
             <div class="doc-file">
                 <h4>2x2 Student Photo</h4>
                 @if(!empty($profile->student_photo))
-                    @php($studentPhotoUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'student_photo']))
+                    @php
+                        $studentPhotoUrl = route($documentRouteName, ['healthProfile' => $profile->id, 'document' => 'student_photo']);
+                    @endphp
                     <div class="doc-actions">
                         <a class="doc-link" href="{{ $studentPhotoUrl }}" target="_blank" rel="noopener">
                             <x-outline-icon name="eye" /> Open
@@ -2009,45 +3160,7 @@
         </div>
 
     </div>
-
-    <div class="profile-card profile-timeline-card">
-        <div class="profile-timeline-head">
-            <h3 class="profile-timeline-title">Health Record Timeline</h3>
-        </div>
-        <div class="profile-timeline">
-            <div class="profile-timeline-step">
-                <span class="timeline-node"><x-outline-icon name="check" /></span>
-                <strong>Profile Submitted</strong>
-                <span>{{ optional($profile->created_at)->format('M d, Y h:i A') ?: 'N/A' }}</span>
-                <small>Student submitted health requirements</small>
-            </div>
-            <div class="profile-timeline-step">
-                <span class="timeline-node"><x-outline-icon name="check" /></span>
-                <strong>Assessment Completed</strong>
-                <span>{{ $formatProfileDate($profile->assessment_date ?: $profile->verified_at) }}</span>
-                <small>Initial assessment and review completed</small>
-            </div>
-            <div class="profile-timeline-step {{ $puptasSyncRaw === 'synced' ? '' : 'is-unsynced' }}">
-                <span class="timeline-node">
-                    @if($puptasSyncRaw === 'synced')
-                        <x-outline-icon name="check" />
-                    @else
-                        <x-outline-icon name="exclamation-circle" />
-                    @endif
-                </span>
-                <strong>Synced to PUPTAS</strong>
-                <span>{{ $profile->puptas_synced_at ? $profile->puptas_synced_at->format('M d, Y h:i A') : $puptasSyncLabel }}</span>
-                <small>Health record sync status</small>
-            </div>
-            <div class="profile-timeline-step">
-                <span class="timeline-node"><x-outline-icon name="check" /></span>
-                <strong>{{ $profileStatusLabel }}</strong>
-                <span>{{ $formatProfileDate($profile->verified_at ?: $profile->updated_at) }}</span>
-                <small>Current clearance state</small>
-            </div>
-        </div>
     </div>
-
 </div>
 
 <div class="correction-modal" id="newHealthFormModal" aria-hidden="true">
@@ -2068,8 +3181,8 @@
             @csrf
             <div class="correction-field">
                 <label for="newHealthFormCategory">Category / Purpose</label>
-                <div class="correction-select-wrap">
-                    <select id="newHealthFormCategory" name="category" required>
+                <div class="correction-select-wrap correction-custom-select-wrap">
+                    <select id="newHealthFormCategory" name="category" class="correction-custom-source" required>
                         <option value="">Select category</option>
                         @foreach(($healthFormCategories ?? collect()) as $category)
                             <option value="{{ $category }}">{{ $category }}</option>
@@ -2089,61 +3202,15 @@
     </div>
 </div>
 
-<div class="correction-modal" id="healthFormHistoryModal" aria-hidden="true">
-    <div class="correction-card">
-        <div class="correction-head">
-            <div class="correction-head-title">
-                <span class="correction-head-icon"><x-outline-icon name="document-text" /></span>
-                <div>
-                    <h3>Health Form History</h3>
-                    <p>Saved PDF snapshots submitted by the student for each category or request.</p>
-                </div>
-            </div>
-            <button type="button" class="correction-close" id="closeHealthFormHistoryModal" aria-label="Close health form history modal">
-                <x-outline-icon name="x-mark" />
-            </button>
-        </div>
-        <div class="correction-body">
-            <div class="health-form-history-table-wrap">
-                <table class="health-form-history-table">
-                    <thead>
-                        <tr>
-                            <th>Category</th>
-                            <th>School Year</th>
-                            <th>Status</th>
-                            <th>Submitted At</th>
-                            <th>Remarks</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse(($healthFormSubmissions ?? collect()) as $submission)
-                            <tr>
-                                <td>{{ $submission->category }}</td>
-                                <td>{{ $submission->school_year ?: '-' }}</td>
-                                <td><span class="health-form-history-pill">{{ ucwords(str_replace('_', ' ', $submission->status)) }}</span></td>
-                                <td>{{ $submission->submitted_at ? $submission->submitted_at->format('M d, Y h:i A') : ($submission->requested_at ? 'Requested ' . $submission->requested_at->format('M d, Y h:i A') : '-') }}</td>
-                                <td>{{ $submission->remarks ?: '-' }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5">No saved Health Form PDFs yet.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
+@if($canViewPullout)
 <div class="correction-modal" id="pulloutRequestModal" aria-hidden="true">
-    <div class="correction-card">
+    <div class="correction-card" role="dialog" aria-modal="true" aria-labelledby="pulloutModalTitle">
         <div class="correction-head">
             <div class="correction-head-title">
                 <span class="correction-head-icon"><x-outline-icon name="document-text" /></span>
                 <div>
-                    <h3>Request for Pullout</h3>
-                    <p>Health form pullout request status.</p>
+                    <h3 id="pulloutModalTitle">{{ $pulloutActionLabel }}</h3>
+                    <p>Manage the manual pullout status without deleting the health record.</p>
                 </div>
             </div>
             <button type="button" class="correction-close" id="closePulloutRequestModal" aria-label="Close request pullout modal">
@@ -2151,15 +3218,133 @@
             </button>
         </div>
         <div class="correction-body">
-            <div class="pullout-static-note">
-                Currently coordination with PUPTAS.
-            </div>
-            <div class="correction-actions">
-                <button type="button" class="correction-submit" id="closePulloutRequestDone">Done</button>
-            </div>
+            @if($pulloutValidationErrors->hasAny([
+                'pullout_reason',
+                'pullout_request_remarks',
+                'pullout_reference',
+                'pullout_completion_remarks',
+                'pullout_restore_reason',
+            ]))
+                <div class="pullout-error" role="alert">{{ $pulloutValidationErrors->first() }}</div>
+            @endif
+            @if($isPulloutPending || $isPulledOut || $isPulloutRestored)
+                <div class="pullout-status-summary">
+                    <div class="pullout-status-heading">
+                        <span class="profile-status-badge {{ $isPulledOut ? 'profile-status-rejected' : ($isPulloutPending ? 'profile-status-pending' : 'profile-status-issued') }}">
+                            {{ $isPulledOut ? 'Pulled Out' : ($isPulloutPending ? 'Pullout Pending' : 'Restored') }}
+                        </span>
+                        <strong>No medical information or uploaded file has been deleted.</strong>
+                    </div>
+                    <dl class="pullout-status-grid">
+                        <div>
+                            <dt>Reason</dt>
+                            <dd>{{ $profile->pullout_reason ?: 'N/A' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Requested By</dt>
+                            <dd>{{ optional($profile->pulloutRequestedBy)->name ?: optional($profile->pulloutRequestedBy)->email ?: 'N/A' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Requested At</dt>
+                            <dd>{{ $profile->pullout_requested_at ? $profile->pullout_requested_at->format('M d, Y h:i A') : 'N/A' }}</dd>
+                        </div>
+                        @if($isPulledOut || $isPulloutRestored)
+                            <div>
+                                <dt>Completed By</dt>
+                                <dd>{{ optional($profile->pulloutCompletedBy)->name ?: optional($profile->pulloutCompletedBy)->email ?: 'N/A' }}</dd>
+                            </div>
+                            <div>
+                                <dt>Completed At</dt>
+                                <dd>{{ $profile->pullout_completed_at ? $profile->pullout_completed_at->format('M d, Y h:i A') : 'N/A' }}</dd>
+                            </div>
+                            <div>
+                                <dt>Reference</dt>
+                                <dd>{{ $profile->pullout_reference ?: 'N/A' }}</dd>
+                            </div>
+                        @endif
+                        @if($isPulloutRestored)
+                            <div>
+                                <dt>Restored By</dt>
+                                <dd>{{ optional($profile->pulloutRestoredBy)->name ?: optional($profile->pulloutRestoredBy)->email ?: 'N/A' }}</dd>
+                            </div>
+                            <div>
+                                <dt>Restored At</dt>
+                                <dd>{{ $profile->pullout_restored_at ? $profile->pullout_restored_at->format('M d, Y h:i A') : 'N/A' }}</dd>
+                            </div>
+                        @endif
+                    </dl>
+                    @if($profile->pullout_request_remarks)
+                        <p class="pullout-summary-note"><strong>Request remarks:</strong> {{ $profile->pullout_request_remarks }}</p>
+                    @endif
+                    @if($profile->pullout_completion_remarks)
+                        <p class="pullout-summary-note"><strong>Completion remarks:</strong> {{ $profile->pullout_completion_remarks }}</p>
+                    @endif
+                    @if($isPulloutRestored && $profile->pullout_restore_reason)
+                        <p class="pullout-summary-note"><strong>Restore reason:</strong> {{ $profile->pullout_restore_reason }}</p>
+                    @endif
+                </div>
+            @endif
+
+            @if($isPulloutPending && $isSuperAdmin)
+                <form method="POST" action="{{ route('admin.health_profile.pullout.complete', $profile->id) }}" class="pullout-form">
+                    @csrf
+                    <div class="correction-actions">
+                        <button type="button" class="correction-cancel" data-close-pullout>Cancel</button>
+                        <button type="submit" class="correction-submit">Mark as Pulled Out</button>
+                    </div>
+                </form>
+            @elseif($isPulledOut && $isSuperAdmin)
+                <form method="POST" action="{{ route('admin.health_profile.pullout.restore', $profile->id) }}" class="pullout-form">
+                    @csrf
+                    <div class="correction-field">
+                        <label for="pulloutRestoreReason">Restore Reason</label>
+                        <textarea id="pulloutRestoreReason" name="pullout_restore_reason" required placeholder="Explain why this health record is being restored.">{{ old('pullout_restore_reason') }}</textarea>
+                    </div>
+                    <div class="correction-actions">
+                        <button type="button" class="correction-cancel" data-close-pullout>Cancel</button>
+                        <button type="submit" class="correction-submit">Restore Health Record</button>
+                    </div>
+                </form>
+            @elseif($canRequestPullout)
+                <form method="POST" action="{{ route('admin.health_profile.pullout.request', $profile->id) }}" class="pullout-form">
+                    @csrf
+                    @if($isPulloutRestored)
+                        <div class="pullout-static-note">
+                            The previous pullout was restored. A new request will begin a separate manual workflow.
+                        </div>
+                    @endif
+                    <div class="correction-field">
+                        <label for="pulloutReason">Pullout Reason</label>
+                        <div class="correction-select-wrap correction-custom-select-wrap">
+                            <select id="pulloutReason" name="pullout_reason" class="correction-custom-source" required>
+                                <option value="">Select a reason</option>
+                                @foreach(['Requested by the record owner', 'Transfer or separation', 'Duplicate health record', 'Record issued in error', 'Other administrative reason'] as $reason)
+                                    <option value="{{ $reason }}" @selected(old('pullout_reason') === $reason)>{{ $reason }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="correction-field">
+                        <label for="pulloutRequestRemarks">Remarks (Optional)</label>
+                        <textarea id="pulloutRequestRemarks" name="pullout_request_remarks" placeholder="Add any supporting details for this pullout.">{{ old('pullout_request_remarks') }}</textarea>
+                    </div>
+                    <div class="pullout-static-note">
+                        This request changes only the workflow status. The approved clearance, health profile history, and uploaded documents will remain stored.
+                    </div>
+                    <div class="correction-actions">
+                        <button type="button" class="correction-cancel" data-close-pullout>Cancel</button>
+                        <button type="submit" class="correction-submit">Mark as Pulled Out</button>
+                    </div>
+                </form>
+            @else
+                <div class="correction-actions">
+                    <button type="button" class="correction-submit" data-close-pullout>Done</button>
+                </div>
+            @endif
         </div>
     </div>
 </div>
+@endif
 
 @if($canReturnToPending)
     <div class="correction-modal" id="returnToPendingModal" aria-hidden="true">
@@ -2275,8 +3460,8 @@
                 <div class="correction-field">
                     <label for="correctionReasonSelect">Reason</label>
                     <input type="hidden" id="correctionReason" name="pending_reason" required>
-                    <div class="correction-select-wrap">
-                        <select id="correctionReasonSelect" required>
+                    <div class="correction-select-wrap correction-custom-select-wrap">
+                        <select id="correctionReasonSelect" class="correction-custom-source" required>
                             <option value="">Select a reason</option>
                             <option value="Blurred or unreadable uploaded document">Blurred or unreadable uploaded document</option>
                             <option value="Incorrect file was uploaded">Incorrect file was uploaded</option>
@@ -2331,6 +3516,21 @@
 
 @push('scripts')
 <script>
+    const profileContentCard = document.querySelector('.profile-content-card');
+    const profileStickyBar = document.querySelector('.profile-switch-sticky');
+
+    function syncProfileStickyOffsets() {
+        if (!profileContentCard || !profileStickyBar) return;
+        const versionTop = Math.max(58, profileStickyBar.offsetHeight - 2);
+        profileContentCard.style.setProperty('--profile-version-sticky-top', versionTop + 'px');
+    }
+
+    syncProfileStickyOffsets();
+    window.addEventListener('resize', syncProfileStickyOffsets);
+    if (window.ResizeObserver && profileStickyBar) {
+        new ResizeObserver(syncProfileStickyOffsets).observe(profileStickyBar);
+    }
+
     document.querySelectorAll('[data-profile-tab-target]').forEach(function (button) {
         button.addEventListener('click', function () {
             const targetId = button.getAttribute('data-profile-tab-target');
@@ -2373,17 +3573,131 @@
     const cancelNewHealthFormModal = document.getElementById('cancelNewHealthFormModal');
     const profileActionsToggle = document.getElementById('profileActionsToggle');
     const profileActionsMenu = document.getElementById('profileActionsMenu');
-    const healthFormHistoryModal = document.getElementById('healthFormHistoryModal');
-    const openHealthFormHistoryModal = document.getElementById('openHealthFormHistoryModal');
-    const closeHealthFormHistoryModal = document.getElementById('closeHealthFormHistoryModal');
     const pulloutRequestModal = document.getElementById('pulloutRequestModal');
     const openPulloutRequestModal = document.getElementById('openPulloutRequestModal');
     const closePulloutRequestModal = document.getElementById('closePulloutRequestModal');
-    const closePulloutRequestDone = document.getElementById('closePulloutRequestDone');
+    const shouldOpenPulloutModal = @json(
+        $pulloutValidationErrors->has('pullout_reason')
+        || $pulloutValidationErrors->has('pullout_request_remarks')
+        || $pulloutValidationErrors->has('pullout_reference')
+        || $pulloutValidationErrors->has('pullout_completion_remarks')
+        || $pulloutValidationErrors->has('pullout_restore_reason')
+    );
     const returnToPendingModal = document.getElementById('returnToPendingModal');
     const openReturnToPendingModal = document.getElementById('openReturnToPendingModal');
     const closeReturnToPendingModal = document.getElementById('closeReturnToPendingModal');
     const cancelReturnToPendingModal = document.getElementById('cancelReturnToPendingModal');
+
+    function setCorrectionDropdownOpen(wrapper, open) {
+        if (!wrapper) return;
+        wrapper.classList.toggle('is-open', open);
+        const trigger = wrapper.querySelector('.correction-custom-trigger');
+        trigger?.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (!open) {
+            wrapper.classList.remove('is-dropup');
+            return;
+        }
+
+        const menu = wrapper.querySelector('.correction-custom-menu');
+        if (!trigger || !menu) return;
+        const triggerRect = trigger.getBoundingClientRect();
+        const availableBelow = window.innerHeight - triggerRect.bottom - 18;
+        const availableAbove = triggerRect.top - 18;
+        const requiredSpace = Math.min(menu.scrollHeight || 250, 250) + 10;
+        wrapper.classList.toggle('is-dropup', availableBelow < requiredSpace && availableAbove > availableBelow);
+    }
+
+    function closeCorrectionDropdowns(exceptWrapper = null) {
+        document.querySelectorAll('.correction-custom-select-wrap.is-open').forEach(function (wrapper) {
+            if (wrapper !== exceptWrapper) {
+                setCorrectionDropdownOpen(wrapper, false);
+            }
+        });
+    }
+
+    function initializeCorrectionDropdown(select) {
+        if (!select || select.dataset.customDropdownReady === 'true') return;
+        const wrapper = select.closest('.correction-custom-select-wrap');
+        if (!wrapper) return;
+
+        select.dataset.customDropdownReady = 'true';
+        const trigger = document.createElement('button');
+        const menu = document.createElement('div');
+        const menuId = (select.id || 'correction-select') + '-custom-menu';
+
+        trigger.type = 'button';
+        trigger.className = 'correction-custom-trigger';
+        trigger.setAttribute('aria-haspopup', 'listbox');
+        trigger.setAttribute('aria-expanded', 'false');
+        trigger.setAttribute('aria-controls', menuId);
+
+        menu.id = menuId;
+        menu.className = 'correction-custom-menu';
+        menu.setAttribute('role', 'listbox');
+
+        function syncDropdown() {
+            const selectedOption = select.options[select.selectedIndex] || select.options[0];
+            trigger.textContent = selectedOption?.textContent?.trim() || 'Select an option';
+            menu.querySelectorAll('.correction-custom-option').forEach(function (button) {
+                const selected = button.dataset.value === select.value;
+                button.classList.toggle('is-selected', selected);
+                button.setAttribute('aria-selected', selected ? 'true' : 'false');
+            });
+        }
+
+        Array.from(select.options).forEach(function (option) {
+            const optionButton = document.createElement('button');
+            optionButton.type = 'button';
+            optionButton.className = 'correction-custom-option';
+            optionButton.dataset.value = option.value;
+            const optionLabel = document.createElement('span');
+            optionLabel.textContent = option.textContent.trim();
+            optionButton.appendChild(optionLabel);
+            optionButton.setAttribute('role', 'option');
+            optionButton.addEventListener('click', function (event) {
+                event.stopPropagation();
+                select.value = option.value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                syncDropdown();
+                setCorrectionDropdownOpen(wrapper, false);
+                trigger.focus();
+            });
+            menu.appendChild(optionButton);
+        });
+
+        trigger.addEventListener('click', function (event) {
+            event.stopPropagation();
+            const willOpen = !wrapper.classList.contains('is-open');
+            closeCorrectionDropdowns(wrapper);
+            setCorrectionDropdownOpen(wrapper, willOpen);
+        });
+        trigger.addEventListener('keydown', function (event) {
+            if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                closeCorrectionDropdowns(wrapper);
+                setCorrectionDropdownOpen(wrapper, true);
+                menu.querySelector('.correction-custom-option.is-selected, .correction-custom-option')?.focus();
+            }
+        });
+        select.addEventListener('change', syncDropdown);
+
+        wrapper.appendChild(trigger);
+        wrapper.appendChild(menu);
+        syncDropdown();
+    }
+
+    document.querySelectorAll('.correction-custom-source').forEach(initializeCorrectionDropdown);
+
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('.correction-custom-select-wrap')) {
+            closeCorrectionDropdowns();
+        }
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeCorrectionDropdowns();
+        }
+    });
 
     function setProfileActionsMenu(open) {
         if (!profileActionsMenu || !profileActionsToggle) return;
@@ -2430,25 +3744,21 @@
         }
     });
 
-    function setHealthFormHistoryModal(open) {
-        if (!healthFormHistoryModal) return;
-        healthFormHistoryModal.classList.toggle('is-open', open);
-        healthFormHistoryModal.setAttribute('aria-hidden', open ? 'false' : 'true');
-    }
+    document.querySelectorAll('[data-profile-version-target]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const targetId = button.getAttribute('data-profile-version-target');
+            const targetPane = targetId ? document.getElementById(targetId) : null;
+            if (!targetPane) return;
 
-    openHealthFormHistoryModal?.addEventListener('click', function () {
-        setProfileActionsMenu(false);
-        setHealthFormHistoryModal(true);
-    });
-
-    closeHealthFormHistoryModal?.addEventListener('click', function () {
-        setHealthFormHistoryModal(false);
-    });
-
-    healthFormHistoryModal?.addEventListener('click', function (event) {
-        if (event.target === healthFormHistoryModal) {
-            setHealthFormHistoryModal(false);
-        }
+            document.querySelectorAll('[data-profile-version-target]').forEach(function (versionButton) {
+                const selected = versionButton === button;
+                versionButton.classList.toggle('is-active', selected);
+                versionButton.setAttribute('aria-selected', selected ? 'true' : 'false');
+            });
+            document.querySelectorAll('.profile-version-pane').forEach(function (pane) {
+                pane.classList.toggle('is-active', pane === targetPane);
+            });
+        });
     });
 
     function setPulloutRequestModal(open) {
@@ -2458,6 +3768,7 @@
     }
 
     openPulloutRequestModal?.addEventListener('click', function () {
+        setProfileActionsMenu(false);
         setPulloutRequestModal(true);
     });
 
@@ -2465,8 +3776,10 @@
         setPulloutRequestModal(false);
     });
 
-    closePulloutRequestDone?.addEventListener('click', function () {
-        setPulloutRequestModal(false);
+    document.querySelectorAll('[data-close-pullout]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            setPulloutRequestModal(false);
+        });
     });
 
     pulloutRequestModal?.addEventListener('click', function (event) {
@@ -2482,8 +3795,13 @@
     }
 
     openReturnToPendingModal?.addEventListener('click', function () {
+        setProfileActionsMenu(false);
         setReturnToPendingModal(true);
     });
+
+    if (shouldOpenPulloutModal) {
+        setPulloutRequestModal(true);
+    }
 
     closeReturnToPendingModal?.addEventListener('click', function () {
         setReturnToPendingModal(false);
@@ -2584,7 +3902,7 @@
     correctionHealthFormOption?.addEventListener('change', function () {
         if (correctionHealthFormOption.checked && correctionReasonSelect && correctionReasonSelect.value === '') {
             correctionReasonSelect.value = 'Health Form Correction';
-            syncCorrectionReason();
+            correctionReasonSelect.dispatchEvent(new Event('change', { bubbles: true }));
         }
     });
     correctionForm?.addEventListener('submit', function (event) {

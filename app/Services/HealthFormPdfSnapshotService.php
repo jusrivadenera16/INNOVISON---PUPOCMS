@@ -9,8 +9,10 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class HealthFormPdfSnapshotService
 {
-    public function __construct(private HealthFileStorage $healthFiles)
-    {
+    public function __construct(
+        private HealthFileStorage $healthFiles,
+        private HealthProfileSnapshotService $profileSnapshots
+    ) {
     }
 
     public function recordSubmittedWithoutPdf(HealthProfile $profile, User $user, ?string $category = null, ?string $remarks = null): HealthFormSubmission
@@ -20,9 +22,10 @@ class HealthFormPdfSnapshotService
         $resolvedCategory = trim((string) ($submission->category ?: $category)) ?: 'General';
         $timestamp = now();
         $filePath = $this->buildSnapshotPath($profile, $user, $resolvedCategory, $timestamp);
+        $snapshotProfile = $profile->fresh('user') ?: $profile;
 
         $pdf = Pdf::loadView('student.print_health_form', [
-            'profile' => $profile->fresh('user') ?: $profile,
+            'profile' => $snapshotProfile,
             'pdfMode' => true,
             'healthFormIdentity' => [],
             'healthFormSubmittedAt' => $timestamp,
@@ -39,6 +42,8 @@ class HealthFormPdfSnapshotService
             'school_year' => trim((string) ($profile->school_year ?? '')) ?: $submission->school_year,
             'status' => HealthFormSubmission::STATUS_SUBMITTED,
             'pdf_path' => $filePath,
+            'profile_snapshot' => $this->profileSnapshots->capture($snapshotProfile),
+            'snapshot_captured_at' => $timestamp,
             'submitted_at' => $timestamp,
             'approved_at' => null,
             'remarks' => trim((string) ($submission->remarks ?? $remarks)) ?: null,
@@ -66,9 +71,10 @@ class HealthFormPdfSnapshotService
         $timestamp = now();
         $submittedAt = $submission->submitted_at ?: $profile->resubmitted_at ?: $profile->created_at ?: $timestamp;
         $filePath = $this->buildSnapshotPath($profile, $user, $resolvedCategory, $timestamp);
+        $snapshotProfile = $profile->fresh('user') ?: $profile;
 
         $pdf = Pdf::loadView('student.print_health_form', [
-            'profile' => $profile->fresh('user') ?: $profile,
+            'profile' => $snapshotProfile,
             'pdfMode' => true,
             'healthFormIdentity' => [],
             'healthFormSubmittedAt' => $submittedAt,
@@ -85,6 +91,8 @@ class HealthFormPdfSnapshotService
             'school_year' => trim((string) ($profile->school_year ?? '')) ?: $submission->school_year,
             'status' => HealthFormSubmission::STATUS_APPROVED,
             'pdf_path' => $filePath,
+            'profile_snapshot' => $this->profileSnapshots->capture($snapshotProfile),
+            'snapshot_captured_at' => $timestamp,
             'submitted_at' => $submittedAt,
             'approved_at' => $timestamp,
             'remarks' => trim((string) ($submission->remarks ?? $remarks)) ?: null,

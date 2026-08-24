@@ -80,6 +80,9 @@ class AdminHubLookupSourceTest extends TestCase
             $table->string('employee_number')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('name')->nullable();
+            $table->string('first_name')->nullable();
+            $table->string('middle_name')->nullable();
+            $table->string('last_name')->nullable();
             $table->string('email')->nullable();
             $table->string('office')->nullable();
             $table->string('role')->nullable();
@@ -154,6 +157,9 @@ class AdminHubLookupSourceTest extends TestCase
                     'fields' => [
                         'faculty_code' => 'FA0010TG2023',
                         'idp_user_id' => $facultyUuid,
+                        'first_name' => 'Rhyan',
+                        'middle_name' => 'Santos',
+                        'last_name' => 'Molinar',
                         'email' => 'rvmolinar@pup.edu.ph',
                     ],
                 ]],
@@ -174,6 +180,8 @@ class AdminHubLookupSourceTest extends TestCase
 
         $this->assertCount(1, $matches);
         $this->assertSame('admin_profile', $matches->first()['source']);
+        $this->assertSame('Santos', $matches->first()['middle_name']);
+        $this->assertSame('Rhyan Santos Molinar', $matches->first()['name']);
         $this->assertSame($facultyUuid, $matches->first()['meta']['admin_uuid']);
         $this->assertSame($facultyUuid, $matches->first()['meta']['idp_user_id']);
     }
@@ -183,6 +191,8 @@ class AdminHubLookupSourceTest extends TestCase
         DB::table('admin_hub')->insert([
             'employee_number' => 'FA0010TG2023',
             'name' => 'Rhyan Molinar',
+            'first_name' => 'Rhyan',
+            'last_name' => 'Molinar',
             'email' => 'rvmolinar@pup.edu.ph',
             'role' => 'admin_designee',
             'status' => 'active',
@@ -198,6 +208,9 @@ class AdminHubLookupSourceTest extends TestCase
                     'fields' => [
                         'faculty_code' => 'FA0010TG2023',
                         'idp_user_id' => $facultyUuid,
+                        'first_name' => 'Rhyan',
+                        'middle_name' => 'Santos',
+                        'last_name' => 'Molinar',
                         'email' => 'rvmolinar@pup.edu.ph',
                     ],
                 ]],
@@ -214,6 +227,8 @@ class AdminHubLookupSourceTest extends TestCase
         $record = collect($data['adminHubRecords'])->firstWhere('email', 'rvmolinar@pup.edu.ph');
 
         $this->assertNotNull($record);
+        $this->assertSame('Santos', $record['middle_name']);
+        $this->assertSame('Rhyan Santos Molinar', $record['name']);
         $this->assertSame($facultyUuid, $record['meta']['admin_uuid']);
         $this->assertDatabaseHas('admin_hub', [
             'email' => 'rvmolinar@pup.edu.ph',

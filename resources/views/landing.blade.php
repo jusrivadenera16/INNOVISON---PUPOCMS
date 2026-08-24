@@ -2554,96 +2554,6 @@
             color: rgba(112, 19, 27, .48) !important;
         }
 
-        .landing-proactive-message {
-            position: fixed;
-            top: 199px;
-            right: 104px;
-            z-index: 46;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: min(210px, calc(100vw - 132px));
-            min-height: 54px;
-            padding: 9px 13px 9px 10px;
-            border: 1px solid rgba(112, 19, 27, .14);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, .96);
-            color: #111827;
-            box-shadow: 0 14px 34px rgba(20, 2, 8, .28), 0 0 0 4px rgba(255, 255, 255, .08);
-            font-family: inherit;
-            text-align: left;
-            cursor: pointer;
-            opacity: 0;
-            transform: translateX(14px) scale(.94);
-            pointer-events: none;
-            transition: opacity .34s ease, transform .38s cubic-bezier(.2, .9, .2, 1), box-shadow .2s ease;
-        }
-
-        .landing-proactive-message::after {
-            content: "";
-            position: absolute;
-            right: -9px;
-            top: 50%;
-            width: 15px;
-            height: 15px;
-            background: #ffffff;
-            border-top: 1px solid rgba(112, 19, 27, .14);
-            border-right: 1px solid rgba(112, 19, 27, .14);
-            transform: translateY(-50%) rotate(45deg);
-            border-radius: 2px;
-            transform-origin: center;
-        }
-
-        .landing-proactive-message.is-visible {
-            opacity: 1;
-            transform: translateX(0) scale(1);
-            pointer-events: auto;
-        }
-
-        .landing-proactive-message.is-leaving {
-            opacity: 0;
-            transform: translateX(12px) scale(.97);
-            pointer-events: none;
-        }
-
-        .landing-proactive-message:hover,
-        .landing-proactive-message:focus-visible {
-            outline: none;
-            box-shadow: 0 18px 40px rgba(20, 2, 8, .34), 0 0 0 4px rgba(250, 204, 21, .12);
-        }
-
-        .landing-proactive-message img {
-            width: 31px;
-            height: 31px;
-            object-fit: contain;
-            flex: 0 0 auto;
-            border-radius: 999px;
-            background: #fff7cc;
-            border: 1px solid rgba(250, 204, 21, .5);
-        }
-
-        .landing-proactive-message strong {
-            display: block;
-            color: #70131b;
-            font-size: 12px;
-            line-height: 1.2;
-            font-weight: 950;
-        }
-
-        .landing-proactive-message span {
-            display: block;
-            margin-top: 2px;
-            color: #64748b;
-            font-size: 10px;
-            line-height: 1.2;
-            font-weight: 800;
-        }
-
-        body.landing-theme-light .landing-proactive-message {
-            background: rgba(255, 255, 255, .98);
-            border-color: rgba(112, 19, 27, .16);
-        }
-
         body.landing-theme-light .landing-theme-toggle::before {
             background: rgba(255, 255, 255, .72);
             border-color: rgba(112, 19, 27, .18);
@@ -3070,13 +2980,20 @@
             background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(4px);
             z-index: 999;
-            display: none;
+            display: flex;
             align-items: center;
             justify-content: flex-end;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity .32s ease, visibility 0s linear .44s;
         }
 
         .announcement-modal-overlay.is-open {
-            display: flex;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transition-delay: 0s;
         }
 
         .announcement-modal {
@@ -3093,12 +3010,14 @@
             z-index: 1000;
             display: flex;
             flex-direction: column;
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
+            opacity: .72;
+            transform: translateX(calc(100% + 28px));
+            transition: transform .44s cubic-bezier(.22, 1, .36, 1), opacity .3s ease;
             overflow: hidden;
         }
 
         .announcement-modal.is-open {
+            opacity: 1;
             transform: translateX(0);
         }
 
@@ -3284,9 +3203,10 @@
 
         .landing-announcement-image {
             display: block;
-            width: 100%;
-            max-height: 180px;
-            margin: 2px 0;
+            width: auto;
+            max-width: 100%;
+            height: 180px;
+            margin: 0;
             border: 1px solid rgba(255, 255, 255, .16);
             border-radius: 8px;
             object-fit: cover;
@@ -3294,23 +3214,30 @@
 
         .landing-announcement-image-grid {
             display: none;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            flex-wrap: wrap;
+            align-items: flex-start;
             gap: 8px;
         }
 
         .landing-announcement-card.is-expanded .landing-announcement-image-grid {
-            display: grid;
+            display: flex;
         }
 
         .landing-announcement-image-card {
             position: relative;
+            display: inline-flex;
+            flex: 0 1 auto;
+            max-width: 100%;
+            height: 180px;
             overflow: hidden;
             border-radius: 8px;
         }
 
         .landing-announcement-image-toggle {
-            display: block;
-            width: 100%;
+            display: flex;
+            width: auto;
+            max-width: 100%;
+            height: 100%;
             padding: 0;
             border: 0;
             background: transparent;
@@ -3340,11 +3267,52 @@
             background: #ffd21f;
             font-size: 12px;
             font-weight: 950;
+            transform: translateY(-22px);
+        }
+
+        .landing-announcement-image-close {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            z-index: 2;
+            width: auto;
+            min-width: 72px;
+            min-height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 14px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, .68);
+            background: rgba(255, 255, 255, .94);
+            color: #70131b;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 950;
+            opacity: 0;
+            pointer-events: none;
+            cursor: pointer;
+            transform: translate(-50%, 16px) scale(.88);
+            transition: opacity .18s ease, transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+        }
+
+        .landing-announcement-image-close:hover,
+        .landing-announcement-image-close:focus-visible {
+            border-color: #facc15;
+            background: #facc15;
+            color: #70131b;
+            outline: none;
         }
 
         .landing-announcement-image-card.is-open .landing-announcement-image-open {
             opacity: 1;
             pointer-events: auto;
+        }
+
+        .landing-announcement-image-card.is-open .landing-announcement-image-close {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, 16px) scale(1);
         }
 
         .landing-announcement-foot {
@@ -3439,7 +3407,7 @@
             right: 18px;
             top: 14px;
             bottom: 14px;
-            width: min(392px, calc(100vw - 28px));
+            width: min(790px, calc(100vw - 28px));
             border-radius: 14px;
             background:
                 radial-gradient(circle at 16% 0%, rgba(157, 20, 39, .28), transparent 34%),
@@ -3514,12 +3482,18 @@
 
         .announcement-overview-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(120px, 1fr));
             gap: 8px;
             margin-bottom: 10px;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            scroll-snap-type: x proximity;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(250, 204, 21, .48) transparent;
         }
 
         .announcement-overview-card {
+            position: relative;
             min-height: 54px;
             display: grid;
             grid-template-columns: 26px minmax(0, 1fr);
@@ -3529,6 +3503,46 @@
             border-radius: 7px;
             background: rgba(255,255,255,.035);
             border: 1px solid rgba(255,255,255,.08);
+            color: inherit;
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+            scroll-snap-align: start;
+            transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+        }
+
+        .announcement-overview-card:hover,
+        .announcement-overview-card:focus-visible {
+            transform: translateY(-2px);
+            border-color: color-mix(in srgb, var(--announcement-accent, #facc15) 64%, transparent);
+            background: color-mix(in srgb, var(--announcement-accent, #facc15) 11%, rgba(255,255,255,.035));
+            box-shadow: 0 10px 22px rgba(0, 0, 0, .22);
+            outline: none;
+        }
+
+        .announcement-overview-card.is-active {
+            border-color: var(--announcement-accent, #facc15);
+            background: color-mix(in srgb, var(--announcement-accent, #facc15) 16%, rgba(255,255,255,.035));
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--announcement-accent, #facc15) 18%, transparent), 0 10px 22px rgba(0, 0, 0, .2);
+        }
+
+        .announcement-overview-card.is-popping {
+            animation: announcementFilterPop .34s cubic-bezier(.22, 1, .36, 1);
+        }
+
+        @keyframes announcementFilterPop {
+            0% { transform: translateY(0) scale(1); }
+            42% { transform: translateY(-4px) scale(1.035); }
+            100% { transform: translateY(-2px) scale(1); }
+        }
+
+        .landing-announcement-card.is-filter-entering {
+            animation: announcementCardEnter .3s cubic-bezier(.22, 1, .36, 1) both;
+        }
+
+        @keyframes announcementCardEnter {
+            from { opacity: 0; transform: translateY(8px) scale(.985); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .announcement-overview-icon,
@@ -3611,6 +3625,8 @@
 
         .announcement-search input::placeholder {
             color: rgba(255,255,255,.74);
+            font-size: 11px;
+            font-weight: 500;
         }
 
         .announcement-section-head {
@@ -3637,6 +3653,20 @@
             background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.025));
             border: 1px solid rgba(255,255,255,.16);
             box-shadow: 0 10px 24px rgba(0, 0, 0, .14);
+            transform: translateY(0);
+            transition: transform .24s cubic-bezier(.22, 1, .36, 1), border-color .24s ease, background .24s ease, box-shadow .24s ease;
+            will-change: transform;
+        }
+
+        .landing-announcement-card[hidden] {
+            display: none !important;
+        }
+
+        .landing-announcement-card:hover {
+            transform: translateY(-3px);
+            border-color: color-mix(in srgb, var(--landing-announcement-priority, #facc15) 72%, rgba(255,255,255,.18));
+            background: linear-gradient(180deg, color-mix(in srgb, var(--landing-announcement-priority, #facc15) 9%, rgba(255,255,255,.05)), rgba(255,255,255,.03));
+            box-shadow: 0 16px 30px rgba(0, 0, 0, .24), 0 0 0 1px color-mix(in srgb, var(--landing-announcement-priority, #facc15) 18%, transparent);
         }
 
         .landing-announcement-card::before {
@@ -3646,7 +3676,8 @@
         .landing-announcement-icon {
             width: 34px;
             height: 34px;
-            margin-top: 20px;
+            margin-top: 0;
+            align-self: start;
             border-radius: 8px;
             color: var(--landing-announcement-priority, #60a5fa);
             background: color-mix(in srgb, var(--landing-announcement-priority, #60a5fa) 18%, transparent);
@@ -3661,8 +3692,25 @@
             align-content: start;
         }
 
+        .landing-announcement-heading {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: start;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .landing-announcement-heading .landing-announcement-meta-right {
+            justify-self: end;
+            white-space: nowrap;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 850;
+            line-height: 1.25;
+        }
+
         .landing-announcement-meta {
-            justify-content: space-between;
+            justify-content: flex-end;
             gap: 6px;
             color: #ffffff;
             font-size: 9px;
@@ -3707,6 +3755,23 @@
             font-size: 10px;
         }
 
+        .landing-announcement-guidance {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            flex: 1 1 220px;
+            min-width: 0;
+        }
+
+        .landing-announcement-guidance svg {
+            width: 15px;
+            height: 15px;
+            flex: 0 0 auto;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.5;
+        }
+
         .landing-announcement-read {
             min-height: 23px;
             padding: 0 9px;
@@ -3716,6 +3781,18 @@
             color: #fda4af;
             font-size: 10px;
             font-weight: 900;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
+        }
+
+        .landing-announcement-read:hover,
+        .landing-announcement-read:focus-visible {
+            transform: translateY(-1px);
+            border-color: #facc15;
+            background: #facc15;
+            color: #70131b;
+            box-shadow: 0 8px 16px rgba(250, 204, 21, .18);
+            outline: none;
         }
 
         .landing-announcement-card.priority-urgent { --landing-announcement-priority: #ef4444; }
@@ -3723,16 +3800,6 @@
         .landing-announcement-card.priority-warning { --landing-announcement-priority: #eab308; }
         .landing-announcement-card.priority-health { --landing-announcement-priority: #22c55e; }
         .landing-announcement-card.priority-event { --landing-announcement-priority: #facc15; }
-
-        .announcement-view-all {
-            width: 100%;
-            margin-top: 12px;
-            border: 0;
-            background: transparent;
-            color: #f87171;
-            font-size: 11px;
-            font-weight: 900;
-        }
 
         body.landing-theme-light .announcement-modal {
             background:
@@ -3744,7 +3811,8 @@
             display: flex;
             flex-direction: column;
             min-height: 0;
-            overflow: hidden;
+            overflow-y: auto;
+            overscroll-behavior: contain;
         }
 
         body.landing-theme-light .announcement-modal-content {
@@ -3755,6 +3823,14 @@
         body.landing-theme-light .announcement-overview-card {
             background: rgba(255, 255, 255, .92);
             border-color: rgba(112, 19, 27, .12);
+        }
+
+        body.landing-theme-light .announcement-overview-card:hover,
+        body.landing-theme-light .announcement-overview-card:focus-visible,
+        body.landing-theme-light .announcement-overview-card.is-active {
+            border-color: var(--announcement-accent, #facc15);
+            background: color-mix(in srgb, var(--announcement-accent, #facc15) 12%, #ffffff);
+            box-shadow: 0 10px 22px rgba(112, 19, 27, .12);
         }
 
         body.landing-theme-light .announcement-overview-copy span,
@@ -3778,6 +3854,10 @@
 
         body.landing-theme-light .announcement-search input::placeholder {
             color: #64748b;
+        }
+
+        body.landing-theme-light .announcement-tools {
+            background: rgba(248, 250, 252, .98);
         }
 
         .announcement-title-copy strong {
@@ -3808,35 +3888,28 @@
         }
 
         .announcement-overview-grid,
-        .announcement-tools,
         .announcement-section-head {
             flex: 0 0 auto;
         }
 
+        .announcement-tools {
+            position: sticky;
+            top: -12px;
+            z-index: 5;
+            flex: 0 0 auto;
+            margin: 0 -12px 10px;
+            padding: 12px 12px 8px;
+            background: rgba(10, 12, 18, .98);
+            border-bottom: 1px solid rgba(255, 255, 255, .07);
+            box-shadow: 0 8px 14px rgba(0, 0, 0, .16);
+        }
+
         .landing-announcement-list {
-            flex: 1 1 auto;
-            min-height: 0;
-            max-height: 100%;
-            overflow-y: auto;
-            overscroll-behavior: contain;
-            padding-right: 2px;
+            flex: 0 0 auto;
+            max-height: none;
+            overflow: visible;
+            padding-right: 0;
             align-content: start;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(250, 204, 21, 0.62) rgba(255, 255, 255, 0.08);
-        }
-
-        .landing-announcement-list::-webkit-scrollbar {
-            width: 7px;
-        }
-
-        .landing-announcement-list::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 999px;
-        }
-
-        .landing-announcement-list::-webkit-scrollbar-thumb {
-            border-radius: 999px;
-            background: rgba(250, 204, 21, 0.62);
         }
 
         .landing-announcement-card {
@@ -3857,6 +3930,16 @@
             border-color: rgba(112, 19, 27, .12);
         }
 
+        body.landing-theme-light .landing-announcement-card:hover {
+            border-color: color-mix(in srgb, var(--landing-announcement-priority, #70131b) 58%, rgba(112, 19, 27, .18));
+            background: color-mix(in srgb, var(--landing-announcement-priority, #70131b) 6%, #ffffff);
+            box-shadow: 0 16px 30px rgba(112, 19, 27, .14);
+        }
+
+        body.landing-theme-light .landing-announcement-heading .landing-announcement-meta-right {
+            color: #64748b;
+        }
+
         .landing-announcement-card.is-expanded .landing-announcement-message {
             display: block !important;
             height: auto;
@@ -3864,6 +3947,15 @@
             -webkit-line-clamp: unset;
             line-clamp: unset;
             overflow: visible !important;
+        }
+
+        .landing-announcement-card.is-expanded .landing-announcement-image-grid {
+            animation: announcementContentReveal .32s cubic-bezier(.22, 1, .36, 1) both;
+        }
+
+        @keyframes announcementContentReveal {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .landing-announcement-message p,
@@ -3887,10 +3979,6 @@
 
         .landing-announcement-message em {
             font-style: italic;
-        }
-
-        .landing-announcement-card.is-hidden-by-limit {
-            display: none;
         }
 
         .landing-announcement-empty.is-search-empty {
@@ -3926,41 +4014,6 @@
 
         .landing-announcement-read {
             font-size: 10px;
-        }
-
-        .announcement-view-all {
-            position: sticky;
-            bottom: 0;
-            flex: 0 0 auto;
-            min-height: 42px;
-            margin: 10px -12px -12px;
-            background: linear-gradient(180deg, rgba(12,14,22,.72), rgba(12,14,22,.98));
-            border-top: 1px solid rgba(255,255,255,.08);
-            z-index: 3;
-        }
-
-        body.landing-theme-light .announcement-view-all {
-            background: linear-gradient(180deg, rgba(255,255,255,.76), rgba(255,255,255,.98));
-        }
-
-        .announcement-modal.is-view-all {
-            width: min(790px, calc(100vw - 28px));
-        }
-
-        .announcement-modal.is-view-all .landing-announcement-list {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-        }
-
-        .announcement-modal.is-view-all .landing-announcement-card {
-            min-height: 140px;
-        }
-
-        @media (max-width: 720px) {
-            .announcement-modal.is-view-all .landing-announcement-list {
-                grid-template-columns: 1fr;
-            }
         }
 
         .assistant-modal-overlay {
@@ -5215,8 +5268,7 @@
             overflow: visible !important;
         }
 
-        .landing-announcement-read,
-        .announcement-view-all {
+        .landing-announcement-read {
             font-size: 12px;
         }
 
@@ -5379,14 +5431,6 @@
             <span>AI Assistant</span>
         </button>
 
-        <button type="button" class="landing-proactive-message" id="landingProactiveMessage" aria-label="Open Cici chat">
-            <img src="{{ asset('images/clinic-robot-nobg.png') }}" alt="" aria-hidden="true">
-            <span>
-                <strong>Hi! Need help?</strong>
-                <span data-proactive-copy>Cici is ready to assist you.</span>
-            </span>
-        </button>
-
         <!-- Announcement Modal -->
         <div class="announcement-modal-overlay" id="announcementModalOverlay">
             <div class="announcement-modal" id="announcementModal">
@@ -5470,39 +5514,57 @@
                         $landingAnnouncementItems = ($landingAnnouncements ?? collect())
                             ->sortByDesc(fn ($announcement) => $announcement->created_at ?? $announcement->id)
                             ->values();
-                        $landingPriorityLabels = [
-                            'urgent' => 'Urgent',
-                            'info' => 'Info',
-                            'warning' => 'Notice',
-                            'health' => 'Health',
-                            'event' => 'Event',
+                        $landingPriorityMessages = [
+                            'urgent' => 'Please review this important clinic advisory.',
+                            'info' => 'For your information and guidance.',
+                            'warning' => 'Please be guided accordingly.',
+                            'health' => 'Your health and safety matter.',
+                            'event' => 'Save the date and review the event details.',
                         ];
                         $landingTotalAnnouncements = $landingAnnouncementItems->count();
                         $landingLatestCount = $landingAnnouncementItems
                             ->filter(fn ($announcement) => $announcement->created_at && $announcement->created_at->gte(now()->subDays(3)))
                             ->count();
+                        $landingUrgentCount = $landingAnnouncementItems
+                            ->filter(fn ($announcement) => ($announcement->priority ?: 'info') === 'urgent')
+                            ->count();
+                        $landingInfoCount = $landingAnnouncementItems
+                            ->filter(fn ($announcement) => ($announcement->priority ?: 'info') === 'info')
+                            ->count();
                         $landingEventCount = $landingAnnouncementItems->filter(fn ($announcement) => ($announcement->priority ?: 'info') === 'event')->count();
                     @endphp
 
                     <div class="announcement-overview-grid">
-                        <div class="announcement-overview-card" style="--announcement-accent:#facc15">
-                            <span class="announcement-overview-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16v-4"/><path d="M12 8h.01"/><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/></svg>
-                            </span>
-                            <span class="announcement-overview-copy"><span>Latest</span><strong>{{ $landingLatestCount }}</strong><small>new posts</small></span>
-                        </div>
-                        <div class="announcement-overview-card" style="--announcement-accent:#f59e0b">
+                        <button type="button" class="announcement-overview-card is-active" style="--announcement-accent:#facc15" data-announcement-filter="all" aria-pressed="true">
                             <span class="announcement-overview-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16v10H4z"/><path d="m4 8 8 5 8-5"/></svg>
                             </span>
                             <span class="announcement-overview-copy"><span>All</span><strong>{{ $landingTotalAnnouncements }}</strong><small>updates</small></span>
-                        </div>
-                        <div class="announcement-overview-card" style="--announcement-accent:#facc15">
+                        </button>
+                        <button type="button" class="announcement-overview-card" style="--announcement-accent:#38bdf8" data-announcement-filter="latest" aria-pressed="false">
+                            <span class="announcement-overview-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16v-4"/><path d="M12 8h.01"/><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/></svg>
+                            </span>
+                            <span class="announcement-overview-copy"><span>Latest</span><strong>{{ $landingLatestCount }}</strong><small>new posts</small></span>
+                        </button>
+                        <button type="button" class="announcement-overview-card" style="--announcement-accent:#ef4444" data-announcement-filter="urgent" aria-pressed="false">
+                            <span class="announcement-overview-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 9 16H3L12 3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                            </span>
+                            <span class="announcement-overview-copy"><span>Urgent</span><strong>{{ $landingUrgentCount }}</strong><small>alerts</small></span>
+                        </button>
+                        <button type="button" class="announcement-overview-card" style="--announcement-accent:#facc15" data-announcement-filter="info" aria-pressed="false">
+                            <span class="announcement-overview-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16v-4"/><path d="M12 8h.01"/><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/></svg>
+                            </span>
+                            <span class="announcement-overview-copy"><span>Info</span><strong>{{ $landingInfoCount }}</strong><small>updates</small></span>
+                        </button>
+                        <button type="button" class="announcement-overview-card" style="--announcement-accent:#a78bfa" data-announcement-filter="event" aria-pressed="false">
                             <span class="announcement-overview-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v13H4V7a2 2 0 0 1 2-2z"/><path d="M8 13h3M8 17h6"/></svg>
                             </span>
                             <span class="announcement-overview-copy"><span>Events</span><strong>{{ $landingEventCount }}</strong><small>updates</small></span>
-                        </div>
+                        </button>
                     </div>
 
                     <div class="announcement-tools">
@@ -5514,7 +5576,7 @@
 
                     @if($landingAnnouncementItems->isNotEmpty())
                         <div class="announcement-section-head">
-                            <span data-announcement-section-title>Latest Announcements</span>
+                            <span data-announcement-section-title>All Announcements</span>
                             <span>{{ $landingTotalAnnouncements }} of {{ $landingTotalAnnouncements }}</span>
                         </div>
                         <div class="landing-announcement-list">
@@ -5523,7 +5585,7 @@
                                     $priority = $announcement->priority ?: 'info';
                                     $priorityClass = in_array($priority, ['urgent', 'info', 'warning', 'health', 'event'], true) ? $priority : 'info';
                                 @endphp
-                                <article class="landing-announcement-card priority-{{ $priorityClass }}" data-announcement-card data-announcement-index="{{ $announcementIndex }}" data-priority="{{ $priorityClass }}" data-search="{{ \Illuminate\Support\Str::lower($announcement->title . ' ' . $announcement->message) }}">
+                                <article class="landing-announcement-card priority-{{ $priorityClass }}" data-announcement-card data-announcement-index="{{ $announcementIndex }}" data-priority="{{ $priorityClass }}" data-is-latest="{{ $announcement->created_at && $announcement->created_at->gte(now()->subDays(3)) ? '1' : '0' }}" data-search="{{ \Illuminate\Support\Str::lower($announcement->title . ' ' . $announcement->message) }}">
                                     <span class="landing-announcement-icon" aria-hidden="true">
                                         @if($priorityClass === 'urgent')
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 9 16H3L12 3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
@@ -5534,29 +5596,32 @@
                                         @endif
                                     </span>
                                     <div class="landing-announcement-body">
-                                        <div class="landing-announcement-meta">
-                                            <span class="landing-announcement-meta-left">
-                                                <span class="landing-announcement-priority">{{ $landingPriorityLabels[$priorityClass] ?? ucfirst($priorityClass) }}</span>
-                                            </span>
+                                        <div class="landing-announcement-heading">
+                                            <h3 class="landing-announcement-title">{{ $announcement->title }}</h3>
                                             <span class="landing-announcement-meta-right">{{ $announcement->created_at?->format('M j, Y · g:i A') ?? 'Just now' }}</span>
                                         </div>
-                                        <h3 class="landing-announcement-title">{{ $announcement->title }}</h3>
                                         <div class="landing-announcement-message">{!! \App\Services\AnnouncementContent::toHtml($announcement->message) !!}</div>
                                         @if($announcement->image_urls !== [])
                                             <div class="landing-announcement-image-grid">
                                                 @foreach($announcement->image_urls as $imageIndex => $imageUrl)
                                                     <div class="landing-announcement-image-card">
-                                                        <button type="button" class="landing-announcement-image-toggle" data-announcement-image-toggle aria-label="Show open option for announcement image {{ $imageIndex + 1 }}">
+                                                        <button type="button" class="landing-announcement-image-toggle" data-announcement-image-toggle aria-label="Show open option for announcement image {{ $imageIndex + 1 }}" aria-expanded="false">
                                                             <img class="landing-announcement-image" src="{{ $imageUrl }}" alt="Announcement image {{ $imageIndex + 1 }} for {{ $announcement->title }}">
                                                         </button>
                                                         <a class="landing-announcement-image-open" href="{{ $imageUrl }}" target="_blank" rel="noopener noreferrer"><span>Open</span></a>
+                                                        <button type="button" class="landing-announcement-image-close" data-announcement-image-close>Close</button>
                                                     </div>
                                                 @endforeach
                                             </div>
                                         @endif
                                         <div class="landing-announcement-foot">
-                                            <span>Target: {{ strtoupper($announcement->target_audience ?? 'All Users') }}</span>
-                                            <button type="button" class="landing-announcement-read" data-announcement-read>Read More →</button>
+                                            <span class="landing-announcement-guidance">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                                </svg>
+                                                <span>{{ $landingPriorityMessages[$priorityClass] ?? 'For your information and guidance.' }}</span>
+                                            </span>
+                                            <button type="button" class="landing-announcement-read" data-announcement-read aria-expanded="false">Read More →</button>
                                         </div>
                                     </div>
                                 </article>
@@ -5566,7 +5631,6 @@
                                 <p>No clinic announcements matched your search.</p>
                             </div>
                         </div>
-                        <button type="button" class="announcement-view-all">View All Announcements →</button>
                     @else
                     <div class="landing-announcement-empty">
                         <p><strong>No announcements at the moment.</strong></p>
@@ -6570,11 +6634,18 @@
         const announcementBadge = document.getElementById('announcementBadge');
         const announcementSearchInput = document.getElementById('announcementSearchInput');
         const announcementCards = Array.from(document.querySelectorAll('[data-announcement-card]'));
+        const announcementFilterButtons = Array.from(document.querySelectorAll('[data-announcement-filter]'));
         const announcementSectionTitle = document.querySelector('[data-announcement-section-title]');
         const announcementSectionCount = document.querySelector('.announcement-section-head span:last-child');
-        const announcementViewAllButton = document.querySelector('.announcement-view-all');
         const announcementEmptyState = document.querySelector('[data-announcement-empty]');
-        let announcementViewAll = false;
+        const announcementFilterTitles = {
+            all: 'All Announcements',
+            latest: 'Latest Announcements',
+            urgent: 'Urgent Announcements',
+            info: 'Information Announcements',
+            event: 'Event Announcements',
+        };
+        let activeAnnouncementFilter = 'all';
 
         function openAnnouncementModal() {
             announcementModalOverlay.classList.add('is-open');
@@ -6604,47 +6675,135 @@
             }
         });
 
-        function filterAnnouncements() {
+        function filterAnnouncements(animateCards = false) {
             const query = (announcementSearchInput?.value || '').trim().toLowerCase();
             let visibleCount = 0;
-            let shownCount = 0;
-            let totalMatches = 0;
+            let categoryTotal = 0;
 
             announcementCards.forEach(function (card) {
                 const searchable = card.dataset.search || '';
                 const searchMatches = query === '' || searchable.includes(query);
-                if (searchMatches) {
-                    totalMatches += 1;
+                const categoryMatches = activeAnnouncementFilter === 'all'
+                    || (activeAnnouncementFilter === 'latest' && card.dataset.isLatest === '1')
+                    || card.dataset.priority === activeAnnouncementFilter;
+                const shouldShow = categoryMatches && searchMatches;
+
+                if (categoryMatches) {
+                    categoryTotal += 1;
                 }
-                const shouldShow = searchMatches && (announcementViewAll || shownCount < 5);
+
                 card.hidden = !shouldShow;
-                card.classList.toggle('is-hidden-by-limit', !shouldShow && searchMatches && !announcementViewAll);
+                card.classList.remove('is-filter-entering');
                 if (shouldShow) {
                     visibleCount += 1;
-                    shownCount += 1;
-                } else if (searchMatches) {
-                    shownCount += 1;
+                    if (animateCards) {
+                        void card.offsetWidth;
+                        card.classList.add('is-filter-entering');
+                    }
                 }
             });
 
             if (announcementSectionTitle) {
-                announcementSectionTitle.textContent = query ? 'Search Results' : 'Latest Announcements';
+                announcementSectionTitle.textContent = query
+                    ? `Search Results - ${announcementFilterTitles[activeAnnouncementFilter]}`
+                    : announcementFilterTitles[activeAnnouncementFilter];
             }
 
             if (announcementSectionCount) {
-                announcementSectionCount.textContent = `${visibleCount} of ${totalMatches}`;
+                announcementSectionCount.textContent = `${visibleCount} of ${categoryTotal}`;
             }
 
             if (announcementEmptyState) {
-                announcementEmptyState.hidden = totalMatches > 0;
+                announcementEmptyState.hidden = visibleCount > 0;
             }
 
-            if (announcementViewAllButton) {
-                announcementViewAllButton.hidden = announcementViewAll || totalMatches <= 5;
-            }
         }
 
-        announcementSearchInput?.addEventListener('input', filterAnnouncements);
+        announcementSearchInput?.addEventListener('input', function () {
+            filterAnnouncements(false);
+        });
+
+        announcementFilterButtons.forEach(function (filterButton) {
+            filterButton.addEventListener('click', function () {
+                activeAnnouncementFilter = filterButton.dataset.announcementFilter || 'all';
+
+                announcementFilterButtons.forEach(function (button) {
+                    const isActive = button === filterButton;
+                    button.classList.toggle('is-active', isActive);
+                    button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                });
+
+                filterButton.classList.remove('is-popping');
+                void filterButton.offsetWidth;
+                filterButton.classList.add('is-popping');
+
+                announcementCards.forEach(function (card) {
+                    card._announcementResizeAnimation?.cancel();
+                    card._announcementResizeAnimation = null;
+                    card.classList.remove('is-expanded');
+                    card.querySelectorAll('.landing-announcement-image-card.is-open').forEach(function (imageCard) {
+                        imageCard.classList.remove('is-open');
+                    });
+                    card.querySelectorAll('[data-announcement-image-toggle]').forEach(function (imageButton) {
+                        imageButton.setAttribute('aria-expanded', 'false');
+                    });
+                });
+
+                filterAnnouncements(true);
+                syncAnnouncementReadButtons();
+            });
+        });
+
+        function animateAnnouncementExpansion(card, shouldExpand) {
+            const runningAnimation = card._announcementResizeAnimation;
+            if (runningAnimation) {
+                runningAnimation.cancel();
+            }
+
+            const startHeight = card.getBoundingClientRect().height;
+            card.classList.toggle('is-expanded', shouldExpand);
+
+            if (!shouldExpand) {
+                card.querySelectorAll('.landing-announcement-image-card.is-open').forEach(function (imageCard) {
+                    imageCard.classList.remove('is-open');
+                });
+                card.querySelectorAll('[data-announcement-image-toggle]').forEach(function (imageButton) {
+                    imageButton.setAttribute('aria-expanded', 'false');
+                });
+            }
+
+            const endHeight = card.getBoundingClientRect().height;
+
+            if (typeof card.animate === 'function' && Math.abs(endHeight - startHeight) > 1) {
+                card._announcementResizeAnimation = card.animate(
+                    [
+                        { height: `${startHeight}px` },
+                        { height: `${endHeight}px` },
+                    ],
+                    {
+                        duration: 380,
+                        easing: 'cubic-bezier(.22, 1, .36, 1)',
+                    }
+                );
+                card._announcementResizeAnimation.addEventListener('finish', function () {
+                    card._announcementResizeAnimation = null;
+                }, { once: true });
+            }
+
+            if (shouldExpand) {
+                const message = card.querySelector('.landing-announcement-message');
+                message?.animate(
+                    [
+                        { opacity: .62, transform: 'translateY(-4px)' },
+                        { opacity: 1, transform: 'translateY(0)' },
+                    ],
+                    {
+                        duration: 320,
+                        easing: 'cubic-bezier(.22, 1, .36, 1)',
+                    }
+                );
+            }
+        }
 
         function syncAnnouncementReadButtons() {
             announcementCards.forEach(function (card) {
@@ -6661,33 +6820,42 @@
                 const hasImages = Boolean(card.querySelector('.landing-announcement-image-grid'));
                 button.hidden = !isOverflowing && !wasExpanded && !hasImages;
                 button.textContent = wasExpanded ? 'Read Less ↑' : 'Read More →';
+                button.setAttribute('aria-expanded', wasExpanded ? 'true' : 'false');
             });
         }
 
         announcementCards.forEach(function (card) {
             const button = card.querySelector('[data-announcement-read]');
             button?.addEventListener('click', function () {
-                card.classList.toggle('is-expanded');
-                syncAnnouncementReadButtons();
-                if (card.classList.contains('is-expanded')) {
+                const shouldExpand = !card.classList.contains('is-expanded');
+                animateAnnouncementExpansion(card, shouldExpand);
+                button.textContent = shouldExpand ? 'Read Less ↑' : 'Read More →';
+                button.setAttribute('aria-expanded', shouldExpand ? 'true' : 'false');
+
+                if (shouldExpand) {
                     window.setTimeout(function () {
                         card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }, 40);
+                    }, 160);
                 }
             });
         });
 
         document.querySelectorAll('[data-announcement-image-toggle]').forEach(function (imageButton) {
             imageButton.addEventListener('click', function () {
-                imageButton.closest('.landing-announcement-image-card')?.classList.toggle('is-open');
+                const imageCard = imageButton.closest('.landing-announcement-image-card');
+                const isOpen = imageCard?.classList.toggle('is-open') || false;
+                imageButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
             });
         });
 
-        announcementViewAllButton?.addEventListener('click', function () {
-            announcementViewAll = true;
-            announcementModal?.classList.add('is-view-all');
-            filterAnnouncements();
-            syncAnnouncementReadButtons();
+        document.querySelectorAll('[data-announcement-image-close]').forEach(function (closeButton) {
+            closeButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                const imageCard = closeButton.closest('.landing-announcement-image-card');
+                imageCard?.classList.remove('is-open');
+                imageCard?.querySelector('[data-announcement-image-toggle]')?.setAttribute('aria-expanded', 'false');
+            });
         });
 
         updateAnnouncementBadge({{ ($landingAnnouncements ?? collect())->count() }});
@@ -7508,105 +7676,6 @@
                 sendCiciMessage(prompt);
             });
         });
-
-        const landingProactiveMessage = document.getElementById('landingProactiveMessage');
-        const landingBotpressToggle = document.getElementById('bp-toggle-chat');
-        let landingBotpressWasOpened = false;
-        let landingBotpressWasOpen = false;
-        let landingProactiveHideTimer = null;
-        let landingProactiveThanksShowing = false;
-
-        function hideLandingProactiveMessage() {
-            if (!landingProactiveMessage) return;
-            if (landingProactiveHideTimer) {
-                window.clearTimeout(landingProactiveHideTimer);
-                landingProactiveHideTimer = null;
-            }
-            landingProactiveMessage.classList.add('is-leaving');
-            landingProactiveMessage.classList.remove('is-visible');
-            window.setTimeout(function () {
-                landingProactiveMessage.classList.remove('is-leaving');
-            }, 420);
-        }
-
-        function isLandingBotpressChatOpen() {
-            return Array.from(document.querySelectorAll('iframe')).some(function (frame) {
-                const rect = frame.getBoundingClientRect();
-                const style = window.getComputedStyle(frame);
-                if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false;
-
-                const descriptor = [
-                    frame.getAttribute('src') || '',
-                    frame.getAttribute('title') || '',
-                    frame.id || '',
-                    frame.className || ''
-                ].join(' ');
-                const isBotpress = /botpress|bpcontent|webchat|bpw|bp-/i.test(descriptor);
-                return isBotpress && rect.width > 260 && rect.height > 320;
-            });
-        }
-
-        function setLandingProactiveThanks() {
-            const title = landingProactiveMessage?.querySelector('strong');
-            const copy = landingProactiveMessage?.querySelector('[data-proactive-copy]');
-            if (title) title.textContent = 'Thank you!';
-            if (copy) copy.textContent = 'Have a great day!';
-        }
-
-        function setLandingProactiveHelp() {
-            const title = landingProactiveMessage?.querySelector('strong');
-            const copy = landingProactiveMessage?.querySelector('[data-proactive-copy]');
-            if (title) title.textContent = 'Hi! Need help?';
-            if (copy) copy.textContent = 'Cici is ready to assist you.';
-            landingProactiveThanksShowing = false;
-        }
-
-        function showLandingProactiveMessage() {
-            if (!landingProactiveMessage) return;
-            if (isLandingBotpressChatOpen()) {
-                hideLandingProactiveMessage();
-                return;
-            }
-            landingProactiveMessage.classList.remove('is-leaving');
-            landingProactiveMessage.classList.add('is-visible');
-            landingProactiveHideTimer = window.setTimeout(function () {
-                hideLandingProactiveMessage();
-                if (landingProactiveThanksShowing) {
-                    window.setTimeout(setLandingProactiveHelp, 450);
-                }
-            }, 5000);
-        }
-
-        window.setTimeout(showLandingProactiveMessage, 5000);
-        window.setInterval(showLandingProactiveMessage, 20000);
-        window.setInterval(function () {
-            const isOpen = isLandingBotpressChatOpen();
-            if (isOpen) {
-                landingBotpressWasOpened = true;
-                hideLandingProactiveMessage();
-            }
-
-            if (landingBotpressWasOpen && !isOpen && landingBotpressWasOpened) {
-                setLandingProactiveThanks();
-                landingProactiveThanksShowing = true;
-                showLandingProactiveMessage();
-                landingBotpressWasOpened = false;
-            }
-
-            landingBotpressWasOpen = isOpen;
-        }, 1000);
-
-        landingProactiveMessage?.addEventListener('click', function () {
-            hideLandingProactiveMessage();
-            landingBotpressWasOpened = true;
-            landingBotpressToggle?.click();
-        });
-
-        landingBotpressToggle?.addEventListener('click', function () {
-            landingBotpressWasOpened = true;
-            hideLandingProactiveMessage();
-        });
-
 
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeLanding);

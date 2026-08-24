@@ -56,6 +56,9 @@ class HealthFormPdfRefreshTest extends TestCase
             $table->string('reference_number')->nullable();
             $table->string('school_year')->nullable();
             $table->string('digital_signature')->nullable();
+            $table->string('medical_condition_remarks')->nullable();
+            $table->boolean('documents_valid')->default(false);
+            $table->string('medical_certificate')->nullable();
             $table->timestamps();
         });
 
@@ -67,6 +70,8 @@ class HealthFormPdfRefreshTest extends TestCase
             $table->string('school_year')->nullable();
             $table->string('status');
             $table->string('pdf_path')->nullable();
+            $table->json('profile_snapshot')->nullable();
+            $table->timestamp('snapshot_captured_at')->nullable();
             $table->unsignedBigInteger('requested_by_user_id')->nullable();
             $table->timestamp('requested_at')->nullable();
             $table->timestamp('submitted_at')->nullable();
@@ -145,6 +150,84 @@ class HealthFormPdfRefreshTest extends TestCase
         $this->assertNotSame($oldPath, $refreshed->pdf_path);
         Storage::disk('health_private')->assertMissing($oldPath);
         $this->assertSame('new-pdf', Storage::disk('health_private')->get($refreshed->pdf_path));
+    }
+
+    public function test_student_submission_saves_a_frozen_health_profile_snapshot(): void
+    {
+        Carbon::setTestNow('2026-08-23 10:15:00');
+
+        $user = User::forceCreate([
+            'name' => 'History Student',
+            'email' => 'history@example.com',
+            'student_number' => '2026-0100',
+        ]);
+        $profile = HealthProfile::forceCreate([
+            'user_id' => $user->id,
+            'student_number' => '2026-0100',
+            'medical_condition_remarks' => 'Asthma',
+            'documents_valid' => true,
+            'medical_certificate' => 'health_profiles/medical_certificates/history.pdf',
+        ]);
+
+        $dompdf = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+        $dompdf->shouldReceive('setPaper')->once()->with([0, 0, 612, 936])->andReturnSelf();
+        $dompdf->shouldReceive('output')->once()->andReturn('snapshot-pdf');
+        Pdf::shouldReceive('loadView')->once()->andReturn($dompdf);
+
+        $submission = app(HealthFormPdfSnapshotService::class)->recordSubmittedWithoutPdf(
+            $profile,
+            $user,
+            'Enrollment'
+        );
+
+        $this->assertSame('Asthma', data_get($submission->profile_snapshot, 'profile.medical_condition_remarks'));
+        $this->assertTrue((bool) data_get($submission->profile_snapshot, 'profile.documents_valid'));
+        $this->assertSame(
+            'health_profiles/medical_certificates/history.pdf',
+            data_get($submission->profile_snapshot, 'profile.medical_certificate')
+        );
+        $this->assertSame('History Student', data_get($submission->profile_snapshot, 'user.name'));
+        $this->assertNotNull($submission->snapshot_captured_at);
+    }
+
+    public function test_new_form_request_preserves_the_previous_current_profile_before_overwrite(): void
+    {
+        Carbon::setTestNow('2026-08-23 11:00:00');
+
+        $user = User::forceCreate([
+            'name' => 'Versioned Student',
+            'student_number' => '2026-0200',
+        ]);
+        $profile = HealthProfile::forceCreate([
+            'user_id' => $user->id,
+            'student_number' => '2026-0200',
+            'medical_condition_remarks' => 'Original assessment',
+            'documents_valid' => true,
+        ]);
+        $current = HealthFormSubmission::create([
+            'user_id' => $user->id,
+            'health_profile_id' => $profile->id,
+            'category' => 'Initial Submission',
+            'status' => HealthFormSubmission::STATUS_APPROVED,
+            'submitted_at' => now()->subMonth(),
+            'approved_at' => now()->subMonth(),
+        ]);
+        $request = HealthFormSubmission::create([
+            'user_id' => $user->id,
+            'health_profile_id' => $profile->id,
+            'category' => 'Internship',
+            'status' => HealthFormSubmission::STATUS_REQUESTED,
+            'requested_at' => now(),
+        ]);
+
+        app(\App\Services\HealthProfileSnapshotService::class)
+            ->preserveCurrentBeforeNewSubmission($profile, $request);
+
+        $this->assertSame(
+            'Original assessment',
+            data_get($current->fresh()->profile_snapshot, 'profile.medical_condition_remarks')
+        );
+        $this->assertNull($request->fresh()->profile_snapshot);
     }
 
     public function test_employee_snapshot_refresh_persists_new_path_and_removes_old_pdf(): void

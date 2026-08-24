@@ -309,7 +309,7 @@
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
     $reportsHomeUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
     $dailyTreatmentRecordUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/daily-treatment-record') : url('/admin/reports/daily-treatment-record');
-    $healthFormsLogbookUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/health-forms-logbook') : url('/admin/reports/health-forms-logbook');
+    $isSuperAdmin = $role === \App\Models\User::ROLE_SUPERADMIN;
 @endphp
 
 <div class="digital-logbook-shell">
@@ -334,16 +334,19 @@
                 <span class="digital-logbook-arrow"><x-outline-icon name="chevron-right" /></span>
             </a>
 
-            <a href="{{ $healthFormsLogbookUrl }}" class="digital-logbook-card">
-                <div>
-                    <span class="digital-logbook-icon"><x-outline-icon name="document-text" /></span>
-                </div>
-                <div>
-                    <h2 class="digital-logbook-card-title">Health Form Logbook</h2>
-                    <p class="digital-logbook-card-copy">Monitor approved health forms, final review visits, approver, condition, and sync status.</p>
-                </div>
-                <span class="digital-logbook-arrow"><x-outline-icon name="chevron-right" /></span>
-            </a>
+            @if($isSuperAdmin)
+                <a href="{{ route('reports.pulled-out-records') }}" class="digital-logbook-card">
+                    <div>
+                        <span class="digital-logbook-icon"><x-outline-icon name="document-check" /></span>
+                    </div>
+                    <div>
+                        <h2 class="digital-logbook-card-title">Pulled Out Records</h2>
+                        <p class="digital-logbook-card-copy">Review archived health profiles, pullout details, retained documents, and authorized record restoration.</p>
+                    </div>
+                    <span class="digital-logbook-arrow"><x-outline-icon name="chevron-right" /></span>
+                </a>
+            @endif
+
         </div>
     </section>
 </div>

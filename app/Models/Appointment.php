@@ -76,19 +76,21 @@ class Appointment extends Model
         $dayPrefix = $sourcePrefix . '-' . $baseTime->format('dmy') . '-';
         $timePrefix = $dayPrefix . $baseTime->format('Hi');
 
-        $highestSequence = static::query()
+        $existingAppointmentNumbers = static::query()
             ->where('apt_id', 'like', $dayPrefix . '%')
             ->pluck('apt_id')
-            ->map(function ($appointmentNumber) {
-                return preg_match('/(\d{2,})$/', (string) $appointmentNumber, $matches)
-                    ? (int) $matches[1]
-                    : 0;
-            })
-            ->max() ?? 0;
+            ->map(fn ($appointmentNumber) => (string) $appointmentNumber);
 
-        $nextSequence = $highestSequence + 1;
+        // Count records instead of parsing the numeric tail. The tail also
+        // contains HHmm, so parsing it caused IDs to grow on every booking.
+        $nextSequence = $existingAppointmentNumbers->count() + 1;
 
-        return $timePrefix . str_pad((string) $nextSequence, 2, '0', STR_PAD_LEFT);
+        do {
+            $appointmentNumber = $timePrefix . str_pad((string) $nextSequence, 2, '0', STR_PAD_LEFT);
+            $nextSequence++;
+        } while ($existingAppointmentNumbers->contains($appointmentNumber));
+
+        return $appointmentNumber;
     }
 
     /**

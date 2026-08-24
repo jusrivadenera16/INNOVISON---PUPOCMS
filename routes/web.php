@@ -142,7 +142,7 @@ Route::get('/student/faq', [AppointmentController::class, 'faq'])->name('student
 Route::get('/student/booking', [AppointmentController::class, 'create'])->name('student.booking');
 
 // --- PROTECTED ROUTES (Login required) ---
-Route::middleware(['auth:student', 'idp.session', 'audit'])->group(function () {
+Route::middleware(['auth:student', 'account.active', 'idp.session', 'audit'])->group(function () {
     Route::middleware('role:student')->group(function () {
         Route::post('/student/skip-barcode', function () {
             session(['barcode_skipped' => true]);
@@ -221,7 +221,7 @@ Route::middleware(['auth:student', 'idp.session', 'audit'])->group(function () {
     Route::get('/fetch-user/{student_id}', [AppointmentController::class, 'fetchUser']);
 });
 
-Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
+Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('/assistant/choose-portal', [LoginController::class, 'showStudentAssistantPortalChooser'])->name('assistant.choose-portal');
         Route::get('/assistant/enter-student', [LoginController::class, 'enterStudentPortal'])->name('assistant.enter-student');
@@ -258,12 +258,24 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
     Route::post('/health-profile/{id}/return-to-pending', [AdminController::class, 'returnHealthProfileToPending'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.request_resubmission'])
         ->name('admin.health_profile.return_to_pending');
+    Route::post('/health-profile/{id}/pullout/request', [AdminController::class, 'requestHealthProfilePullout'])
+        ->middleware('role:superadmin')
+        ->name('admin.health_profile.pullout.request');
+    Route::post('/health-profile/{id}/pullout/complete', [AdminController::class, 'completeHealthProfilePullout'])
+        ->middleware('role:superadmin')
+        ->name('admin.health_profile.pullout.complete');
+    Route::post('/health-profile/{id}/pullout/restore', [AdminController::class, 'restoreHealthProfilePullout'])
+        ->middleware('role:superadmin')
+        ->name('admin.health_profile.pullout.restore');
     Route::post('/health-form-submissions/{submission}/status', [AdminController::class, 'updateHealthFormSubmissionStatus'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.review_documents'])
         ->name('admin.health_form_submissions.status');
     Route::get('/health-form-submissions/{submission}/pdf', [AdminController::class, 'showHealthFormSubmissionPdf'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
         ->name('admin.health_form_submissions.pdf');
+    Route::get('/health-form-submissions/{submission}/document/{document}', [AdminController::class, 'showHealthFormSubmissionDocument'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
+        ->name('admin.health_form_submissions.document');
     Route::post('/health-profile/{id}/for-final-review', [AdminController::class, 'markHealthProfileForFinalReview'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.review_documents'])
         ->name('admin.health_profile.for_final_review');
@@ -334,6 +346,12 @@ Route::middleware(['auth:admin', 'idp.session', 'audit'])->group(function () {
             ->middleware(['module.permission:reports.export_reports', 'superadmin.export'])
             ->name('reports.health-forms-logbook.export');
         Route::get('/admin/reports/feedbacks', [ReportsController::class, 'feedbackReport'])->middleware('module.permission:reports.feedbacks')->name('reports.feedbacks');
+        Route::get('/admin/reports/digital-logbook/pulled-out-records', [ReportsController::class, 'pulledOutRecords'])
+            ->middleware('role:superadmin')
+            ->name('reports.pulled-out-records');
+        Route::get('/admin/reports/digital-logbook/pulled-out-records/{healthProfile}', [ReportsController::class, 'showPulledOutRecord'])
+            ->middleware('role:superadmin')
+            ->name('reports.pulled-out-records.show');
         Route::middleware(['module.permission:reports.export_reports', 'superadmin.export'])->group(function () {
             Route::get('/admin/reports/export-hub', [ReportsController::class, 'exportHub'])->name('reports.exportHub');
             Route::get('/admin/reports/export-hub/mar', [ReportsController::class, 'exportReportsMar'])->name('reports.exportHub.mar');
