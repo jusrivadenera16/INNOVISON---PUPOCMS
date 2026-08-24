@@ -5690,10 +5690,13 @@
         width: 100%;
         max-width: 100%;
         min-width: 0;
+        height: auto !important;
+        min-height: 0;
         box-sizing: border-box;
         display: flex !important;
         flex-direction: column;
         align-items: stretch;
+        overflow: visible !important;
     }
     .main .health-summary-card > .health-table-head,
     .main .health-summary-card > .health-table-scroll {
@@ -5730,10 +5733,24 @@
         box-sizing: border-box;
         overflow: visible;
     }
-    .main .health-summary-card > .health-table-head,
-    .main .health-summary-card .health-table-tools {
+    .main .health-summary-card > .health-table-head {
         position: static !important;
         inset: auto !important;
+    }
+    .main .health-summary-card .health-table-tools {
+        position: relative !important;
+        inset: auto !important;
+        z-index: 60;
+    }
+    .main .health-summary-card #healthFilterModal {
+        z-index: 70 !important;
+    }
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:hover svg,
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:focus-visible svg,
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:hover svg *,
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:focus-visible svg * {
+        color: #70131B !important;
+        stroke: #70131B !important;
     }
     .main .health-summary-card > .health-table-scroll {
         order: 2;
