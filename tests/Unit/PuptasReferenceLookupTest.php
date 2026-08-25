@@ -147,6 +147,62 @@ class PuptasReferenceLookupTest extends TestCase
         $this->assertSame(1, $lookupRequests);
     }
 
+    public function test_it_looks_up_an_applicant_using_the_idp_user_id_endpoint(): void
+    {
+        Http::fake([
+            'https://puptas.example.test/oauth/token' => Http::response([
+                'access_token' => 'test-token',
+                'expires_in' => 3600,
+            ]),
+            'https://puptas.example.test/api/v1/medical/applicants/idp/idp-user-123' => Http::response([
+                'data' => [
+                    'idp_user_id' => 'idp-user-123',
+                    'reference_number' => '2026-0207-8804',
+                ],
+            ]),
+        ]);
+
+        $result = app(PuptasWebhookService::class)
+            ->fetchApplicantByIdpUserIdDetailed('idp-user-123');
+
+        $this->assertTrue($result['success']);
+        $this->assertSame('found', $result['outcome']);
+        $this->assertSame(200, $result['status']);
+        $this->assertSame('2026-0207-8804', $result['data']['reference_number']);
+    }
+
+    public function test_it_does_not_retry_when_the_oauth_token_endpoint_is_rate_limited(): void
+    {
+        $tokenRequests = 0;
+        $lookupRequests = 0;
+
+        Http::fake(function (Request $request) use (&$tokenRequests, &$lookupRequests) {
+            if ($request->url() === 'https://puptas.example.test/oauth/token') {
+                $tokenRequests++;
+
+                return Http::response(
+                    ['message' => 'Rate limited.'],
+                    429,
+                    ['Retry-After' => '120']
+                );
+            }
+
+            $lookupRequests++;
+
+            return Http::response([], 500);
+        });
+
+        $result = app(PuptasWebhookService::class)
+            ->fetchApplicantByIdpUserIdDetailed('idp-user-rate-limited');
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('unavailable', $result['outcome']);
+        $this->assertSame(429, $result['status']);
+        $this->assertSame(1, $result['attempts']);
+        $this->assertSame(1, $tokenRequests);
+        $this->assertSame(0, $lookupRequests);
+    }
+
     public function test_it_retries_temporary_lookup_failures_without_converting_them_to_not_found(): void
     {
         $lookupRequests = 0;

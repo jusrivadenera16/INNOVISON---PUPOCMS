@@ -5690,10 +5690,13 @@
         width: 100%;
         max-width: 100%;
         min-width: 0;
+        height: auto !important;
+        min-height: 0;
         box-sizing: border-box;
         display: flex !important;
         flex-direction: column;
         align-items: stretch;
+        overflow: visible !important;
     }
     .main .health-summary-card > .health-table-head,
     .main .health-summary-card > .health-table-scroll {
@@ -5730,10 +5733,24 @@
         box-sizing: border-box;
         overflow: visible;
     }
-    .main .health-summary-card > .health-table-head,
-    .main .health-summary-card .health-table-tools {
+    .main .health-summary-card > .health-table-head {
         position: static !important;
         inset: auto !important;
+    }
+    .main .health-summary-card .health-table-tools {
+        position: relative !important;
+        inset: auto !important;
+        z-index: 60;
+    }
+    .main .health-summary-card #healthFilterModal {
+        z-index: 70 !important;
+    }
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:hover svg,
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:focus-visible svg,
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:hover svg *,
+    button#healthRecordsOverviewFilterBtn.health-records-search-submit:focus-visible svg * {
+        color: #70131B !important;
+        stroke: #70131B !important;
     }
     .main .health-summary-card > .health-table-scroll {
         order: 2;
@@ -5971,18 +5988,27 @@
             if (str_contains($rawType, 'faculty')) {
                 return 'Faculty';
             }
-            if (str_contains($rawType, 'student')) {
-                return 'Student';
-            }
             if (in_array((string) ($record->record_source ?? 'health'), ['employee', 'staff'], true)) {
                 return 'Faculty';
             }
 
-            $studentNumber = strtoupper(trim((string) ($record->student_number ?: $user->student_number)));
-            return $studentNumber !== ''
-                && !\Illuminate\Support\Str::startsWith($studentNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
-                    ? 'Student'
-                    : 'Applicant';
+            $referenceNumbers = collect([
+                $record->reference_number ?? null,
+                $user->reference_number,
+            ])->map(fn ($value) => strtoupper(trim((string) $value)))
+                ->filter()
+                ->unique();
+            $hasStudentNumber = collect([
+                $record->student_number ?? null,
+                $user->student_number,
+            ])->map(fn ($value) => strtoupper(trim((string) $value)))
+                ->filter()
+                ->contains(function ($studentNumber) use ($referenceNumbers) {
+                    return !\Illuminate\Support\Str::startsWith($studentNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
+                        && !$referenceNumbers->contains($studentNumber);
+                });
+
+            return $hasStudentNumber ? 'Student' : 'Applicant';
         };
     @endphp
 
@@ -6107,9 +6133,11 @@
                     $recordStatus = trim((string) ($record->clearance_status ?? ''));
                     $recordStatusNormalized = strtolower($recordStatus);
                     $recordPulloutStatus = $recordIsEmployee ? '' : trim((string) ($record->pullout_status ?? ''));
-                    $isConditional = in_array($recordStatus, ['Pending/Conditional', 'Rejected'], true)
+                    $isConditional = !in_array($recordStatus, ['Issued', 'Fully Cleared'], true) && (
+                        in_array($recordStatus, ['Pending/Conditional', 'Rejected'], true)
                         || trim((string) ($record->pending_reason ?? '')) !== ''
-                        || trim((string) ($record->medical_condition_remarks ?? '')) !== '';
+                        || trim((string) ($record->medical_condition_remarks ?? '')) !== ''
+                    );
                     $healthTabState = $isConditional
                         ? 'pending_conditional'
                         : (in_array($recordStatus, ['Pending', 'For Verification', ''], true) ? 'pending_approval' : 'cleared');
@@ -7111,7 +7139,7 @@
                 <div class="health-filter-select-wrap is-sort-order">
                     <select id="sortFilter" name="sort" class="health-filter-select health-filter-custom-source">
                         <option value="approved_date" {{ ($sortFilter ?? 'approved_date') === 'approved_date' ? 'selected' : '' }}>Approved Date</option>
-                        <option value="alphabetical" {{ ($sortFilter ?? '') === 'alphabetical' ? 'selected' : '' }}>Alphabetical (A-Z)</option>
+                        <option value="alphabetical" {{ ($sortFilter ?? '') === 'alphabetical' ? 'selected' : '' }}>Last Name (A-Z)</option>
                         <option value="course" {{ ($sortFilter ?? '') === 'course' ? 'selected' : '' }}>Course (A-Z)</option>
                     </select>
                 </div>

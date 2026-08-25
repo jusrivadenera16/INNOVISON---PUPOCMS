@@ -2312,6 +2312,8 @@
                 $manualStudentModeSelected = $selectedReferenceMode === 'student_number';
                 $referenceRequiresValidation = (bool) ($prefill['reference_requires_validation'] ?? true);
                 $referenceVerificationUnavailable = $referenceMode === 'verification_unavailable';
+                $puptasVerificationStatus = (int) ($prefill['puptas_verification_http_status'] ?? 0);
+                $puptasVerificationMessage = trim((string) ($prefill['puptas_verification_message'] ?? ''));
                 $applicantDocumentsRequired = $referenceMode === 'admission' || $manualStudentModeSelected;
                 $stepOneTitle = trim((string) ($prefill['step_1_title'] ?? 'Admission Reference'));
                 $stepOneDescription = trim((string) ($prefill['step_1_description'] ?? 'Confirm your admission reference, complete your health information, then upload the required clinic documents.'));
@@ -2332,7 +2334,11 @@
                 $referenceStatusDefault = $referenceRequiresValidation
                     ? 'No Admission Reference was received. Use the pencil button to enter and verify the reference from Admissions. If you do not have one, contact Admissions or clinic staff at puptclinic@gmail.com.'
                     : ($referenceVerificationUnavailable
-                        ? 'PUPTAS could not be reached after retrying. No clinic reference was generated. Please retry later or contact Admissions or clinic staff at puptclinic@gmail.com.'
+                        ? ($puptasVerificationMessage !== ''
+                            ? $puptasVerificationMessage . ' No clinic reference was generated.'
+                            : ($puptasVerificationStatus === 429
+                                ? 'PUPTAS verification is temporarily rate limited. No clinic reference was generated. Please try again later.'
+                                : 'PUPTAS verification is temporarily unavailable. No clinic reference was generated. Please try again later.'))
                         : ($referenceMode === 'student_number'
                             ? 'Your official student number from GUISIS will be used as your clinic reference.'
                             : 'This clinic reference is generated and managed inside the clinic system for local staff, admin, faculty, and guest records.'));

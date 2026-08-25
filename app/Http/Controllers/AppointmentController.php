@@ -488,6 +488,8 @@ class AppointmentController extends Controller
                 'lookup_type' => 'reference',
                 'outcome' => $lookup['outcome'] ?? null,
                 'status' => $lookup['status'] ?? null,
+                'attempts' => $lookup['attempts'] ?? null,
+                'message' => $lookup['message'] ?? null,
                 'has_data' => is_array($lookup['data'] ?? null),
                 'has_reference_number' => trim((string) data_get($lookup, 'data.reference_number', data_get($lookup, 'data.user.reference_number', ''))) !== '',
             ]);
@@ -505,6 +507,8 @@ class AppointmentController extends Controller
                 'lookup_type' => 'idp',
                 'outcome' => $lookup['outcome'] ?? null,
                 'status' => $lookup['status'] ?? null,
+                'attempts' => $lookup['attempts'] ?? null,
+                'message' => $lookup['message'] ?? null,
                 'has_data' => is_array($lookup['data'] ?? null),
                 'has_reference_number' => trim((string) data_get($lookup, 'data.reference_number', data_get($lookup, 'data.user.reference_number', ''))) !== '',
             ]);
@@ -1408,16 +1412,31 @@ class AppointmentController extends Controller
         $linkedAdminProfile = $linkedAdminProfile ?: $this->resolveLinkedAdminProfile($user);
         $guisisAccountData = $this->isStudentAccount($user) ? $this->buildGuisisAccountData($user) : ['available' => false];
         $studentNumberReference = $this->enrolledStudentReferenceNumber($user, $healthProfile, $guisisAccountData);
+        $storedAdmissionReference = $this->resolveReferenceNumber($user, $healthProfile);
         if ($studentNumberReference !== '') {
             $applicantLookup = [
                 'success' => false,
                 'outcome' => 'skipped_student_number',
+                'status' => null,
                 'message' => 'Student number from GUISIS is used for enrolled student health profiles.',
                 'data' => null,
             ];
             $applicantData = null;
             $lookupOutcome = 'skipped_student_number';
             $referenceMode = 'student_number';
+        } elseif ($storedAdmissionReference !== '') {
+            // References are persisted only after a confirmed PUPTAS lookup or
+            // successful manual verification, so the form can safely reuse it.
+            $applicantLookup = [
+                'success' => true,
+                'outcome' => 'stored_reference',
+                'status' => null,
+                'message' => 'Previously verified Admission Reference loaded from this account.',
+                'data' => null,
+            ];
+            $applicantData = null;
+            $lookupOutcome = 'stored_reference';
+            $referenceMode = 'admission';
         } else {
             $applicantLookup = $this->fetchPuptasApplicantLookupForUser($user);
             $applicantData = is_array($applicantLookup['data'] ?? null) ? $applicantLookup['data'] : null;
@@ -1545,6 +1564,7 @@ class AppointmentController extends Controller
                 default => 'Review your clinic reference, complete your health information, then upload the required clinic documents.',
             },
             'puptas_verification_status' => $lookupOutcome,
+            'puptas_verification_http_status' => $applicantLookup['status'] ?? null,
             'puptas_verification_message' => trim((string) ($applicantLookup['message'] ?? '')),
             'identity_from_puptas' => $hasOfficialApplicantIdentity,
             'puptas_full_name' => $applicantStructuredName,
@@ -4481,6 +4501,7 @@ public function validateHealthFormReference(Request $request)
         ? HealthProfile::query()->where('user_id', $user->id)->first()
         : null;
     $studentNumberReference = $user ? $this->enrolledStudentReferenceNumber($user, $existingHealthProfile) : '';
+    $storedAdmissionReference = $user ? $this->resolveReferenceNumber($user, $existingHealthProfile) : '';
 
     if ($user && $this->wantsManualStudentNumberMode($request)) {
         $manualModeLookup = $this->fetchPuptasApplicantLookupForUser($user);
@@ -4515,10 +4536,15 @@ public function validateHealthFormReference(Request $request)
         ]);
     }
 
+    $accountLookup = null;
     if ($studentNumberReference !== '') {
         $referenceMode = 'student_number';
         $accountApplicantData = null;
         $accountLookupOutcome = 'skipped_student_number';
+    } elseif ($storedAdmissionReference !== '') {
+        $referenceMode = 'admission';
+        $accountApplicantData = null;
+        $accountLookupOutcome = 'stored_reference';
     } else {
         $accountLookup = $this->fetchPuptasApplicantLookupForUser($user);
         $accountApplicantData = is_array($accountLookup['data'] ?? null) ? $accountLookup['data'] : null;
@@ -4532,11 +4558,16 @@ public function validateHealthFormReference(Request $request)
     }
 
     if ($referenceMode === 'verification_unavailable') {
+        $lookupStatus = (int) ($accountLookup['status'] ?? 0);
+        $isRateLimited = $lookupStatus === 429;
+
         return response()->json([
             'success' => false,
             'service_unavailable' => true,
-            'message' => 'PUPTAS verification is temporarily unavailable. Please try again later or contact Admissions or clinic staff.',
-        ], 503);
+            'rate_limited' => $isRateLimited,
+            'message' => trim((string) ($accountLookup['message'] ?? ''))
+                ?: 'PUPTAS verification is temporarily unavailable. Please try again later or contact Admissions or clinic staff.',
+        ], $isRateLimited ? 429 : 503);
     }
 
     if ($referenceMode !== 'admission') {
@@ -4559,13 +4590,14 @@ public function validateHealthFormReference(Request $request)
     ]);
 
     $referenceNumber = strtoupper(trim((string) $validated['reference_number']));
-    $currentReference = strtoupper(trim((string) ($user->reference_number ?? '')));
+    $currentReference = strtoupper(trim((string) ($storedAdmissionReference ?: ($user->reference_number ?? ''))));
 
     if (
         $currentReference !== ''
         && !$this->isClinicReference($currentReference)
         && $referenceNumber === $currentReference
     ) {
+        $this->persistResolvedReferenceNumber($user, $currentReference, $existingHealthProfile);
         RateLimiter::clear($this->healthReferenceAttemptKey($request, $user));
         return response()->json([
             'success' => true,
@@ -4613,11 +4645,16 @@ public function validateHealthFormReference(Request $request)
     $lookup = app(PuptasWebhookService::class)->fetchApplicantByReferenceNumberDetailed($referenceNumber);
     if (empty($lookup['success']) || !is_array($lookup['data'] ?? null)) {
         if (($lookup['outcome'] ?? '') === 'unavailable') {
+            $lookupStatus = (int) ($lookup['status'] ?? 0);
+            $isRateLimited = $lookupStatus === 429;
+
             return response()->json([
                 'success' => false,
                 'service_unavailable' => true,
-                'message' => 'PUPTAS verification is temporarily unavailable. Please try again later or contact Admissions or clinic staff.',
-            ], 503);
+                'rate_limited' => $isRateLimited,
+                'message' => trim((string) ($lookup['message'] ?? ''))
+                    ?: 'PUPTAS verification is temporarily unavailable. Please try again later or contact Admissions or clinic staff.',
+            ], $isRateLimited ? 429 : 503);
         }
 
         RateLimiter::hit($attemptKey, 3600);

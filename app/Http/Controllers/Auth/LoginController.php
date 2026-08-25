@@ -1664,25 +1664,41 @@ class LoginController extends Controller
 
             $puptasService = app(\App\Services\PuptasWebhookService::class);
             $applicantData = null;
+            $lookupResults = [];
 
             // Try lookup by student_id first
             $studentId = trim((string) ($user->student_id ?? ''));
             if ($studentId !== '') {
-                $applicantData = $puptasService->fetchApplicantByIdpUserId($studentId);
+                $lookup = $puptasService->fetchApplicantByIdpUserIdDetailed($studentId);
+                $lookupResults[] = $lookup;
+                if (($lookup['outcome'] ?? '') === 'found' && is_array($lookup['data'] ?? null)) {
+                    $applicantData = $lookup['data'];
+                }
             }
 
             // Fallback: try lookup by reference_number if student_id lookup fails
             if (!is_array($applicantData) || empty($applicantData)) {
                 $referenceNumber = trim((string) ($user->reference_number ?? ''));
                 if ($referenceNumber !== '') {
-                    $applicantData = $puptasService->fetchApplicantByReferenceNumber($referenceNumber);
+                    $lookup = $puptasService->fetchApplicantByReferenceNumberDetailed($referenceNumber);
+                    $lookupResults[] = $lookup;
+                    if (($lookup['outcome'] ?? '') === 'found' && is_array($lookup['data'] ?? null)) {
+                        $applicantData = $lookup['data'];
+                    }
                 }
             }
 
             if (!is_array($applicantData)) {
-                Log::info('PUPTAS lookup not found', [
+                $failedLookup = collect($lookupResults)->first(
+                    fn ($result) => ($result['outcome'] ?? '') === 'unavailable'
+                ) ?: (end($lookupResults) ?: []);
+
+                Log::info('PUPTAS enrichment lookup finished without applicant data', [
                     'user_id' => $user->id,
-                    'student_id' => $studentId,
+                    'outcome' => $failedLookup['outcome'] ?? 'not_found',
+                    'status' => $failedLookup['status'] ?? null,
+                    'attempts' => $failedLookup['attempts'] ?? 0,
+                    'message' => $failedLookup['message'] ?? 'No PUPTAS applicant data was returned.',
                 ]);
                 return;
             }
@@ -1709,7 +1725,7 @@ class LoginController extends Controller
             ));
 
             $shouldUpdate = false;
-            if ($referenceNumber !== '' && $user->reference_number === null) {
+            if ($referenceNumber !== '' && trim((string) $user->reference_number) === '') {
                 $user->reference_number = $referenceNumber;
                 $shouldUpdate = true;
             }

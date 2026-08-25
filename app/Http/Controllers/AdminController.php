@@ -131,14 +131,24 @@ class AdminController extends Controller
                     ->where('student_number', '!=', '')
                     ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
                     ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
-                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%']);
+                    ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%'])
+                    ->where(function ($identityQuery) {
+                        $identityQuery->whereNull('reference_number')
+                            ->orWhere('reference_number', '')
+                            ->orWhereColumn('student_number', '!=', 'reference_number');
+                    });
             })
                 ->orWhereHas('user', function ($userQuery) {
                     $userQuery->whereNotNull('student_number')
                         ->where('student_number', '!=', '')
                         ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
                         ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
-                        ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%']);
+                        ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%'])
+                        ->where(function ($identityQuery) {
+                            $identityQuery->whereNull('reference_number')
+                                ->orWhere('reference_number', '')
+                                ->orWhereColumn('student_number', '!=', 'reference_number');
+                        });
                 });
         };
 
@@ -156,14 +166,20 @@ class AdminController extends Controller
                             ->orWhere('student_number', '')
                             ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
                             ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
-                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%']);
+                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
+                            ->orWhereColumn('student_number', 'reference_number');
                     })
                         ->whereDoesntHave('user', function ($userQuery) {
                             $userQuery->whereNotNull('student_number')
                                 ->where('student_number', '!=', '')
                                 ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
                                 ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
-                                ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%']);
+                                ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%'])
+                                ->where(function ($identityQuery) {
+                                    $identityQuery->whereNull('reference_number')
+                                        ->orWhere('reference_number', '')
+                                        ->orWhereColumn('student_number', '!=', 'reference_number');
+                                });
                         });
                 })
                     ->orWhereHas('user', function ($userQuery) {
@@ -2044,7 +2060,15 @@ class AdminController extends Controller
         $issuedEmployeeRecords = $issuedEmployeeQuery->get()
             ->map(fn ($record) => $decorateHealthRecord($record, 'employee'));
         $healthRecordName = static function ($record): string {
-            return trim((string) (optional($record->user)->name ?: $record->name ?: ''));
+            $user = optional($record->user);
+            $lastName = trim((string) $user->last_name);
+            $firstName = trim((string) $user->first_name);
+            $middleName = trim((string) $user->middle_name);
+            $fallbackName = trim((string) ($user->name ?: $record->name ?: ''));
+
+            return $lastName !== ''
+                ? trim(implode(' ', array_filter([$lastName, $firstName, $middleName])))
+                : $fallbackName;
         };
         $healthRecordCourse = static function ($record): string {
             return trim((string) (
@@ -2490,15 +2514,20 @@ class AdminController extends Controller
         $previousVerifiedAt = $profile->verified_at;
         $previousApprovedBy = $profile->approved_by_user_id;
         $previousPuptasStatus = $profile->puptas_sync_status;
+        $previousPuptasSyncedAt = $profile->puptas_synced_at;
 
         $profile->clearance_status = 'For Verification';
         $profile->physical_assessment_status = 'Not Yet Conducted';
-        $profile->pending_reason = null;
-        $profile->verified_at = null;
-        $profile->approved_by_user_id = null;
+        $profile->pending_reason = trim((string) ($profile->pending_reason ?? '')) ?: 'Returned to pending approval for document review.';
+        $profile->verified_at = $previousVerifiedAt ?? $profile->verified_at;
+        $profile->approved_by_user_id = $previousApprovedBy ?? $profile->approved_by_user_id;
+        $profile->puptas_synced_at = $previousPuptasSyncedAt ?? $profile->puptas_synced_at;
         $profile->save();
         $this->updateCurrentHealthFormSubmissionStatus($profile, HealthFormSubmission::STATUS_SUBMITTED);
-        $this->updatePuptasSyncState($profile, null, null);
+
+        if ($profile->puptas_sync_status === null || $profile->puptas_sync_status === 'not_applicable') {
+            $this->updatePuptasSyncState($profile, $previousPuptasStatus ?? null, $profile->puptas_sync_message ?? 'Approved health clearance remains in its original sync state while pending review.');
+        }
 
         if ($profile->user) {
             $profile->user->is_health_profile_completed = 0;
@@ -2527,6 +2556,7 @@ class AdminController extends Controller
                 'previous_verified_at' => optional($previousVerifiedAt)->toDateTimeString(),
                 'previous_approved_by_user_id' => $previousApprovedBy,
                 'previous_puptas_sync_status' => $previousPuptasStatus,
+                'preserved_puptas_synced_at' => optional($previousPuptasSyncedAt)->toDateTimeString(),
             ],
             'ip_address' => $request->ip(),
             'user_agent' => substr((string) $request->userAgent(), 0, 255),
@@ -3173,17 +3203,19 @@ public function updateClearance(Request $request, $id)
         if (!$wasAlreadyIssued) {
             $record->clearance_status = 'Pending Resubmission';
         }
+
         $pendingReason = trim((string) $validated['pending_reason']);
         if ($needsHealthFormCorrection && !str_contains(strtolower($pendingReason), 'health form correction')) {
             $pendingReason = trim($pendingReason . "\nHealth Form Correction");
         }
+
         $record->pending_reason = $pendingReason;
-        $record->documents_valid = false;
+        $record->documents_valid = $wasAlreadyIssued ? ($record->documents_valid ?? true) : false;
         $record->resubmission_required_documents = $requestedDocuments;
         $record->resubmission_requested_at = now();
         $record->pending_compliance_reminder_sent_at = null;
         $record->pending_compliance_reminder_count = 0;
-        $record->resubmitted_at = null;
+        $record->resubmitted_at = $wasAlreadyIssued ? $record->resubmitted_at : null;
 
         if ($request->boolean('clear_uploaded_documents')) {
             foreach ($requestedDocuments as $documentKey) {
@@ -3213,10 +3245,15 @@ public function updateClearance(Request $request, $id)
                 ->first();
 
             if ($submission) {
-                $submission->status = HealthFormSubmission::STATUS_NEEDS_CORRECTION;
-                $submission->approved_at = null;
-                $submission->remarks = trim((string) ($submission->remarks ?: $pendingReason)) ?: null;
-                $submission->save();
+                if ($wasAlreadyIssued) {
+                    $submission->remarks = trim((string) ($submission->remarks ?: $pendingReason)) ?: null;
+                    $submission->save();
+                } else {
+                    $submission->status = HealthFormSubmission::STATUS_NEEDS_CORRECTION;
+                    $submission->approved_at = null;
+                    $submission->remarks = trim((string) ($submission->remarks ?: $pendingReason)) ?: null;
+                    $submission->save();
+                }
             }
         }
 

@@ -92,6 +92,19 @@ class PuptasWebhookService
             return $cachedToken;
         }
 
+        $rateLimitedUntil = (int) Cache::get($this->accessTokenRateLimitCacheKey(), 0);
+        if ($rateLimitedUntil > now()->timestamp) {
+            $retryAfter = max(1, $rateLimitedUntil - now()->timestamp);
+            throw new \RuntimeException(
+                "PUPTAS access token request is rate limited. Retry after {$retryAfter} seconds.",
+                429
+            );
+        }
+
+        if ($rateLimitedUntil > 0) {
+            Cache::forget($this->accessTokenRateLimitCacheKey());
+        }
+
         if ($this->tokenUrl === '' || $this->clientId === '' || $this->clientSecret === '') {
             throw new \RuntimeException('PUPTAS OAuth configuration is incomplete.');
         }
@@ -107,7 +120,30 @@ class PuptasWebhookService
             ]);
 
         if (!$response->successful()) {
-            throw new \RuntimeException('Unable to fetch PUPTAS access token: ' . $response->body());
+            $status = $response->status();
+            $responseMessage = $this->responseFailureMessage($response->body());
+
+            if ($status === 429) {
+                $retryAfter = $this->retryAfterSeconds($response->header('Retry-After'));
+                $retryAt = now()->addSeconds($retryAfter);
+                Cache::put(
+                    $this->accessTokenRateLimitCacheKey(),
+                    $retryAt->timestamp,
+                    $retryAt
+                );
+
+                throw new \RuntimeException(
+                    "Unable to fetch PUPTAS access token: rate limited. Retry after {$retryAfter} seconds.",
+                    429
+                );
+            }
+
+            throw new \RuntimeException(
+                'Unable to fetch PUPTAS access token'
+                    . ($status > 0 ? " (HTTP {$status})" : '')
+                    . ($responseMessage !== '' ? ': ' . $responseMessage : '.'),
+                $status
+            );
         }
 
         $token = trim((string) $response->json('access_token'));
@@ -117,6 +153,7 @@ class PuptasWebhookService
 
         $expiresIn = max(60, ((int) $response->json('expires_in', 3600)) - 60);
         Cache::put($cacheKey, $token, now()->addSeconds($expiresIn));
+        Cache::forget($this->accessTokenRateLimitCacheKey());
 
         return $token;
     }
@@ -128,6 +165,48 @@ class PuptasWebhookService
             $this->clientId,
             $this->scope,
         ]));
+    }
+
+    private function accessTokenRateLimitCacheKey(): string
+    {
+        return $this->accessTokenCacheKey() . '.rate_limited_until';
+    }
+
+    private function retryAfterSeconds(?string $retryAfter, int $default = 60): int
+    {
+        $retryAfter = trim((string) $retryAfter);
+        if ($retryAfter !== '' && ctype_digit($retryAfter)) {
+            return max(1, min(3600, (int) $retryAfter));
+        }
+
+        if ($retryAfter !== '') {
+            $retryAt = strtotime($retryAfter);
+            if ($retryAt !== false) {
+                return max(1, min(3600, $retryAt - time()));
+            }
+        }
+
+        return $default;
+    }
+
+    private function responseFailureMessage(string $responseBody): string
+    {
+        $responseBody = trim($responseBody);
+        if ($responseBody === '') {
+            return '';
+        }
+
+        $decoded = json_decode($responseBody, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            foreach (['message', 'error', 'detail'] as $key) {
+                $message = trim((string) ($decoded[$key] ?? ''));
+                if ($message !== '') {
+                    return mb_substr($message, 0, 1000);
+                }
+            }
+        }
+
+        return mb_substr($responseBody, 0, 1000);
     }
 
     private function forgetAccessToken(): void
@@ -158,7 +237,12 @@ class PuptasWebhookService
                         ->get($url);
                 }
 
-                $isTemporaryFailure = in_array($response->status(), [408, 425, 429], true)
+                // Retrying a 429 immediately only extends the upstream throttle.
+                if ($response->status() === 429) {
+                    return $response;
+                }
+
+                $isTemporaryFailure = in_array($response->status(), [408, 425], true)
                     || $response->status() >= 500;
 
                 if (!$isTemporaryFailure || $attempt === $maxAttempts) {
@@ -166,7 +250,9 @@ class PuptasWebhookService
                 }
             } catch (\Throwable $exception) {
                 $lastException = $exception;
-                if ($attempt === $maxAttempts) {
+                $status = (int) $exception->getCode();
+                $isNonRetryableHttpFailure = $status >= 400 && $status < 500;
+                if ($isNonRetryableHttpFailure || $attempt === $maxAttempts) {
                     throw $exception;
                 }
             }
@@ -189,6 +275,32 @@ class PuptasWebhookService
             : str_repeat('*', max(4, strlen($value) - 4)) . substr($value, -4);
     }
 
+    private function exceptionHttpStatus(\Throwable $exception): ?int
+    {
+        $status = (int) $exception->getCode();
+
+        return $status >= 400 && $status <= 599 ? $status : null;
+    }
+
+    private function safeLookupExceptionMessage(\Throwable $exception, string $identifier): string
+    {
+        $message = trim($exception->getMessage());
+        if ($message === '') {
+            return 'PUPTAS lookup failed with an unknown exception.';
+        }
+
+        $identifier = trim($identifier);
+        if ($identifier !== '') {
+            $message = str_replace(
+                [$identifier, rawurlencode($identifier)],
+                $this->maskedLookupIdentifier($identifier),
+                $message
+            );
+        }
+
+        return mb_substr($message, 0, 2000);
+    }
+
     private function logApplicantLookupFailure(
         string $lookupType,
         string $identifier,
@@ -203,6 +315,7 @@ class PuptasWebhookService
             'attempts' => $this->lastLookupAttempts,
             'user_id' => auth()->id(),
             'error_type' => $errorType,
+            'message' => $message,
         ]);
 
         try {
@@ -310,7 +423,7 @@ class PuptasWebhookService
                         $referenceNumber,
                         $response->status(),
                         $responseMessage !== '' ? $responseMessage : 'PUPTAS lookup could not be completed.',
-                        'http_error'
+                        $response->status() === 429 ? 'rate_limited' : 'http_error'
                     );
                 }
                 return [
@@ -348,18 +461,22 @@ class PuptasWebhookService
                 'attempts' => $this->lastLookupAttempts,
             ];
         } catch (\Throwable $exception) {
+            $status = $this->exceptionHttpStatus($exception);
+            $exceptionMessage = $this->safeLookupExceptionMessage($exception, $referenceNumber);
             $this->logApplicantLookupFailure(
                 'reference',
                 $referenceNumber,
-                null,
-                'PUPTAS lookup could not be completed after retrying.',
-                'exception'
+                $status,
+                $exceptionMessage,
+                $status === 429 ? 'rate_limited' : 'exception'
             );
             return [
                 'success' => false,
                 'outcome' => 'unavailable',
-                'status' => null,
-                'message' => 'PUPTAS verification is temporarily unavailable. Please try again later.',
+                'status' => $status,
+                'message' => $status === 429
+                    ? 'PUPTAS verification is temporarily rate limited. Please try again later.'
+                    : 'PUPTAS verification is temporarily unavailable. Please try again later.',
                 'data' => null,
                 'attempts' => $this->lastLookupAttempts,
             ];
@@ -435,7 +552,7 @@ class PuptasWebhookService
                         $idpUserId,
                         $response->status(),
                         $responseMessage !== '' ? $responseMessage : 'PUPTAS lookup could not be completed.',
-                        'http_error'
+                        $response->status() === 429 ? 'rate_limited' : 'http_error'
                     );
                 }
                 return [
@@ -473,18 +590,22 @@ class PuptasWebhookService
                 'attempts' => $this->lastLookupAttempts,
             ];
         } catch (\Throwable $exception) {
+            $status = $this->exceptionHttpStatus($exception);
+            $exceptionMessage = $this->safeLookupExceptionMessage($exception, $idpUserId);
             $this->logApplicantLookupFailure(
                 'idp',
                 $idpUserId,
-                null,
-                'PUPTAS lookup could not be completed after retrying.',
-                'exception'
+                $status,
+                $exceptionMessage,
+                $status === 429 ? 'rate_limited' : 'exception'
             );
             return [
                 'success' => false,
                 'outcome' => 'unavailable',
-                'status' => null,
-                'message' => 'PUPTAS verification is temporarily unavailable. Please try again later.',
+                'status' => $status,
+                'message' => $status === 429
+                    ? 'PUPTAS verification is temporarily rate limited. Please try again later.'
+                    : 'PUPTAS verification is temporarily unavailable. Please try again later.',
                 'data' => null,
                 'attempts' => $this->lastLookupAttempts,
             ];
@@ -591,10 +712,25 @@ class PuptasWebhookService
                 'nonce' => $nonce,
                 'error' => $response->body(),
             ]);
-            return ['success' => false, 'message' => $errorMessage];
+            return [
+                'success' => false,
+                'message' => $errorMessage,
+                'status' => $response->status(),
+                'error_type' => $response->status() === 429 ? 'rate_limited' : 'http_error',
+            ];
         } catch (\Exception $e) {
-            Log::error('PUPTAS webhook exception', ['error' => $e->getMessage()]);
-            return ['success' => false, 'message' => $e->getMessage()];
+            $status = $this->exceptionHttpStatus($e);
+            Log::error('PUPTAS webhook exception', [
+                'status' => $status,
+                'error_type' => $status === 429 ? 'rate_limited' : 'exception',
+                'error' => $e->getMessage(),
+            ]);
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'status' => $status,
+                'error_type' => $status === 429 ? 'rate_limited' : 'exception',
+            ];
         }
     }
 
@@ -616,17 +752,22 @@ class PuptasWebhookService
                 return $result;
             }
 
+            $status = (int) ($result['status'] ?? 0);
+            if ($status >= 400 && $status < 500) {
+                return $result;
+            }
+
             $attempt++;
             if ($attempt < $maxRetries) {
                 sleep(2);
             }
         }
 
-        return [
+        return array_merge($lastResult, [
             'success' => false,
             'message' => trim((string) ($lastResult['message'] ?? '')) !== ''
                 ? $lastResult['message']
                 : ('Failed after ' . $maxRetries . ' attempts'),
-        ];
+        ]);
     }
 }
