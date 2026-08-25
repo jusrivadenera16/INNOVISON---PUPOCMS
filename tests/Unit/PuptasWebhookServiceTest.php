@@ -51,11 +51,11 @@ class PuptasWebhookServiceTest extends TestCase
 
             $payload = json_decode($request->body(), true);
 
-            $this->assertSame([
-                'student_id' => 'ade67dc4-50f0-4e32-bd80-84308c0f4e10',
-                'reference_number' => '2026-000-057',
-                'is_health_profile_completed' => 1,
-            ], $payload);
+            $this->assertSame('ade67dc4-50f0-4e32-bd80-84308c0f4e10', $payload['student_id']);
+            $this->assertSame('2026-000-057', $payload['reference_number']);
+            $this->assertSame(1, $payload['is_health_profile_completed']);
+            $this->assertNotEmpty($payload['timestamp']);
+            $this->assertNotEmpty($payload['nonce']);
             $this->assertSame(
                 [hash_hmac('sha256', $request->body(), 'webhook-secret')],
                 $request->header('X-Medical-Signature')
@@ -109,5 +109,43 @@ class PuptasWebhookServiceTest extends TestCase
         $this->assertTrue($result['success']);
         $this->assertTrue($result['skipped']);
         Http::assertNothingSent();
+    }
+
+    public function test_webhook_retry_stops_after_an_oauth_rate_limit_response(): void
+    {
+        Config::set('services.puptas.api_url', 'https://puptas.example/api/v1/webhooks/medical-result');
+        Config::set('services.puptas.client_id', 'client-id');
+        Config::set('services.puptas.client_secret', 'client-secret');
+        Config::set('services.puptas.webhook_secret', 'webhook-secret');
+        Config::set('services.puptas.token_url', 'https://puptas.example/oauth/token');
+        Config::set('services.puptas.timeout', 20);
+
+        $tokenRequests = 0;
+        $webhookRequests = 0;
+
+        Http::fake(function (Request $request) use (&$tokenRequests, &$webhookRequests) {
+            if ($request->url() === 'https://puptas.example/oauth/token') {
+                $tokenRequests++;
+
+                return Http::response(
+                    ['message' => 'Rate limited.'],
+                    429,
+                    ['Retry-After' => '120']
+                );
+            }
+
+            $webhookRequests++;
+
+            return Http::response([], 500);
+        });
+
+        $result = app(PuptasWebhookService::class)
+            ->sendWithRetry('2026-0207-8804', 'idp-user-rate-limited', true);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame(429, $result['status']);
+        $this->assertSame('rate_limited', $result['error_type']);
+        $this->assertSame(1, $tokenRequests);
+        $this->assertSame(0, $webhookRequests);
     }
 }
