@@ -7728,21 +7728,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 : route('student.health_record.signature');
         }
         $hasMissingESignErrors = $errors->has('digital_signature_data') || $errors->has('digital_signature_upload') || $errors->has('signature_method');
+        $hasActiveDocumentCorrectionRequest = $isIssuedStatus && ($resubmissionDocuments->isNotEmpty() || $requiresHealthFormCorrection);
+        $isResubmissionStatus = ($statusNormalized === 'pending resubmission')
+            || (!$isIssuedStatus && ($resubmissionDocuments->isNotEmpty() || $requiresHealthFormCorrection));
         $recordSubmissionStatus = $isResubmissionStatus ? 'Pending Resubmission' : ($isConditionalStatus ? 'Pending Compliance' : 'Waiting for clinic review');
-        $recordStatusMessage = $requiresHealthFormCorrection && $resubmissionDocuments->isEmpty()
+        $recordStatusMessage = $hasActiveDocumentCorrectionRequest
+            ? 'Your health clearance remains valid. Please upload the updated documents.'
+            : ($requiresHealthFormCorrection && $resubmissionDocuments->isEmpty()
             ? 'The clinic requested corrections to your Health Information Form. Open the form below and update the requested information.'
             : ($isResubmissionStatus
             ? 'The clinic requested replacement files for your health profile. Upload only the selected requirement/s below.'
             : ($isConditionalStatus
                 ? 'Your health profile needs follow-up before it can be issued. Please check the pending reason and coordinate with the Medical Clinic.'
-                : 'Your health profile has been submitted. Please proceed to the Medical Clinic on your designated schedule for medical review.'));
-        $recordStatusNote = $requiresHealthFormCorrection && $resubmissionDocuments->isEmpty()
+                : 'Your health profile has been submitted. Please proceed to the Medical Clinic on your designated schedule for medical review.')));
+        $recordStatusNote = $hasActiveDocumentCorrectionRequest
+            ? 'Your existing valid approval remains in place. Only the requested replacement documents need to be uploaded.'
+            : ($requiresHealthFormCorrection && $resubmissionDocuments->isEmpty()
             ? 'Your approved record remains available while the requested Health Form correction is pending.'
             : ($isResubmissionStatus
             ? 'Your existing valid files will remain unchanged. Only the requested replacement file/s will be updated.'
             : ($isConditionalStatus
                 ? 'Please complete the pending requirement before your record can be marked as issued.'
-                : 'Clinic approval is required before your record can be marked as issued.'));
+                : 'Clinic approval is required before your record can be marked as issued.')));
         $puptasSyncStatus = $usesEmployeeHealthForm ? null : optional($healthProfileRecord)->puptas_sync_status;
         $puptasSyncMessage = $usesEmployeeHealthForm ? '' : trim((string) optional($healthProfileRecord)->puptas_sync_message);
         $puptasSyncedAt = $usesEmployeeHealthForm ? null : optional(optional($healthProfileRecord)->puptas_synced_at)->format('M d, Y g:i A');
@@ -7773,6 +7780,7 @@ document.addEventListener('DOMContentLoaded', function () {
             !$healthFormSubmitted => 'Not Submitted',
             $isIssuedStatus => 'Approved',
             $isRejectedStatus => 'Rejected',
+            $hasActiveDocumentCorrectionRequest => 'Approved',
             $isResubmissionStatus => 'Pending Resubmission',
             $isConditionalStatus => 'Pending Compliance',
             default => 'Under Review',

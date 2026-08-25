@@ -3005,6 +3005,24 @@
     </div>
 
     <div class="profile-panel" id="docsPanel">
+        @if($hasCorrectionRequest && $correctionStatusLabel === 'Pending')
+            <div class="health-record-correction-banner" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;border:1px solid #f0b179;border-radius:14px;background:#fff6ee;padding:1rem 1.25rem;margin:0 0 1rem;color:#7a3b11;">
+                <div style="display:flex;align-items:flex-start;gap:0.75rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" style="width:20px;height:20px;flex:0 0 auto;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                    </svg>
+                    <div>
+                        <div style="font-weight:700;font-size:0.92rem;line-height:1.35;">File correction requested</div>
+                        <div style="font-size:0.84rem;line-height:1.45;">The approved clearance remains intact. Review the uploaded documents and wait for the corrected files.</div>
+                    </div>
+                </div>
+                @if($canRequestFileCorrection)
+                    <button type="button" class="health-record-correction-banner-action" id="openCorrectionStatus" style="border:1px solid #d07a4d;background:#fff;border-radius:10px;padding:0.7rem 1rem;font-weight:600;color:#7a3b11;cursor:pointer;">
+                        View details
+                    </button>
+                @endif
+            </div>
+        @endif
         <div class="doc-grid">
             <div class="doc-file">
                 <h4>Health Information Form</h4>
@@ -3381,7 +3399,7 @@
                     </div>
                     <div class="correction-info-row">
                         <span>PUPTAS Sync</span>
-                        <strong>Will be cleared</strong>
+                        <strong>Will be preserved</strong>
                     </div>
                 </div>
                 <div class="correction-actions">
@@ -3567,6 +3585,7 @@
     const correctionModalBack = document.getElementById('correctionModalBack');
     const correctionActionsToggle = document.getElementById('correctionActionsToggle');
     const correctionActionsMenu = document.getElementById('correctionActionsMenu');
+    const openCorrectionStatus = document.getElementById('openCorrectionStatus');
     const newHealthFormModal = document.getElementById('newHealthFormModal');
     const openNewHealthFormModal = document.getElementById('openNewHealthFormModal');
     const closeNewHealthFormModal = document.getElementById('closeNewHealthFormModal');
@@ -3887,6 +3906,12 @@
     openCorrectionModal?.addEventListener('click', function () {
         setProfileActionsMenu(false);
         setCorrectionModal(true);
+    });
+
+    openCorrectionStatus?.addEventListener('click', function () {
+        setProfileActionsMenu(false);
+        setCorrectionModal(true);
+        setCorrectionView('status');
     });
 
     closeCorrectionModal?.addEventListener('click', function () {
