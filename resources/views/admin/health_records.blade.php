@@ -6133,9 +6133,11 @@
                     $recordStatus = trim((string) ($record->clearance_status ?? ''));
                     $recordStatusNormalized = strtolower($recordStatus);
                     $recordPulloutStatus = $recordIsEmployee ? '' : trim((string) ($record->pullout_status ?? ''));
-                    $isConditional = in_array($recordStatus, ['Pending/Conditional', 'Rejected'], true)
+                    $isConditional = !in_array($recordStatus, ['Issued', 'Fully Cleared'], true) && (
+                        in_array($recordStatus, ['Pending/Conditional', 'Rejected'], true)
                         || trim((string) ($record->pending_reason ?? '')) !== ''
-                        || trim((string) ($record->medical_condition_remarks ?? '')) !== '';
+                        || trim((string) ($record->medical_condition_remarks ?? '')) !== ''
+                    );
                     $healthTabState = $isConditional
                         ? 'pending_conditional'
                         : (in_array($recordStatus, ['Pending', 'For Verification', ''], true) ? 'pending_approval' : 'cleared');
