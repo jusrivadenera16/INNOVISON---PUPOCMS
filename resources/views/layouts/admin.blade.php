@@ -1373,10 +1373,7 @@
             overflow: hidden;
             cursor: pointer;
             user-select: none;
-            box-shadow:
-                inset 8px 8px 18px rgba(112, 19, 27, 0.09),
-                inset -9px -9px 18px rgba(255, 255, 255, 0.86),
-                0 14px 24px rgba(95, 0, 18, 0.10);
+            box-shadow: none;
             transition: width 0.24s ease, min-width 0.24s ease, padding 0.24s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
         }
 
@@ -1400,10 +1397,7 @@
         .admin-user:hover,
         .profile-wrap.is-expanded .admin-user {
             border-color: rgba(139, 16, 32, 0.2);
-            box-shadow:
-                inset 9px 9px 20px rgba(112, 19, 27, 0.1),
-                inset -10px -10px 20px rgba(255, 255, 255, 0.9),
-                0 18px 30px rgba(95, 0, 18, 0.14);
+            box-shadow: none;
             transform: translateY(-1px);
         }
 
@@ -1569,12 +1563,27 @@
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
-            overflow-y: auto;
+            overflow: hidden;
             overflow-x: hidden;
             transition:
                 background 0.28s ease,
                 border-color 0.28s ease,
                 box-shadow 0.28s ease;
+        }
+
+        .sidebar-scroll-region {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .sidebar-scroll-region::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+            display: none;
         }
 
         .sidebar-logo {
@@ -1656,6 +1665,21 @@
                 max-width 0.34s cubic-bezier(0.22, 1, 0.36, 1),
                 opacity 0.2s ease,
                 transform 0.24s ease;
+        }
+
+        .sidebar-section-title {
+            margin: 18px 12px 8px;
+            color: var(--admin-sidebar-muted);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            line-height: 1.2;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .sidebar-nav > .sidebar-section-title:first-child {
+            margin-top: 2px;
         }
 
         .sidebar-nav a,
@@ -2281,8 +2305,9 @@
         }
 
         .sidebar-logout {
-            margin-top: auto;
-            padding-top: 16px;
+            flex: 0 0 auto;
+            margin-top: 12px;
+            padding-top: 12px;
             border-top: 1px solid var(--admin-sidebar-divider);
         }
 
@@ -2300,6 +2325,7 @@
             color: var(--admin-sidebar-text);
             background: var(--admin-sidebar-logout-bg);
             line-height: 1.2;
+            font-size: 13px;
         }
 
         .sidebar-logout a:hover {
@@ -2330,6 +2356,70 @@
             border-radius: var(--radius-xl);
         }
 
+        .admin-content-loader {
+            position: absolute;
+            inset: 0;
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border-radius: inherit;
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--admin-card-text);
+            backdrop-filter: blur(3px);
+        }
+
+        .main.is-navigation-loading {
+            overflow: hidden;
+        }
+
+        .main.is-navigation-loading .admin-content-loader {
+            display: inline-flex;
+            animation: adminContentLoaderIn 0.18s ease-out both;
+        }
+
+        .admin-content-loader .loading {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 48px;
+        }
+
+        .admin-content-loader .loading svg {
+            display: block;
+            width: 64px;
+            height: 48px;
+        }
+
+        .admin-content-loader .loading svg polyline {
+            fill: none;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .admin-content-loader .loading svg polyline#back {
+            stroke: rgba(250, 204, 21, 0.28);
+        }
+
+        .admin-content-loader .loading svg polyline#front {
+            stroke: #facc15;
+            stroke-dasharray: 48, 144;
+            stroke-dashoffset: 192;
+            animation: adminContentLoaderDash 1.4s linear infinite;
+        }
+
+        @keyframes adminContentLoaderIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes adminContentLoaderDash {
+            72.5% { opacity: 0; }
+            to { stroke-dashoffset: 0; }
+        }
+
         .main table {
             width: 100%;
         }
@@ -2354,17 +2444,6 @@
 
         .main::-webkit-scrollbar-track {
             background: transparent;
-        }
-
-        .sidebar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        .sidebar::-webkit-scrollbar {
-            width: 0;
-            height: 0;
-            display: none;
         }
 
         .sidebar-scroll-indicator {
@@ -3089,7 +3168,7 @@
 
         .assistant-launch {
             border: 1px solid rgba(139, 16, 32, 0.14);
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(255, 248, 249, 0.88));
+            background: transparent;
             color: #5f0012;
             border-radius: 14px;
             height: 44px;
@@ -3101,20 +3180,14 @@
             display: inline-flex;
             align-items: center;
             gap: 9px;
-            box-shadow:
-                inset 8px 8px 18px rgba(112, 19, 27, 0.09),
-                inset -9px -9px 18px rgba(255, 255, 255, 0.86),
-                0 14px 24px rgba(95, 0, 18, 0.10);
+            box-shadow: none;
             transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .assistant-launch:hover {
-            background: linear-gradient(145deg, #ffffff, #fff6f8);
+            background: transparent;
             border-color: rgba(139, 16, 32, 0.2);
-            box-shadow:
-                inset 9px 9px 20px rgba(112, 19, 27, 0.1),
-                inset -10px -10px 20px rgba(255, 255, 255, 0.9),
-                0 18px 30px rgba(95, 0, 18, 0.14);
+            box-shadow: none;
             transform: translateY(-1px);
         }
 
@@ -3141,10 +3214,7 @@
             border-radius: 999px;
             background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(255, 248, 249, 0.88));
             border: 1px solid rgba(139, 16, 32, 0.12);
-            box-shadow:
-                inset 9px 9px 19px rgba(112, 19, 27, 0.10),
-                inset -10px -10px 20px rgba(255, 255, 255, 0.9),
-                0 16px 28px rgba(95, 0, 18, 0.10);
+            box-shadow: none;
             isolation: isolate;
             overflow: hidden;
             transition: width .3s ease, background .2s ease, box-shadow .2s ease, transform .2s ease;
@@ -3153,10 +3223,7 @@
         #globalSearchForm .input-container:hover {
             background: linear-gradient(145deg, #ffffff, #fff6f8);
             border-color: rgba(139, 16, 32, 0.18);
-            box-shadow:
-                inset 10px 10px 21px rgba(112, 19, 27, 0.11),
-                inset -11px -11px 21px rgba(255, 255, 255, 0.92),
-                0 18px 32px rgba(95, 0, 18, 0.14);
+            box-shadow: none;
             transform: translateY(-1px);
         }
 
@@ -3186,6 +3253,7 @@
 
         #globalSearchForm .input::placeholder {
             color: transparent;
+            font-weight: 400;
         }
 
         #globalSearchForm .input:focus::placeholder {
@@ -3366,27 +3434,32 @@
         }
 
         html[data-theme="dark"] #globalSearchForm .input-container,
-        html[data-theme="dark"] .assistant-launch,
         html[data-theme="dark"] .admin-user {
             border-color: rgba(250, 204, 21, 0.18);
             background: linear-gradient(145deg, rgba(73, 18, 29, 0.92), rgba(31, 11, 18, 0.96));
             color: #fff7fa;
-            box-shadow:
-                inset 7px 7px 16px rgba(0, 0, 0, 0.34),
-                inset -7px -7px 16px rgba(255, 255, 255, 0.04),
-                0 14px 24px rgba(0, 0, 0, 0.28);
+            box-shadow: none;
+        }
+
+        html[data-theme="dark"] .assistant-launch {
+            border-color: rgba(250, 204, 21, 0.26);
+            background: transparent;
+            color: #fff7fa;
+            box-shadow: none;
         }
 
         html[data-theme="dark"] #globalSearchForm .input-container:hover,
-        html[data-theme="dark"] .assistant-launch:hover,
         html[data-theme="dark"] .admin-user:hover,
         html[data-theme="dark"] .profile-wrap.is-expanded .admin-user {
             border-color: rgba(250, 204, 21, 0.28);
             background: linear-gradient(145deg, rgba(88, 22, 35, 0.95), rgba(43, 12, 20, 0.98));
-            box-shadow:
-                inset 8px 8px 18px rgba(0, 0, 0, 0.38),
-                inset -8px -8px 18px rgba(255, 255, 255, 0.05),
-                0 18px 30px rgba(0, 0, 0, 0.34);
+            box-shadow: none;
+        }
+
+        html[data-theme="dark"] .assistant-launch:hover {
+            border-color: rgba(250, 204, 21, 0.5);
+            background: transparent;
+            box-shadow: none;
         }
 
         html[data-theme="dark"] #globalSearchForm .input,
@@ -3537,7 +3610,6 @@
             color: #8b0000;
         }
 
-        html[data-theme="light"] .assistant-launch,
         html[data-theme="light"] .accessibility-launch-admin,
         html[data-theme="light"] .theme-toggle-admin,
         html[data-theme="light"] .quick-action-btn,
@@ -3548,13 +3620,23 @@
             color: #5f0012;
         }
 
-        html[data-theme="light"] .assistant-launch:hover,
         html[data-theme="light"] .accessibility-launch-admin:hover,
         html[data-theme="light"] .theme-toggle-admin:hover,
         html[data-theme="light"] .quick-action-btn:hover,
         html[data-theme="light"] .sidebar-toggle:hover {
             background: rgba(128, 0, 0, 0.14);
             border-color: rgba(128, 0, 0, 0.34);
+        }
+
+        html[data-theme="light"] .assistant-launch {
+            background: transparent;
+            border-color: rgba(128, 0, 0, 0.24);
+            color: #5f0012;
+        }
+
+        html[data-theme="light"] .assistant-launch:hover {
+            background: transparent;
+            border-color: rgba(128, 0, 0, 0.44);
         }
 
         html[data-theme="light"] .quick-actions-toggle {
@@ -3772,7 +3854,8 @@
         }
 
         html[data-theme="light"] .sidebar-logo-sub,
-        html[data-theme="light"] .sidebar h4 {
+        html[data-theme="light"] .sidebar h4,
+        html[data-theme="light"] .sidebar-section-title {
             color: rgba(90, 20, 33, 0.72);
         }
 
@@ -3847,6 +3930,19 @@
             color: #1f2937;
             background: linear-gradient(180deg, #ffffff 0%, #fbfbfd 100%);
             border-color: rgba(128, 0, 0, 0.12);
+        }
+
+        html[data-theme="light"] .admin-content-loader {
+            background: rgba(255, 255, 255, 0.92);
+            color: #5a1421;
+        }
+
+        html[data-theme="light"] .admin-content-loader .loading svg polyline#back {
+            stroke: rgba(128, 0, 0, 0.2);
+        }
+
+        html[data-theme="light"] .admin-content-loader .loading svg polyline#front {
+            stroke: #8b1020;
         }
 
         html[data-theme="light"] .main,
@@ -5271,9 +5367,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             <img src="{{ $brandLogo }}" alt="Clinic Logo" class="header-brand-avatar header-brand-avatar--clinic">
         </div>
         <div class="header-copy">
-            <p class="header-kicker">{{ $adminTypeLabel ? 'Clinic Administration' : ($isStudentAssistant ? 'Clinic Assistant Console' : 'Clinic Administration') }}</p>
-            <h1 class="header-title">Welcome back, <span>{{ $welcomeName }}</span></h1>
-            <p class="header-subtitle">Monitor operations and patient flow in one clear workspace.</p>
+            <h1 class="header-title">PUP TAGUIG CLINIC</h1>
+            <p class="header-subtitle">{{ $adminTypeLabel ? 'Clinic Administration' : ($isStudentAssistant ? 'Clinic Assistant Console' : 'Clinic Administration') }}</p>
         </div>
     </div>
 
@@ -5283,7 +5378,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         </button>
         <form class="global-search-form" id="globalSearchForm" role="search" novalidate>
             <div class="input-container">
-                <input type="text" name="text" class="input" placeholder="Search something..." data-voice-skip aria-label="Global search">
+                <input type="text" name="text" class="input" placeholder="Type to search..." data-voice-skip aria-label="Global search">
                 <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false" class="icon">
                     <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0s208 93.1 208 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z" />
                 </svg>
@@ -5377,6 +5472,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 <div class="admin-layout">
   
   <aside class="sidebar" id="adminSidebar">
+    <div class="sidebar-scroll-region" id="adminSidebarScrollRegion">
     <div class="sidebar-logo">
       <div class="sidebar-logo-badges">
         
@@ -5387,49 +5483,16 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
       </div>
     </div>
     
-    <h4>Main Menu</h4>
     <nav class="sidebar-nav">
       <a href="{{ $dashboardUrl }}" class="nav-dashboard {{ (request()->routeIs('admin.dashboard') || request()->routeIs('assistant.dashboard')) ? 'active' : '' }}">
         <span class="sidebar-short"><x-outline-icon name="squares-2x2" /></span><span class="sidebar-label">Dashboard</span>
       </a>
+      <p class="sidebar-section-title">Clinic Operations</p>
       @if($canViewAppointments)
         <a href="{{ $appointmentsUrl }}" class="nav-appointments {{ (request()->routeIs('admin.appointments*') || request()->routeIs('assistant.appointments*')) ? 'active' : '' }}">
           <span class="sidebar-short"><x-outline-icon name="calendar-days" /></span><span class="sidebar-label">Appointments</span>
         </a>
       @endif
-      @if($canViewInventory)
-        <a href="{{ $inventoryUrl }}" class="nav-inventory {{ (request()->routeIs('admin.inventory*') || request()->routeIs('assistant.inventory*')) ? 'active' : '' }}">
-          <span class="sidebar-short"><x-outline-icon name="cube" /></span><span class="sidebar-label">Inventory</span>
-        </a>
-      @endif
-      @if($canViewReports)
-      <div class="sidebar-nav-group {{ $reportsIsActive ? 'is-open' : '' }}" data-sidebar-dropdown-group>
-        <a
-          href="{{ $reportsUrl }}"
-          class="nav-reports {{ $reportsIsActive ? 'active' : '' }}"
-          aria-expanded="{{ $reportsIsActive ? 'true' : 'false' }}"
-        >
-          <span class="sidebar-short"><x-outline-icon name="chart-bar" /></span>
-          <span class="sidebar-label">Reports</span>
-          <span class="sidebar-dropdown-caret" data-sidebar-dropdown-toggle role="button" tabindex="0" aria-expanded="{{ $reportsIsActive ? 'true' : 'false' }}" aria-label="Toggle Reports dropdown">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-            </svg>
-          </span>
-        </a>
-        <div class="sidebar-subnav" aria-label="Reports">
-          @foreach($reportNavLinks as $reportNavLink)
-            <a href="{{ $reportNavLink['url'] }}" class="{{ $reportNavLink['active'] ? 'active' : '' }}">
-              <span class="sidebar-subnav-icon" aria-hidden="true">
-                <x-outline-icon :name="$reportNavLink['icon']" />
-              </span>
-              <span class="sidebar-subnav-label">{{ $reportNavLink['label'] }}</span>
-            </a>
-          @endforeach
-        </div>
-      </div>
-      @endif
-     
       @if($canViewWalkin)
       <a href="{{ $walkinUrl }}" class="nav-walkin {{ (Request::is('admin/walkin*') || Request::is('assistant/walkin*')) ? 'active' : '' }}">
         <span class="sidebar-short"><x-outline-icon name="user-plus" /></span><span class="sidebar-label">Walk-in</span>
@@ -5468,7 +5531,13 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         </div>
       </div>
       @endif
+      @if($canViewInventory)
+        <a href="{{ $inventoryUrl }}" class="nav-inventory {{ (request()->routeIs('admin.inventory*') || request()->routeIs('assistant.inventory*')) ? 'active' : '' }}">
+          <span class="sidebar-short"><x-outline-icon name="cube" /></span><span class="sidebar-label">Inventory</span>
+        </a>
+      @endif
       @if($canViewAnnouncements)
+      <p class="sidebar-section-title">Communication</p>
       <a href="{{ route('admin.announcements') }}" class="nav-announcements {{ request()->routeIs('admin.announcements') ? 'active' : '' }}">
         <span class="sidebar-short">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -5477,10 +5546,43 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         </span><span class="sidebar-label">Announcements</span>
       </a>
       @endif
+      @if($canViewReports || $isAdminLike)
+      <p class="sidebar-section-title">Management</p>
+      @endif
+      @if($canViewReports)
+      <div class="sidebar-nav-group {{ $reportsIsActive ? 'is-open' : '' }}" data-sidebar-dropdown-group>
+        <a
+          href="{{ $reportsUrl }}"
+          class="nav-reports {{ $reportsIsActive ? 'active' : '' }}"
+          aria-expanded="{{ $reportsIsActive ? 'true' : 'false' }}"
+        >
+          <span class="sidebar-short"><x-outline-icon name="chart-bar" /></span>
+          <span class="sidebar-label">Reports</span>
+          <span class="sidebar-dropdown-caret" data-sidebar-dropdown-toggle role="button" tabindex="0" aria-expanded="{{ $reportsIsActive ? 'true' : 'false' }}" aria-label="Toggle Reports dropdown">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+            </svg>
+          </span>
+        </a>
+        <div class="sidebar-subnav" aria-label="Reports">
+          @foreach($reportNavLinks as $reportNavLink)
+            <a href="{{ $reportNavLink['url'] }}" class="{{ $reportNavLink['active'] ? 'active' : '' }}">
+              <span class="sidebar-subnav-icon" aria-hidden="true">
+                <x-outline-icon :name="$reportNavLink['icon']" />
+              </span>
+              <span class="sidebar-subnav-label">{{ $reportNavLink['label'] }}</span>
+            </a>
+          @endforeach
+        </div>
+      </div>
+      @endif
       @if($isAdminLike)
           <a href="{{ route('admin.logs') }}" class="nav-audit {{ (request()->routeIs('admin.logs') || Request::is('admin/activity-logs*')) ? 'active' : '' }}">
             <span class="sidebar-short"><x-outline-icon name="clipboard-document-list" /></span><span class="sidebar-label">Audit Trail</span>
           </a>
+      @endif
+      @if($canViewSettings || $canSeeDeveloperTools)
+      <p class="sidebar-section-title">System</p>
       @endif
       @if($canViewSettings)
           <div class="sidebar-nav-group {{ $settingsIsActive ? 'is-open' : '' }}" data-sidebar-dropdown-group>
@@ -5517,9 +5619,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
     </nav>
 
-    <button type="button" class="sidebar-scroll-indicator" id="sidebarScrollIndicator" aria-label="Scroll navigation">
-      <x-outline-icon name="chevron-down" />
-    </button>
+    </div>
 
     <div class="sidebar-logout">
       <a href="#" onclick="event.preventDefault(); document.getElementById('layoutLogoutForm').submit();">
@@ -5528,7 +5628,15 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     </div>
   </aside>
 
-    <main class="main">
+    <main class="main" id="adminMainContent" aria-busy="false">
+        <div class="admin-content-loader" role="status" aria-live="polite" aria-label="Loading page">
+            <div class="loading" aria-hidden="true">
+                <svg width="64" height="48" viewBox="0 0 64 48" focusable="false">
+                    <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" id="back"></polyline>
+                    <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" id="front"></polyline>
+                </svg>
+            </div>
+        </div>
         @yield('content')
     </main>
 
@@ -5852,10 +5960,12 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
     function initSidebarScrollIndicator() {
         const sidebar = document.getElementById('adminSidebar');
+        const scrollRegion = document.getElementById('adminSidebarScrollRegion');
         const indicator = document.getElementById('sidebarScrollIndicator');
-        const activeLink = sidebar ? sidebar.querySelector('.sidebar-nav a.active') : null;
+        const activeLinks = sidebar ? Array.from(sidebar.querySelectorAll('.sidebar-nav a.active')) : [];
+        const activeLink = activeLinks.at(-1) || null;
 
-        if (!sidebar || !indicator) {
+        if (!sidebar || !scrollRegion) {
             return;
         }
 
@@ -5864,36 +5974,43 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 return;
             }
 
-            const sidebarRect = sidebar.getBoundingClientRect();
+            const sidebarRect = scrollRegion.getBoundingClientRect();
             const linkRect = activeLink.getBoundingClientRect();
-            const topOverflow = linkRect.top < sidebarRect.top + 84;
-            const bottomOverflow = linkRect.bottom > sidebarRect.bottom - 76;
+            const targetScrollTop = scrollRegion.scrollTop
+                + (linkRect.top - sidebarRect.top)
+                - ((scrollRegion.clientHeight - linkRect.height) / 2);
 
-            if (topOverflow || bottomOverflow) {
-                activeLink.scrollIntoView({
-                    block: 'center',
-                    behavior: 'auto'
-                });
-            }
+            scrollRegion.scrollTo({
+                top: Math.max(0, targetScrollTop),
+                behavior: 'auto'
+            });
         };
 
         const updateIndicator = () => {
-            const canScroll = sidebar.scrollHeight - sidebar.clientHeight > 6;
-            const hasMoreBelow = sidebar.scrollTop + sidebar.clientHeight < sidebar.scrollHeight - 6;
+            if (!indicator) {
+                return;
+            }
+
+            const canScroll = scrollRegion.scrollHeight - scrollRegion.clientHeight > 6;
+            const hasMoreBelow = scrollRegion.scrollTop + scrollRegion.clientHeight < scrollRegion.scrollHeight - 6;
             const isExpanded = window.innerWidth > 860 || document.body.classList.contains('sidebar-open');
             indicator.classList.toggle('is-visible', canScroll && hasMoreBelow && isExpanded);
         };
 
-        indicator.addEventListener('click', () => {
-            sidebar.scrollBy({
-                top: Math.max(180, Math.floor(sidebar.clientHeight * 0.45)),
-                behavior: 'smooth'
+        if (indicator) {
+            indicator.addEventListener('click', () => {
+                scrollRegion.scrollBy({
+                    top: Math.max(180, Math.floor(scrollRegion.clientHeight * 0.45)),
+                    behavior: 'smooth'
+                });
             });
-        });
+        }
 
-        sidebar.addEventListener('scroll', updateIndicator, { passive: true });
-        sidebar.addEventListener('mouseenter', updateIndicator);
-        sidebar.addEventListener('mouseleave', updateIndicator);
+        if (indicator) {
+            scrollRegion.addEventListener('scroll', updateIndicator, { passive: true });
+            scrollRegion.addEventListener('mouseenter', updateIndicator);
+            scrollRegion.addEventListener('mouseleave', updateIndicator);
+        }
         window.addEventListener('resize', () => {
             revealActiveLink();
             updateIndicator();
@@ -5902,6 +6019,86 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         updateIndicator();
         window.setTimeout(revealActiveLink, 80);
         window.setTimeout(updateIndicator, 150);
+    }
+
+    function initContentNavigationLoading() {
+        const content = document.getElementById('adminMainContent');
+
+        if (!content) {
+            return;
+        }
+
+        const clearLoadingState = function () {
+            content.classList.remove('is-navigation-loading');
+            content.setAttribute('aria-busy', 'false');
+        };
+
+        const showLoadingState = function () {
+            content.classList.add('is-navigation-loading');
+            content.setAttribute('aria-busy', 'true');
+        };
+
+        document.addEventListener('click', function (event) {
+            if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                return;
+            }
+
+            const link = event.target.closest('a[href]');
+            if (!link) {
+                return;
+            }
+
+            const href = link.getAttribute('href');
+            if (!href || href === '#' || link.hasAttribute('download') || link.target === '_blank') {
+                return;
+            }
+
+            let destination;
+            try {
+                destination = new URL(link.href, window.location.href);
+            } catch (error) {
+                return;
+            }
+
+            if (
+                destination.origin !== window.location.origin
+                || (destination.pathname === window.location.pathname && destination.search === window.location.search)
+            ) {
+                return;
+            }
+
+            showLoadingState();
+        });
+
+        document.addEventListener('submit', function (event) {
+            if (event.defaultPrevented) {
+                return;
+            }
+
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement) || form.matches('#globalSearchForm, [data-no-navigation-loader]') || form.target === '_blank') {
+                return;
+            }
+
+            const action = form.getAttribute('action') || window.location.href;
+            let destination;
+            try {
+                destination = new URL(action, window.location.href);
+            } catch (error) {
+                return;
+            }
+
+            if (
+                destination.origin !== window.location.origin
+                || (destination.pathname === window.location.pathname && destination.search === window.location.search)
+            ) {
+                return;
+            }
+
+            showLoadingState();
+        });
+
+        window.addEventListener('pageshow', clearLoadingState);
     }
 
     function initSidebarDropdowns() {
@@ -7203,6 +7400,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         initThemeToggle();
         initSidebarScrollIndicator();
         initSidebarDropdowns();
+        initContentNavigationLoading();
         initHeaderQuickActionsToggle();
         initMedicineAlerts();
         initTreatmentRecordModal();

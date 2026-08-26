@@ -138,6 +138,21 @@ class HealthProfile extends Model
         return $this->hasMany(HealthFormSubmission::class);
     }
 
+    public function correctionRequests()
+    {
+        return $this->hasMany(HealthProfileCorrectionRequest::class);
+    }
+
+    public function activeCorrectionRequest()
+    {
+        return $this->hasOne(HealthProfileCorrectionRequest::class)
+            ->whereIn('status', [
+                HealthProfileCorrectionRequest::STATUS_PENDING,
+                HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW,
+            ])
+            ->latestOfMany();
+    }
+
     public function latestHealthFormSubmission()
     {
         return $this->hasOne(HealthFormSubmission::class)->latestOfMany('submitted_at');

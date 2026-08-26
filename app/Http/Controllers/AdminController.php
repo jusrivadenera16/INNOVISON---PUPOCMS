@@ -11,6 +11,7 @@ use App\Models\ActivityLog;
 use App\Models\Consultation;
 use App\Models\HealthFormSubmission;
 use App\Models\HealthFormCategory;
+use App\Models\HealthProfileCorrectionRequest;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\MedicineType;
@@ -2471,7 +2472,7 @@ class AdminController extends Controller
 
         $adminUser = Auth::guard('admin')->user();
 
-        HealthFormSubmission::query()->updateOrCreate(
+        $submission = HealthFormSubmission::query()->updateOrCreate(
             [
                 'user_id' => $profile->user_id,
                 'status' => HealthFormSubmission::STATUS_REQUESTED,
@@ -2483,6 +2484,27 @@ class AdminController extends Controller
                 'requested_by_user_id' => $adminUser?->id,
                 'requested_at' => now(),
                 'remarks' => trim((string) ($validated['remarks'] ?? '')) ?: null,
+            ]
+        );
+
+        HealthProfileCorrectionRequest::query()->updateOrCreate(
+            [
+                'user_id' => $profile->user_id,
+                'health_profile_id' => $profile->id,
+                'type' => HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM,
+                'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
+            ],
+            [
+                'health_form_submission_id' => $submission->id,
+                'profile_kind' => 'student',
+                'required_documents' => [],
+                'admin_note' => trim((string) ($validated['remarks'] ?? '')) ?: null,
+                'requested_by_user_id' => $adminUser?->id,
+                'requested_at' => now(),
+                'metadata' => [
+                    'category' => trim((string) $validated['category']),
+                    'school_year' => trim((string) ($profile->school_year ?? '')) ?: null,
+                ],
             ]
         );
 
@@ -2519,8 +2541,8 @@ class AdminController extends Controller
         $profile->clearance_status = 'For Verification';
         $profile->physical_assessment_status = 'Not Yet Conducted';
         $profile->pending_reason = trim((string) ($profile->pending_reason ?? '')) ?: 'Returned to pending approval for document review.';
-        $profile->verified_at = $previousVerifiedAt ?? $profile->verified_at;
-        $profile->approved_by_user_id = $previousApprovedBy ?? $profile->approved_by_user_id;
+        $profile->verified_at = null;
+        $profile->approved_by_user_id = null;
         $profile->puptas_synced_at = $previousPuptasSyncedAt ?? $profile->puptas_synced_at;
         $profile->save();
         $this->updateCurrentHealthFormSubmissionStatus($profile, HealthFormSubmission::STATUS_SUBMITTED);
@@ -3091,6 +3113,30 @@ public function updateClearance(Request $request, $id)
     $record->resubmitted_at = $requestedStatus === 'Pending Resubmission' ? null : $record->resubmitted_at;
 
     if ($record->save()) {
+        if ($requestedStatus === 'Pending Resubmission') {
+            HealthProfileCorrectionRequest::query()->updateOrCreate(
+                [
+                    'user_id' => $record->user_id,
+                    'health_profile_id' => $record->id,
+                    'type' => str_contains(strtolower((string) $record->pending_reason), 'health form correction')
+                        ? HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION
+                        : HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION,
+                    'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
+                ],
+                [
+                    'profile_kind' => 'student',
+                    'required_documents' => $record->resubmission_required_documents ?? [],
+                    'admin_note' => trim((string) $record->pending_reason) ?: null,
+                    'requested_by_user_id' => auth()->id(),
+                    'requested_at' => $record->resubmission_requested_at ?: now(),
+                    'metadata' => [
+                        'source' => 'clearance_update',
+                        'previous_status' => $previousStatus,
+                    ],
+                ]
+            );
+        }
+
         if ($record->user) {
             $record->user->is_health_profile_completed = $isApproval ? 1 : 0;
             $record->user->save();
@@ -3120,6 +3166,19 @@ public function updateClearance(Request $request, $id)
                         'error' => $exception->getMessage(),
                     ]);
                 }
+
+                HealthProfileCorrectionRequest::query()
+                    ->where('health_profile_id', $record->id)
+                    ->whereIn('status', [
+                        HealthProfileCorrectionRequest::STATUS_PENDING,
+                        HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                        HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW,
+                    ])
+                    ->update([
+                        'status' => HealthProfileCorrectionRequest::STATUS_APPROVED,
+                        'reviewed_at' => now(),
+                        'updated_at' => now(),
+                    ]);
 
                 try {
                     $puptasService = app(PuptasWebhookService::class);
@@ -3215,7 +3274,7 @@ public function updateClearance(Request $request, $id)
         $record->resubmission_requested_at = now();
         $record->pending_compliance_reminder_sent_at = null;
         $record->pending_compliance_reminder_count = 0;
-        $record->resubmitted_at = $wasAlreadyIssued ? $record->resubmitted_at : null;
+        $record->resubmitted_at = null;
 
         if ($request->boolean('clear_uploaded_documents')) {
             foreach ($requestedDocuments as $documentKey) {
@@ -3227,6 +3286,28 @@ public function updateClearance(Request $request, $id)
         }
 
         $record->save();
+
+        HealthProfileCorrectionRequest::query()->updateOrCreate(
+            [
+                'user_id' => $record->user_id,
+                'health_profile_id' => $record->id,
+                'type' => $needsHealthFormCorrection
+                    ? HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION
+                    : HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION,
+                'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
+            ],
+            [
+                'profile_kind' => 'student',
+                'required_documents' => $requestedDocuments,
+                'admin_note' => $pendingReason,
+                'requested_by_user_id' => auth()->id(),
+                'requested_at' => now(),
+                'metadata' => [
+                    'was_already_issued' => $wasAlreadyIssued,
+                    'cleared_document_references' => $request->boolean('clear_uploaded_documents'),
+                ],
+            ]
+        );
 
         if ($needsHealthFormCorrection && $record->user) {
             $submission = HealthFormSubmission::query()
@@ -3378,6 +3459,28 @@ public function updateClearance(Request $request, $id)
 
         $employeeProfile->save();
 
+        HealthProfileCorrectionRequest::query()->updateOrCreate(
+            [
+                'user_id' => $employeeProfile->user_id,
+                'employee_health_profile_id' => $employeeProfile->id,
+                'type' => $needsHealthFormCorrection
+                    ? HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION
+                    : HealthProfileCorrectionRequest::TYPE_FILE_CORRECTION,
+                'status' => HealthProfileCorrectionRequest::STATUS_PENDING,
+            ],
+            [
+                'profile_kind' => 'employee',
+                'required_documents' => $requestedDocuments,
+                'admin_note' => $pendingReason,
+                'requested_by_user_id' => auth()->id(),
+                'requested_at' => now(),
+                'metadata' => [
+                    'was_already_issued' => $wasAlreadyIssued,
+                    'cleared_document_references' => $request->boolean('clear_uploaded_documents'),
+                ],
+            ]
+        );
+
         if ($employeeProfile->user && !$wasAlreadyIssued) {
             $employeeProfile->user->is_health_profile_completed = 0;
             $employeeProfile->user->save();
@@ -3449,6 +3552,16 @@ public function updateClearance(Request $request, $id)
         $record->approved_by_user_id = null;
         $record->save();
         $this->updateCurrentHealthFormSubmissionStatus($record, HealthFormSubmission::STATUS_SUBMITTED);
+        HealthProfileCorrectionRequest::query()
+            ->where('health_profile_id', $record->id)
+            ->whereIn('status', [
+                HealthProfileCorrectionRequest::STATUS_PENDING,
+                HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+            ])
+            ->update([
+                'status' => HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW,
+                'updated_at' => now(),
+            ]);
 
         ActivityLog::create([
             'user_id' => auth()->id(),

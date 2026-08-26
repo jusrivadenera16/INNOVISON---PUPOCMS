@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ApiErrorLog;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -20,6 +21,8 @@ class PuptasWebhookService
     private int $timeout;
     private string $scope;
     private string $tokenUrl;
+    private int $tokenLockSeconds;
+    private int $tokenLockWaitSeconds;
     private int $lastLookupAttempts = 0;
 
     public function __construct()
@@ -34,6 +37,12 @@ class PuptasWebhookService
         $this->timeout = (int) config('services.puptas.timeout', 20);
         $this->scope = (string) config('services.puptas.scope', 'medical-read medical-write');
         $this->tokenUrl = $this->resolveTokenUrl((string) config('services.puptas.token_url', ''));
+        $this->tokenLockSeconds = max(
+            5,
+            $this->timeout + 5,
+            (int) config('services.puptas.token_lock_seconds', 30)
+        );
+        $this->tokenLockWaitSeconds = max(0, (int) config('services.puptas.token_lock_wait_seconds', 25));
     }
 
     private function buildHmacSignature(string $payload): string
@@ -92,6 +101,46 @@ class PuptasWebhookService
             return $cachedToken;
         }
 
+        $this->ensureAccessTokenRequestIsAvailable();
+
+        if ($this->tokenUrl === '' || $this->clientId === '' || $this->clientSecret === '') {
+            throw new \RuntimeException('PUPTAS OAuth configuration is incomplete.');
+        }
+
+        $lock = Cache::lock($this->accessTokenLockCacheKey(), $this->tokenLockSeconds);
+
+        try {
+            return $lock->block($this->tokenLockWaitSeconds, function () use ($cacheKey): string {
+                // Another request may have refreshed the token while this request waited.
+                $cachedToken = trim((string) Cache::get($cacheKey, ''));
+                if ($cachedToken !== '') {
+                    return $cachedToken;
+                }
+
+                $this->ensureAccessTokenRequestIsAvailable();
+
+                return $this->requestAndCacheAccessToken($cacheKey);
+            });
+        } catch (LockTimeoutException $exception) {
+            // Check once more before reporting contention; the lock owner may have
+            // completed between the final lock attempt and this exception.
+            $cachedToken = trim((string) Cache::get($cacheKey, ''));
+            if ($cachedToken !== '') {
+                return $cachedToken;
+            }
+
+            $this->ensureAccessTokenRequestIsAvailable();
+
+            throw new \RuntimeException(
+                'PUPTAS access token refresh is already in progress. Please try again shortly.',
+                503,
+                $exception
+            );
+        }
+    }
+
+    private function ensureAccessTokenRequestIsAvailable(): void
+    {
         $rateLimitedUntil = (int) Cache::get($this->accessTokenRateLimitCacheKey(), 0);
         if ($rateLimitedUntil > now()->timestamp) {
             $retryAfter = max(1, $rateLimitedUntil - now()->timestamp);
@@ -104,11 +153,10 @@ class PuptasWebhookService
         if ($rateLimitedUntil > 0) {
             Cache::forget($this->accessTokenRateLimitCacheKey());
         }
+    }
 
-        if ($this->tokenUrl === '' || $this->clientId === '' || $this->clientSecret === '') {
-            throw new \RuntimeException('PUPTAS OAuth configuration is incomplete.');
-        }
-
+    private function requestAndCacheAccessToken(string $cacheKey): string
+    {
         $response = Http::asForm()
             ->acceptJson()
             ->timeout($this->timeout)
@@ -170,6 +218,11 @@ class PuptasWebhookService
     private function accessTokenRateLimitCacheKey(): string
     {
         return $this->accessTokenCacheKey() . '.rate_limited_until';
+    }
+
+    private function accessTokenLockCacheKey(): string
+    {
+        return $this->accessTokenCacheKey() . '.refresh_lock';
     }
 
     private function retryAfterSeconds(?string $retryAfter, int $default = 60): int

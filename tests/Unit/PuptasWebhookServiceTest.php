@@ -147,5 +147,102 @@ class PuptasWebhookServiceTest extends TestCase
         $this->assertSame('rate_limited', $result['error_type']);
         $this->assertSame(1, $tokenRequests);
         $this->assertSame(0, $webhookRequests);
+
+        $secondResult = app(PuptasWebhookService::class)
+            ->sendMedicalClearance('2026-0207-8804', 'idp-user-rate-limited', true);
+
+        $this->assertFalse($secondResult['success']);
+        $this->assertSame(429, $secondResult['status']);
+        $this->assertSame(1, $tokenRequests);
+        $this->assertSame(0, $webhookRequests);
+    }
+
+    public function test_lookup_and_webhook_share_one_cached_oauth_token(): void
+    {
+        Config::set('services.puptas.api_url', 'https://puptas.example/api/v1/webhooks/medical-result');
+        Config::set('services.puptas.client_id', 'shared-client-id');
+        Config::set('services.puptas.client_secret', 'shared-client-secret');
+        Config::set('services.puptas.webhook_secret', 'webhook-secret');
+        Config::set('services.puptas.token_url', 'https://puptas.example/oauth/token');
+        Config::set('services.puptas.scope', 'medical-read medical-write');
+
+        $tokenRequests = 0;
+        $lookupRequests = 0;
+        $webhookRequests = 0;
+
+        Http::fake(function (Request $request) use (&$tokenRequests, &$lookupRequests, &$webhookRequests) {
+            if ($request->url() === 'https://puptas.example/oauth/token') {
+                $tokenRequests++;
+
+                return Http::response([
+                    'access_token' => 'shared-token',
+                    'expires_in' => 3600,
+                ]);
+            }
+
+            if ($request->url() === 'https://puptas.example/api/v1/medical/applicants/2026-0207-8804') {
+                $lookupRequests++;
+
+                return Http::response([
+                    'data' => [
+                        'idp_user_id' => 'idp-user-123',
+                        'reference_number' => '2026-0207-8804',
+                    ],
+                ]);
+            }
+
+            if ($request->url() === 'https://puptas.example/api/v1/webhooks/medical-result') {
+                $webhookRequests++;
+
+                return Http::response(['message' => 'ok']);
+            }
+
+            return Http::response([], 404);
+        });
+
+        $lookup = app(PuptasWebhookService::class)
+            ->fetchApplicantByReferenceNumberDetailed('2026-0207-8804');
+        $webhook = app(PuptasWebhookService::class)
+            ->sendMedicalClearance('2026-0207-8804', 'idp-user-123', true);
+
+        $this->assertTrue($lookup['success']);
+        $this->assertTrue($webhook['success']);
+        $this->assertSame(1, $tokenRequests);
+        $this->assertSame(1, $lookupRequests);
+        $this->assertSame(1, $webhookRequests);
+    }
+
+    public function test_it_does_not_request_another_token_while_refresh_is_locked(): void
+    {
+        Config::set('services.puptas.api_url', 'https://puptas.example/api/v1/webhooks/medical-result');
+        Config::set('services.puptas.client_id', 'locked-client-id');
+        Config::set('services.puptas.client_secret', 'locked-client-secret');
+        Config::set('services.puptas.webhook_secret', 'webhook-secret');
+        Config::set('services.puptas.token_url', 'https://puptas.example/oauth/token');
+        Config::set('services.puptas.scope', 'medical-read medical-write');
+        Config::set('services.puptas.token_lock_seconds', 30);
+        Config::set('services.puptas.token_lock_wait_seconds', 0);
+
+        $tokenCacheKey = 'puptas.oauth_token.' . hash('sha256', implode('|', [
+            'https://puptas.example/oauth/token',
+            'locked-client-id',
+            'medical-read medical-write',
+        ]));
+        $lock = Cache::lock($tokenCacheKey . '.refresh_lock', 30);
+
+        $this->assertTrue($lock->get());
+        Http::fake();
+
+        try {
+            $result = app(PuptasWebhookService::class)
+                ->sendMedicalClearance('2026-0207-8804', 'idp-user-locked', true);
+        } finally {
+            $lock->release();
+        }
+
+        $this->assertFalse($result['success']);
+        $this->assertSame(503, $result['status']);
+        $this->assertStringContainsString('already in progress', $result['message']);
+        Http::assertNothingSent();
     }
 }

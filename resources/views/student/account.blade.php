@@ -7616,6 +7616,14 @@ document.addEventListener('DOMContentLoaded', function () {
     @php
         $usesEmployeeHealthForm = $studentUsesEmployeeHealthForm ?? false;
         $healthProfileRecord = $usesEmployeeHealthForm ? $user->employeeHealthProfile : $user->healthProfile;
+        $activeHealthCorrectionRequest = (!$usesEmployeeHealthForm && $healthProfileRecord)
+            ? \App\Models\HealthProfileCorrectionRequest::query()
+                ->where('health_profile_id', $healthProfileRecord->id)
+                ->active()
+                ->latest('requested_at')
+                ->latest('id')
+                ->first()
+            : null;
         $healthFormRoute = $usesEmployeeHealthForm ? route('health.form.employee') : route('health.form');
         $healthFormSubmitted = $hasSubmittedHealthProfile ?? ($healthProfileRecord !== null);
         $status = optional($healthProfileRecord)->clearance_status ?? 'For Verification';
@@ -7624,9 +7632,10 @@ document.addEventListener('DOMContentLoaded', function () {
         $isRejectedStatus = $statusNormalized === 'rejected';
         $isConditionalStatus = str_contains($statusNormalized, 'pending') || str_contains($statusNormalized, 'conditional');
         $isPendingStatus = !$isIssuedStatus && !$isRejectedStatus;
-        $recordPendingReason = trim((string) optional($healthProfileRecord)->pending_reason);
+        $recordPendingReason = trim((string) ($activeHealthCorrectionRequest?->admin_note ?: optional($healthProfileRecord)->pending_reason));
         $recordPendingReasonSearch = strtolower($recordPendingReason);
-        $requiresHealthFormCorrection = str_contains($recordPendingReasonSearch, 'health form correction')
+        $requiresHealthFormCorrection = $activeHealthCorrectionRequest?->type === \App\Models\HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION
+            || str_contains($recordPendingReasonSearch, 'health form correction')
             || ($isConditionalStatus && collect([
                 'health information form',
                 'health form',
@@ -7636,7 +7645,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 'correct details',
             ])->contains(fn ($needle) => str_contains($recordPendingReasonSearch, $needle)));
         $resubmissionDocuments = collect(
-            optional($healthProfileRecord)->resubmission_required_documents
+            $activeHealthCorrectionRequest?->required_documents
+                ?? optional($healthProfileRecord)->resubmission_required_documents
                 ?? optional($healthProfileRecord)->resubmission_required_fields
                 ?? []
         )->filter()->values();
