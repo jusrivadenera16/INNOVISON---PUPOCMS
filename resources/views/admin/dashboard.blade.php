@@ -10,6 +10,75 @@
         margin: 0 auto;
     }
 
+    .dashboard-welcome {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin: 4px 0 18px;
+        padding: 0 2px;
+    }
+
+    .dashboard-welcome-copy h1 {
+        margin: 0;
+        color: #111827;
+        font-family: "Outfit", "Manrope", sans-serif;
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .dashboard-welcome-copy h1 span {
+        color: #8b0000;
+    }
+
+    .dashboard-welcome-copy p {
+        margin: 4px 0 0;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .dashboard-date-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        flex: 0 0 auto;
+        min-width: 158px;
+        padding: 10px 12px;
+        border: 1px solid rgba(128, 0, 0, 0.12);
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+    }
+
+    .dashboard-date-badge svg {
+        width: 20px;
+        height: 20px;
+        color: #8b0000;
+        flex: 0 0 auto;
+        stroke-width: 1.8;
+    }
+
+    .dashboard-date-badge strong,
+    .dashboard-date-badge span {
+        display: block;
+    }
+
+    .dashboard-date-badge strong {
+        color: #111827;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .dashboard-date-badge span {
+        margin-top: 2px;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
     /* --- 1. STATS ROW (The "MedTrackr" Style) --- */
     .stats-grid {
         display: grid;
@@ -384,8 +453,33 @@
     @media (max-width: 768px) {
         .stats-grid { grid-template-columns: repeat(2, 1fr); }
         .dashboard-chart-row { grid-template-columns: 84px 1fr 36px; }
+        .dashboard-welcome { align-items: flex-start; }
     }
-    @media (max-width: 500px) { .stats-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 500px) {
+        .stats-grid { grid-template-columns: 1fr; }
+        .dashboard-welcome { gap: 12px; }
+        .dashboard-welcome-copy h1 { font-size: 18px; }
+        .dashboard-welcome-copy p { font-size: 12px; }
+        .dashboard-date-badge { min-width: auto; padding: 9px; }
+        .dashboard-date-badge strong { font-size: 11px; }
+        .dashboard-date-badge span { display: none; }
+    }
+
+    html[data-theme="dark"] .dashboard-welcome-copy h1,
+    html[data-theme="dark"] .dashboard-date-badge strong {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .dashboard-welcome-copy p,
+    html[data-theme="dark"] .dashboard-date-badge span {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .dashboard-date-badge {
+        border-color: rgba(250, 204, 21, 0.18);
+        background: rgba(15, 23, 42, 0.72);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
+    }
 
     /* Final light-mode surface pass */
     html:not([data-theme="dark"]) .stats-grid .stat-card {
@@ -417,8 +511,27 @@
         $rate = max(0, min(100, (int) $rate));
         return (int) round((100 - $rate) * 0.52);
     };
+    $dashboardDisplayName = trim((string) (optional(auth()->user())->name ?? 'Clinic User'));
+    $dashboardNameParts = preg_split('/\s+/', $dashboardDisplayName, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+    $dashboardFirstName = $dashboardNameParts[0] ?? 'Clinic User';
+    $dashboardLastName = count($dashboardNameParts) > 1 ? (string) end($dashboardNameParts) : '';
+    $dashboardWelcomeName = trim($dashboardFirstName . ($dashboardLastName !== '' ? ' ' . strtoupper(substr($dashboardLastName, 0, 1)) . '.' : ''));
+    $dashboardToday = now();
 @endphp
 <div class="dashboard-container">
+    <section class="dashboard-welcome" aria-label="Dashboard summary">
+        <div class="dashboard-welcome-copy">
+            <h1>Good day! <span>{{ $dashboardWelcomeName }}</span></h1>
+            <p>Here's what's happening in the clinic today.</p>
+        </div>
+        <div class="dashboard-date-badge" aria-label="{{ $dashboardToday->format('F j, Y, l') }}">
+            <x-outline-icon name="calendar-days" />
+            <div>
+                <strong>{{ $dashboardToday->format('F j, Y') }}</strong>
+                <span>{{ $dashboardToday->format('l') }}</span>
+            </div>
+        </div>
+    </section>
     <div class="stats-grid">
         
         <div class="stat-card" style="--wave-offset: {{ $dashboardWaveOffset($completionRate) }}px;">

@@ -2910,11 +2910,19 @@
         $showHealthFormModal = $studentUser
             && !(bool) ($studentUser->is_health_profile_completed ?? false)
             && ($studentUsesEmployeeHealthForm ? !$studentUser->employeeHealthProfile : !$studentUser->healthProfile);
-        $studentResubmissionDocuments = collect(optional($studentUser?->healthProfile)->resubmission_required_documents ?? [])
+        $studentActiveCorrectionRequest = $studentUser?->healthProfile
+            ? \App\Models\HealthProfileCorrectionRequest::query()
+                ->where('health_profile_id', $studentUser->healthProfile->id)
+                ->active()
+                ->latest('requested_at')
+                ->latest('id')
+                ->first()
+            : null;
+        $studentResubmissionDocuments = collect($studentActiveCorrectionRequest?->required_documents ?? optional($studentUser?->healthProfile)->resubmission_required_documents ?? [])
             ->filter()
             ->intersect(['student_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])
             ->values();
-        $studentResubmissionNote = trim((string) optional($studentUser?->healthProfile)->pending_reason);
+        $studentResubmissionNote = trim((string) ($studentActiveCorrectionRequest?->admin_note ?: optional($studentUser?->healthProfile)->pending_reason));
         $studentResubmissionNote = trim(preg_replace('/^Document\s+Resubmission:\s*/i', '', $studentResubmissionNote));
         $studentPendingHealthFormRequest = $studentUser
             ? \App\Models\HealthFormSubmission::query()
@@ -2927,7 +2935,8 @@
         $studentPendingReasonSearch = strtolower($studentResubmissionNote);
         $studentNeedsHealthFormCorrection = $studentUser?->healthProfile
             && (
-                str_contains($studentPendingReasonSearch, 'health form correction')
+                $studentActiveCorrectionRequest?->type === \App\Models\HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION
+                || str_contains($studentPendingReasonSearch, 'health form correction')
                 || (
                     (str_contains(strtolower((string) $studentUser->healthProfile->clearance_status), 'pending')
                         || str_contains(strtolower((string) $studentUser->healthProfile->clearance_status), 'conditional'))
@@ -2941,7 +2950,7 @@
                     ])->contains(fn ($needle) => str_contains($studentPendingReasonSearch, $needle))
                 )
             );
-        $studentCorrectionRequestedAt = optional($studentUser?->healthProfile)->resubmission_requested_at;
+        $studentCorrectionRequestedAt = $studentActiveCorrectionRequest?->requested_at ?: optional($studentUser?->healthProfile)->resubmission_requested_at;
         $studentNewFormRequestedAt = optional($studentPendingHealthFormRequest)->requested_at;
         $studentHealthActionMode = null;
         if ($studentNeedsHealthFormCorrection && $studentPendingHealthFormRequest) {

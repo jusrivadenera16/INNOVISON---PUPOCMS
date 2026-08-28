@@ -11,6 +11,7 @@ use App\Models\Appointment;
 use App\Models\AppointmentFeedback;
 use App\Models\Consultation;
 use App\Models\HealthFormSubmission;
+use App\Models\HealthProfileCorrectionRequest;
 use App\Models\HealthProfile;
 use App\Models\EmployeeHealthProfile;
 use App\Models\Faq;
@@ -2176,10 +2177,33 @@ class AppointmentController extends Controller
         return EmployeeHealthProfile::query()->where('user_id', $user->id)->exists();
     }
 
+    private function activeHealthProfileCorrectionRequest(?HealthProfile $healthProfile, ?string $type = null): ?HealthProfileCorrectionRequest
+    {
+        if (!$healthProfile) {
+            return null;
+        }
+
+        $query = HealthProfileCorrectionRequest::query()
+            ->where('health_profile_id', $healthProfile->id)
+            ->active()
+            ->latest('requested_at')
+            ->latest('id');
+
+        if ($type !== null) {
+            $query->where('type', $type);
+        }
+
+        return $query->first();
+    }
+
     private function healthProfileNeedsFormCorrection(?HealthProfile $healthProfile): bool
     {
         if (!$healthProfile) {
             return false;
+        }
+
+        if ($this->activeHealthProfileCorrectionRequest($healthProfile, HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION)) {
+            return true;
         }
 
         $reason = strtolower(trim((string) $healthProfile->pending_reason));
@@ -2216,6 +2240,15 @@ class AppointmentController extends Controller
     {
         if (!$healthProfile) {
             return [];
+        }
+
+        $activeCorrectionRequest = $this->activeHealthProfileCorrectionRequest($healthProfile);
+        if ($activeCorrectionRequest) {
+            return collect($activeCorrectionRequest->required_documents ?? [])
+                ->filter()
+                ->intersect(['student_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])
+                ->values()
+                ->all();
         }
 
         return collect($healthProfile->resubmission_required_documents ?? [])
@@ -3069,7 +3102,8 @@ public function account(Request $request)
                 ->with('error', 'Submit your health profile before uploading replacement requirements.');
         }
 
-        $requiredDocuments = collect($healthProfile->resubmission_required_documents ?? [])
+        $activeCorrectionRequest = $this->activeHealthProfileCorrectionRequest($healthProfile);
+        $requiredDocuments = collect($activeCorrectionRequest?->required_documents ?? $healthProfile->resubmission_required_documents ?? [])
             ->filter()
             ->intersect(['student_photo', 'health_declaration', 'medical_certificate', 'chest_xray_result', 'pwd_id_proof'])
             ->values();
@@ -3157,6 +3191,26 @@ public function account(Request $request)
             $healthProfile->resubmission_requested_at = null;
             $healthProfile->resubmitted_at = now();
             $healthProfile->save();
+
+            if ($activeCorrectionRequest) {
+                $metadata = is_array($activeCorrectionRequest->metadata) ? $activeCorrectionRequest->metadata : [];
+                $metadata['uploaded_documents'] = $storedPaths;
+                $metadata['legacy_health_profile_updated'] = true;
+
+                if ($activeCorrectionRequest->type === HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION) {
+                    $activeCorrectionRequest->forceFill([
+                        'required_documents' => [],
+                        'submitted_at' => now(),
+                        'metadata' => $metadata,
+                    ])->save();
+                } else {
+                    $activeCorrectionRequest->forceFill([
+                        'status' => HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                        'submitted_at' => now(),
+                        'metadata' => $metadata,
+                    ])->save();
+                }
+            }
 
             $user->is_health_profile_completed = 0;
             $user->save();
@@ -4755,6 +4809,10 @@ public function storeHealthForm(Request $request)
         ? $user->healthProfile
         : \App\Models\HealthProfile::where('user_id', $user?->id)->first();
     $isHealthFormCorrectionMode = $this->healthProfileNeedsFormCorrection($existingHealthProfile);
+    $activeHealthFormCorrectionRequest = $this->activeHealthProfileCorrectionRequest(
+        $existingHealthProfile,
+        HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION
+    );
     $requestedCorrectionDocuments = $this->requestedHealthProfileDocuments($existingHealthProfile);
     $pendingHealthFormRequest = $user
         ? HealthFormSubmission::query()
@@ -5162,12 +5220,46 @@ public function storeHealthForm(Request $request)
         $user->is_health_profile_completed = 0;
         $user->save();
 
-        app(HealthFormPdfSnapshotService::class)->recordSubmittedWithoutPdf(
+        $healthFormSubmission = app(HealthFormPdfSnapshotService::class)->recordSubmittedWithoutPdf(
             $healthProfile->fresh('user'),
             $user,
             $request->input('health_form_category', 'General'),
-            trim((string) $request->input('health_form_request_remarks'))
+            trim((string) $request->input('health_form_request_remarks')),
+            $isHealthFormCorrectionMode && !$pendingHealthFormRequest
         );
+
+        if ($activeHealthFormCorrectionRequest) {
+            $metadata = is_array($activeHealthFormCorrectionRequest->metadata)
+                ? $activeHealthFormCorrectionRequest->metadata
+                : [];
+            $metadata['health_form_submission_id'] = $healthFormSubmission->id;
+
+            $activeHealthFormCorrectionRequest->forceFill([
+                'status' => HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                'health_form_submission_id' => $healthFormSubmission->id,
+                'submitted_at' => now(),
+                'metadata' => $metadata,
+            ])->save();
+        }
+
+        if ($pendingHealthFormRequest) {
+            $activeNewHealthFormRequest = HealthProfileCorrectionRequest::query()
+                ->where('user_id', $user->id)
+                ->where('health_profile_id', $healthProfile->id)
+                ->where('type', HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM)
+                ->active()
+                ->latest('requested_at')
+                ->latest('id')
+                ->first();
+
+            if ($activeNewHealthFormRequest) {
+                $activeNewHealthFormRequest->forceFill([
+                    'status' => HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                    'health_form_submission_id' => $healthFormSubmission->id,
+                    'submitted_at' => now(),
+                ])->save();
+            }
+        }
 
         \App\Models\ActivityLog::create([
             'user_id'     => $user->id,

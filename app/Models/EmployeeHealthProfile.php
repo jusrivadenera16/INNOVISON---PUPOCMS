@@ -139,6 +139,21 @@ class EmployeeHealthProfile extends Model
         return $this->belongsTo(User::class, 'approved_by_user_id');
     }
 
+    public function correctionRequests()
+    {
+        return $this->hasMany(HealthProfileCorrectionRequest::class, 'employee_health_profile_id');
+    }
+
+    public function activeCorrectionRequest()
+    {
+        return $this->hasOne(HealthProfileCorrectionRequest::class, 'employee_health_profile_id')
+            ->whereIn('status', [
+                HealthProfileCorrectionRequest::STATUS_PENDING,
+                HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW,
+            ])
+            ->latestOfMany();
+    }
+
     public function hasMedicalCondition(): bool
     {
         $arrays = [

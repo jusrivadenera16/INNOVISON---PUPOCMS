@@ -15,10 +15,16 @@ class HealthFormPdfSnapshotService
     ) {
     }
 
-    public function recordSubmittedWithoutPdf(HealthProfile $profile, User $user, ?string $category = null, ?string $remarks = null): HealthFormSubmission
+    public function recordSubmittedWithoutPdf(
+        HealthProfile $profile,
+        User $user,
+        ?string $category = null,
+        ?string $remarks = null,
+        bool $createNewSubmission = false
+    ): HealthFormSubmission
     {
         $profile->loadMissing('user');
-        $submission = $this->submissionForUpdate($profile, $user);
+        $submission = $this->submissionForUpdate($profile, $user, $createNewSubmission);
         $resolvedCategory = trim((string) ($submission->category ?: $category)) ?: 'General';
         $timestamp = now();
         $filePath = $this->buildSnapshotPath($profile, $user, $resolvedCategory, $timestamp);
@@ -170,7 +176,7 @@ class HealthFormPdfSnapshotService
         return $submission->fresh();
     }
 
-    private function submissionForUpdate(HealthProfile $profile, User $user): HealthFormSubmission
+    private function submissionForUpdate(HealthProfile $profile, User $user, bool $createNewSubmission = false): HealthFormSubmission
     {
         $pendingRequest = HealthFormSubmission::query()
             ->where('user_id', $user->id)
@@ -181,6 +187,13 @@ class HealthFormPdfSnapshotService
 
         if ($pendingRequest) {
             return $pendingRequest;
+        }
+
+        if ($createNewSubmission) {
+            return new HealthFormSubmission([
+                'user_id' => $user->id,
+                'health_profile_id' => $profile->id,
+            ]);
         }
 
         $existing = HealthFormSubmission::query()

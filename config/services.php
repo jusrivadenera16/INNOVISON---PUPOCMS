@@ -162,6 +162,8 @@ return [
         'timeout' => (int) env('PUPTAS_TIMEOUT', 20),
         'scope' => env('PUPTAS_SCOPE', 'medical-read medical-write'),
         'token_url' => env('PUPTAS_TOKEN_URL'),
+        'token_lock_seconds' => (int) env('PUPTAS_TOKEN_LOCK_SECONDS', 30),
+        'token_lock_wait_seconds' => (int) env('PUPTAS_TOKEN_LOCK_WAIT_SECONDS', 25),
     ],
 
 ];

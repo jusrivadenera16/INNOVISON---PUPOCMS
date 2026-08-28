@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ApiErrorLog;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -20,6 +21,8 @@ class PuptasWebhookService
     private int $timeout;
     private string $scope;
     private string $tokenUrl;
+    private int $tokenLockSeconds;
+    private int $tokenLockWaitSeconds;
     private int $lastLookupAttempts = 0;
 
     public function __construct()
@@ -34,6 +37,12 @@ class PuptasWebhookService
         $this->timeout = (int) config('services.puptas.timeout', 20);
         $this->scope = (string) config('services.puptas.scope', 'medical-read medical-write');
         $this->tokenUrl = $this->resolveTokenUrl((string) config('services.puptas.token_url', ''));
+        $this->tokenLockSeconds = max(
+            5,
+            $this->timeout + 5,
+            (int) config('services.puptas.token_lock_seconds', 30)
+        );
+        $this->tokenLockWaitSeconds = max(0, (int) config('services.puptas.token_lock_wait_seconds', 25));
     }
 
     private function buildHmacSignature(string $payload): string
@@ -89,12 +98,80 @@ class PuptasWebhookService
         $cacheKey = $this->accessTokenCacheKey();
         $cachedToken = trim((string) Cache::get($cacheKey, ''));
         if ($cachedToken !== '') {
+            $this->logTokenCacheStateOnce('hit', 1800);
+
             return $cachedToken;
         }
 
+        $this->logTokenCacheStateOnce('miss', 300);
+
+        $this->ensureAccessTokenRequestIsAvailable();
+
+        if ($this->tokenUrl === '' || $this->clientId === '' || $this->clientSecret === '') {
+            throw new \RuntimeException('PUPTAS OAuth configuration is incomplete.');
+        }
+
+        $lock = Cache::lock($this->accessTokenLockCacheKey(), $this->tokenLockSeconds);
+
+        try {
+            return $lock->block($this->tokenLockWaitSeconds, function () use ($cacheKey): string {
+                // Another request may have refreshed the token while this request waited.
+                $cachedToken = trim((string) Cache::get($cacheKey, ''));
+                if ($cachedToken !== '') {
+                    Log::info('PUPTAS OAuth access token cache filled while waiting for refresh lock',
+                        $this->tokenDiagnosticContext()
+                    );
+
+                    return $cachedToken;
+                }
+
+                $this->ensureAccessTokenRequestIsAvailable();
+
+                Log::info('PUPTAS OAuth access token refresh lock acquired',
+                    $this->tokenDiagnosticContext([
+                        'lock_seconds' => $this->tokenLockSeconds,
+                        'lock_wait_seconds' => $this->tokenLockWaitSeconds,
+                    ])
+                );
+
+                return $this->requestAndCacheAccessToken($cacheKey);
+            });
+        } catch (LockTimeoutException $exception) {
+            // Check once more before reporting contention; the lock owner may have
+            // completed between the final lock attempt and this exception.
+            $cachedToken = trim((string) Cache::get($cacheKey, ''));
+            if ($cachedToken !== '') {
+                Log::info('PUPTAS OAuth access token became available after refresh lock timeout',
+                    $this->tokenDiagnosticContext()
+                );
+
+                return $cachedToken;
+            }
+
+            $this->ensureAccessTokenRequestIsAvailable();
+
+            Log::warning('PUPTAS OAuth access token refresh lock timed out',
+                $this->tokenDiagnosticContext([
+                    'lock_seconds' => $this->tokenLockSeconds,
+                    'lock_wait_seconds' => $this->tokenLockWaitSeconds,
+                ])
+            );
+
+            throw new \RuntimeException(
+                'PUPTAS access token refresh is already in progress. Please try again shortly.',
+                503,
+                $exception
+            );
+        }
+    }
+
+    private function ensureAccessTokenRequestIsAvailable(): void
+    {
         $rateLimitedUntil = (int) Cache::get($this->accessTokenRateLimitCacheKey(), 0);
         if ($rateLimitedUntil > now()->timestamp) {
             $retryAfter = max(1, $rateLimitedUntil - now()->timestamp);
+            $this->logTokenCooldownOnce($retryAfter, $rateLimitedUntil);
+
             throw new \RuntimeException(
                 "PUPTAS access token request is rate limited. Retry after {$retryAfter} seconds.",
                 429
@@ -103,28 +180,46 @@ class PuptasWebhookService
 
         if ($rateLimitedUntil > 0) {
             Cache::forget($this->accessTokenRateLimitCacheKey());
+            Cache::forget($this->tokenDiagnosticMarkerKey('cooldown'));
         }
+    }
 
-        if ($this->tokenUrl === '' || $this->clientId === '' || $this->clientSecret === '') {
-            throw new \RuntimeException('PUPTAS OAuth configuration is incomplete.');
+    private function requestAndCacheAccessToken(string $cacheKey): string
+    {
+        $requestStartedAt = microtime(true);
+
+        Log::info('PUPTAS OAuth access token request started',
+            $this->tokenDiagnosticContext()
+        );
+
+        try {
+            $response = Http::asForm()
+                ->acceptJson()
+                ->timeout($this->timeout)
+                ->post($this->tokenUrl, [
+                    'grant_type' => 'client_credentials',
+                    'client_id' => $this->clientId,
+                    'client_secret' => $this->clientSecret,
+                    'scope' => $this->scope,
+                ]);
+        } catch (\Throwable $exception) {
+            Log::warning('PUPTAS OAuth access token request failed before receiving a response',
+                $this->tokenDiagnosticContext([
+                    'duration_ms' => $this->elapsedMilliseconds($requestStartedAt),
+                    'exception_type' => get_class($exception),
+                ])
+            );
+
+            throw $exception;
         }
-
-        $response = Http::asForm()
-            ->acceptJson()
-            ->timeout($this->timeout)
-            ->post($this->tokenUrl, [
-                'grant_type' => 'client_credentials',
-                'client_id' => $this->clientId,
-                'client_secret' => $this->clientSecret,
-                'scope' => $this->scope,
-            ]);
 
         if (!$response->successful()) {
             $status = $response->status();
             $responseMessage = $this->responseFailureMessage($response->body());
 
             if ($status === 429) {
-                $retryAfter = $this->retryAfterSeconds($response->header('Retry-After'));
+                $retryAfterHeader = trim((string) $response->header('Retry-After'));
+                $retryAfter = $this->retryAfterSeconds($retryAfterHeader);
                 $retryAt = now()->addSeconds($retryAfter);
                 Cache::put(
                     $this->accessTokenRateLimitCacheKey(),
@@ -132,11 +227,28 @@ class PuptasWebhookService
                     $retryAt
                 );
 
+                Log::warning('PUPTAS OAuth token endpoint returned a rate limit response',
+                    $this->tokenDiagnosticContext(array_merge([
+                        'status' => $status,
+                        'duration_ms' => $this->elapsedMilliseconds($requestStartedAt),
+                        'retry_after_seconds' => $retryAfter,
+                        'retry_after_source' => $retryAfterHeader !== '' ? 'upstream_header' : 'local_default',
+                        'cooldown_cache_write_verified' => Cache::has($this->accessTokenRateLimitCacheKey()),
+                    ], $this->tokenRateLimitHeaders($response)))
+                );
+
                 throw new \RuntimeException(
                     "Unable to fetch PUPTAS access token: rate limited. Retry after {$retryAfter} seconds.",
                     429
                 );
             }
+
+            Log::warning('PUPTAS OAuth token endpoint rejected the access token request',
+                $this->tokenDiagnosticContext(array_merge([
+                    'status' => $status,
+                    'duration_ms' => $this->elapsedMilliseconds($requestStartedAt),
+                ], $this->tokenRateLimitHeaders($response)))
+            );
 
             throw new \RuntimeException(
                 'Unable to fetch PUPTAS access token'
@@ -148,14 +260,154 @@ class PuptasWebhookService
 
         $token = trim((string) $response->json('access_token'));
         if ($token === '') {
+            Log::warning('PUPTAS OAuth token response did not include an access token',
+                $this->tokenDiagnosticContext([
+                    'status' => $response->status(),
+                    'duration_ms' => $this->elapsedMilliseconds($requestStartedAt),
+                ])
+            );
+
             throw new \RuntimeException('PUPTAS access token response did not include access_token.');
         }
 
-        $expiresIn = max(60, ((int) $response->json('expires_in', 3600)) - 60);
-        Cache::put($cacheKey, $token, now()->addSeconds($expiresIn));
+        $reportedExpiresIn = (int) $response->json('expires_in', 3600);
+        if ($reportedExpiresIn <= 0) {
+            $reportedExpiresIn = 3600;
+        }
+
+        $safetyWindow = min(60, max(5, (int) ceil($reportedExpiresIn * 0.1)));
+        $cacheTtl = max(1, $reportedExpiresIn - $safetyWindow);
+        Cache::put($cacheKey, $token, now()->addSeconds($cacheTtl));
         Cache::forget($this->accessTokenRateLimitCacheKey());
+        Cache::forget($this->tokenDiagnosticMarkerKey('miss'));
+        Cache::forget($this->tokenDiagnosticMarkerKey('hit'));
+        Cache::forget($this->tokenDiagnosticMarkerKey('cooldown'));
+
+        Log::info('PUPTAS OAuth access token cached successfully',
+            $this->tokenDiagnosticContext([
+                'status' => $response->status(),
+                'duration_ms' => $this->elapsedMilliseconds($requestStartedAt),
+                'reported_expires_in_seconds' => $reportedExpiresIn,
+                'cache_ttl_seconds' => $cacheTtl,
+                'cache_write_verified' => Cache::has($cacheKey),
+            ])
+        );
 
         return $token;
+    }
+
+    private function logTokenCacheStateOnce(string $state, int $markerTtlSeconds): void
+    {
+        try {
+            $shouldLog = Cache::add(
+                $this->tokenDiagnosticMarkerKey($state),
+                true,
+                now()->addSeconds($markerTtlSeconds)
+            );
+        } catch (\Throwable $exception) {
+            Log::debug('PUPTAS OAuth cache diagnostic marker could not be stored',
+                $this->tokenDiagnosticContext([
+                    'state' => $state,
+                    'exception_type' => get_class($exception),
+                ])
+            );
+
+            return;
+        }
+
+        if ($shouldLog) {
+            Log::info("PUPTAS OAuth access token cache {$state}",
+                $this->tokenDiagnosticContext()
+            );
+        }
+    }
+
+    private function logTokenCooldownOnce(int $retryAfter, int $rateLimitedUntil): void
+    {
+        try {
+            $shouldLog = Cache::add(
+                $this->tokenDiagnosticMarkerKey('cooldown'),
+                true,
+                now()->addSeconds($retryAfter)
+            );
+        } catch (\Throwable $exception) {
+            return;
+        }
+
+        if ($shouldLog) {
+            Log::info('PUPTAS OAuth access token request blocked by cached cooldown',
+                $this->tokenDiagnosticContext([
+                    'retry_after_seconds' => $retryAfter,
+                    'rate_limited_until' => date(DATE_ATOM, $rateLimitedUntil),
+                ])
+            );
+        }
+    }
+
+    private function tokenDiagnosticContext(array $additional = []): array
+    {
+        return array_merge([
+            'cache_store' => (string) config('cache.default', 'unknown'),
+            'token_endpoint' => $this->safeTokenEndpoint(),
+            'client_fingerprint' => $this->safeFingerprint($this->clientId),
+            'scope_fingerprint' => $this->safeFingerprint($this->scope),
+            'cache_key_fingerprint' => substr(hash('sha256', $this->accessTokenCacheKey()), 0, 12),
+        ], $additional);
+    }
+
+    private function safeTokenEndpoint(): string
+    {
+        $parts = parse_url($this->tokenUrl);
+        if (!is_array($parts) || empty($parts['scheme']) || empty($parts['host'])) {
+            return $this->tokenUrl === '' ? 'not_configured' : 'invalid_url';
+        }
+
+        $endpoint = $parts['scheme'] . '://' . $parts['host'];
+        if (!empty($parts['port'])) {
+            $endpoint .= ':' . $parts['port'];
+        }
+
+        return $endpoint . ($parts['path'] ?? '');
+    }
+
+    private function safeFingerprint(string $value): string
+    {
+        $value = trim($value);
+
+        return $value === '' ? 'missing' : substr(hash('sha256', $value), 0, 12);
+    }
+
+    private function tokenDiagnosticMarkerKey(string $state): string
+    {
+        return $this->accessTokenCacheKey() . '.diagnostics.' . $state;
+    }
+
+    private function elapsedMilliseconds(float $startedAt): int
+    {
+        return max(0, (int) round((microtime(true) - $startedAt) * 1000));
+    }
+
+    private function tokenRateLimitHeaders($response): array
+    {
+        $context = [];
+        $headers = [
+            'retry_after_header' => 'Retry-After',
+            'rate_limit_limit' => 'RateLimit-Limit',
+            'rate_limit_remaining' => 'RateLimit-Remaining',
+            'rate_limit_reset' => 'RateLimit-Reset',
+            'x_rate_limit_limit' => 'X-RateLimit-Limit',
+            'x_rate_limit_remaining' => 'X-RateLimit-Remaining',
+            'x_rate_limit_reset' => 'X-RateLimit-Reset',
+        ];
+
+        foreach ($headers as $contextKey => $headerName) {
+            $value = trim((string) $response->header($headerName));
+            if ($value !== '') {
+                $context[$contextKey] = mb_substr($value, 0, 100);
+            }
+        }
+
+        return $context;
     }
 
     private function accessTokenCacheKey(): string
@@ -170,6 +422,11 @@ class PuptasWebhookService
     private function accessTokenRateLimitCacheKey(): string
     {
         return $this->accessTokenCacheKey() . '.rate_limited_until';
+    }
+
+    private function accessTokenLockCacheKey(): string
+    {
+        return $this->accessTokenCacheKey() . '.refresh_lock';
     }
 
     private function retryAfterSeconds(?string $retryAfter, int $default = 60): int
