@@ -17,7 +17,11 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('health_profile_id')->nullable()->constrained('health_profiles')->nullOnDelete();
             $table->unsignedBigInteger('employee_health_profile_id')->nullable();
-            $table->foreignId('health_form_submission_id')->nullable()->constrained('health_form_submissions')->nullOnDelete();
+            $table->foreignId('health_form_submission_id')->nullable();
+            $table->foreign('health_form_submission_id', 'hpcr_submission_fk')
+                ->references('id')
+                ->on('health_form_submissions')
+                ->nullOnDelete();
             $table->string('profile_kind', 30)->default('student');
             $table->string('type', 40);
             $table->string('status', 40)->default('pending');

@@ -6147,7 +6147,7 @@
                 </div>
                 <div class="dialog-actions">
                     <button type="button" class="dialog-btn dialog-btn-secondary" onclick="closeStatusActionModal()"><span>Cancel</span></button>
-                    <a id="statusActionConfirm" href="#" class="dialog-btn dialog-btn-confirm">
+                    <a id="statusActionConfirm" href="#" class="dialog-btn dialog-btn-confirm" data-loader-scope="screen">
                         <x-outline-icon name="check" />
                         <span>Confirm</span>
                     </a>

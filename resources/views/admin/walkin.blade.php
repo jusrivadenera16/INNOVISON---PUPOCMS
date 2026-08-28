@@ -8163,6 +8163,307 @@
         box-shadow: 0 0 0 3px rgba(250, 204, 21, .18), 0 14px 24px rgba(112, 19, 27, .16) !important;
     }
 
+    /* Final Review: complete dark-mode surface pass. */
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-modal-body,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-ref-panel {
+        background: #0f172a !important;
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-search,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-ref-input {
+        border-color: rgba(250, 204, 21, .24) !important;
+        background: #1e293b !important;
+        color: #f8fafc !important;
+        box-shadow: 0 12px 26px rgba(0, 0, 0, .22) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-search::placeholder,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-ref-input::placeholder {
+        color: #94a3b8 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-ref-field label,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-card small,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-pagination-summary,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-pagination-controls {
+        color: #94a3b8 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-card,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-pagination,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-empty {
+        border-color: rgba(148, 163, 184, .22) !important;
+        background: #182235 !important;
+        box-shadow: 0 12px 26px rgba(0, 0, 0, .18) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-card:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-card:focus-within {
+        border-color: rgba(250, 204, 21, .42) !important;
+        background: #202c42 !important;
+        box-shadow: 0 16px 30px rgba(0, 0, 0, .28) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-card strong,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-card span {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-reference-badge {
+        border-color: rgba(250, 204, 21, .28) !important;
+        background: #111827 !important;
+        color: #fde68a !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-page-btn,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-per-page,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .premium-select-button,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .premium-select-menu,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .premium-select-option {
+        border-color: rgba(148, 163, 184, .24) !important;
+        background: #111827 !important;
+        color: #e2e8f0 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .premium-select-option:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .premium-select-option.is-selected {
+        border-color: #facc15 !important;
+        background: #70131b !important;
+        color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-action-row {
+        background: rgba(15, 23, 42, .92) !important;
+        border-color: rgba(148, 163, 184, .18) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-back,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-ref-cancel-btn,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-ref-draft-btn {
+        border-color: rgba(148, 163, 184, .28) !important;
+        background: #1e293b !important;
+        color: #f8fafc !important;
+        box-shadow: 0 10px 22px rgba(0, 0, 0, .2) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-ref-instruction {
+        border-color: rgba(251, 191, 36, .3) !important;
+        background: rgba(120, 53, 15, .25) !important;
+        color: #fde68a !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-ref-instruction * {
+        color: inherit !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-ref-status.info,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .ocr-status.info {
+        border-color: rgba(96, 165, 250, .35) !important;
+        background: rgba(30, 64, 175, .24) !important;
+        color: #bfdbfe !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-result,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-file-actions,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-lookup-details {
+        border-color: rgba(148, 163, 184, .2) !important;
+        background: #182235 !important;
+        color: #f8fafc !important;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, .2) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-result::before,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-result strong,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-lookup-value {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-lookup-label {
+        color: #94a3b8 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-lookup-card,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-review-source-grid .applicant-lookup-card {
+        border-color: rgba(148, 163, 184, .2) !important;
+        background: #111827 !important;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, .18) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-screening-panel,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-review-panel {
+        border-color: rgba(148, 163, 184, .22) !important;
+        background: #182235 !important;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, .2) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-screening-panel-title,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-review-source-grid .applicant-lookup-label,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-findings-label,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-condition-field label {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-review-result-detail,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-screening-panel-copy {
+        color: #cbd5e1 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-vitals-grid,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-findings-option span,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-pending-reason-option,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-condition-input,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-condition-textarea {
+        border-color: rgba(148, 163, 184, .24) !important;
+        background: #111827 !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-vitals-grid .applicant-condition-field {
+        border-color: rgba(148, 163, 184, .16) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-vitals-grid .applicant-condition-field label,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-vitals-grid .applicant-condition-input,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-vitals-grid .applicant-condition-textarea {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-condition-textarea[readonly] {
+        background: #111827 !important;
+        color: #cbd5e1 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-pending-history-bubble {
+        border-color: rgba(250, 204, 21, .24) !important;
+        background: #1e293b !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-pending-history-bubble strong {
+        color: #f8fafc !important;
+    }
+
+    /* Nested Final Review information modals. */
+    html[data-theme="dark"] #applicantHealthInfoModal .applicant-modal-body,
+    html[data-theme="dark"] #applicantMedicalConditionModal .applicant-modal-body,
+    html[data-theme="dark"] #applicantDocumentsModal .applicant-modal-body {
+        background: #0f172a !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .applicant-information-details,
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-editor,
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-content {
+        border-color: rgba(148, 163, 184, .22) !important;
+        background: #111827 !important;
+        color: #f8fafc !important;
+        box-shadow: none !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-tabs {
+        border-color: rgba(148, 163, 184, .18) !important;
+        background: #182235 !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-tab {
+        color: #cbd5e1 !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-tab:hover {
+        background: #243149 !important;
+        color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-tab.is-active {
+        border-color: rgba(250, 204, 21, .7) !important;
+        background: rgba(112, 19, 27, .78) !important;
+        color: #fde68a !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-header,
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-field {
+        border-color: rgba(148, 163, 184, .18) !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-kicker,
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-field label {
+        color: #94a3b8 !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-header h4,
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-value {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-input,
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-check-option,
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-vaccine-grid,
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-edit-btn,
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-cancel-btn {
+        border-color: rgba(148, 163, 184, .26) !important;
+        background: #1e293b !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantHealthInfoModal .health-info-vaccine-dose strong {
+        color: #fde68a !important;
+    }
+
+    html[data-theme="dark"] #applicantMedicalConditionModal .applicant-medical-condition-details {
+        border-color: rgba(148, 163, 184, .22) !important;
+        background: #182235 !important;
+        box-shadow: 0 12px 26px rgba(0, 0, 0, .2) !important;
+    }
+
+    html[data-theme="dark"] #applicantMedicalConditionModal .applicant-lookup-card {
+        border-color: rgba(148, 163, 184, .22) !important;
+        background: #111827 !important;
+    }
+
+    html[data-theme="dark"] #applicantMedicalConditionModal .applicant-lookup-label {
+        color: #94a3b8 !important;
+    }
+
+    html[data-theme="dark"] #applicantMedicalConditionModal .applicant-lookup-value {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantDocumentsModal .applicant-documents-workspace,
+    html[data-theme="dark"] #applicantDocumentsModal .applicant-documents-sidebar,
+    html[data-theme="dark"] #applicantDocumentsModal .applicant-document-preview-panel,
+    html[data-theme="dark"] #applicantDocumentsModal .applicant-document-preview-head {
+        border-color: rgba(148, 163, 184, .2) !important;
+        background: #111827 !important;
+    }
+
+    html[data-theme="dark"] #applicantDocumentsModal .applicant-document-card {
+        border-color: rgba(148, 163, 184, .22) !important;
+        background: #182235 !important;
+    }
+
+    html[data-theme="dark"] #applicantDocumentsModal .applicant-document-card.is-active {
+        border-color: #facc15 !important;
+        background: rgba(112, 19, 27, .42) !important;
+    }
+
+    html[data-theme="dark"] #applicantDocumentsModal .applicant-document-preview-empty {
+        background: #0b1220 !important;
+        color: #94a3b8 !important;
+    }
+
+    html[data-theme="dark"] #applicantDocumentsModal .applicant-document-preview-frame,
+    html[data-theme="dark"] #applicantDocumentsModal .applicant-document-preview-image {
+        background: #e5e7eb !important;
+    }
+
+    html[data-theme="dark"] #applicantDocumentsModal .applicant-document-preview-close {
+        border-color: rgba(250, 204, 21, .26) !important;
+        background: #1e293b !important;
+        color: #fde68a !important;
+    }
+
 </style>
 @endpush
 

@@ -28,7 +28,7 @@
         line-height: 1.2;
     }
 
-    .dashboard-welcome-copy h1 span {
+    .dashboard-welcome-copy h1 .dashboard-welcome-name {
         color: #8b0000;
     }
 
@@ -470,6 +470,11 @@
         color: #f8fafc;
     }
 
+    html[data-theme="dark"] .dashboard-welcome-copy h1 .dashboard-welcome-name {
+        color: #facc15;
+        text-shadow: 0 0 10px rgba(250, 204, 21, 0.16);
+    }
+
     html[data-theme="dark"] .dashboard-welcome-copy p,
     html[data-theme="dark"] .dashboard-date-badge span {
         color: #cbd5e1;
@@ -517,11 +522,15 @@
     $dashboardLastName = count($dashboardNameParts) > 1 ? (string) end($dashboardNameParts) : '';
     $dashboardWelcomeName = trim($dashboardFirstName . ($dashboardLastName !== '' ? ' ' . strtoupper(substr($dashboardLastName, 0, 1)) . '.' : ''));
     $dashboardToday = now();
+    $dashboardHour = (int) $dashboardToday->format('G');
+    $dashboardGreeting = $dashboardHour < 12
+        ? 'Good morning'
+        : ($dashboardHour < 18 ? 'Good afternoon' : 'Good evening');
 @endphp
 <div class="dashboard-container">
     <section class="dashboard-welcome" aria-label="Dashboard summary">
         <div class="dashboard-welcome-copy">
-            <h1>Good day! <span>{{ $dashboardWelcomeName }}</span></h1>
+            <h1><span class="dashboard-time-greeting" id="dashboardTimeGreeting">{{ $dashboardGreeting }}!</span> <span class="dashboard-welcome-name">{{ $dashboardWelcomeName }}</span></h1>
             <p>Here's what's happening in the clinic today.</p>
         </div>
         <div class="dashboard-date-badge" aria-label="{{ $dashboardToday->format('F j, Y, l') }}">
@@ -684,3 +693,25 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    (function () {
+        const greetingElement = document.getElementById('dashboardTimeGreeting');
+        if (!greetingElement) {
+            return;
+        }
+
+        const updateDashboardGreeting = function () {
+            const hour = new Date().getHours();
+            const greeting = hour < 12
+                ? 'Good morning'
+                : (hour < 18 ? 'Good afternoon' : 'Good evening');
+            greetingElement.textContent = `${greeting}!`;
+        };
+
+        updateDashboardGreeting();
+        window.setInterval(updateDashboardGreeting, 60000);
+    })();
+</script>
+@endpush
