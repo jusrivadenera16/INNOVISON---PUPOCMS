@@ -2358,29 +2358,40 @@
             border-radius: var(--radius-xl);
         }
 
-        .admin-content-loader {
-            position: absolute;
-            inset: 0;
-            z-index: 5000;
+        .admin-loader-overlay {
             display: none;
             align-items: center;
             justify-content: center;
-            border-radius: inherit;
             background: rgba(15, 23, 42, 0.9);
             color: var(--admin-card-text);
             backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
         }
 
-        .main.is-navigation-loading {
-            overflow: hidden;
+        .admin-content-loader {
+            position: fixed;
+            top: var(--admin-loader-top, 0px);
+            left: var(--admin-loader-left, 0px);
+            z-index: 5000;
+            width: var(--admin-loader-width, 0px);
+            height: var(--admin-loader-height, 0px);
+            border-radius: var(--radius-xl);
         }
 
-        .main.is-navigation-loading .admin-content-loader {
+        .admin-action-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 600000;
+            border-radius: 0;
+        }
+
+        .main.is-navigation-loading .admin-content-loader,
+        .admin-action-loader.is-active {
             display: inline-flex;
             animation: adminContentLoaderIn 0.18s ease-out both;
         }
 
-        .admin-content-loader .loading {
+        .admin-loader-overlay .loading {
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -2388,24 +2399,24 @@
             height: 48px;
         }
 
-        .admin-content-loader .loading svg {
+        .admin-loader-overlay .loading svg {
             display: block;
             width: 64px;
             height: 48px;
         }
 
-        .admin-content-loader .loading svg polyline {
+        .admin-loader-overlay .loading svg polyline {
             fill: none;
             stroke-width: 3;
             stroke-linecap: round;
             stroke-linejoin: round;
         }
 
-        .admin-content-loader .loading svg polyline#back {
+        .admin-loader-overlay .loading svg .loader-trace {
             stroke: rgba(250, 204, 21, 0.28);
         }
 
-        .admin-content-loader .loading svg polyline#front {
+        .admin-loader-overlay .loading svg .loader-pulse {
             stroke: #facc15;
             stroke-dasharray: 48, 144;
             stroke-dashoffset: 192;
@@ -3934,16 +3945,16 @@
             border-color: rgba(128, 0, 0, 0.12);
         }
 
-        html[data-theme="light"] .admin-content-loader {
+        html[data-theme="light"] .admin-loader-overlay {
             background: rgba(255, 255, 255, 0.92);
             color: #5a1421;
         }
 
-        html[data-theme="light"] .admin-content-loader .loading svg polyline#back {
+        html[data-theme="light"] .admin-loader-overlay .loading svg .loader-trace {
             stroke: rgba(128, 0, 0, 0.2);
         }
 
-        html[data-theme="light"] .admin-content-loader .loading svg polyline#front {
+        html[data-theme="light"] .admin-loader-overlay .loading svg .loader-pulse {
             stroke: #8b1020;
         }
 
@@ -5462,7 +5473,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                         <span>Switch to Student Workspace</span>
                     </a>
                 @endif
-                <a href="#" class="logout-link" onclick="event.preventDefault(); document.getElementById('layoutLogoutForm').submit();">
+                <a href="#" class="logout-link" onclick="event.preventDefault(); window.AdminLoading?.showAction(); document.getElementById('layoutLogoutForm').submit();">
                     <x-outline-icon name="arrow-left-on-rectangle" />
                     <span>Logout</span>
                 </a>
@@ -5624,24 +5635,33 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     </div>
 
     <div class="sidebar-logout">
-      <a href="#" onclick="event.preventDefault(); document.getElementById('layoutLogoutForm').submit();">
+      <a href="#" onclick="event.preventDefault(); window.AdminLoading?.showAction(); document.getElementById('layoutLogoutForm').submit();">
         <span class="sidebar-short"><x-outline-icon name="arrow-left-on-rectangle" /></span><span class="sidebar-label">Logout</span>
       </a>
     </div>
   </aside>
 
     <main class="main" id="adminMainContent" aria-busy="false">
-        <div class="admin-content-loader" role="status" aria-live="polite" aria-label="Loading page">
+        <div class="admin-loader-overlay admin-content-loader" role="status" aria-live="polite" aria-label="Loading page" aria-hidden="true">
             <div class="loading" aria-hidden="true">
                 <svg width="64" height="48" viewBox="0 0 64 48" focusable="false">
-                    <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" id="back"></polyline>
-                    <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" id="front"></polyline>
+                    <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" class="loader-trace"></polyline>
+                    <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" class="loader-pulse"></polyline>
                 </svg>
             </div>
         </div>
         @yield('content')
     </main>
 
+</div>
+
+<div class="admin-loader-overlay admin-action-loader" id="adminActionLoader" role="status" aria-live="assertive" aria-label="Processing action" aria-hidden="true">
+    <div class="loading" aria-hidden="true">
+        <svg width="64" height="48" viewBox="0 0 64 48" focusable="false">
+            <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" class="loader-trace"></polyline>
+            <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" class="loader-pulse"></polyline>
+        </svg>
+    </div>
 </div>
 
 <form id="layoutLogoutForm" method="POST" action="{{ route('logout') }}" style="display:none;">
@@ -6025,19 +6045,58 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
     function initContentNavigationLoading() {
         const content = document.getElementById('adminMainContent');
+        const contentLoader = content?.querySelector('.admin-content-loader');
+        const actionLoader = document.getElementById('adminActionLoader');
 
-        if (!content) {
+        if (!content || !contentLoader || !actionLoader) {
             return;
         }
+
+        const syncContentLoaderBounds = function () {
+            const rect = content.getBoundingClientRect();
+            const top = Math.max(0, rect.top);
+            const left = Math.max(0, rect.left);
+            const right = Math.min(window.innerWidth, rect.right);
+            const bottom = Math.min(window.innerHeight, rect.bottom);
+
+            contentLoader.style.setProperty('--admin-loader-top', `${Math.round(top)}px`);
+            contentLoader.style.setProperty('--admin-loader-left', `${Math.round(left)}px`);
+            contentLoader.style.setProperty('--admin-loader-width', `${Math.max(0, Math.round(right - left))}px`);
+            contentLoader.style.setProperty('--admin-loader-height', `${Math.max(0, Math.round(bottom - top))}px`);
+        };
 
         const clearLoadingState = function () {
             content.classList.remove('is-navigation-loading');
             content.setAttribute('aria-busy', 'false');
+            contentLoader.setAttribute('aria-hidden', 'true');
+            actionLoader.classList.remove('is-active');
+            actionLoader.setAttribute('aria-hidden', 'true');
+            document.body.removeAttribute('aria-busy');
         };
 
-        const showLoadingState = function () {
+        const showContentLoading = function () {
+            actionLoader.classList.remove('is-active');
+            actionLoader.setAttribute('aria-hidden', 'true');
+            document.body.removeAttribute('aria-busy');
+            syncContentLoaderBounds();
             content.classList.add('is-navigation-loading');
             content.setAttribute('aria-busy', 'true');
+            contentLoader.setAttribute('aria-hidden', 'false');
+        };
+
+        const showActionLoading = function () {
+            content.classList.remove('is-navigation-loading');
+            content.setAttribute('aria-busy', 'false');
+            contentLoader.setAttribute('aria-hidden', 'true');
+            actionLoader.classList.add('is-active');
+            actionLoader.setAttribute('aria-hidden', 'false');
+            document.body.setAttribute('aria-busy', 'true');
+        };
+
+        window.AdminLoading = {
+            showContent: showContentLoading,
+            showAction: showActionLoading,
+            clear: clearLoadingState,
         };
 
         document.addEventListener('click', function (event) {
@@ -6047,6 +6106,11 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
             const link = event.target.closest('a[href]');
             if (!link) {
+                return;
+            }
+
+            const loaderScope = (link.dataset.loaderScope || '').toLowerCase();
+            if (loaderScope === 'none') {
                 return;
             }
 
@@ -6064,12 +6128,20 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
             if (
                 destination.origin !== window.location.origin
-                || (destination.pathname === window.location.pathname && destination.search === window.location.search)
             ) {
                 return;
             }
 
-            showLoadingState();
+            if (loaderScope === 'screen') {
+                showActionLoading();
+                return;
+            }
+
+            if (destination.pathname === window.location.pathname && destination.search === window.location.search) {
+                return;
+            }
+
+            showContentLoading();
         });
 
         document.addEventListener('submit', function (event) {
@@ -6082,6 +6154,12 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 return;
             }
 
+            const submitterScope = event.submitter?.dataset?.loaderScope || '';
+            const loaderScope = (submitterScope || form.dataset.loaderScope || '').toLowerCase();
+            if (loaderScope === 'none') {
+                return;
+            }
+
             const action = form.getAttribute('action') || window.location.href;
             let destination;
             try {
@@ -6090,16 +6168,34 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 return;
             }
 
-            if (
-                destination.origin !== window.location.origin
-                || (destination.pathname === window.location.pathname && destination.search === window.location.search)
-            ) {
+            if (destination.origin !== window.location.origin) {
                 return;
             }
 
-            showLoadingState();
+            const method = (form.getAttribute('method') || 'get').toLowerCase();
+            if (loaderScope === 'screen' || (loaderScope !== 'content' && method !== 'get')) {
+                showActionLoading();
+                return;
+            }
+
+            if (destination.pathname === window.location.pathname && destination.search === window.location.search) {
+                return;
+            }
+
+            showContentLoading();
         });
 
+        window.addEventListener('resize', function () {
+            if (content.classList.contains('is-navigation-loading')) {
+                syncContentLoaderBounds();
+            }
+        }, { passive: true });
+        window.addEventListener('scroll', function () {
+            if (content.classList.contains('is-navigation-loading')) {
+                syncContentLoaderBounds();
+            }
+        }, { passive: true, capture: true });
+        window.visualViewport?.addEventListener('resize', syncContentLoaderBounds, { passive: true });
         window.addEventListener('pageshow', clearLoadingState);
     }
 
