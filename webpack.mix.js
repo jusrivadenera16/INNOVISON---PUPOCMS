@@ -14,6 +14,7 @@ mix.disableNotifications();
  */
 
 mix.js('resources/js/app.js', 'public/js')
+    .copy('node_modules/matter-js/build/matter.min.js', 'public/js/matter.min.js')
     .postCss('resources/css/app.css', 'public/css', [
         //
     ])

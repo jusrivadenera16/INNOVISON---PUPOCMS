@@ -1538,6 +1538,7 @@
             justify-content: flex-start;
             line-height: 1.2;
             padding: 12px 14px;
+            font-weight: 700;
         }
 
         .profile-dropdown a.logout-link:hover {
@@ -2326,6 +2327,7 @@
             background: var(--admin-sidebar-logout-bg);
             line-height: 1.2;
             font-size: 13px;
+            font-weight: 700;
         }
 
         .sidebar-logout a:hover {
