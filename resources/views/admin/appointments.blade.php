@@ -5483,16 +5483,18 @@
         };
         $appointmentsWithMedicalConditions = $appointmentCollection
             ->filter($appointmentHasMedicalCondition);
+        $consultationStatuses = ['approved', 'scheduled', 'rescheduled'];
+        $summaryStatuses = ['completed', 'cancelled', 'rejected', 'missed', 'expired'];
         $forConsultationAppointments = $appointmentCollection
-            ->filter(fn ($appointment) => in_array(strtolower(trim((string) $appointment->status)), ['approved', 'scheduled'], true))
+            ->filter(fn ($appointment) => in_array(strtolower(trim((string) $appointment->status)), $consultationStatuses, true))
             ->values();
         $forReviewAppointments = $appointmentCollection
             ->filter(fn ($appointment) => strtolower(trim((string) $appointment->status)) === 'pending')
             ->values();
         $summaryAppointments = $appointmentCollection
-            ->filter(fn ($appointment) => in_array(strtolower(trim((string) $appointment->status)), ['approved', 'cancelled', 'rejected', 'rescheduled', 'missed'], true))
+            ->filter(fn ($appointment) => in_array(strtolower(trim((string) $appointment->status)), $summaryStatuses, true))
             ->values();
-        $appointmentPresentation = function ($appointment) use ($appointmentHasMedicalCondition, $basePrefix): array {
+        $appointmentPresentation = function ($appointment) use ($appointmentHasMedicalCondition, $basePrefix, $consultationStatuses): array {
             $user = $appointment->user;
             $studentProfile = $user?->healthProfile;
             $employeeProfile = $user?->healthProfileStaff;
@@ -5544,7 +5546,7 @@
                     $user?->course ?: $studentProfile?->course_college,
                     trim(implode('-', array_filter([$user?->year, $user?->section]))),
                 ])));
-            $scheduledAt = in_array(strtolower((string) $appointment->status), ['approved', 'scheduled'], true)
+            $scheduledAt = in_array(strtolower(trim((string) $appointment->status)), $consultationStatuses, true)
                 ? \Carbon\Carbon::parse($appointment->date . ' ' . $appointment->time)
                 : null;
             $consultEligibleAt = $scheduledAt?->copy()->subMinutes(10);
@@ -5652,11 +5654,11 @@
                         <div class="appointments-status-wrap" id="appointmentsStatusWrap">
                             <select id="appointmentStatusFilter" class="appointments-status-select" aria-hidden="true" tabindex="-1">
                                 <option value="">All Statuses</option>
-                                <option value="Approved">Approved</option>
+                                <option value="Completed">Completed</option>
                                 <option value="Cancelled">Cancelled</option>
                                 <option value="Rejected">Rejected</option>
-                                <option value="Rescheduled">Rescheduled</option>
                                 <option value="Missed">Missed</option>
+                                <option value="Expired">Expired</option>
                             </select>
                             <button type="button" class="appointments-status-display" id="appointmentsStatusDisplay" aria-haspopup="listbox" aria-expanded="false">
                                 All Statuses
@@ -5664,11 +5666,11 @@
                             <div class="appointments-status-menu" id="appointmentsStatusMenu" role="listbox" aria-label="Appointment status options">
                                 <div class="appointments-status-options">
                                     <button type="button" class="appointments-status-option is-selected" data-status-value=""><span>All Statuses</span></button>
-                                    <button type="button" class="appointments-status-option" data-status-value="Approved"><span>Approved</span></button>
+                                    <button type="button" class="appointments-status-option" data-status-value="Completed"><span>Completed</span></button>
                                     <button type="button" class="appointments-status-option" data-status-value="Cancelled"><span>Cancelled</span></button>
                                     <button type="button" class="appointments-status-option" data-status-value="Rejected"><span>Rejected</span></button>
-                                    <button type="button" class="appointments-status-option" data-status-value="Rescheduled"><span>Rescheduled</span></button>
                                     <button type="button" class="appointments-status-option" data-status-value="Missed"><span>Missed</span></button>
+                                    <button type="button" class="appointments-status-option" data-status-value="Expired"><span>Expired</span></button>
                                 </div>
                             </div>
                         </div>
@@ -5871,7 +5873,7 @@
             'id' => 'consultationQueueModal',
             'badge' => 'FC',
             'title' => 'For Consultations',
-            'description' => 'Approved appointments that are ready for clinic consultation.',
+            'description' => 'Approved and rescheduled appointments that are ready for clinic consultation.',
             'records' => $forConsultationAppointments,
             'review' => false,
             'empty' => 'No appointments are currently ready for consultation.',
