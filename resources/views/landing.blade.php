@@ -29,6 +29,7 @@
         }
 
         body {
+            position: relative;
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             color: var(--white);
             background:
@@ -41,11 +42,151 @@
             content: "";
             position: fixed;
             inset: 0;
+            z-index: 0;
+            pointer-events: none;
             background:
                 radial-gradient(circle at 18% 18%, rgba(250, 204, 21, 0.20), transparent 28%),
                 radial-gradient(circle at 88% 12%, rgba(255, 255, 255, 0.12), transparent 24%),
                 linear-gradient(180deg, rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.32));
+        }
+
+        body::after {
+            display: none;
+        }
+
+        .landing-starfield {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
             pointer-events: none;
+            isolation: isolate;
+        }
+
+        #stars,
+        #stars2,
+        #stars3 {
+            position: absolute;
+            inset: -120px;
+            background-repeat: repeat;
+            will-change: background-position;
+            transform: translateZ(0);
+        }
+
+        #stars {
+            opacity: 0.82;
+            background-image:
+                radial-gradient(circle, #fff 0 0.7px, transparent 1px),
+                radial-gradient(circle, #fff 0 0.65px, transparent 0.95px),
+                radial-gradient(circle, rgba(255,255,255,.9) 0 0.7px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,.78) 0 0.55px, transparent 0.85px);
+            background-size: 137px 149px, 191px 173px, 233px 211px, 283px 257px;
+            background-position: 17px 31px, 83px 109px, 149px 47px, 211px 163px;
+            animation: landingStarsFar 50s linear infinite;
+        }
+
+        #stars2 {
+            opacity: 0.88;
+            background-image:
+                radial-gradient(circle, #fff 0 1px, transparent 1.35px),
+                radial-gradient(circle, rgba(255,255,255,.9) 0 0.9px, transparent 1.25px),
+                radial-gradient(circle, rgba(255,255,255,.76) 0 0.85px, transparent 1.2px);
+            background-size: 251px 229px, 317px 293px, 389px 347px;
+            background-position: 41px 73px, 179px 137px, 283px 29px;
+            animation: landingStarsMiddle 100s linear infinite;
+        }
+
+        #stars3 {
+            opacity: 0.95;
+            background-image:
+                radial-gradient(circle, #fff 0 1.35px, transparent 1.75px),
+                radial-gradient(circle, rgba(255,255,255,.88) 0 1.2px, transparent 1.6px);
+            background-size: 431px 397px, 557px 503px;
+            background-position: 101px 59px, 347px 223px;
+            animation: landingStarsNear 150s linear infinite;
+        }
+
+        @keyframes landingStarsFar {
+            from { background-position: 17px 31px, 83px 109px, 149px 47px, 211px 163px; }
+            to { background-position: 17px -1969px, 83px -1891px, 149px -1953px, 211px -1837px; }
+        }
+
+        @keyframes landingStarsMiddle {
+            from { background-position: 41px 73px, 179px 137px, 283px 29px; }
+            to { background-position: 41px -1927px, 179px -1863px, 283px -1971px; }
+        }
+
+        @keyframes landingStarsNear {
+            from { background-position: 101px 59px, 347px 223px; }
+            to { background-position: 101px -1941px, 347px -1777px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #stars,
+            #stars2,
+            #stars3 {
+                animation: none;
+            }
+        }
+
+        .landing-footer {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            color: rgba(255, 255, 255, 0.92);
+            background: transparent;
+            border-top: 1px solid rgba(250, 204, 21, 0.16);
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            box-shadow: none;
+        }
+
+        .landing-footer__inner {
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 10px 20px;
+            font-size: 14px;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .landing-footer__message em {
+            font-weight: 500;
+        }
+
+        .landing-footer__message strong {
+            color: #facc15;
+            font-weight: 900;
+        }
+
+        .landing-footer__separator {
+            width: 1px;
+            height: 20px;
+            flex: 0 0 auto;
+            background: rgba(255, 255, 255, 0.38);
+        }
+
+        .landing-footer__version {
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 13px;
+            font-weight: 400;
+            letter-spacing: 0;
+        }
+
+        @media (max-width: 480px) {
+            .landing-footer__inner {
+                min-height: 46px;
+                gap: 10px;
+                padding-inline: 12px;
+                font-size: 13px;
+            }
+
+            .landing-footer__version {
+                font-size: 12px;
+            }
         }
 
         a {
@@ -60,6 +201,14 @@
             align-items: center;
             justify-content: center;
             padding: clamp(20px, 4vw, 48px) 18px;
+        }
+
+        .landing-shell,
+        .landing-topbar,
+        .landing-assistant-btn,
+        .landing-announcement-btn {
+            position: relative;
+            z-index: 2;
         }
 
         .landing-topbar {
@@ -5604,6 +5753,48 @@
             color: #facc15;
         }
 
+        .gateway-title-line--clinic {
+            position: relative;
+            color: #facc15;
+        }
+
+        .gateway-title-line--clinic::after {
+            content: attr(data-shine-text);
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            color: transparent;
+            background: linear-gradient(
+                110deg,
+                transparent 0%,
+                transparent 42%,
+                #fff4a8 47%,
+                #fffde8 50%,
+                #fff4a8 53%,
+                transparent 58%,
+                transparent 100%
+            );
+            background-size: 250% 100%;
+            background-position: 130% 0;
+            background-repeat: no-repeat;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: landingMedicalClinicShine 5s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes landingMedicalClinicShine {
+            0%, 8% { background-position: 130% 0; }
+            55%, 100% { background-position: -130% 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .gateway-title-line--clinic::after {
+                content: none;
+            }
+        }
+
         .login-copy.gateway-brand-copy .gateway-copy {
             max-width: 560px !important;
             color: #ffffff;
@@ -5655,7 +5846,7 @@
         }
 
         .workspace-utility-actions.gateway-utility {
-            margin-top: -2px;
+            margin-top: 6px;
         }
 
         .gateway-feature-grid,
@@ -7202,8 +7393,8 @@
             transition: opacity .18s ease, transform .2s ease, filter .18s ease, color .2s ease, background .2s ease, box-shadow .2s ease;
         }
 
-        .announcement-modal-overlay.is-visible::before,
-        .announcement-modal-overlay.is-visible::after,
+        .announcement-modal-overlay.is-heading-visible::before,
+        .announcement-modal-overlay.is-heading-visible::after,
         .announcement-modal-overlay.is-visible .announcement-modal-content::before,
         .announcement-modal-overlay.is-visible .landing-announcement-carousel,
         .announcement-modal-overlay.is-visible .landing-announcement-view-all,
@@ -7212,17 +7403,45 @@
             filter: none;
         }
 
-        .announcement-modal-overlay.is-visible::before,
-        .announcement-modal-overlay.is-visible::after {
+        .announcement-modal-overlay.is-heading-visible::before,
+        .announcement-modal-overlay.is-heading-visible::after {
             transform: translate(-50%, 0) scale(1);
         }
 
-        .announcement-modal-overlay.is-visible::before {
+        .announcement-modal-overlay.is-heading-visible::before {
             transition: opacity .48s ease 70ms, transform .58s cubic-bezier(.22, 1, .36, 1) 70ms, filter .48s ease 70ms;
+            animation: landingAnnouncementEyebrowReveal .72s cubic-bezier(.22, 1, .36, 1) both;
         }
 
-        .announcement-modal-overlay.is-visible::after {
+        .announcement-modal-overlay.is-heading-visible::after {
             transition: opacity .54s ease 150ms, transform .66s cubic-bezier(.22, 1, .36, 1) 150ms, filter .54s ease 150ms;
+            animation: landingAnnouncementTitleReveal .82s cubic-bezier(.22, 1, .36, 1) .14s both;
+        }
+
+        @keyframes landingAnnouncementEyebrowReveal {
+            from {
+                opacity: 0;
+                filter: blur(5px);
+                transform: translate(-50%, 16px) scale(.96);
+            }
+            to {
+                opacity: 1;
+                filter: blur(0);
+                transform: translate(-50%, 0) scale(1);
+            }
+        }
+
+        @keyframes landingAnnouncementTitleReveal {
+            from {
+                opacity: 0;
+                filter: blur(7px);
+                transform: translate(-50%, 22px) scale(.94);
+            }
+            to {
+                opacity: 1;
+                filter: blur(0);
+                transform: translate(-50%, 0) scale(1);
+            }
         }
 
         .announcement-modal-overlay.is-visible .announcement-modal-content::before {
@@ -7295,6 +7514,7 @@
                 filter: none;
                 transform: translateX(-50%);
                 transition: none;
+                animation: none;
             }
 
             .announcement-modal-content::before,
@@ -7845,9 +8065,9 @@
 
         @media (max-width: 640px) {
             .landing-panel {
-                --steth-earpiece-left: -62px;
-                --steth-earpiece-top: 38px;
-                --steth-earpiece-width: 172px;
+                --steth-earpiece-left: 8px;
+                --steth-earpiece-top: -10px;
+                --steth-earpiece-width: 132px;
             }
 
             .landing-announcement-stethoscope {
@@ -7858,7 +8078,7 @@
             }
 
             .landing-stethoscope-earpiece {
-                --steth-earpiece-opacity: .38;
+                --steth-earpiece-opacity: .56;
             }
         }
 
@@ -7917,9 +8137,18 @@
                 transition: none;
             }
         }
+
+
     </style>
 </head>
 <body>
+    <div class="landing-starfield" aria-hidden="true">
+        <div id="stars"></div>
+        <div id="stars2"></div>
+        <div id="stars3"></div>
+        <div></div>
+    </div>
+
     @php
         $landingAdminUser = Auth::guard('admin')->user();
         $landingStudentUser = Auth::guard('student')->user();
@@ -8514,7 +8743,7 @@
                             <p class="gateway-kicker">Medical Services Department</p>
                             <h1 class="gateway-title">
                                 <span class="gateway-title-line">PUP Taguig</span>
-                                <span class="gateway-title-line gateway-title-line--clinic">Medical Clinic</span>
+                                <span class="gateway-title-line gateway-title-line--clinic" data-shine-text="Medical Clinic">Medical Clinic</span>
                             </h1>
                             <p class="gateway-copy">Your secure portal for appointments, health records, and clinic updates.</p>
                         </div>
@@ -8908,7 +9137,13 @@
             </div>
         </section>
     </div>
-    @include('partials.system_footer')
+    <footer class="landing-footer" role="contentinfo" aria-label="OCMS footer">
+        <div class="landing-footer__inner">
+            <span class="landing-footer__message"><em>Mula sa'yo,</em> <strong>Para sa Bayan!</strong></span>
+            <span class="landing-footer__separator" aria-hidden="true"></span>
+            <span class="landing-footer__version">OCMS V.26</span>
+        </div>
+    </footer>
     <script>
 
         const preloader = document.getElementById('preloader');
@@ -9876,12 +10111,18 @@
             event: 'Event Announcements',
         };
         let activeAnnouncementFilter = 'all';
+        let announcementHeadingRevealTimer = null;
         let announcementRevealTimer = null;
         let announcementRevealAnimationTimer = null;
 
         announcementCards.forEach(function (card, index) {
             card.style.setProperty('--announcement-delay', index % 6);
         });
+
+        function revealAnnouncementHeading() {
+            window.clearTimeout(announcementHeadingRevealTimer);
+            announcementModalOverlay?.classList.add('is-heading-visible');
+        }
 
         function revealAnnouncementSection() {
             window.clearTimeout(announcementRevealTimer);
@@ -9899,6 +10140,7 @@
         }
 
         function openAnnouncementModal() {
+            revealAnnouncementHeading();
             revealAnnouncementSection();
             announcementModalOverlay?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             window.setTimeout(syncAnnouncementReadButtons, 180);
@@ -9919,6 +10161,20 @@
 
         announcementBtn?.addEventListener('click', openAnnouncementModal);
         announcementModalClose?.addEventListener('click', closeAnnouncementModal);
+        const announcementHeadingRevealObserver = 'IntersectionObserver' in window && announcementModalOverlay
+            ? new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    window.clearTimeout(announcementHeadingRevealTimer);
+                    if (entry.isIntersecting) {
+                        announcementHeadingRevealTimer = window.setTimeout(revealAnnouncementHeading, 30);
+                        return;
+                    }
+
+                    announcementModalOverlay.classList.remove('is-heading-visible');
+                });
+            }, { threshold: 0.01, rootMargin: '0px 0px -12% 0px' })
+            : null;
+
         const announcementRevealObserver = 'IntersectionObserver' in window && announcementModalOverlay
             ? new IntersectionObserver(function (entries) {
                 entries.forEach(function (entry) {
@@ -9936,8 +10192,10 @@
             }, { threshold: 0.16, rootMargin: '0px 0px -8% 0px' })
             : null;
 
+        announcementHeadingRevealObserver?.observe(announcementModalOverlay);
         announcementRevealObserver?.observe(announcementModalOverlay);
         if (!announcementRevealObserver) {
+            revealAnnouncementHeading();
             revealAnnouncementSection();
         }
 
