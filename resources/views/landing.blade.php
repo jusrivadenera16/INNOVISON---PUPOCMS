@@ -6761,8 +6761,8 @@
         .landing-detail-image-link:hover img,
         .landing-detail-image-link:focus-visible img {
             z-index: 2;
-            border-color: rgba(250, 204, 21, .88);
-            box-shadow: 0 16px 30px rgba(0, 0, 0, .36), 0 0 0 1px rgba(250, 204, 21, .14);
+            border-color: rgba(250, 204, 21, .62);
+            box-shadow: 0 16px 30px rgba(0, 0, 0, .36), 0 0 0 2px rgba(250, 204, 21, .18);
             transform: translateY(-4px) scale(1.018);
         }
 
@@ -6771,27 +6771,24 @@
             top: 50%;
             left: 50%;
             z-index: 4;
-            width: 48px;
-            height: 48px;
-            display: grid;
-            place-items: center;
+            width: max-content;
+            min-height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 18px;
             border: 1px solid rgba(250, 204, 21, .58);
-            border-radius: 50%;
+            border-radius: 6px;
             background: rgba(75, 7, 20, .86);
             color: #fff4a8;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1;
             opacity: 0;
             visibility: hidden;
             transform: translate(-50%, -42%) scale(.86);
             transition: opacity .2s ease, visibility .2s ease, transform .24s cubic-bezier(.22, 1, .36, 1), background .2s ease, color .2s ease, border-color .2s ease;
             pointer-events: none;
-        }
-
-        .landing-detail-image-view svg {
-            width: 24px;
-            height: 24px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 1.5;
         }
 
         .landing-detail-image-link:hover .landing-detail-image-view,
@@ -10455,7 +10452,7 @@
                         const viewIcon = document.createElement('span');
                         viewIcon.className = 'landing-detail-image-view';
                         viewIcon.setAttribute('aria-hidden', 'true');
-                        viewIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>';
+                        viewIcon.textContent = 'Click to view';
 
                         imageLink.append(image, viewIcon);
                         return imageLink;

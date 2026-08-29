@@ -1723,6 +1723,13 @@
         .feedback-stars {
             margin-top: 8px;
         }
+        .home-footer-signature {
+            gap: 10px;
+            font-size: 13px;
+        }
+        .home-footer-signature__version {
+            font-size: 12px;
+        }
     }
 
     /* --- FOOTER STYLES --- */
@@ -1747,6 +1754,17 @@
             linear-gradient(180deg, rgba(6, 12, 24, .30), rgba(6, 12, 24, .78)),
             repeating-linear-gradient(160deg, transparent 0 8px, rgba(139,0,0,.20) 8px 9px, transparent 9px 18px);
         opacity: .58;
+        pointer-events: none;
+    }
+    .site-footer::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 118px;
+        z-index: 0;
+        background: linear-gradient(180deg, rgba(112, 13, 37, .72) 0%, rgba(48, 6, 18, .36) 42%, rgba(8, 17, 32, 0) 100%);
         pointer-events: none;
     }
     .footer-top,
@@ -1873,16 +1891,14 @@
     .contact-list li:last-child { border-bottom:0; }
     .contact-icon { width:20px; height:20px; stroke:#ff8a8a; fill:none; stroke-width:1.8; flex:0 0 20px; margin-top:3px; }
     .footer-bottom {
-        border-top:1px solid rgba(239, 68, 68, .80);
+        border-top:0;
         border-bottom: 0;
-        padding:14px 0;
+        padding:13px 0;
         text-align:center;
         color:rgba(255,255,255,0.72);
         font-size:14px;
         margin-top:0;
-        background:
-            radial-gradient(circle at 50% 0%, rgba(250,204,21,.38), transparent 100px),
-            rgba(3, 10, 23, .52);
+        background: rgba(3, 10, 23, .46);
     }
     .site-footer {
         padding-bottom: 0 !important;
@@ -1893,6 +1909,34 @@
         height: 14px;
         vertical-align: -2px;
         fill: currentColor;
+    }
+    .home-footer-signature {
+        min-height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        color: rgba(255, 255, 255, .92);
+        line-height: 1.4;
+    }
+    .home-footer-signature em {
+        font-weight: 500;
+    }
+    .home-footer-signature strong {
+        color: #facc15;
+        font-weight: 900;
+    }
+    .home-footer-signature__separator {
+        width: 1px;
+        height: 20px;
+        flex: 0 0 auto;
+        background: rgba(255, 255, 255, .38);
+    }
+    .home-footer-signature__version {
+        color: rgba(255, 255, 255, .78);
+        font-size: 13px;
+        font-weight: 400;
+        letter-spacing: 0;
     }
     .learn-more-modal {
         display:none;
@@ -3070,7 +3114,13 @@
       </div>
 
       <div class="footer-bottom">
-        <div class="container">Empowering minds. Building the future. <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M305 151.1L320 171.8L335 151.1C360 116.5 400.2 96 442.9 96C516.4 96 576 155.6 576 229.1L576 231.7C576 343.9 436.1 474.2 363.1 529.9C350.7 539.3 335.5 544 320 544C304.5 544 289.2 539.4 276.9 529.9C203.9 474.2 64 343.9 64 231.7L64 229.1C64 155.6 123.6 96 197.1 96C239.8 96 280 116.5 305 151.1z"/></svg></div>
+        <div class="container">
+          <span class="home-footer-signature">
+            <span><em>Mula sa'yo,</em> <strong>Para sa Bayan!</strong></span>
+            <span class="home-footer-signature__separator" aria-hidden="true"></span>
+            <span class="home-footer-signature__version">OCMS V.26</span>
+          </span>
+        </div>
       </div>
     </footer>
 
