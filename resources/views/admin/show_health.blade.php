@@ -2349,31 +2349,37 @@
     #newHealthFormModal .correction-card,
     #correctionModal .correction-card,
     #pulloutRequestModal .correction-card,
+    #returnToPendingModal .correction-card,
     [data-theme="dark"] #newHealthFormModal .correction-card,
     [data-theme="dark"] #correctionModal .correction-card,
-    [data-theme="dark"] #pulloutRequestModal .correction-card {
+    [data-theme="dark"] #pulloutRequestModal .correction-card,
+    [data-theme="dark"] #returnToPendingModal .correction-card {
         border: 1px solid rgba(250, 204, 21, .34) !important;
     }
 
     #newHealthFormModal .correction-head,
     #correctionModal .correction-head,
-    #pulloutRequestModal .correction-head {
+    #pulloutRequestModal .correction-head,
+    #returnToPendingModal .correction-head {
         background: linear-gradient(135deg, #70131B, #8f2230) !important;
     }
 
     #newHealthFormModal .correction-head-icon,
     #correctionModal .correction-head-icon,
     #pulloutRequestModal .correction-head-icon,
+    #returnToPendingModal .correction-head-icon,
     #newHealthFormModal .correction-head-icon svg,
     #correctionModal .correction-head-icon svg,
-    #pulloutRequestModal .correction-head-icon svg {
+    #pulloutRequestModal .correction-head-icon svg,
+    #returnToPendingModal .correction-head-icon svg {
         color: #ffffff !important;
         stroke: currentColor !important;
     }
 
     #newHealthFormModal .correction-close,
     #correctionModal .correction-close,
-    #pulloutRequestModal .correction-close {
+    #pulloutRequestModal .correction-close,
+    #returnToPendingModal .correction-close {
         position: relative !important;
         overflow: hidden !important;
         width: 40px !important;
@@ -2391,7 +2397,8 @@
 
     #newHealthFormModal .correction-close::after,
     #correctionModal .correction-close::after,
-    #pulloutRequestModal .correction-close::after {
+    #pulloutRequestModal .correction-close::after,
+    #returnToPendingModal .correction-close::after {
         content: "" !important;
         position: absolute !important;
         top: -35% !important;
@@ -2408,7 +2415,8 @@
 
     #newHealthFormModal .correction-close svg,
     #correctionModal .correction-close svg,
-    #pulloutRequestModal .correction-close svg {
+    #pulloutRequestModal .correction-close svg,
+    #returnToPendingModal .correction-close svg {
         position: relative !important;
         z-index: 1 !important;
         width: 18px !important;
@@ -2422,7 +2430,9 @@
     #correctionModal .correction-close:hover,
     #correctionModal .correction-close:focus-visible,
     #pulloutRequestModal .correction-close:hover,
-    #pulloutRequestModal .correction-close:focus-visible {
+    #pulloutRequestModal .correction-close:focus-visible,
+    #returnToPendingModal .correction-close:hover,
+    #returnToPendingModal .correction-close:focus-visible {
         border-color: #facc15 !important;
         background: #facc15 !important;
         color: #70131B !important;
@@ -2436,8 +2446,63 @@
     #correctionModal .correction-close:hover::after,
     #correctionModal .correction-close:focus-visible::after,
     #pulloutRequestModal .correction-close:hover::after,
-    #pulloutRequestModal .correction-close:focus-visible::after {
+    #pulloutRequestModal .correction-close:focus-visible::after,
+    #returnToPendingModal .correction-close:hover::after,
+    #returnToPendingModal .correction-close:focus-visible::after {
         left: 128% !important;
+    }
+
+    [data-theme="dark"] #returnToPendingModal .correction-card,
+    [data-theme="dark"] #returnToPendingModal .correction-body {
+        background: #111827 !important;
+        color: #f8fafc !important;
+    }
+
+    [data-theme="dark"] #returnToPendingModal .return-pending-summary {
+        border-color: rgba(250, 204, 21, .28) !important;
+        background: rgba(120, 53, 15, .24) !important;
+        color: #fde68a !important;
+    }
+
+    [data-theme="dark"] #returnToPendingModal .return-pending-icon {
+        background: rgba(250, 204, 21, .14) !important;
+        color: #facc15 !important;
+    }
+
+    [data-theme="dark"] #returnToPendingModal .return-pending-summary strong {
+        color: #fef3c7 !important;
+    }
+
+    [data-theme="dark"] #returnToPendingModal .return-pending-summary p {
+        color: #fde68a !important;
+    }
+
+    [data-theme="dark"] #returnToPendingModal .correction-info-row {
+        border-color: rgba(148, 163, 184, .22) !important;
+        background: #182334 !important;
+        color: #f8fafc !important;
+    }
+
+    [data-theme="dark"] #returnToPendingModal .correction-info-row span:first-child {
+        color: #94a3b8 !important;
+    }
+
+    [data-theme="dark"] #returnToPendingModal .correction-info-row strong {
+        color: #f8fafc !important;
+    }
+
+    [data-theme="dark"] #returnToPendingModal .correction-cancel {
+        border-color: rgba(148, 163, 184, .28) !important;
+        background: #1e293b !important;
+        color: #f8fafc !important;
+    }
+
+    [data-theme="dark"] #returnToPendingModal .correction-cancel:hover,
+    [data-theme="dark"] #returnToPendingModal .correction-cancel:focus-visible {
+        border-color: #facc15 !important;
+        background: #334155 !important;
+        color: #ffffff !important;
+        outline: none !important;
     }
 </style>
 @endpush

@@ -164,6 +164,7 @@ return [
         'token_url' => env('PUPTAS_TOKEN_URL'),
         'token_lock_seconds' => (int) env('PUPTAS_TOKEN_LOCK_SECONDS', 30),
         'token_lock_wait_seconds' => (int) env('PUPTAS_TOKEN_LOCK_WAIT_SECONDS', 25),
+        'user_agent' => env('PUPTAS_USER_AGENT', 'PUPOCMS/1.0 Laravel'),
     ],
 
 ];

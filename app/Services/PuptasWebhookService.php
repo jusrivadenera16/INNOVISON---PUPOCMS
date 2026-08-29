@@ -23,6 +23,7 @@ class PuptasWebhookService
     private string $tokenUrl;
     private int $tokenLockSeconds;
     private int $tokenLockWaitSeconds;
+    private string $userAgent;
     private int $lastLookupAttempts = 0;
 
     public function __construct()
@@ -43,6 +44,7 @@ class PuptasWebhookService
             (int) config('services.puptas.token_lock_seconds', 30)
         );
         $this->tokenLockWaitSeconds = max(0, (int) config('services.puptas.token_lock_wait_seconds', 25));
+        $this->userAgent = trim((string) config('services.puptas.user_agent', 'PUPOCMS/1.0 Laravel')) ?: 'PUPOCMS/1.0 Laravel';
     }
 
     private function buildHmacSignature(string $payload): string
@@ -195,6 +197,7 @@ class PuptasWebhookService
         try {
             $response = Http::asForm()
                 ->acceptJson()
+                ->withUserAgent($this->userAgent)
                 ->timeout($this->timeout)
                 ->post($this->tokenUrl, [
                     'grant_type' => 'client_credentials',
@@ -234,7 +237,7 @@ class PuptasWebhookService
                         'retry_after_seconds' => $retryAfter,
                         'retry_after_source' => $retryAfterHeader !== '' ? 'upstream_header' : 'local_default',
                         'cooldown_cache_write_verified' => Cache::has($this->accessTokenRateLimitCacheKey()),
-                    ], $this->tokenRateLimitHeaders($response)))
+                    ], $this->tokenResponseHeaders($response)))
                 );
 
                 throw new \RuntimeException(
@@ -247,7 +250,7 @@ class PuptasWebhookService
                 $this->tokenDiagnosticContext(array_merge([
                     'status' => $status,
                     'duration_ms' => $this->elapsedMilliseconds($requestStartedAt),
-                ], $this->tokenRateLimitHeaders($response)))
+                ], $this->tokenResponseHeaders($response)))
             );
 
             throw new \RuntimeException(
@@ -387,9 +390,11 @@ class PuptasWebhookService
         return max(0, (int) round((microtime(true) - $startedAt) * 1000));
     }
 
-    private function tokenRateLimitHeaders($response): array
+    private function tokenResponseHeaders($response): array
     {
-        $context = [];
+        $context = [
+            'response_headers' => [],
+        ];
         $headers = [
             'retry_after_header' => 'Retry-After',
             'rate_limit_limit' => 'RateLimit-Limit',
@@ -405,6 +410,19 @@ class PuptasWebhookService
             if ($value !== '') {
                 $context[$contextKey] = mb_substr($value, 0, 100);
             }
+        }
+
+        foreach ($response->headers() as $headerName => $values) {
+            $normalizedName = strtolower((string) $headerName);
+            if (in_array($normalizedName, ['authorization', 'proxy-authorization', 'set-cookie'], true)) {
+                continue;
+            }
+
+            $context['response_headers'][$normalizedName] = mb_substr(
+                implode(', ', array_map('strval', (array) $values)),
+                0,
+                500
+            );
         }
 
         return $context;
@@ -482,6 +500,7 @@ class PuptasWebhookService
 
             try {
                 $response = Http::timeout($this->timeout)
+                    ->withUserAgent($this->userAgent)
                     ->withToken($this->getAccessToken())
                     ->acceptJson()
                     ->get($url);
@@ -489,6 +508,7 @@ class PuptasWebhookService
                 if ($response->status() === 401) {
                     $this->forgetAccessToken();
                     $response = Http::timeout($this->timeout)
+                        ->withUserAgent($this->userAgent)
                         ->withToken($this->getAccessToken())
                         ->acceptJson()
                         ->get($url);
@@ -945,6 +965,7 @@ class PuptasWebhookService
             }
 
             $response = Http::timeout($this->timeout)
+                ->withUserAgent($this->userAgent)
                 ->withToken($accessToken)
                 ->withHeaders($headers)
                 ->withBody($payload, 'application/json')

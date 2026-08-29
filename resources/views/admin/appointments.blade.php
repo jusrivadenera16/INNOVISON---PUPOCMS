@@ -5375,6 +5375,54 @@
         color: #70131B;
     }
 
+    /* Keep both appointments per-page pickers fully dark after global button styles. */
+    html[data-theme="dark"] body .main .appointments-page-size-menu,
+    html[data-theme="dark"] body .main .appointment-queue-page-size-menu {
+        border-color: rgba(250, 204, 21, .22) !important;
+        background: #111827 !important;
+        box-shadow: 0 22px 48px rgba(0, 0, 0, .42) !important;
+    }
+
+    html[data-theme="dark"] body .main button.appointments-page-size-trigger,
+    html[data-theme="dark"] body .main button.appointments-page-size-option,
+    html[data-theme="dark"] body .main button.appointment-queue-page-size-trigger,
+    html[data-theme="dark"] body .main button.appointment-queue-page-size-option {
+        border-color: rgba(148, 163, 184, .28) !important;
+        background: #182334 !important;
+        color: #f8fafc !important;
+        -webkit-text-fill-color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] body .main button.appointments-page-size-trigger > span,
+    html[data-theme="dark"] body .main button.appointments-page-size-option > span,
+    html[data-theme="dark"] body .main button.appointment-queue-page-size-trigger > span,
+    html[data-theme="dark"] body .main button.appointment-queue-page-size-option > span {
+        color: inherit !important;
+        -webkit-text-fill-color: inherit !important;
+    }
+
+    html[data-theme="dark"] body .main button.appointments-page-size-option.is-selected,
+    html[data-theme="dark"] body .main button.appointment-queue-page-size-option.is-selected {
+        border-color: #be3445 !important;
+        background: #9f1d2d !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] body .main button.appointments-page-size-trigger:hover,
+    html[data-theme="dark"] body .main button.appointments-page-size-trigger:focus-visible,
+    html[data-theme="dark"] body .main button.appointments-page-size-option:hover,
+    html[data-theme="dark"] body .main button.appointments-page-size-option:focus-visible,
+    html[data-theme="dark"] body .main button.appointment-queue-page-size-trigger:hover,
+    html[data-theme="dark"] body .main button.appointment-queue-page-size-trigger:focus-visible,
+    html[data-theme="dark"] body .main button.appointment-queue-page-size-option:hover,
+    html[data-theme="dark"] body .main button.appointment-queue-page-size-option:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+    }
+
     @media (max-width: 768px) {
         .appointments-summary-card {
             padding-inline: 12px !important;

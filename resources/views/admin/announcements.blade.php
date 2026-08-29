@@ -61,7 +61,6 @@
 
     .announcement-hero h2 {
         margin: 0;
-        color: #111827;
         font-size: 24px;
         font-weight: 950;
         line-height: 1.15;
@@ -945,7 +944,9 @@
 
     .announcement-delete,
     .announcement-archive,
-    .announcement-view {
+    .announcement-view,
+    .announcement-edit,
+    .announcement-restore {
         width: 34px;
         height: 34px;
         display: grid;
@@ -967,10 +968,23 @@
         color: #475569;
     }
 
+    .announcement-edit {
+        border: 1px solid rgba(100, 116, 139, 0.24);
+        background: #f8fafc;
+        color: #475569;
+        box-shadow: 0 12px 24px rgba(112, 19, 27, 0.10), 0 3px 10px rgba(15, 23, 42, 0.05);
+    }
+
     .announcement-view {
         border: 1px solid rgba(37, 99, 235, 0.2);
         background: #eff6ff;
         color: #1d4ed8;
+    }
+
+    .announcement-restore {
+        border: 1px solid rgba(100, 116, 139, 0.24);
+        background: #f8fafc;
+        color: #475569;
     }
 
     .announcement-delete:hover,
@@ -978,7 +992,11 @@
     .announcement-archive:hover,
     .announcement-archive:focus-visible,
     .announcement-view:hover,
-    .announcement-view:focus-visible {
+    .announcement-view:focus-visible,
+    .announcement-edit:hover,
+    .announcement-edit:focus-visible,
+    .announcement-restore:hover,
+    .announcement-restore:focus-visible {
         background: #70131B;
         color: #ffffff;
         outline: none;
@@ -986,7 +1004,9 @@
 
     .announcement-delete svg,
     .announcement-archive svg,
-    .announcement-view svg {
+    .announcement-view svg,
+    .announcement-edit svg,
+    .announcement-restore svg {
         width: 17px;
         height: 17px;
     }
@@ -1344,6 +1364,56 @@
         color: #cbd5e1;
     }
 
+    html[data-theme="dark"] .announcement-archive-shell,
+    html[data-theme="dark"] .announcement-archive-item {
+        background: #0f172a;
+        border-color: rgba(250, 204, 21, 0.18);
+        color: #e2e8f0;
+    }
+
+    html[data-theme="dark"] .announcement-archive-summary {
+        background: #172033;
+        border-color: rgba(250, 204, 21, 0.18);
+        color: #e2e8f0;
+    }
+
+    html[data-theme="dark"] .announcement-archive-item h4,
+    html[data-theme="dark"] .announcement-archive-empty h4 {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .announcement-archive-item p,
+    html[data-theme="dark"] .announcement-archive-meta,
+    html[data-theme="dark"] .announcement-archive-empty {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .announcement-archive-empty {
+        background: #172033;
+        border-color: rgba(250, 204, 21, 0.22);
+    }
+
+    html[data-theme="dark"] .announcement-restore {
+        border-color: rgba(250, 204, 21, 0.2);
+        background: #1e293b;
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .announcement-edit {
+        border-color: rgba(250, 204, 21, 0.2);
+        background: #1e293b;
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .announcement-detail-meta {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .announcement-detail-body h4,
+    html[data-theme="dark"] .announcement-detail-message {
+        color: #f8fafc;
+    }
+
     .announcement-archive-modal {
         position: fixed;
         inset: 0;
@@ -1358,6 +1428,10 @@
 
     .announcement-archive-modal.is-open {
         display: flex;
+    }
+
+    #announcementDetailModal {
+        z-index: 1400;
     }
 
     .announcement-archive-shell {
@@ -1381,6 +1455,15 @@
         color: #ffffff;
     }
 
+    .announcement-edit-shell {
+        width: min(720px, 100%);
+    }
+
+    .announcement-edit-form {
+        max-height: calc(100vh - 150px);
+        overflow-y: auto;
+        padding: 20px;
+    }
     .announcement-archive-title {
         display: flex;
         align-items: flex-start;
@@ -1575,6 +1658,7 @@
     html:not([data-theme="dark"]) .announcement-delete,
     html:not([data-theme="dark"]) .announcement-archive,
     html:not([data-theme="dark"]) .announcement-view,
+    html:not([data-theme="dark"]) .announcement-edit,
     html:not([data-theme="dark"]) .announcement-archive-close,
     html:not([data-theme="dark"]) .announcement-submit,
     html:not([data-theme="dark"]) .announcement-form-submit,
@@ -1876,7 +1960,15 @@
                                 <span class="announcement-time">&middot; {{ $announcement->created_at?->diffForHumans() ?? 'Just now' }}</span>
                             </div>
                             <div class="announcement-actions">
-                                <span class="announcement-status {{ $statusClass }}">{{ $statusLabel }}</span>
+                                @if($canPublishAnnouncements && ! $isArchived)
+                                    <button type="button" class="announcement-edit" data-announcement-edit data-update-url="{{ route('admin.announcements.update', $announcement) }}" data-title="{{ $announcement->title }}" data-message="{{ base64_encode($announcement->message) }}" data-priority="{{ $priority }}" data-show-on-landing="{{ $announcement->show_on_landing ? '1' : '0' }}" data-show-in-portal="{{ $announcement->show_in_portal ? '1' : '0' }}" data-expires="{{ $announcement->expires_at?->format('Y-m-d') ?? '' }}" data-image-urls='@json($announcement->image_urls)' aria-label="Edit announcement" title="Edit announcement">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                        </svg>
+                                    </button>
+                                @else
+                                    <span class="announcement-status {{ $statusClass }}">{{ $statusLabel }}</span>
+                                @endif
                                 <button
                                     type="button"
                                     class="announcement-view"
@@ -2000,6 +2092,88 @@
         </div>
     </div>
 
+    <div class="announcement-archive-modal" id="announcementEditModal" role="dialog" aria-modal="true" aria-labelledby="announcementEditModalTitle" aria-hidden="true">
+        <div class="announcement-archive-shell announcement-edit-shell" role="document">
+            <div class="announcement-archive-head">
+                <div class="announcement-archive-title">
+                    <span class="announcement-archive-badge" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                        </svg>
+                    </span>
+                    <div>
+                        <h3 id="announcementEditModalTitle">Edit Announcement</h3>
+                        <p>Update the announcement details and visibility.</p>
+                    </div>
+                </div>
+                <button type="button" class="announcement-archive-close" id="closeAnnouncementEditModal" aria-label="Close edit announcement">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </div>
+            <form method="POST" action="" class="announcement-form announcement-edit-form" id="announcementEditForm" enctype="multipart/form-data">
+                @csrf
+                @method('PATCH')
+                <label class="announcement-field">
+                    <span class="announcement-label">Title</span>
+                    <input class="announcement-input" type="text" name="title" id="announcementEditTitle" maxlength="140" required>
+                </label>
+                <label class="announcement-field">
+                    <span class="announcement-label">Priority Level</span>
+                    <select class="announcement-select" name="priority" id="announcementEditPriority" required>
+                        @foreach($priorityLabels as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <div class="announcement-field">
+                    <span class="announcement-label">Message Content</span>
+                    <div class="announcement-editor">
+                        <div class="announcement-textarea announcement-rich-editor" contenteditable="true" role="textbox" aria-multiline="true" data-announcement-edit-message></div>
+                        <textarea name="message" id="announcementEditMessage" hidden required></textarea>
+                    </div>
+                </div>
+                <div class="announcement-field">
+                    <span class="announcement-label">Announcement Image <small>(Optional)</small></span>
+                    <div class="announcement-image-preview" id="announcementEditExistingImages" hidden></div>
+                    <div id="announcementEditRemovedImages"></div>
+                    <div class="announcement-image-controls">
+                        <input id="announcementEditImages" class="announcement-image-input" type="file" name="images[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+                        <label class="announcement-image-add" for="announcementEditImages">
+                            <x-outline-icon name="plus-circle" />
+                            <span>Add image</span>
+                        </label>
+                    </div>
+                    <span class="announcement-image-note">Remove an existing image with X, or add replacement images. Up to 5 images total, 500 KB each.</span>
+                    <span class="announcement-image-feedback" id="announcementEditImageFeedback" role="status" hidden></span>
+                    <div class="announcement-image-preview" id="announcementEditNewImages" hidden></div>
+                </div>
+                <div class="announcement-visibility-field">
+                    <strong class="announcement-visibility-title">Visibility</strong>
+                    <div class="announcement-visibility-options">
+                        <input type="hidden" name="show_on_landing" value="0">
+                        <label class="announcement-visibility-toggle">
+                            <input type="checkbox" name="show_on_landing" value="1" id="announcementEditLanding">
+                            <span>Show in General</span>
+                        </label>
+                        <input type="hidden" name="show_in_portal" value="0">
+                        <label class="announcement-visibility-toggle">
+                            <input type="checkbox" name="show_in_portal" value="1" id="announcementEditPortal">
+                            <span>Show in User Portal</span>
+                        </label>
+                    </div>
+                </div>
+                <label class="announcement-field">
+                    <span class="announcement-label">Expiration Date (Optional)</span>
+                    <input class="announcement-input" type="date" name="expires_at" id="announcementEditExpires">
+                </label>
+                <button type="submit" class="announcement-submit">
+                    <x-outline-icon name="check" />
+                    Save Changes
+                </button>
+            </form>
+        </div>
+    </div>
+
     <div class="announcement-archive-modal" id="archivedAnnouncementsModal" role="dialog" aria-modal="true" aria-labelledby="archivedAnnouncementsTitle" aria-hidden="true">
         <div class="announcement-archive-shell" role="document">
             <div class="announcement-archive-head">
@@ -2043,7 +2217,35 @@
                                         </span>
                                         <span class="announcement-time">&middot; Archived {{ $announcement->updated_at?->diffForHumans() ?? 'recently' }}</span>
                                     </div>
-                                    <span class="announcement-status is-archived">Archived</span>
+                                    <div class="announcement-actions">
+                                        <button
+                                            type="button"
+                                            class="announcement-view"
+                                            data-announcement-view
+                                            data-title="{{ $announcement->title }}"
+                                            data-priority="{{ $priorityLabel }}"
+                                            data-status="Archived"
+                                            data-published="{{ $announcement->created_at?->format('M j, Y g:i A') ?? 'N/A' }}"
+                                            data-expires="{{ $announcement->expires_at?->format('M j, Y') ?? 'Never' }}"
+                                            data-message-html="{!! e(\App\Services\AnnouncementContent::toHtml($announcement->message)) !!}"
+                                            data-image-urls='@json($announcement->image_urls)'
+                                            aria-label="View archived announcement"
+                                            title="View archived announcement"
+                                        >
+                                            <x-outline-icon name="eye" />
+                                        </button>
+                                        @if($canArchiveAnnouncements)
+                                            <form method="POST" action="{{ route('admin.announcements.restore', $announcement) }}" onsubmit="return confirm('Restore this announcement?');">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button class="announcement-restore" type="submit" aria-label="Restore announcement" title="Restore announcement">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m7.49 12-3.75 3.75m0 0 3.75 3.75m-3.75-3.75h16.5V4.499" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
                                 </div>
                                 <h4>{{ $announcement->title }}</h4>
                                 @if($announcement->image_urls !== [])
@@ -2105,7 +2307,143 @@
         const detailMeta = document.getElementById('announcementDetailMeta');
         const detailMessage = document.getElementById('announcementDetailMessage');
         const detailImages = document.getElementById('announcementDetailImages');
+        const editModal = document.getElementById('announcementEditModal');
+        const editClose = document.getElementById('closeAnnouncementEditModal');
+        const editForm = document.getElementById('announcementEditForm');
+        const editTitle = document.getElementById('announcementEditTitle');
+        const editPriority = document.getElementById('announcementEditPriority');
+        const editMessage = document.querySelector('[data-announcement-edit-message]');
+        const editMessageInput = document.getElementById('announcementEditMessage');
+        const editLanding = document.getElementById('announcementEditLanding');
+        const editPortal = document.getElementById('announcementEditPortal');
+        const editExpires = document.getElementById('announcementEditExpires');
+        const editImageInput = document.getElementById('announcementEditImages');
+        const editExistingImages = document.getElementById('announcementEditExistingImages');
+        const editNewImages = document.getElementById('announcementEditNewImages');
+        const editRemovedImages = document.getElementById('announcementEditRemovedImages');
+        const editImageFeedback = document.getElementById('announcementEditImageFeedback');
+        let editImageUrls = [];
+        let removedEditImageIndexes = new Set();
+        let selectedEditImages = [];
+        let editTrigger = null;
         let detailTrigger = null;
+
+        const decodeAnnouncementMessage = (value) => {
+            try {
+                return decodeURIComponent(escape(window.atob(value || '')));
+            } catch (error) {
+                return '';
+            }
+        };
+
+        const syncEditImageInput = () => {
+            if (!editImageInput) return;
+            const transfer = new DataTransfer();
+            selectedEditImages.forEach((file) => transfer.items.add(file));
+            editImageInput.files = transfer.files;
+        };
+
+        const syncRemovedEditImages = () => {
+            if (!editRemovedImages) return;
+            editRemovedImages.replaceChildren(...Array.from(removedEditImageIndexes).map((index) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'remove_image_indexes[]';
+                input.value = String(index);
+                return input;
+            }));
+        };
+
+        const createEditImageCard = (source, alt, onRemove) => {
+            const card = document.createElement('span');
+            card.className = 'announcement-image-preview-card';
+
+            const image = document.createElement('img');
+            image.src = source;
+            image.alt = alt;
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'announcement-image-remove';
+            removeButton.setAttribute('aria-label', `Remove ${alt}`);
+            removeButton.title = 'Remove image';
+            removeButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12" /></svg>';
+            removeButton.addEventListener('click', onRemove);
+
+            card.append(image, removeButton);
+            return card;
+        };
+
+        const renderEditImages = () => {
+            if (editExistingImages) {
+                const existingCards = editImageUrls.flatMap((url, index) => {
+                    if (removedEditImageIndexes.has(index)) return [];
+                    return [createEditImageCard(url, `existing announcement image ${index + 1}`, () => {
+                        removedEditImageIndexes.add(index);
+                        syncRemovedEditImages();
+                        renderEditImages();
+                    })];
+                });
+                editExistingImages.replaceChildren(...existingCards);
+                editExistingImages.classList.toggle('is-visible', existingCards.length > 0);
+                editExistingImages.toggleAttribute('hidden', existingCards.length === 0);
+            }
+
+            if (editNewImages) {
+                const newCards = selectedEditImages.map((file, index) => createEditImageCard(
+                    URL.createObjectURL(file),
+                    `new announcement image ${index + 1}`,
+                    () => {
+                        selectedEditImages.splice(index, 1);
+                        syncEditImageInput();
+                        renderEditImages();
+                    }
+                ));
+                editNewImages.replaceChildren(...newCards);
+                editNewImages.classList.toggle('is-visible', newCards.length > 0);
+                editNewImages.toggleAttribute('hidden', newCards.length === 0);
+            }
+        };
+
+        const openEditModal = (trigger) => {
+            if (!editModal || !editForm || !editMessage) return;
+            editTrigger = trigger;
+            editForm.action = trigger.dataset.updateUrl || '';
+            editTitle.value = trigger.dataset.title || '';
+            editPriority.value = trigger.dataset.priority || 'info';
+            editMessage.innerHTML = decodeAnnouncementMessage(trigger.dataset.message);
+            editMessageInput.value = editMessage.innerHTML;
+            editLanding.checked = trigger.dataset.showOnLanding === '1';
+            editPortal.checked = trigger.dataset.showInPortal === '1';
+            editExpires.value = trigger.dataset.expires || '';
+            try {
+                editImageUrls = JSON.parse(trigger.dataset.imageUrls || '[]');
+            } catch (error) {
+                editImageUrls = [];
+            }
+            removedEditImageIndexes = new Set();
+            selectedEditImages = [];
+            if (editImageInput) editImageInput.value = '';
+            if (editImageFeedback) {
+                editImageFeedback.textContent = '';
+                editImageFeedback.hidden = true;
+            }
+            syncRemovedEditImages();
+            renderEditImages();
+            editModal.classList.add('is-open');
+            editModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            editTitle.focus();
+        };
+
+        const closeEditModal = () => {
+            if (!editModal) return;
+            editModal.classList.remove('is-open');
+            editModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            editTrigger?.focus();
+            editTrigger = null;
+        };
 
         const openArchiveModal = () => {
             if (!archiveModal) {
@@ -2204,6 +2542,12 @@
             }
         });
         document.addEventListener('click', function (event) {
+            const editButton = event.target.closest('[data-announcement-edit]');
+            if (editButton) {
+                event.preventDefault();
+                openEditModal(editButton);
+                return;
+            }
             const viewButton = event.target.closest('[data-announcement-view]');
             if (viewButton) {
                 event.preventDefault();
@@ -2215,6 +2559,49 @@
             if (event.target === detailModal) {
                 closeDetailModal();
             }
+        });
+        editClose?.addEventListener('click', closeEditModal);
+        editModal?.addEventListener('click', function (event) {
+            if (event.target === editModal) closeEditModal();
+        });
+        editMessage?.addEventListener('input', function () {
+            editMessageInput.value = editMessage.innerHTML;
+        });
+        editImageInput?.addEventListener('change', function () {
+            const incomingFiles = Array.from(editImageInput.files || []);
+            const remainingExistingIndexes = editImageUrls
+                .map((_, index) => index)
+                .filter((index) => !removedEditImageIndexes.has(index));
+            const retainedExistingCount = remainingExistingIndexes.length;
+            const currentlySelectedCount = selectedEditImages.length;
+            const availableSlots = Math.max(0, 5 - retainedExistingCount - currentlySelectedCount);
+            const validFiles = incomingFiles.filter((file) => file.size <= 500 * 1024);
+            const acceptedFiles = validFiles.slice(0, availableSlots);
+
+            if (acceptedFiles.length > 0 && retainedExistingCount > 0) {
+                const replacementCount = Math.min(acceptedFiles.length, retainedExistingCount);
+                remainingExistingIndexes.slice(0, replacementCount).forEach((index) => {
+                    removedEditImageIndexes.add(index);
+                });
+            }
+
+            selectedEditImages.push(...acceptedFiles);
+            syncEditImageInput();
+            syncRemovedEditImages();
+            renderEditImages();
+
+            const messages = [];
+            if (validFiles.length !== incomingFiles.length) messages.push('Each image must be 500 KB or smaller.');
+            if (validFiles.length > availableSlots) messages.push('An announcement can have up to 5 images.');
+            if (editImageFeedback) {
+                editImageFeedback.textContent = messages.join(' ');
+                editImageFeedback.toggleAttribute('hidden', messages.length === 0);
+            }
+        });
+        editForm?.addEventListener('submit', function () {
+            editMessageInput.value = editMessage.innerHTML;
+            syncEditImageInput();
+            syncRemovedEditImages();
         });
 
         const loadActiveBulletinPage = async (url) => {

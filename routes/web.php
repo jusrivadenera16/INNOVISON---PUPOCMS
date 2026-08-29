@@ -365,7 +365,9 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::post('/admin/notifications/mark-all-read', [AdminController::class, 'markAllAdminNotificationsRead'])->name('admin.notifications.read_all');
         Route::get('/admin/announcements', [AdminController::class, 'announcements'])->middleware('module.permission:announcements.view')->name('admin.announcements');
         Route::post('/admin/announcements', [AdminController::class, 'storeAnnouncement'])->middleware('module.permission:announcements.publish')->name('admin.announcements.store');
+        Route::patch('/admin/announcements/{announcement}', [AdminController::class, 'updateAnnouncement'])->middleware('module.permission:announcements.publish')->name('admin.announcements.update');
         Route::patch('/admin/announcements/{announcement}/archive', [AdminController::class, 'archiveAnnouncement'])->middleware('module.permission:announcements.archive')->name('admin.announcements.archive');
+        Route::patch('/admin/announcements/{announcement}/restore', [AdminController::class, 'restoreAnnouncement'])->middleware('module.permission:announcements.archive')->name('admin.announcements.restore');
         Route::delete('/admin/announcements/{announcement}', [AdminController::class, 'destroyAnnouncement'])->middleware('module.permission:announcements.archive')->name('admin.announcements.destroy');
         Route::middleware('role:superadmin')->group(function () {
             Route::get('/admin/user-management', [AdminUserController::class, 'index'])->name('admin.user-management');
