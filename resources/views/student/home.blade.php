@@ -1737,13 +1737,13 @@
         position: relative;
         overflow: hidden;
         color:#dbe4ee;
-        padding: 36px 0 0;
+        padding: 42px 0 0;
         font-size: 15px;
-        margin-top: 0;
+        margin-top: -1px;
         background:
-            radial-gradient(circle at 14% 0%, rgba(190, 18, 60, .34), transparent 250px),
+            radial-gradient(circle at 14% 0%, rgba(190, 18, 60, .18), transparent 270px),
             radial-gradient(circle at 76% 6%, rgba(250, 204, 21, .10), transparent 220px),
-            linear-gradient(135deg, rgba(48, 6, 18, .94), rgba(8, 17, 32, .98) 48%, rgba(13, 20, 37, .98)),
+            linear-gradient(180deg, rgba(8, 17, 32, .96) 0%, rgba(8, 17, 32, .98) 36%, rgba(13, 20, 37, .98) 100%),
             url('{{ asset("images/PUPBG.jpg") }}') center bottom / cover no-repeat;
     }
     .site-footer::before {
@@ -1762,9 +1762,9 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 118px;
+        height: 136px;
         z-index: 0;
-        background: linear-gradient(180deg, rgba(112, 13, 37, .72) 0%, rgba(48, 6, 18, .36) 42%, rgba(8, 17, 32, 0) 100%);
+        background: linear-gradient(180deg, rgba(8, 17, 32, .22) 0%, rgba(8, 17, 32, 0) 100%);
         pointer-events: none;
     }
     .footer-top,
@@ -2329,7 +2329,13 @@
         max-width: none;
         padding: 52px 24px 58px;
         color: #fffaf7;
-        background: transparent;
+        background: linear-gradient(
+            180deg,
+            transparent 0%,
+            transparent calc(100% - 142px),
+            rgba(89, 8, 31, .42) calc(100% - 88px),
+            rgba(8, 17, 32, .96) 100%
+        );
         border-top: 0;
         box-shadow: none;
     }
