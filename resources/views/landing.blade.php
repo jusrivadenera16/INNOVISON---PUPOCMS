@@ -5756,6 +5756,7 @@
         .gateway-title-line--clinic {
             position: relative;
             color: #facc15;
+            text-shadow: none;
         }
 
         .gateway-title-line--clinic::after {
@@ -5805,7 +5806,7 @@
 
         body.landing-theme-light .login-copy.gateway-brand-copy .gateway-kicker,
         body.landing-theme-light .gateway-title-line--clinic {
-            color: #b77900;
+            color: #facc15;
         }
 
         body.landing-theme-light .login-copy.gateway-brand-copy .gateway-copy {
@@ -6716,6 +6717,18 @@
             display: none;
         }
 
+        .landing-detail-image-link {
+            position: relative;
+            display: block;
+            min-width: 0;
+            overflow: hidden;
+            border-radius: 8px;
+            color: #ffffff;
+            text-decoration: none;
+            cursor: pointer;
+            outline: none;
+        }
+
         .landing-detail-image-grid img {
             position: relative;
             width: 100%;
@@ -6733,8 +6746,11 @@
             opacity: 1;
         }
 
-        .landing-detail-image-grid img.is-landscape {
+        .landing-detail-image-link.is-landscape {
             grid-column: 1 / -1;
+        }
+
+        .landing-detail-image-grid img.is-landscape {
             aspect-ratio: 16 / 9;
         }
 
@@ -6742,13 +6758,50 @@
             aspect-ratio: 1 / 1;
         }
 
-        .landing-detail-image-grid img:hover,
-        .landing-detail-image-grid img:focus-visible {
+        .landing-detail-image-link:hover img,
+        .landing-detail-image-link:focus-visible img {
             z-index: 2;
             border-color: rgba(250, 204, 21, .88);
             box-shadow: 0 16px 30px rgba(0, 0, 0, .36), 0 0 0 1px rgba(250, 204, 21, .14);
             transform: translateY(-4px) scale(1.018);
-            outline: none;
+        }
+
+        .landing-detail-image-view {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            z-index: 4;
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(250, 204, 21, .58);
+            border-radius: 50%;
+            background: rgba(75, 7, 20, .86);
+            color: #fff4a8;
+            opacity: 0;
+            visibility: hidden;
+            transform: translate(-50%, -42%) scale(.86);
+            transition: opacity .2s ease, visibility .2s ease, transform .24s cubic-bezier(.22, 1, .36, 1), background .2s ease, color .2s ease, border-color .2s ease;
+            pointer-events: none;
+        }
+
+        .landing-detail-image-view svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.5;
+        }
+
+        .landing-detail-image-link:hover .landing-detail-image-view,
+        .landing-detail-image-link:focus-visible .landing-detail-image-view {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+            border-color: #facc15;
+            background: #facc15;
+            color: #70131b;
         }
 
         .landing-detail-date {
@@ -7800,7 +7853,7 @@
 
         body.landing-theme-light .gateway-title-line--clinic,
         body.landing-theme-light .login-copy.gateway-brand-copy .gateway-kicker {
-            color: #a66d00;
+            color: #facc15;
         }
 
         body.landing-theme-light .login-copy.gateway-brand-copy .gateway-copy,
@@ -10348,8 +10401,12 @@
             }
 
             const aspectRatio = image.naturalWidth / image.naturalHeight;
+            const imageLink = image.closest('.landing-detail-image-link');
             image.classList.remove('is-landscape', 'is-portrait', 'is-square');
-            image.classList.add(aspectRatio > 1.1 ? 'is-landscape' : (aspectRatio < .9 ? 'is-portrait' : 'is-square'));
+            imageLink?.classList.remove('is-landscape', 'is-portrait', 'is-square');
+            const imageShape = aspectRatio > 1.1 ? 'is-landscape' : (aspectRatio < .9 ? 'is-portrait' : 'is-square');
+            image.classList.add(imageShape);
+            imageLink?.classList.add(imageShape);
             window.requestAnimationFrame(function () {
                 image.classList.add('is-ready');
             });
@@ -10376,6 +10433,13 @@
                 if (landingAnnouncementDetailImages) {
                     const imageUrls = parseAnnouncementImages(trigger.dataset.imageUrls);
                     landingAnnouncementDetailImages.replaceChildren(...imageUrls.map(function (imageUrl, index) {
+                        const imageLink = document.createElement('a');
+                        imageLink.className = 'landing-detail-image-link';
+                        imageLink.href = imageUrl;
+                        imageLink.target = '_blank';
+                        imageLink.rel = 'noopener noreferrer';
+                        imageLink.setAttribute('aria-label', `Open announcement image ${index + 1} in a new tab`);
+
                         const image = document.createElement('img');
                         image.alt = `Announcement image ${index + 1}`;
                         image.decoding = 'async';
@@ -10388,7 +10452,13 @@
                             classifyLandingDetailImage(image);
                         }
 
-                        return image;
+                        const viewIcon = document.createElement('span');
+                        viewIcon.className = 'landing-detail-image-view';
+                        viewIcon.setAttribute('aria-hidden', 'true');
+                        viewIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>';
+
+                        imageLink.append(image, viewIcon);
+                        return imageLink;
                     }));
                     landingAnnouncementDetailImages.hidden = imageUrls.length === 0;
                 }
