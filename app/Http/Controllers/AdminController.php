@@ -853,6 +853,8 @@ class AdminController extends Controller
             'show_in_portal' => ['nullable', 'boolean'],
             'images' => ['nullable', 'array', 'max:5'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp,gif', 'max:500'],
+            'remove_image_indexes' => ['nullable', 'array'],
+            'remove_image_indexes.*' => ['integer', 'min:0'],
             'expires_at' => ['nullable', 'date'],
         ]);
 
@@ -901,6 +903,93 @@ class AdminController extends Controller
         $announcement->update(['status' => Announcement::STATUS_ARCHIVED]);
 
         return back()->with('success', 'Announcement archived.');
+    }
+
+    public function updateAnnouncement(Request $request, Announcement $announcement)
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:140'],
+            'priority' => ['required', Rule::in(['urgent', 'info', 'warning', 'health', 'event'])],
+            'message' => ['required', 'string', 'max:10000'],
+            'show_on_landing' => ['nullable', 'boolean'],
+            'show_in_portal' => ['nullable', 'boolean'],
+            'images' => ['nullable', 'array', 'max:5'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp,gif', 'max:500'],
+            'remove_image_indexes' => ['nullable', 'array'],
+            'remove_image_indexes.*' => ['integer', 'min:0'],
+            'expires_at' => ['nullable', 'date'],
+        ]);
+
+        $validated['message'] = AnnouncementContent::sanitizeEditorHtml($validated['message']);
+        $validated['expires_at'] = $request->filled('expires_at') ? $validated['expires_at'] : null;
+        $validated['show_on_landing'] = $request->boolean('show_on_landing');
+        $validated['show_in_portal'] = $request->boolean('show_in_portal');
+
+        if (! $validated['show_on_landing'] && ! $validated['show_in_portal']) {
+            throw ValidationException::withMessages([
+                'show_in_portal' => 'Select at least one announcement visibility option.',
+            ]);
+        }
+
+        if ($validated['message'] === '' || mb_strlen(AnnouncementContent::toPlainText($validated['message'])) > 2000) {
+            throw ValidationException::withMessages([
+                'message' => 'The announcement message must contain up to 2,000 characters.',
+            ]);
+        }
+
+        $existingImagePaths = array_values($announcement->image_paths ?? []);
+        $removeImageIndexes = collect($validated['remove_image_indexes'] ?? [])
+            ->map(fn ($index) => (int) $index)
+            ->unique()
+            ->filter(fn ($index) => array_key_exists($index, $existingImagePaths))
+            ->values();
+        $removedImagePaths = $removeImageIndexes
+            ->map(fn ($index) => $existingImagePaths[$index])
+            ->all();
+        $imagePaths = array_values(array_filter(
+            $existingImagePaths,
+            fn ($path, $index) => ! $removeImageIndexes->contains($index),
+            ARRAY_FILTER_USE_BOTH
+        ));
+        $newImages = $request->file('images', []);
+
+        if (count($imagePaths) + count($newImages) > 5) {
+            throw ValidationException::withMessages([
+                'images' => 'An announcement can have up to 5 images in total.',
+            ]);
+        }
+
+        if ($request->hasFile('images')) {
+            $directory = public_path('images/announcements');
+            File::ensureDirectoryExists($directory);
+            foreach ($newImages as $image) {
+                $filename = $image->hashName();
+                $image->move($directory, $filename);
+                $imagePaths[] = 'announcements/' . $filename;
+            }
+        }
+
+        unset($validated['images'], $validated['remove_image_indexes']);
+        $announcement->update([
+            ...$validated,
+            'image_paths' => $imagePaths,
+        ]);
+
+        foreach ($removedImagePaths as $imagePath) {
+            $path = trim((string) $imagePath);
+            if ($path !== '') {
+                File::delete(public_path('images/' . ltrim($path, '/')));
+            }
+        }
+
+        return back()->with('success', 'Announcement updated.');
+    }
+
+    public function restoreAnnouncement(Announcement $announcement)
+    {
+        $announcement->update(['status' => Announcement::STATUS_ACTIVE]);
+
+        return back()->with('success', 'Announcement restored.');
     }
 
     public function destroyAnnouncement(Announcement $announcement)
