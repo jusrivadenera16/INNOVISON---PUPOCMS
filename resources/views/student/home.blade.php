@@ -75,7 +75,7 @@
         z-index: 3;
         width: min(1180px, calc(100% - 44px));
         margin: 0 auto;
-        padding: clamp(56px, 8vh, 82px) 0 96px;
+        padding: clamp(28px, 5vh, 48px) 0 96px;
         color: #fff;
         display: grid;
         grid-template-columns: minmax(0, 620px) minmax(360px, 470px);
@@ -2325,7 +2325,7 @@
         .PUPBG { min-height: calc(100vh - 74px); }
         .PUPBG-inner {
             grid-template-columns: 1fr;
-            padding: 78px 0 130px;
+            padding: 48px 0 130px;
             text-align: center;
         }
         .hero-copy,
@@ -2335,6 +2335,29 @@
         .hero-actions { grid-template-columns: 1fr; width: min(420px, 100%); margin-left: auto; margin-right: auto; transform: none; }
         .hero-status-card { margin-left: auto; margin-right: auto; min-height: 72px; }
         .hero-action-card { min-height: 238px; }
+        .phonecard::before {
+            width: 300px;
+            height: 92px;
+            bottom: -24px;
+        }
+        .phone-float-icons {
+            left: 10px;
+            top: 14px;
+            width: 128px;
+            height: 122px;
+        }
+        .phone-float-icon {
+            width: 40px;
+            height: 40px;
+        }
+        .phone-float-icon:nth-child(2) {
+            left: 56px;
+            top: 42px;
+        }
+        .phone-float-icon:nth-child(3) {
+            left: 70px;
+            top: -18px;
+        }
         .why-grid { grid-template-columns: 1fr; gap: 14px; }
         .why-item {
             border-right: 0;
@@ -3170,6 +3193,158 @@
   margin: 60px auto;
 }
 
+.phonecard::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -34px;
+  width: 390px;
+  height: 118px;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at center, rgba(122, 0, 25, 0.4) 0%, rgba(122, 0, 25, 0.22) 45%, rgba(122, 0, 25, 0) 70%),
+    conic-gradient(from 190deg, rgba(250, 204, 21, 0), rgba(250, 204, 21, 0.8), rgba(250, 204, 21, 0.12), rgba(250, 204, 21, 0));
+  opacity: 0.72;
+  transform: translateX(-50%) rotate(-8deg) skewX(-18deg);
+  filter: blur(0.2px);
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease, transform 0.7s ease;
+}
+
+.phonecard::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -18px;
+  width: 248px;
+  height: 52px;
+  border-radius: 999px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.44) 0%, rgba(0, 0, 0, 0.24) 45%, rgba(0, 0, 0, 0) 74%);
+  filter: blur(8px);
+  opacity: 0.72;
+  transform: translateX(-50%) rotate(-8deg) skewX(-18deg);
+  transform-origin: center;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease, transform 0.7s ease, width 0.7s ease;
+}
+
+.phonecard:hover::before {
+  opacity: 0.56;
+  transform: translateX(-50%) translateY(10px) rotate(0deg) skewX(0deg) scale(0.82);
+}
+
+.phonecard:hover::after {
+  width: 212px;
+  opacity: 0.48;
+  transform: translateX(-50%) translateY(10px) rotate(0deg) skewX(0deg);
+}
+
+.phone-float-icons {
+  position: absolute;
+  left: -84px;
+  top: 96px;
+  z-index: 12;
+  width: 150px;
+  height: 146px;
+  transform: translateZ(90px);
+  pointer-events: none;
+}
+
+.phone-float-icon {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(250, 204, 21, 0.7);
+  border-radius: 14px;
+  background: rgba(255, 250, 247, 0.95);
+  color: #7a0019;
+  box-shadow: 0 0 14px rgba(250, 204, 21, 0.28);
+  isolation: isolate;
+  opacity: 0;
+  transform: translate(132px, 98px) scale(0.36) rotate(20deg) skewX(-5deg);
+  animation:
+    phoneIconPopOut 0.95s cubic-bezier(0.18, 0.92, 0.24, 1.16) 3.05s forwards,
+    phoneIconFloat 3.4s ease-in-out 4s infinite;
+}
+
+.phone-float-icon::before {
+  content: "";
+  position: absolute;
+  inset: 7px 5px 3px 8px;
+  border-radius: inherit;
+  background: rgba(31, 0, 9, 0.34);
+  filter: blur(13px);
+  transform: translate(12px, 14px) scale(0.95);
+  z-index: -1;
+  opacity: 0.78;
+}
+
+.phone-float-icon:nth-child(2) {
+  left: 66px;
+  top: 38px;
+  animation-delay: 3.24s, 4.18s;
+}
+
+.phone-float-icon:nth-child(3) {
+  left: 82px;
+  top: -22px;
+  animation-delay: 3.43s, 4.36s;
+}
+
+.phonecard:hover .phone-float-icon {
+  animation: phoneIconSinkIntoPhone 0.48s cubic-bezier(0.64, 0, 0.36, 1) forwards;
+}
+
+.phonecard:hover .phone-float-icon:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.phonecard:hover .phone-float-icon:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+.phone-float-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+@keyframes phoneIconPopOut {
+  0% {
+    opacity: 0;
+    transform: translate(132px, 98px) scale(0.36) rotate(20deg) skewX(-5deg);
+  }
+  55% {
+    opacity: 1;
+    transform: translate(-8px, -6px) scale(1.08) rotate(-20deg) skewX(-5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(-18deg) skewX(-5deg);
+  }
+}
+
+@keyframes phoneIconFloat {
+  0%, 100% { opacity: 1; transform: translateY(0) rotate(-18deg) skewX(-5deg); }
+  50% { opacity: 1; transform: translateY(-7px) rotate(-15deg) skewX(-5deg); }
+}
+
+@keyframes phoneIconSinkIntoPhone {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(-18deg) skewX(-5deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(132px, 98px) scale(0.35) rotate(18deg) skewX(-5deg);
+  }
+}
+
 .phone {
   position: relative;
   width: 100%;
@@ -3179,6 +3354,7 @@
   border-radius: 12px;
   box-shadow: -15px 25px 35px rgba(0, 0, 0, 0.65);
   transition: transform 1s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.5s ease;
+  z-index: 2;
   
 }
 
@@ -3306,6 +3482,20 @@
   padding-top: 1.8rem;
 }
 
+.lock-screen::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 86px;
+  height: 86px;
+  background: url('{{ asset("images/pup_logo.png") }}') center / contain no-repeat;
+  opacity: 0.18;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.12));
+  pointer-events: none;
+}
+
 .lock-wallpaper {
   display: none;
 }
@@ -3332,7 +3522,7 @@
 .unlock-label {
   position: absolute;
   bottom: 24px; 
-  font-size: 7px;
+  font-size: 8.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -3420,6 +3610,58 @@
   color: #ffffff;
 }
 
+.phone-unlocked-logo {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  z-index: 5;
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(250, 204, 21, 0.42);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.14);
+  opacity: 0;
+  transform: translate(-50%, 14px) scale(0.86);
+  transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.18, 0.92, 0.24, 1.16);
+  pointer-events: none;
+}
+
+.phone-unlocked-logo img {
+  width: 48px;
+  height: 48px;
+  display: block;
+  object-fit: contain;
+}
+
+.phone-version-label {
+  position: absolute;
+  left: 50%;
+  bottom: 27px;
+  z-index: 5;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translate(-50%, 8px);
+  transition: opacity 0.42s ease 0.08s, transform 0.42s ease 0.08s;
+  pointer-events: none;
+}
+
+.phone:hover .phone-unlocked-logo {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.phone:hover .phone-version-label {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 
 .btn-action {
   width: 85%;
@@ -3439,6 +3681,18 @@
   justify-content: center;
   gap: 6px; 
   outline: none !important;
+  filter: none;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  backface-visibility: hidden;
+  transform-style: flat;
+}
+
+.btn-action span,
+.btn-action svg {
+  filter: none;
+  text-shadow: none;
+  backface-visibility: hidden;
 }
 
 
@@ -3455,7 +3709,7 @@
   border: 1px solid rgba(250, 204, 21, 0.45); 
   box-shadow: 
     0 4px 10px rgba(115, 6, 26, 0.4),
-    0 0 8px rgba(250, 204, 21, 0.2);   
+    0 0 3px rgba(250, 204, 21, 0.24);
   transition-delay: 0.05s;
 }
 
@@ -3471,7 +3725,7 @@
   background-color: transparent; 
   color: #ffffff; 
   border: 1px solid rgba(250, 204, 21, 0.45);
-  box-shadow: 0 0 8px rgba(250, 204, 21, 0.15);
+  box-shadow: 0 0 3px rgba(250, 204, 21, 0.18);
   transition-delay: 0.1s; 
 }
 
@@ -3494,12 +3748,25 @@
   animation: phoneBoot 3s ease-in-out forwards;
 }
 .splash-logo {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: logoPulse 1.5s infinite ease-in-out;
+}
+.splash-logo img {
+  width: 58px;
+  height: 58px;
+  display: block;
+  object-fit: contain;
+}
+.splash-logo span {
   font-family: 'Arial Black', -apple-system, sans-serif;
-  font-size: 20px;
+  font-size: 15px;
   font-weight: 900;
   color: #0f0c22;
-  letter-spacing: 2px;
-  animation: logoPulse 1.5s infinite ease-in-out;
+  letter-spacing: .6px;
 }
 @keyframes phoneBoot {
   0% { opacity: 1; visibility: visible; }
@@ -3592,9 +3859,26 @@
           </script>
         @endif
 
-                <!-- === 🌟 BAGONG 3D PHONE ACTIONS REPLACEMENT === -->
+                <!-- === 3D Phone === -->
         <div class="hero-actions-phone-wrapper">
           <div class="phonecard">
+            <div class="phone-float-icons" aria-hidden="true">
+              <span class="phone-float-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 2.994v2.25m10.5-2.25v2.25m-14.252 13.5V7.491a2.25 2.25 0 0 1 2.25-2.25h13.5a2.25 2.25 0 0 1 2.25 2.25v11.251m-18 0a2.25 2.25 0 0 0 2.25 2.25h13.5a2.25 2.25 0 0 0 2.25-2.25m-18 0v-7.5a2.25 2.25 0 0 1 2.25-2.25h13.5a2.25 2.25 0 0 1 2.25 2.25v7.5m-6.75-6h2.25m-9 2.25h4.5m.002-2.25h.005v.006H12v-.006Zm-.001 4.5h.006v.006h-.006v-.005Zm-2.25.001h.005v.006H9.75v-.006Zm-2.25 0h.005v.005h-.006v-.005Zm6.75-2.247h.005v.005h-.005v-.005Zm0 2.247h.006v.006h-.006v-.006Zm2.25-2.248h.006V15H16.5v-.005Z" />
+                </svg>
+              </span>
+              <span class="phone-float-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                </svg>
+              </span>
+              <span class="phone-float-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+                </svg>
+              </span>
+            </div>
             <div class="phone">
               
               <!-- 3D Thickness Structural Layers -->
@@ -3612,7 +3896,10 @@
 
                 <!-- System Loading Layer -->
                 <div class="splash-screen">
-                  <div class="splash-logo">OCMS</div>
+                  <div class="splash-logo">
+                    <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="PUP Taguig Clinic logo">
+                    <span>CareSync</span>
+                  </div>
                 </div>
 
                 <!-- 🔒 Lock Screen Layer (May Background Cover via CSS) -->
@@ -3624,7 +3911,7 @@
                 
                 <!-- Top Status Component -->
                 <div class="head">
-                  <div class="h-left">moov</div>
+                  <div class="h-left">CareSync</div>
                   <div class="h-right">
                     <span class="wifi">
                       <svg stroke="currentColor" fill="currentColor" viewBox="0 0 365.892 365.892" class="logo-head">
@@ -3649,6 +3936,10 @@
                 </div>
                 
                 <!-- 🌟 LARAVEL DYNAMIC ROUTE ANCHORS (Ginamit ang bago mong SVG Icons) -->
+                <div class="phone-unlocked-logo" aria-hidden="true">
+                  <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="">
+                </div>
+
                 <a href="{{ url('/student/booking') }}" class="btn-action btn-book">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="btn-icon">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 2.994v2.25m10.5-2.25v2.25m-14.252 13.5V7.491a2.25 2.25 0 0 1 2.25-2.25h13.5a2.25 2.25 0 0 1 2.25 2.25v11.251m-18 0a2.25 2.25 0 0 0 2.25 2.25h13.5a2.25 2.25 0 0 0 2.25-2.25m-18 0v-7.5a2.25 2.25 0 0 1 2.25-2.25h13.5a2.25 2.25 0 0 1 2.25 2.25v7.5m-6.75-6h2.25m-9 2.25h4.5m.002-2.25h.005v.006H12v-.006Zm-.001 4.5h.006v.006h-.006v-.005Zm-2.25.001h.005v.006H9.75v-.006Zm-2.25 0h.005v.005h-.006v-.005Zm6.75-2.247h.005v.005h-.005v-.005Zm0 2.247h.006v.006h-.006v-.006Zm2.25-2.248h.006V15H16.5v-.005Z" />
@@ -3665,6 +3956,8 @@
                 </a>
                 
                 <!-- Bottom Soft-Keys Navigation Panel -->
+                <div class="phone-version-label" aria-hidden="true">Clinic V.26</div>
+
                 <div class="navigation">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="btn-nav-svg">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
