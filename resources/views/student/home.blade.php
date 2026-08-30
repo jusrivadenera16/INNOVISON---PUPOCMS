@@ -32,7 +32,7 @@
             radial-gradient(circle at 54% 87%, rgba(250, 204, 21, .16), transparent 180px),
             linear-gradient(90deg, rgba(72, 3, 12, .96) 0%, rgba(112, 19, 27, .88) 45%, rgba(112, 19, 27, .58) 100%),
             linear-gradient(180deg, rgba(28, 4, 10, .16), rgba(28, 4, 10, .34)),
-            url('{{ asset("images/PUPBG.jpg") }}') center center / cover no-repeat;
+            url('{{ asset("images/PUPBG.jpg") }}') center center / cover fixed no-repeat;
         z-index: 0;
     }
     .PUPBG-overlay {
@@ -2505,49 +2505,33 @@
     /* --- CONTINUOUS ANNOUNCEMENTS / ABOUT EXPERIENCE --- */
     .hero-curve {
         bottom: -2px;
-        height: 126px;
-        background: linear-gradient(
-            180deg,
-            rgba(74, 4, 23, 0) 0%,
-            rgba(74, 4, 23, .1) 22%,
-            rgba(74, 4, 23, .28) 45%,
-            rgba(74, 4, 23, .56) 68%,
-            rgba(74, 4, 23, .84) 86%,
-            #4a0417 100%
-        );
+        height: 0;
+        background: transparent;
     }
     html[data-theme="dark"] .hero-curve {
-        background: linear-gradient(
-            180deg,
-            rgba(5, 13, 27, 0) 0%,
-            rgba(5, 13, 27, .1) 22%,
-            rgba(5, 13, 27, .3) 45%,
-            rgba(5, 13, 27, .6) 68%,
-            rgba(5, 13, 27, .86) 86%,
-            #050d1b 100%
-        );
+        background: transparent;
     }
     .student-home-info-bg {
+        position: relative;
         margin-top: -72px;
         padding-top: 72px;
-        background: linear-gradient(
-            180deg,
-            rgba(74, 4, 23, 0) 0,
-            #4a0417 72px,
-            #6f0b24 52%,
-            #a91f35 100%
-        );
+        isolation: isolate;
+        background:
+            radial-gradient(circle at 91% 11%, rgba(250, 204, 21, .16), transparent 190px),
+            radial-gradient(circle at 54% 87%, rgba(250, 204, 21, .13), transparent 220px),
+            linear-gradient(90deg, rgba(72, 3, 12, .96) 0%, rgba(112, 19, 27, .88) 45%, rgba(112, 19, 27, .58) 100%),
+            linear-gradient(180deg, rgba(28, 4, 10, .16), rgba(28, 4, 10, .34)),
+            url('{{ asset("images/PUPBG.jpg") }}') center center / cover fixed no-repeat;
     }
     html[data-theme="dark"] .student-home-info-bg {
         margin-top: -72px;
         padding-top: 72px;
-        background: linear-gradient(
-            180deg,
-            rgba(5, 13, 27, 0) 0,
-            #050d1b 72px,
-            #0a1728 52%,
-            #132942 100%
-        );
+        background:
+            radial-gradient(circle at 91% 11%, rgba(250, 204, 21, .12), transparent 190px),
+            radial-gradient(circle at 54% 87%, rgba(250, 204, 21, .09), transparent 220px),
+            linear-gradient(90deg, rgba(3, 10, 24, .97) 0%, rgba(8, 24, 43, .9) 48%, rgba(12, 34, 55, .68) 100%),
+            linear-gradient(180deg, rgba(2, 6, 18, .2), rgba(2, 6, 18, .42)),
+            url('{{ asset("images/PUPBG.jpg") }}') center center / cover fixed no-repeat;
     }
     .student-home-info-bg::before,
     html[data-theme="dark"] .student-home-info-bg::before {
@@ -2580,6 +2564,17 @@
         );
         border-top: 0;
         box-shadow: none;
+    }
+    html[data-theme="dark"] #about.about-experience {
+        background: linear-gradient(
+            180deg,
+            transparent 0%,
+            transparent calc(100% - 238px),
+            rgba(8, 24, 43, .42) calc(100% - 188px),
+            rgba(5, 13, 27, .62) calc(100% - 126px),
+            rgba(5, 13, 27, .84) calc(100% - 54px),
+            rgba(8, 17, 32, .96) 100%
+        );
     }
     #about.about-experience::before {
         content: "";
@@ -3006,7 +3001,7 @@
             radial-gradient(circle at 54% 87%, rgba(250, 204, 21, .09), transparent 180px),
             linear-gradient(90deg, rgba(3, 10, 24, .97) 0%, rgba(8, 24, 43, .9) 48%, rgba(12, 34, 55, .68) 100%),
             linear-gradient(180deg, rgba(2, 6, 18, .2), rgba(2, 6, 18, .42)),
-            url('{{ asset("images/PUPBG.jpg") }}') center center / cover no-repeat;
+            url('{{ asset("images/PUPBG.jpg") }}') center center / cover fixed no-repeat;
     }
     html[data-theme="dark"] .PUPBG-overlay {
         background:
@@ -3264,7 +3259,10 @@
   border-radius: 14px;
   background: rgba(255, 250, 247, 0.95);
   color: #7a0019;
-  box-shadow: 0 0 14px rgba(250, 204, 21, 0.28);
+  box-shadow:
+    10px 12px 18px rgba(31, 0, 9, 0.28),
+    -3px 5px 10px rgba(31, 0, 9, 0.16),
+    0 0 14px rgba(250, 204, 21, 0.28);
   isolation: isolate;
   opacity: 0;
   transform: translate(132px, 98px) scale(0.36) rotate(20deg) skewX(-5deg);
@@ -3280,14 +3278,23 @@
   border-radius: inherit;
   background: rgba(31, 0, 9, 0.34);
   filter: blur(13px);
-  transform: translate(12px, 14px) scale(0.95);
+  transform: translate(16px, 12px) scale(0.95);
   z-index: -1;
   opacity: 0.78;
+}
+
+.phone-float-icon:nth-child(1) {
+  border-color: rgba(250, 204, 21, 0.78);
+  background: rgba(122, 0, 25, 0.94);
+  color: #facc15;
 }
 
 .phone-float-icon:nth-child(2) {
   left: 66px;
   top: 38px;
+  border-color: rgba(122, 0, 25, 0.46);
+  background: rgba(250, 204, 21, 0.94);
+  color: #7a0019;
   animation-delay: 3.24s, 4.18s;
 }
 
