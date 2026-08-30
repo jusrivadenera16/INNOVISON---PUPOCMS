@@ -235,4 +235,52 @@ class AdminHubLookupSourceTest extends TestCase
             'admin_uuid' => null,
         ]);
     }
+
+    public function test_admin_hub_lookup_can_include_idp_admin_users_from_current_admin_cookie(): void
+    {
+        Config::set('services.idp.base_url', 'https://identity.example.test');
+        Config::set('services.idp.access_cookie_name', 'access_token');
+
+        Http::fake([
+            'https://faculty.example.test/api/faculties*' => Http::response(['faculties' => []]),
+            'https://identity.example.test/api/v1/admin/users*' => Http::response([
+                'data' => [
+                    'users' => [[
+                        'id' => '4f9ac4c0-61f5-43f4-b9b4-9a89482091a7',
+                        'first_name' => 'Maria',
+                        'middle_name' => 'Santos',
+                        'last_name' => 'Reyes',
+                        'email' => 'maria.reyes@pup.edu.ph',
+                        'employee_number' => 'EMP-100',
+                        'role' => 'faculty',
+                        'status' => 'active',
+                    ]],
+                ],
+            ]),
+        ]);
+
+        $request = Request::create('/admin/user-management/admin-hub', 'GET', [
+            'lookup_search' => 'Maria',
+            'management_view' => 'admin-hub',
+        ], [
+            'access_token' => 'admin-session-token',
+        ]);
+        $controller = new AdminUserController();
+        $method = new ReflectionMethod($controller, 'buildManagementData');
+        $method->setAccessible(true);
+        $data = $method->invoke($controller, $request, app(FacultySyncService::class), 'admin-hub');
+        $record = collect($data['lookupRecords'])->firstWhere('source', 'idp_admin_user');
+
+        $this->assertNotNull($record);
+        $this->assertSame('Maria Santos Reyes', $record['name']);
+        $this->assertSame('maria.reyes@pup.edu.ph', $record['email']);
+        $this->assertSame('EMP-100', $record['meta']['employee_number']);
+        $this->assertSame('idp_admin_user', $record['meta']['lookup_source']);
+        $this->assertTrue($record['can_onboard']);
+
+        Http::assertSent(function ($request) {
+            return $request->url() === 'https://identity.example.test/api/v1/admin/users?page=1&limit=100'
+                && $request->hasHeader('Cookie', 'access_token=admin-session-token');
+        });
+    }
 }
