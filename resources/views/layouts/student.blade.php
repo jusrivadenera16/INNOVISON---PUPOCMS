@@ -2114,7 +2114,7 @@
                 @endphp
                 <ul class="nav-list">
                     <li>
-                        <a href="{{ url('/student/home') }}" class="{{ Request::is('student/home') ? 'active' : '' }}" data-student-nav="home">
+                        <a href="{{ url('/student/home') }}" data-student-nav="home">
                             <span class="nav-link-content">
                                 <x-outline-icon name="home" class="nav-link-icon" />
                                 <span>Home</span>
@@ -2130,7 +2130,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url('/student/home') }}#about" data-student-nav="about">
+                        <a href="{{ url('/student/home') }}#about" class="{{ Request::is('student/home') ? 'active' : '' }}" data-student-nav="about">
                             <span class="nav-link-content">
                                 <x-outline-icon name="information-circle" class="nav-link-icon" />
                                 <span>About Us</span>
