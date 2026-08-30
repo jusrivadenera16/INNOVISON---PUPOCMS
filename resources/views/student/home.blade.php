@@ -3160,7 +3160,356 @@
             bottom: 24px;
         }
     }
+/*phone css*/
+.phonecard {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  position: relative;
+  width: 237px;
+  height: 400px;
+  margin: 60px auto;
+}
 
+.phone {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(55deg) rotateY(0deg) rotateZ(35deg);
+  border-radius: 12px;
+  box-shadow: -15px 25px 35px rgba(0, 0, 0, 0.65);
+  transition: transform 1s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.5s ease;
+  
+}
+
+.front {
+  width: 100%;
+  height: 100%;
+  border: solid 2.5px rgb(0, 0, 0);
+  background: radial-gradient(circle, #510515 30%, #1f0107 100%);
+  padding: 1.5rem 0.5rem 1.8rem;
+  border-radius: 12px;
+  transform: translateZ(12px);
+  z-index: 2;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  animation: neonPulse 3s infinite ease-in-out;
+  transition: box-shadow 0.5s ease;
+}
+
+@keyframes neonPulse {
+  0%, 100% {
+    box-shadow: 
+      -6px -6px 12px rgba(255, 255, 255, 0.4),
+      inset 6px 6px 10px rgba(255, 255, 255, 0.35);
+  }
+  50% {
+    box-shadow: 
+      -12px -12px 25px rgba(255, 255, 255, 0.75),
+      inset 10px 10px 18px rgba(255, 255, 255, 0.6);
+  }
+}
+
+.phone:hover {
+  transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5); 
+}
+
+.phone:hover .front {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+.face {
+  position: absolute;
+  box-sizing: border-box;
+  top: 0;
+  left: 0;
+}
+
+.back {
+  width: 100%;
+  height: 100%;
+  border: solid 2.5px rgb(0, 0, 0);
+  background: #111113;
+  border-radius: 12px !important;
+  transform: rotateY(180deg) translateZ(12px);
+  
+}
+
+.left {
+  height: 400px;
+  width: 24px;
+  background: linear-gradient(to bottom, #222225, #141415);
+  transform: translateX(-6px) rotateY(-90deg);
+  border-top: 2px solid #000;
+  border-bottom: 2px solid #000;
+}
+
+.right {
+  height: 400px;
+  width: 24px;
+  background: linear-gradient(to bottom, #2a2a2e, #1a1a1c);
+  transform: translateX(225px) rotateY(90deg);
+  border-top: 2px solid #000;
+  border-bottom: 2px solid #000;
+}
+
+.top {
+  width: 237px;
+  height: 24px;
+  background: #222225;
+  transform: translateY(-6px) rotateX(90deg);
+  border-left: 2px solid #000;
+  border-right: 2px solid #000;
+}
+
+.bottom {
+  width: 237px;
+  height: 24px;
+  background: #141415;
+  transform: translateY(388px) rotateX(-90deg);
+  border-left: 2px solid #000;
+  border-right: 2px solid #000;
+}
+.phone:hover .left,
+.phone:hover .right,
+.phone:hover .top,
+.phone:hover .bottom {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.left, .right, .top, .bottom {
+  transition: opacity 0.3s ease;
+}
+.lock-screen {
+  position: absolute;
+  inset: 0;
+  background: 
+    linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), 
+    url('image_kR8D5B.png') center center / cover no-repeat;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
+  visibility: visible;
+  padding-top: 1.8rem;
+}
+
+.lock-wallpaper {
+  display: none;
+}
+
+.lock-time {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #000000;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+.lock-date {
+  font-size: 8px;
+  font-weight: 600;
+  opacity: 0.8;
+  margin-top: 1px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #000000;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+.unlock-label {
+  position: absolute;
+  bottom: 24px; 
+  font-size: 7px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #333333;
+  opacity: 0.8;
+  animation: labelBlink 2s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes labelBlink {
+  0%, 100% { opacity: 0.3; transform: scale(0.96); }
+  50% { opacity: 0.9; transform: scale(1); }
+}
+
+.phone:hover .lock-screen {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.9) translateY(-10px);
+}
+
+.phone:hover .btn-action {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.head {
+  font-size: 6px;
+  position: absolute;
+  width: calc(100% - 1rem);
+  left: 0.5rem;
+  top: 5px;
+  height: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #000000; 
+  z-index: 6;
+  transition: color 0.4s ease;
+}
+.head .h-left { font-family: sans-serif; font-weight: bold; }
+.head .h-right { display: flex; align-items: center; gap: 2px; }
+.head .h-right span { display: inline-block; width: 8px; height: 8px; }
+.logo-head { width: 100%; height: 100%; fill: currentColor; stroke: currentColor; }
+
+.phone:hover .head {
+  color: #ffffff;
+}
+
+.front-camera {
+  width: 8px;
+  height: 8px;
+  background-color: rgb(0, 0, 0);
+  border-radius: 50%;
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 1px solid #333;
+  z-index: 15;
+}
+
+.navigation {
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 1.2rem;
+  box-sizing: border-box;
+  z-index: 6;
+  color: #000000; 
+  transition: color 0.4s ease;
+}
+
+.navigation .btn-nav-svg {
+  width: 9px;
+  height: 9px;
+  opacity: 0.85;
+  stroke: currentColor;
+}
+
+.phone:hover .navigation {
+  color: #ffffff;
+}
+
+
+.btn-action {
+  width: 85%;
+  padding: 0.5rem 0.6rem;
+  font-size: 8.5px; 
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-sizing: border-box;
+  cursor: pointer;
+  border-radius: 4px; 
+  opacity: 0;
+  transform: translateY(12px) scale(0.9);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px; 
+  outline: none !important;
+}
+
+
+.btn-action .btn-icon {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  stroke-width: 2; /* Mas makapal para malinaw tingnan */
+}
+
+.btn-book { 
+  background-color: #73061a; 
+  color: white; 
+  border: 1px solid rgba(250, 204, 21, 0.45); 
+  box-shadow: 
+    0 4px 10px rgba(115, 6, 26, 0.4),
+    0 0 8px rgba(250, 204, 21, 0.2);   
+  transition-delay: 0.05s;
+}
+
+.btn-book:hover { 
+  background-color: yellow; 
+  color: maroon;
+  border: 1px solid rgba(250, 204, 21, 0.6);
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 6px 15px rgba(250, 204, 21, 0.65); 
+}
+
+.btn-view { 
+  background-color: transparent; 
+  color: #ffffff; 
+  border: 1px solid rgba(250, 204, 21, 0.45);
+  box-shadow: 0 0 8px rgba(250, 204, 21, 0.15);
+  transition-delay: 0.1s; 
+}
+
+.btn-view:hover { 
+  background-color: #facc15; 
+  color: #0f0c22;
+  border: 1px solid rgba(250, 204, 21, 0.6);
+  transform: translateY(-2px) scale(1.03) !important; 
+  box-shadow: 0 6px 15px rgba(250, 204, 21, 0.55);
+}
+
+.splash-screen {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: phoneBoot 3s ease-in-out forwards;
+}
+.splash-logo {
+  font-family: 'Arial Black', -apple-system, sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: #0f0c22;
+  letter-spacing: 2px;
+  animation: logoPulse 1.5s infinite ease-in-out;
+}
+@keyframes phoneBoot {
+  0% { opacity: 1; visibility: visible; }
+  80% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.1); visibility: hidden; }
+}
+@keyframes logoPulse {
+  0%, 100% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
 </style>
 @endpush
 
@@ -3243,30 +3592,97 @@
           </script>
         @endif
 
-        <div class="hero-actions">
-          <a href="{{ url('/student/booking') }}" class="btn hero-action-card">
-            <span class="hero-action-icon" aria-hidden="true">
-              <x-outline-icon name="calendar-days" />
-            </span>
-            <span class="hero-action-copy">
-              <span>Book</span>
-              <span>Appointment</span>
-            </span>
-            <span class="hero-action-description">Schedule a consultation or medical appointment.</span>
-            <x-outline-icon name="arrow-long-right" class="hero-action-arrow" />
-          </a>
+                <!-- === 🌟 BAGONG 3D PHONE ACTIONS REPLACEMENT === -->
+        <div class="hero-actions-phone-wrapper">
+          <div class="phonecard">
+            <div class="phone">
+              
+              <!-- 3D Thickness Structural Layers -->
+              <div class="face back"></div>
+              <div class="face left"></div>
+              <div class="face right"></div>
+              <div class="face top"></div>
+              <div class="face bottom"></div>
 
-          <a href="{{ url('/student/history') }}" class="btn hero-action-card">
-            <span class="hero-action-icon" aria-hidden="true">
-              <x-outline-icon name="document-text" />
-            </span>
-            <span class="hero-action-copy">
-              <span>View Appointments</span>
-            </span>
-            <span class="hero-action-description">Check your upcoming visits and appointment status.</span>
-            <x-outline-icon name="arrow-long-right" class="hero-action-arrow" />
-          </a>
+              <!-- Main Front Screen Surface -->
+              <div class="face front">
+                
+                <!-- Notch Element -->
+                <div class="front-camera"></div>
+
+                <!-- System Loading Layer -->
+                <div class="splash-screen">
+                  <div class="splash-logo">OCMS</div>
+                </div>
+
+                <!-- 🔒 Lock Screen Layer (May Background Cover via CSS) -->
+                <div class="lock-screen">
+                  <div class="lock-time" id="liveTime">--:--</div>
+                  <div class="lock-date" id="liveDate">--, --- --</div>
+                  <div class="unlock-label">Hover to unlock</div>
+                </div>
+                
+                <!-- Top Status Component -->
+                <div class="head">
+                  <div class="h-left">moov</div>
+                  <div class="h-right">
+                    <span class="wifi">
+                      <svg stroke="currentColor" fill="currentColor" viewBox="0 0 365.892 365.892" class="logo-head">
+                        <circle r="41.494" cy="286.681" cx="182.945"></circle>
+                        <path d="M182.946,176.029c-35.658,0-69.337,17.345-90.09,46.398c-5.921,8.288-4.001,19.806,4.286,25.726 c3.249,2.321,6.994,3.438,10.704,3.438c5.754,0,11.423-2.686,15.021-7.724c13.846-19.383,36.305-30.954,60.078-30.954 c23.775,0,46.233,11.571,60.077,30.953c5.919,8.286,17.437,10.209,25.726,4.288c8.288-5.92,10.208-17.438,4.288-25.726 C252.285,193.373,218.606,176.029,182.946,176.029z"></path>
+                        <path d="M182.946,106.873c-50.938,0-99.694,21.749-133.77,59.67c-6.807,7.576-6.185,19.236,1.392,26.044 c3.523,3.166,7.929,4.725,12.32,4.725c5.051-0.001,10.082-2.063,13.723-6.116c27.091-30.148,65.849-47.439,106.336-47.439 s79.246,17.291,106.338,47.438c6.808,7.576,18.468,8.198,26.043,1.391c7.576-6.808,8.198-18.468,1.391-26.043 C282.641,128.621,233.883,106.873,182.946,106.873z"></path>
+                        <path d="M360.611,112.293c-47.209-48.092-110.305-74.577-177.665-74.577c-67.357,0-130.453,26.485-177.664,74.579 c-7.135,7.269-7.027,18.944,0.241,26.079c3.59,3.524,8.255,5.282,12.918,5.281c4.776,0,9.551-1.845,13.161-5.522 c40.22-40.971,93.968-63.534,151.344-63.534c57.379,0,111.127,22.563,151.343,63.532c7.136,7.269,18.812,7.376,26.08,0.242 C367.637,131.238,365.892,119.562,360.611,112.293z"></path>
+                      </svg>
+                    </span>
+                    <span class="network">
+                      <svg fill="currentColor" viewBox="0 0 16 16" class="logo-head">
+                        <path d="m 13 1 c -0.554688 0 -1 0.445312 -1 1 v 12 c 0 0.554688 0.445312 1 1 1 h 1 c 0.554688 0 1 -0.445312 1 -1 v -12 c 0 -0.554688 -0.445312 -1 -1 -1 z m -4 3 c -0.554688 0 -1 0.445312 -1 1 v 9 c 0 0.554688 0.445312 1 1 1 h 1 c 0.554688 0 1 -0.445312 1 -1 v -9 c 0 -0.554688 -0.445312 -1 -1 -1 z m -4 3 c -0.554688 0 -1 0.445312 -1 1 v 6 c 0 0.554688 0.445312 1 1 1 h 1 c 0.554688 0 1 -0.445312 1 -1 v -6 c 0 -0.554688 -0.445312 -1 -1 -1 z m -4 3 c -0.554688 0 -1 0.445312 -1 1 v 3 c 0 0.554688 0.445312 1 1 1 h 1 c 0.554688 0 1 -0.445312 1 -1 v -3 c 0 -0.554688 -0.445312 -1 -1 -1 z"></path>
+                      </svg>
+                    </span>
+                    <span class="battery">
+                      <svg transform="matrix(-1, 0, 0, 1, 0, 0)" fill="currentColor" viewBox="1 10 20 5" class="logo-head">
+                        <path fill-opacity="0.3" d="M20,10V8.33A1.34,1.34,0,0,0,18.67,7H8V17H18.67A1.34,1.34,0,0,0,20,15.67V14h2V10Z"></path>
+                        <path d="M3.33,17H8V7H3.34A1.34,1.34,0,0,0,2,8.33v7.33A1.34,1.34,0,0,0,3.33,17Z"></path>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+                
+                <!-- 🌟 LARAVEL DYNAMIC ROUTE ANCHORS (Ginamit ang bago mong SVG Icons) -->
+                <a href="{{ url('/student/booking') }}" class="btn-action btn-book">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="btn-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 2.994v2.25m10.5-2.25v2.25m-14.252 13.5V7.491a2.25 2.25 0 0 1 2.25-2.25h13.5a2.25 2.25 0 0 1 2.25 2.25v11.251m-18 0a2.25 2.25 0 0 0 2.25 2.25h13.5a2.25 2.25 0 0 0 2.25-2.25m-18 0v-7.5a2.25 2.25 0 0 1 2.25-2.25h13.5a2.25 2.25 0 0 1 2.25 2.25v7.5m-6.75-6h2.25m-9 2.25h4.5m.002-2.25h.005v.006H12v-.006Zm-.001 4.5h.006v.006h-.006v-.005Zm-2.25.001h.005v.006H9.75v-.006Zm-2.25 0h.005v.005h-.006v-.005Zm6.75-2.247h.005v.005h-.005v-.005Zm0 2.247h.006v.006h-.006v-.006Zm2.25-2.248h.006V15H16.5v-.005Z" />
+                  </svg>
+                  <span>Book</span>
+                </a>
+
+                <a href="{{ url('/student/history') }}" class="btn-action btn-view">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="btn-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  </svg>
+                  <span>View</span>
+                </a>
+                
+                <!-- Bottom Soft-Keys Navigation Panel -->
+                <div class="navigation">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="btn-nav-svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                  </svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="btn-nav-svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                  </svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="btn-nav-svg">
+                    <rect x="5" y="5" width="14" height="14" rx="2" stroke-width="1.5" stroke="currentColor"/>
+                  </svg>
+                </div>
+                
+              </div>
+            </div>
+          </div>
         </div>
+
+        
 
         <a href="#announcements" class="hero-scroll" aria-label="Scroll to Explore">
           <span>Scroll to Explore</span>
@@ -4065,6 +4481,28 @@
           aboutNavLink.classList.add('active');
         }
       });
+      <!-- ⚡ LIVE TICKER CLOCK ENGINE -->
+          (() => {
+            const updatePhoneClock = () => {
+              const now = new Date();
+              let hours = now.getHours();
+              let minutes = now.getMinutes();
+              hours = hours < 10 ? '0' + hours : hours;
+              minutes = minutes < 10 ? '0' + minutes : minutes;
+              
+              const timeEl = document.getElementById('liveTime');
+              const dateEl = document.getElementById('liveDate');
+              
+              if (timeEl) timeEl.textContent = `${hours}:${minutes}`;
+              if (dateEl) {
+                const options = { weekday: 'short', month: 'short', day: '2-digit' };
+                dateEl.textContent = now.toLocaleDateString('en-US', options);
+              }
+            };
+            window.setInterval(updatePhoneClock, 1000);
+            updatePhoneClock();
+          })();
+        
     </script>
 
 @endsection
