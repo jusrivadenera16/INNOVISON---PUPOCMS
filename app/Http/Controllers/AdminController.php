@@ -1478,23 +1478,31 @@ class AdminController extends Controller
 
             try {
                 $localIdpUuid = strtolower($this->normalizeSyncIdentifier($user->student_id));
-                $lookupQueries = [];
+                $lookupRequests = [];
                 if ($localIdpUuid !== '') {
-                    $lookupQueries[] = trim((string) $user->student_id);
+                    $lookupRequests[] = [
+                        'type' => 'idp',
+                        'search' => trim((string) $user->student_id),
+                    ];
                 }
                 if ($email !== '') {
-                    $lookupQueries[] = $email;
+                    $lookupRequests[] = [
+                        'type' => 'email',
+                        'search' => $email,
+                    ];
                 }
-                $lookupQueries = array_values(array_unique($lookupQueries));
                 $studentsByKey = [];
                 $failedLookups = [];
 
-                foreach ($lookupQueries as $lookupSearch) {
-                    $lookupResult = $guisisApiService->listStudentsDetailed([
-                        'search' => $lookupSearch,
-                        'page' => 1,
-                        'page_size' => 25,
-                    ]);
+                foreach ($lookupRequests as $lookupRequest) {
+                    $lookupSearch = $lookupRequest['search'];
+                    $lookupResult = $lookupRequest['type'] === 'email'
+                        ? $guisisApiService->getStudentByEmailDetailed($lookupSearch)
+                        : $guisisApiService->listStudentsDetailed([
+                            'search' => $lookupSearch,
+                            'page' => 1,
+                            'page_size' => 25,
+                        ]);
 
                     if (!($lookupResult['ok'] ?? false)) {
                         $failedLookups[] = trim((string) ($lookupResult['message'] ?? 'GuiSIS request failed.'));
