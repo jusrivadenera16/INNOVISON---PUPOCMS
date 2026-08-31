@@ -3494,8 +3494,8 @@
   position: absolute;
   left: 50%;
   top: 52%;
-  width: 86px;
-  height: 86px;
+  width: 400px;
+  height: 400px;
   background: url('{{ asset("images/stagingphonebg.png") }}') center / contain no-repeat;
   opacity: 0.18;
   transform: translate(-50%, -50%);
