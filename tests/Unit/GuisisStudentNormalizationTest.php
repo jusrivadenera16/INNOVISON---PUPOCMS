@@ -37,4 +37,25 @@ class GuisisStudentNormalizationTest extends TestCase
         $this->assertSame('1', $result[0]['year_level']);
         $this->assertSame('1', $result[0]['section']);
     }
+
+    public function test_list_response_envelope_is_normalized_for_sync_matching(): void
+    {
+        $controller = new AdminController();
+        $method = new ReflectionMethod($controller, 'normalizeGuisisStudentResults');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($controller, [
+            'data' => [
+                'items' => [[
+                    'idpUuid' => '4784198f-a082-4244-9a7d-ecfaef346b93',
+                    'studentNumber' => '2026-00316-TG-1',
+                    'email' => 'sacramentofaith975@gmail.com',
+                ]],
+            ],
+        ], '4784198f-a082-4244-9a7d-ecfaef346b93');
+
+        $this->assertCount(1, $result);
+        $this->assertSame('2026-00316-TG-1', $result[0]['student_number']);
+        $this->assertSame('4784198f-a082-4244-9a7d-ecfaef346b93', $result[0]['idp_uuid']);
+    }
 }

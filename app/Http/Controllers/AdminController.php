@@ -1477,25 +1477,50 @@ class AdminController extends Controller
             }
 
             try {
-                $lookupResult = $guisisApiService->listStudentsDetailed([
-                    'search' => $email,
-                    'page' => 1,
-                    'page_size' => 25,
-                ]);
+                $localIdpUuid = strtolower($this->normalizeSyncIdentifier($user->student_id));
+                $lookupQueries = [];
+                if ($localIdpUuid !== '') {
+                    $lookupQueries[] = trim((string) $user->student_id);
+                }
+                if ($email !== '') {
+                    $lookupQueries[] = $email;
+                }
+                $lookupQueries = array_values(array_unique($lookupQueries));
+                $studentsByKey = [];
+                $failedLookups = [];
 
-                if (!($lookupResult['ok'] ?? false)) {
+                foreach ($lookupQueries as $lookupSearch) {
+                    $lookupResult = $guisisApiService->listStudentsDetailed([
+                        'search' => $lookupSearch,
+                        'page' => 1,
+                        'page_size' => 25,
+                    ]);
+
+                    if (!($lookupResult['ok'] ?? false)) {
+                        $failedLookups[] = trim((string) ($lookupResult['message'] ?? 'GuiSIS request failed.'));
+                        continue;
+                    }
+
+                    foreach ($this->normalizeGuisisStudentResults($lookupResult['data'] ?? null, $lookupSearch) as $studentResult) {
+                        $studentKey = strtolower(trim((string) ($studentResult['idp_uuid'] ?? '')));
+                        $studentKey = $studentKey !== '' ? 'idp:' . $studentKey : strtolower(trim((string) ($studentResult['email'] ?? '')));
+                        $studentKey = $studentKey !== '' ? $studentKey : 'record:' . sha1(json_encode($studentResult));
+                        $studentsByKey[$studentKey] = $studentResult;
+                    }
+                }
+
+                if ($studentsByKey === [] && $failedLookups !== []) {
                     $summary['failed']++;
                     $summary['details'][] = [
                         'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
                         'email' => $email,
                         'status' => 'failed',
-                        'message' => trim((string) ($lookupResult['message'] ?? 'GuiSIS request failed.')),
+                        'message' => $failedLookups[0] ?? 'GuiSIS request failed.',
                     ];
                     continue;
                 }
 
-                $students = $this->normalizeGuisisStudentResults($lookupResult['data'] ?? null, $email);
-                $localIdpUuid = strtolower($this->normalizeSyncIdentifier($user->student_id));
+                $students = array_values($studentsByKey);
                 $emailMatches = collect($students)->filter(function (array $student) use ($email): bool {
                     return strtolower(trim((string) ($student['email'] ?? ''))) === $email;
                 });
@@ -2304,7 +2329,18 @@ class AdminController extends Controller
             return [];
         }
 
-        $students = $payload['students'] ?? $payload['data']['students'] ?? $payload['data'] ?? [];
+        $students = $payload['students']
+            ?? $payload['data']['students']
+            ?? $payload['data']['items']
+            ?? $payload['data']['results']
+            ?? $payload['data']['records']
+            ?? $payload['data']['matches']
+            ?? $payload['items']
+            ?? $payload['results']
+            ?? $payload['records']
+            ?? $payload['matches']
+            ?? $payload['data']
+            ?? [];
         if ($students === [] && (isset($payload['studentNumber']) || isset($payload['email']) || isset($payload['idpUuid']))) {
             $students = $payload;
         }
