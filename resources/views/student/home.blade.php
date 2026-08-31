@@ -2232,8 +2232,8 @@
         background: rgba(62, 5, 20, .94);
         transform: translateX(-50%) rotate(45deg);
     }
-    .about-learn-more:hover .learn-more-bubble,
-    .about-learn-more:focus-within .learn-more-bubble {
+    .about-learn-more .btn-outline:hover + .learn-more-bubble,
+    .about-learn-more .btn-outline:focus-visible + .learn-more-bubble {
         opacity: 1;
         visibility: visible;
         transform: translate(-50%, 0) scale(1);
@@ -2821,7 +2821,7 @@
         justify-content: center;
         gap: 0;
         padding: 24px 22px;
-        border: 1px solid rgba(250, 204, 21, .38);
+        border: 1px solid rgba(128, 0, 32, .42);
         border-radius: 17px;
         background: transparent;
         text-align: center;
@@ -2833,9 +2833,9 @@
         user-select: none;
         transform-origin: center;
     }
-    #about .why-item:last-child { border-right: 1px solid rgba(250, 204, 21, .38); }
+    #about .why-item:last-child { border-right: 1px solid rgba(128, 0, 32, .42); }
     #about .why-item:hover {
-        border-color: rgba(128, 0, 32, .68);
+        border-color: rgba(250, 204, 21, .54);
         transform: scale(1.05);
     }
     #about .why-item:active {
@@ -3028,10 +3028,10 @@
     }
     html[data-theme="dark"] #about .why-item {
         background: transparent;
-        border-color: rgba(250, 204, 21, .32);
+        border-color: rgba(128, 0, 32, .52);
     }
     html[data-theme="dark"] #about .why-item:hover {
-        border-color: rgba(128, 0, 32, .68);
+        border-color: rgba(250, 204, 21, .54);
     }
     .PUPBG .hero-scroll,
     .PUPBG .hero-scroll:visited,
@@ -4471,6 +4471,24 @@
 
         initializeHomeScrollReveal();
 
+        const homeNavLink = document.querySelector('[data-student-nav="home"]');
+        const aboutNavLink = document.querySelector('[data-student-nav="about"]');
+        const aboutSection = document.getElementById('about');
+        if (homeNavLink && aboutNavLink && aboutSection) {
+          const syncHomeNavActiveState = function () {
+            const headerOffset = 130;
+            const aboutTop = aboutSection.getBoundingClientRect().top + window.scrollY - headerOffset;
+            const isAboutArea = window.scrollY >= aboutTop;
+
+            homeNavLink.classList.toggle('active', !isAboutArea);
+            aboutNavLink.classList.toggle('active', isAboutArea);
+          };
+
+          syncHomeNavActiveState();
+          window.addEventListener('scroll', syncHomeNavActiveState, { passive: true });
+          window.addEventListener('resize', syncHomeNavActiveState);
+        }
+
         if (heroRotatingWord) {
           const words = ['Care', 'Commitment', 'Continuity', 'Concern'];
           let activeWord = 0;
@@ -4774,12 +4792,6 @@
           startFeedbackTimer();
         }
 
-        const homeNavLink = document.querySelector('[data-student-nav="home"]');
-        const aboutNavLink = document.querySelector('[data-student-nav="about"]');
-        if (homeNavLink && aboutNavLink) {
-          homeNavLink.classList.remove('active');
-          aboutNavLink.classList.add('active');
-        }
       });
       <!-- ⚡ LIVE TICKER CLOCK ENGINE -->
           (() => {

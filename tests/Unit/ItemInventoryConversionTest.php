@@ -55,4 +55,38 @@ class ItemInventoryConversionTest extends TestCase
 
         $this->assertSame(0.033333, $item->convertDispensingQuantityToStockQuantity(1));
     }
+
+    public function test_fefo_sort_key_places_medicines_without_expiry_last(): void
+    {
+        $this->assertSame(0, Item::fefoSortKey('2026-09-15'));
+        $this->assertSame(1, Item::fefoSortKey(null));
+        $this->assertSame(1, Item::fefoSortKey(''));
+    }
+
+    public function test_fefo_rule_prioritizes_earliest_expiration_then_name(): void
+    {
+        $medicines = [
+            ['name' => 'Vitamin C', 'expiration_date' => null],
+            ['name' => 'Cetirizine', 'expiration_date' => '2026-10-10'],
+            ['name' => 'Biogesic', 'expiration_date' => '2026-09-01'],
+            ['name' => 'Amoxicillin', 'expiration_date' => '2026-09-01'],
+        ];
+
+        usort($medicines, function (array $first, array $second): int {
+            return [
+                Item::fefoSortKey($first['expiration_date']),
+                $first['expiration_date'] ?: '9999-12-31',
+                $first['name'],
+            ] <=> [
+                Item::fefoSortKey($second['expiration_date']),
+                $second['expiration_date'] ?: '9999-12-31',
+                $second['name'],
+            ];
+        });
+
+        $this->assertSame(
+            ['Amoxicillin', 'Biogesic', 'Cetirizine', 'Vitamin C'],
+            array_column($medicines, 'name')
+        );
+    }
 }

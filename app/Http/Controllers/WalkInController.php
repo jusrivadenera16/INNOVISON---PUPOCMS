@@ -1387,8 +1387,9 @@ class WalkInController extends Controller
 
         // Kukuha lang tayo ng data kung ang source link ay 'online'
         if ($user_source === 'online') {
+            $consultableAppointmentStatuses = ['Approved', 'Scheduled', 'Rescheduled'];
             $latestAppointment = Appointment::query()
-                ->where('status', 'Approved')
+                ->whereIn('status', $consultableAppointmentStatuses)
                 ->where(function ($query) use ($student) {
                     $query->where('student_id', $student->student_id);
 
@@ -1409,10 +1410,9 @@ class WalkInController extends Controller
             }
         }
 
-        $items = \App\Models\Item::where('category', 'Medicine')
-                                 ->where('quantity', '>', 0)
-                                 ->orderBy('name')
-                                 ->get();
+        $items = Item::query()
+            ->availableMedicinesFefo()
+            ->get();
 
         $conditions = \App\Models\MedicalConditions::with('category')->get();
         $studentDocuments = $this->healthProfileDocuments($request, $student->healthProfile);
@@ -2117,17 +2117,18 @@ PROMPT;
             $isOnlineSource = $requestedSource === 'online';
             $finalSource = 'walkin';
             $patientType = Appointment::normalizeUserType($student->user_role ?? $student->user_type);
+            $consultableAppointmentStatuses = ['Approved', 'Scheduled', 'Rescheduled'];
             $completedAppointment = null;
 
             if ($isOnlineSource) {
                 $existingAppt = Appointment::where('student_id', $student->student_id)
-                    ->where('status', 'Approved')
+                    ->whereIn('status', $consultableAppointmentStatuses)
                     ->whereDate('date', now()->format('Y-m-d'))
                     ->first();
 
                 if (!$existingAppt && !empty($student->student_number)) {
                     $existingAppt = Appointment::where('student_number', $student->student_number)
-                        ->where('status', 'Approved')
+                        ->whereIn('status', $consultableAppointmentStatuses)
                         ->whereDate('date', now()->format('Y-m-d'))
                         ->first();
                 }
@@ -2182,8 +2183,10 @@ PROMPT;
 
                     $stockDeduction = $item->convertDispensingQuantityToStockQuantity($issuedQuantity);
                     $stockBefore = (float) $item->quantity;
-                    $item->decrement('quantity', $stockDeduction);
-                    $item->refresh();
+                    $stockAfter = max(0, $stockBefore - $stockDeduction);
+                    $item->quantity = $stockAfter;
+                    $item->consumed = max(0, (float) ($item->consumed ?? 0)) + $stockDeduction;
+                    $item->save();
 
                     InventoryMovement::create([
                         'item_id' => $item->id,
@@ -2191,7 +2194,7 @@ PROMPT;
                         'type' => 'consumed',
                         'quantity' => -1 * $stockDeduction,
                         'stock_before' => $stockBefore,
-                        'stock_after' => (float) $item->quantity,
+                        'stock_after' => $stockAfter,
                         'unit' => $item->unit ?: 'pcs',
                         'batch_number' => $item->batch_number,
                         'supplier_source' => $item->supplier_source,

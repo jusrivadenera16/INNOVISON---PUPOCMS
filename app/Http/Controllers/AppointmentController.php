@@ -2843,6 +2843,7 @@ public function account(Request $request)
     $accountProfileData['home_address'] = trim((string) optional($profileSource)->home_address) ?: ($accountProfileData['home_address'] ?? '');
     $accountProfileData['guardian_name'] = trim((string) (optional($profileSource)->guardian_name ?? optional($profileSource)->emergency_contact_person)) ?: ($accountProfileData['guardian_name'] ?? '');
     $accountProfileData['cellphone'] = trim((string) (optional($profileSource)->cellphone ?? optional($profileSource)->emergency_contact_no)) ?: ($accountProfileData['cellphone'] ?? '');
+    $accountProfileData['contact_number'] = trim((string) ($user->contact_no ?? '')) ?: ($accountProfileData['contact_number'] ?? '');
 
     $guisisAccountData = $this->buildGuisisAccountData($user);
     if (!$studentUsesEmployeeHealthForm && ($guisisAccountData['available'] ?? false)) {
@@ -2857,7 +2858,6 @@ public function account(Request $request)
             'course_college',
             'year',
             'section',
-            'contact_number',
         ] as $key) {
             // GUISIS is authoritative for account information. Assign blank
             // values too, so stale clinic-form data is not shown as GUISIS data.
@@ -3817,10 +3817,15 @@ public function updateContact(Request $request)
         return redirect()->back()->with('error', 'User session not found.');
     }
 
-    // 2. GUISIS owns student profile details. Clinic profile edits only allow height and weight.
+    // 2. Save only clinic-controlled personal information from the student profile page.
     $validated = $request->validate([
-        'height'     => ['nullable', 'string', 'max:20', 'regex:/^\s*\d+(\.\d+)?(\s*ft)?\s*$/i'],
-        'weight'     => ['nullable', 'string', 'max:20', 'regex:/^\s*\d+(\.\d+)?(\s*lbs?)?\s*$/i'],
+        'contact_no' => ['nullable', 'string', 'max:50'],
+        'address' => ['nullable', 'string', 'max:500'],
+        'emergency_contact_person' => ['nullable', 'string', 'max:255'],
+        'emergency_contact_no' => ['nullable', 'string', 'max:50'],
+        'civil_status' => ['nullable', 'string', 'max:80'],
+        'height' => ['nullable', 'string', 'max:20', 'regex:/^\s*\d+(\.\d+)?(\s*ft)?\s*$/i'],
+        'weight' => ['nullable', 'string', 'max:20', 'regex:/^\s*\d+(\.\d+)?(\s*lbs?)?\s*$/i'],
     ], [
         'height.regex' => 'Height must be a valid number (optional unit: ft).',
         'weight.regex' => 'Weight must be a valid number (optional unit: lbs).',
@@ -3829,20 +3834,87 @@ public function updateContact(Request $request)
     $heightNumeric = $this->extractMeasurementNumber($validated['height'] ?? null);
     $weightNumeric = $this->extractMeasurementNumber($validated['weight'] ?? null);
 
-    // 3. Save only clinic-controlled measurements.
+    $clean = fn (string $key): ?string => array_key_exists($key, $validated)
+        ? (trim((string) $validated[$key]) !== '' ? trim((string) $validated[$key]) : null)
+        : null;
+    $hasField = fn (string $key): bool => $request->has($key);
+
+    // 3. Keep the student account table in sync for fields it already owns.
+    if ($hasField('contact_no')) {
+        $user->contact_no = $clean('contact_no');
+    }
     $user->height = $heightNumeric ?? $user->height;
     $user->weight = $weightNumeric ?? $user->weight;
     $user->save();
 
-    $healthProfile = $user->healthProfile()->first();
-    if ($healthProfile) {
-        if ($heightNumeric !== null) {
-            $healthProfile->height = $heightNumeric;
+    if ($this->shouldUseEmployeeHealthForm($user)) {
+        $employeeProfile = $user->employeeHealthProfile()->first();
+        if ($employeeProfile) {
+            if ($hasField('contact_no')) {
+                $employeeProfile->contact_no = $clean('contact_no');
+            }
+            if ($hasField('address')) {
+                $employeeProfile->home_address = $clean('address');
+            }
+            if ($hasField('emergency_contact_person')) {
+                $employeeProfile->emergency_contact_person = $clean('emergency_contact_person');
+            }
+            if ($hasField('emergency_contact_no')) {
+                $employeeProfile->emergency_contact_no = $clean('emergency_contact_no');
+            }
+            if ($hasField('civil_status')) {
+                $employeeProfile->civil_status = $clean('civil_status');
+            }
+            if ($heightNumeric !== null) {
+                $employeeProfile->height = $heightNumeric;
+            }
+            if ($weightNumeric !== null) {
+                $employeeProfile->weight = $weightNumeric;
+            }
+            $employeeProfile->save();
         }
-        if ($weightNumeric !== null) {
-            $healthProfile->weight = $weightNumeric;
+    } else {
+        $healthProfile = $user->healthProfile()->first();
+        if ($healthProfile) {
+            if ($hasField('address')) {
+                $healthProfile->home_address = $clean('address');
+            }
+            if ($hasField('emergency_contact_person')) {
+                $healthProfile->guardian_name = $clean('emergency_contact_person');
+            }
+            if ($hasField('emergency_contact_no')) {
+                $healthProfile->cellphone = $clean('emergency_contact_no');
+            }
+            if ($hasField('civil_status')) {
+                $healthProfile->civil_status = $clean('civil_status');
+            }
+            if ($heightNumeric !== null) {
+                $healthProfile->height = $heightNumeric;
+            }
+            if ($weightNumeric !== null) {
+                $healthProfile->weight = $weightNumeric;
+            }
+            $healthProfile->save();
         }
-        $healthProfile->save();
+    }
+
+    $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
+    if ($linkedAdminProfile) {
+        $adminUpdates = [
+            'contact_no' => $clean('contact_no'),
+            'address' => $clean('address'),
+            'emergency_contact_person' => $clean('emergency_contact_person'),
+            'emergency_contact_no' => $clean('emergency_contact_no'),
+            'civil_status' => $clean('civil_status'),
+        ];
+
+        foreach ($adminUpdates as $column => $value) {
+            if ($hasField($column) && Admin::hasColumn($column)) {
+                $linkedAdminProfile->{$column} = $value;
+            }
+        }
+
+        $linkedAdminProfile->save();
     }
 
     // 5. SYSTEM LOG ---
@@ -3850,7 +3922,7 @@ public function updateContact(Request $request)
         'user_id'     => $user->id,
         'user_name'   => $user->name,
         'action'      => 'Profile Update',
-        'description' => 'Updated clinic profile measurements: height and weight.',
+        'description' => 'Updated clinic personal information fields.',
         'ip_address'  => $request->ip(),
         'user_agent'  => $request->userAgent(),
     ]);

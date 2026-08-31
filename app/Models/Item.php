@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -56,6 +57,26 @@ class Item extends Model
     public function movements(): HasMany
     {
         return $this->hasMany(InventoryMovement::class)->latest();
+    }
+
+    public function scopeAvailableMedicinesFefo(Builder $query): Builder
+    {
+        return $query
+            ->where('category', 'Medicine')
+            ->where('quantity', '>', 0)
+            ->where(function (Builder $query): void {
+                $query
+                    ->whereNull('expiration_date')
+                    ->orWhereDate('expiration_date', '>=', now()->toDateString());
+            })
+            ->orderByRaw('CASE WHEN expiration_date IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('expiration_date')
+            ->orderBy('name');
+    }
+
+    public static function fefoSortKey(?string $expirationDate): int
+    {
+        return trim((string) $expirationDate) === '' ? 1 : 0;
     }
 
     public function normalizedUnit(): string
