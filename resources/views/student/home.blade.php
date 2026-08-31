@@ -3904,7 +3904,7 @@
                 <!-- System Loading Layer -->
                 <div class="splash-screen">
                   <div class="splash-logo">
-                    <img src="{{ asset('images/stagingphonebg.png') }}" alt="PUP Taguig Clinic logo">
+                    <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="PUP Taguig Clinic logo">
                     <span>CareSync</span>
                   </div>
                 </div>
@@ -3944,7 +3944,7 @@
                 
                 <!-- 🌟 LARAVEL DYNAMIC ROUTE ANCHORS (Ginamit ang bago mong SVG Icons) -->
                 <div class="phone-unlocked-logo" aria-hidden="true">
-                  <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="">
+                  <img src="{{ asset('images/stagingphonebg.png') }}" alt="">
                 </div>
 
                 <a href="{{ url('/student/booking') }}" class="btn-action btn-book">
