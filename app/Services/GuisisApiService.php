@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -101,7 +102,15 @@ class GuisisApiService
         try {
             $tokenMeta = $this->accessToken();
             $url = $this->baseUrl . $path;
-            $response = Http::timeout($this->timeout)
+            $response = Http::retry(2, 250, static function ($exception): bool {
+                    if ($exception instanceof ConnectionException) {
+                        return true;
+                    }
+
+                    return $exception instanceof RequestException
+                        && (($exception->response?->status() ?? 0) === 429 || ($exception->response?->status() ?? 0) >= 500);
+                })
+                ->timeout($this->timeout)
                 ->acceptJson()
                 ->withHeaders(['Content-Type' => 'application/json'])
                 ->withToken($tokenMeta['token'])

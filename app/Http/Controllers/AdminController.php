@@ -1030,6 +1030,7 @@ class AdminController extends Controller
         $apiResponseMeta = null;
         $errorMessage = null;
         $errorDetails = null;
+        $studentNumberSyncPendingCount = $this->studentNumberSyncCandidateQuery()->count();
 
         $canRunWithoutSearch = in_array($source, ['admin_api', 'admin_options', 'database_info', 'guisis_profiles'], true);
 
@@ -1105,6 +1106,7 @@ class AdminController extends Controller
                             'apiResponseMeta' => $apiResponseMeta,
                             'errorMessage' => $errorMessage,
                             'errorDetails' => $errorDetails,
+                            'studentNumberSyncPendingCount' => $studentNumberSyncPendingCount,
                         ]);
                     }
 
@@ -1142,6 +1144,7 @@ class AdminController extends Controller
                             'apiResponseMeta' => $apiResponseMeta,
                             'errorMessage' => $errorMessage,
                             'errorDetails' => $errorDetails,
+                            'studentNumberSyncPendingCount' => $studentNumberSyncPendingCount,
                         ]);
                     }
 
@@ -1394,7 +1397,367 @@ class AdminController extends Controller
             'apiResponseMeta' => $apiResponseMeta,
             'errorMessage' => $errorMessage,
             'errorDetails' => $errorDetails,
+            'studentNumberSyncPendingCount' => $studentNumberSyncPendingCount,
         ]);
+    }
+
+    public function syncMissingStudentNumbers(Request $request, GuisisApiService $guisisApiService)
+    {
+        $admin = $this->currentAdminUser();
+        abort_unless($admin instanceof User && $this->canAccessApiTesting($admin), 403);
+
+        $mode = $request->input('mode') === 'apply' ? 'apply' : 'preview';
+        $batchSize = min(max((int) $request->input('batch_size', 25), 1), 25);
+        $syncCursorKey = 'guisis_student_number_sync_cursor';
+        $syncCursor = max(0, (int) SystemSetting::getValue($syncCursorKey, 0));
+        $candidates = $this->studentNumberSyncCandidateQuery()
+            ->with('healthProfile')
+            ->where('users.id', '>', $syncCursor)
+            ->orderBy('id')
+            ->limit($batchSize)
+            ->get();
+
+        $summary = [
+            'mode' => $mode,
+            'batch_size' => $batchSize,
+            'candidates' => $candidates->count(),
+            'synced' => 0,
+            'already_complete' => 0,
+            'no_match' => 0,
+            'missing_email' => 0,
+            'failed' => 0,
+            'manual_review' => 0,
+            'appointment_records_updated' => 0,
+            'cycle_completed' => false,
+            'details' => [],
+        ];
+
+        if ($candidates->isEmpty() && $syncCursor > 0) {
+            SystemSetting::putValue($syncCursorKey, '0');
+            $summary['cycle_completed'] = true;
+            $summary['remaining'] = $this->studentNumberSyncCandidateQuery()->count();
+            $summary['details'][] = [
+                'name' => 'Sync cycle complete',
+                'email' => '',
+                'status' => 'cycle_completed',
+                'message' => 'The previous batch cycle reached the end of the candidate list. The next sync starts a new audit cycle.',
+            ];
+
+            return redirect()
+                ->route('admin.api-testing')
+                ->with('student_number_sync_summary', $summary);
+        }
+
+        foreach ($candidates as $user) {
+            $email = strtolower(trim((string) $user->email));
+            if ($email === '') {
+                $summary['missing_email']++;
+                $summary['details'][] = [
+                    'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
+                    'email' => '',
+                    'status' => 'missing_email',
+                    'message' => 'No local email address is available for GuiSIS lookup.',
+                ];
+                continue;
+            }
+
+            $duplicateLocalEmailCount = User::query()
+                ->whereRaw('LOWER(email) = ?', [$email])
+                ->where('id', '!=', $user->id)
+                ->count();
+            if ($duplicateLocalEmailCount > 0) {
+                $summary['manual_review']++;
+                $summary['details'][] = [
+                    'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
+                    'email' => $email,
+                    'status' => 'manual_review',
+                    'message' => 'The email address is used by more than one local user, so this record was not matched automatically.',
+                ];
+                continue;
+            }
+
+            try {
+                $lookupResult = $guisisApiService->listStudentsDetailed([
+                    'search' => $email,
+                    'page' => 1,
+                    'page_size' => 25,
+                ]);
+
+                if (!($lookupResult['ok'] ?? false)) {
+                    $summary['failed']++;
+                    $summary['details'][] = [
+                        'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
+                        'email' => $email,
+                        'status' => 'failed',
+                        'message' => trim((string) ($lookupResult['message'] ?? 'GuiSIS request failed.')),
+                    ];
+                    continue;
+                }
+
+                $students = $this->normalizeGuisisStudentResults($lookupResult['data'] ?? null, $email);
+                $localIdpUuid = strtolower($this->normalizeSyncIdentifier($user->student_id));
+                $emailMatches = collect($students)->filter(function (array $student) use ($email): bool {
+                    return strtolower(trim((string) ($student['email'] ?? ''))) === $email;
+                });
+                $idpMatches = $localIdpUuid !== ''
+                    ? collect($students)->filter(function (array $student) use ($localIdpUuid): bool {
+                        return strtolower(trim((string) ($student['idp_uuid'] ?? ''))) === $localIdpUuid;
+                    })
+                    : collect();
+                $emailMatch = $emailMatches->count() === 1 ? $emailMatches->first() : null;
+                $idpMatch = $idpMatches->count() === 1 ? $idpMatches->first() : null;
+
+                if ($emailMatches->count() > 1 || $idpMatches->count() > 1) {
+                    $summary['manual_review']++;
+                    $summary['details'][] = [
+                        'name' => $emailMatch['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'status' => 'manual_review',
+                        'message' => 'GuiSIS returned multiple possible matches for this record.',
+                    ];
+                    continue;
+                }
+
+                if ($localIdpUuid !== '' && !$idpMatch && $emailMatch) {
+                    $summary['manual_review']++;
+                    $summary['details'][] = [
+                        'name' => $emailMatch['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'status' => 'manual_review',
+                        'message' => trim((string) ($emailMatch['idp_uuid'] ?? '')) === ''
+                            ? 'The local IDP UUID could not be verified against the GuiSIS email match.'
+                            : 'The local IDP UUID does not match the GuiSIS record found by email.',
+                    ];
+                    continue;
+                }
+
+                $student = $localIdpUuid !== '' ? $idpMatch : $emailMatch;
+                if (!$student) {
+                    $summary['no_match']++;
+                    $summary['details'][] = [
+                        'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
+                        'email' => $email,
+                        'status' => 'no_match',
+                        'message' => 'No exact GuiSIS email or IDP UUID match was found.',
+                    ];
+                    continue;
+                }
+
+                $studentNumber = trim((string) ($student['student_number'] ?? ''));
+                $idpUuid = $this->normalizeSyncIdentifier($student['idp_uuid'] ?? '');
+                $yearLevel = trim((string) ($student['year_level'] ?? ''));
+                $section = trim((string) ($student['section'] ?? ''));
+                $studentNumber = strtoupper($studentNumber) === 'N/A' ? '' : $studentNumber;
+                $yearLevel = strtoupper($yearLevel) === 'N/A' ? '' : $yearLevel;
+                $section = strtoupper($section) === 'N/A' ? '' : $section;
+
+                if (!$this->isOfficialStudentNumber($studentNumber)) {
+                    $summary['no_match']++;
+                    $summary['details'][] = [
+                        'name' => $student['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'status' => 'no_student_number',
+                        'message' => 'GuiSIS matched the student but returned no student number.',
+                    ];
+                    continue;
+                }
+
+                $profile = $user->healthProfile;
+                $localUserStudentNumber = trim((string) ($user->student_number ?? ''));
+                $localProfileStudentNumber = trim((string) optional($profile)->student_number);
+                $localProfileIdpUuid = strtolower($this->normalizeSyncIdentifier(optional($profile)->student_id));
+                if ($idpUuid !== '' && $localProfileIdpUuid !== '' && $localProfileIdpUuid !== $idpUuid) {
+                    $summary['manual_review']++;
+                    $summary['details'][] = [
+                        'name' => $student['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'status' => 'manual_review',
+                        'message' => 'A different IDP UUID already exists in the linked health profile.',
+                    ];
+                    continue;
+                }
+                if (($this->isOfficialStudentNumber($localUserStudentNumber) && strtoupper($localUserStudentNumber) !== strtoupper($studentNumber))
+                    || ($this->isOfficialStudentNumber($localProfileStudentNumber) && strtoupper($localProfileStudentNumber) !== strtoupper($studentNumber))) {
+                    $summary['manual_review']++;
+                    $summary['details'][] = [
+                        'name' => $student['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'status' => 'manual_review',
+                        'message' => 'A different official student number already exists locally.',
+                    ];
+                    continue;
+                }
+
+                $changes = [
+                    'student_number' => !$this->isOfficialStudentNumber($localUserStudentNumber) ? $studentNumber : null,
+                    'student_id' => $idpUuid !== '' && ($user->student_id === null || trim((string) $user->student_id) === '') ? $idpUuid : null,
+                    'year' => $yearLevel !== '' && trim((string) $user->year) !== $yearLevel ? $yearLevel : null,
+                    'section' => $section !== '' && trim((string) $user->section) !== $section ? $section : null,
+                    'health_profile_student_id' => $profile && $idpUuid !== '' && $localProfileIdpUuid === '' ? $idpUuid : null,
+                    'health_profile_student_number' => $profile && !$this->isOfficialStudentNumber($localProfileStudentNumber) ? $studentNumber : null,
+                ];
+                $hasChanges = collect($changes)->contains(static fn ($value): bool => $value !== null);
+
+                if (!$hasChanges) {
+                    $summary['already_complete']++;
+                    $summary['details'][] = [
+                        'name' => $student['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'status' => 'already_complete',
+                        'message' => 'Local identity and academic fields already match the available data.',
+                    ];
+                    continue;
+                }
+
+                if ($mode === 'preview') {
+                    $summary['synced']++;
+                    $summary['details'][] = [
+                        'name' => $student['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'status' => 'ready',
+                        'message' => 'Ready to sync: ' . implode(', ', array_keys(array_filter($changes, static fn ($value): bool => $value !== null))),
+                    ];
+                    continue;
+                }
+
+                $appointmentsUpdated = 0;
+                DB::transaction(function () use ($user, $profile, $changes, $studentNumber, $idpUuid, &$appointmentsUpdated): void {
+                    if ($changes['student_number'] !== null) {
+                        $user->student_number = $changes['student_number'];
+                    }
+                    if ($changes['student_id'] !== null) {
+                        $user->student_id = $changes['student_id'];
+                    }
+                    if ($changes['year'] !== null) {
+                        $user->year = $changes['year'];
+                    }
+                    if ($changes['section'] !== null) {
+                        $user->section = $changes['section'];
+                    }
+                    $user->save();
+
+                    if ($profile && $changes['health_profile_student_number'] !== null) {
+                        $profile->student_number = $studentNumber;
+                    }
+                    if ($profile && $changes['health_profile_student_id'] !== null) {
+                        $profile->student_id = $changes['health_profile_student_id'];
+                    }
+                    if ($profile && ($changes['health_profile_student_number'] !== null || $changes['health_profile_student_id'] !== null)) {
+                        $profile->save();
+                    }
+
+                    if ($changes['student_number'] !== null) {
+                        $appointmentsUpdated += Appointment::query()
+                        ->where('user_id', $user->id)
+                        ->where(function ($query): void {
+                            $query->whereNull('student_number')
+                                ->orWhere('student_number', '')
+                                ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
+                                ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
+                                ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
+                                ->orWhereRaw('UPPER(student_number) IN (?, ?, ?, ?)', ['N/A', 'NA', 'NULL', 'UNKNOWN']);
+                        })
+                        ->update(['student_number' => $studentNumber]);
+                    }
+
+                    if ($idpUuid !== '') {
+                        $appointmentsUpdated += Appointment::query()
+                            ->where('user_id', $user->id)
+                            ->where(function ($query) use ($idpUuid): void {
+                                $query->whereNull('student_id')->orWhere('student_id', '')->orWhere('student_id', '!=', $idpUuid);
+                            })
+                            ->update(['student_id' => $idpUuid]);
+                    }
+                });
+
+                $summary['synced']++;
+                $summary['appointment_records_updated'] += $appointmentsUpdated;
+                $summary['details'][] = [
+                    'name' => $student['name'] ?? 'Unnamed user',
+                    'email' => $email,
+                    'status' => 'synced',
+                    'message' => 'Student number and available academic fields were synchronized.',
+                ];
+            } catch (\Throwable $exception) {
+                \Log::warning('GuiSIS student number batch sync failed', [
+                    'user_id' => $user->id,
+                    'email' => $email,
+                    'error' => $exception->getMessage(),
+                ]);
+                $summary['failed']++;
+                $summary['details'][] = [
+                    'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
+                    'email' => $email,
+                    'status' => 'failed',
+                    'message' => 'Unexpected error while processing this record.',
+                ];
+            }
+        }
+
+        if ($mode === 'apply' && $candidates->isNotEmpty()) {
+            SystemSetting::putValue($syncCursorKey, (string) $candidates->max('id'));
+        }
+
+        $summary['remaining'] = $this->studentNumberSyncCandidateQuery()->count();
+
+        return redirect()
+            ->route('admin.api-testing')
+            ->with('student_number_sync_summary', $summary);
+    }
+
+    private function studentNumberSyncCandidateQuery()
+    {
+        return User::query()
+            ->where(function ($query): void {
+                $query->whereRaw("LOWER(COALESCE(idp_role, '')) = ?", ['student'])
+                    ->orWhereRaw("LOWER(COALESCE(user_type, '')) = ?", ['student'])
+                    ->orWhere(function ($fallbackQuery): void {
+                        $fallbackQuery->where(function ($typeQuery): void {
+                            $typeQuery->whereNull('user_type')->orWhere('user_type', '');
+                        })->whereRaw("LOWER(COALESCE(user_role, '')) = ?", ['student']);
+                    });
+            })
+            ->whereHas('healthProfile')
+            ->where(function ($query): void {
+                $query->whereNull('student_number')
+                    ->orWhere('student_number', '')
+                    ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
+                    ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
+                    ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
+                    ->orWhereRaw('UPPER(student_number) IN (?, ?, ?, ?)', ['N/A', 'NA', 'NULL', 'UNKNOWN'])
+                    ->orWhereNull('year')
+                    ->orWhere('year', '')
+                    ->orWhereNull('section')
+                    ->orWhere('section', '')
+                    ->orWhereHas('healthProfile', function ($profileQuery): void {
+                        $profileQuery->whereNull('student_number')
+                            ->orWhere('student_number', '')
+                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
+                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
+                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
+                            ->orWhereRaw('UPPER(student_number) IN (?, ?, ?, ?)', ['N/A', 'NA', 'NULL', 'UNKNOWN']);
+                    });
+            });
+    }
+
+    private function isOfficialStudentNumber(?string $studentNumber): bool
+    {
+        $studentNumber = strtoupper(trim((string) $studentNumber));
+
+        return $studentNumber !== ''
+            && !str_starts_with($studentNumber, 'CLN-')
+            && !str_starts_with($studentNumber, 'LOC-')
+            && !str_starts_with($studentNumber, 'TEST-LOCAL')
+            && !in_array($studentNumber, ['N/A', 'NA', 'NULL', 'NONE', 'UNKNOWN'], true)
+            && !preg_match('/^[0-9A-F]{8}-[0-9A-F]{4}-[1-5][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i', $studentNumber);
+    }
+
+    private function normalizeSyncIdentifier($value): string
+    {
+        $value = trim((string) $value);
+        $normalized = strtoupper($value);
+
+        return in_array($normalized, ['', 'N/A', 'NA', 'NULL', 'NONE', 'UNKNOWN'], true) ? '' : $value;
     }
 
     public function updateApiTestingDatabaseRecord(Request $request, string $table, int $id)
@@ -1854,10 +2217,11 @@ class AdminController extends Controller
             $profileAddress = isset($profile['address']) && is_array($profile['address'])
                 ? $profile['address']
                 : [];
-            $firstName = trim((string) ($item['first_name'] ?? $itemFields['first_name'] ?? $profile['first_name'] ?? ''));
-            $middleName = trim((string) ($item['middle_name'] ?? $itemFields['middle_name'] ?? $profile['middle_name'] ?? ''));
-            $lastName = trim((string) ($item['last_name'] ?? $itemFields['last_name'] ?? $profile['last_name'] ?? ''));
-            $suffixName = trim((string) ($item['suffix_name'] ?? $itemFields['suffix_name'] ?? $profile['suffix_name'] ?? ''));
+            $program = isset($item['program']) && is_array($item['program']) ? $item['program'] : [];
+            $firstName = trim((string) ($item['first_name'] ?? $item['firstName'] ?? $itemFields['first_name'] ?? $itemFields['firstName'] ?? $profile['first_name'] ?? $profile['firstName'] ?? ''));
+            $middleName = trim((string) ($item['middle_name'] ?? $item['middleName'] ?? $itemFields['middle_name'] ?? $itemFields['middleName'] ?? $profile['middle_name'] ?? $profile['middleName'] ?? ''));
+            $lastName = trim((string) ($item['last_name'] ?? $item['lastName'] ?? $itemFields['last_name'] ?? $itemFields['lastName'] ?? $profile['last_name'] ?? $profile['lastName'] ?? ''));
+            $suffixName = trim((string) ($item['suffix_name'] ?? $item['suffixName'] ?? $itemFields['suffix_name'] ?? $itemFields['suffixName'] ?? $profile['suffix_name'] ?? $profile['suffixName'] ?? ''));
             $structuredName = trim(implode(' ', array_filter([
                 $firstName,
                 $middleName,
@@ -1866,15 +2230,27 @@ class AdminController extends Controller
             ])));
             $name = $structuredName !== ''
                 ? $structuredName
-                : trim((string) ($item['name'] ?? ''));
-            $email = trim((string) ($item['email'] ?? $item['email_address'] ?? ''));
-            $identifier = trim((string) ($item['faculty_code'] ?? $item['faculty_id'] ?? $item['id'] ?? $item['admin_id'] ?? $item['student_number'] ?? $item['student_id'] ?? $item['employee_id'] ?? ''));
+                : trim((string) ($item['name'] ?? $item['fullName'] ?? ''));
+            $email = trim((string) ($item['email'] ?? $item['email_address'] ?? $item['emailAddress'] ?? ''));
+            $studentNumber = trim((string) ($item['student_number'] ?? $item['studentNumber'] ?? $itemFields['student_number'] ?? $itemFields['studentNumber'] ?? ''));
+            $idpUuid = trim((string) ($item['idp_uuid'] ?? $item['idpUuid'] ?? $itemFields['idp_uuid'] ?? $itemFields['idpUuid'] ?? ''));
+            $identifier = trim((string) ($item['faculty_code'] ?? $item['faculty_id'] ?? $item['admin_id'] ?? ''));
+            if ($identifier === '') {
+                $identifier = $studentNumber !== ''
+                    ? $studentNumber
+                    : trim((string) ($item['student_id'] ?? $item['employee_id'] ?? $item['id'] ?? ''));
+            }
             $birthday = trim((string) ($item['birthday'] ?? $profile['birthday'] ?? $item['dob'] ?? $item['date_of_birth'] ?? ''));
             $role = trim((string) ($item['faculty_type'] ?? $item['role'] ?? $item['access_level'] ?? $item['designation'] ?? ''));
             $office = trim((string) ($item['office'] ?? $item['offices'] ?? $item['department'] ?? ''));
             $contactNumber = trim((string) ($item['contact_no'] ?? $item['contact_number'] ?? $item['phone'] ?? $item['mobile'] ?? ''));
             $address = trim((string) ($item['address'] ?? $item['home_address'] ?? $this->formatApiTestingAddress($profileAddress)));
             $status = trim((string) ($item['status'] ?? ($item['is_active'] ?? '')));
+            $courseCode = trim((string) ($item['course_code'] ?? $item['courseCode'] ?? $program['code'] ?? ''));
+            $courseName = trim((string) ($item['course_name'] ?? $item['courseName'] ?? $program['name'] ?? ''));
+            $yearLevel = trim((string) ($item['year_level'] ?? $item['yearLevel'] ?? ''));
+            $section = trim((string) ($item['section'] ?? $item['section_name'] ?? $item['sectionName'] ?? ''));
+            $gender = trim((string) ($item['gender'] ?? $item['sex'] ?? $item['genderName'] ?? $profile['gender'] ?? ''));
 
             $haystack = strtolower(implode(' ', array_filter([
                 $name,
@@ -1889,6 +2265,8 @@ class AdminController extends Controller
 
             $normalized[] = [
                 'identifier' => $identifier !== '' ? $identifier : 'N/A',
+                'student_number' => $studentNumber !== '' ? $studentNumber : 'N/A',
+                'idp_uuid' => $idpUuid !== '' ? $idpUuid : 'N/A',
                 'admin_id' => trim((string) ($item['admin_id'] ?? $item['id'] ?? '')) ?: 'N/A',
                 'name' => $name !== '' ? $name : 'N/A',
                 'first_name' => $firstName !== '' ? $firstName : 'N/A',
@@ -1898,7 +2276,11 @@ class AdminController extends Controller
                 'email' => $email !== '' ? $email : 'N/A',
                 'birthday' => $birthday !== '' ? $birthday : 'N/A',
                 'age' => trim((string) ($item['age'] ?? '')) ?: 'N/A',
-                'gender' => trim((string) ($item['gender'] ?? $profile['gender'] ?? '')) ?: 'N/A',
+                'gender' => $gender !== '' ? $gender : 'N/A',
+                'course' => $courseName !== '' ? $courseName : ($courseCode !== '' ? $courseCode : 'N/A'),
+                'course_code' => $courseCode !== '' ? $courseCode : 'N/A',
+                'year_level' => $yearLevel !== '' ? $yearLevel : 'N/A',
+                'section' => $section !== '' ? $section : 'N/A',
                 'civil_status' => trim((string) ($item['civil_status'] ?? '')) ?: 'N/A',
                 'role' => $role !== '' ? $role : 'N/A',
                 'access_level' => trim((string) ($item['access_level'] ?? $item['role'] ?? '')) ?: ($role !== '' ? $role : 'N/A'),
@@ -1923,6 +2305,9 @@ class AdminController extends Controller
         }
 
         $students = $payload['students'] ?? $payload['data']['students'] ?? $payload['data'] ?? [];
+        if ($students === [] && (isset($payload['studentNumber']) || isset($payload['email']) || isset($payload['idpUuid']))) {
+            $students = $payload;
+        }
         if (!is_array($students)) {
             return [];
         }

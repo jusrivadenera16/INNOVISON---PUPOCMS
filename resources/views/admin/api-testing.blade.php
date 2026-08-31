@@ -10,6 +10,208 @@
         gap: 20px;
     }
 
+    .guisis-sync-card {
+        border-color: rgba(127, 29, 45, 0.18);
+        background: linear-gradient(135deg, rgba(255, 250, 247, 0.98), rgba(255, 244, 239, 0.98));
+    }
+
+    html[data-theme="dark"] .guisis-sync-card {
+        border-color: rgba(245, 190, 83, 0.22);
+        background: linear-gradient(135deg, rgba(49, 23, 31, 0.98), rgba(35, 17, 25, 0.98));
+    }
+
+    .guisis-sync-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+    }
+
+    .guisis-sync-head h3 {
+        margin: 0 0 6px;
+        color: #7f1d2d;
+        font-size: 19px;
+        font-weight: 900;
+    }
+
+    html[data-theme="dark"] .guisis-sync-head h3 {
+        color: #f5d27a;
+    }
+
+    .guisis-sync-head p,
+    .guisis-sync-note {
+        margin: 0;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.55;
+    }
+
+    html[data-theme="dark"] .guisis-sync-head p,
+    html[data-theme="dark"] .guisis-sync-note {
+        color: #cbd5e1;
+    }
+
+    .guisis-sync-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .guisis-sync-actions form {
+        margin: 0;
+    }
+
+    .guisis-sync-button {
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 9px 14px;
+        border: 1px solid rgba(127, 29, 45, 0.22);
+        border-radius: 9px;
+        background: transparent;
+        color: #7f1d2d;
+        font-size: 12px;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+    .guisis-sync-button:hover,
+    .guisis-sync-button:focus-visible {
+        border-color: #7f1d2d;
+        background: rgba(127, 29, 45, 0.07);
+    }
+
+    .guisis-sync-button.is-primary {
+        border-color: #7f1d2d;
+        background: #7f1d2d;
+        color: #ffffff;
+    }
+
+    .guisis-sync-button.is-primary:hover,
+    .guisis-sync-button.is-primary:focus-visible {
+        background: #641523;
+    }
+
+    html[data-theme="dark"] .guisis-sync-button {
+        border-color: rgba(245, 210, 122, 0.35);
+        color: #f5d27a;
+    }
+
+    html[data-theme="dark"] .guisis-sync-button:hover,
+    html[data-theme="dark"] .guisis-sync-button:focus-visible {
+        background: rgba(245, 210, 122, 0.08);
+    }
+
+    html[data-theme="dark"] .guisis-sync-button.is-primary {
+        border-color: #f5d27a;
+        background: #f5d27a;
+        color: #35121a;
+    }
+
+    .guisis-sync-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+        gap: 8px;
+        margin-top: 16px;
+    }
+
+    .guisis-sync-stat {
+        padding: 10px 12px;
+        border: 1px solid rgba(127, 29, 45, 0.12);
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.58);
+    }
+
+    html[data-theme="dark"] .guisis-sync-stat {
+        border-color: rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.16);
+    }
+
+    .guisis-sync-stat strong,
+    .guisis-sync-stat span {
+        display: block;
+    }
+
+    .guisis-sync-stat strong {
+        color: #7f1d2d;
+        font-size: 18px;
+        line-height: 1.1;
+    }
+
+    html[data-theme="dark"] .guisis-sync-stat strong {
+        color: #f5d27a;
+    }
+
+    .guisis-sync-stat span {
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    html[data-theme="dark"] .guisis-sync-stat span {
+        color: #cbd5e1;
+    }
+
+    .guisis-sync-result {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border: 1px solid rgba(127, 29, 45, 0.14);
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.66);
+    }
+
+    html[data-theme="dark"] .guisis-sync-result {
+        border-color: rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.16);
+    }
+
+    .guisis-sync-result-list {
+        display: grid;
+        gap: 5px;
+        max-height: 190px;
+        margin-top: 9px;
+        overflow: auto;
+    }
+
+    .guisis-sync-result-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 7px 0;
+        border-bottom: 1px solid rgba(127, 29, 45, 0.08);
+        color: #334155;
+        font-size: 12px;
+    }
+
+    html[data-theme="dark"] .guisis-sync-result-item {
+        border-bottom-color: rgba(255, 255, 255, 0.07);
+        color: #e2e8f0;
+    }
+
+    .guisis-sync-result-item strong {
+        color: #7f1d2d;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    html[data-theme="dark"] .guisis-sync-result-item strong {
+        color: #f5d27a;
+    }
+
+    @media (max-width: 760px) {
+        .guisis-sync-head {
+            display: grid;
+        }
+
+        .guisis-sync-actions {
+            justify-content: flex-start;
+        }
+    }
+
     .api-tabs {
         display: flex;
         gap: 0;
@@ -1579,6 +1781,27 @@
             $apiResultCount = (int) ($apiResponseMeta['result_count'] ?? 0);
             $apiStatusCode = (int) ($apiResponseMeta['status'] ?? 200);
             $apiErrorCount = $errorMessage ? 1 : 0;
+            $apiPinUser = \Illuminate\Support\Facades\Auth::guard('admin')->user() ?? auth()->user();
+            $integrationPinDisabled = (bool) ($apiPinUser->api_pin_disabled ?? false);
+            $legacyIntegrationPinEnabled = (bool) ($apiPinUser->api_pin_enabled ?? false);
+            $integrationPinEnabled = $legacyIntegrationPinEnabled && (bool) ($apiPinUser->api_pin_page_enabled ?? true);
+            $apiTestingCurrentSource = $source ?? 'faculty';
+            $apiTestingSearchLabel = 'Search by name, email, or ID';
+            $apiTestingSearchPlaceholder = 'Try a name, email address, or identifier';
+
+            if ($apiTestingCurrentSource === 'puptas_applicant') {
+                $apiTestingSearchLabel = 'Search by Student Number';
+                $apiTestingSearchPlaceholder = 'Try a student number';
+            } elseif ($apiTestingCurrentSource === 'puptas_applicant_idp') {
+                $apiTestingSearchLabel = 'Search by IDP User ID';
+                $apiTestingSearchPlaceholder = 'Try an IDP user ID';
+            } elseif ($apiTestingCurrentSource === 'guisis_profile') {
+                $apiTestingSearchLabel = 'Search by Student Email';
+                $apiTestingSearchPlaceholder = 'Try a student email address';
+            } elseif (in_array($apiTestingCurrentSource, ['guisis_student', 'guisis_addresses', 'guisis_personal_info'], true)) {
+                $apiTestingSearchLabel = 'Search by Student Number';
+                $apiTestingSearchPlaceholder = 'Try a student number';
+            }
         @endphp
         <div class="api-testing-head">
             <div>
@@ -1636,6 +1859,65 @@
             </article>
         </div>
 
+        @php
+            $studentNumberSyncSummary = session('student_number_sync_summary');
+        @endphp
+        <section class="api-testing-card guisis-sync-card" aria-labelledby="guisisStudentNumberSyncTitle">
+            <div class="guisis-sync-head">
+                <div>
+                    <h3 id="guisisStudentNumberSyncTitle">GuiSIS Student Number Sync</h3>
+                    <p>Check health-record users against GuiSIS and sync their official IDP ID, student number, year level, and section in batches of 25.</p>
+                    <p class="guisis-sync-note" style="margin-top: 6px;">Matching uses IDP UUID first, then exact email. Name-only matches are never applied automatically.</p>
+                    <p class="guisis-sync-note" style="margin-top: 6px;"><strong>{{ number_format((int) ($studentNumberSyncPendingCount ?? 0)) }}</strong> local health-record users currently need checking.</p>
+                </div>
+                <div class="guisis-sync-actions">
+                    <form method="POST" action="{{ route('admin.api-testing.sync-student-numbers') }}">
+                        @csrf
+                        <input type="hidden" name="mode" value="preview">
+                        <input type="hidden" name="batch_size" value="25">
+                        <button type="submit" class="guisis-sync-button">Preview Next 25</button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.api-testing.sync-student-numbers') }}" onsubmit="return confirm('Sync the next 25 matched student records from GuiSIS?');">
+                        @csrf
+                        <input type="hidden" name="mode" value="apply">
+                        <input type="hidden" name="batch_size" value="25">
+                        <button type="submit" class="guisis-sync-button is-primary">Sync Next 25</button>
+                    </form>
+                </div>
+            </div>
+
+            @if(is_array($studentNumberSyncSummary))
+                <div class="guisis-sync-summary" aria-label="GuiSIS synchronization summary">
+                    <div class="guisis-sync-stat"><strong>{{ $studentNumberSyncSummary['candidates'] ?? 0 }}</strong><span>Candidates</span></div>
+                    <div class="guisis-sync-stat"><strong>{{ $studentNumberSyncSummary['synced'] ?? 0 }}</strong><span>{{ ($studentNumberSyncSummary['mode'] ?? '') === 'preview' ? 'Ready' : 'Synced' }}</span></div>
+                    <div class="guisis-sync-stat"><strong>{{ $studentNumberSyncSummary['already_complete'] ?? 0 }}</strong><span>Complete</span></div>
+                    <div class="guisis-sync-stat"><strong>{{ $studentNumberSyncSummary['no_match'] ?? 0 }}</strong><span>No match</span></div>
+                    <div class="guisis-sync-stat"><strong>{{ $studentNumberSyncSummary['manual_review'] ?? 0 }}</strong><span>Review</span></div>
+                    <div class="guisis-sync-stat"><strong>{{ $studentNumberSyncSummary['remaining'] ?? 0 }}</strong><span>Remaining</span></div>
+                </div>
+                <div class="guisis-sync-result" aria-live="polite">
+                    <p class="guisis-sync-note">
+                        @if(!empty($studentNumberSyncSummary['cycle_completed']))
+                            Sync cycle complete. The next sync starts again from the first candidate.
+                        @else
+                            {{ ($studentNumberSyncSummary['mode'] ?? '') === 'preview' ? 'Preview complete. No records were changed.' : 'Sync complete.' }}
+                            Appointment records updated: {{ $studentNumberSyncSummary['appointment_records_updated'] ?? 0 }}.
+                        @endif
+                    </p>
+                    @if(!empty($studentNumberSyncSummary['details']))
+                        <div class="guisis-sync-result-list">
+                            @foreach($studentNumberSyncSummary['details'] as $detail)
+                                <div class="guisis-sync-result-item">
+                                    <span>{{ $detail['name'] ?? 'Unnamed user' }}{{ !empty($detail['email']) ? ' - ' . $detail['email'] : '' }}<br>{{ $detail['message'] ?? '' }}</span>
+                                    <strong>{{ $detail['status'] ?? 'unknown' }}</strong>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            @endif
+        </section>
+
         <div class="api-tabs">
             <button class="api-tab-button is-active" data-tab="tests">
                 🔍 API Tests
@@ -1649,39 +1931,13 @@
             <button class="api-tab-button" data-tab="systems">
                 🔗 System Status
             </button>
-            @php
-                $apiPinUser = \Illuminate\Support\Facades\Auth::guard('admin')->user() ?? auth()->user();
-                $integrationPinDisabled = (bool) ($apiPinUser->api_pin_disabled ?? false);
-                $legacyIntegrationPinEnabled = (bool) ($apiPinUser->api_pin_enabled ?? false);
-                $integrationPinEnabled = $legacyIntegrationPinEnabled && (bool) ($apiPinUser->api_pin_page_enabled ?? true);
-            @endphp
-            <a href="{{ route('admin.integration-tokens') }}" class="api-tab-button {{ $integrationPinDisabled ? 'is-disabled' : '' }}" id="integrationTokensGateButton" data-pin-disabled="{{ $integrationPinDisabled ? '1' : '0' }}" data-pin-enabled="{{ $integrationPinEnabled ? '1' : '0' }}" style="text-decoration: none; display: flex; align-items: center; justify-content: center;" aria-disabled="{{ $integrationPinDisabled ? 'true' : 'false' }}">
+            <a href="{{ route('admin.integration-tokens') }}" class="api-tab-button {{ ($integrationPinDisabled ?? false) ? 'is-disabled' : '' }}" id="integrationTokensGateButton" data-pin-disabled="{{ ($integrationPinDisabled ?? false) ? '1' : '0' }}" data-pin-enabled="{{ ($integrationPinEnabled ?? false) ? '1' : '0' }}" style="text-decoration: none; display: flex; align-items: center; justify-content: center;" aria-disabled="{{ ($integrationPinDisabled ?? false) ? 'true' : 'false' }}">
                 🔐 Integration Tokens
             </a>
         </div>
 
         <!-- TAB 1: API TESTS (Original Content) -->
         <div class="api-tab-content is-active" id="tab-tests">
-
-        @php
-            $apiTestingCurrentSource = $source ?? 'faculty';
-            $apiTestingSearchLabel = 'Search by name, email, or ID';
-            $apiTestingSearchPlaceholder = 'Try a name, email address, or identifier';
-
-            if ($apiTestingCurrentSource === 'puptas_applicant') {
-                $apiTestingSearchLabel = 'Search by Student Number';
-                $apiTestingSearchPlaceholder = 'Try a student number';
-            } elseif ($apiTestingCurrentSource === 'puptas_applicant_idp') {
-                $apiTestingSearchLabel = 'Search by IDP User ID';
-                $apiTestingSearchPlaceholder = 'Try an IDP user ID';
-            } elseif ($apiTestingCurrentSource === 'guisis_profile') {
-                $apiTestingSearchLabel = 'Search by Student Email';
-                $apiTestingSearchPlaceholder = 'Try a student email address';
-            } elseif (in_array($apiTestingCurrentSource, ['guisis_student', 'guisis_addresses', 'guisis_personal_info'], true)) {
-                $apiTestingSearchLabel = 'Search by Student Number';
-                $apiTestingSearchPlaceholder = 'Try a student number';
-            }
-        @endphp
 
         <div class="api-builder-head">
             <div>
@@ -1725,13 +1981,13 @@
                 </select>
             </div>
             <div>
-                <label for="search">{{ $apiTestingSearchLabel }}</label>
+                <label for="search">{{ $apiTestingSearchLabel ?? 'Search by name, email, or ID' }}</label>
                 <input
                     type="text"
                     id="search"
                     name="search"
                     value="{{ $search }}"
-                    placeholder="{{ $apiTestingSearchPlaceholder }}"
+                    placeholder="{{ $apiTestingSearchPlaceholder ?? 'Try a name, email address, or identifier' }}"
                 >
             </div>
             <button type="submit">Run Test</button>
@@ -1913,7 +2169,7 @@
                         <div class="api-result-grid">
                             <div class="api-field">
                                 <small>Student Number</small>
-                                <strong>{{ $result['identifier'] ?? data_get($guisisFields, 'student_number', 'N/A') }}</strong>
+                                <strong>{{ $result['student_number'] ?? $result['identifier'] ?? data_get($guisisFields, 'studentNumber', data_get($guisisFields, 'student_number', 'N/A')) }}</strong>
                             </div>
                             <div class="api-field">
                                 <small>Email</small>
@@ -1921,19 +2177,23 @@
                             </div>
                             <div class="api-field">
                                 <small>First Name</small>
-                                <strong>{{ $result['first_name'] ?? data_get($guisisFields, 'first_name', 'N/A') }}</strong>
+                                <strong>{{ $result['first_name'] ?? data_get($guisisFields, 'firstName', data_get($guisisFields, 'first_name', 'N/A')) }}</strong>
                             </div>
                             <div class="api-field">
                                 <small>Last Name</small>
-                                <strong>{{ $result['last_name'] ?? data_get($guisisFields, 'last_name', 'N/A') }}</strong>
+                                <strong>{{ $result['last_name'] ?? data_get($guisisFields, 'lastName', data_get($guisisFields, 'last_name', 'N/A')) }}</strong>
                             </div>
                             <div class="api-field">
                                 <small>Course</small>
-                                <strong>{{ data_get($guisisFields, 'course.name', data_get($guisisFields, 'course', 'N/A')) }}</strong>
+                                <strong>{{ data_get($guisisFields, 'course.name', data_get($guisisFields, 'program.name', data_get($guisisFields, 'course', data_get($guisisFields, 'program', 'N/A')))) }}</strong>
                             </div>
                             <div class="api-field">
                                 <small>Year Level</small>
-                                <strong>{{ data_get($guisisFields, 'year_level', 'N/A') }}</strong>
+                                <strong>{{ data_get($guisisFields, 'yearLevel', data_get($guisisFields, 'year_level', 'N/A')) }}</strong>
+                            </div>
+                            <div class="api-field">
+                                <small>Section</small>
+                                <strong>{{ data_get($guisisFields, 'section', data_get($guisisFields, 'section_name', data_get($guisisFields, 'sectionName', 'N/A'))) }}</strong>
                             </div>
                             <div class="api-field">
                                 <small>Gender</small>

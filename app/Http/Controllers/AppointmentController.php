@@ -2096,8 +2096,12 @@ class AppointmentController extends Controller
                 'birthday' => 'DOB',
                 'contact_number' => 'contact_no',
             ] as $sourceKey => $userColumn) {
-                if (($data[$sourceKey] ?? '') !== '' && trim((string) ($user->{$userColumn} ?? '')) === '') {
-                    $user->{$userColumn} = $data[$sourceKey];
+                $incomingValue = trim((string) ($data[$sourceKey] ?? ''));
+                $currentValue = trim((string) ($user->{$userColumn} ?? ''));
+                $isOfficialAcademicField = in_array($sourceKey, ['year', 'section'], true);
+
+                if ($incomingValue !== '' && ($currentValue === '' || ($isOfficialAcademicField && $currentValue !== $incomingValue))) {
+                    $user->{$userColumn} = $incomingValue;
                     $shouldSave = true;
                 }
             }
