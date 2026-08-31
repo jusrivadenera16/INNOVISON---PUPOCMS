@@ -3496,7 +3496,7 @@
   top: 52%;
   width: 86px;
   height: 86px;
-  background: url('{{ asset("images/pup_logo.png") }}') center / contain no-repeat;
+  background: url('{{ asset("images/stagingphonebg.png") }}') center / contain no-repeat;
   opacity: 0.18;
   transform: translate(-50%, -50%);
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.12));
@@ -3944,7 +3944,7 @@
                 
                 <!-- 🌟 LARAVEL DYNAMIC ROUTE ANCHORS (Ginamit ang bago mong SVG Icons) -->
                 <div class="phone-unlocked-logo" aria-hidden="true">
-                  <img src="{{ asset('images/stagingphonebg.png') }}" alt="">
+                  <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="">
                 </div>
 
                 <a href="{{ url('/student/booking') }}" class="btn-action btn-book">
