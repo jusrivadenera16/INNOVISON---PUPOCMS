@@ -1284,7 +1284,7 @@
                 <button class="um-btn um-btn-primary" type="submit">Search</button>
             </form>
             <div class="access-onboard-filter-row">
-                <select id="lookupSourceFilter" aria-label="Filter lookup source"><option value="">All Sources</option><option value="faculty">Faculty</option><option value="admin">Admin Hub</option></select>
+                <select id="lookupSourceFilter" aria-label="Filter lookup source"><option value="">All Sources</option><option value="faculty">Faculty</option><option value="admin">Admin Hub</option><option value="idp">IDP Users</option></select>
                 <select id="lookupStatusFilter" aria-label="Filter lookup status"><option value="">All Status</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
             </div>
             <div class="access-onboard-count"><span data-lookup-result-count>{{ count($lookupRecords) }} result{{ count($lookupRecords) === 1 ? '' : 's' }} found</span><span>Employee number shown when available</span></div>
@@ -1837,7 +1837,11 @@
             const rowSource = (row.dataset.source || '').toLowerCase();
             const rowStatus = (row.dataset.status || '').toLowerCase();
             const rowRole = (row.dataset.roleLabel || row.dataset.role || '').toLowerCase();
-            const matches = (!source || rowSource.includes(source))
+            const sourceMatches = !source
+                || (source === 'admin' && ['admin', 'admin_profile'].includes(rowSource))
+                || (source === 'idp' && rowSource === 'idp_admin_user')
+                || rowSource === source;
+            const matches = sourceMatches
                 && (!status || rowStatus === status)
                 && (!role || rowRole === role);
             row.hidden = !matches;

@@ -21,53 +21,91 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
         
         body {
-            background: linear-gradient(rgba(15, 27, 38, 0.75), rgba(15, 27, 38, 0.85)), 
-                        url('{{ asset("images/PUPBG.jpg") }}') no-repeat center center fixed;
+            background-color: #740018;
+            background-image:
+                linear-gradient(rgba(91, 0, 22, 0.38), rgba(91, 0, 22, 0.50)),
+                url('{{ asset("images/PUPBG.jpg") }}');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-attachment: fixed;
             background-size: cover;
+            background-blend-mode: normal, soft-light;
             color: var(--white);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            isolation: isolate;
+            animation: loginTheme 21s linear infinite;
         }
 
-        /* --- 2. LOGO HEADER --- */
-        .logo-header {
-            background: rgba(91, 0, 0, 0.92);
-            padding: 18px 24px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.22);
-            display: flex;
-            justify-content: center;
-            position: relative;
-            z-index: 10;
-            backdrop-filter: blur(10px);
-            overflow: hidden;
-        }
-        .logo-header::after,
-        .login-hero::after {
+        body::before,
+        body::after {
             content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(110deg, transparent 35%, rgba(250, 204, 21, 0.18) 50%, transparent 65%);
-            transform: translateX(-140%);
-            pointer-events: none;
-        }
-        .logo-header::after { animation: headerSweep 4s ease-in-out infinite; }
-        .login-hero::after { animation: headerSweep 4s ease-in-out infinite; }
-        .logo-header::after,
-        .login-hero::after {
+            display: block;
+            position: fixed;
             z-index: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            width: 100vmax;
+            height: 100vmax;
+            background: rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+            transform-origin: center;
+            animation: loginBackgroundRotate 90s linear infinite;
         }
-        .logo-header > *,
-        .login-hero > * {
+
+        body::after {
+            left: 15vw;
+        }
+
+        body::before {
+            right: 15vw;
+            animation-delay: -30s;
+            animation-direction: reverse;
+        }
+
+        /* --- 2. CENTERED PAGE BRAND --- */
+        .login-page-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 18px;
             position: relative;
             z-index: 1;
+            color: #ffffff;
         }
-        .logo-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        .logo-icon { width: 48px; height: 48px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); object-fit: cover; }
-        .logo-text { color: var(--white); line-height: 1.1; }
-        .logo-title { font-weight: 800; font-size: 18px; letter-spacing: 0.5px; }
-        .logo-subtitle { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; }
-
+        .login-page-brand__logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: contain;
+            filter: drop-shadow(0 5px 10px rgba(91, 0, 0, 0.14));
+        }
+        .login-page-brand__title {
+            margin-top: 2px;
+            font-size: 20px;
+            line-height: 1.05;
+            font-weight: 900;
+            letter-spacing: 0.02em;
+        }
+        .login-page-brand__subtitle {
+            color: #ffffff;
+            font-size: 12px;
+            line-height: 1.2;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+        }
+        .login-page-brand__accent {
+            width: 38px;
+            height: 2px;
+            margin-top: 4px;
+            border-radius: 999px;
+            background: var(--accent-gold);
+        }
         /* --- 3. MAIN CONTAINER --- */
         .lp-container {
             flex: 1;
@@ -78,93 +116,96 @@
             padding: 28px 16px;
             text-align: center;
             width: 100%;
+            position: relative;
+            z-index: 1;
         }
 
         .login-box {
-            background: linear-gradient(180deg, rgba(255,255,255,0.97), rgba(248,250,252,0.95));
-            padding: 34px;
-            border-radius: 26px;
+            background: linear-gradient(145deg, rgba(82, 0, 20, 0.82), rgba(121, 10, 36, 0.68));
+            padding: 30px 32px 28px;
+            border-radius: 18px;
             width: 100%;
-            max-width: 520px;
-            color: var(--text-dark);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 28px 70px rgba(0,0,0,0.35);
+            max-width: 430px;
+            color: #ffffff;
+            border: 1px solid rgba(250, 204, 21, 0.36);
+            box-shadow: 0 24px 58px rgba(45, 0, 12, 0.32), 0 4px 14px rgba(15, 23, 42, 0.12);
+            backdrop-filter: blur(18px);
             animation: slideUp 0.7s ease-out;
             overflow: hidden;
         }
 
         .login-hero {
             position: relative;
-            overflow: hidden;
-            padding: 22px 22px 20px;
-            margin: -34px -34px 24px;
-            background: linear-gradient(135deg, rgba(91,0,0,0.98), rgba(127,29,29,0.98) 55%, rgba(168,18,18,0.98));
-            color: #fff;
-            border-bottom: 1px solid rgba(255,255,255,0.12);
+            padding: 0;
+            margin: 0;
+            background: transparent;
+            color: var(--text-dark);
+            border: 0;
+            text-align: center;
         }
-        .login-hero-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 14px;
-        }
-        .login-hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 7px 12px;
-            border-radius: 999px;
-            background: rgba(250, 204, 21, 0.14);
-            border: 1px solid rgba(250, 204, 21, 0.3);
-            color: #fff7cc;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-        .login-hero-badge span {
-            width: 7px;
-            height: 7px;
+        .login-security-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 17px;
+            display: grid;
+            place-items: center;
             border-radius: 50%;
-            background: var(--accent-gold);
-            box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.15);
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffe4e8;
+            border: 1px solid rgba(250, 204, 21, 0.28);
+        }
+        .login-security-icon svg {
+            width: 42px;
+            height: 42px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
         .login-box h2 {
-            color: #fff;
+            color: #ffffff;
             font-weight: 900;
-            font-size: 32px;
-            line-height: 1.05;
-            margin-bottom: 10px;
+            font-size: 29px;
+            line-height: 1.1;
+            margin-bottom: 9px;
         }
         .login-box p {
-            color: rgba(255,255,255,0.88);
+            color: rgba(255, 255, 255, 0.78);
             font-size: 14px;
-            line-height: 1.7;
+            line-height: 1.55;
             margin-bottom: 0;
             max-width: 44ch;
         }
         .login-box p.login-hero-copy {
-            max-width: 100%;
+            max-width: 33ch;
             text-align: center;
             margin-left: auto;
             margin-right: auto;
         }
-        .login-subline {
-            margin-top: 14px;
+        .login-divider {
+            width: 100%;
+            margin: 21px 0;
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 13px;
         }
-        .login-chip {
-            padding: 7px 10px;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.12);
-            border: 1px solid rgba(255,255,255,0.16);
-            color: rgba(255,255,255,0.9);
-            font-size: 11px;
-            font-weight: 700;
+        .login-divider::before,
+        .login-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: rgba(250, 204, 21, 0.24);
+        }
+        .login-divider svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: #e5a900;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex: 0 0 auto;
         }
 
         /* Error Alert Styling */
@@ -186,7 +227,7 @@
             display: block;
             font-size: 11px;
             font-weight: 900;
-            color: #7a1b1b;
+            color: #fff3f3;
             margin-bottom: 6px;
             letter-spacing: 0.08em;
             text-transform: uppercase;
@@ -232,15 +273,35 @@
             width: 100%;
             min-height: 52px;
             padding: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 11px;
             background: linear-gradient(135deg, #5e0000, #8b0000 60%, #a61b1b);
             color: white;
-            border: none;
-            border-radius: 14px;
+            border: 1px solid rgba(250, 204, 21, 0.38);
+            border-radius: 8px;
+            text-decoration: none;
+            text-align: center;
+            font-size: 14px;
             font-weight: 900;
             cursor: pointer;
             margin-top: 10px;
-            box-shadow: 0 16px 26px rgba(91,0,0,0.24);
+            box-shadow: 0 14px 28px rgba(41, 0, 11, 0.38), 0 0 0 1px rgba(250, 204, 21, 0.06);
             transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease, background 0.18s ease, color 0.18s ease;
+        }
+        .idp-login-wrap .btn-submit {
+            margin-top: 0;
+        }
+        .btn-submit svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.9;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex: 0 0 auto;
         }
         .login-box form .btn-submit:hover,
         .login-box form .btn-submit:focus,
@@ -263,26 +324,38 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
-            margin-top: 18px;
+            gap: 20px;
+            margin-top: 0;
         }
         .idp-login-note {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             font-size: 13px;
-            color: var(--text-light);
-            max-width: 360px;
+            color: rgba(255, 255, 255, 0.76);
+            max-width: 330px;
             margin: 0 auto;
+            text-align: left;
+        }
+        .idp-login-note svg {
+            width: 25px;
+            height: 25px;
+            fill: none;
+            stroke: #facc15;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex: 0 0 auto;
         }
 
         .idp-fallback-card {
-            margin-top: 18px;
-            padding: 26px 24px;
-            border-radius: 24px;
-            background:
-                radial-gradient(circle at 50% 0%, rgba(139, 0, 0, 0.08), transparent 42%),
-                linear-gradient(180deg, #ffffff, #fbfbfc);
-            border: 1px solid rgba(139, 0, 0, 0.12);
-            box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
-            color: var(--text-dark);
+            margin: 0;
+            padding: 6px 4px 2px;
+            border-radius: 0;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            color: #ffffff;
         }
         .idp-fallback-icon {
             width: 92px;
@@ -291,9 +364,9 @@
             display: grid;
             place-items: center;
             border-radius: 50%;
-            background: #fff0f0;
-            color: #bd3030;
-            border: 1px solid rgba(189, 48, 48, 0.12);
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffe4e8;
+            border: 1px solid rgba(250, 204, 21, 0.28);
         }
         .idp-fallback-icon svg {
             width: 52px;
@@ -305,7 +378,7 @@
         .idp-fallback-card h3 {
             margin: 0 auto 14px;
             max-width: 360px;
-            color: #2b0f14;
+            color: #ffffff;
             font-size: 25px;
             font-weight: 950;
             line-height: 1.16;
@@ -314,12 +387,12 @@
             width: 100%;
             height: 1px;
             margin: 18px 0;
-            background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.42), transparent);
+            background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.34), transparent);
         }
         .idp-fallback-card p {
             max-width: 360px;
             margin: 0 auto;
-            color: #5f6877;
+            color: rgba(255, 255, 255, 0.76);
             font-size: 14px;
             line-height: 1.7;
         }
@@ -333,12 +406,13 @@
             margin-top: 22px;
             padding: 14px 18px;
             border-radius: 14px;
+            border: 1px solid rgba(250, 204, 21, 0.38);
             background: linear-gradient(135deg, #5e0000, #8b0000 60%, #a61b1b);
             color: #ffffff;
             text-decoration: none;
             font-size: 15px;
             font-weight: 950;
-            box-shadow: 0 16px 26px rgba(91,0,0,0.24);
+            box-shadow: 0 14px 28px rgba(41, 0, 11, 0.38), 0 0 0 1px rgba(250, 204, 21, 0.06);
             transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
         }
         .idp-fallback-action:hover,
@@ -515,7 +589,7 @@
             gap: 10px;
             margin-top: 12px;
             padding: 14px 18px;
-            border: 0;
+            border: 1px solid rgba(250, 204, 21, 0.38);
             border-radius: 16px;
             background: linear-gradient(135deg, #5e0000, #8b0000 60%, #a61b1b);
             color: #ffffff;
@@ -523,7 +597,7 @@
             font-weight: 900;
             letter-spacing: 0.02em;
             cursor: pointer;
-            box-shadow: 0 18px 30px rgba(91,0,0,0.24);
+            box-shadow: 0 14px 28px rgba(41, 0, 11, 0.38), 0 0 0 1px rgba(250, 204, 21, 0.06);
             transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
         }
         .register-submit:hover,
@@ -542,8 +616,8 @@
             flex: 0 0 auto;
         }
 
-        .switch-form { margin-top: 20px; font-size: 14px; color: var(--text-light); }
-        .switch-form span { color: var(--accent); cursor: pointer; font-weight: 700; text-decoration: underline; }
+        .switch-form { margin-top: 20px; font-size: 14px; color: rgba(255, 255, 255, 0.74); }
+        .switch-form span { color: #facc15; cursor: pointer; font-weight: 700; text-decoration: underline; }
 
         .lp-foot {
             background: rgba(17, 24, 39, 0.92);
@@ -615,12 +689,8 @@
                 background-attachment: scroll;
             }
 
-            .logo-header {
-                padding: 12px 14px;
-            }
-
-            .logo-title {
-                font-size: 16px;
+            .login-page-brand {
+                margin-bottom: 14px;
             }
 
             .lp-container {
@@ -659,8 +729,8 @@
         }
 
         @media (max-width: 420px) {
-            .logo-subtitle {
-                font-size: 10px;
+            .login-page-brand__title {
+                font-size: 18px;
             }
 
             .btn-submit {
@@ -672,27 +742,47 @@
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
         }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes headerSweep {
-            0% { transform: translateX(-140%); }
-            35% { transform: translateX(140%); }
-            100% { transform: translateX(140%); }
+
+        @keyframes loginTheme {
+            0% { background-color: #740018; }
+            16% { background-color: #8f1730; }
+            33% { background-color: #aa2342; }
+            50% { background-color: #7b001c; }
+            66% { background-color: #bd3655; }
+            83% { background-color: #961d34; }
+            100% { background-color: #740018; }
         }
+
+        @keyframes loginBackgroundRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body {
+                animation: none;
+                background-color: #7b001c;
+            }
+
+            body::before,
+            body::after {
+                animation: none;
+            }
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-  <div class="logo-header">
-    <div class="logo-brand">
-      <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="Clinic Logo" class="logo-icon">
-      <div class="logo-text">
-        <div class="logo-title">PUP TAGUIG</div>
-        <div class="logo-subtitle">ONLINE CLINIC</div>
-      </div>
-    </div>
-  </div>
-
   <main class="lp-container">
+    <div class="login-page-brand" aria-label="PUP Taguig Clinic Centralized Access">
+        <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="PUP Taguig Clinic logo" class="login-page-brand__logo">
+        <div class="login-page-brand__title">PUP TAGUIG CLINIC</div>
+        <div class="login-page-brand__subtitle">CENTRALIZED ACCESS</div>
+        <span class="login-page-brand__accent" aria-hidden="true"></span>
+    </div>
+
     <div class="login-box">
         @php
             $portalLoginUrl = route('login.portal');
@@ -702,20 +792,22 @@
 
         @unless($idpUnavailable)
             <div class="login-hero">
-                <div class="login-hero-top">
-                    <div class="login-hero-badge"><span></span> Clinic Access</div>
-                    <div class="login-chip">
-                        {{ config('services.idp.enabled') ? 'Centralized Sign In' : ($localLoginEnabled ? 'Local Sign In' : 'Restricted Sign In') }}
-                    </div>
+                <div class="login-security-icon" aria-hidden="true">
+                    <svg viewBox="0 0 48 48">
+                        <path d="M24 5.5 38 11v10.8c0 9.2-5.7 16.5-14 20.7-8.3-4.2-14-11.5-14-20.7V11L24 5.5Z" />
+                        <rect x="18" y="21" width="12" height="10" rx="2" />
+                        <path d="M20.5 21v-3a3.5 3.5 0 0 1 7 0v3M24 25v2.5" />
+                    </svg>
                 </div>
                 <h2>Clinic Portal</h2>
-                <p class="login-hero-copy">Login to your account to continue. The same system keeps student and clinic access in one place.</p>
-                <div class="login-subline">
-                    <span class="login-chip">IdP Ready</span>
-                    @if($localLoginEnabled)
-                        <span class="login-chip">Local Fallback</span>
-                    @endif
-                </div>
+                <p class="login-hero-copy">Access the PUP Taguig Clinic using your campus account.</p>
+            </div>
+
+            <div class="login-divider" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 3 19 6v5.4c0 4.6-2.8 8.2-7 10.3-4.2-2.1-7-5.7-7-10.3V6l7-3Z" />
+                    <path d="m9.3 12 1.8 1.8 3.8-4" />
+                </svg>
             </div>
         @endunless
 
@@ -754,11 +846,19 @@
             </section>
         @elseif(config('services.idp.enabled'))
             <div class="idp-login-wrap">
-                <a href="{{ $portalLoginUrl }}" class="btn-submit" style="display:block; text-decoration:none; text-align:center;">
-                    Login through Identity Provider
+                <a href="{{ $portalLoginUrl }}" class="btn-submit">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M14 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-3" />
+                        <path d="M10 12h11M18 9l3 3-3 3" />
+                    </svg>
+                    <span>Continue with One Portal</span>
                 </a>
                 <p class="idp-login-note">
-                    Centralized sign-in is enabled for this system. Use the button above to authenticate through the campus identity provider.
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 3 19 6v5.4c0 4.6-2.8 8.2-7 10.3-4.2-2.1-7-5.7-7-10.3V6l7-3Z" />
+                        <path d="m9.3 12 1.8 1.8 3.8-4" />
+                    </svg>
+                    <span>You'll be redirected to the campus Identity Provider to sign in securely.</span>
                 </p>
             </div>
 
@@ -919,8 +1019,6 @@
           <div class="login-loading-text">Signing in...</div>
       </div>
   </div>
-
-  @include('partials.system_footer')
 
   <script>
       function openModal(id) { document.getElementById(id).style.display = 'flex'; }

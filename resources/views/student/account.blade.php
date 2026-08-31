@@ -305,6 +305,7 @@
     }
 
     .profile-dashboard .widget-card > form,
+    .profile-dashboard .widget-card > .profile-readonly-content,
     .profile-dashboard .profile-sections-grid {
         display: contents;
     }
@@ -375,6 +376,7 @@
         gap: 20px;
         position: relative;
         overflow: hidden;
+        clip-path: url(#profileHeroSmoothWave);
     }
 
     .profile-dashboard .profile-hero::before {
@@ -400,25 +402,54 @@
 
     .profile-dashboard .profile-hero-wave {
         position: absolute;
+        top: 0;
         left: 0;
         right: 0;
-        bottom: 0;
         width: 100%;
-        height: 20%;
+        height: calc(100% + 68px);
         z-index: 1;
         pointer-events: none;
         overflow: visible;
     }
 
     .profile-dashboard .profile-hero-wave path {
-        fill: #fff8ed;
-        stroke: #facc15;
-        stroke-width: 4;
+        fill: none;
+        stroke-linecap: round;
         stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+    }
+
+    .profile-dashboard .profile-hero-wave-echo {
+        stroke: url(#profileHeroWaveEcho);
+    }
+
+    .profile-dashboard .profile-hero-wave-echo.is-near {
+        stroke-width: 1;
+    }
+
+    .profile-dashboard .profile-hero-wave-echo.is-far {
+        stroke-width: .75;
+    }
+
+    .profile-dashboard .profile-hero-wave-main,
+    .profile-dashboard .profile-hero-wave-grow {
+        stroke: url(#profileHeroWaveStroke);
+    }
+
+    .profile-dashboard .profile-hero-wave-main {
+        stroke-width: 1.25;
+    }
+
+    .profile-dashboard .profile-hero-wave-grow.is-middle {
+        stroke-width: 2.75;
+    }
+
+    .profile-dashboard .profile-hero-wave-grow.is-right {
+        stroke-width: 4.5;
     }
 
     html[data-theme="dark"] .profile-dashboard .profile-hero-wave path {
-        fill: #0f131a;
+        fill: none;
     }
 
     .profile-dashboard .profile-hero > * {
@@ -1219,6 +1250,312 @@
         color: #ffffff;
     }
 
+    .profile-edit-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 22px;
+    }
+
+    .profile-edit-modal.is-open {
+        display: flex;
+    }
+
+    .profile-edit-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.62);
+        backdrop-filter: blur(8px);
+    }
+
+    .profile-edit-dialog {
+        position: relative;
+        width: min(760px, 100%);
+        max-height: min(86vh, 780px);
+        border: 1px solid rgba(250, 204, 21, 0.42);
+        border-radius: 14px;
+        background: #fffaf7;
+        box-shadow: 0 28px 80px rgba(15, 23, 42, 0.34);
+        overflow: hidden;
+        transform: translateY(14px) scale(0.98);
+        opacity: 0;
+        transition: transform .22s ease, opacity .22s ease;
+    }
+
+    .profile-edit-modal.is-open .profile-edit-dialog {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+
+    .profile-edit-form {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        max-height: inherit;
+    }
+
+    .profile-edit-modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 18px;
+        padding: 20px 22px;
+        background: linear-gradient(135deg, #7f1d2d, #9f1239);
+        color: #ffffff;
+        border-bottom: 1px solid rgba(250, 204, 21, 0.28);
+    }
+
+    .profile-edit-modal-kicker {
+        display: block;
+        margin-bottom: 7px;
+        color: #facc15;
+        font-size: 11px;
+        font-weight: 950;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .profile-edit-modal-head h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 950;
+        letter-spacing: 0;
+    }
+
+    .profile-edit-close {
+        width: 40px;
+        height: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 999px;
+        background: rgba(63, 7, 18, 0.55);
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        transition: color .08s linear, transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+
+    .profile-edit-close::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(120deg,
+                rgba(255, 248, 196, 0) 0%,
+                rgba(255, 239, 181, 0.18) 22%,
+                rgba(255, 255, 240, 0.82) 48%,
+                rgba(255, 239, 181, 0.18) 72%,
+                rgba(255, 248, 196, 0) 100%);
+        transform: translateX(-135%);
+        transition: transform 1.5s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .profile-edit-close:hover,
+    .profile-edit-close:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        box-shadow:
+            0 0 0 3px rgba(250, 204, 21, 0.18),
+            0 14px 24px rgba(112, 19, 27, 0.16);
+        transform: translateY(-1px);
+        outline: none;
+    }
+
+    .profile-edit-close:hover::after,
+    .profile-edit-close:focus-visible::after {
+        transform: translateX(135%);
+    }
+
+    .profile-edit-close svg {
+        width: 20px;
+        height: 20px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .profile-edit-modal-body {
+        display: grid;
+        gap: 16px;
+        padding: 20px 22px;
+        overflow: auto;
+        color: #172033;
+    }
+
+    .profile-edit-alert {
+        border: 1px solid rgba(220, 38, 38, 0.26);
+        border-radius: 10px;
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 11px 13px;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .profile-edit-section {
+        border: 1px solid rgba(112, 19, 27, 0.14);
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 15px;
+    }
+
+    .profile-edit-section h3 {
+        margin: 0 0 12px;
+        color: #70131b;
+        font-size: 14px;
+        font-weight: 950;
+    }
+
+    .profile-edit-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .profile-edit-field {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+    }
+
+    .profile-edit-field-wide {
+        grid-column: 1 / -1;
+    }
+
+    .profile-edit-field span {
+        color: #475569;
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    .profile-edit-field input,
+    .profile-edit-field select,
+    .profile-edit-field textarea {
+        width: 100%;
+        border: 1px solid rgba(112, 19, 27, 0.16);
+        border-radius: 8px;
+        background: #fffaf7;
+        color: #172033;
+        padding: 11px 12px;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.4;
+        outline: none;
+        transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    .profile-edit-field select {
+        appearance: none;
+        background-image:
+            linear-gradient(45deg, transparent 50%, #70131b 50%),
+            linear-gradient(135deg, #70131b 50%, transparent 50%);
+        background-position:
+            calc(100% - 18px) 50%,
+            calc(100% - 13px) 50%;
+        background-size: 5px 5px, 5px 5px;
+        background-repeat: no-repeat;
+        padding-right: 34px;
+    }
+
+    .profile-edit-field textarea {
+        resize: vertical;
+        min-height: 92px;
+    }
+
+    .profile-edit-field input:focus,
+    .profile-edit-field select:focus,
+    .profile-edit-field textarea:focus {
+        border-color: #facc15;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.18);
+    }
+
+    .profile-edit-field input:disabled,
+    .profile-edit-field textarea:disabled {
+        color: #64748b;
+        background: #f8fafc;
+        border-color: rgba(148, 163, 184, 0.34);
+        cursor: not-allowed;
+        opacity: 1;
+    }
+
+    .profile-edit-field em {
+        color: #b91c1c;
+        font-size: 11px;
+        font-style: normal;
+        font-weight: 800;
+    }
+
+    .profile-edit-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding: 14px 22px 18px;
+        border-top: 1px solid rgba(112, 19, 27, 0.12);
+        background: #fffaf7;
+    }
+
+    .profile-edit-modal-footer .profile-action-btn {
+        min-width: 150px;
+        padding: 10px 18px;
+        border-radius: 8px;
+    }
+
+    .profile-edit-modal-footer .profile-action-btn.save:hover,
+    .profile-edit-modal-footer .profile-action-btn.save:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131b;
+        box-shadow:
+            0 0 0 3px rgba(250, 204, 21, 0.18),
+            0 14px 24px rgba(112, 19, 27, 0.16);
+        outline: none;
+    }
+
+    .profile-edit-modal-footer .profile-action-btn.save::after {
+        background:
+            linear-gradient(120deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 250, 210, 0.28) 22%,
+                rgba(255, 255, 240, 0.78) 48%,
+                rgba(255, 250, 210, 0.28) 72%,
+                rgba(255, 255, 255, 0) 100%);
+    }
+
+    @media (max-width: 640px) {
+        .profile-edit-modal {
+            padding: 12px;
+            align-items: flex-end;
+        }
+
+        .profile-edit-dialog {
+            max-height: 88vh;
+            border-radius: 14px 14px 0 0;
+        }
+
+        .profile-edit-modal-head,
+        .profile-edit-modal-body,
+        .profile-edit-modal-footer {
+            padding-left: 16px;
+            padding-right: 16px;
+        }
+
+        .profile-edit-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-edit-modal-footer .profile-action-btn {
+            width: 100%;
+        }
+    }
+
     .input-label { font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; display: block; }
 
     .profile-grid-3 > div,
@@ -1233,14 +1570,6 @@
         border-radius: 12px;
         background: linear-gradient(180deg, #ffffff 0%, #fffdf6 100%);
         transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .profile-grid-3 > div.is-editing,
-    .profile-grid-2 > div.is-editing,
-    .profile-info-row.is-editing {
-        border-color: rgba(250, 204, 21, 0.95);
-        background: linear-gradient(180deg, #fffbea 0%, #fff7d1 100%);
-        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.22);
     }
 
     .profile-info-row {
@@ -1408,16 +1737,67 @@
         background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.94) 100%);
         border-color: rgba(148, 163, 184, 0.3);
     }
-    html[data-theme="dark"] .profile-grid-3 > div.is-editing,
-    html[data-theme="dark"] .profile-grid-2 > div.is-editing,
-    html[data-theme="dark"] .profile-info-row.is-editing {
-        border-color: rgba(250, 204, 21, 0.62);
-        background: linear-gradient(180deg, rgba(133, 77, 14, 0.35) 0%, rgba(146, 64, 14, 0.24) 100%);
-        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.18);
-    }
     html[data-theme="dark"] .profile-form-section {
         background: linear-gradient(180deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 41, 59, 0.9) 100%);
         border-color: rgba(148, 163, 184, 0.3);
+    }
+    html[data-theme="dark"] .profile-edit-backdrop {
+        background: rgba(2, 6, 23, 0.72);
+    }
+    html[data-theme="dark"] .profile-edit-dialog {
+        background: #101827;
+        border-color: rgba(250, 204, 21, 0.5);
+        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.58);
+    }
+    html[data-theme="dark"] .profile-edit-modal-head {
+        background: linear-gradient(135deg, #5f0f1a, #881337);
+    }
+    html[data-theme="dark"] .profile-edit-modal-body {
+        color: #e5e7eb;
+    }
+    html[data-theme="dark"] .profile-edit-section {
+        background: rgba(15, 23, 42, 0.94);
+        border-color: rgba(148, 163, 184, 0.28);
+    }
+    html[data-theme="dark"] .profile-edit-section h3 {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .profile-edit-field span {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .profile-edit-field input,
+    html[data-theme="dark"] .profile-edit-field select,
+    html[data-theme="dark"] .profile-edit-field textarea {
+        background: rgba(2, 6, 23, 0.55);
+        border-color: rgba(148, 163, 184, 0.26);
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .profile-edit-field select {
+        background-image:
+            linear-gradient(45deg, transparent 50%, #facc15 50%),
+            linear-gradient(135deg, #facc15 50%, transparent 50%);
+    }
+    html[data-theme="dark"] .profile-edit-field input:focus,
+    html[data-theme="dark"] .profile-edit-field select:focus,
+    html[data-theme="dark"] .profile-edit-field textarea:focus {
+        background: rgba(15, 23, 42, 0.98);
+        border-color: #facc15;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.16);
+    }
+    html[data-theme="dark"] .profile-edit-field input:disabled,
+    html[data-theme="dark"] .profile-edit-field textarea:disabled {
+        background: rgba(15, 23, 42, 0.5);
+        border-color: rgba(148, 163, 184, 0.18);
+        color: #94a3b8;
+    }
+    html[data-theme="dark"] .profile-edit-modal-footer {
+        background: rgba(15, 23, 42, 0.96);
+        border-top-color: rgba(148, 163, 184, 0.18);
+    }
+    html[data-theme="dark"] .profile-edit-alert {
+        background: rgba(127, 29, 29, 0.28);
+        border-color: rgba(248, 113, 113, 0.34);
+        color: #fecaca;
     }
     html[data-theme="dark"] .profile-form-section.accent-maroon {
         --field-bottom: #fca5a5;
@@ -5297,7 +5677,7 @@
         .health-record-hero.page-hero {
             min-height: 0;
             margin-top: -8px;
-            padding: 20px 17px;
+            padding: 18px 17px;
         }
         .health-record-hero-main {
             grid-template-columns: 64px minmax(0, 1fr);
@@ -5315,23 +5695,28 @@
         .health-record-hero .page-hero-title { font-size: 25px; }
         .health-record-hero .page-hero-steps {
             grid-column: 1 / -1;
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            display: flex;
+            flex-wrap: nowrap;
+            margin-right: -17px;
+            padding: 0 17px 4px 0;
+            overflow-x: auto;
+            scrollbar-width: thin;
         }
         .health-record-hero .page-hero-step {
             width: auto;
-            min-width: 0;
+            min-width: max-content;
+            flex: 0 0 auto;
             justify-content: center;
             padding-inline: 6px;
             white-space: nowrap;
         }
         .health-record-hero-overview {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
         .health-record-hero-overview-item + .health-record-hero-overview-item {
-            border-top: 1px solid rgba(255,255,255,.14);
-            border-left: 0;
-            padding-left: 0;
+            border-top: 0;
+            border-left: 1px solid rgba(255,255,255,.14);
+            padding-left: 14px;
         }
         .health-record-sidebar,
         .health-record-dashboard .health-status-actions {
@@ -5391,7 +5776,7 @@
         stroke-width: 2;
     }
     .notification-stat-grid {
-        display: grid;
+        display: none;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
         margin-bottom: 14px;
@@ -6279,8 +6664,19 @@
         .notification-sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 620px) {
-        .notification-hero .page-hero-steps { grid-template-columns: 1fr; }
-        .notification-hero .page-hero-step { justify-content: flex-start; }
+        .notification-hero .page-hero-steps {
+            display: flex;
+            flex-wrap: nowrap;
+            margin-right: -17px;
+            padding: 0 17px 4px 0;
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+        .notification-hero .page-hero-step {
+            flex: 0 0 auto;
+            min-width: max-content;
+            justify-content: flex-start;
+        }
         .notification-stat-grid { gap: 8px; }
         .notification-stat-card {
             min-height: 78px;
@@ -7132,7 +7528,7 @@
     $rebuiltDisplayFullName = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([$cleanFirstName, $cleanMiddleName, $cleanLastName, $cleanSuffixName]))));
     $displayFullName = $rebuiltDisplayFullName !== ''
         ? $rebuiltDisplayFullName
-        : ($displayFullName !== '' ? $displayFullName : ($hasGuisisAccountData ? 'Available once enrolled' : ($user->name ?? 'Student')));
+        : ($displayFullName !== '' ? $displayFullName : ($hasGuisisAccountData ? '-' : ($user->name ?? 'Student')));
     $displayNameParts = preg_split('/\s+/', $displayFullName) ?: [];
     $displayFirstName = $displayNameParts[0] ?? $displayFullName;
     $displayRemainingName = trim(implode(' ', array_slice($displayNameParts, 1)));
@@ -7143,10 +7539,10 @@
     $displaySection = trim((string) ($accountProfileData['section'] ?? $user->section ?? ''));
     $heroAcademicParts = array_values(array_filter([$displayStudentNumber, $displayCourse], fn ($value) => trim((string) $value) !== ''));
     $localMiddleName = $cleanNamePart($accountProfileData['middle_name'] ?? $user->middle_name ?? optional($linkedAdminProfile)->middle_name ?? '');
-    $localMiddleName = $localMiddleName !== '' ? $localMiddleName : 'N/A';
-    $localSuffixName = trim((string) ($accountProfileData['suffix_name'] ?? $user->suffix_name ?? optional($linkedAdminProfile)->suffix_name ?? ''));
-    $localSuffixName = $localSuffixName !== '' ? $localSuffixName : 'N/A';
-    $guisisPendingText = 'Available once enrolled';
+    $localMiddleName = $localMiddleName !== '' ? $localMiddleName : '-';
+    $localSuffixName = $cleanNamePart($accountProfileData['suffix_name'] ?? $user->suffix_name ?? optional($linkedAdminProfile)->suffix_name ?? '');
+    $localSuffixName = $localSuffixName !== '' ? $localSuffixName : '-';
+    $guisisPendingText = '-';
     $guisisValue = fn ($value) => trim((string) $value) !== '' ? trim((string) $value) : $guisisPendingText;
     $guisisPendingClass = fn ($value) => trim((string) $value) === '' ? ' guisis-pending-value' : '';
     $clinicMeasurementProfile = $usesEmployeeHealthForm
@@ -7156,6 +7552,8 @@
         : ($user->relationLoaded('healthProfile')
             ? $user->healthProfile
             : \App\Models\HealthProfile::where('user_id', $user->id)->first());
+    $clinicProfileApprovalStatus = strtolower(trim((string) optional($clinicMeasurementProfile)->clearance_status));
+    $canEditClinicProfileInfo = in_array($clinicProfileApprovalStatus, ['approved', 'issued', 'fully cleared', 'cleared'], true);
     $heightRaw = old('height', optional($clinicMeasurementProfile)->height ?? '');
     $weightRaw = old('weight', optional($clinicMeasurementProfile)->weight ?? '');
     $bloodTypeDisplay = trim((string) ($accountProfileData['blood_type'] ?? optional($clinicMeasurementProfile)->blood_type ?? ''));
@@ -7165,6 +7563,29 @@
     $heightDisplay = $heightMatch[0] ?? trim((string) $heightRaw);
     $weightDisplay = $weightMatch[0] ?? trim((string) $weightRaw);
     $showClinicMeasurements = trim((string) $heightRaw) !== '' && trim((string) $weightRaw) !== '';
+    $profileEditErrorFields = ['contact_no', 'address', 'emergency_contact_person', 'emergency_contact_no', 'civil_status', 'height', 'weight'];
+    $hasProfileEditErrors = isset($errors)
+        && collect($profileEditErrorFields)->contains(fn ($field) => $errors->has($field));
+    $profileEditCivilStatus = old('civil_status', $accountProfileData['civil_status'] ?? optional($linkedAdminProfile)->civil_status ?? '');
+    $profileEditContactNo = old('contact_no', $accountProfileData['contact_number'] ?? $user->contact_no ?? optional($linkedAdminProfile)->contact_no ?? '');
+    $profileEditAddress = old('address', $accountProfileData['home_address'] ?? optional($linkedAdminProfile)->address ?? '');
+    $profileEditEmergencyPerson = old('emergency_contact_person', $accountProfileData['guardian_name'] ?? optional($linkedAdminProfile)->emergency_contact_person ?? '');
+    $profileEditEmergencyNo = old('emergency_contact_no', $accountProfileData['cellphone'] ?? optional($linkedAdminProfile)->emergency_contact_no ?? '');
+    $profileEditCivilOptions = ['Single', 'Married', 'Widowed', 'Separated'];
+    $profileModalFirstName = $guisisValue($accountProfileData['first_name'] ?? optional($linkedAdminProfile)->first_name ?? $user->first_name ?? '');
+    $profileModalMiddleName = $localMiddleName;
+    $profileModalLastName = $guisisValue($accountProfileData['last_name'] ?? optional($linkedAdminProfile)->last_name ?? $user->last_name ?? '');
+    $profileModalSuffixName = $localSuffixName;
+    $profileModalGender = $guisisValue($accountProfileData['sex'] ?? optional($linkedAdminProfile)->gender ?? $user->gender ?? '');
+    $profileModalBirthday = $guisisValue($accountProfileData['birthday'] ?? optional($linkedAdminProfile)->birthday ?? $user->birthday ?? '');
+    $profileModalAge = $guisisValue($accountProfileData['age'] ?? optional($linkedAdminProfile)->age ?? $user->age ?? '');
+    $profileModalBloodType = $bloodTypeDisplay;
+    $profileModalIdNumber = $displayStudentNumber !== '' ? $displayStudentNumber : $guisisPendingText;
+    $profileModalCourse = $displayCourse !== '' ? $displayCourse : $guisisPendingText;
+    $profileModalOffice = $displayOffice !== '' ? $displayOffice : $guisisPendingText;
+    $profileModalYear = $displayYear !== '' ? $displayYear : $guisisPendingText;
+    $profileModalSection = $displaySection !== '' ? $displaySection : $guisisPendingText;
+    $profileModalEmail = $guisisValue($accountProfileData['email'] ?? optional($linkedAdminProfile)->email ?? $user->email ?? '');
 @endphp
 <div class="container" style="padding: 0 20px 40px;">
 
@@ -7187,23 +7608,48 @@
         </div>
     @endif
 
-    @if(session('success') && !session('health_profile_submitted'))
-        <div class="alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
-    
-    @if($errors->any())
-        <div style="background:#fee2e2; color:#b91c1c; padding:12px; border-radius:8px; margin-bottom:20px; text-align:center; font-size:14px; border:1px solid #fecaca;">
-            {{ $errors->first() }}
-        </div>
-    @endif
-
     @if($accountView === 'profile')
+    <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+        <defs>
+            <clipPath id="profileHeroSmoothWave" clipPathUnits="objectBoundingBox">
+                <path d="M0,0 H1 V0.79 C0.98,0.78 0.95,0.77 0.91,0.77 C0.82,0.77 0.73,0.81 0.64,0.85 C0.55,0.89 0.48,0.91 0.40,0.91 C0.31,0.91 0.22,0.88 0.14,0.84 C0.08,0.81 0.03,0.80 0,0.82 Z" />
+            </clipPath>
+        </defs>
+    </svg>
     <div class="profile-dashboard">
     <div class="profile-hero" id="profileHeroCard">
-        <svg class="profile-hero-wave" viewBox="0 0 1000 180" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M0 80 C82 106 142 116 232 94 C350 68 424 67 542 87 C694 110 801 120 890 82 C946 56 972 27 1000 -8 L1000 180 L0 180 Z" />
+        <svg class="profile-hero-wave" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+                <linearGradient id="profileHeroWaveStroke" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#facc15" stop-opacity="1" />
+                    <stop offset="48%" stop-color="#facc15" stop-opacity="0.72" />
+                    <stop offset="100%" stop-color="#facc15" stop-opacity="0.28" />
+                </linearGradient>
+                <linearGradient id="profileHeroWaveEcho" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#fef08a" stop-opacity="0.38" />
+                    <stop offset="55%" stop-color="#fef9c3" stop-opacity="0.22" />
+                    <stop offset="100%" stop-color="#fef9c3" stop-opacity="0.08" />
+                </linearGradient>
+                <linearGradient id="profileHeroWaveMiddleMask" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="25%" stop-color="black" />
+                    <stop offset="64%" stop-color="white" />
+                </linearGradient>
+                <linearGradient id="profileHeroWaveRightMask" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="60%" stop-color="black" />
+                    <stop offset="100%" stop-color="white" />
+                </linearGradient>
+                <mask id="profileHeroWaveGrowMiddle" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000">
+                    <rect width="1000" height="1000" fill="url(#profileHeroWaveMiddleMask)" />
+                </mask>
+                <mask id="profileHeroWaveGrowRight" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000">
+                    <rect width="1000" height="1000" fill="url(#profileHeroWaveRightMask)" />
+                </mask>
+            </defs>
+            <path class="profile-hero-wave-echo is-far" transform="translate(0 -24)" d="M0 820 C30 800 80 810 140 840 C220 880 310 910 400 910 C480 910 550 890 640 850 C730 810 820 770 910 770 C950 770 980 780 1000 790" />
+            <path class="profile-hero-wave-echo is-near" transform="translate(0 -13)" d="M0 820 C30 800 80 810 140 840 C220 880 310 910 400 910 C480 910 550 890 640 850 C730 810 820 770 910 770 C950 770 980 780 1000 790" />
+            <path class="profile-hero-wave-main" d="M0 820 C30 800 80 810 140 840 C220 880 310 910 400 910 C480 910 550 890 640 850 C730 810 820 770 910 770 C950 770 980 780 1000 790" />
+            <path class="profile-hero-wave-grow is-middle" mask="url(#profileHeroWaveGrowMiddle)" d="M0 820 C30 800 80 810 140 840 C220 880 310 910 400 910 C480 910 550 890 640 850 C730 810 820 770 910 770 C950 770 980 780 1000 790" />
+            <path class="profile-hero-wave-grow is-right" mask="url(#profileHeroWaveGrowRight)" d="M0 820 C30 800 80 810 140 840 C220 880 310 910 400 910 C480 910 550 890 640 850 C730 810 820 770 910 770 C950 770 980 780 1000 790" />
         </svg>
         <div class="profile-hero-campus" aria-hidden="true"></div>
         <div class="profile-hero-quote" aria-hidden="true">
@@ -7251,7 +7697,7 @@
                     </div>
                 @endif
             @else
-                <div class="hero-course">Available once enrolled</div>
+                <div class="hero-course">-</div>
             @endif
 
             @if($isEnrolled)
@@ -7312,7 +7758,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <p class="profile-card-description">Review your personal account details and keep your clinic information up to date.</p>
         </div>
         @if($isEnrolled)
-            <button type="button" id="editBtn" class="profile-edit-btn" onclick="enableEditing()">
+            <button type="button" id="editBtn" class="profile-edit-btn" onclick="openProfileEditModal({{ $canEditClinicProfileInfo ? 'true' : 'false' }})">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                 </svg>
@@ -7321,12 +7767,7 @@ document.addEventListener('DOMContentLoaded', function () {
         @endif
     </div>
 
-    <form action="{{ route('student.updateContact') }}" method="POST">
-        @csrf
-        @if(!empty($linkedAdminProfile))
-            <input type="hidden" name="admin_profile_id" value="{{ $linkedAdminProfile->admin_id }}">
-        @endif
-        
+    <div class="profile-readonly-content">
         @if(!$isEnrolled)
             <div class="profile-enrollment-empty">
                 <div class="profile-enrollment-empty-head">
@@ -7340,12 +7781,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         </p>
                     </div>
                 </div>
-                <div class="profile-enrollment-empty-note">Available once enrolled</div>
+                <div class="profile-enrollment-empty-note">-</div>
             </div>
         @elseif(empty($linkedAdminProfile))
             <div class="profile-sections-grid">
                 <div class="profile-column-stack">
-                    <section class="profile-form-section accent-gold profile-personal-section">
+                    <section class="profile-form-section accent-gold profile-personal-section" data-profile-edit-card>
                         <h3 class="profile-form-section-title"><x-outline-icon name="user-circle" />Personal Details</h3>
                         <div class="profile-grid-3">
                             <div>
@@ -7382,25 +7823,23 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                             <div>
                                 <label class="input-label">Civil Status</label>
-                                <input type="text" class="form-control{{ $guisisPendingClass($accountProfileData['civil_status'] ?? '') }}" value="{{ $guisisValue($accountProfileData['civil_status'] ?? '') }}" readonly>
+                                <input type="text" name="civil_status" class="form-control profile-editable-field{{ $guisisPendingClass(old('civil_status', $accountProfileData['civil_status'] ?? '')) }}" value="{{ old('civil_status', $accountProfileData['civil_status'] ?? '') }}" placeholder="{{ $guisisPendingText }}" disabled data-profile-editable>
                             </div>
                         </div>
-                        @if($showClinicMeasurements)
-                            <div class="profile-grid-2">
-                                <div>
-                                    <label class="input-label">Height (ft)</label>
-                                    <div class="metric-field">
-                                        <input type="text" name="height" class="form-control editable-input" inputmode="decimal" value="{{ $heightDisplay }}" disabled>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="input-label">Weight (lbs)</label>
-                                    <div class="metric-field">
-                                        <input type="text" name="weight" class="form-control editable-input" inputmode="decimal" value="{{ $weightDisplay }}" disabled>
-                                    </div>
+                        <div class="profile-grid-2">
+                            <div>
+                                <label class="input-label">Height (ft)</label>
+                                <div class="metric-field">
+                                    <input type="text" name="height" class="form-control editable-input profile-editable-field" inputmode="decimal" value="{{ $heightDisplay }}" placeholder="{{ $guisisPendingText }}" disabled data-profile-editable>
                                 </div>
                             </div>
-                        @endif
+                            <div>
+                                <label class="input-label">Weight (lbs)</label>
+                                <div class="metric-field">
+                                    <input type="text" name="weight" class="form-control editable-input profile-editable-field" inputmode="decimal" value="{{ $weightDisplay }}" placeholder="{{ $guisisPendingText }}" disabled data-profile-editable>
+                                </div>
+                            </div>
+                        </div>
                         <div class="profile-grid-2">
                             <div>
                                 <label class="input-label">Blood Type</label>
@@ -7447,7 +7886,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </section>
 
-                    <section class="profile-form-section accent-maroon profile-frame-equal profile-contact-section">
+                    <section class="profile-form-section accent-maroon profile-frame-equal profile-contact-section" data-profile-edit-card>
                         <h3 class="profile-form-section-title"><x-outline-icon name="envelope" />Contact Information</h3>
                         <div class="profile-info-row">
                             <label class="input-label">Email Address</label>
@@ -7455,24 +7894,24 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                         <div class="profile-info-row">
                             <label class="input-label">Contact Number</label>
-                            <input type="text" name="contact_no" class="form-control{{ $guisisPendingClass($accountProfileData['contact_number'] ?? '') }}" value="{{ $guisisValue($accountProfileData['contact_number'] ?? '') }}" readonly>
+                            <input type="text" name="contact_no" class="form-control profile-editable-field{{ $guisisPendingClass(old('contact_no', $accountProfileData['contact_number'] ?? '')) }}" value="{{ old('contact_no', $accountProfileData['contact_number'] ?? '') }}" placeholder="{{ $guisisPendingText }}" disabled data-profile-editable>
                         </div>
                         <div class="profile-info-row">
                             <label class="input-label">Address</label>
-                            <textarea class="form-control{{ $guisisPendingClass(old('home_address', $accountProfileData['home_address'] ?? '')) }}" rows="2" placeholder="{{ $guisisPendingText }}" disabled>{{ old('home_address', $accountProfileData['home_address'] ?? '') }}</textarea>
+                            <textarea name="address" class="form-control profile-editable-field{{ $guisisPendingClass(old('address', $accountProfileData['home_address'] ?? '')) }}" rows="2" placeholder="{{ $guisisPendingText }}" disabled data-profile-editable>{{ old('address', $accountProfileData['home_address'] ?? '') }}</textarea>
                         </div>
                     </section>
 
-                    <section class="profile-form-section accent-gold profile-emergency-section">
+                    <section class="profile-form-section accent-gold profile-emergency-section" data-profile-edit-card>
                         <h3 class="profile-form-section-title"><x-outline-icon name="exclamation-triangle" />Emergency Contact</h3>
                         <div class="profile-grid-2">
                             <div class="soft-field">
                                 <label class="input-label">Emergency Contact Person</label>
-                                <input type="text" name="guardian_name" class="form-control{{ $guisisPendingClass(old('guardian_name', $accountProfileData['guardian_name'] ?? '')) }}" value="{{ old('guardian_name', $accountProfileData['guardian_name'] ?? '') }}" placeholder="{{ $guisisPendingText }}" disabled>
+                                <input type="text" name="emergency_contact_person" class="form-control profile-editable-field{{ $guisisPendingClass(old('emergency_contact_person', $accountProfileData['guardian_name'] ?? '')) }}" value="{{ old('emergency_contact_person', $accountProfileData['guardian_name'] ?? '') }}" placeholder="{{ $guisisPendingText }}" disabled data-profile-editable>
                             </div>
                             <div class="soft-field">
                                 <label class="input-label">Emergency Contact Number</label>
-                                <input type="text" name="cellphone" class="form-control{{ $guisisPendingClass(old('cellphone', $accountProfileData['cellphone'] ?? '')) }}" value="{{ old('cellphone', $accountProfileData['cellphone'] ?? '') }}" placeholder="{{ $guisisPendingText }}" disabled>
+                                <input type="text" name="emergency_contact_no" class="form-control profile-editable-field{{ $guisisPendingClass(old('emergency_contact_no', $accountProfileData['cellphone'] ?? '')) }}" value="{{ old('emergency_contact_no', $accountProfileData['cellphone'] ?? '') }}" placeholder="{{ $guisisPendingText }}" disabled data-profile-editable>
                             </div>
                         </div>
                     </section>
@@ -7482,7 +7921,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         @if($isEnrolled && !empty($linkedAdminProfile))
             <div class="profile-sections-grid">
-            <section class="profile-form-section accent-maroon">
+            <section class="profile-form-section accent-maroon" data-profile-edit-card>
                 <h3 class="profile-form-section-title"><x-outline-icon name="information-circle" />Personal Information</h3>
                 @if($displayStudentNumber !== '')
                     <div class="profile-info-row">
@@ -7530,26 +7969,24 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                     <div>
                         <label class="input-label">Civil Status</label>
-                        <input type="text" name="civil_status" class="form-control{{ $guisisPendingClass(old('civil_status', $accountProfileData['civil_status'] ?? $linkedAdminProfile->civil_status)) }}" value="{{ old('civil_status', $accountProfileData['civil_status'] ?? $linkedAdminProfile->civil_status) }}" placeholder="{{ $guisisPendingText }}" disabled>
+                        <input type="text" name="civil_status" class="form-control profile-editable-field{{ $guisisPendingClass(old('civil_status', $accountProfileData['civil_status'] ?? $linkedAdminProfile->civil_status)) }}" value="{{ old('civil_status', $accountProfileData['civil_status'] ?? $linkedAdminProfile->civil_status) }}" placeholder="{{ $guisisPendingText }}" disabled data-profile-editable>
                     </div>
                 </div>
 
-                @if($showClinicMeasurements)
-                    <div class="profile-grid-2">
-                        <div>
-                            <label class="input-label">Height (ft)</label>
-                            <div class="metric-field">
-                                <input type="text" name="height" class="form-control editable-input" inputmode="decimal" value="{{ $heightDisplay }}" disabled>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="input-label">Weight (lbs)</label>
-                            <div class="metric-field">
-                                <input type="text" name="weight" class="form-control editable-input" inputmode="decimal" value="{{ $weightDisplay }}" disabled>
-                            </div>
+                <div class="profile-grid-2">
+                    <div>
+                        <label class="input-label">Height (ft)</label>
+                        <div class="metric-field">
+                            <input type="text" name="height" class="form-control editable-input profile-editable-field" inputmode="decimal" value="{{ $heightDisplay }}" placeholder="{{ $guisisPendingText }}" disabled data-profile-editable>
                         </div>
                     </div>
-                @endif
+                    <div>
+                        <label class="input-label">Weight (lbs)</label>
+                        <div class="metric-field">
+                            <input type="text" name="weight" class="form-control editable-input profile-editable-field" inputmode="decimal" value="{{ $weightDisplay }}" placeholder="{{ $guisisPendingText }}" disabled data-profile-editable>
+                        </div>
+                    </div>
+                </div>
                 <div class="profile-grid-2">
                     <div>
                         <label class="input-label">Blood Type</label>
@@ -7558,7 +7995,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             </section>
 
-            <section class="profile-form-section accent-gold">
+            <section class="profile-form-section accent-gold" data-profile-edit-card>
                 <h3 class="profile-form-section-title"><x-outline-icon name="envelope" />Contact Information</h3>
                 <div class="profile-grid-2">
                     <div>
@@ -7567,25 +8004,27 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                     <div>
                         <label class="input-label">Contact Number</label>
-                        <input type="text" name="contact_no" class="form-control{{ $guisisPendingClass(old('contact_no', $accountProfileData['contact_number'] ?? $user->contact_no)) }}" value="{{ $guisisValue(old('contact_no', $accountProfileData['contact_number'] ?? $user->contact_no)) }}" disabled>
+                        <input type="text" name="contact_no" class="form-control profile-editable-field{{ $guisisPendingClass(old('contact_no', $accountProfileData['contact_number'] ?? $user->contact_no)) }}" value="{{ old('contact_no', $accountProfileData['contact_number'] ?? $user->contact_no) }}" placeholder="{{ $guisisPendingText }}" disabled data-profile-editable>
                     </div>
                 </div>
                 <div class="profile-info-row">
                     <label class="input-label">Address</label>
-                    <textarea name="address" class="form-control{{ $guisisPendingClass(old('address', $accountProfileData['home_address'] ?? $linkedAdminProfile->address)) }}" rows="2" placeholder="{{ $guisisPendingText }}" disabled>{{ old('address', $accountProfileData['home_address'] ?? $linkedAdminProfile->address) }}</textarea>
+                    <textarea name="address" class="form-control profile-editable-field{{ $guisisPendingClass(old('address', $accountProfileData['home_address'] ?? $linkedAdminProfile->address)) }}" rows="2" placeholder="{{ $guisisPendingText }}" disabled data-profile-editable>{{ old('address', $accountProfileData['home_address'] ?? $linkedAdminProfile->address) }}</textarea>
                 </div>
+            </section>
 
+            <section class="profile-form-section accent-gold profile-emergency-section" data-profile-edit-card>
+                <h3 class="profile-form-section-title"><x-outline-icon name="exclamation-triangle" />Emergency Contact</h3>
                 <div class="profile-grid-2">
                     <div class="soft-field">
                         <label class="input-label">Emergency Contact Person</label>
-                        <input type="text" name="emergency_contact_person" class="form-control{{ $guisisPendingClass(old('emergency_contact_person', $accountProfileData['guardian_name'] ?? $linkedAdminProfile->emergency_contact_person)) }}" value="{{ old('emergency_contact_person', $accountProfileData['guardian_name'] ?? $linkedAdminProfile->emergency_contact_person) }}" placeholder="{{ $guisisPendingText }}" disabled>
+                        <input type="text" name="emergency_contact_person" class="form-control profile-editable-field{{ $guisisPendingClass(old('emergency_contact_person', $accountProfileData['guardian_name'] ?? $linkedAdminProfile->emergency_contact_person)) }}" value="{{ old('emergency_contact_person', $accountProfileData['guardian_name'] ?? $linkedAdminProfile->emergency_contact_person) }}" placeholder="{{ $guisisPendingText }}" disabled data-profile-editable>
                     </div>
                     <div class="soft-field">
                         <label class="input-label">Emergency Contact Number</label>
-                        <input type="text" name="emergency_contact_no" class="form-control{{ $guisisPendingClass(old('emergency_contact_no', $accountProfileData['cellphone'] ?? $linkedAdminProfile->emergency_contact_no)) }}" value="{{ old('emergency_contact_no', $accountProfileData['cellphone'] ?? $linkedAdminProfile->emergency_contact_no) }}" placeholder="{{ $guisisPendingText }}" disabled>
+                        <input type="text" name="emergency_contact_no" class="form-control profile-editable-field{{ $guisisPendingClass(old('emergency_contact_no', $accountProfileData['cellphone'] ?? $linkedAdminProfile->emergency_contact_no)) }}" value="{{ old('emergency_contact_no', $accountProfileData['cellphone'] ?? $linkedAdminProfile->emergency_contact_no) }}" placeholder="{{ $guisisPendingText }}" disabled data-profile-editable>
                     </div>
                 </div>
-
                 @if($showOfficeField)
                 <div class="profile-grid-2">
                     <div>
@@ -7598,19 +8037,175 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         @endif
 
-        @if($isEnrolled)
-            <div id="profileActionBar">
-                <div id="saveAction">
-                    <button type="submit" class="profile-action-btn save">
-                        Save Changes
-                    </button>
-                    <button type="button" class="profile-action-btn cancel" onclick="window.location.reload()">
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        @endif
-    </form>
+    </div>
+
+    @if($isEnrolled)
+        <div class="profile-edit-modal" id="profileEditModal" aria-hidden="true">
+            <div class="profile-edit-backdrop" data-profile-modal-close></div>
+            <section class="profile-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="profileEditModalTitle">
+                <form action="{{ route('student.updateContact') }}" method="POST" id="profileEditForm" class="profile-edit-form">
+                    @csrf
+                    @if(!empty($linkedAdminProfile))
+                        <input type="hidden" name="admin_profile_id" value="{{ $linkedAdminProfile->admin_id }}">
+                    @endif
+
+                    <div class="profile-edit-modal-head">
+                        <div>
+                            <span class="profile-edit-modal-kicker">Profile Update</span>
+                            <h2 id="profileEditModalTitle">Edit Profile</h2>
+                        </div>
+                        <button type="button" class="profile-edit-close" aria-label="Close edit profile modal" data-profile-modal-close>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="profile-edit-modal-body">
+                        <div class="profile-edit-section">
+                            <h3>Personal Details</h3>
+                            <div class="profile-edit-grid">
+                                <label class="profile-edit-field">
+                                    <span>First Name</span>
+                                    <input type="text" value="{{ $profileModalFirstName }}" disabled>
+                                </label>
+                                <label class="profile-edit-field">
+                                    <span>Middle Name</span>
+                                    <input type="text" value="{{ $profileModalMiddleName }}" disabled>
+                                </label>
+                                <label class="profile-edit-field">
+                                    <span>Last Name</span>
+                                    <input type="text" value="{{ $profileModalLastName }}" disabled>
+                                </label>
+                                <label class="profile-edit-field">
+                                    <span>Suffix Name</span>
+                                    <input type="text" value="{{ $profileModalSuffixName }}" disabled>
+                                </label>
+                                <label class="profile-edit-field">
+                                    <span>Gender</span>
+                                    <input type="text" value="{{ $profileModalGender }}" disabled>
+                                </label>
+                                <label class="profile-edit-field">
+                                    <span>Birthday</span>
+                                    <input type="text" value="{{ $profileModalBirthday }}" disabled>
+                                </label>
+                                <label class="profile-edit-field">
+                                    <span>Age</span>
+                                    <input type="text" value="{{ $profileModalAge }}" disabled>
+                                </label>
+                                <label class="profile-edit-field">
+                                    <span>Civil Status</span>
+                                    <select name="civil_status">
+                                        <option value="" {{ trim((string) $profileEditCivilStatus) === '' ? 'selected' : '' }}>Select civil status</option>
+                                        @if(trim((string) $profileEditCivilStatus) !== '' && !in_array($profileEditCivilStatus, $profileEditCivilOptions, true))
+                                            <option value="{{ $profileEditCivilStatus }}" selected>{{ $profileEditCivilStatus }}</option>
+                                        @endif
+                                        @foreach($profileEditCivilOptions as $status)
+                                            <option value="{{ $status }}" {{ $profileEditCivilStatus === $status ? 'selected' : '' }}>{{ $status }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('civil_status')<em>{{ $message }}</em>@enderror
+                                </label>
+                                <label class="profile-edit-field">
+                                    <span>Height (ft)</span>
+                                    <input type="text" name="height" inputmode="decimal" value="{{ old('height', $heightDisplay) }}" placeholder="{{ $guisisPendingText }}">
+                                    @error('height')<em>{{ $message }}</em>@enderror
+                                </label>
+                                <label class="profile-edit-field">
+                                    <span>Weight (lbs)</span>
+                                    <input type="text" name="weight" inputmode="decimal" value="{{ old('weight', $weightDisplay) }}" placeholder="{{ $guisisPendingText }}">
+                                    @error('weight')<em>{{ $message }}</em>@enderror
+                                </label>
+                                <label class="profile-edit-field">
+                                    <span>Blood Type</span>
+                                    <input type="text" value="{{ $profileModalBloodType }}" disabled>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="profile-edit-section">
+                            <h3>{{ $usesEmployeeHealthForm ? 'Employment Information' : 'Academic Information' }}</h3>
+                            <div class="profile-edit-grid">
+                                <label class="profile-edit-field">
+                                    <span>{{ $idNumberHeading }}</span>
+                                    <input type="text" value="{{ $profileModalIdNumber }}" disabled>
+                                </label>
+                                @if($usesEmployeeHealthForm)
+                                    <label class="profile-edit-field">
+                                        <span>Office / Department</span>
+                                        <input type="text" value="{{ $profileModalOffice }}" disabled>
+                                    </label>
+                                @else
+                                    <label class="profile-edit-field profile-edit-field-wide">
+                                        <span>Course</span>
+                                        <input type="text" value="{{ $profileModalCourse }}" disabled>
+                                    </label>
+                                @endif
+                                <label class="profile-edit-field">
+                                    <span>{{ $usesEmployeeHealthForm ? 'School Year' : 'Year' }}</span>
+                                    <input type="text" value="{{ $profileModalYear }}" disabled>
+                                </label>
+                                @if(!$usesEmployeeHealthForm)
+                                    <label class="profile-edit-field">
+                                        <span>Section</span>
+                                        <input type="text" value="{{ $profileModalSection }}" disabled>
+                                    </label>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="profile-edit-section">
+                            <h3>Contact Information</h3>
+                            <div class="profile-edit-grid">
+                                <label class="profile-edit-field">
+                                    <span>Email Address</span>
+                                    <input type="email" value="{{ $profileModalEmail }}" disabled>
+                                </label>
+                                <label class="profile-edit-field">
+                                    <span>Contact Number</span>
+                                    <input type="text" name="contact_no" inputmode="tel" value="{{ $profileEditContactNo }}" placeholder="{{ $guisisPendingText }}">
+                                    @error('contact_no')<em>{{ $message }}</em>@enderror
+                                </label>
+                                <label class="profile-edit-field profile-edit-field-wide">
+                                    <span>Address</span>
+                                    <textarea name="address" rows="3" placeholder="{{ $guisisPendingText }}">{{ $profileEditAddress }}</textarea>
+                                    @error('address')<em>{{ $message }}</em>@enderror
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="profile-edit-section">
+                            <h3>Emergency Contact</h3>
+                            <div class="profile-edit-grid">
+                                <label class="profile-edit-field">
+                                    <span>Emergency Contact Person</span>
+                                    <input type="text" name="emergency_contact_person" value="{{ $profileEditEmergencyPerson }}" placeholder="{{ $guisisPendingText }}">
+                                    @error('emergency_contact_person')<em>{{ $message }}</em>@enderror
+                                </label>
+                                <label class="profile-edit-field">
+                                    <span>Emergency Contact Number</span>
+                                    <input type="text" name="emergency_contact_no" inputmode="tel" value="{{ $profileEditEmergencyNo }}" placeholder="{{ $guisisPendingText }}">
+                                    @error('emergency_contact_no')<em>{{ $message }}</em>@enderror
+                                </label>
+                                @if($showOfficeField)
+                                    <label class="profile-edit-field">
+                                        <span>Office</span>
+                                        <input type="text" value="{{ $profileModalOffice }}" disabled>
+                                    </label>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-edit-modal-footer">
+                        <button type="submit" class="profile-action-btn save">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    @endif
 </div>
 @elseif($accountView === 'health-record')
     @php
@@ -9184,11 +9779,51 @@ window.updateHealthDeclarationPreview = function (input) {
     }
 };
 
-function enableEditing() {
-    alert('Edit Profile is currently unavailable for now. Please contact the clinic staff if any information needs correction.');
+function openProfileEditModal(canEdit = true) {
+    if (!canEdit) {
+        alert('Edit Profile is currently unavailable for now. Please contact the clinic staff if any information needs correction.');
+        return;
+    }
+
+    const modal = document.getElementById('profileEditModal');
+    if (!modal) return;
+
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.dataset.profileModalOverflow = document.body.style.overflow || '';
+    document.body.style.overflow = 'hidden';
+
+    const firstField = modal.querySelector('input:not([type="hidden"]):not(:disabled), select:not(:disabled), textarea:not(:disabled), button');
+    window.setTimeout(() => firstField?.focus(), 80);
+}
+
+function closeProfileEditModal() {
+    const modal = document.getElementById('profileEditModal');
+    if (!modal) return;
+
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = document.body.dataset.profileModalOverflow || '';
+    delete document.body.dataset.profileModalOverflow;
+    document.getElementById('editBtn')?.focus();
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-profile-modal-close]').forEach(function (button) {
+        button.addEventListener('click', closeProfileEditModal);
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && document.getElementById('profileEditModal')?.classList.contains('is-open')) {
+            closeProfileEditModal();
+        }
+    });
+
+    const shouldOpenProfileEditModal = @json($accountView === 'profile' && $isEnrolled && $canEditClinicProfileInfo && $hasProfileEditErrors);
+    if (shouldOpenProfileEditModal) {
+        openProfileEditModal();
+    }
+
     document.querySelectorAll('[data-notification-toggle]').forEach(function (toggle) {
         const detailsId = toggle.getAttribute('aria-controls');
         const details = detailsId ? document.getElementById(detailsId) : null;

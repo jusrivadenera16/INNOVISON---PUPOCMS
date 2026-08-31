@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
@@ -90,7 +91,7 @@ class AdminUserController extends Controller
             ? []
             : $this->collectAdminHubProfiles($lookupSearch, $facultyDirectory);
 
-        $lookupRecords = $this->buildLookupRecords($lookupSearch, $managementView, $facultySyncService);
+        $lookupRecords = $this->buildLookupRecords($lookupSearch, $managementView, $facultySyncService, $request);
 
         $stats = [
             'students' => collect($allLocalUsers)->where('source', 'student')->count(),
@@ -126,7 +127,7 @@ class AdminUserController extends Controller
         $this->ensureCanManageUsers();
 
         $lookupSearch = trim((string) $request->query('lookup_search', ''));
-        $lookupRecords = $this->buildLookupRecords($lookupSearch, 'account-access', $facultySyncService);
+        $lookupRecords = $this->buildLookupRecords($lookupSearch, 'account-access', $facultySyncService, $request);
 
         return response()->json([
             'html' => view('admin.user_management.partials.account-access-lookup-results', compact('lookupRecords'))->render(),
@@ -145,7 +146,7 @@ class AdminUserController extends Controller
         $this->ensureCanManageUsers();
 
         $lookupSearch = trim((string) $request->query('lookup_search', ''));
-        $lookupRecords = $this->buildLookupRecords($lookupSearch, 'admin-hub', $facultySyncService);
+        $lookupRecords = $this->buildLookupRecords($lookupSearch, 'admin-hub', $facultySyncService, $request);
 
         return response()->json([
             'html' => view('admin.user_management.partials.admin-hub-lookup-results', compact('lookupRecords'))->render(),
@@ -156,7 +157,8 @@ class AdminUserController extends Controller
     private function buildLookupRecords(
         string $lookupSearch,
         string $managementView,
-        FacultySyncService $facultySyncService
+        FacultySyncService $facultySyncService,
+        ?Request $request = null
     ): array {
         if ($lookupSearch === '') {
             return [];
@@ -197,6 +199,13 @@ class AdminUserController extends Controller
             $lookupRecords = $this->mergeFacultyLookupRecords(
                 $lookupRecords,
                 $facultyLookupRecords
+            );
+        }
+
+        if ($managementView === 'admin-hub') {
+            $lookupRecords = $this->mergeIdpAdminUserLookupRecords(
+                $lookupRecords,
+                collect($this->collectIdpAdminUsers($lookupSearch, $request))
             );
         }
 
@@ -573,7 +582,7 @@ class AdminUserController extends Controller
             : ['admin_clinic_staff', 'student_assistant', 'super_admin'];
 
         $request->validate([
-            'lookup_source' => ['required', Rule::in(['faculty', 'admin_profile'])],
+            'lookup_source' => ['required', Rule::in(['faculty', 'admin_profile', 'idp_admin_user'])],
             'management_view' => ['nullable', Rule::in(['account-access', 'admin-hub'])],
             'user_role' => ['required', Rule::in($allowedRoles)],
             'status' => ['required', Rule::in(['active', 'inactive'])],
@@ -1480,6 +1489,227 @@ class AdminUserController extends Controller
             ->all();
     }
 
+    private function mergeIdpAdminUserLookupRecords($lookupRecords, $idpRecords)
+    {
+        $existingRecords = collect($lookupRecords);
+        $remainingIdpRecords = collect($idpRecords)
+            ->reject(function (array $idpRecord) use ($existingRecords) {
+                return $existingRecords->contains(
+                    fn (array $record) => $this->lookupRecordsShareIdentity($record, $idpRecord)
+                );
+            })
+            ->values();
+
+        return $existingRecords->merge($remainingIdpRecords);
+    }
+
+    private function collectIdpAdminUsers(string $search, ?Request $request = null): array
+    {
+        $baseUrl = rtrim((string) config('services.idp.base_url', ''), '/');
+        $cookieName = trim((string) config('services.idp.access_cookie_name', 'access_token'));
+        $accessToken = trim((string) ($request?->cookie($cookieName) ?? request()->cookie($cookieName, '')));
+
+        if ($search === '' || $baseUrl === '' || $cookieName === '' || $accessToken === '') {
+            return [];
+        }
+
+        try {
+            $response = Http::acceptJson()
+                ->timeout(10)
+                ->withHeaders([
+                    'Cookie' => $cookieName . '=' . $accessToken,
+                ])
+                ->get($baseUrl . '/api/v1/admin/users', [
+                    'page' => 1,
+                    'limit' => 100,
+                ]);
+        } catch (\Throwable $exception) {
+            return [];
+        }
+
+        if (!$response->successful()) {
+            return [];
+        }
+
+        $payload = $response->json();
+        if (!is_array($payload)) {
+            return [];
+        }
+
+        return collect($this->extractIdpUsersFromPayload($payload))
+            ->filter(fn ($user) => is_array($user))
+            ->map(fn (array $user) => $this->transformIdpAdminUserLookupRecord($user))
+            ->filter()
+            ->filter(fn (array $record) => $this->lookupRecordMatchesSearch($record, $search))
+            ->values()
+            ->all();
+    }
+
+    private function extractIdpUsersFromPayload(array $payload): array
+    {
+        foreach ([
+            data_get($payload, 'data.users'),
+            data_get($payload, 'data.data'),
+            data_get($payload, 'data.items'),
+            data_get($payload, 'users'),
+            data_get($payload, 'results'),
+            data_get($payload, 'items'),
+            data_get($payload, 'data'),
+        ] as $candidate) {
+            if (is_array($candidate) && array_is_list($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return [];
+    }
+
+    private function transformIdpAdminUserLookupRecord(array $user): ?array
+    {
+        $profile = is_array($user['profile'] ?? null) ? $user['profile'] : [];
+        $fields = is_array($user['fields'] ?? null) ? $user['fields'] : [];
+        $firstName = (string) $this->firstFilledValue([
+            $user['first_name'] ?? null,
+            $user['firstname'] ?? null,
+            $user['given_name'] ?? null,
+            $fields['first_name'] ?? null,
+            data_get($profile, 'first_name'),
+        ]);
+        $middleName = (string) $this->firstFilledValue([
+            $user['middle_name'] ?? null,
+            $user['middlename'] ?? null,
+            $fields['middle_name'] ?? null,
+            data_get($profile, 'middle_name'),
+        ]);
+        $lastName = (string) $this->firstFilledValue([
+            $user['last_name'] ?? null,
+            $user['lastname'] ?? null,
+            $user['family_name'] ?? null,
+            $fields['last_name'] ?? null,
+            data_get($profile, 'last_name'),
+        ]);
+        $displayName = (string) $this->firstFilledValue([
+            $user['name'] ?? null,
+            $user['full_name'] ?? null,
+            $user['display_name'] ?? null,
+            trim(implode(' ', array_filter([$firstName, $middleName, $lastName]))),
+        ]);
+        $email = (string) $this->firstFilledValue([
+            $user['email'] ?? null,
+            $user['pup_email'] ?? null,
+            $user['institutional_email'] ?? null,
+            $user['email_address'] ?? null,
+            $fields['email'] ?? null,
+            data_get($profile, 'email'),
+        ]);
+        $idpUserId = (string) $this->firstFilledValue([
+            $user['id'] ?? null,
+            $user['uuid'] ?? null,
+            $user['user_id'] ?? null,
+            $user['admin_uuid'] ?? null,
+            $fields['idp_user_id'] ?? null,
+            data_get($profile, 'idp_user_id'),
+        ]);
+        $employeeNumber = (string) $this->firstFilledValue([
+            $user['employee_number'] ?? null,
+            $user['employee_no'] ?? null,
+            $user['employee_id'] ?? null,
+            $user['faculty_code'] ?? null,
+            $user['student_number'] ?? null,
+            $fields['employee_number'] ?? null,
+            data_get($profile, 'employee_number'),
+        ]);
+
+        if ($displayName === '' && $email === '' && $idpUserId === '') {
+            return null;
+        }
+
+        $rawStatus = strtolower((string) $this->firstFilledValue([
+            $user['status'] ?? null,
+            $user['account_status'] ?? null,
+            $fields['status'] ?? null,
+            data_get($profile, 'status'),
+            'active',
+        ]));
+        $status = in_array($rawStatus, ['0', 'false', 'inactive', 'disabled'], true) ? 'inactive' : 'active';
+        $idpRole = (string) $this->firstFilledValue([
+            $user['role'] ?? null,
+            $user['user_role'] ?? null,
+            $user['idp_role'] ?? null,
+            $fields['role'] ?? null,
+            data_get($profile, 'role'),
+            'IDP User',
+        ]);
+        $adminUuid = $this->isUuid($idpUserId) ? $idpUserId : '';
+        $recordId = $employeeNumber !== '' ? $employeeNumber : ($idpUserId !== '' ? $idpUserId : $email);
+        $avatarSeed = $displayName !== '' ? $displayName : ($email !== '' ? $email : 'I');
+
+        return [
+            'id' => $recordId,
+            'record_id' => $recordId,
+            'source' => 'idp_admin_user',
+            'source_label' => 'IDP User',
+            'name' => $displayName !== '' ? $displayName : ($email !== '' ? $email : 'IDP User'),
+            'first_name' => $firstName,
+            'middle_name' => $middleName,
+            'last_name' => $lastName,
+            'student_id' => $employeeNumber,
+            'email' => $email,
+            'role' => $idpRole !== '' ? $idpRole : 'IDP User',
+            'raw_role' => 'admin_designee',
+            'status' => $status,
+            'avatar_url' => null,
+            'avatar_letter' => strtoupper(substr($avatarSeed, 0, 1)),
+            'can_edit' => false,
+            'can_onboard' => true,
+            'is_local_user' => false,
+            'is_external' => true,
+            'meta' => [
+                'email' => $email,
+                'idp_role' => $idpRole,
+                'user_type' => $idpRole,
+                'access_level' => 'designee',
+                'admin_login_email' => $email,
+                'admin_uuid' => $adminUuid,
+                'idp_user_id' => $idpUserId,
+                'employee_number' => $employeeNumber,
+                'DOB' => $this->firstFilledValue([$user['birthday'] ?? null, $user['date_of_birth'] ?? null, data_get($profile, 'birthday')]),
+                'birthday' => $this->firstFilledValue([$user['birthday'] ?? null, $user['date_of_birth'] ?? null, data_get($profile, 'birthday')]),
+                'age' => $this->firstFilledValue([$user['age'] ?? null, data_get($profile, 'age')]),
+                'gender' => $this->firstFilledValue([$user['gender'] ?? null, $user['sex'] ?? null, data_get($profile, 'gender')]),
+                'civil_status' => $this->firstFilledValue([$user['civil_status'] ?? null, data_get($profile, 'civil_status')]),
+                'contact_no' => $this->firstFilledValue([$user['contact_no'] ?? null, $user['phone'] ?? null, data_get($profile, 'contact_no')]),
+                'address' => $this->firstFilledValue([$user['address'] ?? null, $user['home_address'] ?? null, data_get($profile, 'address')]),
+                'office' => $this->firstFilledValue([$user['office'] ?? null, $user['department'] ?? null, data_get($profile, 'office')]),
+                'lookup_source' => 'idp_admin_user',
+                'updated_at' => $this->firstFilledValue([$user['updated_at'] ?? null, $user['last_updated'] ?? null]),
+            ],
+        ];
+    }
+
+    private function lookupRecordMatchesSearch(array $record, string $search): bool
+    {
+        $needle = strtolower(trim($search));
+        if ($needle === '') {
+            return true;
+        }
+
+        $haystack = strtolower(implode(' ', array_filter([
+            $record['name'] ?? '',
+            $record['first_name'] ?? '',
+            $record['middle_name'] ?? '',
+            $record['last_name'] ?? '',
+            $record['email'] ?? '',
+            $record['student_id'] ?? '',
+            $record['role'] ?? '',
+            data_get($record, 'meta.employee_number'),
+            data_get($record, 'meta.idp_user_id'),
+            data_get($record, 'meta.admin_uuid'),
+        ])));
+
+        return str_contains($haystack, $needle);
+    }
+
     private function collectAdminHubProfiles(string $search = '', array $facultyDirectory = []): array
     {
         if (!Schema::hasTable('admin_hub')) {
@@ -2026,6 +2256,7 @@ class AdminUserController extends Controller
             'student_assistant' => 2,
             'student' => 3,
             'faculty' => 4,
+            'idp_admin_user' => 4,
             default => 9,
         };
     }

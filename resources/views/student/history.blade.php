@@ -1144,7 +1144,7 @@
           line-height: 1.35;
       }
       .history-modern-stat-grid {
-          display: grid;
+          display: none;
           grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 10px;
           margin-bottom: 14px;
@@ -1567,14 +1567,29 @@
       }
       @media (max-width: 600px) {
           .history-modern-page { width: min(100% - 20px, 1060px); }
-          .history-modern-hero { min-height: 0; margin-top: -4px; padding: 19px 16px; }
+          .history-modern-hero { min-height: 0; margin-top: -4px; padding: 18px 16px; }
           .history-modern-hero-main { grid-template-columns: 62px minmax(0, 1fr); align-items: start; gap: 12px; }
           .history-modern-emblem { width: 60px; height: 60px; }
           .history-modern-emblem svg { width: 33px; height: 33px; }
           .history-modern-title { font-size: 25px; }
-          .history-modern-chips { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr; }
-          .history-modern-hero-overview { grid-template-columns: 1fr; }
-          .history-modern-overview-item + .history-modern-overview-item { border-top: 1px solid rgba(255,255,255,.14); border-left: 0; padding-left: 0; }
+          .history-modern-chips {
+              grid-column: 1 / -1;
+              display: flex;
+              flex-wrap: nowrap;
+              gap: 7px;
+              margin-right: -16px;
+              padding: 0 16px 4px 0;
+              overflow-x: auto;
+              scrollbar-width: thin;
+          }
+          .history-modern-chip { flex: 0 0 auto; white-space: nowrap; }
+          .history-modern-hero-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .history-modern-overview-item { padding: 12px 0; }
+          .history-modern-overview-item + .history-modern-overview-item {
+              border-top: 0;
+              border-left: 1px solid rgba(255,255,255,.14);
+              padding-left: 14px;
+          }
           .history-modern-appointment-card { grid-template-columns: 42px minmax(0, 1fr); align-items: start; }
           .history-entry-actions { grid-column: 2; display: flex; justify-content: space-between; align-items: center; justify-items: stretch; }
           .history-entry-details { grid-template-columns: 1fr; padding-left: 0; }

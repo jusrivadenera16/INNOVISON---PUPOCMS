@@ -1058,6 +1058,159 @@
             color: #9fb0c8;
         }
 
+        .student-toast-stack {
+            position: fixed;
+            top: calc(var(--header-height, 74px) + 16px);
+            right: 26px;
+            z-index: 499996;
+            display: grid;
+            gap: 12px;
+            width: min(330px, calc(100vw - 32px));
+            pointer-events: none;
+        }
+
+        .student-toast {
+            position: relative;
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr) 28px;
+            align-items: center;
+            gap: 12px;
+            min-height: 78px;
+            padding: 14px 12px 14px 22px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.98);
+            color: #334155;
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+            opacity: 0;
+            transform: translateX(18px) scale(0.98);
+            animation: studentToastIn 0.32s cubic-bezier(.2, .8, .2, 1) forwards;
+            pointer-events: auto;
+            overflow: hidden;
+        }
+
+        .student-toast::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 8px;
+            background:
+                linear-gradient(135deg, transparent 0 45%, var(--toast-accent) 46% 100%) 0 0 / 8px 12px,
+                linear-gradient(45deg, transparent 0 45%, var(--toast-accent-soft) 46% 100%) 0 6px / 8px 12px;
+        }
+
+        .student-toast.is-success {
+            --toast-accent: #86efac;
+            --toast-accent-soft: #bbf7d0;
+        }
+
+        .student-toast.is-error {
+            --toast-accent: #fca5a5;
+            --toast-accent-soft: #fecaca;
+        }
+
+        .student-toast.is-hiding {
+            animation: studentToastOut 0.22s ease forwards;
+        }
+
+        .student-toast-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--toast-accent-soft);
+            color: var(--toast-title);
+        }
+
+        .student-toast.is-success .student-toast-icon,
+        .student-toast.is-success .student-toast-title {
+            --toast-title: #16a34a;
+        }
+
+        .student-toast.is-error .student-toast-icon,
+        .student-toast.is-error .student-toast-title {
+            --toast-title: #dc2626;
+        }
+
+        .student-toast-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke-width: 2.2;
+        }
+
+        .student-toast-title,
+        .student-toast-message {
+            display: block;
+            line-height: 1.25;
+        }
+
+        .student-toast-title {
+            margin-bottom: 4px;
+            color: var(--toast-title);
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .student-toast-message {
+            color: #475569;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .student-toast-close {
+            width: 28px;
+            height: 28px;
+            border: 0;
+            border-radius: 999px;
+            background: transparent;
+            color: #475569;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background .18s ease, color .18s ease, transform .18s ease;
+        }
+
+        .student-toast-close:hover,
+        .student-toast-close:focus-visible {
+            background: rgba(15, 23, 42, 0.08);
+            color: #111827;
+            transform: scale(1.04);
+            outline: none;
+        }
+
+        .student-toast-close svg {
+            width: 17px;
+            height: 17px;
+            stroke-width: 2;
+        }
+
+        @keyframes studentToastIn {
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        @keyframes studentToastOut {
+            to {
+                opacity: 0;
+                transform: translateX(18px) scale(0.98);
+            }
+        }
+
+        html[data-theme="dark"] .student-toast {
+            background: rgba(15, 23, 42, 0.98);
+            color: #f8fafc;
+            box-shadow: 0 18px 38px rgba(2, 6, 23, 0.38);
+        }
+
+        html[data-theme="dark"] .student-toast-message,
+        html[data-theme="dark"] .student-toast-close {
+            color: #cbd5e1;
+        }
+
         @media (max-width: 768px) {
             .student-quick-actions-fab-wrap {
                 right: 18px;
@@ -1090,6 +1243,12 @@
 
             .student-notif-panel.is-open {
                 transform: translateY(0) scale(1);
+            }
+
+            .student-toast-stack {
+                top: calc(var(--header-height, 74px) + 10px);
+                right: 12px;
+                width: min(310px, calc(100vw - 24px));
             }
         }
 
@@ -1124,17 +1283,41 @@
             border-radius: 14px;
             border: 1px solid rgba(139, 0, 0, 0.12);
             box-shadow: 0 18px 36px rgba(15, 23, 42, 0.16);
-            display: none;
+            display: block;
             z-index: 40;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(-8px) scale(.97);
+            transform-origin: top right;
+            transition: opacity .22s ease, transform .26s cubic-bezier(.2, .8, .2, 1), visibility .22s ease;
         }
 
         .nav-dropdown.is-open .nav-dropdown-menu {
-            display: block;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
         }
 
         .nav-dropdown-menu li {
             width: 100%;
+            opacity: 0;
+            transform: translateY(-4px);
+            transition: opacity .2s ease, transform .22s ease;
         }
+
+        .nav-dropdown.is-open .nav-dropdown-menu li {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .nav-dropdown.is-open .nav-dropdown-menu li:nth-child(2) { transition-delay: .03s; }
+        .nav-dropdown.is-open .nav-dropdown-menu li:nth-child(3) { transition-delay: .06s; }
+        .nav-dropdown.is-open .nav-dropdown-menu li:nth-child(4) { transition-delay: .09s; }
+        .nav-dropdown.is-open .nav-dropdown-menu li:nth-child(5) { transition-delay: .12s; }
+        .nav-dropdown.is-open .nav-dropdown-menu li:nth-child(6) { transition-delay: .15s; }
+        .nav-dropdown.is-open .nav-dropdown-menu li:nth-child(7) { transition-delay: .18s; }
 
         .nav-dropdown-menu li + li {
             margin-top: 4px;
@@ -1524,30 +1707,90 @@
         @media (max-width: 768px) {
             .nav-toggle {
                 margin-left: auto;
+                width: 42px;
+                height: 42px;
+                padding: 0;
+                display: inline-flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 5px;
+                border: 0;
+                background: transparent;
+                color: #ffffff;
+                cursor: pointer;
+                position: relative;
+                z-index: 40;
+                transition: color .22s ease, transform .22s ease;
+            }
+
+            .nav-toggle:hover,
+            .nav-toggle:focus-visible,
+            .nav-toggle.is-open {
+                color: #facc15;
+                outline: none;
+            }
+
+            .nav-toggle:hover {
+                transform: translateY(-1px);
+            }
+
+            .nav-toggle-line {
+                width: 20px;
+                height: 2px;
+                border-radius: 999px;
+                background: currentColor;
+                transform-origin: center;
+                transition: transform .28s ease, opacity .2s ease, width .28s ease;
+            }
+
+            .nav-toggle.is-open .nav-toggle-line:nth-child(1) {
+                transform: translateY(7px) rotate(45deg);
+            }
+
+            .nav-toggle.is-open .nav-toggle-line:nth-child(2) {
+                opacity: 0;
+                transform: scaleX(.2);
+            }
+
+            .nav-toggle.is-open .nav-toggle-line:nth-child(3) {
+                transform: translateY(-7px) rotate(-45deg);
             }
 
             .main-nav {
-                width: 0;
+                width: auto;
             }
 
             .nav-list {
-                display: none;
+                display: flex;
                 position: absolute;
                 top: var(--header-height);
-                left: 0;
-                right: 0;
+                left: auto;
+                right: 12px;
                 flex-direction: column;
-                gap: 16px;
-                padding: 14px 16px;
-                background: #ffffff;
-                border-bottom: 1px solid var(--border);
-                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+                align-items: stretch;
+                gap: 8px;
+                width: min(260px, calc(100vw - 28px));
+                padding: 12px;
+                background: rgba(255, 255, 255, .97);
+                border: 1px solid rgba(127, 29, 45, .16);
+                border-radius: 0 0 18px 18px;
+                box-shadow: 0 18px 38px rgba(0, 0, 0, 0.18);
                 max-height: calc(100vh - var(--header-height) - 10px);
                 overflow-y: auto;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transform: translateY(-8px) scale(.98);
+                transform-origin: top right;
+                transition: opacity .24s ease, transform .28s ease, visibility .24s ease;
             }
 
             .nav-list.show {
-                display: flex;
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+                transform: translateY(0) scale(1);
             }
 
             .nav-list li {
@@ -1559,13 +1802,15 @@
                 width: 100%;
                 display: flex;
                 align-items: center;
-                padding: 8px 0;
+                justify-content: flex-start;
+                padding: 9px 10px;
+                border-radius: 10px;
             }
 
             .nav-list-divider {
                 width: 100%;
                 height: 1px;
-                margin: 2px 0 8px;
+                margin: 4px 0;
                 background: #e5e7eb;
             }
 
@@ -1575,7 +1820,8 @@
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                padding: 8px 0;
+                padding: 9px 10px;
+                border-radius: 10px;
             }
 
             .nav-dropdown-menu {
@@ -1627,6 +1873,19 @@
             .nav-list li .logout-btn svg {
                 color: #ffffff;
                 stroke: currentColor;
+            }
+
+            .standalone-logout-item {
+                display: none;
+                opacity: 0;
+                transform: translateY(-6px);
+                transition: opacity .2s ease, transform .24s ease;
+            }
+
+            .nav-dropdown.is-open + .standalone-logout-item {
+                display: flex;
+                opacity: 1;
+                transform: translateY(0);
             }
 
             main table {
@@ -1736,6 +1995,70 @@
                 0 7px 12px rgba(45, 0, 10, 0.22),
                 inset 0 1px 2px rgba(255, 255, 255, 0.26),
                 inset 0 -3px 4px rgba(56, 0, 12, 0.18);
+        }
+
+        .nav-dropdown-menu .desktop-account-logout {
+            position: relative;
+            overflow: hidden;
+            margin-top: 8px;
+            background: #7f1d2d !important;
+            border: 1px solid rgba(127, 29, 45, .88);
+            color: #ffffff !important;
+            box-shadow:
+                0 8px 16px rgba(45, 0, 10, .18),
+                inset 0 1px 0 rgba(255, 255, 255, .18);
+        }
+
+        .nav-dropdown-menu .desktop-account-logout::before {
+            content: "";
+            position: absolute;
+            inset: -45% auto -45% -70%;
+            width: 56%;
+            transform: skewX(-18deg);
+            background: linear-gradient(90deg, transparent, rgba(255, 243, 166, .7), transparent);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .nav-dropdown-menu .desktop-account-logout:hover,
+        .nav-dropdown-menu .desktop-account-logout:focus-visible {
+            background: #facc15 !important;
+            border-color: rgba(250, 204, 21, .95);
+            color: #7f1d2d !important;
+            box-shadow:
+                0 10px 20px rgba(127, 29, 45, .18),
+                0 0 18px rgba(250, 204, 21, .26);
+        }
+
+        .nav-dropdown-menu .desktop-account-logout:hover::before,
+        .nav-dropdown-menu .desktop-account-logout:focus-visible::before {
+            opacity: 1;
+            animation: accountLogoutSweep .78s ease forwards;
+        }
+
+        .nav-dropdown-menu .desktop-account-logout svg {
+            width: 17px;
+            height: 17px;
+            stroke-width: 1.9;
+        }
+
+        .desktop-logout-item {
+            display: none;
+        }
+
+        @keyframes accountLogoutSweep {
+            from { transform: translateX(0) skewX(-18deg); }
+            to { transform: translateX(360%) skewX(-18deg); }
+        }
+
+        @media (min-width: 769px) {
+            .desktop-logout-item {
+                display: block;
+            }
+
+            .standalone-logout-item {
+                display: none;
+            }
         }
 
         html[data-theme="dark"] .nav-list-divider {
@@ -2077,6 +2400,136 @@
             html[data-theme="dark"] .nav-dropdown-toggle {
                 color: #f3f4f6 !important;
             }
+
+            .nav-list {
+                height: max-content;
+                min-height: 0;
+            }
+
+            .nav-dropdown-menu {
+                width: 100%;
+                max-height: 0;
+                margin-top: 0;
+                padding: 0 10px;
+                overflow: hidden;
+                border-width: 0;
+                box-sizing: border-box;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transform: none;
+                transition:
+                    max-height .3s cubic-bezier(.2, .8, .2, 1),
+                    margin-top .3s ease,
+                    padding .3s ease,
+                    border-width .18s ease,
+                    opacity .18s ease,
+                    visibility 0s linear .3s;
+            }
+
+            .nav-dropdown.is-open .nav-dropdown-menu {
+                max-height: 430px;
+                margin-top: 8px;
+                padding: 10px;
+                border-width: 1px;
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+                transform: none;
+                transition-delay: 0s;
+            }
+
+            .standalone-logout-item,
+            .nav-dropdown.is-open + .standalone-logout-item {
+                display: flex;
+                margin-top: 0;
+                opacity: 1;
+                transform: none;
+            }
+
+            .nav-list li .student-logout-btn,
+            html[data-theme="dark"] .nav-list li .student-logout-btn {
+                min-height: 42px;
+                border-radius: 8px;
+                background: #7f1d2d !important;
+                border-color: #681424 !important;
+                color: #ffffff !important;
+            }
+
+            .nav-list li .student-logout-btn:hover,
+            .nav-list li .student-logout-btn:focus-visible,
+            html[data-theme="dark"] .nav-list li .student-logout-btn:hover,
+            html[data-theme="dark"] .nav-list li .student-logout-btn:focus-visible {
+                background: #681424 !important;
+                border-color: #560e1c !important;
+                color: #ffffff !important;
+            }
+
+            .nav-list li a:not(.logout-btn):hover,
+            .nav-list li a:not(.logout-btn):focus-visible,
+            .nav-dropdown-toggle:hover,
+            .nav-dropdown-toggle:focus-visible {
+                background: transparent !important;
+                color: #111827 !important;
+                outline: none;
+            }
+
+            html[data-theme="dark"] .nav-list li a:not(.logout-btn):hover,
+            html[data-theme="dark"] .nav-list li a:not(.logout-btn):focus-visible,
+            html[data-theme="dark"] .nav-dropdown-toggle:hover,
+            html[data-theme="dark"] .nav-dropdown-toggle:focus-visible {
+                background: transparent !important;
+                color: #f8fafc !important;
+                outline: none;
+            }
+
+            .nav-list li a:not(.logout-btn):hover .nav-link-content > span:last-child,
+            .nav-list li a:not(.logout-btn):focus-visible .nav-link-content > span:last-child,
+            .nav-dropdown-toggle:hover .nav-link-content > span:last-child,
+            .nav-dropdown-toggle:focus-visible .nav-link-content > span:last-child,
+            .nav-dropdown-menu a:hover .nav-dropdown-link-content > span:last-child,
+            .nav-dropdown-menu a:focus-visible .nav-dropdown-link-content > span:last-child {
+                text-decoration-line: underline;
+                text-decoration-color: #facc15;
+                text-decoration-thickness: 2px;
+                text-underline-offset: 4px;
+            }
+
+            .nav-list li a:not(.logout-btn).active,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle.active,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle[aria-expanded="true"],
+            .nav-list .nav-dropdown.is-open > .nav-dropdown-toggle {
+                background: transparent !important;
+                color: #111827 !important;
+                font-weight: 800 !important;
+            }
+
+            .nav-list .nav-dropdown > .nav-dropdown-toggle.active .nav-link-content,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle[aria-expanded="true"] .nav-link-content,
+            .nav-list .nav-dropdown.is-open > .nav-dropdown-toggle .nav-link-content,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle.active .nav-link-icon,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle[aria-expanded="true"] .nav-link-icon,
+            .nav-list .nav-dropdown.is-open > .nav-dropdown-toggle .nav-link-icon,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle.active .nav-dropdown-caret,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle[aria-expanded="true"] .nav-dropdown-caret,
+            .nav-list .nav-dropdown.is-open > .nav-dropdown-toggle .nav-dropdown-caret {
+                color: inherit !important;
+            }
+
+            .nav-list .nav-dropdown > .nav-dropdown-toggle.active .nav-link-content > span:last-child,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle[aria-expanded="true"] .nav-link-content > span:last-child,
+            .nav-list .nav-dropdown.is-open > .nav-dropdown-toggle .nav-link-content > span:last-child {
+                font-weight: 800;
+                text-decoration: none !important;
+            }
+
+            html[data-theme="dark"] .nav-list li a:not(.logout-btn).active,
+            html[data-theme="dark"] .nav-list .nav-dropdown > .nav-dropdown-toggle.active,
+            html[data-theme="dark"] .nav-list .nav-dropdown > .nav-dropdown-toggle[aria-expanded="true"],
+            html[data-theme="dark"] .nav-list .nav-dropdown.is-open > .nav-dropdown-toggle {
+                background: transparent !important;
+                color: #f8fafc !important;
+            }
         }
     </style>
 </head>
@@ -2096,8 +2549,10 @@
                 </a>
             </div>
 
-            <button class="nav-toggle" aria-label="Open menu">
-                <x-outline-icon name="bars-3" width="24" height="24" stroke="#fff" stroke-width="2" />
+            <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+                <span class="nav-toggle-line" aria-hidden="true"></span>
+                <span class="nav-toggle-line" aria-hidden="true"></span>
+                <span class="nav-toggle-line" aria-hidden="true"></span>
             </button>
 
             <nav id="main-menu" class="main-nav">
@@ -2147,11 +2602,11 @@
                     </li>
                     <li class="nav-list-divider" aria-hidden="true"></li>
                     @auth('student')
-                    <li class="nav-dropdown {{ $isMyAccountSection ? 'is-open-on-route' : '' }}" data-nav-dropdown>
+                    <li class="nav-dropdown" data-nav-dropdown>
                         <button
                             type="button"
                             class="nav-dropdown-toggle {{ $isMyAccountSection ? 'active' : '' }}"
-                            aria-expanded="{{ $isMyAccountSection ? 'true' : 'false' }}"
+                            aria-expanded="false"
                             aria-haspopup="true"
                         >
                             <span class="nav-link-content">
@@ -2218,9 +2673,18 @@
                                     @endif
                                 </li>
                             @endif
+                            <li class="desktop-logout-item">
+                                <a href="#" class="desktop-account-logout"
+                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                    <span class="nav-dropdown-link-content">
+                                        <x-outline-icon name="arrow-left-on-rectangle" class="nav-dropdown-link-icon" />
+                                        <span>Logout</span>
+                                    </span>
+                                </a>
+                            </li>
                         </ul>
                     </li>
-                    <li>
+                    <li class="standalone-logout-item">
                         <a href="#" class="logout-btn student-logout-btn"
                         onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                             <x-outline-icon name="arrow-left-on-rectangle" />
@@ -2279,6 +2743,40 @@
             </div>
         </aside>
     @endif
+
+    @php
+        $studentToastMessage = Request::is('student/*')
+            ? (session('error') ?: session('success') ?: ($errors->any() ? $errors->first() : null))
+            : null;
+        $studentToastType = (session('error') || $errors->any()) ? 'error' : 'success';
+        $studentToastTitle = $studentToastType === 'error' ? 'Error message' : 'Success message';
+    @endphp
+    <div class="student-toast-stack" data-student-toast-stack aria-live="polite" aria-atomic="true">
+        @if($studentToastMessage)
+            <div class="student-toast is-{{ $studentToastType }}" role="{{ $studentToastType === 'error' ? 'alert' : 'status' }}" data-student-toast>
+                <span class="student-toast-icon" aria-hidden="true">
+                    @if($studentToastType === 'error')
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+                        </svg>
+                    @else
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                    @endif
+                </span>
+                <span>
+                    <strong class="student-toast-title">{{ $studentToastTitle }}</strong>
+                    <span class="student-toast-message">{{ $studentToastMessage }}</span>
+                </span>
+                <button type="button" class="student-toast-close" data-student-toast-close aria-label="Dismiss message">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        @endif
+    </div>
 
     <main>
         @yield('content')
@@ -2448,6 +2946,17 @@
             const studentNotifHistorySection = document.getElementById('studentNotifHistorySection');
             const storageKey = 'student_theme';
 
+            document.querySelectorAll('[data-student-toast]').forEach((toast) => {
+                const closeButton = toast.querySelector('[data-student-toast-close]');
+                const dismissToast = () => {
+                    toast.classList.add('is-hiding');
+                    window.setTimeout(() => toast.remove(), 240);
+                };
+
+                closeButton?.addEventListener('click', dismissToast);
+                window.setTimeout(dismissToast, 5200);
+            });
+
             function forceAccessibilityButtonTheme() {
                 document.querySelectorAll('.asw-menu-btn').forEach((button) => {
                     button.style.setProperty('background', '#800000', 'important');
@@ -2522,7 +3031,13 @@
             }
 
             if (navToggle && navList) {
-                const closeMobileMenu = () => navList.classList.remove('show');
+                const setMobileMenuOpen = (isOpen) => {
+                    navList.classList.toggle('show', isOpen);
+                    navToggle.classList.toggle('is-open', isOpen);
+                    navToggle.setAttribute('aria-expanded', isOpen.toString());
+                    navToggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+                };
+                const closeMobileMenu = () => setMobileMenuOpen(false);
                 const closeDropdowns = (exceptDropdown = null) => {
                     navDropdowns.forEach((dropdown) => {
                         if (dropdown === exceptDropdown) {
@@ -2542,7 +3057,7 @@
                 };
 
                 navToggle.addEventListener('click', () => {
-                    navList.classList.toggle('show');
+                    setMobileMenuOpen(!navList.classList.contains('show'));
                 });
 
                 navDropdowns.forEach((dropdown) => {
