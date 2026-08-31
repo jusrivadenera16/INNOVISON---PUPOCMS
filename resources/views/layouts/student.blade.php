@@ -2400,6 +2400,136 @@
             html[data-theme="dark"] .nav-dropdown-toggle {
                 color: #f3f4f6 !important;
             }
+
+            .nav-list {
+                height: max-content;
+                min-height: 0;
+            }
+
+            .nav-dropdown-menu {
+                width: 100%;
+                max-height: 0;
+                margin-top: 0;
+                padding: 0 10px;
+                overflow: hidden;
+                border-width: 0;
+                box-sizing: border-box;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transform: none;
+                transition:
+                    max-height .3s cubic-bezier(.2, .8, .2, 1),
+                    margin-top .3s ease,
+                    padding .3s ease,
+                    border-width .18s ease,
+                    opacity .18s ease,
+                    visibility 0s linear .3s;
+            }
+
+            .nav-dropdown.is-open .nav-dropdown-menu {
+                max-height: 430px;
+                margin-top: 8px;
+                padding: 10px;
+                border-width: 1px;
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+                transform: none;
+                transition-delay: 0s;
+            }
+
+            .standalone-logout-item,
+            .nav-dropdown.is-open + .standalone-logout-item {
+                display: flex;
+                margin-top: 0;
+                opacity: 1;
+                transform: none;
+            }
+
+            .nav-list li .student-logout-btn,
+            html[data-theme="dark"] .nav-list li .student-logout-btn {
+                min-height: 42px;
+                border-radius: 8px;
+                background: #7f1d2d !important;
+                border-color: #681424 !important;
+                color: #ffffff !important;
+            }
+
+            .nav-list li .student-logout-btn:hover,
+            .nav-list li .student-logout-btn:focus-visible,
+            html[data-theme="dark"] .nav-list li .student-logout-btn:hover,
+            html[data-theme="dark"] .nav-list li .student-logout-btn:focus-visible {
+                background: #681424 !important;
+                border-color: #560e1c !important;
+                color: #ffffff !important;
+            }
+
+            .nav-list li a:not(.logout-btn):hover,
+            .nav-list li a:not(.logout-btn):focus-visible,
+            .nav-dropdown-toggle:hover,
+            .nav-dropdown-toggle:focus-visible {
+                background: transparent !important;
+                color: #111827 !important;
+                outline: none;
+            }
+
+            html[data-theme="dark"] .nav-list li a:not(.logout-btn):hover,
+            html[data-theme="dark"] .nav-list li a:not(.logout-btn):focus-visible,
+            html[data-theme="dark"] .nav-dropdown-toggle:hover,
+            html[data-theme="dark"] .nav-dropdown-toggle:focus-visible {
+                background: transparent !important;
+                color: #f8fafc !important;
+                outline: none;
+            }
+
+            .nav-list li a:not(.logout-btn):hover .nav-link-content > span:last-child,
+            .nav-list li a:not(.logout-btn):focus-visible .nav-link-content > span:last-child,
+            .nav-dropdown-toggle:hover .nav-link-content > span:last-child,
+            .nav-dropdown-toggle:focus-visible .nav-link-content > span:last-child,
+            .nav-dropdown-menu a:hover .nav-dropdown-link-content > span:last-child,
+            .nav-dropdown-menu a:focus-visible .nav-dropdown-link-content > span:last-child {
+                text-decoration-line: underline;
+                text-decoration-color: #facc15;
+                text-decoration-thickness: 2px;
+                text-underline-offset: 4px;
+            }
+
+            .nav-list li a:not(.logout-btn).active,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle.active,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle[aria-expanded="true"],
+            .nav-list .nav-dropdown.is-open > .nav-dropdown-toggle {
+                background: transparent !important;
+                color: #111827 !important;
+                font-weight: 800 !important;
+            }
+
+            .nav-list .nav-dropdown > .nav-dropdown-toggle.active .nav-link-content,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle[aria-expanded="true"] .nav-link-content,
+            .nav-list .nav-dropdown.is-open > .nav-dropdown-toggle .nav-link-content,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle.active .nav-link-icon,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle[aria-expanded="true"] .nav-link-icon,
+            .nav-list .nav-dropdown.is-open > .nav-dropdown-toggle .nav-link-icon,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle.active .nav-dropdown-caret,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle[aria-expanded="true"] .nav-dropdown-caret,
+            .nav-list .nav-dropdown.is-open > .nav-dropdown-toggle .nav-dropdown-caret {
+                color: inherit !important;
+            }
+
+            .nav-list .nav-dropdown > .nav-dropdown-toggle.active .nav-link-content > span:last-child,
+            .nav-list .nav-dropdown > .nav-dropdown-toggle[aria-expanded="true"] .nav-link-content > span:last-child,
+            .nav-list .nav-dropdown.is-open > .nav-dropdown-toggle .nav-link-content > span:last-child {
+                font-weight: 800;
+                text-decoration: none !important;
+            }
+
+            html[data-theme="dark"] .nav-list li a:not(.logout-btn).active,
+            html[data-theme="dark"] .nav-list .nav-dropdown > .nav-dropdown-toggle.active,
+            html[data-theme="dark"] .nav-list .nav-dropdown > .nav-dropdown-toggle[aria-expanded="true"],
+            html[data-theme="dark"] .nav-list .nav-dropdown.is-open > .nav-dropdown-toggle {
+                background: transparent !important;
+                color: #f8fafc !important;
+            }
         }
     </style>
 </head>
@@ -2615,9 +2745,7 @@
     @endif
 
     @php
-        $isStudentToastRoute = Request::is('student/booking')
-            || (Request::is('student/account') && request('view', 'profile') === 'profile');
-        $studentToastMessage = $isStudentToastRoute
+        $studentToastMessage = Request::is('student/*')
             ? (session('error') ?: session('success') ?: ($errors->any() ? $errors->first() : null))
             : null;
         $studentToastType = (session('error') || $errors->any()) ? 'error' : 'success';

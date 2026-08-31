@@ -279,14 +279,6 @@
         <p><strong>Student Number:</strong> {{ $studentContext['student_number'] ?? $user->student_number ?? 'N/A' }}</p>
     </div>
 
-    @if(session('success'))
-        <div class="submitted-message">{{ session('success') }}</div>
-    @endif
-
-    @error('barcode')
-        <div class="field-error">{{ $message }}</div>
-    @enderror
-
     <div class="scan-bio-grid">
         <section class="scan-section" style="opacity: 0.8;">
     <h3>Barcode (Deprecated)</h3>

@@ -376,6 +376,7 @@
         gap: 20px;
         position: relative;
         overflow: hidden;
+        clip-path: url(#profileHeroSmoothWave);
     }
 
     .profile-dashboard .profile-hero::before {
@@ -401,25 +402,54 @@
 
     .profile-dashboard .profile-hero-wave {
         position: absolute;
+        top: 0;
         left: 0;
         right: 0;
-        bottom: 0;
         width: 100%;
-        height: 20%;
+        height: calc(100% + 68px);
         z-index: 1;
         pointer-events: none;
         overflow: visible;
     }
 
     .profile-dashboard .profile-hero-wave path {
-        fill: #fff8ed;
-        stroke: #facc15;
-        stroke-width: 4;
+        fill: none;
+        stroke-linecap: round;
         stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+    }
+
+    .profile-dashboard .profile-hero-wave-echo {
+        stroke: url(#profileHeroWaveEcho);
+    }
+
+    .profile-dashboard .profile-hero-wave-echo.is-near {
+        stroke-width: 1;
+    }
+
+    .profile-dashboard .profile-hero-wave-echo.is-far {
+        stroke-width: .75;
+    }
+
+    .profile-dashboard .profile-hero-wave-main,
+    .profile-dashboard .profile-hero-wave-grow {
+        stroke: url(#profileHeroWaveStroke);
+    }
+
+    .profile-dashboard .profile-hero-wave-main {
+        stroke-width: 1.25;
+    }
+
+    .profile-dashboard .profile-hero-wave-grow.is-middle {
+        stroke-width: 2.75;
+    }
+
+    .profile-dashboard .profile-hero-wave-grow.is-right {
+        stroke-width: 4.5;
     }
 
     html[data-theme="dark"] .profile-dashboard .profile-hero-wave path {
-        fill: #0f131a;
+        fill: none;
     }
 
     .profile-dashboard .profile-hero > * {
@@ -1305,20 +1335,51 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: transform .18s ease, border-color .18s ease, background .18s ease;
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        transition: color .08s linear, transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+
+    .profile-edit-close::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(120deg,
+                rgba(255, 248, 196, 0) 0%,
+                rgba(255, 239, 181, 0.18) 22%,
+                rgba(255, 255, 240, 0.82) 48%,
+                rgba(255, 239, 181, 0.18) 72%,
+                rgba(255, 248, 196, 0) 100%);
+        transform: translateX(-135%);
+        transition: transform 1.5s ease;
+        pointer-events: none;
+        z-index: 0;
     }
 
     .profile-edit-close:hover,
     .profile-edit-close:focus-visible {
         border-color: #facc15;
-        background: rgba(63, 7, 18, 0.82);
+        background: #facc15;
+        color: #70131b;
+        box-shadow:
+            0 0 0 3px rgba(250, 204, 21, 0.18),
+            0 14px 24px rgba(112, 19, 27, 0.16);
         transform: translateY(-1px);
         outline: none;
+    }
+
+    .profile-edit-close:hover::after,
+    .profile-edit-close:focus-visible::after {
+        transform: translateX(135%);
     }
 
     .profile-edit-close svg {
         width: 20px;
         height: 20px;
+        position: relative;
+        z-index: 1;
     }
 
     .profile-edit-modal-body {
@@ -7547,25 +7608,48 @@
         </div>
     @endif
 
-    @if($accountView !== 'profile')
-        @if(session('success') && !session('health_profile_submitted'))
-            <div class="alert-success">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if($errors->any())
-            <div style="background:#fee2e2; color:#b91c1c; padding:12px; border-radius:8px; margin-bottom:20px; text-align:center; font-size:14px; border:1px solid #fecaca;">
-                {{ $errors->first() }}
-            </div>
-        @endif
-    @endif
-
     @if($accountView === 'profile')
+    <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+        <defs>
+            <clipPath id="profileHeroSmoothWave" clipPathUnits="objectBoundingBox">
+                <path d="M0,0 H1 V0.79 C0.98,0.78 0.95,0.77 0.91,0.77 C0.82,0.77 0.73,0.81 0.64,0.85 C0.55,0.89 0.48,0.91 0.40,0.91 C0.31,0.91 0.22,0.88 0.14,0.84 C0.08,0.81 0.03,0.80 0,0.82 Z" />
+            </clipPath>
+        </defs>
+    </svg>
     <div class="profile-dashboard">
     <div class="profile-hero" id="profileHeroCard">
-        <svg class="profile-hero-wave" viewBox="0 0 1000 180" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M0 80 C82 106 142 116 232 94 C350 68 424 67 542 87 C694 110 801 120 890 82 C946 56 972 27 1000 -8 L1000 180 L0 180 Z" />
+        <svg class="profile-hero-wave" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+                <linearGradient id="profileHeroWaveStroke" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#facc15" stop-opacity="1" />
+                    <stop offset="48%" stop-color="#facc15" stop-opacity="0.72" />
+                    <stop offset="100%" stop-color="#facc15" stop-opacity="0.28" />
+                </linearGradient>
+                <linearGradient id="profileHeroWaveEcho" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#fef08a" stop-opacity="0.38" />
+                    <stop offset="55%" stop-color="#fef9c3" stop-opacity="0.22" />
+                    <stop offset="100%" stop-color="#fef9c3" stop-opacity="0.08" />
+                </linearGradient>
+                <linearGradient id="profileHeroWaveMiddleMask" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="25%" stop-color="black" />
+                    <stop offset="64%" stop-color="white" />
+                </linearGradient>
+                <linearGradient id="profileHeroWaveRightMask" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="60%" stop-color="black" />
+                    <stop offset="100%" stop-color="white" />
+                </linearGradient>
+                <mask id="profileHeroWaveGrowMiddle" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000">
+                    <rect width="1000" height="1000" fill="url(#profileHeroWaveMiddleMask)" />
+                </mask>
+                <mask id="profileHeroWaveGrowRight" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000">
+                    <rect width="1000" height="1000" fill="url(#profileHeroWaveRightMask)" />
+                </mask>
+            </defs>
+            <path class="profile-hero-wave-echo is-far" transform="translate(0 -24)" d="M0 820 C30 800 80 810 140 840 C220 880 310 910 400 910 C480 910 550 890 640 850 C730 810 820 770 910 770 C950 770 980 780 1000 790" />
+            <path class="profile-hero-wave-echo is-near" transform="translate(0 -13)" d="M0 820 C30 800 80 810 140 840 C220 880 310 910 400 910 C480 910 550 890 640 850 C730 810 820 770 910 770 C950 770 980 780 1000 790" />
+            <path class="profile-hero-wave-main" d="M0 820 C30 800 80 810 140 840 C220 880 310 910 400 910 C480 910 550 890 640 850 C730 810 820 770 910 770 C950 770 980 780 1000 790" />
+            <path class="profile-hero-wave-grow is-middle" mask="url(#profileHeroWaveGrowMiddle)" d="M0 820 C30 800 80 810 140 840 C220 880 310 910 400 910 C480 910 550 890 640 850 C730 810 820 770 910 770 C950 770 980 780 1000 790" />
+            <path class="profile-hero-wave-grow is-right" mask="url(#profileHeroWaveGrowRight)" d="M0 820 C30 800 80 810 140 840 C220 880 310 910 400 910 C480 910 550 890 640 850 C730 810 820 770 910 770 C950 770 980 780 1000 790" />
         </svg>
         <div class="profile-hero-campus" aria-hidden="true"></div>
         <div class="profile-hero-quote" aria-hidden="true">
@@ -7674,7 +7758,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <p class="profile-card-description">Review your personal account details and keep your clinic information up to date.</p>
         </div>
         @if($isEnrolled)
-            <button type="button" id="editBtn" class="profile-edit-btn" onclick="openProfileEditModal()">
+            <button type="button" id="editBtn" class="profile-edit-btn" onclick="openProfileEditModal({{ $canEditClinicProfileInfo ? 'true' : 'false' }})">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                 </svg>
@@ -7682,12 +7766,6 @@ document.addEventListener('DOMContentLoaded', function () {
             </button>
         @endif
     </div>
-
-    @if(session('success') && !session('health_profile_submitted'))
-        <div class="alert-success" style="margin-bottom: 18px;">
-            {{ session('success') }}
-        </div>
-    @endif
 
     <div class="profile-readonly-content">
         @if(!$isEnrolled)
@@ -7984,10 +8062,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <div class="profile-edit-modal-body">
-                        @if($errors->any())
-                            <div class="profile-edit-alert">{{ $errors->first() }}</div>
-                        @endif
-
                         <div class="profile-edit-section">
                             <h3>Personal Details</h3>
                             <div class="profile-edit-grid">
@@ -9705,7 +9779,12 @@ window.updateHealthDeclarationPreview = function (input) {
     }
 };
 
-function openProfileEditModal() {
+function openProfileEditModal(canEdit = true) {
+    if (!canEdit) {
+        alert('Edit Profile is currently unavailable for now. Please contact the clinic staff if any information needs correction.');
+        return;
+    }
+
     const modal = document.getElementById('profileEditModal');
     if (!modal) return;
 
@@ -9740,7 +9819,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    const shouldOpenProfileEditModal = @json($accountView === 'profile' && $isEnrolled && $hasProfileEditErrors);
+    const shouldOpenProfileEditModal = @json($accountView === 'profile' && $isEnrolled && $canEditClinicProfileInfo && $hasProfileEditErrors);
     if (shouldOpenProfileEditModal) {
         openProfileEditModal();
     }

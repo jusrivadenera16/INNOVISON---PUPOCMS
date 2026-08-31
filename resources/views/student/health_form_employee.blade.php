@@ -1343,6 +1343,110 @@
             box-shadow: 0 12px 24px rgba(127, 29, 45, 0.3);
         }
 
+        .student-toast-stack {
+            position: fixed;
+            top: 18px;
+            right: 24px;
+            z-index: 2147482600;
+            width: min(330px, calc(100vw - 32px));
+            pointer-events: none;
+        }
+
+        .student-toast {
+            position: relative;
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr) 28px;
+            align-items: center;
+            gap: 12px;
+            min-height: 78px;
+            padding: 14px 12px 14px 22px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.98);
+            color: #334155;
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+            animation: studentToastIn 0.32s cubic-bezier(.2, .8, .2, 1) forwards;
+            pointer-events: auto;
+            overflow: hidden;
+        }
+
+        .student-toast::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 8px;
+            background:
+                linear-gradient(135deg, transparent 0 45%, var(--toast-accent) 46% 100%) 0 0 / 8px 12px,
+                linear-gradient(45deg, transparent 0 45%, var(--toast-accent-soft) 46% 100%) 0 6px / 8px 12px;
+        }
+
+        .student-toast.is-success {
+            --toast-accent: #86efac;
+            --toast-accent-soft: #bbf7d0;
+            --toast-title: #16a34a;
+        }
+
+        .student-toast.is-error {
+            --toast-accent: #fca5a5;
+            --toast-accent-soft: #fecaca;
+            --toast-title: #dc2626;
+        }
+
+        .student-toast-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--toast-accent-soft);
+            color: var(--toast-title);
+        }
+
+        .student-toast-title,
+        .student-toast-message {
+            display: block;
+            line-height: 1.25;
+        }
+
+        .student-toast-title {
+            margin-bottom: 4px;
+            color: var(--toast-title);
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .student-toast-message {
+            color: #475569;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .student-toast-close {
+            width: 28px;
+            height: 28px;
+            border: 0;
+            border-radius: 999px;
+            background: transparent;
+            color: #475569;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .student-toast.is-hiding {
+            animation: studentToastOut 0.22s ease forwards;
+        }
+
+        @keyframes studentToastIn {
+            from { opacity: 0; transform: translateX(18px) scale(0.98); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
+        }
+
+        @keyframes studentToastOut {
+            to { opacity: 0; transform: translateX(18px) scale(0.98); }
+        }
+
         .clinic-select-wrap {
             position: relative;
         }
@@ -2837,7 +2941,24 @@
         </div>
     </div>
 
-    <div class="health-error-modal" id="healthErrorModal" aria-hidden="true" data-initial-message="{{ session('error') ? e(session('error')) : ($errors->any() ? e($errors->first()) : '') }}">
+    @php
+        $studentToastMessage = session('error') ?: session('success') ?: ($errors->any() ? $errors->first() : null);
+        $studentToastType = (session('error') || $errors->any()) ? 'error' : 'success';
+    @endphp
+    <div class="student-toast-stack" aria-live="polite" aria-atomic="true">
+        @if($studentToastMessage)
+            <div class="student-toast is-{{ $studentToastType }}" role="{{ $studentToastType === 'error' ? 'alert' : 'status' }}" data-student-toast>
+                <span class="student-toast-icon" aria-hidden="true">!</span>
+                <span>
+                    <strong class="student-toast-title">{{ $studentToastType === 'error' ? 'Error message' : 'Success message' }}</strong>
+                    <span class="student-toast-message">{{ $studentToastMessage }}</span>
+                </span>
+                <button type="button" class="student-toast-close" data-student-toast-close aria-label="Dismiss message">&times;</button>
+            </div>
+        @endif
+    </div>
+
+    <div class="health-error-modal" id="healthErrorModal" aria-hidden="true" data-initial-message="">
         <div class="health-error-card" role="alertdialog" aria-modal="true" aria-labelledby="healthErrorTitle" aria-describedby="healthErrorMessage">
             <h3 id="healthErrorTitle">Error</h3>
             <p id="healthErrorMessage">Please complete the required field.</p>
@@ -2847,6 +2968,17 @@
 
     <script>
         (function () {
+            document.querySelectorAll('[data-student-toast]').forEach((toast) => {
+                const closeButton = toast.querySelector('[data-student-toast-close]');
+                const dismissToast = () => {
+                    toast.classList.add('is-hiding');
+                    window.setTimeout(() => toast.remove(), 240);
+                };
+
+                closeButton?.addEventListener('click', dismissToast);
+                window.setTimeout(dismissToast, 5200);
+            });
+
             const form = document.getElementById('employeeHealthForm');
             if (!form) return;
 

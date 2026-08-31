@@ -392,9 +392,6 @@
             </section>
 
             <section class="feedback-right">
-                @if($errors->any())
-                    <div class="feedback-errors">{{ $errors->first() }}</div>
-                @endif
                 <div class="feedback-detail-grid">
                     <div class="feedback-detail"><span>Appointment Number</span><strong>{{ $appointmentNumber }}</strong></div>
                     <div class="feedback-detail"><span>Notes</span><p>{{ $appointmentNotes !== '' ? $appointmentNotes : 'No appointment notes recorded.' }}</p></div>
