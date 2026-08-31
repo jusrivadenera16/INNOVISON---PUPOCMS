@@ -3904,7 +3904,7 @@
                 <!-- System Loading Layer -->
                 <div class="splash-screen">
                   <div class="splash-logo">
-                    <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="PUP Taguig Clinic logo">
+                    <img src="{{ asset('images/stagingphonebg.png') }}" alt="PUP Taguig Clinic logo">
                     <span>CareSync</span>
                   </div>
                 </div>
