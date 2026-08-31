@@ -2081,6 +2081,19 @@
             color: #ffd166 !important;
         }
 
+        html[data-theme="dark"] .nav-dropdown-menu .desktop-account-logout {
+            background: #7f1d2d !important;
+            border-color: rgba(250, 204, 21, 0.22);
+            color: #ffffff !important;
+        }
+
+        html[data-theme="dark"] .nav-dropdown-menu .desktop-account-logout:hover,
+        html[data-theme="dark"] .nav-dropdown-menu .desktop-account-logout:focus-visible {
+            background: #facc15 !important;
+            border-color: #facc15;
+            color: #7f1d2d !important;
+        }
+
         html[data-theme="dark"] .nav-dropdown-menu .nav-dropdown-disabled {
             color: #8290a5;
         }

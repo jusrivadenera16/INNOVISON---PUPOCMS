@@ -906,14 +906,64 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .sidebar-toggle svg {
+        .sidebar-toggle:hover,
+        .sidebar-toggle:focus-visible,
+        body.sidebar-open .sidebar-toggle {
+            border-color: rgba(250, 204, 21, .64);
+            color: #facc15;
+            box-shadow: 0 0 0 3px rgba(250, 204, 21, .12);
+            outline: none;
+        }
+
+        .sidebar-toggle-bars {
+            position: relative;
             width: 20px;
-            height: 20px;
-            stroke-width: 1.8;
+            height: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             flex: 0 0 auto;
+        }
+
+        .sidebar-toggle-bars span {
+            position: absolute;
+            left: 0;
+            width: 20px;
+            height: 2px;
+            border-radius: 999px;
+            background: currentColor;
+            transform-origin: center;
+            transition: transform .26s cubic-bezier(.22, 1, .36, 1), opacity .18s ease, top .26s cubic-bezier(.22, 1, .36, 1), background .2s ease;
+        }
+
+        .sidebar-toggle-bars span:nth-child(1) {
+            top: 0;
+        }
+
+        .sidebar-toggle-bars span:nth-child(2) {
+            top: 7px;
+        }
+
+        .sidebar-toggle-bars span:nth-child(3) {
+            top: 14px;
+        }
+
+        body.sidebar-open .sidebar-toggle-bars span:nth-child(1) {
+            top: 7px;
+            transform: rotate(45deg);
+        }
+
+        body.sidebar-open .sidebar-toggle-bars span:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(.35);
+        }
+
+        body.sidebar-open .sidebar-toggle-bars span:nth-child(3) {
+            top: 7px;
+            transform: rotate(-45deg);
         }
 
         .profile-wrap {
@@ -1499,6 +1549,8 @@
         }
 
         .profile-dropdown a {
+            position: relative;
+            overflow: hidden;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -1507,7 +1559,7 @@
             text-decoration: none;
             font-size: 14px;
             font-weight: 600;
-            transition: background 0.2s ease, color 0.2s ease;
+            transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
@@ -1519,8 +1571,9 @@
         }
 
         .profile-dropdown a:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: #ffffff;
+            background: #facc15;
+            color: #8B0000;
+            transform: translateX(2px);
         }
 
         .profile-dropdown a.switch-student-link {
@@ -1533,16 +1586,44 @@
         }
 
         .profile-dropdown a.logout-link {
-            color: #ffd7df;
+            background: #8B0000;
+            color: #ffffff;
             border-bottom: none;
             justify-content: flex-start;
             line-height: 1.2;
             padding: 12px 14px;
-            font-weight: 700;
+            font-weight: 800;
+        }
+
+        .profile-dropdown a.logout-link::before {
+            content: "";
+            position: absolute;
+            inset: -45% auto -45% -68%;
+            width: 58%;
+            background: linear-gradient(115deg, transparent 0%, rgba(255, 247, 194, 0.12) 35%, rgba(255, 247, 194, 0.76) 50%, rgba(255, 247, 194, 0.14) 65%, transparent 100%);
+            transform: skewX(-18deg);
+            transition: left 0.5s ease;
+            pointer-events: none;
+        }
+
+        .profile-dropdown a.logout-link > * {
+            position: relative;
+            z-index: 1;
         }
 
         .profile-dropdown a.logout-link:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: #facc15;
+            color: #8B0000;
+        }
+
+        .profile-dropdown a.logout-link:hover::before,
+        .profile-dropdown a.logout-link:focus-visible::before {
+            left: 112%;
+        }
+
+        .profile-dropdown a:focus-visible {
+            outline: 2px solid rgba(250, 204, 21, 0.36);
+            outline-offset: -2px;
         }
 
         .admin-layout {
@@ -2313,33 +2394,290 @@
         }
 
         .sidebar-logout a {
+            position: relative;
+            overflow: hidden;
             display: flex;
             align-items: center;
             gap: 12px;
             padding: 10px 12px;
             border-radius: var(--radius-md);
-            border: 1px solid var(--admin-sidebar-logout-border);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             text-decoration: none;
             min-width: 210px;
-            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+            transition: background 0.22s ease, border-color 0.22s ease, color 0.22s ease, transform 0.2s ease, box-shadow 0.22s ease;
             margin-bottom: 0;
-            color: var(--admin-sidebar-text);
-            background: var(--admin-sidebar-logout-bg);
+            color: #ffffff;
+            background: #8B0000;
             line-height: 1.2;
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 800;
+            box-shadow: 0 12px 24px rgba(139, 0, 0, 0.18);
+        }
+
+        .sidebar-logout a::before {
+            content: "";
+            position: absolute;
+            inset: -45% auto -45% -68%;
+            width: 58%;
+            background: linear-gradient(115deg, transparent 0%, rgba(255, 247, 194, 0.12) 35%, rgba(255, 247, 194, 0.76) 50%, rgba(255, 247, 194, 0.14) 65%, transparent 100%);
+            transform: skewX(-18deg);
+            transition: left 0.5s ease;
+            pointer-events: none;
+        }
+
+        .sidebar-logout a > * {
+            position: relative;
+            z-index: 1;
         }
 
         .sidebar-logout a:hover {
-            background: var(--admin-sidebar-hover-bg);
-            border-color: var(--admin-sidebar-hover-border);
+            background: #facc15;
+            border-color: #facc15;
+            color: #8B0000;
             transform: translateX(1px);
+            box-shadow: 0 16px 30px rgba(250, 204, 21, 0.22);
+        }
+
+        .sidebar-logout a:hover::before,
+        .sidebar-logout a:focus-visible::before {
+            left: 112%;
+        }
+
+        .sidebar-logout a:focus-visible {
+            background: #facc15;
+            border-color: #facc15;
+            color: #8B0000;
+            outline: 2px solid rgba(250, 204, 21, 0.34);
+            outline-offset: 2px;
         }
 
         .sidebar-logout .sidebar-short {
             color: #ffffff;
             border-color: rgba(255, 255, 255, 0.26);
             background: rgba(255, 255, 255, 0.12);
+            transition: background 0.22s ease, border-color 0.22s ease, color 0.22s ease;
+        }
+
+        .sidebar-logout a:hover .sidebar-short,
+        .sidebar-logout a:focus-visible .sidebar-short {
+            color: #8B0000;
+            border-color: rgba(139, 0, 0, 0.18);
+            background: rgba(255, 255, 255, 0.34);
+        }
+
+        .admin-logout-confirm {
+            position: fixed;
+            inset: 0;
+            z-index: 1000002;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: rgba(15, 23, 42, 0.38);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        .admin-logout-confirm.is-open {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .admin-logout-confirm.is-closing {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        body.admin-logout-confirm-open {
+            overflow: hidden;
+        }
+
+        @keyframes adminLogoutModalIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px) scale(0.94);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes adminLogoutModalOut {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(14px) scale(0.96);
+            }
+        }
+
+        .admin-logout-confirm-dialog {
+            width: min(100%, 320px);
+            padding: 26px 24px 28px;
+            border-radius: 8px;
+            border: 1px solid rgba(112, 19, 27, 0.10);
+            background: #ffffff;
+            color: #111827;
+            text-align: center;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+            transform: translateY(10px) scale(0.96);
+            transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .admin-logout-confirm.is-open .admin-logout-confirm-dialog {
+            transform: translateY(0) scale(1);
+            animation: adminLogoutModalIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .admin-logout-confirm.is-closing .admin-logout-confirm-dialog {
+            animation: adminLogoutModalOut 0.18s ease both;
+        }
+
+        .admin-logout-confirm-icon {
+            width: 48px;
+            height: 48px;
+            display: inline-grid;
+            place-items: center;
+            margin-bottom: 16px;
+            border-radius: 999px;
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .admin-logout-confirm-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke-width: 1.8;
+        }
+
+        .admin-logout-confirm-title {
+            margin: 0;
+            color: #111827;
+            font-size: 16px;
+            font-weight: 900;
+            line-height: 1.25;
+        }
+
+        .admin-logout-confirm-copy {
+            margin: 12px 0 18px;
+            color: #64748b;
+            font-size: 15px;
+            line-height: 1.35;
+        }
+
+        .admin-logout-confirm-actions {
+            display: grid;
+            gap: 12px;
+        }
+
+        .admin-logout-confirm-btn {
+            position: relative;
+            overflow: hidden;
+            min-height: 42px;
+            width: 100%;
+            border-radius: 5px;
+            border: 1px solid transparent;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.18s ease, box-shadow 0.2s ease;
+        }
+
+        .admin-logout-confirm-btn::before {
+            content: "";
+            position: absolute;
+            inset: -45% auto -45% -68%;
+            width: 58%;
+            background: linear-gradient(115deg, transparent 0%, rgba(255, 247, 194, 0.12) 35%, rgba(255, 247, 194, 0.76) 50%, rgba(255, 247, 194, 0.14) 65%, transparent 100%);
+            transform: skewX(-18deg);
+            transition: left 0.5s ease;
+            pointer-events: none;
+        }
+
+        .admin-logout-confirm-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .admin-logout-confirm-btn.is-primary {
+            background: #8B0000;
+            border-color: #8B0000;
+            color: #ffffff;
+            box-shadow: 0 12px 24px rgba(139, 0, 0, 0.18);
+        }
+
+        .admin-logout-confirm-btn.is-primary:hover,
+        .admin-logout-confirm-btn.is-primary:focus-visible {
+            background: #facc15;
+            border-color: #facc15;
+            color: #8B0000;
+            transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba(250, 204, 21, 0.22);
+        }
+
+        .admin-logout-confirm-btn.is-primary:hover::before,
+        .admin-logout-confirm-btn.is-primary:focus-visible::before {
+            left: 112%;
+        }
+
+        .admin-logout-confirm-btn.is-secondary {
+            background: #ffffff;
+            border-color: #d1d5db;
+            color: #374151;
+        }
+
+        .admin-logout-confirm-btn.is-secondary:hover,
+        .admin-logout-confirm-btn.is-secondary:focus-visible {
+            border-color: #facc15;
+            background: #facc15;
+            color: #8B0000;
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px rgba(250, 204, 21, 0.18);
+        }
+
+        .admin-logout-confirm-btn:focus-visible {
+            outline: 2px solid rgba(250, 204, 21, 0.4);
+            outline-offset: 2px;
+        }
+
+        html[data-theme="dark"] .admin-logout-confirm {
+            background: rgba(0, 0, 0, 0.56);
+        }
+
+        html[data-theme="dark"] .admin-logout-confirm-dialog {
+            border-color: rgba(250, 204, 21, 0.16);
+            background: #111827;
+            color: #f8fafc;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+        }
+
+        html[data-theme="dark"] .admin-logout-confirm-title {
+            color: #f8fafc;
+        }
+
+        html[data-theme="dark"] .admin-logout-confirm-copy {
+            color: #cbd5e1;
+        }
+
+        html[data-theme="dark"] .admin-logout-confirm-btn.is-secondary {
+            border-color: rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.06);
+            color: #f8fafc;
+        }
+
+        html[data-theme="dark"] .admin-logout-confirm-btn.is-secondary:hover,
+        html[data-theme="dark"] .admin-logout-confirm-btn.is-secondary:focus-visible {
+            border-color: #facc15;
+            background: #facc15;
+            color: #8B0000;
         }
 
         .main {
@@ -2562,8 +2900,14 @@
                 bottom: 12px;
                 width: min(86vw, 300px);
                 z-index: 60;
-                transform: translateX(-115%);
-                transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+                opacity: 0;
+                visibility: hidden;
+                transform: translateX(-115%) scale(.98);
+                transition:
+                    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+                    opacity .22s ease,
+                    visibility 0s linear .34s;
+                will-change: transform, opacity;
             }
 
             .sidebar:hover,
@@ -2572,7 +2916,13 @@
             }
 
             body.sidebar-open .sidebar {
+                opacity: 1;
+                visibility: visible;
                 transform: translateX(0);
+                transition:
+                    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+                    opacity .22s ease,
+                    visibility 0s;
             }
 
             body.sidebar-open::before {
@@ -2581,6 +2931,12 @@
                 inset: 0;
                 background: rgba(15, 23, 42, 0.28);
                 z-index: 55;
+                animation: adminSidebarBackdropIn .22s ease both;
+            }
+
+            @keyframes adminSidebarBackdropIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
             }
 
             .main {
@@ -3902,14 +4258,28 @@
         }
 
         html[data-theme="light"] .sidebar-logout a {
-            background: #fff7f8;
-            border-color: rgba(128, 0, 0, 0.14);
-            color: #561320;
+            background: #8B0000;
+            border-color: rgba(139, 0, 0, 0.22);
+            color: #ffffff;
         }
 
         html[data-theme="light"] .sidebar-logout a:hover {
-            background: #fdecee;
-            border-color: rgba(128, 0, 0, 0.2);
+            background: #facc15;
+            border-color: #facc15;
+            color: #8B0000;
+        }
+
+        html[data-theme="light"] .sidebar-logout .sidebar-short {
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.28);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        html[data-theme="light"] .sidebar-logout a:hover .sidebar-short,
+        html[data-theme="light"] .sidebar-logout a:focus-visible .sidebar-short {
+            color: #8B0000;
+            border-color: rgba(139, 0, 0, 0.18);
+            background: rgba(255, 255, 255, 0.34);
         }
 
         html[data-theme="light"] .sidebar-scroll-indicator {
@@ -4000,8 +4370,8 @@
         }
 
         html[data-theme="light"] .profile-dropdown a:hover {
-            background: #f8f5f6;
-            color: #56111d;
+            background: #facc15;
+            color: #8B0000;
         }
 
         html[data-theme="light"] .profile-dropdown a.switch-student-link {
@@ -4014,7 +4384,15 @@
         }
 
         html[data-theme="light"] .profile-dropdown a.logout-link {
-            color: #a2263f;
+            background: #8B0000;
+            color: #ffffff;
+            border-bottom-color: transparent;
+        }
+
+        html[data-theme="light"] .profile-dropdown a.logout-link:hover,
+        html[data-theme="light"] .profile-dropdown a.logout-link:focus-visible {
+            background: #facc15;
+            color: #8B0000;
         }
 
         html[data-theme="light"] .assistant-panel {
@@ -4979,7 +5357,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         ['label' => 'Inventory Summary', 'url' => $reportNavUrl('inventory-summary'), 'active' => request()->routeIs('reports.inventory-summary'), 'icon' => 'cube', 'permission' => 'reports.inventory_summary'],
         ['label' => 'Health Forms', 'url' => $reportNavUrl('health-forms'), 'active' => request()->routeIs('reports.health-forms') || request()->routeIs('reports.health-forms.applicants-list'), 'icon' => 'document-text', 'permission' => 'reports.health_forms'],
         ['label' => 'Appointment Statistics', 'url' => $reportNavUrl('appointment-statistics'), 'active' => request()->routeIs('reports.appointment-statistics'), 'icon' => 'calendar-days', 'permission' => 'reports.appointment_statistics'],
-        ['label' => 'Digital Logbook', 'url' => $reportNavUrl('digital-logbook'), 'active' => request()->routeIs('reports.digital-logbook') || request()->routeIs('reports.pulled-out-records*'), 'icon' => 'clipboard-document-list', 'permission' => 'reports.digital_logbook'],
+        ['label' => 'Digital Logbook', 'url' => $reportNavUrl('digital-logbook'), 'active' => request()->routeIs('reports.digital-logbook') || request()->routeIs('assistant.reports.digital-logbook') || request()->routeIs('reports.daily-treatment-record') || request()->routeIs('assistant.reports.daily-treatment-record') || request()->routeIs('reports.pulled-out-records*'), 'icon' => 'clipboard-document-list', 'permission' => 'reports.digital_logbook'],
         ['label' => 'Feedbacks', 'url' => $reportNavUrl('feedbacks'), 'active' => request()->routeIs('reports.feedbacks'), 'icon' => 'megaphone', 'permission' => 'reports.feedbacks'],
         ['label' => 'Export Reports', 'url' => $reportNavUrl('export-hub'), 'active' => request()->routeIs('reports.exportHub*'), 'icon' => 'arrow-down-tray', 'permission' => 'reports.export_reports'],
         ['label' => 'Audit Trail', 'url' => $isStudentAssistant ? url('/assistant/logs') : url('/admin/activity-logs'), 'active' => request()->routeIs('admin.logs') || Request::is('admin/activity-logs') || Request::is('assistant/logs'), 'icon' => 'clock', 'superadmin' => true],
@@ -5386,8 +5764,12 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     </div>
 
     <div class="header-right">
-        <button type="button" class="sidebar-toggle" aria-label="Toggle sidebar" onclick="toggleSidebar()">
-            <x-outline-icon name="bars-3" />
+        <button type="button" class="sidebar-toggle" aria-label="Open navigation menu" aria-expanded="false" onclick="toggleSidebar()">
+            <span class="sidebar-toggle-bars" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+            </span>
         </button>
         <form class="global-search-form" id="globalSearchForm" role="search" novalidate>
             <div class="input-container">
@@ -5473,7 +5855,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                         <span>Switch to Student Workspace</span>
                     </a>
                 @endif
-                <a href="#" class="logout-link" onclick="event.preventDefault(); window.AdminLoading?.showAction(); document.getElementById('layoutLogoutForm').submit();">
+                <a href="#" class="logout-link" data-admin-logout-trigger>
                     <x-outline-icon name="arrow-left-on-rectangle" />
                     <span>Logout</span>
                 </a>
@@ -5635,7 +6017,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     </div>
 
     <div class="sidebar-logout">
-      <a href="#" onclick="event.preventDefault(); window.AdminLoading?.showAction(); document.getElementById('layoutLogoutForm').submit();">
+      <a href="#" data-admin-logout-trigger>
         <span class="sidebar-short"><x-outline-icon name="arrow-left-on-rectangle" /></span><span class="sidebar-label">Logout</span>
       </a>
     </div>
@@ -5662,6 +6044,26 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" class="loader-pulse"></polyline>
         </svg>
     </div>
+</div>
+
+<div class="admin-logout-confirm" id="adminLogoutConfirm" aria-hidden="true">
+    <section class="admin-logout-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="adminLogoutConfirmTitle" aria-describedby="adminLogoutConfirmCopy">
+        <span class="admin-logout-confirm-icon" aria-hidden="true">
+            <x-outline-icon name="exclamation-triangle" />
+        </span>
+        <h2 class="admin-logout-confirm-title" id="adminLogoutConfirmTitle">Logout</h2>
+        <p class="admin-logout-confirm-copy" id="adminLogoutConfirmCopy">
+            Are you sure you want to logout? You will need to sign in again to access the admin workspace.
+        </p>
+        <div class="admin-logout-confirm-actions">
+            <button type="button" class="admin-logout-confirm-btn is-primary" id="adminLogoutConfirmSubmit">
+                <span>Logout</span>
+            </button>
+            <button type="button" class="admin-logout-confirm-btn is-secondary" id="adminLogoutConfirmCancel">
+                <span>Cancel</span>
+            </button>
+        </div>
+    </section>
 </div>
 
 <form id="layoutLogoutForm" method="POST" action="{{ route('logout') }}" style="display:none;">
@@ -5931,7 +6333,16 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
     function toggleSidebar() {
-        document.body.classList.toggle('sidebar-open');
+        const isOpen = document.body.classList.toggle('sidebar-open');
+        syncSidebarToggleState(isOpen);
+    }
+
+    function syncSidebarToggleState(isOpen = document.body.classList.contains('sidebar-open')) {
+        const toggle = document.querySelector('.sidebar-toggle');
+        if (toggle) {
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            toggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+        }
     }
 
     function applyAdminTheme(theme) {
@@ -7429,6 +7840,83 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         });
     }
 
+    function initAdminLogoutConfirm() {
+        const modal = document.getElementById('adminLogoutConfirm');
+        const form = document.getElementById('layoutLogoutForm');
+        const confirmButton = document.getElementById('adminLogoutConfirmSubmit');
+        const cancelButton = document.getElementById('adminLogoutConfirmCancel');
+        const triggers = Array.from(document.querySelectorAll('[data-admin-logout-trigger]'));
+
+        if (!modal || !form || !confirmButton || !cancelButton || triggers.length === 0) {
+            return;
+        }
+
+        let lastFocusedElement = null;
+        let closeTimer = null;
+
+        const closeProfileMenu = function () {
+            const menu = document.getElementById('profileDropdown');
+            const wrap = document.getElementById('profileWrap');
+            const button = wrap ? wrap.querySelector('.admin-user') : null;
+            if (menu) {
+                menu.style.display = 'none';
+            }
+            wrap?.classList.remove('is-expanded');
+            button?.setAttribute('aria-expanded', 'false');
+        };
+
+        const openModal = function () {
+            window.clearTimeout(closeTimer);
+            lastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+            closeProfileMenu();
+            modal.classList.remove('is-closing');
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('admin-logout-confirm-open');
+            window.setTimeout(function () {
+                confirmButton.focus({ preventScroll: true });
+            }, 40);
+        };
+
+        const closeModal = function () {
+            if (!modal.classList.contains('is-open') || modal.classList.contains('is-closing')) {
+                return;
+            }
+
+            modal.classList.add('is-closing');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('admin-logout-confirm-open');
+            closeTimer = window.setTimeout(function () {
+                modal.classList.remove('is-open', 'is-closing');
+                lastFocusedElement?.focus({ preventScroll: true });
+                lastFocusedElement = null;
+            }, 180);
+        };
+
+        triggers.forEach(function (trigger) {
+            trigger.addEventListener('click', function (event) {
+                event.preventDefault();
+                openModal();
+            });
+        });
+
+        cancelButton.addEventListener('click', closeModal);
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+                closeModal();
+            }
+        });
+        confirmButton.addEventListener('click', function () {
+            window.AdminLoading?.showAction();
+            form.submit();
+        });
+    }
+
     document.addEventListener('click', function (event) {
         const menu = document.getElementById('profileDropdown');
         const trigger = document.querySelector('.admin-user');
@@ -7468,6 +7956,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             !sidebarToggle.contains(event.target)
         ) {
             document.body.classList.remove('sidebar-open');
+            syncSidebarToggleState(false);
         }
 
         if (
@@ -7484,6 +7973,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     window.addEventListener('resize', function () {
         if (window.innerWidth > 860) {
             document.body.classList.remove('sidebar-open');
+            syncSidebarToggleState(false);
         }
         if (hasOpenQuickActionPopup()) {
             toggleHeaderQuickActions(true);
@@ -7504,6 +7994,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         initTreatmentRecordModal();
         initAdminLiveAlerts();
         initAccessibilityLaunch();
+        initAdminLogoutConfirm();
     });
 </script>
 

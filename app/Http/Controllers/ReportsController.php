@@ -1594,39 +1594,13 @@ class ReportsController extends Controller
 
     public function feedbackReport(Request $request)
     {
-        $search = trim((string) $request->query('q', ''));
-        $monthFilter = trim((string) $request->query('month', now()->format('Y-m')));
-
         $query = AppointmentFeedback::query()
             ->with(['appointment', 'user'])
             ->whereNotNull('submitted_at');
 
-        if ($monthFilter !== '') {
-            $monthStart = Carbon::parse($monthFilter . '-01')->startOfMonth();
-            $monthEnd = (clone $monthStart)->endOfMonth();
-            $query->whereBetween('submitted_at', [$monthStart, $monthEnd]);
-        }
-
-        if ($search !== '') {
-            $query->where(function ($builder) use ($search) {
-                $builder->where('feedback', 'like', "%{$search}%")
-                    ->orWhereHas('user', function ($userQuery) use ($search) {
-                        $userQuery->where('name', 'like', "%{$search}%")
-                            ->orWhere('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%")
-                            ->orWhere('student_number', 'like', "%{$search}%");
-                    })
-                    ->orWhereHas('appointment', function ($appointmentQuery) use ($search) {
-                        $appointmentQuery->where('service', 'like', "%{$search}%")
-                            ->orWhere('type', 'like', "%{$search}%")
-                            ->orWhere('user_type', 'like', "%{$search}%");
-                    });
-            });
-        }
-
         $feedbackItems = (clone $query)
             ->latest('submitted_at')
-            ->paginate(12)
+            ->paginate(5)
             ->through(function (AppointmentFeedback $feedback) {
                 $appointment = $feedback->appointment;
                 $user = $feedback->user;
@@ -1669,11 +1643,6 @@ class ReportsController extends Controller
             });
 
         $summaryBaseQuery = AppointmentFeedback::query()->whereNotNull('submitted_at');
-        if ($monthFilter !== '') {
-            $monthStart = Carbon::parse($monthFilter . '-01')->startOfMonth();
-            $monthEnd = (clone $monthStart)->endOfMonth();
-            $summaryBaseQuery->whereBetween('submitted_at', [$monthStart, $monthEnd]);
-        }
 
         $totalFeedbacks = (clone $summaryBaseQuery)->count();
         $averageRating = round((float) ((clone $summaryBaseQuery)->avg('rating') ?? 0), 1);
@@ -1686,9 +1655,7 @@ class ReportsController extends Controller
             'totalFeedbacks',
             'clinicScore',
             'recommendedCount',
-            'lowRatingCount',
-            'search',
-            'monthFilter'
+            'lowRatingCount'
         ));
     }
 

@@ -149,6 +149,12 @@
         height: 18px;
     }
 
+    .appointment-stats-filter-toggle > *,
+    .appointment-stats-filter-button > * {
+        position: relative;
+        z-index: 1;
+    }
+
     .appointment-stats-filter-shell {
         position: relative;
         display: inline-flex;
@@ -257,8 +263,7 @@
         grid-column: 1 / -1;
     }
 
-    .appointment-stats-filter-reset,
-    .appointment-stats-filter-close {
+    .appointment-stats-filter-reset {
         flex: 1 1 0;
         min-height: 42px;
         border-radius: 12px;
@@ -280,8 +285,7 @@
         color: #ffffff;
     }
 
-    html[data-theme="dark"] .appointment-stats-filter-reset,
-    html[data-theme="dark"] .appointment-stats-filter-close {
+    html[data-theme="dark"] .appointment-stats-filter-reset {
         background: rgba(18, 18, 18, 0.55);
         color: #f8fafc;
         border-color: rgba(255, 255, 255, 0.08);
@@ -812,8 +816,10 @@
             </a> --}}
             <div class="appointment-stats-filter-shell" id="appointmentStatsFilterShell">
                 <button type="button" class="appointment-stats-filter-toggle" id="appointmentStatsFilterToggle" aria-label="Open appointment statistics filters" aria-expanded="false" aria-controls="appointmentStatsFilterPanel">
-                    <x-outline-icon name="funnel" />
-                    Filter
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+                    </svg>
+                    <span>Filter</span>
                 </button>
                 <div class="appointment-stats-filter-panel" id="appointmentStatsFilterPanel" aria-hidden="true">
                     <div class="appointment-stats-filter-title">Report Filter</div>
@@ -863,7 +869,6 @@
                         </div>
                         <div class="appointment-stats-filter-actions">
                             <a class="appointment-stats-filter-reset" href="{{ $filterAction }}">Reset</a>
-                            <button type="button" class="appointment-stats-filter-close" id="appointmentStatsFilterClose">Close</button>
                             <button class="appointment-stats-filter-button" type="submit">
                                 <x-outline-icon name="calendar-days" />
                                 Apply
@@ -992,7 +997,6 @@
         const filterShell = document.getElementById('appointmentStatsFilterShell');
         const filterToggle = document.getElementById('appointmentStatsFilterToggle');
         const filterPanel = document.getElementById('appointmentStatsFilterPanel');
-        const filterClose = document.getElementById('appointmentStatsFilterClose');
 
         const setFilterOpenState = function (isOpen) {
             if (!filterShell || !filterToggle || !filterPanel) {
@@ -1006,10 +1010,6 @@
 
         filterToggle?.addEventListener('click', function () {
             setFilterOpenState(!filterShell?.classList.contains('is-open'));
-        });
-
-        filterClose?.addEventListener('click', function () {
-            setFilterOpenState(false);
         });
 
         document.addEventListener('click', function (event) {

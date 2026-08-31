@@ -473,7 +473,6 @@
 @php
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
     $reportsHomeUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
-    $feedbackUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/feedbacks') : url('/admin/reports/feedbacks');
 @endphp
 
 <div class="feedback-report-shell">
@@ -502,27 +501,11 @@
 
     <div class="feedback-layout">
         <aside class="feedback-panel">
-            <h3>Filter Feedbacks</h3>
-            <form method="GET" action="{{ $feedbackUrl }}" class="feedback-filter-form">
-                <div class="feedback-field">
-                    <label for="feedbackSearch">Search</label>
-                    <input id="feedbackSearch" type="text" name="q" value="{{ $search }}" placeholder="Name, service, comment">
-                </div>
-                <div class="feedback-field">
-                    <label for="feedbackMonth">Month</label>
-                    <input id="feedbackMonth" type="month" name="month" value="{{ $monthFilter }}">
-                </div>
-                <div class="feedback-filter-actions">
-                    <button type="submit" class="feedback-btn primary">Apply</button>
-                    <a href="{{ $feedbackUrl }}" class="feedback-btn secondary">Reset</a>
-                </div>
-            </form>
-
             <div class="clinic-score-block">
                 <div class="clinic-score-kicker">Clinic Score</div>
                 <div class="clinic-score-number">{{ number_format($clinicScore, 1) }}/10</div>
                 <div class="clinic-score-copy">
-                    rack patient satisfaction to identify and resolve operational bottlenecks.
+                    Track patient satisfaction to identify and resolve operational bottlenecks.
                 </div>
             </div>
         </aside>
@@ -556,7 +539,7 @@
                     {{ $feedbackItems->links() }}
                 </div>
             @else
-                <div class="feedback-empty">No feedback submissions were found for the current filters.</div>
+                <div class="feedback-empty">No feedback submissions were found.</div>
             @endif
         </section>
     </div>

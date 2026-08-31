@@ -789,6 +789,202 @@ class AdminController extends Controller
             ->count();
         $inventoryOutOfStock = Item::where('quantity', '<=', 0)->count();
 
+        $dashboardRole = User::normalizeRole((string) (Auth::user()?->user_role ?? ''));
+        $appointmentsUrl = $dashboardRole === User::ROLE_ADMIN
+            ? url('/assistant/appointments')
+            : url('/admin/appointments');
+        $healthRecordsUrl = route('admin.health_records');
+        $inventoryUrl = $dashboardRole === User::ROLE_ADMIN
+            ? url('/assistant/inventory')
+            : url('/admin/inventory');
+
+        $activityPeriodOptions = [
+            'today' => 'Today',
+            'yesterday' => 'Yesterday',
+            'week' => 'Last One Week',
+            'two_weeks' => 'Last Two Weeks',
+        ];
+        $activityPeriod = (string) request()->query('activity_period', 'today');
+        $activityPeriod = array_key_exists($activityPeriod, $activityPeriodOptions) ? $activityPeriod : 'today';
+
+        $today = today();
+        [$periodStart, $periodEnd, $activityPeriodPhrase] = match ($activityPeriod) {
+            'yesterday' => [
+                today()->subDay()->startOfDay(),
+                today()->subDay()->endOfDay(),
+                'yesterday',
+            ],
+            'week' => [
+                today()->subDays(6)->startOfDay(),
+                now()->endOfDay(),
+                'in the last 7 days',
+            ],
+            'two_weeks' => [
+                today()->subDays(13)->startOfDay(),
+                now()->endOfDay(),
+                'in the last 14 days',
+            ],
+            default => [
+                today()->startOfDay(),
+                now()->endOfDay(),
+                'today',
+            ],
+        };
+        $periodDays = max(1, $periodStart->diffInDays($periodEnd) + 1);
+        $previousPeriodStart = $periodStart->copy()->subDays($periodDays);
+        $previousPeriodEnd = $periodStart->copy()->subSecond();
+        $movementDateColumn = Schema::hasColumn('inventory_movements', 'movement_date') ? 'movement_date' : 'created_at';
+        $movementDateRange = function ($query, Carbon $start, Carbon $end) use ($movementDateColumn) {
+            if ($movementDateColumn === 'movement_date') {
+                return $query->whereBetween($movementDateColumn, [$start->toDateString(), $end->toDateString()]);
+            }
+
+            return $query->whereBetween($movementDateColumn, [$start, $end]);
+        };
+        $trendFor = function (int $current, int $previous): array {
+            if ($previous <= 0) {
+                $percent = $current > 0 ? 100 : 0;
+            } else {
+                $percent = (int) round((($current - $previous) / $previous) * 100);
+            }
+
+            return [
+                'value' => abs($percent),
+                'direction' => $percent > 0 ? 'up' : ($percent < 0 ? 'down' : 'flat'),
+            ];
+        };
+
+        $completedAppointments = Appointment::where('status', 'Completed')
+            ->whereBetween('updated_at', [$periodStart, $periodEnd])
+            ->count();
+        $previousCompletedAppointments = Appointment::where('status', 'Completed')
+            ->whereBetween('updated_at', [$previousPeriodStart, $previousPeriodEnd])
+            ->count();
+        $firstCompletedAppointmentAt = Appointment::where('status', 'Completed')->min('updated_at');
+        $totalCompletedAppointments = Appointment::where('status', 'Completed')->count();
+        $completedAverageDays = $firstCompletedAppointmentAt
+            ? max(1, Carbon::parse($firstCompletedAppointmentAt)->startOfDay()->diffInDays(today()) + 1)
+            : 1;
+        $completedDailyAverage = $totalCompletedAppointments > 0
+            ? max(1, (int) ceil($totalCompletedAppointments / $completedAverageDays))
+            : 1;
+        $medicineDispensed = $movementDateRange(
+            InventoryMovement::whereIn('type', ['issued', 'consumed'])
+                ->whereHas('item', fn ($query) => $query->where('category', 'Medicine')),
+            $periodStart,
+            $periodEnd
+        )->count();
+        $previousMedicineDispensed = $movementDateRange(
+            InventoryMovement::whereIn('type', ['issued', 'consumed'])
+                ->whereHas('item', fn ($query) => $query->where('category', 'Medicine')),
+            $previousPeriodStart,
+            $previousPeriodEnd
+        )->count();
+        $inventoryAdded = $movementDateRange(
+            InventoryMovement::whereIn('type', ['created', 'restocked']),
+            $periodStart,
+            $periodEnd
+        )->count();
+        $previousInventoryAdded = $movementDateRange(
+            InventoryMovement::whereIn('type', ['created', 'restocked']),
+            $previousPeriodStart,
+            $previousPeriodEnd
+        )->count();
+        $issuedClearanceStatuses = ['Approved', 'Issued', 'Fully Cleared', 'Cleared'];
+        $todayClearances = HealthProfile::whereIn('clearance_status', $issuedClearanceStatuses)
+            ->whereBetween('verified_at', [$periodStart, $periodEnd])
+            ->count()
+            + EmployeeHealthProfile::whereIn('clearance_status', $issuedClearanceStatuses)
+                ->whereBetween('verified_at', [$periodStart, $periodEnd])
+                ->count();
+        $yesterdayClearances = HealthProfile::whereIn('clearance_status', $issuedClearanceStatuses)
+            ->whereBetween('verified_at', [$previousPeriodStart, $previousPeriodEnd])
+            ->count()
+            + EmployeeHealthProfile::whereIn('clearance_status', $issuedClearanceStatuses)
+                ->whereBetween('verified_at', [$previousPeriodStart, $previousPeriodEnd])
+                ->count();
+
+        $clinicActivityBase = [
+            [
+                'title' => 'Appointments Completed',
+                'description' => 'Completed ' . $activityPeriodPhrase,
+                'value' => $completedAppointments,
+                'previous' => $previousCompletedAppointments,
+                'icon' => 'document-check',
+                'tone' => 'rose',
+                'progress_base' => $completedDailyAverage,
+            ],
+            [
+                'title' => 'Medicine Dispensed',
+                'description' => 'Dispensed ' . $activityPeriodPhrase,
+                'value' => $medicineDispensed,
+                'previous' => $previousMedicineDispensed,
+                'icon' => 'heart-pulse',
+                'tone' => 'violet',
+            ],
+            [
+                'title' => 'Inventory Added',
+                'description' => 'Stock added ' . $activityPeriodPhrase,
+                'value' => $inventoryAdded,
+                'previous' => $previousInventoryAdded,
+                'icon' => 'cube',
+                'tone' => 'green',
+            ],
+            [
+                'title' => 'Medical Clearances Issued',
+                'description' => 'Issued ' . $activityPeriodPhrase,
+                'value' => $todayClearances,
+                'previous' => $yesterdayClearances,
+                'icon' => 'medical-clearance-issued',
+                'tone' => 'amber',
+            ],
+        ];
+        $clinicActivityMax = max(1, ...array_map(fn ($item) => (int) $item['value'], $clinicActivityBase));
+        $clinicActivityItems = collect($clinicActivityBase)->map(function (array $item) use ($clinicActivityMax, $trendFor) {
+            $progressBase = max(1, (float) ($item['progress_base'] ?? $clinicActivityMax));
+            $item['trend'] = $trendFor((int) $item['value'], (int) $item['previous']);
+            $item['progress'] = (int) min(100, max(6, round(((int) $item['value'] / $progressBase) * 100)));
+
+            return $item;
+        });
+
+        $clearanceRequests = HealthProfile::where('clearance_status', 'For Final Review')->count()
+            + EmployeeHealthProfile::where('clearance_status', 'For Final Review')->count();
+        $needsAttentionItems = collect([
+            [
+                'title' => 'Pending Requests',
+                'description' => 'Appointments request',
+                'value' => $pending,
+                'icon' => 'exclamation-circle',
+                'tone' => 'rose',
+                'url' => $appointmentsUrl,
+            ],
+            [
+                'title' => 'For Consultation',
+                'description' => 'Scheduled today',
+                'value' => $upcoming,
+                'icon' => 'calendar-days',
+                'tone' => 'violet',
+                'url' => $appointmentsUrl,
+            ],
+            [
+                'title' => 'Clearance Requests',
+                'description' => 'Awaiting review',
+                'value' => $clearanceRequests,
+                'icon' => 'document-download',
+                'tone' => 'green',
+                'url' => $healthRecordsUrl,
+            ],
+            [
+                'title' => 'Low Stock Items',
+                'description' => 'Below minimum stock',
+                'value' => $inventoryLowStock,
+                'icon' => 'cube',
+                'tone' => 'amber',
+                'url' => $inventoryUrl,
+            ],
+        ]);
+
         $appointmentChartStats = [
             ['label' => 'Pending', 'value' => $pending, 'class' => 'warning'],
             ['label' => 'Scheduled Today', 'value' => $upcoming, 'class' => 'success'],
@@ -802,7 +998,90 @@ class AdminController extends Controller
             ['label' => 'Out', 'value' => $inventoryOutOfStock, 'class' => 'danger'],
         ];
 
-        $recentAppointments = Appointment::latest()->take(5)->get();
+        $recentAppointmentActivities = Appointment::query()
+            ->latest()
+            ->take(20)
+            ->get()
+            ->map(function (Appointment $appointment) use ($appointmentsUrl) {
+                $activityAt = $appointment->updated_at ?: $appointment->created_at;
+                $appointmentDate = $appointment->date
+                    ? Carbon::parse($appointment->date)->format('M d')
+                    : optional($activityAt)->format('M d');
+                $appointmentTime = $appointment->time
+                    ? Carbon::parse($appointment->time)->format('g:i A')
+                    : optional($activityAt)->format('g:i A');
+
+                return (object) [
+                    'kind' => 'appointment',
+                    'name' => trim((string) ($appointment->name ?? 'Unknown patient')),
+                    'identifier' => trim((string) ($appointment->student_number ?: $appointment->student_id)),
+                    'activity' => trim((string) ($appointment->service ?? 'Appointment')),
+                    'activity_at' => $activityAt,
+                    'date_label' => trim(implode(' ', array_filter([$appointmentDate, $appointmentTime ? '- ' . $appointmentTime : '']))),
+                    'status' => trim((string) ($appointment->status ?? 'Pending')),
+                    'status_class' => 'st-' . Str::slug(strtolower((string) ($appointment->status ?? 'pending'))),
+                    'url' => $appointmentsUrl . '?highlight_appointment=' . $appointment->id,
+                ];
+            });
+
+        $recentHealthActivities = HealthProfile::query()
+            ->with('user')
+            ->where(function ($query) {
+                $query->whereNotNull('verified_at')
+                    ->orWhereIn('clearance_status', ['Approved', 'Issued', 'Fully Cleared', 'Cleared']);
+            })
+            ->latest('verified_at')
+            ->take(20)
+            ->get()
+            ->map(function (HealthProfile $profile) use ($healthRecordsUrl) {
+                $user = $profile->user;
+                $activityAt = $profile->verified_at ?: $profile->updated_at ?: $profile->created_at;
+
+                return (object) [
+                    'kind' => 'health',
+                    'name' => trim((string) ($user->name ?? $profile->full_name ?? 'Health record')),
+                    'identifier' => trim((string) ($user->student_number ?? $profile->student_number ?? $user->student_id ?? '')),
+                    'activity' => 'Health Record Approved',
+                    'activity_at' => $activityAt,
+                    'date_label' => optional($activityAt)->format('M d - g:i A') ?: 'Recently',
+                    'status' => trim((string) ($profile->clearance_status ?: 'Approved')),
+                    'status_class' => 'st-health',
+                    'url' => $healthRecordsUrl . '?tab=approved&highlight_health=' . $profile->id,
+                ];
+            });
+
+        $recentEmployeeHealthActivities = EmployeeHealthProfile::query()
+            ->with('user')
+            ->where(function ($query) {
+                $query->whereNotNull('verified_at')
+                    ->orWhereIn('clearance_status', ['Approved', 'Issued', 'Fully Cleared', 'Cleared']);
+            })
+            ->latest('verified_at')
+            ->take(20)
+            ->get()
+            ->map(function (EmployeeHealthProfile $profile) use ($healthRecordsUrl) {
+                $user = $profile->user;
+                $activityAt = $profile->verified_at ?: $profile->updated_at ?: $profile->created_at;
+
+                return (object) [
+                    'kind' => 'health',
+                    'name' => trim((string) ($user->name ?? $profile->full_name ?? 'Employee record')),
+                    'identifier' => trim((string) ($user->employee_number ?? $profile->employee_number ?? $user->email ?? '')),
+                    'activity' => 'Health Record Approved',
+                    'activity_at' => $activityAt,
+                    'date_label' => optional($activityAt)->format('M d - g:i A') ?: 'Recently',
+                    'status' => trim((string) ($profile->clearance_status ?: 'Approved')),
+                    'status_class' => 'st-health',
+                    'url' => $healthRecordsUrl . '?tab=approved&highlight_employee_health=' . $profile->id,
+                ];
+            });
+
+        $recentActivities = $recentAppointmentActivities
+            ->concat($recentHealthActivities)
+            ->concat($recentEmployeeHealthActivities)
+            ->sortByDesc(fn ($activity) => optional($activity->activity_at)->timestamp ?? 0)
+            ->take(20)
+            ->values();
 
         return view('admin.dashboard', compact(
             'total',
@@ -813,7 +1092,11 @@ class AdminController extends Controller
             'inventoryTotal',
             'appointmentChartStats',
             'inventoryChartStats',
-            'recentAppointments'
+            'clinicActivityItems',
+            'needsAttentionItems',
+            'activityPeriod',
+            'activityPeriodOptions',
+            'recentActivities'
         ));
     }
 
@@ -1583,12 +1866,14 @@ class AdminController extends Controller
                 $studentNumber = strtoupper($studentNumber) === 'N/A' ? '' : $studentNumber;
                 $yearLevel = strtoupper($yearLevel) === 'N/A' ? '' : $yearLevel;
                 $section = strtoupper($section) === 'N/A' ? '' : $section;
+                $matchedBy = $localIdpUuid !== '' && $idpMatch ? 'IDP UUID' : 'Exact email';
 
                 if (!$this->isOfficialStudentNumber($studentNumber)) {
                     $summary['no_match']++;
                     $summary['details'][] = [
                         'name' => $student['name'] ?? 'Unnamed user',
                         'email' => $email,
+                        'matched_by' => $matchedBy,
                         'status' => 'no_student_number',
                         'message' => 'GuiSIS matched the student but returned no student number.',
                     ];
@@ -1604,6 +1889,7 @@ class AdminController extends Controller
                     $summary['details'][] = [
                         'name' => $student['name'] ?? 'Unnamed user',
                         'email' => $email,
+                        'matched_by' => $matchedBy,
                         'status' => 'manual_review',
                         'message' => 'A different IDP UUID already exists in the linked health profile.',
                     ];
@@ -1615,6 +1901,7 @@ class AdminController extends Controller
                     $summary['details'][] = [
                         'name' => $student['name'] ?? 'Unnamed user',
                         'email' => $email,
+                        'matched_by' => $matchedBy,
                         'status' => 'manual_review',
                         'message' => 'A different official student number already exists locally.',
                     ];
@@ -1636,6 +1923,7 @@ class AdminController extends Controller
                     $summary['details'][] = [
                         'name' => $student['name'] ?? 'Unnamed user',
                         'email' => $email,
+                        'matched_by' => $matchedBy,
                         'status' => 'already_complete',
                         'message' => 'Local identity and academic fields already match the available data.',
                     ];
@@ -1647,6 +1935,7 @@ class AdminController extends Controller
                     $summary['details'][] = [
                         'name' => $student['name'] ?? 'Unnamed user',
                         'email' => $email,
+                        'matched_by' => $matchedBy,
                         'status' => 'ready',
                         'message' => 'Ready to sync: ' . implode(', ', array_keys(array_filter($changes, static fn ($value): bool => $value !== null))),
                     ];
@@ -1708,6 +1997,7 @@ class AdminController extends Controller
                 $summary['details'][] = [
                     'name' => $student['name'] ?? 'Unnamed user',
                     'email' => $email,
+                    'matched_by' => $matchedBy,
                     'status' => 'synced',
                     'message' => 'Student number and available academic fields were synchronized.',
                 ];
@@ -5941,14 +6231,34 @@ public function exportInventory()
     // 6. FOR INVENTORY SUMMARY
 public function inventorySummary()
 {
-    $monthFilter = request()->query('month', now()->format('Y-m'));
-    $monthStart = Carbon::parse($monthFilter . '-01')->startOfMonth();
-    $monthEnd = (clone $monthStart)->endOfMonth();
+    $fallbackMonth = request()->query('month', now()->format('Y-m'));
+    $fallbackStart = Carbon::parse($fallbackMonth . '-01')->startOfMonth();
+    $fallbackEnd = (clone $fallbackStart)->endOfMonth();
+
+    try {
+        $dateFrom = request()->filled('date_from')
+            ? Carbon::parse(request()->query('date_from'))->startOfDay()
+            : $fallbackStart;
+    } catch (\Throwable $exception) {
+        $dateFrom = $fallbackStart;
+    }
+
+    try {
+        $dateTo = request()->filled('date_to')
+            ? Carbon::parse(request()->query('date_to'))->endOfDay()
+            : $fallbackEnd;
+    } catch (\Throwable $exception) {
+        $dateTo = $fallbackEnd;
+    }
+
+    if ($dateTo->lt($dateFrom)) {
+        [$dateFrom, $dateTo] = [$dateTo->copy()->startOfDay(), $dateFrom->copy()->endOfDay()];
+    }
 
     $consumedByItem = InventoryMovement::query()
         ->select('item_id', DB::raw('SUM(ABS(quantity)) as consumed_total'))
         ->where('type', 'consumed')
-        ->whereBetween('created_at', [$monthStart, $monthEnd])
+        ->whereBetween('created_at', [$dateFrom, $dateTo])
         ->groupBy('item_id')
         ->pluck('consumed_total', 'item_id');
 
@@ -6001,7 +6311,7 @@ public function inventorySummary()
     ]);
 
     return view('admin.reports.inventory-summary', compact(
-        'totalItems', 'totalStock', 'totalConsumed', 'outOfStock', 'lowStockItems', 'lowStockCount', 'categorySummary', 'itemPerformance', 'monthFilter'
+        'totalItems', 'totalStock', 'totalConsumed', 'outOfStock', 'lowStockItems', 'lowStockCount', 'categorySummary', 'itemPerformance', 'dateFrom', 'dateTo'
     ));
 }
 

@@ -2205,6 +2205,15 @@
         color: #6b7280;
         font-weight: 600;
     }
+    #restockModal input[type="number"] {
+        appearance: textfield;
+        -moz-appearance: textfield;
+    }
+    #restockModal input[type="number"]::-webkit-outer-spin-button,
+    #restockModal input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
     #restockModal .restock-quantity-control {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 112px;
@@ -2325,6 +2334,11 @@
             0 2px 4px rgba(0, 0, 0, 0.12),
             0 8px 20px rgba(0, 0, 0, 0.22),
             0 18px 36px rgba(0, 0, 0, 0.16);
+    }
+    html[data-theme="dark"] #restockModal input[type="number"].form-control {
+        background: #111827 !important;
+        color: #ffffff !important;
+        color-scheme: dark;
     }
     html[data-theme="dark"] #restockModal .form-group:focus-within,
     html[data-theme="dark"] #issueModal .form-group:focus-within {
@@ -6774,17 +6788,7 @@
                         <div class="inventory-inline-grid">
                             <div class="form-group">
                                 <label for="restockQuantity">Quantity to Add</label>
-                                <div class="restock-quantity-control">
-                                    <input type="number" name="restock_quantity" id="restockQuantity" class="form-control" min="0.01" step="0.01" required placeholder="e.g. 5">
-                                    <div class="restock-unit-shell">
-                                        <select id="restockUnitSelect" class="restock-quantity-unit" aria-label="Stock unit" disabled>
-                                            <option value="pcs">pcs</option>
-                                        </select>
-                                        <svg class="restock-unit-arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                                            <path d="m6 8 4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </div>
-                                </div>
+                                <input type="number" name="restock_quantity" id="restockQuantity" class="form-control" min="0.01" step="0.01" required placeholder="e.g. 5">
                                 <small class="form-note">Or click a preset above to fill quickly.</small>
                             </div>
                             <div class="form-group">
@@ -7881,11 +7885,6 @@
         restockCurrentUnit = item.unit || 'pcs';
         document.getElementById('restockQuantity').value = '';
         document.getElementById('restockDate').value = localIsoDate();
-
-        const unitSelect = document.getElementById('restockUnitSelect');
-        if (unitSelect) {
-            unitSelect.replaceChildren(new Option(restockCurrentUnit, restockCurrentUnit, true, true));
-        }
 
         updateRestockPreview();
         if (restockQuantityInput) restockQuantityInput.focus();
