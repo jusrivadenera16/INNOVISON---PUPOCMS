@@ -274,25 +274,6 @@
         margin: 0;
     }
 
-    .btn-view-all {
-        font-size: 13px;
-        font-weight: 600;
-        color: #8B0000;
-        text-decoration: none;
-        padding: 6px 12px;
-        background: #fff1f2;
-        border-radius: 6px;
-        transition: 0.2s;
-    }
-    .btn-view-all:hover { background: #ffe4e6; }
-    html[data-theme="dark"] .btn-view-all {
-        color: #0f172a;
-        background: #f8fafc;
-    }
-    html[data-theme="dark"] .btn-view-all:hover {
-        background: #ffffff;
-    }
-
     /* Table Styles */
     table { width: 100%; border-collapse: separate; border-spacing: 0; }
     th { 
@@ -318,141 +299,544 @@
     .st-pending { background: #fffbeb; color: #b45309; }
     .st-completed { background: #dbeafe; color: #1e40af; }
     .st-cancelled { background: #fee2e2; color: #b91c1c; }
+    .st-missed,
+    .st-expired,
+    .st-rejected { background: #fee2e2; color: #b91c1c; }
+    .st-health { background: #fef3c7; color: #8B0000; }
 
-    .dashboard-chart-grid {
+    .panel-header {
+        align-items: center;
+        gap: 12px;
+    }
+
+    .btn-view-all {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 38px;
+        padding: 0 16px;
+        border: 1px solid #8B0000;
+        border-radius: 999px;
+        background: #8B0000;
+        color: #ffffff;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        line-height: 1;
+        text-decoration: none;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 12px 24px rgba(139, 0, 0, .16);
+        transition: transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
+    }
+
+    .btn-view-all::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -130%;
+        width: 120%;
+        height: 180%;
+        background: linear-gradient(115deg, rgba(255, 247, 181, 0) 0%, rgba(255, 247, 181, .58) 45%, rgba(255, 247, 181, 0) 100%);
+        transform: skewX(-20deg);
+        transition: left 1.35s ease;
+        pointer-events: none;
+    }
+
+    .btn-view-all:hover,
+    .btn-view-all:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        box-shadow: 0 14px 28px rgba(112, 19, 27, .18);
+        outline: none;
+    }
+
+    .btn-view-all:hover::after,
+    .btn-view-all:focus-visible::after {
+        left: 125%;
+    }
+
+    .btn-view-all > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .btn-view-all svg {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+        transition: transform .18s ease;
+    }
+
+    .recent-activity-panel.is-expanded .btn-view-all svg {
+        transform: rotate(180deg);
+    }
+
+    .recent-activity-table-wrap {
+        max-height: 420px;
+        overflow: auto;
+        border-radius: 12px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(139, 0, 0, .36) transparent;
+    }
+
+    .recent-activity-table-wrap::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .recent-activity-table-wrap::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(139, 0, 0, .36);
+    }
+
+    .recent-activity-extra {
+        display: none;
+    }
+
+    .recent-activity-panel.is-expanded .recent-activity-extra {
+        display: table-row;
+    }
+
+    .recent-activity-kind {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 24px;
+        padding: 0 9px;
+        border-radius: 999px;
+        border: 1px solid rgba(139, 0, 0, .12);
+        background: #fff7ed;
+        color: #8B0000;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    html[data-theme="dark"] .btn-view-all {
+        border-color: rgba(250, 204, 21, .28);
+        background: #8B0000;
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .btn-view-all:hover,
+    html[data-theme="dark"] .btn-view-all:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131B;
+    }
+
+    html[data-theme="dark"] .recent-activity-kind {
+        border-color: rgba(250, 204, 21, .22);
+        background: rgba(250, 204, 21, .10);
+        color: #facc15;
+    }
+
+    .dashboard-overview-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 16px;
+        gap: 18px;
         margin: -12px 0 22px;
     }
 
-    .dashboard-chart-card {
+    .dashboard-overview-card {
         background: rgba(255, 255, 255, 0.96);
         border: 1px solid rgba(112, 19, 27, 0.12);
         border-radius: 16px;
-        padding: 16px;
+        padding: 22px;
         box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
     }
 
-    .dashboard-chart-head {
+    .dashboard-overview-head {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 12px;
-        margin-bottom: 12px;
+        margin-bottom: 22px;
     }
 
-    .dashboard-chart-title {
+    .dashboard-overview-title {
         margin: 0;
-        color: #0f172a;
+        color: #70131B;
         font-size: 15px;
-        font-weight: 800;
+        font-weight: 900;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
     }
 
-    .dashboard-chart-copy {
+    .dashboard-overview-copy {
         margin: 3px 0 0;
         color: #64748b;
         font-size: 12px;
         line-height: 1.4;
     }
 
-    .dashboard-chart-total {
-        min-width: 54px;
+    .dashboard-period-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        min-height: 34px;
+        padding: 0 10px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        background: transparent;
+        color: #8B0000;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    }
+
+    .dashboard-period-btn svg {
+        width: 14px;
+        height: 14px;
+        stroke-width: 2.2;
+        transition: transform 0.18s ease;
+    }
+
+    .dashboard-period-control {
+        position: relative;
+        flex: 0 0 auto;
+    }
+
+    .dashboard-period-control.is-open .dashboard-period-btn {
+        border-color: rgba(139, 0, 0, 0.16);
+        background: #fff1f2;
+        color: #70131B;
+    }
+
+    .dashboard-period-control.is-open .dashboard-period-btn svg {
+        transform: rotate(180deg);
+    }
+
+    .dashboard-period-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 20;
+        min-width: 166px;
+        padding: 7px;
+        border: 1px solid rgba(112, 19, 27, 0.12);
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-6px);
+        transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+    }
+
+    .dashboard-period-control.is-open .dashboard-period-menu {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .dashboard-period-link {
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        min-height: 34px;
+        padding: 0 10px;
+        border-radius: 8px;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 800;
+        text-decoration: none;
+        transition: background 0.18s ease, color 0.18s ease;
+    }
+
+    .dashboard-period-link::before {
+        content: "";
+        position: absolute;
+        inset: -45% auto -45% -68%;
+        width: 58%;
+        background: linear-gradient(115deg, transparent 0%, rgba(255, 247, 194, 0.12) 35%, rgba(255, 247, 194, 0.78) 50%, rgba(255, 247, 194, 0.14) 65%, transparent 100%);
+        transform: skewX(-18deg);
+        transition: left 0.5s ease;
+        pointer-events: none;
+    }
+
+    .dashboard-period-link span {
+        position: relative;
+        z-index: 1;
+    }
+
+    .dashboard-period-link:hover,
+    .dashboard-period-link:focus-visible {
+        background: #facc15;
+        color: #8B0000;
+        outline: none;
+    }
+
+    .dashboard-period-link:hover::before,
+    .dashboard-period-link:focus-visible::before {
+        left: 112%;
+    }
+
+    .dashboard-period-link.is-active {
+        background: #8B0000;
+        color: #facc15 !important;
+        outline: none;
+    }
+
+    .dashboard-period-link.is-active span {
+        color: #facc15 !important;
+    }
+
+    .clinic-activity-list,
+    .needs-attention-list {
+        display: grid;
+        gap: 0;
+    }
+
+    .clinic-activity-row {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 0;
+    }
+
+    .clinic-activity-row + .clinic-activity-row,
+    .needs-attention-row + .needs-attention-row {
+        border-top: 1px solid rgba(112, 19, 27, 0.10);
+    }
+
+    .dashboard-row-icon {
+        width: 42px;
+        height: 42px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--icon-bg, rgba(148, 163, 184, 0.14));
+        color: var(--icon-color, #64748b);
+        flex: 0 0 auto;
+    }
+
+    .dashboard-row-icon svg {
+        width: 20px;
+        height: 20px;
+        stroke-width: 1.9;
+    }
+
+    .dashboard-row-icon.tone-rose {
+        --icon-bg: rgba(244, 63, 94, 0.12);
+        --icon-color: #e11d48;
+    }
+
+    .dashboard-row-icon.tone-violet {
+        --icon-bg: rgba(147, 51, 234, 0.12);
+        --icon-color: #9333ea;
+    }
+
+    .dashboard-row-icon.tone-green {
+        --icon-bg: rgba(34, 197, 94, 0.13);
+        --icon-color: #16a34a;
+    }
+
+    .dashboard-row-icon.tone-amber {
+        --icon-bg: rgba(245, 158, 11, 0.14);
+        --icon-color: #f59e0b;
+    }
+
+    .dashboard-row-icon.tone-blue {
+        --icon-bg: rgba(59, 130, 246, 0.12);
+        --icon-color: #2563eb;
+    }
+
+    .dashboard-row-main {
+        min-width: 0;
+    }
+
+    .dashboard-row-title {
+        color: #111827;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.25;
+    }
+
+    .dashboard-row-copy {
+        margin-top: 2px;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.35;
+    }
+
+    .clinic-activity-meter {
+        display: grid;
+        grid-template-columns: minmax(92px, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        min-width: 238px;
+    }
+
+    .clinic-activity-track {
+        height: 8px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #eef2f7;
+    }
+
+    .clinic-activity-fill {
+        display: block;
+        height: 100%;
+        width: var(--activity-progress, 0%);
+        min-width: 5px;
+        border-radius: inherit;
+        background: var(--activity-color, #94a3b8);
+    }
+
+    .clinic-activity-row.tone-rose { --activity-color: #e11d48; }
+    .clinic-activity-row.tone-violet { --activity-color: #9333ea; }
+    .clinic-activity-row.tone-green { --activity-color: #16a34a; }
+    .clinic-activity-row.tone-amber { --activity-color: #f59e0b; }
+
+    .clinic-activity-value {
+        min-width: 44px;
+        color: #111827;
+        font-size: 22px;
+        font-weight: 900;
         text-align: right;
+        line-height: 1;
+    }
+
+    .clinic-activity-trend {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+        margin-top: 7px;
+        color: #16a34a;
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    .clinic-activity-trend.is-down {
+        color: #dc2626;
+    }
+
+    .clinic-activity-trend.is-flat {
+        color: #64748b;
+    }
+
+    .needs-attention-row {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr) auto 18px;
+        align-items: center;
+        gap: 14px;
+        padding: 13px 0;
+        color: inherit;
+        text-decoration: none;
+        transition: transform 0.18s ease, color 0.18s ease;
+    }
+
+    .needs-attention-row:hover,
+    .needs-attention-row:focus-visible {
+        color: #8B0000;
+        transform: translateX(3px);
+        outline: none;
+    }
+
+    .needs-attention-row .dashboard-row-title,
+    .needs-attention-row .dashboard-row-copy {
+        display: block;
+    }
+
+    .needs-attention-count {
         color: #8B0000;
         font-size: 22px;
         font-weight: 900;
         line-height: 1;
-    }
-
-    .dashboard-chart-total span {
-        display: block;
-        margin-top: 3px;
-        color: #94a3b8;
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-    }
-
-    .dashboard-chart-bars {
-        display: grid;
-        gap: 9px;
-    }
-
-    .dashboard-chart-row {
-        display: grid;
-        grid-template-columns: 92px 1fr 42px;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .dashboard-chart-label {
-        color: #334155;
-        font-size: 12px;
-        font-weight: 800;
-        white-space: nowrap;
-    }
-
-    .dashboard-chart-track {
-        height: 9px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: #f1f5f9;
-    }
-
-    .dashboard-chart-fill {
-        display: block;
-        height: 100%;
-        min-width: 4px;
-        border-radius: inherit;
-        background: #94a3b8;
-    }
-
-    .dashboard-chart-fill.success { background: #22c55e; }
-    .dashboard-chart-fill.warning { background: #f59e0b; }
-    .dashboard-chart-fill.info { background: #3b82f6; }
-    .dashboard-chart-fill.danger { background: #ef4444; }
-
-    .dashboard-chart-value {
-        color: #0f172a;
-        font-size: 12px;
-        font-weight: 900;
         text-align: right;
     }
 
-    html[data-theme="dark"] .dashboard-chart-card {
+    .needs-attention-chevron {
+        width: 18px;
+        height: 18px;
+        color: #70131B;
+        stroke-width: 2.5;
+    }
+
+    html[data-theme="dark"] .dashboard-overview-card {
         background: rgba(15, 23, 42, 0.78);
         border-color: rgba(250, 204, 21, 0.16);
     }
 
-    html[data-theme="dark"] .dashboard-chart-title,
-    html[data-theme="dark"] .dashboard-chart-value,
-    html[data-theme="dark"] .dashboard-chart-label {
+    html[data-theme="dark"] .dashboard-overview-title,
+    html[data-theme="dark"] .dashboard-row-title,
+    html[data-theme="dark"] .clinic-activity-value {
         color: #f8fafc;
     }
 
-    html[data-theme="dark"] .dashboard-chart-copy,
-    html[data-theme="dark"] .dashboard-chart-total span {
+    html[data-theme="dark"] .dashboard-overview-copy,
+    html[data-theme="dark"] .dashboard-row-copy {
         color: #cbd5e1;
     }
 
-    html[data-theme="dark"] .dashboard-chart-total {
+    html[data-theme="dark"] .dashboard-period-btn,
+    html[data-theme="dark"] .needs-attention-count,
+    html[data-theme="dark"] .needs-attention-chevron {
         color: #fde68a;
     }
 
-    html[data-theme="dark"] .dashboard-chart-track {
+    html[data-theme="dark"] .dashboard-period-control.is-open .dashboard-period-btn {
+        border-color: rgba(250, 204, 21, 0.24);
+        background: rgba(250, 204, 21, 0.10);
+        color: #fde68a;
+    }
+
+    html[data-theme="dark"] .dashboard-period-menu {
+        border-color: rgba(250, 204, 21, 0.18);
+        background: #111827;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.34);
+    }
+
+    html[data-theme="dark"] .dashboard-period-link {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .dashboard-period-link:hover,
+    html[data-theme="dark"] .dashboard-period-link:focus-visible {
+        background: #facc15;
+        color: #8B0000;
+    }
+
+    html[data-theme="dark"] .dashboard-period-link.is-active {
+        background: #8B0000;
+        color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] .dashboard-period-link.is-active span {
+        color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] .clinic-activity-track {
         background: rgba(255, 255, 255, 0.12);
+    }
+
+    html[data-theme="dark"] .clinic-activity-row + .clinic-activity-row,
+    html[data-theme="dark"] .needs-attention-row + .needs-attention-row {
+        border-color: rgba(255, 255, 255, 0.10);
     }
 
     /* Responsive */
     @media (max-width: 1200px) {
         .stats-grid { grid-template-columns: repeat(2, 1fr); }
-        .dashboard-chart-grid { grid-template-columns: 1fr; }
+        .dashboard-overview-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 768px) {
         .stats-grid { grid-template-columns: repeat(2, 1fr); }
-        .dashboard-chart-row { grid-template-columns: 84px 1fr 36px; }
+        .clinic-activity-row { grid-template-columns: 42px minmax(0, 1fr); }
+        .clinic-activity-meter { grid-column: 2; min-width: 0; }
+        .needs-attention-row { grid-template-columns: 42px minmax(0, 1fr) auto 18px; }
         .dashboard-welcome { align-items: flex-start; }
     }
     @media (max-width: 500px) {
@@ -500,8 +884,6 @@
 
 @section('content')
 @php
-    $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
-    $appointmentsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/appointments') : url('/admin/appointments');
     $dashboardPercent = function ($value, $base) {
         $base = max(0, (int) $base);
         return $base > 0 ? (int) round(((int) $value / $base) * 100) : 0;
@@ -589,106 +971,134 @@
 
     </div>
 
-    @php
-        $appointmentChartMax = max(1, collect($appointmentChartStats)->max('value') ?? 0);
-        $inventoryChartMax = max(1, collect($inventoryChartStats)->max('value') ?? 0);
-    @endphp
-
-    <div class="dashboard-chart-grid" aria-label="Dashboard statistics charts">
-        <section class="dashboard-chart-card">
-            <div class="dashboard-chart-head">
+    <div class="dashboard-overview-grid" aria-label="Dashboard clinic overview">
+        <section class="dashboard-overview-card">
+            <div class="dashboard-overview-head">
                 <div>
-                    <h3 class="dashboard-chart-title">Appointment Status</h3>
-                    <p class="dashboard-chart-copy">Quick count of current request outcomes.</p>
+                    <h3 class="dashboard-overview-title">Clinic Activity</h3>
+                    <p class="dashboard-overview-copy">Overview of key clinic activities.</p>
                 </div>
-                <div class="dashboard-chart-total">{{ $total }}<span>Total</span></div>
+                <div class="dashboard-period-control">
+                    <button type="button" class="dashboard-period-btn" aria-haspopup="true" aria-expanded="false">
+                        <span>{{ $activityPeriodOptions[$activityPeriod] ?? 'Today' }}</span>
+                        <x-outline-icon name="chevron-down" />
+                    </button>
+                    <div class="dashboard-period-menu" role="menu" aria-label="Clinic activity period">
+                        @foreach($activityPeriodOptions as $periodKey => $periodLabel)
+                            <a
+                                href="{{ request()->fullUrlWithQuery(['activity_period' => $periodKey]) }}"
+                                class="dashboard-period-link {{ $activityPeriod === $periodKey ? 'is-active' : '' }}"
+                                role="menuitem"
+                            >
+                                <span>{{ $periodLabel }}</span>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
             </div>
-            <div class="dashboard-chart-bars">
-                @foreach($appointmentChartStats as $chartItem)
-                    @php $width = max(4, round(((int) $chartItem['value'] / $appointmentChartMax) * 100)); @endphp
-                    <div class="dashboard-chart-row">
-                        <div class="dashboard-chart-label">{{ $chartItem['label'] }}</div>
-                        <div class="dashboard-chart-track" aria-hidden="true">
-                            <span class="dashboard-chart-fill {{ $chartItem['class'] }}" style="width: {{ $width }}%;"></span>
+
+            <div class="clinic-activity-list">
+                @foreach($clinicActivityItems as $activityItem)
+                    <div class="clinic-activity-row tone-{{ $activityItem['tone'] }}">
+                        <span class="dashboard-row-icon tone-{{ $activityItem['tone'] }}" aria-hidden="true">
+                            <x-outline-icon name="{{ $activityItem['icon'] }}" />
+                        </span>
+                        <div class="dashboard-row-main">
+                            <div class="dashboard-row-title">{{ $activityItem['title'] }}</div>
+                            <div class="dashboard-row-copy">{{ $activityItem['description'] }}</div>
                         </div>
-                        <div class="dashboard-chart-value">{{ number_format($chartItem['value']) }}</div>
+                        <div class="clinic-activity-meter">
+                            <div class="clinic-activity-track" aria-hidden="true">
+                                <span class="clinic-activity-fill" style="--activity-progress: {{ $activityItem['progress'] }}%;"></span>
+                            </div>
+                            <div>
+                                <div class="clinic-activity-value">{{ number_format($activityItem['value']) }}</div>
+                                <div class="clinic-activity-trend is-{{ $activityItem['trend']['direction'] }}">
+                                    @if($activityItem['trend']['direction'] === 'down')
+                                        <span aria-hidden="true">&darr;</span>
+                                    @elseif($activityItem['trend']['direction'] === 'up')
+                                        <span aria-hidden="true">&uarr;</span>
+                                    @else
+                                        <span aria-hidden="true">&minus;</span>
+                                    @endif
+                                    <span>{{ $activityItem['trend']['value'] }}%</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 @endforeach
             </div>
         </section>
 
-        <section class="dashboard-chart-card">
-            <div class="dashboard-chart-head">
+        <section class="dashboard-overview-card">
+            <div class="dashboard-overview-head">
                 <div>
-                    <h3 class="dashboard-chart-title">Inventory Health</h3>
-                    <p class="dashboard-chart-copy">Stock condition across encoded items.</p>
+                    <h3 class="dashboard-overview-title">Needs Attention</h3>
+                    <p class="dashboard-overview-copy">Items that need your immediate action.</p>
                 </div>
-                <div class="dashboard-chart-total">{{ $inventoryTotal }}<span>Items</span></div>
             </div>
-            <div class="dashboard-chart-bars">
-                @foreach($inventoryChartStats as $chartItem)
-                    @php $width = max(4, round(((int) $chartItem['value'] / $inventoryChartMax) * 100)); @endphp
-                    <div class="dashboard-chart-row">
-                        <div class="dashboard-chart-label">{{ $chartItem['label'] }}</div>
-                        <div class="dashboard-chart-track" aria-hidden="true">
-                            <span class="dashboard-chart-fill {{ $chartItem['class'] }}" style="width: {{ $width }}%;"></span>
-                        </div>
-                        <div class="dashboard-chart-value">{{ number_format($chartItem['value']) }}</div>
-                    </div>
+
+            <div class="needs-attention-list">
+                @foreach($needsAttentionItems as $attentionItem)
+                    <a href="{{ $attentionItem['url'] }}" class="needs-attention-row">
+                        <span class="dashboard-row-icon tone-{{ $attentionItem['tone'] }}" aria-hidden="true">
+                            <x-outline-icon name="{{ $attentionItem['icon'] }}" />
+                        </span>
+                        <span class="dashboard-row-main">
+                            <span class="dashboard-row-title">{{ $attentionItem['title'] }}</span>
+                            <span class="dashboard-row-copy">{{ $attentionItem['description'] }}</span>
+                        </span>
+                        <span class="needs-attention-count">{{ number_format($attentionItem['value']) }}</span>
+                        <x-outline-icon name="chevron-right" class="needs-attention-chevron" />
+                    </a>
                 @endforeach
             </div>
         </section>
     </div>
 
-    <div class="panel">
+    <div class="panel recent-activity-panel" id="recentActivityPanel">
         <div class="panel-header">
             <h3 class="panel-title">Recent Activity</h3>
-            <a href="{{ $appointmentsUrl }}" class="btn-view-all">View All</a>
+            @if($recentActivities->count() > 5)
+                <button type="button" class="btn-view-all" id="recentActivityToggle" aria-expanded="false" aria-controls="recentActivityTable">
+                    <span>Show All</span>
+                    <x-outline-icon name="chevron-down" />
+                </button>
+            @endif
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Student Name</th>
-                    <th>Service</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($recentAppointments as $appt)
+        <div class="recent-activity-table-wrap" id="recentActivityTable">
+            <table>
+                <thead>
                     <tr>
-                        <td style="font-weight: 600;">
-                            {{ $appt->name }}<br>
-                            <span style="font-size:11px; color:#94a3b8; font-weight:400;">{{ $appt->student_number ?: $appt->student_id }}</span>
-                        </td>
-                        <td>{{ $appt->service }}</td>
-                        <td>
-                            {{ \Carbon\Carbon::parse($appt->date)->format('M d') }}
-                            <span style="color:#cbd5e1; margin:0 4px;">&bull;</span>
-                            <span style="color:#64748b; font-size:12px;">{{ \Carbon\Carbon::parse($appt->time)->format('g:i A') }}</span>
-                        </td>
-                        <td>
-                            @if($appt->status == 'Approved')
-                                <span class="status-pill st-approved">Approved</span>
-                            @elseif($appt->status == 'Pending')
-                                <span class="status-pill st-pending">Pending</span>
-                            @elseif($appt->status == 'Completed')
-                                <span class="status-pill st-completed">Completed</span>
-                            @elseif($appt->status == 'Missed')
-                                <span class="status-pill st-cancelled">Missed</span>
-                            @elseif($appt->status == 'Expired')
-                                <span class="status-pill st-cancelled">Expired</span>
-                            @else
-                                <span class="status-pill st-cancelled">Cancelled</span>
-                            @endif
-                        </td>
+                        <th>Patient / Record</th>
+                        <th>Activity</th>
+                        <th>Date</th>
+                        <th>Status</th>
                     </tr>
-                @empty
-                    <tr><td colspan="4" style="text-align: center; padding: 30px; color: #94a3b8;">No recent activity.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse($recentActivities as $activity)
+                        <tr class="{{ $loop->iteration > 5 ? 'recent-activity-extra' : '' }}">
+                            <td style="font-weight: 600;">
+                                <a href="{{ $activity->url }}" style="color: inherit; text-decoration: none;">
+                                    {{ $activity->name }}
+                                </a><br>
+                                <span style="font-size:11px; color:#94a3b8; font-weight:400;">{{ $activity->identifier ?: ucfirst($activity->kind) }}</span>
+                            </td>
+                            <td>
+                                <span class="recent-activity-kind">{{ $activity->kind }}</span>
+                                <span style="display:block; margin-top:6px;">{{ $activity->activity }}</span>
+                            </td>
+                            <td>{{ $activity->date_label }}</td>
+                            <td><span class="status-pill {{ $activity->status_class }}">{{ $activity->status }}</span></td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="4" style="text-align: center; padding: 30px; color: #94a3b8;">No recent activity.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
 </div>
@@ -712,6 +1122,54 @@
 
         updateDashboardGreeting();
         window.setInterval(updateDashboardGreeting, 60000);
+    })();
+
+    (function () {
+        const panel = document.getElementById('recentActivityPanel');
+        const toggle = document.getElementById('recentActivityToggle');
+        if (!panel || !toggle) {
+            return;
+        }
+
+        toggle.addEventListener('click', function () {
+            const isExpanded = panel.classList.toggle('is-expanded');
+            toggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+            const label = toggle.querySelector('span');
+            if (label) {
+                label.textContent = isExpanded ? 'Show Less' : 'Show All';
+            }
+        });
+    })();
+
+    (function () {
+        const control = document.querySelector('.dashboard-period-control');
+        const button = control ? control.querySelector('.dashboard-period-btn') : null;
+        if (!control || !button) {
+            return;
+        }
+
+        const setOpen = function (isOpen) {
+            control.classList.toggle('is-open', isOpen);
+            button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        };
+
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            setOpen(!control.classList.contains('is-open'));
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!control.contains(event.target)) {
+                setOpen(false);
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                setOpen(false);
+            }
+        });
     })();
 </script>
 @endpush

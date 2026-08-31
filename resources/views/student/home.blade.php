@@ -2903,41 +2903,42 @@
         z-index: 2;
     }
     #about .comments-section .section-head { display: block; margin: 0 0 18px; text-align: center; }
-    .feedback-stage { width: min(760px, 100%); display: grid; margin: 0 auto; }
+    .feedback-stage {
+        width: min(1060px, 100%);
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        margin: 0 auto;
+    }
     .feedback-slide {
-        grid-area: 1 / 1;
-        min-height: 148px;
+        min-height: 190px;
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         grid-template-areas: "quote stars" "identity identity";
         gap: 10px 20px;
-        padding: 22px 28px;
+        padding: 22px;
         border: 1px solid rgba(255, 247, 240, .36);
         border-radius: 10px;
         background: rgba(69, 5, 23, .32);
         box-shadow: 0 16px 30px rgba(27, 0, 8, .2), 1px 1px 0 rgba(250, 204, 21, .34);
-        opacity: 0;
-        visibility: hidden;
-        transform: translateX(22px) scale(.985);
-        pointer-events: none;
-        transition: opacity .42s ease, transform .32s cubic-bezier(.22, 1, .36, 1),
-            visibility .42s ease, border-color .25s ease, box-shadow .25s ease;
+        transition: transform .32s cubic-bezier(.22, 1, .36, 1), border-color .25s ease, box-shadow .25s ease;
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
     }
-    .feedback-slide.is-active {
-        opacity: 1;
-        visibility: visible;
-        transform: translateX(0) scale(1);
-        pointer-events: auto;
-    }
-    .feedback-slide.is-active:hover,
-    .feedback-slide.is-active:focus-within {
+    .feedback-slide:hover,
+    .feedback-slide:focus-within {
         transform: translateY(-7px) scale(1.012);
         border-color: rgba(250, 204, 21, .64);
         box-shadow: 0 24px 42px rgba(27, 0, 8, .3), 1px 1px 0 rgba(250, 204, 21, .62);
     }
-    .feedback-slide.is-empty { display: flex; align-items: center; justify-content: center; text-align: center; }
+    .feedback-slide.is-empty {
+        min-height: 150px;
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
     .feedback-quote {
         grid-area: quote;
         color: #facc15;
@@ -2980,20 +2981,8 @@
         line-height: 1.5;
         overflow-wrap: break-word;
     }
-    .feedback-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 17px; }
-    .feedback-dot {
-        width: 7px;
-        height: 7px;
-        padding: 0;
-        border: 0;
-        border-radius: 999px;
-        background: rgba(255,255,255,.28);
-        cursor: pointer;
-        transition: width .2s ease, background .2s ease, transform .2s ease;
-    }
-    .feedback-dot:hover,
-    .feedback-dot:focus-visible { background: rgba(255,255,255,.68); transform: scale(1.18); outline: none; }
-    .feedback-dot.is-active { width: 18px; background: #facc15; }
+    .feedback-pagination,
+    .feedback-dot { display: none; }
 
     html[data-theme="dark"] .PUPBG::before {
         background:
@@ -3095,6 +3084,9 @@
             min-width: 0;
             white-space: nowrap;
         }
+        .feedback-stage {
+            grid-template-columns: 1fr;
+        }
         .feedback-slide {
             grid-template-columns: 1fr;
             grid-template-areas: "quote" "stars" "identity";
@@ -3102,6 +3094,12 @@
             padding: 20px;
         }
         .feedback-stars { justify-content: flex-start; }
+    }
+
+    @media (min-width: 681px) and (max-width: 1040px) {
+        .feedback-stage {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
     }
 
     @media (max-width: 680px) {
@@ -4177,7 +4175,7 @@
         @php
           $feedbackSlides = collect($recentFeedback ?? []);
         @endphp
-        <section class="comments-section feedback-showcase" data-feedback-carousel aria-labelledby="feedbacksTitle">
+        <section class="comments-section feedback-showcase" aria-labelledby="feedbacksTitle">
           <header class="section-head feedback-heading">
             <span class="feedback-kicker">What Students Are Saying</span>
             <h3 id="feedbacksTitle">Feedbacks</h3>
@@ -4188,7 +4186,7 @@
               @php
                 $feedbackRating = max(1, min(5, (int) ($feedback['rating'] ?? 5)));
               @endphp
-              <article class="feedback-slide {{ $loop->first ? 'is-active' : '' }}" data-feedback-slide aria-hidden="{{ $loop->first ? 'false' : 'true' }}">
+              <article class="feedback-slide">
                 <span class="feedback-quote" aria-hidden="true">&ldquo;</span>
                 <div class="feedback-stars" aria-label="{{ $feedbackRating }} out of 5 stars">
                   @for($star = 1; $star <= 5; $star++)
@@ -4205,7 +4203,7 @@
                 </div>
               </article>
             @empty
-              <article class="feedback-slide is-active is-empty" data-feedback-slide aria-hidden="false">
+              <article class="feedback-slide is-empty">
                 <div class="feedback-copy">
                   <h4>No feedback has been shared yet.</h4>
                   <p>Student feedback will appear here after a clinic visit is completed.</p>
@@ -4213,20 +4211,6 @@
               </article>
             @endforelse
           </div>
-
-          @if($feedbackSlides->count() > 1)
-            <div class="feedback-pagination" aria-label="Choose feedback">
-              @foreach($feedbackSlides as $feedback)
-                <button
-                  type="button"
-                  class="feedback-dot {{ $loop->first ? 'is-active' : '' }}"
-                  data-feedback-dot="{{ $loop->index }}"
-                  aria-label="Show feedback {{ $loop->iteration }}"
-                  aria-current="{{ $loop->first ? 'true' : 'false' }}"
-                ></button>
-              @endforeach
-            </div>
-          @endif
         </section>
 
 
@@ -4399,7 +4383,6 @@
           { selector: '#about .about-learn-more' },
           { selector: '.feedback-showcase .feedback-heading' },
           { selector: '.feedback-showcase .feedback-stage' },
-          { selector: '.feedback-showcase .feedback-pagination' },
           { selector: '.site-footer .footer-col', stagger: 80 },
           { selector: '.site-footer .footer-bottom' }
         ];
@@ -4737,59 +4720,6 @@
 
           showAnnouncement(activeAnnouncement);
           restartAnnouncementTimer();
-        }
-
-        const feedbackCarousel = document.querySelector('[data-feedback-carousel]');
-        if (feedbackCarousel) {
-          const feedbackSlides = Array.from(feedbackCarousel.querySelectorAll('[data-feedback-slide]'));
-          const feedbackDots = Array.from(feedbackCarousel.querySelectorAll('[data-feedback-dot]'));
-          let activeFeedback = feedbackSlides.findIndex(function (slide) {
-            return slide.classList.contains('is-active');
-          });
-          let feedbackTimer = null;
-
-          if (activeFeedback < 0) activeFeedback = 0;
-
-          const showFeedback = function (nextIndex) {
-            if (!feedbackSlides.length) return;
-            activeFeedback = (nextIndex + feedbackSlides.length) % feedbackSlides.length;
-
-            feedbackSlides.forEach(function (slide, index) {
-              const isActive = index === activeFeedback;
-              slide.classList.toggle('is-active', isActive);
-              slide.setAttribute('aria-hidden', isActive ? 'false' : 'true');
-            });
-
-            feedbackDots.forEach(function (dot, index) {
-              const isActive = index === activeFeedback;
-              dot.classList.toggle('is-active', isActive);
-              dot.setAttribute('aria-current', isActive ? 'true' : 'false');
-            });
-          };
-
-          const startFeedbackTimer = function () {
-            if (feedbackTimer) window.clearInterval(feedbackTimer);
-            if (feedbackSlides.length > 1) {
-              feedbackTimer = window.setInterval(function () {
-                showFeedback(activeFeedback + 1);
-              }, 5500);
-            }
-          };
-
-          feedbackDots.forEach(function (dot) {
-            dot.addEventListener('click', function () {
-              showFeedback(Number(dot.dataset.feedbackDot || 0));
-              startFeedbackTimer();
-            });
-          });
-
-          feedbackCarousel.addEventListener('mouseenter', function () {
-            if (feedbackTimer) window.clearInterval(feedbackTimer);
-          });
-          feedbackCarousel.addEventListener('mouseleave', startFeedbackTimer);
-
-          showFeedback(activeFeedback);
-          startFeedbackTimer();
         }
 
       });

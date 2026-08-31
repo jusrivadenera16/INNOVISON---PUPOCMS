@@ -387,6 +387,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::middleware('role:superadmin')->group(function () {
             Route::get('/admin/developer-tools', [AdminController::class, 'developerTools'])->name('admin.developer-tools');
             Route::get('/admin/api-testing', [AdminController::class, 'apiTesting'])->name('admin.api-testing');
+            Route::post('/admin/api-testing/sync-student-numbers', [AdminController::class, 'syncMissingStudentNumbers'])->name('admin.api-testing.sync-student-numbers');
             Route::get('/admin/api/health-monitor', [AdminController::class, 'apiHealthMonitor'])->name('admin.api.health-monitor');
             Route::get('/admin/api/error-logs', [AdminController::class, 'apiErrorLogs'])->name('admin.api.error-logs');
             Route::get('/admin/api/system-status', [AdminController::class, 'apiSystemStatus'])->name('admin.api.system-status');

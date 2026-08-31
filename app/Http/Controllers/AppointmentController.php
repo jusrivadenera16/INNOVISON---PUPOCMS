@@ -724,12 +724,18 @@ class AppointmentController extends Controller
         }
     }
 
-    private function buildRecentFeedbackCollection()
+    private function buildRecentFeedbackCollection(?int $limit = null)
     {
-        return AppointmentFeedback::query()
+        $query = AppointmentFeedback::query()
             ->with(['user', 'appointment'])
             ->whereNotNull('submitted_at')
-            ->latest('submitted_at')
+            ->latest('submitted_at');
+
+        if ($limit !== null) {
+            $query->limit($limit);
+        }
+
+        return $query
             ->get()
             ->map(function (AppointmentFeedback $feedback) {
                 $appointment = $feedback->appointment;
@@ -739,6 +745,7 @@ class AppointmentController extends Controller
                     'name' => $this->formatFeedbackDisplayName($user, $appointment),
                     'role' => trim((string) ($appointment?->user_type ?? $user?->user_role ?? 'Student')),
                     'time' => optional($feedback->submitted_at)->diffForHumans() ?? 'Recently',
+                    'rating' => (int) $feedback->rating,
                     'message' => trim((string) $feedback->feedback) !== '' ? trim((string) $feedback->feedback) : 'Shared positive feedback about the clinic experience.',
                     'service' => trim((string) ($appointment?->service ?? 'Clinic Service')),
                 ];
@@ -755,9 +762,10 @@ class AppointmentController extends Controller
         }
 
         $this->promoteDesigneeAdminToStudentGuard();
-        $allFeedback = $this->buildRecentFeedbackCollection();
-        $feedbackCount = $allFeedback->count();
-        $recentFeedback = $allFeedback->take(3);
+        $feedbackCount = AppointmentFeedback::query()
+            ->whereNotNull('submitted_at')
+            ->count();
+        $recentFeedback = $this->buildRecentFeedbackCollection(10);
         $clinicHoursStatus = $this->buildClinicHoursStatus();
         $homeAnnouncements = Announcement::query()
             ->where('status', Announcement::STATUS_ACTIVE)
@@ -2096,8 +2104,12 @@ class AppointmentController extends Controller
                 'birthday' => 'DOB',
                 'contact_number' => 'contact_no',
             ] as $sourceKey => $userColumn) {
-                if (($data[$sourceKey] ?? '') !== '' && trim((string) ($user->{$userColumn} ?? '')) === '') {
-                    $user->{$userColumn} = $data[$sourceKey];
+                $incomingValue = trim((string) ($data[$sourceKey] ?? ''));
+                $currentValue = trim((string) ($user->{$userColumn} ?? ''));
+                $isOfficialAcademicField = in_array($sourceKey, ['year', 'section'], true);
+
+                if ($incomingValue !== '' && ($currentValue === '' || ($isOfficialAcademicField && $currentValue !== $incomingValue))) {
+                    $user->{$userColumn} = $incomingValue;
                     $shouldSave = true;
                 }
             }

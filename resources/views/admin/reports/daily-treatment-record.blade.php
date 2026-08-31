@@ -54,6 +54,15 @@
         transition: color .08s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
     }
 
+    body .main .treatment-record-actions .treatment-record-back,
+    body .main .treatment-record-actions .treatment-record-back:link,
+    body .main .treatment-record-actions .treatment-record-back:visited,
+    body .main .treatment-record-actions .treatment-record-back:active {
+        border-color: #70131B !important;
+        background: #70131B !important;
+        color: #ffffff !important;
+    }
+
     .treatment-record-back::after {
         content: "";
         position: absolute;
@@ -80,6 +89,13 @@
         box-shadow: 0 12px 28px rgba(112, 19, 27, 0.18);
         transform: translateY(-1px);
         outline: none;
+    }
+
+    body .main .treatment-record-actions .treatment-record-back:hover,
+    body .main .treatment-record-actions .treatment-record-back:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
     }
 
     .treatment-record-actions {

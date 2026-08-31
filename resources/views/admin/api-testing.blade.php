@@ -10,6 +10,890 @@
         gap: 20px;
     }
 
+    .guisis-sync-card {
+        border-color: rgba(127, 29, 45, 0.18);
+        background: linear-gradient(135deg, rgba(255, 250, 247, 0.98), rgba(255, 244, 239, 0.98));
+    }
+
+    html[data-theme="dark"] .guisis-sync-card {
+        border-color: rgba(245, 190, 83, 0.22);
+        background: linear-gradient(135deg, rgba(49, 23, 31, 0.98), rgba(35, 17, 25, 0.98));
+    }
+
+    .guisis-sync-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+    }
+
+    .guisis-sync-head h3 {
+        margin: 0 0 6px;
+        color: #7f1d2d;
+        font-size: 19px;
+        font-weight: 900;
+    }
+
+    html[data-theme="dark"] .guisis-sync-head h3 {
+        color: #f5d27a;
+    }
+
+    .guisis-sync-head p,
+    .guisis-sync-note {
+        margin: 0;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.55;
+    }
+
+    html[data-theme="dark"] .guisis-sync-head p,
+    html[data-theme="dark"] .guisis-sync-note {
+        color: #cbd5e1;
+    }
+
+    .guisis-sync-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .guisis-sync-actions form {
+        margin: 0;
+    }
+
+    .guisis-sync-button {
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 9px 14px;
+        border: 1px solid rgba(127, 29, 45, 0.22);
+        border-radius: 9px;
+        background: transparent;
+        color: #7f1d2d;
+        font-size: 12px;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+    .guisis-sync-button:hover,
+    .guisis-sync-button:focus-visible {
+        border-color: #7f1d2d;
+        background: rgba(127, 29, 45, 0.07);
+    }
+
+    .guisis-sync-button.is-primary {
+        border-color: #7f1d2d;
+        background: #7f1d2d;
+        color: #ffffff;
+    }
+
+    .guisis-sync-button.is-primary:hover,
+    .guisis-sync-button.is-primary:focus-visible {
+        background: #641523;
+    }
+
+    html[data-theme="dark"] .guisis-sync-button {
+        border-color: rgba(245, 210, 122, 0.35);
+        color: #f5d27a;
+    }
+
+    html[data-theme="dark"] .guisis-sync-button:hover,
+    html[data-theme="dark"] .guisis-sync-button:focus-visible {
+        background: rgba(245, 210, 122, 0.08);
+    }
+
+    html[data-theme="dark"] .guisis-sync-button.is-primary {
+        border-color: #f5d27a;
+        background: #f5d27a;
+        color: #35121a;
+    }
+
+    .guisis-sync-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+        gap: 8px;
+        margin-top: 16px;
+    }
+
+    .guisis-sync-stat {
+        padding: 10px 12px;
+        border: 1px solid rgba(127, 29, 45, 0.12);
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.58);
+    }
+
+    html[data-theme="dark"] .guisis-sync-stat {
+        border-color: rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.16);
+    }
+
+    .guisis-sync-stat strong,
+    .guisis-sync-stat span {
+        display: block;
+    }
+
+    .guisis-sync-stat strong {
+        color: #7f1d2d;
+        font-size: 18px;
+        line-height: 1.1;
+    }
+
+    html[data-theme="dark"] .guisis-sync-stat strong {
+        color: #f5d27a;
+    }
+
+    .guisis-sync-stat span {
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    html[data-theme="dark"] .guisis-sync-stat span {
+        color: #cbd5e1;
+    }
+
+    .guisis-sync-result {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border: 1px solid rgba(127, 29, 45, 0.14);
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.66);
+    }
+
+    html[data-theme="dark"] .guisis-sync-result {
+        border-color: rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.16);
+    }
+
+    .guisis-sync-result-list {
+        display: grid;
+        gap: 5px;
+        max-height: 190px;
+        margin-top: 9px;
+        overflow: auto;
+    }
+
+    .guisis-sync-result-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 7px 0;
+        border-bottom: 1px solid rgba(127, 29, 45, 0.08);
+        color: #334155;
+        font-size: 12px;
+    }
+
+    html[data-theme="dark"] .guisis-sync-result-item {
+        border-bottom-color: rgba(255, 255, 255, 0.07);
+        color: #e2e8f0;
+    }
+
+    .guisis-sync-result-item strong {
+        color: #7f1d2d;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    html[data-theme="dark"] .guisis-sync-result-item strong {
+        color: #f5d27a;
+    }
+
+    .guisis-sync-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 5900;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, .58);
+        backdrop-filter: blur(8px);
+    }
+
+    .guisis-sync-modal.is-open {
+        display: flex;
+    }
+
+    body.guisis-sync-modal-open {
+        overflow: hidden;
+    }
+
+    .guisis-sync-dialog {
+        width: min(900px, calc(100vw - 40px));
+        max-height: min(760px, calc(100vh - 40px));
+        overflow: auto;
+        padding: 18px;
+        border-radius: 13px;
+        border: 1px solid rgba(127, 29, 45, .22);
+        background: #ffffff;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, .3);
+    }
+
+    .guisis-sync-dialog-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin: -18px -18px 0;
+        padding: 16px 18px;
+        border-radius: 12px 12px 0 0;
+        background: #7f1d2d;
+    }
+
+    .guisis-sync-title-wrap {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .guisis-sync-title-icon,
+    .guisis-sync-info-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        color: #8b1e2d;
+        background: #f9e9ec;
+    }
+
+    .guisis-sync-dialog-head .guisis-sync-title-icon {
+        color: #f5d27a;
+        background: rgba(245, 210, 122, .16);
+    }
+
+    .guisis-sync-title-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+    }
+
+    .guisis-sync-title-icon svg {
+        width: 21px;
+        height: 21px;
+    }
+
+    .guisis-sync-dialog-head h3 {
+        margin: 0 0 3px;
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 900;
+    }
+
+    .guisis-sync-dialog-head p {
+        margin: 0;
+        color: rgba(255, 255, 255, .82);
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .guisis-sync-close {
+        width: 30px;
+        height: 30px;
+        margin-top: -2px;
+        border-radius: 999px;
+        font-size: 0;
+        border-color: rgba(255, 255, 255, .2);
+        background: #5b1321;
+        color: #ffffff;
+        transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+    }
+
+    .guisis-sync-close svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .guisis-sync-close:hover,
+    .guisis-sync-close:focus-visible {
+        border-color: #f5d27a;
+        background: #f5d27a;
+        color: #7f1d2d;
+        outline: none;
+        transform: rotate(6deg);
+    }
+
+    .guisis-sync-overview {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        margin-top: 18px;
+        padding: 14px 10px;
+        border-radius: 9px;
+        background: #fdf3f4;
+    }
+
+    .guisis-sync-overview-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        padding: 0 12px;
+    }
+
+    .guisis-sync-overview-item + .guisis-sync-overview-item {
+        border-left: 1px solid rgba(127, 29, 45, .1);
+    }
+
+    .guisis-sync-info-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+    }
+
+    .guisis-sync-info-icon svg {
+        width: 21px;
+        height: 21px;
+    }
+
+    .guisis-sync-overview-label,
+    .guisis-sync-matching-label {
+        display: block;
+        color: #7f1d2d;
+        font-size: 9px;
+        font-weight: 950;
+        text-transform: uppercase;
+    }
+
+    .guisis-sync-overview-value {
+        display: block;
+        margin-top: 2px;
+        color: #7f1d2d;
+        font-size: 22px;
+        font-weight: 950;
+        line-height: 1.1;
+    }
+
+    .guisis-sync-overview-note {
+        display: block;
+        margin-top: 3px;
+        color: #64748b;
+        font-size: 10px;
+    }
+
+    .guisis-sync-matching {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+        margin-top: 18px;
+        padding: 0 10px 18px;
+        border-bottom: 1px solid rgba(127, 29, 45, .1);
+    }
+
+    .guisis-sync-matching-content {
+        min-width: 0;
+    }
+
+    .guisis-sync-match-flow {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 6px;
+    }
+
+    .guisis-sync-match-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 27px;
+        padding: 4px 8px;
+        border: 1px solid rgba(127, 29, 45, .14);
+        border-radius: 6px;
+        background: #fffafb;
+        color: #7f1d2d;
+        font-size: 10px;
+        font-weight: 850;
+    }
+
+    .guisis-sync-match-chip svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .guisis-sync-match-arrow {
+        color: #94a3b8;
+        font-size: 17px;
+        line-height: 1;
+    }
+
+    .guisis-sync-matching-note {
+        display: block;
+        margin-top: 6px;
+        color: #64748b;
+        font-size: 10px;
+    }
+
+    .guisis-sync-dialog .guisis-sync-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 14px;
+        padding-top: 0;
+    }
+
+    .guisis-sync-dialog .guisis-sync-matching-label {
+        color: #334155;
+        font-size: 11px;
+        text-transform: none;
+    }
+
+    .guisis-sync-dialog .guisis-sync-button {
+        position: relative;
+        overflow: hidden;
+        min-height: 34px;
+        padding: 7px 10px;
+        border-radius: 7px;
+        font-size: 11px;
+        transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+    }
+
+    .guisis-sync-dialog .guisis-sync-button::before {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: -75%;
+        width: 45%;
+        content: '';
+        pointer-events: none;
+        background: linear-gradient(105deg, transparent, rgba(255, 249, 196, .82), transparent);
+        transform: skewX(-18deg);
+        transition: left .6s ease;
+    }
+
+    .guisis-sync-dialog .guisis-sync-button:hover::before,
+    .guisis-sync-dialog .guisis-sync-button:focus-visible::before {
+        left: 135%;
+    }
+
+    .guisis-sync-dialog .guisis-sync-button:hover,
+    .guisis-sync-dialog .guisis-sync-button:focus-visible,
+    .guisis-sync-dialog .guisis-sync-button.is-primary:hover,
+    .guisis-sync-dialog .guisis-sync-button.is-primary:focus-visible {
+        border-color: #f5d27a;
+        background: #f5d27a;
+        color: #7f1d2d;
+        outline: none;
+        transform: translateY(-1px);
+    }
+
+    .guisis-sync-dialog .guisis-sync-button svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .guisis-sync-result-state {
+        margin-top: 16px;
+        padding-bottom: 10px;
+    }
+
+    .guisis-sync-dialog .guisis-sync-dialog-head h3 {
+        color: #ffffff !important;
+    }
+
+    .guisis-sync-dialog .guisis-sync-dialog-head p {
+        color: rgba(255, 255, 255, .82) !important;
+    }
+
+    .guisis-sync-result-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .guisis-sync-result-title {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 7px;
+        color: #7f1d2d;
+        font-size: 14px;
+        font-weight: 950;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .guisis-sync-result-count {
+        padding: 3px 6px;
+        border-radius: 999px;
+        background: #f9e9ec;
+        color: #7f1d2d;
+        font-size: 11px;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    .guisis-sync-result-time {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: #94a3b8;
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+    .guisis-sync-result-time svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .guisis-sync-result-stats {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .guisis-sync-result-stat {
+        min-width: 0;
+        min-height: 74px;
+        padding: 10px 8px;
+        border: 1px solid rgba(127, 29, 45, .1);
+        border-radius: 7px;
+        background: #ffffff;
+    }
+
+    .guisis-sync-result-stat strong,
+    .guisis-sync-result-stat span {
+        display: block;
+    }
+
+    .guisis-sync-result-stat strong {
+        color: #7f1d2d;
+        font-size: 20px;
+        line-height: 1.1;
+    }
+
+    .guisis-sync-result-stat span:last-child {
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 750;
+    }
+
+    .guisis-sync-result-table-wrap {
+        margin-top: 12px;
+        margin-bottom: 4px;
+        max-height: 275px;
+        overflow-x: auto;
+        overflow-y: auto;
+        border: 1px solid rgba(127, 29, 45, .1);
+        border-radius: 7px;
+    }
+
+    .guisis-sync-result-table {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .guisis-sync-result-table-row {
+        display: grid;
+        grid-template-columns: 32px minmax(180px, 1.1fr) minmax(100px, .75fr) minmax(260px, 1.5fr) 84px;
+        gap: 8px;
+        align-items: center;
+        padding: 8px 9px;
+        border-top: 1px solid rgba(127, 29, 45, .08);
+        color: #334155;
+        font-size: 11px;
+    }
+
+    .guisis-sync-result-table-row.is-header {
+        border-top: 0;
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 950;
+        text-transform: uppercase;
+    }
+
+    .guisis-sync-result-user strong,
+    .guisis-sync-result-user span,
+    .guisis-sync-result-message strong,
+    .guisis-sync-result-message span {
+        display: block;
+    }
+
+    .guisis-sync-result-user strong,
+    .guisis-sync-result-message strong {
+        color: #1e293b;
+        font-size: 12px;
+    }
+
+    .guisis-sync-result-user span,
+    .guisis-sync-result-message span {
+        margin-top: 2px;
+        color: #64748b;
+        line-height: 1.35;
+    }
+
+    .guisis-sync-match-badge,
+    .guisis-sync-status-badge {
+        display: inline-flex;
+        width: fit-content;
+        align-items: center;
+        min-height: 17px;
+        padding: 2px 5px;
+        border-radius: 4px;
+        background: #eef2ff;
+        color: #4338ca;
+        font-size: 9px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .guisis-sync-status-badge {
+        background: #ecfdf3;
+        color: #15803d;
+        text-transform: uppercase;
+    }
+
+    .guisis-sync-status-badge.is-failed {
+        background: #fff1f2;
+        color: #dc2626;
+    }
+
+    .guisis-sync-status-badge.is-review {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
+    html[data-theme="dark"] .guisis-sync-result-title,
+    html[data-theme="dark"] .guisis-sync-result-stat strong {
+        color: #f5d27a;
+    }
+
+    html[data-theme="dark"] .guisis-sync-result-count {
+        background: rgba(245, 210, 122, .12);
+        color: #f5d27a;
+    }
+
+    html[data-theme="dark"] .guisis-sync-result-stat,
+    html[data-theme="dark"] .guisis-sync-result-table-row.is-header {
+        border-color: rgba(245, 210, 122, .14);
+        background: rgba(255, 255, 255, .04);
+    }
+
+    html[data-theme="dark"] .guisis-sync-result-table-row {
+        border-color: rgba(245, 210, 122, .1);
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .guisis-sync-result-user strong,
+    html[data-theme="dark"] .guisis-sync-result-message strong {
+        color: #f8fafc;
+    }
+
+    @media (max-width: 560px) {
+        .guisis-sync-result-heading {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .guisis-sync-result-stats {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    .guisis-sync-close {
+        width: 36px;
+        height: 36px;
+        flex: 0 0 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(127, 29, 45, .18);
+        border-radius: 999px;
+        background: transparent;
+        color: #7f1d2d;
+        font-size: 24px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .guisis-sync-close:hover,
+    .guisis-sync-close:focus-visible {
+        border-color: #f5d27a;
+        background: #f5d27a;
+        outline: none;
+    }
+
+    .guisis-sync-dialog-head .guisis-sync-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        margin-top: -2px;
+        padding: 0;
+        border-color: rgba(255, 255, 255, .2);
+        border-radius: 50%;
+        background: #5b1321;
+        color: #ffffff;
+        font-size: 0;
+        line-height: 0;
+        aspect-ratio: 1;
+    }
+
+    .guisis-sync-dialog-head .guisis-sync-close svg {
+        display: block;
+        flex: 0 0 16px;
+        width: 16px;
+        height: 16px;
+    }
+
+    .guisis-sync-dialog-head .guisis-sync-close:hover,
+    .guisis-sync-dialog-head .guisis-sync-close:focus-visible {
+        border-color: #f5d27a;
+        background: #facc15;
+        color: #7f1d2d;
+    }
+
+    .guisis-sync-tab-button {
+        position: relative;
+    }
+
+    .guisis-sync-tab-count {
+        min-width: 20px;
+        min-height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: #facc15;
+        color: #4a111b;
+        font-size: 10px;
+        font-weight: 950;
+    }
+
+    html[data-theme="dark"] .guisis-sync-dialog {
+        border-color: rgba(245, 210, 122, .24);
+        background: #24131a;
+    }
+
+    html[data-theme="dark"] .guisis-sync-title-icon,
+    html[data-theme="dark"] .guisis-sync-info-icon {
+        color: #f5d27a;
+        background: rgba(245, 210, 122, .12);
+    }
+
+    html[data-theme="dark"] .guisis-sync-dialog-head {
+        background: #7f1d2d;
+    }
+
+    html[data-theme="dark"] .guisis-sync-dialog-head .guisis-sync-title-icon {
+        color: #f5d27a;
+        background: rgba(245, 210, 122, .16);
+    }
+
+    html[data-theme="dark"] .guisis-sync-dialog-head h3 {
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .guisis-sync-dialog .guisis-sync-button.is-primary {
+        border-color: #7f1d2d;
+        background: #7f1d2d;
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .guisis-sync-dialog .guisis-sync-button:hover,
+    html[data-theme="dark"] .guisis-sync-dialog .guisis-sync-button:focus-visible,
+    html[data-theme="dark"] .guisis-sync-dialog .guisis-sync-button.is-primary:hover,
+    html[data-theme="dark"] .guisis-sync-dialog .guisis-sync-button.is-primary:focus-visible {
+        border-color: #f5d27a;
+        background: #f5d27a;
+        color: #7f1d2d;
+    }
+
+    html[data-theme="dark"] .guisis-sync-dialog-head p {
+        color: rgba(255, 255, 255, .82);
+    }
+
+    html[data-theme="dark"] .guisis-sync-dialog .guisis-sync-matching-label,
+    html[data-theme="dark"] .guisis-sync-matching-note,
+    html[data-theme="dark"] .guisis-sync-overview-note {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .guisis-sync-overview-label,
+    html[data-theme="dark"] .guisis-sync-matching-label,
+    html[data-theme="dark"] .guisis-sync-overview-value,
+    html[data-theme="dark"] .guisis-sync-match-chip {
+        color: #f5d27a;
+    }
+
+    html[data-theme="dark"] .guisis-sync-overview {
+        background: rgba(245, 210, 122, .08);
+    }
+
+    html[data-theme="dark"] .guisis-sync-overview-item + .guisis-sync-overview-item,
+    html[data-theme="dark"] .guisis-sync-matching {
+        border-color: rgba(245, 210, 122, .14);
+    }
+
+    html[data-theme="dark"] .guisis-sync-match-chip {
+        border-color: rgba(245, 210, 122, .2);
+        background: rgba(255, 255, 255, .04);
+    }
+
+    html[data-theme="dark"] .guisis-sync-close {
+        border-color: rgba(245, 210, 122, .28);
+        color: #f5d27a;
+    }
+
+    html[data-theme="dark"] .guisis-sync-dialog-head .guisis-sync-close {
+        border-color: rgba(127, 29, 45, .24);
+        background: #5b1321;
+        color: #ffffff;
+    }
+
+    html[data-theme="dark"] .guisis-sync-dialog-head .guisis-sync-close:hover,
+    html[data-theme="dark"] .guisis-sync-dialog-head .guisis-sync-close:focus-visible {
+        border-color: #f5d27a;
+        background: #facc15;
+        color: #7f1d2d;
+    }
+
+    @media (max-width: 760px) {
+        .guisis-sync-modal {
+            padding: 10px;
+        }
+
+        .guisis-sync-dialog {
+            max-height: calc(100vh - 20px);
+            padding: 15px;
+        }
+
+        .guisis-sync-overview-item {
+            padding: 0 7px;
+        }
+
+        .guisis-sync-dialog .guisis-sync-actions {
+            justify-content: stretch;
+        }
+
+        .guisis-sync-dialog .guisis-sync-actions form,
+        .guisis-sync-dialog .guisis-sync-button {
+            flex: 1;
+        }
+    }
+
+    @media (max-width: 760px) {
+        .guisis-sync-head {
+            display: grid;
+        }
+
+        .guisis-sync-actions {
+            justify-content: flex-start;
+        }
+    }
+
     .api-tabs {
         display: flex;
         gap: 0;
@@ -911,7 +1795,7 @@
 
     .api-tabs {
         display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: repeat(6, minmax(0, 1fr));
         overflow: hidden;
         border: 1px solid rgba(127, 29, 45, .14);
         border-radius: 10px;
@@ -1579,6 +2463,27 @@
             $apiResultCount = (int) ($apiResponseMeta['result_count'] ?? 0);
             $apiStatusCode = (int) ($apiResponseMeta['status'] ?? 200);
             $apiErrorCount = $errorMessage ? 1 : 0;
+            $apiPinUser = \Illuminate\Support\Facades\Auth::guard('admin')->user() ?? auth()->user();
+            $integrationPinDisabled = (bool) ($apiPinUser->api_pin_disabled ?? false);
+            $legacyIntegrationPinEnabled = (bool) ($apiPinUser->api_pin_enabled ?? false);
+            $integrationPinEnabled = $legacyIntegrationPinEnabled && (bool) ($apiPinUser->api_pin_page_enabled ?? true);
+            $apiTestingCurrentSource = $source ?? 'faculty';
+            $apiTestingSearchLabel = 'Search by name, email, or ID';
+            $apiTestingSearchPlaceholder = 'Try a name, email address, or identifier';
+
+            if ($apiTestingCurrentSource === 'puptas_applicant') {
+                $apiTestingSearchLabel = 'Search by Student Number';
+                $apiTestingSearchPlaceholder = 'Try a student number';
+            } elseif ($apiTestingCurrentSource === 'puptas_applicant_idp') {
+                $apiTestingSearchLabel = 'Search by IDP User ID';
+                $apiTestingSearchPlaceholder = 'Try an IDP user ID';
+            } elseif ($apiTestingCurrentSource === 'guisis_profile') {
+                $apiTestingSearchLabel = 'Search by Student Email';
+                $apiTestingSearchPlaceholder = 'Try a student email address';
+            } elseif (in_array($apiTestingCurrentSource, ['guisis_student', 'guisis_addresses', 'guisis_personal_info'], true)) {
+                $apiTestingSearchLabel = 'Search by Student Number';
+                $apiTestingSearchPlaceholder = 'Try a student number';
+            }
         @endphp
         <div class="api-testing-head">
             <div>
@@ -1636,6 +2541,168 @@
             </article>
         </div>
 
+        @php
+            $studentNumberSyncSummary = session('student_number_sync_summary');
+            $studentNumberSyncHasSummary = is_array($studentNumberSyncSummary);
+            $studentNumberSyncMode = (string) ($studentNumberSyncSummary['mode'] ?? 'preview');
+            $studentNumberSyncFailed = (int) ($studentNumberSyncSummary['failed'] ?? 0)
+                + (int) ($studentNumberSyncSummary['no_match'] ?? 0)
+                + (int) ($studentNumberSyncSummary['missing_email'] ?? 0);
+            $studentNumberSyncReady = $studentNumberSyncMode === 'preview'
+                ? (int) ($studentNumberSyncSummary['synced'] ?? 0)
+                : 0;
+            $studentNumberSyncApplied = $studentNumberSyncMode === 'apply'
+                ? (int) ($studentNumberSyncSummary['synced'] ?? 0)
+                : 0;
+        @endphp
+        <div class="guisis-sync-modal" id="guisisStudentNumberSyncModal" aria-hidden="true">
+            <section class="api-testing-card guisis-sync-card guisis-sync-dialog" role="dialog" aria-modal="true" aria-labelledby="guisisStudentNumberSyncTitle">
+                <div class="guisis-sync-dialog-head">
+                    <div class="guisis-sync-title-wrap">
+                        <span class="guisis-sync-title-icon"><x-outline-icon name="arrow-path" /></span>
+                        <div>
+                            <h3 id="guisisStudentNumberSyncTitle">GuiSIS Applicants Sync</h3>
+                            <p>Match and sync health-record users with GuiSIS in batches.</p>
+                        </div>
+                    </div>
+                    <button type="button" class="guisis-sync-close" id="closeGuisisStudentNumberSyncModal" aria-label="Close GuiSIS Sync modal">
+                        <x-outline-icon name="x-mark" />
+                    </button>
+                </div>
+
+                @if(!$studentNumberSyncHasSummary)
+                    <div class="guisis-sync-overview">
+                    <div class="guisis-sync-overview-item">
+                        <span class="guisis-sync-info-icon"><x-outline-icon name="users" /></span>
+                        <span>
+                            <span class="guisis-sync-overview-label">Users to check</span>
+                            <strong class="guisis-sync-overview-value">{{ number_format((int) ($studentNumberSyncPendingCount ?? 0)) }}</strong>
+                            <span class="guisis-sync-overview-note">local health-record users</span>
+                        </span>
+                    </div>
+                    <div class="guisis-sync-overview-item">
+                        <span class="guisis-sync-info-icon"><x-outline-icon name="cube" /></span>
+                        <span>
+                            <span class="guisis-sync-overview-label">Batch size</span>
+                            <strong class="guisis-sync-overview-value">25</strong>
+                            <span class="guisis-sync-overview-note">users per batch</span>
+                        </span>
+                    </div>
+                    </div>
+
+                    <div class="guisis-sync-matching">
+                    <span class="guisis-sync-info-icon"><x-outline-icon name="shield-check" /></span>
+                    <div class="guisis-sync-matching-content">
+                        <span class="guisis-sync-matching-label">Matching priority</span>
+                        <div class="guisis-sync-match-flow">
+                            <span class="guisis-sync-match-chip"><x-outline-icon name="identification" /> IDP UUID</span>
+                            <span class="guisis-sync-match-arrow">&#8594;</span>
+                            <span class="guisis-sync-match-chip"><x-outline-icon name="envelope" /> Exact email</span>
+                        </div>
+                        <span class="guisis-sync-matching-note">Name-only matches are never synced automatically.</span>
+                    </div>
+                    </div>
+                @endif
+
+                <div class="guisis-sync-actions">
+                    <form method="POST" action="{{ route('admin.api-testing.sync-student-numbers') }}">
+                        @csrf
+                        <input type="hidden" name="mode" value="preview">
+                        <input type="hidden" name="batch_size" value="25">
+                        <button type="submit" class="guisis-sync-button"><x-outline-icon name="eye" /> Preview Batch</button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.api-testing.sync-student-numbers') }}" onsubmit="return confirm('Sync the next 25 matched student records from GuiSIS?');">
+                        @csrf
+                        <input type="hidden" name="mode" value="apply">
+                        <input type="hidden" name="batch_size" value="25">
+                        <button type="submit" class="guisis-sync-button is-primary"><x-outline-icon name="arrow-path" /> Sync 25 Users</button>
+                    </form>
+                </div>
+
+            @if($studentNumberSyncHasSummary)
+                <div class="guisis-sync-result-state" aria-live="polite">
+                    <div class="guisis-sync-result-heading">
+                        <div class="guisis-sync-result-title">
+                            {{ $studentNumberSyncMode === 'preview' ? 'Preview Results' : 'Sync Results' }}
+                            <span class="guisis-sync-result-count">{{ number_format((int) ($studentNumberSyncSummary['candidates'] ?? 0)) }} candidates</span>
+                        </div>
+                        <span class="guisis-sync-result-time"><x-outline-icon name="clock" /> {{ $studentNumberSyncMode === 'preview' ? 'Previewed' : 'Synced' }} just now</span>
+                    </div>
+
+                    <div class="guisis-sync-result-stats">
+                        <div class="guisis-sync-result-stat">
+                            <strong>{{ $studentNumberSyncSummary['candidates'] ?? 0 }}</strong>
+                            <span>Candidates</span>
+                        </div>
+                        <div class="guisis-sync-result-stat">
+                            <strong>{{ $studentNumberSyncReady }}</strong>
+                            <span>Ready</span>
+                        </div>
+                        <div class="guisis-sync-result-stat">
+                            <strong>{{ $studentNumberSyncApplied }}</strong>
+                            <span>Synced</span>
+                        </div>
+                        <div class="guisis-sync-result-stat">
+                            <strong>{{ $studentNumberSyncFailed }}</strong>
+                            <span>Failed</span>
+                        </div>
+                        <div class="guisis-sync-result-stat">
+                            <strong>{{ $studentNumberSyncSummary['manual_review'] ?? 0 }}</strong>
+                            <span>Review</span>
+                        </div>
+                        <div class="guisis-sync-result-stat">
+                            <strong>{{ $studentNumberSyncSummary['remaining'] ?? 0 }}</strong>
+                            <span>Remaining</span>
+                        </div>
+                    </div>
+
+                    @if(!empty($studentNumberSyncSummary['cycle_completed']))
+                        <p class="guisis-sync-note" style="margin-top: 10px;">Sync cycle complete. The next sync starts again from the first candidate.</p>
+                    @endif
+
+                    @if(!empty($studentNumberSyncSummary['details']))
+                        <div class="guisis-sync-result-table-wrap">
+                            <div class="guisis-sync-result-table">
+                                <div class="guisis-sync-result-table-row is-header">
+                                    <span>#</span>
+                                    <span>User / Email</span>
+                                    <span>Matched by</span>
+                                    <span>Result / Message</span>
+                                    <span>Status</span>
+                                </div>
+                                @foreach($studentNumberSyncSummary['details'] as $index => $detail)
+                                    @php
+                                        $detailStatus = (string) ($detail['status'] ?? 'unknown');
+                                        $detailStatusClass = in_array($detailStatus, ['no_match', 'no_student_number', 'failed', 'missing_email'], true)
+                                            ? 'is-failed'
+                                            : (in_array($detailStatus, ['manual_review'], true) ? 'is-review' : '');
+                                    @endphp
+                                    <div class="guisis-sync-result-table-row">
+                                        <span>{{ $index + 1 }}</span>
+                                        <span class="guisis-sync-result-user">
+                                            <strong>{{ $detail['name'] ?? 'Unnamed user' }}</strong>
+                                            <span>{{ $detail['email'] ?? 'No email' }}</span>
+                                        </span>
+                                        <span class="guisis-sync-match-badge">{{ $detail['matched_by'] ?? '—' }}</span>
+                                        <span class="guisis-sync-result-message">
+                                            <strong>{{ $detailStatus === 'ready' ? 'Ready to sync' : ($detailStatus === 'synced' ? 'Synchronized' : ucwords(str_replace('_', ' ', $detailStatus))) }}</strong>
+                                            <span>{{ $detail['message'] ?? 'No additional message.' }}</span>
+                                        </span>
+                                        <span class="guisis-sync-status-badge {{ $detailStatusClass }}">{{ $detailStatus === 'already_complete' ? 'Complete' : ($detailStatus === 'manual_review' ? 'Review' : ($detailStatus === 'no_match' || $detailStatus === 'no_student_number' || $detailStatus === 'missing_email' ? 'Failed' : $detailStatus)) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    @if($studentNumberSyncMode === 'apply')
+                        <p class="guisis-sync-note" style="margin-top: 10px;">Appointment records updated: {{ $studentNumberSyncSummary['appointment_records_updated'] ?? 0 }}.</p>
+                    @endif
+                </div>
+            @endif
+            </section>
+        </div>
+
         <div class="api-tabs">
             <button class="api-tab-button is-active" data-tab="tests">
                 🔍 API Tests
@@ -1649,39 +2716,17 @@
             <button class="api-tab-button" data-tab="systems">
                 🔗 System Status
             </button>
-            @php
-                $apiPinUser = \Illuminate\Support\Facades\Auth::guard('admin')->user() ?? auth()->user();
-                $integrationPinDisabled = (bool) ($apiPinUser->api_pin_disabled ?? false);
-                $legacyIntegrationPinEnabled = (bool) ($apiPinUser->api_pin_enabled ?? false);
-                $integrationPinEnabled = $legacyIntegrationPinEnabled && (bool) ($apiPinUser->api_pin_page_enabled ?? true);
-            @endphp
-            <a href="{{ route('admin.integration-tokens') }}" class="api-tab-button {{ $integrationPinDisabled ? 'is-disabled' : '' }}" id="integrationTokensGateButton" data-pin-disabled="{{ $integrationPinDisabled ? '1' : '0' }}" data-pin-enabled="{{ $integrationPinEnabled ? '1' : '0' }}" style="text-decoration: none; display: flex; align-items: center; justify-content: center;" aria-disabled="{{ $integrationPinDisabled ? 'true' : 'false' }}">
+            <button type="button" class="api-tab-button guisis-sync-tab-button" id="guisisStudentNumberSyncTabButton" aria-controls="guisisStudentNumberSyncModal" title="Open GuiSIS student number sync">
+                GuiSIS Sync
+                <span class="guisis-sync-tab-count">{{ number_format((int) ($studentNumberSyncPendingCount ?? 0)) }}</span>
+            </button>
+            <a href="{{ route('admin.integration-tokens') }}" class="api-tab-button {{ ($integrationPinDisabled ?? false) ? 'is-disabled' : '' }}" id="integrationTokensGateButton" data-pin-disabled="{{ ($integrationPinDisabled ?? false) ? '1' : '0' }}" data-pin-enabled="{{ ($integrationPinEnabled ?? false) ? '1' : '0' }}" style="text-decoration: none; display: flex; align-items: center; justify-content: center;" aria-disabled="{{ ($integrationPinDisabled ?? false) ? 'true' : 'false' }}">
                 🔐 Integration Tokens
             </a>
         </div>
 
         <!-- TAB 1: API TESTS (Original Content) -->
         <div class="api-tab-content is-active" id="tab-tests">
-
-        @php
-            $apiTestingCurrentSource = $source ?? 'faculty';
-            $apiTestingSearchLabel = 'Search by name, email, or ID';
-            $apiTestingSearchPlaceholder = 'Try a name, email address, or identifier';
-
-            if ($apiTestingCurrentSource === 'puptas_applicant') {
-                $apiTestingSearchLabel = 'Search by Student Number';
-                $apiTestingSearchPlaceholder = 'Try a student number';
-            } elseif ($apiTestingCurrentSource === 'puptas_applicant_idp') {
-                $apiTestingSearchLabel = 'Search by IDP User ID';
-                $apiTestingSearchPlaceholder = 'Try an IDP user ID';
-            } elseif ($apiTestingCurrentSource === 'guisis_profile') {
-                $apiTestingSearchLabel = 'Search by Student Email';
-                $apiTestingSearchPlaceholder = 'Try a student email address';
-            } elseif (in_array($apiTestingCurrentSource, ['guisis_student', 'guisis_addresses', 'guisis_personal_info'], true)) {
-                $apiTestingSearchLabel = 'Search by Student Number';
-                $apiTestingSearchPlaceholder = 'Try a student number';
-            }
-        @endphp
 
         <div class="api-builder-head">
             <div>
@@ -1725,13 +2770,13 @@
                 </select>
             </div>
             <div>
-                <label for="search">{{ $apiTestingSearchLabel }}</label>
+                <label for="search">{{ $apiTestingSearchLabel ?? 'Search by name, email, or ID' }}</label>
                 <input
                     type="text"
                     id="search"
                     name="search"
                     value="{{ $search }}"
-                    placeholder="{{ $apiTestingSearchPlaceholder }}"
+                    placeholder="{{ $apiTestingSearchPlaceholder ?? 'Try a name, email address, or identifier' }}"
                 >
             </div>
             <button type="submit">Run Test</button>
@@ -1913,7 +2958,7 @@
                         <div class="api-result-grid">
                             <div class="api-field">
                                 <small>Student Number</small>
-                                <strong>{{ $result['identifier'] ?? data_get($guisisFields, 'student_number', 'N/A') }}</strong>
+                                <strong>{{ $result['student_number'] ?? $result['identifier'] ?? data_get($guisisFields, 'studentNumber', data_get($guisisFields, 'student_number', 'N/A')) }}</strong>
                             </div>
                             <div class="api-field">
                                 <small>Email</small>
@@ -1921,19 +2966,23 @@
                             </div>
                             <div class="api-field">
                                 <small>First Name</small>
-                                <strong>{{ $result['first_name'] ?? data_get($guisisFields, 'first_name', 'N/A') }}</strong>
+                                <strong>{{ $result['first_name'] ?? data_get($guisisFields, 'firstName', data_get($guisisFields, 'first_name', 'N/A')) }}</strong>
                             </div>
                             <div class="api-field">
                                 <small>Last Name</small>
-                                <strong>{{ $result['last_name'] ?? data_get($guisisFields, 'last_name', 'N/A') }}</strong>
+                                <strong>{{ $result['last_name'] ?? data_get($guisisFields, 'lastName', data_get($guisisFields, 'last_name', 'N/A')) }}</strong>
                             </div>
                             <div class="api-field">
                                 <small>Course</small>
-                                <strong>{{ data_get($guisisFields, 'course.name', data_get($guisisFields, 'course', 'N/A')) }}</strong>
+                                <strong>{{ data_get($guisisFields, 'course.name', data_get($guisisFields, 'program.name', data_get($guisisFields, 'course', data_get($guisisFields, 'program', 'N/A')))) }}</strong>
                             </div>
                             <div class="api-field">
                                 <small>Year Level</small>
-                                <strong>{{ data_get($guisisFields, 'year_level', 'N/A') }}</strong>
+                                <strong>{{ data_get($guisisFields, 'yearLevel', data_get($guisisFields, 'year_level', 'N/A')) }}</strong>
+                            </div>
+                            <div class="api-field">
+                                <small>Section</small>
+                                <strong>{{ data_get($guisisFields, 'section', data_get($guisisFields, 'section_name', data_get($guisisFields, 'sectionName', 'N/A'))) }}</strong>
                             </div>
                             <div class="api-field">
                                 <small>Gender</small>
@@ -2293,6 +3342,39 @@
                 }
             });
         });
+
+        const guisisSyncTabButton = document.getElementById('guisisStudentNumberSyncTabButton');
+        const guisisSyncModal = document.getElementById('guisisStudentNumberSyncModal');
+        const closeGuisisSyncModal = document.getElementById('closeGuisisStudentNumberSyncModal');
+
+        function setGuisisSyncModalOpen(isOpen) {
+            if (!guisisSyncModal) return;
+
+            guisisSyncModal.classList.toggle('is-open', isOpen);
+            guisisSyncModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+            document.body.classList.toggle('guisis-sync-modal-open', isOpen);
+
+            if (isOpen) {
+                window.setTimeout(() => closeGuisisSyncModal?.focus(), 60);
+            }
+        }
+
+        guisisSyncTabButton?.addEventListener('click', () => setGuisisSyncModalOpen(true));
+        closeGuisisSyncModal?.addEventListener('click', () => setGuisisSyncModalOpen(false));
+        guisisSyncModal?.addEventListener('click', (event) => {
+            if (event.target === guisisSyncModal) {
+                setGuisisSyncModalOpen(false);
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                setGuisisSyncModalOpen(false);
+            }
+        });
+
+        @if(is_array($studentNumberSyncSummary))
+            setGuisisSyncModalOpen(true);
+        @endif
 
         const integrationTokensButton = document.getElementById('integrationTokensGateButton');
         const integrationPinModal = document.getElementById('integrationPinModal');

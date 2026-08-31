@@ -789,6 +789,202 @@ class AdminController extends Controller
             ->count();
         $inventoryOutOfStock = Item::where('quantity', '<=', 0)->count();
 
+        $dashboardRole = User::normalizeRole((string) (Auth::user()?->user_role ?? ''));
+        $appointmentsUrl = $dashboardRole === User::ROLE_ADMIN
+            ? url('/assistant/appointments')
+            : url('/admin/appointments');
+        $healthRecordsUrl = route('admin.health_records');
+        $inventoryUrl = $dashboardRole === User::ROLE_ADMIN
+            ? url('/assistant/inventory')
+            : url('/admin/inventory');
+
+        $activityPeriodOptions = [
+            'today' => 'Today',
+            'yesterday' => 'Yesterday',
+            'week' => 'Last One Week',
+            'two_weeks' => 'Last Two Weeks',
+        ];
+        $activityPeriod = (string) request()->query('activity_period', 'today');
+        $activityPeriod = array_key_exists($activityPeriod, $activityPeriodOptions) ? $activityPeriod : 'today';
+
+        $today = today();
+        [$periodStart, $periodEnd, $activityPeriodPhrase] = match ($activityPeriod) {
+            'yesterday' => [
+                today()->subDay()->startOfDay(),
+                today()->subDay()->endOfDay(),
+                'yesterday',
+            ],
+            'week' => [
+                today()->subDays(6)->startOfDay(),
+                now()->endOfDay(),
+                'in the last 7 days',
+            ],
+            'two_weeks' => [
+                today()->subDays(13)->startOfDay(),
+                now()->endOfDay(),
+                'in the last 14 days',
+            ],
+            default => [
+                today()->startOfDay(),
+                now()->endOfDay(),
+                'today',
+            ],
+        };
+        $periodDays = max(1, $periodStart->diffInDays($periodEnd) + 1);
+        $previousPeriodStart = $periodStart->copy()->subDays($periodDays);
+        $previousPeriodEnd = $periodStart->copy()->subSecond();
+        $movementDateColumn = Schema::hasColumn('inventory_movements', 'movement_date') ? 'movement_date' : 'created_at';
+        $movementDateRange = function ($query, Carbon $start, Carbon $end) use ($movementDateColumn) {
+            if ($movementDateColumn === 'movement_date') {
+                return $query->whereBetween($movementDateColumn, [$start->toDateString(), $end->toDateString()]);
+            }
+
+            return $query->whereBetween($movementDateColumn, [$start, $end]);
+        };
+        $trendFor = function (int $current, int $previous): array {
+            if ($previous <= 0) {
+                $percent = $current > 0 ? 100 : 0;
+            } else {
+                $percent = (int) round((($current - $previous) / $previous) * 100);
+            }
+
+            return [
+                'value' => abs($percent),
+                'direction' => $percent > 0 ? 'up' : ($percent < 0 ? 'down' : 'flat'),
+            ];
+        };
+
+        $completedAppointments = Appointment::where('status', 'Completed')
+            ->whereBetween('updated_at', [$periodStart, $periodEnd])
+            ->count();
+        $previousCompletedAppointments = Appointment::where('status', 'Completed')
+            ->whereBetween('updated_at', [$previousPeriodStart, $previousPeriodEnd])
+            ->count();
+        $firstCompletedAppointmentAt = Appointment::where('status', 'Completed')->min('updated_at');
+        $totalCompletedAppointments = Appointment::where('status', 'Completed')->count();
+        $completedAverageDays = $firstCompletedAppointmentAt
+            ? max(1, Carbon::parse($firstCompletedAppointmentAt)->startOfDay()->diffInDays(today()) + 1)
+            : 1;
+        $completedDailyAverage = $totalCompletedAppointments > 0
+            ? max(1, (int) ceil($totalCompletedAppointments / $completedAverageDays))
+            : 1;
+        $medicineDispensed = $movementDateRange(
+            InventoryMovement::whereIn('type', ['issued', 'consumed'])
+                ->whereHas('item', fn ($query) => $query->where('category', 'Medicine')),
+            $periodStart,
+            $periodEnd
+        )->count();
+        $previousMedicineDispensed = $movementDateRange(
+            InventoryMovement::whereIn('type', ['issued', 'consumed'])
+                ->whereHas('item', fn ($query) => $query->where('category', 'Medicine')),
+            $previousPeriodStart,
+            $previousPeriodEnd
+        )->count();
+        $inventoryAdded = $movementDateRange(
+            InventoryMovement::whereIn('type', ['created', 'restocked']),
+            $periodStart,
+            $periodEnd
+        )->count();
+        $previousInventoryAdded = $movementDateRange(
+            InventoryMovement::whereIn('type', ['created', 'restocked']),
+            $previousPeriodStart,
+            $previousPeriodEnd
+        )->count();
+        $issuedClearanceStatuses = ['Approved', 'Issued', 'Fully Cleared', 'Cleared'];
+        $todayClearances = HealthProfile::whereIn('clearance_status', $issuedClearanceStatuses)
+            ->whereBetween('verified_at', [$periodStart, $periodEnd])
+            ->count()
+            + EmployeeHealthProfile::whereIn('clearance_status', $issuedClearanceStatuses)
+                ->whereBetween('verified_at', [$periodStart, $periodEnd])
+                ->count();
+        $yesterdayClearances = HealthProfile::whereIn('clearance_status', $issuedClearanceStatuses)
+            ->whereBetween('verified_at', [$previousPeriodStart, $previousPeriodEnd])
+            ->count()
+            + EmployeeHealthProfile::whereIn('clearance_status', $issuedClearanceStatuses)
+                ->whereBetween('verified_at', [$previousPeriodStart, $previousPeriodEnd])
+                ->count();
+
+        $clinicActivityBase = [
+            [
+                'title' => 'Appointments Completed',
+                'description' => 'Completed ' . $activityPeriodPhrase,
+                'value' => $completedAppointments,
+                'previous' => $previousCompletedAppointments,
+                'icon' => 'document-check',
+                'tone' => 'rose',
+                'progress_base' => $completedDailyAverage,
+            ],
+            [
+                'title' => 'Medicine Dispensed',
+                'description' => 'Dispensed ' . $activityPeriodPhrase,
+                'value' => $medicineDispensed,
+                'previous' => $previousMedicineDispensed,
+                'icon' => 'heart-pulse',
+                'tone' => 'violet',
+            ],
+            [
+                'title' => 'Inventory Added',
+                'description' => 'Stock added ' . $activityPeriodPhrase,
+                'value' => $inventoryAdded,
+                'previous' => $previousInventoryAdded,
+                'icon' => 'cube',
+                'tone' => 'green',
+            ],
+            [
+                'title' => 'Medical Clearances Issued',
+                'description' => 'Issued ' . $activityPeriodPhrase,
+                'value' => $todayClearances,
+                'previous' => $yesterdayClearances,
+                'icon' => 'medical-clearance-issued',
+                'tone' => 'amber',
+            ],
+        ];
+        $clinicActivityMax = max(1, ...array_map(fn ($item) => (int) $item['value'], $clinicActivityBase));
+        $clinicActivityItems = collect($clinicActivityBase)->map(function (array $item) use ($clinicActivityMax, $trendFor) {
+            $progressBase = max(1, (float) ($item['progress_base'] ?? $clinicActivityMax));
+            $item['trend'] = $trendFor((int) $item['value'], (int) $item['previous']);
+            $item['progress'] = (int) min(100, max(6, round(((int) $item['value'] / $progressBase) * 100)));
+
+            return $item;
+        });
+
+        $clearanceRequests = HealthProfile::where('clearance_status', 'For Final Review')->count()
+            + EmployeeHealthProfile::where('clearance_status', 'For Final Review')->count();
+        $needsAttentionItems = collect([
+            [
+                'title' => 'Pending Requests',
+                'description' => 'Appointments request',
+                'value' => $pending,
+                'icon' => 'exclamation-circle',
+                'tone' => 'rose',
+                'url' => $appointmentsUrl,
+            ],
+            [
+                'title' => 'For Consultation',
+                'description' => 'Scheduled today',
+                'value' => $upcoming,
+                'icon' => 'calendar-days',
+                'tone' => 'violet',
+                'url' => $appointmentsUrl,
+            ],
+            [
+                'title' => 'Clearance Requests',
+                'description' => 'Awaiting review',
+                'value' => $clearanceRequests,
+                'icon' => 'document-download',
+                'tone' => 'green',
+                'url' => $healthRecordsUrl,
+            ],
+            [
+                'title' => 'Low Stock Items',
+                'description' => 'Below minimum stock',
+                'value' => $inventoryLowStock,
+                'icon' => 'cube',
+                'tone' => 'amber',
+                'url' => $inventoryUrl,
+            ],
+        ]);
+
         $appointmentChartStats = [
             ['label' => 'Pending', 'value' => $pending, 'class' => 'warning'],
             ['label' => 'Scheduled Today', 'value' => $upcoming, 'class' => 'success'],
@@ -802,7 +998,90 @@ class AdminController extends Controller
             ['label' => 'Out', 'value' => $inventoryOutOfStock, 'class' => 'danger'],
         ];
 
-        $recentAppointments = Appointment::latest()->take(5)->get();
+        $recentAppointmentActivities = Appointment::query()
+            ->latest()
+            ->take(20)
+            ->get()
+            ->map(function (Appointment $appointment) use ($appointmentsUrl) {
+                $activityAt = $appointment->updated_at ?: $appointment->created_at;
+                $appointmentDate = $appointment->date
+                    ? Carbon::parse($appointment->date)->format('M d')
+                    : optional($activityAt)->format('M d');
+                $appointmentTime = $appointment->time
+                    ? Carbon::parse($appointment->time)->format('g:i A')
+                    : optional($activityAt)->format('g:i A');
+
+                return (object) [
+                    'kind' => 'appointment',
+                    'name' => trim((string) ($appointment->name ?? 'Unknown patient')),
+                    'identifier' => trim((string) ($appointment->student_number ?: $appointment->student_id)),
+                    'activity' => trim((string) ($appointment->service ?? 'Appointment')),
+                    'activity_at' => $activityAt,
+                    'date_label' => trim(implode(' ', array_filter([$appointmentDate, $appointmentTime ? '- ' . $appointmentTime : '']))),
+                    'status' => trim((string) ($appointment->status ?? 'Pending')),
+                    'status_class' => 'st-' . Str::slug(strtolower((string) ($appointment->status ?? 'pending'))),
+                    'url' => $appointmentsUrl . '?highlight_appointment=' . $appointment->id,
+                ];
+            });
+
+        $recentHealthActivities = HealthProfile::query()
+            ->with('user')
+            ->where(function ($query) {
+                $query->whereNotNull('verified_at')
+                    ->orWhereIn('clearance_status', ['Approved', 'Issued', 'Fully Cleared', 'Cleared']);
+            })
+            ->latest('verified_at')
+            ->take(20)
+            ->get()
+            ->map(function (HealthProfile $profile) use ($healthRecordsUrl) {
+                $user = $profile->user;
+                $activityAt = $profile->verified_at ?: $profile->updated_at ?: $profile->created_at;
+
+                return (object) [
+                    'kind' => 'health',
+                    'name' => trim((string) ($user->name ?? $profile->full_name ?? 'Health record')),
+                    'identifier' => trim((string) ($user->student_number ?? $profile->student_number ?? $user->student_id ?? '')),
+                    'activity' => 'Health Record Approved',
+                    'activity_at' => $activityAt,
+                    'date_label' => optional($activityAt)->format('M d - g:i A') ?: 'Recently',
+                    'status' => trim((string) ($profile->clearance_status ?: 'Approved')),
+                    'status_class' => 'st-health',
+                    'url' => $healthRecordsUrl . '?tab=approved&highlight_health=' . $profile->id,
+                ];
+            });
+
+        $recentEmployeeHealthActivities = EmployeeHealthProfile::query()
+            ->with('user')
+            ->where(function ($query) {
+                $query->whereNotNull('verified_at')
+                    ->orWhereIn('clearance_status', ['Approved', 'Issued', 'Fully Cleared', 'Cleared']);
+            })
+            ->latest('verified_at')
+            ->take(20)
+            ->get()
+            ->map(function (EmployeeHealthProfile $profile) use ($healthRecordsUrl) {
+                $user = $profile->user;
+                $activityAt = $profile->verified_at ?: $profile->updated_at ?: $profile->created_at;
+
+                return (object) [
+                    'kind' => 'health',
+                    'name' => trim((string) ($user->name ?? $profile->full_name ?? 'Employee record')),
+                    'identifier' => trim((string) ($user->employee_number ?? $profile->employee_number ?? $user->email ?? '')),
+                    'activity' => 'Health Record Approved',
+                    'activity_at' => $activityAt,
+                    'date_label' => optional($activityAt)->format('M d - g:i A') ?: 'Recently',
+                    'status' => trim((string) ($profile->clearance_status ?: 'Approved')),
+                    'status_class' => 'st-health',
+                    'url' => $healthRecordsUrl . '?tab=approved&highlight_employee_health=' . $profile->id,
+                ];
+            });
+
+        $recentActivities = $recentAppointmentActivities
+            ->concat($recentHealthActivities)
+            ->concat($recentEmployeeHealthActivities)
+            ->sortByDesc(fn ($activity) => optional($activity->activity_at)->timestamp ?? 0)
+            ->take(20)
+            ->values();
 
         return view('admin.dashboard', compact(
             'total',
@@ -813,7 +1092,11 @@ class AdminController extends Controller
             'inventoryTotal',
             'appointmentChartStats',
             'inventoryChartStats',
-            'recentAppointments'
+            'clinicActivityItems',
+            'needsAttentionItems',
+            'activityPeriod',
+            'activityPeriodOptions',
+            'recentActivities'
         ));
     }
 
@@ -1030,6 +1313,7 @@ class AdminController extends Controller
         $apiResponseMeta = null;
         $errorMessage = null;
         $errorDetails = null;
+        $studentNumberSyncPendingCount = $this->studentNumberSyncCandidateQuery()->count();
 
         $canRunWithoutSearch = in_array($source, ['admin_api', 'admin_options', 'database_info', 'guisis_profiles'], true);
 
@@ -1105,6 +1389,7 @@ class AdminController extends Controller
                             'apiResponseMeta' => $apiResponseMeta,
                             'errorMessage' => $errorMessage,
                             'errorDetails' => $errorDetails,
+                            'studentNumberSyncPendingCount' => $studentNumberSyncPendingCount,
                         ]);
                     }
 
@@ -1142,6 +1427,7 @@ class AdminController extends Controller
                             'apiResponseMeta' => $apiResponseMeta,
                             'errorMessage' => $errorMessage,
                             'errorDetails' => $errorDetails,
+                            'studentNumberSyncPendingCount' => $studentNumberSyncPendingCount,
                         ]);
                     }
 
@@ -1394,7 +1680,407 @@ class AdminController extends Controller
             'apiResponseMeta' => $apiResponseMeta,
             'errorMessage' => $errorMessage,
             'errorDetails' => $errorDetails,
+            'studentNumberSyncPendingCount' => $studentNumberSyncPendingCount,
         ]);
+    }
+
+    public function syncMissingStudentNumbers(Request $request, GuisisApiService $guisisApiService)
+    {
+        $admin = $this->currentAdminUser();
+        abort_unless($admin instanceof User && $this->canAccessApiTesting($admin), 403);
+
+        $mode = $request->input('mode') === 'apply' ? 'apply' : 'preview';
+        $batchSize = min(max((int) $request->input('batch_size', 25), 1), 25);
+        $syncCursorKey = 'guisis_student_number_sync_cursor';
+        $syncCursor = max(0, (int) SystemSetting::getValue($syncCursorKey, 0));
+        $candidates = $this->studentNumberSyncCandidateQuery()
+            ->with('healthProfile')
+            ->where('users.id', '>', $syncCursor)
+            ->orderBy('id')
+            ->limit($batchSize)
+            ->get();
+
+        $summary = [
+            'mode' => $mode,
+            'batch_size' => $batchSize,
+            'candidates' => $candidates->count(),
+            'synced' => 0,
+            'already_complete' => 0,
+            'no_match' => 0,
+            'missing_email' => 0,
+            'failed' => 0,
+            'manual_review' => 0,
+            'appointment_records_updated' => 0,
+            'cycle_completed' => false,
+            'details' => [],
+        ];
+
+        if ($candidates->isEmpty() && $syncCursor > 0) {
+            SystemSetting::putValue($syncCursorKey, '0');
+            $summary['cycle_completed'] = true;
+            $summary['remaining'] = $this->studentNumberSyncCandidateQuery()->count();
+            $summary['details'][] = [
+                'name' => 'Sync cycle complete',
+                'email' => '',
+                'status' => 'cycle_completed',
+                'message' => 'The previous batch cycle reached the end of the candidate list. The next sync starts a new audit cycle.',
+            ];
+
+            return redirect()
+                ->route('admin.api-testing')
+                ->with('student_number_sync_summary', $summary);
+        }
+
+        foreach ($candidates as $user) {
+            $email = strtolower(trim((string) $user->email));
+            if ($email === '') {
+                $summary['missing_email']++;
+                $summary['details'][] = [
+                    'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
+                    'email' => '',
+                    'status' => 'missing_email',
+                    'message' => 'No local email address is available for GuiSIS lookup.',
+                ];
+                continue;
+            }
+
+            $duplicateLocalEmailCount = User::query()
+                ->whereRaw('LOWER(email) = ?', [$email])
+                ->where('id', '!=', $user->id)
+                ->count();
+            if ($duplicateLocalEmailCount > 0) {
+                $summary['manual_review']++;
+                $summary['details'][] = [
+                    'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
+                    'email' => $email,
+                    'status' => 'manual_review',
+                    'message' => 'The email address is used by more than one local user, so this record was not matched automatically.',
+                ];
+                continue;
+            }
+
+            try {
+                $localIdpUuid = strtolower($this->normalizeSyncIdentifier($user->student_id));
+                $lookupRequests = [];
+                if ($localIdpUuid !== '') {
+                    $lookupRequests[] = [
+                        'type' => 'idp',
+                        'search' => trim((string) $user->student_id),
+                    ];
+                }
+                if ($email !== '') {
+                    $lookupRequests[] = [
+                        'type' => 'email',
+                        'search' => $email,
+                    ];
+                }
+                $studentsByKey = [];
+                $failedLookups = [];
+
+                foreach ($lookupRequests as $lookupRequest) {
+                    $lookupSearch = $lookupRequest['search'];
+                    $lookupResult = $lookupRequest['type'] === 'email'
+                        ? $guisisApiService->getStudentByEmailDetailed($lookupSearch)
+                        : $guisisApiService->listStudentsDetailed([
+                            'search' => $lookupSearch,
+                            'page' => 1,
+                            'page_size' => 25,
+                        ]);
+
+                    if (!($lookupResult['ok'] ?? false)) {
+                        $failedLookups[] = trim((string) ($lookupResult['message'] ?? 'GuiSIS request failed.'));
+                        continue;
+                    }
+
+                    foreach ($this->normalizeGuisisStudentResults($lookupResult['data'] ?? null, $lookupSearch) as $studentResult) {
+                        $studentKey = strtolower(trim((string) ($studentResult['idp_uuid'] ?? '')));
+                        $studentKey = $studentKey !== '' ? 'idp:' . $studentKey : strtolower(trim((string) ($studentResult['email'] ?? '')));
+                        $studentKey = $studentKey !== '' ? $studentKey : 'record:' . sha1(json_encode($studentResult));
+                        $studentsByKey[$studentKey] = $studentResult;
+                    }
+                }
+
+                if ($studentsByKey === [] && $failedLookups !== []) {
+                    $summary['failed']++;
+                    $summary['details'][] = [
+                        'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
+                        'email' => $email,
+                        'status' => 'failed',
+                        'message' => $failedLookups[0] ?? 'GuiSIS request failed.',
+                    ];
+                    continue;
+                }
+
+                $students = array_values($studentsByKey);
+                $emailMatches = collect($students)->filter(function (array $student) use ($email): bool {
+                    return strtolower(trim((string) ($student['email'] ?? ''))) === $email;
+                });
+                $idpMatches = $localIdpUuid !== ''
+                    ? collect($students)->filter(function (array $student) use ($localIdpUuid): bool {
+                        return strtolower(trim((string) ($student['idp_uuid'] ?? ''))) === $localIdpUuid;
+                    })
+                    : collect();
+                $emailMatch = $emailMatches->count() === 1 ? $emailMatches->first() : null;
+                $idpMatch = $idpMatches->count() === 1 ? $idpMatches->first() : null;
+
+                if ($emailMatches->count() > 1 || $idpMatches->count() > 1) {
+                    $summary['manual_review']++;
+                    $summary['details'][] = [
+                        'name' => $emailMatch['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'status' => 'manual_review',
+                        'message' => 'GuiSIS returned multiple possible matches for this record.',
+                    ];
+                    continue;
+                }
+
+                if ($localIdpUuid !== '' && !$idpMatch && $emailMatch) {
+                    $summary['manual_review']++;
+                    $summary['details'][] = [
+                        'name' => $emailMatch['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'status' => 'manual_review',
+                        'message' => trim((string) ($emailMatch['idp_uuid'] ?? '')) === ''
+                            ? 'The local IDP UUID could not be verified against the GuiSIS email match.'
+                            : 'The local IDP UUID does not match the GuiSIS record found by email.',
+                    ];
+                    continue;
+                }
+
+                $student = $localIdpUuid !== '' ? $idpMatch : $emailMatch;
+                if (!$student) {
+                    $summary['no_match']++;
+                    $summary['details'][] = [
+                        'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
+                        'email' => $email,
+                        'status' => 'no_match',
+                        'message' => 'No exact GuiSIS email or IDP UUID match was found.',
+                    ];
+                    continue;
+                }
+
+                $studentNumber = trim((string) ($student['student_number'] ?? ''));
+                $idpUuid = $this->normalizeSyncIdentifier($student['idp_uuid'] ?? '');
+                $yearLevel = trim((string) ($student['year_level'] ?? ''));
+                $section = trim((string) ($student['section'] ?? ''));
+                $studentNumber = strtoupper($studentNumber) === 'N/A' ? '' : $studentNumber;
+                $yearLevel = strtoupper($yearLevel) === 'N/A' ? '' : $yearLevel;
+                $section = strtoupper($section) === 'N/A' ? '' : $section;
+                $matchedBy = $localIdpUuid !== '' && $idpMatch ? 'IDP UUID' : 'Exact email';
+
+                if (!$this->isOfficialStudentNumber($studentNumber)) {
+                    $summary['no_match']++;
+                    $summary['details'][] = [
+                        'name' => $student['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'matched_by' => $matchedBy,
+                        'status' => 'no_student_number',
+                        'message' => 'GuiSIS matched the student but returned no student number.',
+                    ];
+                    continue;
+                }
+
+                $profile = $user->healthProfile;
+                $localUserStudentNumber = trim((string) ($user->student_number ?? ''));
+                $localProfileStudentNumber = trim((string) optional($profile)->student_number);
+                $localProfileIdpUuid = strtolower($this->normalizeSyncIdentifier(optional($profile)->student_id));
+                if ($idpUuid !== '' && $localProfileIdpUuid !== '' && $localProfileIdpUuid !== $idpUuid) {
+                    $summary['manual_review']++;
+                    $summary['details'][] = [
+                        'name' => $student['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'matched_by' => $matchedBy,
+                        'status' => 'manual_review',
+                        'message' => 'A different IDP UUID already exists in the linked health profile.',
+                    ];
+                    continue;
+                }
+                if (($this->isOfficialStudentNumber($localUserStudentNumber) && strtoupper($localUserStudentNumber) !== strtoupper($studentNumber))
+                    || ($this->isOfficialStudentNumber($localProfileStudentNumber) && strtoupper($localProfileStudentNumber) !== strtoupper($studentNumber))) {
+                    $summary['manual_review']++;
+                    $summary['details'][] = [
+                        'name' => $student['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'matched_by' => $matchedBy,
+                        'status' => 'manual_review',
+                        'message' => 'A different official student number already exists locally.',
+                    ];
+                    continue;
+                }
+
+                $changes = [
+                    'student_number' => !$this->isOfficialStudentNumber($localUserStudentNumber) ? $studentNumber : null,
+                    'student_id' => $idpUuid !== '' && ($user->student_id === null || trim((string) $user->student_id) === '') ? $idpUuid : null,
+                    'year' => $yearLevel !== '' && trim((string) $user->year) !== $yearLevel ? $yearLevel : null,
+                    'section' => $section !== '' && trim((string) $user->section) !== $section ? $section : null,
+                    'health_profile_student_id' => $profile && $idpUuid !== '' && $localProfileIdpUuid === '' ? $idpUuid : null,
+                    'health_profile_student_number' => $profile && !$this->isOfficialStudentNumber($localProfileStudentNumber) ? $studentNumber : null,
+                ];
+                $hasChanges = collect($changes)->contains(static fn ($value): bool => $value !== null);
+
+                if (!$hasChanges) {
+                    $summary['already_complete']++;
+                    $summary['details'][] = [
+                        'name' => $student['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'matched_by' => $matchedBy,
+                        'status' => 'already_complete',
+                        'message' => 'Local identity and academic fields already match the available data.',
+                    ];
+                    continue;
+                }
+
+                if ($mode === 'preview') {
+                    $summary['synced']++;
+                    $summary['details'][] = [
+                        'name' => $student['name'] ?? 'Unnamed user',
+                        'email' => $email,
+                        'matched_by' => $matchedBy,
+                        'status' => 'ready',
+                        'message' => 'Ready to sync: ' . implode(', ', array_keys(array_filter($changes, static fn ($value): bool => $value !== null))),
+                    ];
+                    continue;
+                }
+
+                $appointmentsUpdated = 0;
+                DB::transaction(function () use ($user, $profile, $changes, $studentNumber, $idpUuid, &$appointmentsUpdated): void {
+                    if ($changes['student_number'] !== null) {
+                        $user->student_number = $changes['student_number'];
+                    }
+                    if ($changes['student_id'] !== null) {
+                        $user->student_id = $changes['student_id'];
+                    }
+                    if ($changes['year'] !== null) {
+                        $user->year = $changes['year'];
+                    }
+                    if ($changes['section'] !== null) {
+                        $user->section = $changes['section'];
+                    }
+                    $user->save();
+
+                    if ($profile && $changes['health_profile_student_number'] !== null) {
+                        $profile->student_number = $studentNumber;
+                    }
+                    if ($profile && $changes['health_profile_student_id'] !== null) {
+                        $profile->student_id = $changes['health_profile_student_id'];
+                    }
+                    if ($profile && ($changes['health_profile_student_number'] !== null || $changes['health_profile_student_id'] !== null)) {
+                        $profile->save();
+                    }
+
+                    if ($changes['student_number'] !== null) {
+                        $appointmentsUpdated += Appointment::query()
+                        ->where('user_id', $user->id)
+                        ->where(function ($query): void {
+                            $query->whereNull('student_number')
+                                ->orWhere('student_number', '')
+                                ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
+                                ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
+                                ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
+                                ->orWhereRaw('UPPER(student_number) IN (?, ?, ?, ?)', ['N/A', 'NA', 'NULL', 'UNKNOWN']);
+                        })
+                        ->update(['student_number' => $studentNumber]);
+                    }
+
+                    if ($idpUuid !== '') {
+                        $appointmentsUpdated += Appointment::query()
+                            ->where('user_id', $user->id)
+                            ->where(function ($query) use ($idpUuid): void {
+                                $query->whereNull('student_id')->orWhere('student_id', '')->orWhere('student_id', '!=', $idpUuid);
+                            })
+                            ->update(['student_id' => $idpUuid]);
+                    }
+                });
+
+                $summary['synced']++;
+                $summary['appointment_records_updated'] += $appointmentsUpdated;
+                $summary['details'][] = [
+                    'name' => $student['name'] ?? 'Unnamed user',
+                    'email' => $email,
+                    'matched_by' => $matchedBy,
+                    'status' => 'synced',
+                    'message' => 'Student number and available academic fields were synchronized.',
+                ];
+            } catch (\Throwable $exception) {
+                \Log::warning('GuiSIS student number batch sync failed', [
+                    'user_id' => $user->id,
+                    'email' => $email,
+                    'error' => $exception->getMessage(),
+                ]);
+                $summary['failed']++;
+                $summary['details'][] = [
+                    'name' => trim((string) ($user->name ?: implode(' ', array_filter([$user->first_name, $user->last_name])))) ?: 'Unnamed user',
+                    'email' => $email,
+                    'status' => 'failed',
+                    'message' => 'Unexpected error while processing this record.',
+                ];
+            }
+        }
+
+        if ($mode === 'apply' && $candidates->isNotEmpty()) {
+            SystemSetting::putValue($syncCursorKey, (string) $candidates->max('id'));
+        }
+
+        $summary['remaining'] = $this->studentNumberSyncCandidateQuery()->count();
+
+        return redirect()
+            ->route('admin.api-testing')
+            ->with('student_number_sync_summary', $summary);
+    }
+
+    private function studentNumberSyncCandidateQuery()
+    {
+        return User::query()
+            ->where(function ($query): void {
+                $query->whereRaw("LOWER(COALESCE(idp_role, '')) = ?", ['student'])
+                    ->orWhereRaw("LOWER(COALESCE(user_type, '')) = ?", ['student'])
+                    ->orWhere(function ($fallbackQuery): void {
+                        $fallbackQuery->where(function ($typeQuery): void {
+                            $typeQuery->whereNull('user_type')->orWhere('user_type', '');
+                        })->whereRaw("LOWER(COALESCE(user_role, '')) = ?", ['student']);
+                    });
+            })
+            ->whereHas('healthProfile')
+            ->where(function ($query): void {
+                $query->whereNull('student_number')
+                    ->orWhere('student_number', '')
+                    ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
+                    ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
+                    ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
+                    ->orWhereRaw('UPPER(student_number) IN (?, ?, ?, ?)', ['N/A', 'NA', 'NULL', 'UNKNOWN'])
+                    ->orWhereNull('year')
+                    ->orWhere('year', '')
+                    ->orWhereNull('section')
+                    ->orWhere('section', '')
+                    ->orWhereHas('healthProfile', function ($profileQuery): void {
+                        $profileQuery->whereNull('student_number')
+                            ->orWhere('student_number', '')
+                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['CLN-%'])
+                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['LOC-%'])
+                            ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
+                            ->orWhereRaw('UPPER(student_number) IN (?, ?, ?, ?)', ['N/A', 'NA', 'NULL', 'UNKNOWN']);
+                    });
+            });
+    }
+
+    private function isOfficialStudentNumber(?string $studentNumber): bool
+    {
+        $studentNumber = strtoupper(trim((string) $studentNumber));
+
+        return $studentNumber !== ''
+            && !str_starts_with($studentNumber, 'CLN-')
+            && !str_starts_with($studentNumber, 'LOC-')
+            && !str_starts_with($studentNumber, 'TEST-LOCAL')
+            && !in_array($studentNumber, ['N/A', 'NA', 'NULL', 'NONE', 'UNKNOWN'], true)
+            && !preg_match('/^[0-9A-F]{8}-[0-9A-F]{4}-[1-5][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i', $studentNumber);
+    }
+
+    private function normalizeSyncIdentifier($value): string
+    {
+        $value = trim((string) $value);
+        $normalized = strtoupper($value);
+
+        return in_array($normalized, ['', 'N/A', 'NA', 'NULL', 'NONE', 'UNKNOWN'], true) ? '' : $value;
     }
 
     public function updateApiTestingDatabaseRecord(Request $request, string $table, int $id)
@@ -1854,10 +2540,11 @@ class AdminController extends Controller
             $profileAddress = isset($profile['address']) && is_array($profile['address'])
                 ? $profile['address']
                 : [];
-            $firstName = trim((string) ($item['first_name'] ?? $itemFields['first_name'] ?? $profile['first_name'] ?? ''));
-            $middleName = trim((string) ($item['middle_name'] ?? $itemFields['middle_name'] ?? $profile['middle_name'] ?? ''));
-            $lastName = trim((string) ($item['last_name'] ?? $itemFields['last_name'] ?? $profile['last_name'] ?? ''));
-            $suffixName = trim((string) ($item['suffix_name'] ?? $itemFields['suffix_name'] ?? $profile['suffix_name'] ?? ''));
+            $program = isset($item['program']) && is_array($item['program']) ? $item['program'] : [];
+            $firstName = trim((string) ($item['first_name'] ?? $item['firstName'] ?? $itemFields['first_name'] ?? $itemFields['firstName'] ?? $profile['first_name'] ?? $profile['firstName'] ?? ''));
+            $middleName = trim((string) ($item['middle_name'] ?? $item['middleName'] ?? $itemFields['middle_name'] ?? $itemFields['middleName'] ?? $profile['middle_name'] ?? $profile['middleName'] ?? ''));
+            $lastName = trim((string) ($item['last_name'] ?? $item['lastName'] ?? $itemFields['last_name'] ?? $itemFields['lastName'] ?? $profile['last_name'] ?? $profile['lastName'] ?? ''));
+            $suffixName = trim((string) ($item['suffix_name'] ?? $item['suffixName'] ?? $itemFields['suffix_name'] ?? $itemFields['suffixName'] ?? $profile['suffix_name'] ?? $profile['suffixName'] ?? ''));
             $structuredName = trim(implode(' ', array_filter([
                 $firstName,
                 $middleName,
@@ -1866,15 +2553,27 @@ class AdminController extends Controller
             ])));
             $name = $structuredName !== ''
                 ? $structuredName
-                : trim((string) ($item['name'] ?? ''));
-            $email = trim((string) ($item['email'] ?? $item['email_address'] ?? ''));
-            $identifier = trim((string) ($item['faculty_code'] ?? $item['faculty_id'] ?? $item['id'] ?? $item['admin_id'] ?? $item['student_number'] ?? $item['student_id'] ?? $item['employee_id'] ?? ''));
+                : trim((string) ($item['name'] ?? $item['fullName'] ?? ''));
+            $email = trim((string) ($item['email'] ?? $item['email_address'] ?? $item['emailAddress'] ?? ''));
+            $studentNumber = trim((string) ($item['student_number'] ?? $item['studentNumber'] ?? $itemFields['student_number'] ?? $itemFields['studentNumber'] ?? ''));
+            $idpUuid = trim((string) ($item['idp_uuid'] ?? $item['idpUuid'] ?? $itemFields['idp_uuid'] ?? $itemFields['idpUuid'] ?? ''));
+            $identifier = trim((string) ($item['faculty_code'] ?? $item['faculty_id'] ?? $item['admin_id'] ?? ''));
+            if ($identifier === '') {
+                $identifier = $studentNumber !== ''
+                    ? $studentNumber
+                    : trim((string) ($item['student_id'] ?? $item['employee_id'] ?? $item['id'] ?? ''));
+            }
             $birthday = trim((string) ($item['birthday'] ?? $profile['birthday'] ?? $item['dob'] ?? $item['date_of_birth'] ?? ''));
             $role = trim((string) ($item['faculty_type'] ?? $item['role'] ?? $item['access_level'] ?? $item['designation'] ?? ''));
             $office = trim((string) ($item['office'] ?? $item['offices'] ?? $item['department'] ?? ''));
             $contactNumber = trim((string) ($item['contact_no'] ?? $item['contact_number'] ?? $item['phone'] ?? $item['mobile'] ?? ''));
             $address = trim((string) ($item['address'] ?? $item['home_address'] ?? $this->formatApiTestingAddress($profileAddress)));
             $status = trim((string) ($item['status'] ?? ($item['is_active'] ?? '')));
+            $courseCode = trim((string) ($item['course_code'] ?? $item['courseCode'] ?? $program['code'] ?? ''));
+            $courseName = trim((string) ($item['course_name'] ?? $item['courseName'] ?? $program['name'] ?? ''));
+            $yearLevel = trim((string) ($item['year_level'] ?? $item['yearLevel'] ?? ''));
+            $section = trim((string) ($item['section'] ?? $item['section_name'] ?? $item['sectionName'] ?? ''));
+            $gender = trim((string) ($item['gender'] ?? $item['sex'] ?? $item['genderName'] ?? $profile['gender'] ?? ''));
 
             $haystack = strtolower(implode(' ', array_filter([
                 $name,
@@ -1889,6 +2588,8 @@ class AdminController extends Controller
 
             $normalized[] = [
                 'identifier' => $identifier !== '' ? $identifier : 'N/A',
+                'student_number' => $studentNumber !== '' ? $studentNumber : 'N/A',
+                'idp_uuid' => $idpUuid !== '' ? $idpUuid : 'N/A',
                 'admin_id' => trim((string) ($item['admin_id'] ?? $item['id'] ?? '')) ?: 'N/A',
                 'name' => $name !== '' ? $name : 'N/A',
                 'first_name' => $firstName !== '' ? $firstName : 'N/A',
@@ -1898,7 +2599,11 @@ class AdminController extends Controller
                 'email' => $email !== '' ? $email : 'N/A',
                 'birthday' => $birthday !== '' ? $birthday : 'N/A',
                 'age' => trim((string) ($item['age'] ?? '')) ?: 'N/A',
-                'gender' => trim((string) ($item['gender'] ?? $profile['gender'] ?? '')) ?: 'N/A',
+                'gender' => $gender !== '' ? $gender : 'N/A',
+                'course' => $courseName !== '' ? $courseName : ($courseCode !== '' ? $courseCode : 'N/A'),
+                'course_code' => $courseCode !== '' ? $courseCode : 'N/A',
+                'year_level' => $yearLevel !== '' ? $yearLevel : 'N/A',
+                'section' => $section !== '' ? $section : 'N/A',
                 'civil_status' => trim((string) ($item['civil_status'] ?? '')) ?: 'N/A',
                 'role' => $role !== '' ? $role : 'N/A',
                 'access_level' => trim((string) ($item['access_level'] ?? $item['role'] ?? '')) ?: ($role !== '' ? $role : 'N/A'),
@@ -1922,7 +2627,21 @@ class AdminController extends Controller
             return [];
         }
 
-        $students = $payload['students'] ?? $payload['data']['students'] ?? $payload['data'] ?? [];
+        $students = $payload['students']
+            ?? $payload['data']['students']
+            ?? $payload['data']['items']
+            ?? $payload['data']['results']
+            ?? $payload['data']['records']
+            ?? $payload['data']['matches']
+            ?? $payload['items']
+            ?? $payload['results']
+            ?? $payload['records']
+            ?? $payload['matches']
+            ?? $payload['data']
+            ?? [];
+        if ($students === [] && (isset($payload['studentNumber']) || isset($payload['email']) || isset($payload['idpUuid']))) {
+            $students = $payload;
+        }
         if (!is_array($students)) {
             return [];
         }
@@ -5512,14 +6231,34 @@ public function exportInventory()
     // 6. FOR INVENTORY SUMMARY
 public function inventorySummary()
 {
-    $monthFilter = request()->query('month', now()->format('Y-m'));
-    $monthStart = Carbon::parse($monthFilter . '-01')->startOfMonth();
-    $monthEnd = (clone $monthStart)->endOfMonth();
+    $fallbackMonth = request()->query('month', now()->format('Y-m'));
+    $fallbackStart = Carbon::parse($fallbackMonth . '-01')->startOfMonth();
+    $fallbackEnd = (clone $fallbackStart)->endOfMonth();
+
+    try {
+        $dateFrom = request()->filled('date_from')
+            ? Carbon::parse(request()->query('date_from'))->startOfDay()
+            : $fallbackStart;
+    } catch (\Throwable $exception) {
+        $dateFrom = $fallbackStart;
+    }
+
+    try {
+        $dateTo = request()->filled('date_to')
+            ? Carbon::parse(request()->query('date_to'))->endOfDay()
+            : $fallbackEnd;
+    } catch (\Throwable $exception) {
+        $dateTo = $fallbackEnd;
+    }
+
+    if ($dateTo->lt($dateFrom)) {
+        [$dateFrom, $dateTo] = [$dateTo->copy()->startOfDay(), $dateFrom->copy()->endOfDay()];
+    }
 
     $consumedByItem = InventoryMovement::query()
         ->select('item_id', DB::raw('SUM(ABS(quantity)) as consumed_total'))
         ->where('type', 'consumed')
-        ->whereBetween('created_at', [$monthStart, $monthEnd])
+        ->whereBetween('created_at', [$dateFrom, $dateTo])
         ->groupBy('item_id')
         ->pluck('consumed_total', 'item_id');
 
@@ -5572,7 +6311,7 @@ public function inventorySummary()
     ]);
 
     return view('admin.reports.inventory-summary', compact(
-        'totalItems', 'totalStock', 'totalConsumed', 'outOfStock', 'lowStockItems', 'lowStockCount', 'categorySummary', 'itemPerformance', 'monthFilter'
+        'totalItems', 'totalStock', 'totalConsumed', 'outOfStock', 'lowStockItems', 'lowStockCount', 'categorySummary', 'itemPerformance', 'dateFrom', 'dateTo'
     ));
 }
 

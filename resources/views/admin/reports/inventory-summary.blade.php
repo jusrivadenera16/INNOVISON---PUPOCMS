@@ -378,6 +378,10 @@
     }
 
     .summary-filter-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         min-height: 50px;
         min-width: 120px;
         padding: 0 18px;
@@ -405,6 +409,17 @@
         pointer-events: none;
     }
 
+    .summary-filter-toggle > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .summary-filter-toggle svg {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+    }
+
     .summary-filter-toggle:hover,
     .summary-filter-toggle:focus-visible {
         background: #facc15;
@@ -423,7 +438,7 @@
         right: 0;
         top: calc(100% + 10px);
         z-index: 80;
-        width: min(290px, 92vw);
+        width: min(420px, 92vw);
         padding: 14px;
         border-radius: 18px;
         border: 1px solid rgba(112, 19, 27, .12);
@@ -445,11 +460,22 @@
         color: #70131B;
     }
 
-    .summary-month-wrap {
-        position: relative;
+    .summary-date-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
     }
 
-    .summary-month-wrap input[type="month"] {
+    .summary-date-field {
+        display: grid;
+        gap: 6px;
+    }
+
+    .summary-date-field label {
+        margin: 0;
+    }
+
+    .summary-date-field input[type="date"] {
         width: 100%;
         min-height: 46px;
         padding: 12px 14px;
@@ -458,6 +484,7 @@
         background: linear-gradient(180deg, #ffffff 0%, #fff8f6 100%);
         color: #111827;
         font-weight: 800;
+        color-scheme: light;
         box-shadow: 0 12px 22px rgba(15, 23, 42, .08), inset 0 1px 0 rgba(255,255,255,.86);
     }
 
@@ -481,6 +508,31 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
+    }
+
+    html[data-theme="dark"] .summary-filter-panel {
+        background: rgba(15, 23, 42, .98) !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+        box-shadow: 0 24px 38px rgba(0, 0, 0, .42) !important;
+    }
+
+    html[data-theme="dark"] .summary-filter-panel-title,
+    html[data-theme="dark"] .summary-date-field label {
+        color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] .summary-date-field input[type="date"] {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, .22) !important;
+        color: #ffffff !important;
+        color-scheme: dark;
+        box-shadow: 0 12px 22px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255,255,255,.05) !important;
+    }
+
+    html[data-theme="dark"] .summary-filter-actions a {
+        background: rgba(17, 24, 39, .94) !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+        color: #ffffff !important;
     }
 
     .summary-filter-actions button:hover,
@@ -589,7 +641,7 @@
     }
 
     html[data-theme="dark"] .summary-filter-panel,
-    html[data-theme="dark"] .summary-month-wrap input[type="month"] {
+    html[data-theme="dark"] .summary-date-field input[type="date"] {
         background: rgba(15, 23, 42, .96) !important;
         border-color: rgba(250, 204, 21, .18) !important;
         color: #ffffff !important;
@@ -706,26 +758,39 @@
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
     $reportsHomeUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
     $summaryUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/inventory-summary') : url('/admin/reports/inventory-summary');
-    $reportMonthLabel = \Carbon\Carbon::parse($monthFilter . '-01')->format('F Y');
+    $rangeStartLabel = $dateFrom->format('M d, Y');
+    $rangeEndLabel = $dateTo->format('M d, Y');
+    $reportRangeLabel = $dateFrom->isSameDay($dateTo) ? $rangeStartLabel : $rangeStartLabel . ' to ' . $rangeEndLabel;
 @endphp
 <div class="summary-container">
     <div class="summary-header">
         <div>
             <h2 class="summary-title">Inventory Summary Report</h2>
-            <p class="summary-subtitle">Monitor current stock, monthly consumption, and starting balances for {{ $reportMonthLabel }}.</p>
+            <p class="summary-subtitle">Monitor current stock, consumption, and starting balances for {{ $reportRangeLabel }}.</p>
         </div>
 
         <form action="{{ $summaryUrl }}" method="GET" class="summary-filter" id="summaryFilterShell">
-            <button type="button" class="summary-filter-toggle" id="summaryFilterToggle" aria-expanded="false" aria-controls="summaryFilterPanel">Filter</button>
+            <button type="button" class="summary-filter-toggle" id="summaryFilterToggle" aria-expanded="false" aria-controls="summaryFilterPanel">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+                </svg>
+                <span>Filter</span>
+            </button>
             <a href="{{ $reportsHomeUrl }}" class="summary-back">&larr; Back to Reports</a>
             <div class="summary-filter-panel" id="summaryFilterPanel" aria-hidden="true">
-                <div class="summary-filter-panel-title">Month Filter</div>
-                <div class="summary-month-wrap">
-                    <input id="summaryMonth" type="month" name="month" value="{{ $monthFilter }}" aria-label="Report month">
+                <div class="summary-filter-panel-title">Calendar Filter</div>
+                <div class="summary-date-grid">
+                    <div class="summary-date-field">
+                        <label for="summaryDateFrom">From</label>
+                        <input id="summaryDateFrom" type="date" name="date_from" value="{{ $dateFrom->format('Y-m-d') }}" aria-label="Report start date">
+                    </div>
+                    <div class="summary-date-field">
+                        <label for="summaryDateTo">To</label>
+                        <input id="summaryDateTo" type="date" name="date_to" value="{{ $dateTo->format('Y-m-d') }}" aria-label="Report end date">
+                    </div>
                 </div>
                 <div class="summary-filter-actions">
                     <a href="{{ $summaryUrl }}">Reset</a>
-                    <button type="button" id="summaryFilterClose">Close</button>
                     <button type="submit">Apply</button>
                 </div>
             </div>
@@ -871,7 +936,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const shell = document.getElementById('summaryFilterShell');
     const toggle = document.getElementById('summaryFilterToggle');
     const panel = document.getElementById('summaryFilterPanel');
-    const closeBtn = document.getElementById('summaryFilterClose');
 
     function setOpen(isOpen) {
         if (!shell || !toggle || !panel) return;
@@ -883,10 +947,6 @@ document.addEventListener('DOMContentLoaded', function () {
     toggle?.addEventListener('click', function (event) {
         event.preventDefault();
         setOpen(!shell.classList.contains('is-open'));
-    });
-
-    closeBtn?.addEventListener('click', function () {
-        setOpen(false);
     });
 
     document.addEventListener('click', function (event) {

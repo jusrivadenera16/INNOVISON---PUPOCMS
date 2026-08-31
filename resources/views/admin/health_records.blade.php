@@ -5959,9 +5959,21 @@
             return $year;
         };
         $formatHealthCourseYearSection = function ($courseName, $courseCode = '', $year = '', $section = '') use ($formatHealthCourseCode, $formatHealthYear) {
-            $code = $formatHealthCourseCode($courseName, $courseCode);
+            $rawCourseName = trim((string) $courseName);
             $year = $formatHealthYear($year);
             $section = trim((string) $section);
+
+            // Preserve academic suffixes when older records stored them in the course text.
+            if (($year === '' || $section === '') && preg_match('/^(.*?)\s+([1-4])(?:\s*[-\/]\s*([A-Za-z0-9][A-Za-z0-9._-]*))?$/', $rawCourseName, $matches)) {
+                $parsedCourseName = trim((string) ($matches[1] ?? ''));
+                if ($parsedCourseName !== '') {
+                    $courseName = $parsedCourseName;
+                    $year = $year !== '' ? $year : $formatHealthYear($matches[2] ?? '');
+                    $section = $section !== '' ? $section : trim((string) ($matches[3] ?? ''));
+                }
+            }
+
+            $code = $formatHealthCourseCode($courseName, $courseCode);
             $suffix = trim($year . ($section !== '' ? ' - ' . $section : ''));
             $display = trim($code . ($suffix !== '' ? ' ' . $suffix : ''));
 

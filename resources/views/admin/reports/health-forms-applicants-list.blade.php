@@ -188,6 +188,11 @@
         transform: translateY(-1px);
         outline: none;
     }
+    .filter-btn-open svg {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+    }
     .modal-overlay {
         display: none;
         position: fixed;
@@ -852,16 +857,20 @@
     .premium-select-shell { position: relative; display: inline-flex; min-width: 132px; z-index: 30; }
     .premium-select-shell.is-open { z-index: 120; }
     .filter-group .premium-select-shell { width: 100%; display: flex; }
-    .filter-group .premium-select-button { min-height: 44px; border-radius: 12px; padding: 0 14px; font-size: 14px; }
-    .premium-select-button { width: 100%; min-height: 38px; display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; border-radius: 9px; border: 1px solid rgba(112, 19, 27, .24); background: #fff; color: #111827; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 10px 20px rgba(15, 23, 42, .06); }
-    .premium-select-button::after { content: ""; width: 8px; height: 8px; border-right: 2px solid #70131B; border-bottom: 2px solid #70131B; transform: rotate(45deg) translateY(-2px); }
-    .premium-select-shell.is-open .premium-select-button::after { transform: rotate(225deg) translateY(-2px); }
-    .premium-select-menu { position: absolute; top: calc(100% + 8px); left: 0; right: 0; display: none; flex-direction: column; gap: 6px; padding: 8px; border-radius: 14px; border: 1px solid rgba(112, 19, 27, .16); background: #fff; box-shadow: 0 18px 36px rgba(15, 23, 42, .16); z-index: 130; max-height: 220px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+    .filter-group .premium-select-button { min-height: 46px; border-radius: 16px; padding: 12px 50px 12px 16px; font-size: 14px; }
+    .premium-select-button { width: 100%; min-height: 46px; display: inline-flex; align-items: center; justify-content: flex-start; gap: 10px; padding: 12px 50px 12px 16px; border-radius: 16px; border: 1px solid rgba(127, 29, 29, 0.22); background: radial-gradient(circle at top right, rgba(250, 204, 21, 0.10), transparent 36%), linear-gradient(180deg, #ffffff 0%, #fff8f6 100%); color: #111827; font-size: 13px; font-weight: 800; text-align: left; cursor: pointer; box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255,255,255,0.86); transition: all .2s ease; }
+    .premium-select-button:hover { border-color: rgba(139, 0, 0, 0.34); box-shadow: 0 14px 24px rgba(15, 23, 42, 0.10), 0 8px 18px rgba(139, 0, 0, 0.05), inset 0 1px 0 rgba(255,255,255,0.90); transform: translateY(-1px); }
+    .premium-select-button:focus,
+    .premium-select-shell.is-open .premium-select-button { border-color: #8B0000; box-shadow: 0 0 0 4px rgba(139, 0, 0, 0.06), 0 14px 24px rgba(139, 0, 0, 0.10), inset 0 1px 0 rgba(255,255,255,0.88); outline: none; }
+    .premium-select-shell::after { content: ""; position: absolute; top: 23px; right: 18px; width: 10px; height: 10px; border-right: 2px solid #8B0000; border-bottom: 2px solid #8B0000; transform: translateY(-65%) rotate(45deg); pointer-events: none; transition: transform .18s ease; }
+    .premium-select-shell::before { content: ""; position: absolute; top: 23px; right: 42px; transform: translateY(-50%); width: 1px; height: 24px; background: rgba(148, 163, 184, 0.24); pointer-events: none; }
+    .premium-select-shell.is-open::after { transform: translateY(-20%) rotate(225deg); }
+    .premium-select-menu { position: absolute; top: calc(100% + 10px); left: 0; right: 0; display: none; flex-direction: column; gap: 10px; padding: 14px; border-radius: 18px; border: 1px solid rgba(139, 0, 0, 0.12); background: rgba(255, 255, 255, 0.98); box-shadow: 0 18px 34px rgba(15, 23, 42, 0.14); z-index: 130; max-height: 260px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
     .premium-select-menu::-webkit-scrollbar { display: none; }
     .premium-select-shell.is-open .premium-select-menu { display: flex; }
-    .premium-select-option { min-height: 34px; border: 1px solid rgba(226, 232, 240, .9); border-radius: 999px; background: #fff; color: #111827; font-size: 12px; font-weight: 900; text-align: left; padding: 0 12px; cursor: pointer; }
-    .premium-select-option:hover { background: #7f0010; color: #ffffff; border-color: #7f0010; }
-    .premium-select-option.is-selected { background: #7f0010; color: #facc15; border-color: #7f0010; }
+    .premium-select-option { width: 100%; min-height: 42px; border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 999px; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); color: #1e293b; font-size: 13px; font-weight: 800; text-align: left; padding: 10px 14px; cursor: pointer; transition: all .18s ease; box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255,255,255,0.82); }
+    .premium-select-option:hover,
+    .premium-select-option.is-selected { transform: translateY(-1px); border-color: #8B0000; background: linear-gradient(135deg, #8B0000, #70131B); color: #facc15; box-shadow: 0 12px 20px rgba(139, 0, 0, 0.16); }
     html[data-theme="dark"] .logbook-shell {
         color: #f8fafc;
     }
@@ -958,6 +967,18 @@
         background: #7f0010 !important;
         border-color: #facc15 !important;
         color: #ffffff !important;
+    }
+    html[data-theme="dark"] .premium-select-shell::before {
+        background: rgba(250, 204, 21, .18);
+    }
+    html[data-theme="dark"] .premium-select-shell::after {
+        border-color: #facc15;
+    }
+    html[data-theme="dark"] .premium-select-button:hover,
+    html[data-theme="dark"] .premium-select-button:focus,
+    html[data-theme="dark"] .premium-select-shell.is-open .premium-select-button {
+        border-color: #facc15 !important;
+        box-shadow: 0 0 0 4px rgba(250, 204, 21, .08), 0 14px 24px rgba(0, 0, 0, .30) !important;
     }
     html[data-theme="dark"] .premium-select-option.is-selected {
         background: #7f0010 !important;
@@ -1172,7 +1193,12 @@
             <p class="logbook-copy">List of applicants, students, and staff who submitted health forms.</p>
         </div>
         <div style="display: flex; gap: 10px;">
-            <button type="button" class="filter-btn-open" onclick="openFilterModal()">🔍 Filter</button>
+            <button type="button" class="filter-btn-open" onclick="openFilterModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+                </svg>
+                <span>Filter</span>
+            </button>
             <a href="{{ $reportsUrl }}" class="logbook-back">&larr; Back</a>
         </div>
     </div>
@@ -1191,10 +1217,8 @@
             <button type="button" class="modal-close" onclick="closeFilterModal()" aria-label="Close filter">&times;</button>
             <div class="modal-header">
                 <span class="modal-title-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M3 5h18"></path>
-                        <path d="M6 12h12"></path>
-                        <path d="M10 19h4"></path>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
                     </svg>
                 </span>
                 <div>
