@@ -8592,40 +8592,6 @@
                 draggable="false"
                 decoding="async"
             >
-            <div class="landing-sticker-layer" aria-label="Draggable clinic icons">
-                <button type="button" class="landing-sticker landing-sticker--heart" data-landing-sticker data-sticker-key="heart" aria-label="Drag heart health icon" title="Drag icon">
-                    <span class="landing-sticker__surface">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"></path>
-                            <path d="M4.5 12h4l1.5-3 3 6 1.5-3h5"></path>
-                        </svg>
-                    </span>
-                </button>
-                <button type="button" class="landing-sticker landing-sticker--clipboard" data-landing-sticker data-sticker-key="clipboard" aria-label="Drag clinic checklist icon" title="Drag icon">
-                    <span class="landing-sticker__surface">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <rect x="5" y="4" width="14" height="17" rx="2"></rect>
-                            <path d="M9 4.5V3h6v1.5M9 10h6M9 14h6M9 18h4"></path>
-                        </svg>
-                    </span>
-                </button>
-                <button type="button" class="landing-sticker landing-sticker--calendar" data-landing-sticker data-sticker-key="calendar" aria-label="Drag appointment calendar icon" title="Drag icon">
-                    <span class="landing-sticker__surface">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <rect x="3" y="5" width="18" height="16" rx="2"></rect>
-                            <path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"></path>
-                        </svg>
-                    </span>
-                </button>
-                <button type="button" class="landing-sticker landing-sticker--shield" data-landing-sticker data-sticker-key="shield" aria-label="Drag medical protection icon" title="Drag icon">
-                    <span class="landing-sticker__surface">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path>
-                            <path d="M12 8v8M8 12h8"></path>
-                        </svg>
-                    </span>
-                </button>
-            </div>
             <div class="info-column">
                 <div class="info-default">
                     <div class="brand-row">
@@ -9818,7 +9784,6 @@
                 preloader.classList.remove('hidden');
             }
 
-            initializeLandingStickers();
             initializeLandingEarpiece();
             initializeLandingChestpiece();
             initializeLandingHeroReveal();
