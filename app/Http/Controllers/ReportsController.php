@@ -372,6 +372,7 @@ class ReportsController extends Controller
                 'user.healthProfile',
                 'medicalCondition.category',
                 'medicineItem',
+                'medicines.item',
                 'attendingStaff.adminProfile',
             ])
             ->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()])
@@ -944,7 +945,7 @@ class ReportsController extends Controller
                     ->get();
 
                 $consultationRecords = Consultation::where('user_id', $userId)
-                    ->with(['user', 'attendingStaff'])
+                    ->with(['user', 'attendingStaff', 'medicineItem', 'medicines.item'])
                     ->orderByDesc('consultation_date')
                     ->orderByDesc('time_in')
                     ->get();
@@ -1066,7 +1067,7 @@ class ReportsController extends Controller
             ->get();
 
         $consultationRecords = Consultation::where('user_id', $userId)
-            ->with(['user', 'attendingStaff'])
+            ->with(['user', 'attendingStaff', 'medicineItem', 'medicines.item'])
             ->orderByDesc('consultation_date')
             ->orderByDesc('time_in')
             ->get();

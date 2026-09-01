@@ -14,6 +14,7 @@ use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\ActivityLog;
 use App\Models\Consultation;
+use App\Models\ConsultationMedicine;
 use App\Services\PuptasWebhookService;
 use App\Services\StudentNotificationMailer;
 use App\Services\EmployeeHealthFormPdfService;
@@ -1518,7 +1519,7 @@ class WalkInController extends Controller
         $conditions = \App\Models\MedicalConditions::with('category')->get();
         $studentDocuments = $this->healthProfileDocuments($request, $student->healthProfile);
         $studentTreatments = Consultation::query()
-            ->with(['medicalCondition.category', 'medicineItem', 'attendingStaff'])
+            ->with(['medicalCondition.category', 'medicineItem', 'medicines.item', 'attendingStaff'])
             ->where('user_id', $student->id)
             ->latest('consultation_date')
             ->latest('time_out')
@@ -2113,6 +2114,14 @@ PROMPT;
     // 5. FINAL STORE
     public function store(Request $request)
     {
+        // Accept the previous single-medicine payload while the form now submits arrays.
+        foreach (['item_id', 'issued_quantity'] as $medicineField) {
+            $value = $request->input($medicineField);
+            if ($value !== null && !is_array($value)) {
+                $request->merge([$medicineField => [$value]]);
+            }
+        }
+
         $request->validate([
             'student_number' => 'required',
             'service'      => 'required',
@@ -2129,8 +2138,11 @@ PROMPT;
             'covid_positive_date' => 'required_if:covid_status,Yes|nullable|date|before_or_equal:today',
             'reason_for_visit' => 'nullable|string|max:255',
             'certificate_type' => 'nullable|in:none,excused_letter,coc_ijt,coc_ladderized',
-            'item_id' => 'nullable|exists:items,id',
-            'issued_quantity' => 'nullable|numeric|min:0.01',
+            'item_id' => 'nullable|array|max:5',
+            // Empty medicine rows are allowed; duplicate selected medicines are checked below.
+            'item_id.*' => 'nullable|integer|exists:items,id',
+            'issued_quantity' => 'nullable|array|max:5',
+            'issued_quantity.*' => 'nullable|numeric|min:0.01',
             'consultation_started_at' => 'nullable|date_format:H:i:s',
         ]);
 
@@ -2187,18 +2199,38 @@ PROMPT;
             $student->healthProfile->save();
         }
 
-        $issuedQuantity = (float) $request->input('issued_quantity', 0);
-        $dispensedItem = null;
+        $itemIds = $request->input('item_id', []);
+        $issuedQuantities = $request->input('issued_quantity', []);
+        $itemIds = is_array($itemIds) ? $itemIds : [$itemIds];
+        $issuedQuantities = is_array($issuedQuantities) ? $issuedQuantities : [$issuedQuantities];
+        $medicineLines = [];
+        $selectedItemIds = [];
+        $lineCount = max(count($itemIds), count($issuedQuantities));
 
-        if ($request->filled('item_id')) {
-            $dispensedItem = Item::find($request->input('item_id'));
+        for ($index = 0; $index < $lineCount; $index++) {
+            $itemId = trim((string) ($itemIds[$index] ?? ''));
+            $rawQuantity = trim((string) ($issuedQuantities[$index] ?? ''));
 
-            if (!$dispensedItem) {
-                return redirect()->back()->withInput()->with('error', 'Selected medicine was not found in inventory.');
+            if ($itemId === '' && $rawQuantity === '') {
+                continue;
             }
 
+            if ($itemId === '') {
+                return redirect()->back()->withInput()->with('error', 'Select a medicine for every quantity entered.');
+            }
+
+            $issuedQuantity = (float) $rawQuantity;
             if ($issuedQuantity <= 0) {
-                return redirect()->back()->withInput()->with('error', 'Enter the quantity to issue for the selected medicine.');
+                return redirect()->back()->withInput()->with('error', 'Enter the quantity to issue for every selected medicine.');
+            }
+
+            if (in_array((int) $itemId, $selectedItemIds, true)) {
+                return redirect()->back()->withInput()->with('error', 'Each medicine can only be selected once per consultation.');
+            }
+
+            $dispensedItem = Item::find($itemId);
+            if (!$dispensedItem) {
+                return redirect()->back()->withInput()->with('error', 'Selected medicine was not found in inventory.');
             }
 
             if ($dispensedItem->requiresDispensingConversion() && !$dispensedItem->hasDispensingConversion()) {
@@ -2219,11 +2251,19 @@ PROMPT;
                     'Only ' . $this->formatQuantityNumber($availableDispensingQuantity) . ' ' . $availableUnitLabel . ' of ' . $dispensedItem->name . ' are currently available.'
                 );
             }
-        } elseif ($issuedQuantity > 0) {
-            return redirect()->back()->withInput()->with('error', 'Select a medicine before entering a quantity to issue.');
+
+            $selectedItemIds[] = (int) $itemId;
+            $medicineLines[] = [
+                'item_id' => (int) $itemId,
+                'quantity' => $issuedQuantity,
+            ];
         }
 
-        $completedAppointment = DB::transaction(function () use ($request, $student, $dispensedItem, $issuedQuantity, $requestedSource, $consultationStartedAt) {
+        if (count($medicineLines) > 5) {
+            return redirect()->back()->withInput()->with('error', 'You can issue up to five medicines per consultation.');
+        }
+
+        $completedAppointment = DB::transaction(function () use ($request, $student, $medicineLines, $requestedSource, $consultationStartedAt) {
             $isOnlineSource = $requestedSource === 'online';
             $finalSource = 'walkin';
             $patientType = Appointment::normalizeUserType($student->user_role ?? $student->user_type);
@@ -2277,44 +2317,56 @@ PROMPT;
                 $completedAppointment = $appointment;
             }
 
-            // --- MEDICINE LOGIC ---
-            $medicineName = 'None';
-            if ($dispensedItem) {
-                $item = Item::query()->lockForUpdate()->find($dispensedItem->id);
-                $medicineName = $item ? $item->name : 'None';
+            // Deduct every selected medicine atomically and keep a movement per item.
+            $medicineRecords = [];
+            foreach ($medicineLines as $line) {
+                $item = Item::query()->lockForUpdate()->find($line['item_id']);
+                $issuedQuantity = (float) $line['quantity'];
 
-                if ($item && $issuedQuantity > 0) {
-                    $availableDispensingQuantity = $item->availableDispensingQuantity();
-                    if ($issuedQuantity - $availableDispensingQuantity > 0.00001) {
-                        throw \Illuminate\Validation\ValidationException::withMessages([
-                            'issued_quantity' => ['The selected medicine no longer has enough stock for that quantity.'],
-                        ]);
-                    }
-
-                    $stockDeduction = $item->convertDispensingQuantityToStockQuantity($issuedQuantity);
-                    $stockBefore = (float) $item->quantity;
-                    $stockAfter = max(0, $stockBefore - $stockDeduction);
-                    $item->quantity = $stockAfter;
-                    $item->consumed = max(0, (float) ($item->consumed ?? 0)) + $stockDeduction;
-                    $item->save();
-
-                    InventoryMovement::create([
-                        'item_id' => $item->id,
-                        'user_id' => auth()->id(),
-                        'type' => 'consumed',
-                        'quantity' => -1 * $stockDeduction,
-                        'stock_before' => $stockBefore,
-                        'stock_after' => $stockAfter,
-                        'unit' => $item->unit ?: 'pcs',
-                        'batch_number' => $item->batch_number,
-                        'supplier_source' => $item->supplier_source,
-                        'notes' => 'Issued during consultation.',
+                if (!$item) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'item_id' => ['One of the selected medicines could not be found.'],
                     ]);
                 }
+
+                $availableDispensingQuantity = $item->availableDispensingQuantity();
+                if ($issuedQuantity - $availableDispensingQuantity > 0.00001) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'issued_quantity' => ['One of the selected medicines no longer has enough stock.'],
+                    ]);
+                }
+
+                $stockDeduction = $item->convertDispensingQuantityToStockQuantity($issuedQuantity);
+                $stockBefore = (float) $item->quantity;
+                $stockAfter = max(0, $stockBefore - $stockDeduction);
+                $item->quantity = $stockAfter;
+                $item->consumed = max(0, (float) ($item->consumed ?? 0)) + $stockDeduction;
+                $item->save();
+
+                InventoryMovement::create([
+                    'item_id' => $item->id,
+                    'user_id' => auth()->id(),
+                    'type' => 'consumed',
+                    'quantity' => -1 * $stockDeduction,
+                    'stock_before' => $stockBefore,
+                    'stock_after' => $stockAfter,
+                    'unit' => $item->unit ?: 'pcs',
+                    'batch_number' => $item->batch_number,
+                    'supplier_source' => $item->supplier_source,
+                    'notes' => 'Issued during consultation.',
+                ]);
+
+                $medicineRecords[] = [
+                    'item_id' => $item->id,
+                    'medicine' => $item->name,
+                    'quantity' => $issuedQuantity,
+                ];
             }
 
+            $firstMedicine = $medicineRecords[0] ?? null;
+
             // --- SAVE TO CONSULTATIONS TABLE ---
-            \App\Models\Consultation::create([
+            $consultation = Consultation::create([
                 'user_id'              => $student->id,
                 'attending_staff_id'   => auth()->id(),
                 'attending_staff_name' => auth()->user()?->name ?? auth()->user()?->email ?? 'Clinic Staff',
@@ -2337,11 +2389,21 @@ PROMPT;
                 'covid_positive_date'  => $request->input('covid_positive_date'),
                 'reason_for_visit'     => $request->input('reason_for_visit'),
                 'certificate_type'     => $request->input('certificate_type') ?: 'none',
-                'medicine'             => $medicineName,
-                'item_id'              => $dispensedItem?->id,
-                'medicine_quantity'    => $issuedQuantity > 0 ? $issuedQuantity : 0,
+                // Keep the first line in the legacy columns for existing reports and exports.
+                'medicine'             => $firstMedicine['medicine'] ?? 'None',
+                'item_id'              => $firstMedicine['item_id'] ?? null,
+                'medicine_quantity'    => $firstMedicine['quantity'] ?? 0,
                 'comments'             => $request->remarks,
             ]);
+
+            foreach ($medicineRecords as $medicineRecord) {
+                ConsultationMedicine::create([
+                    'consultation_id' => $consultation->id,
+                    'item_id' => $medicineRecord['item_id'],
+                    'medicine' => $medicineRecord['medicine'],
+                    'quantity' => $medicineRecord['quantity'],
+                ]);
+            }
 
             return $completedAppointment;
         });

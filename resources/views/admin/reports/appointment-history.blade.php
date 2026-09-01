@@ -631,8 +631,13 @@
                                 $visitDate = $cons?->consultation_date ?: $appt?->date;
                                 $timeIn = $cons?->time_in ?: $appt?->time;
                                 $service = $cons?->service ?: $appt?->service;
-                                $medicine = trim((string) ($cons?->medicine ?? ''));
-                                $quantity = $cons?->medicine_quantity;
+                                $medicineLines = $cons?->medicines?->filter(fn ($line) => trim((string) ($line->medicine ?: optional($line->item)->name)) !== '') ?? collect();
+                                $medicine = $medicineLines->isNotEmpty()
+                                    ? $medicineLines->map(fn ($line) => $line->medicine ?: optional($line->item)->name)->implode(', ')
+                                    : trim((string) ($cons?->medicine ?? ''));
+                                $quantity = $medicineLines->isNotEmpty()
+                                    ? $medicineLines->map(fn ($line) => rtrim(rtrim(number_format((float) $line->quantity, 2, '.', ''), '0'), '.'))->implode(', ')
+                                    : $cons?->medicine_quantity;
                                 $complaint = trim((string) ($appt?->problem ?: $cons?->reason_for_visit));
                                 $impression = trim((string) ($cons?->comments ?? ''));
                                 $staff = $cons

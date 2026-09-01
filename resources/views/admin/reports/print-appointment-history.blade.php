@@ -175,8 +175,17 @@
                             <td>{{ $formatTime($timeIn) }}</td>
                             <td>{{ $validTimeOut($timeIn, $cons?->time_out) }}</td>
                             <td>{{ $cons?->service ?: $appt?->service ?: '-' }}</td>
-                            <td>{{ $cons && $cons->medicine ? $cons->medicine : ($appt?->notes ?? $appt?->remarks ?? '-') }}</td>
-                            <td>{{ $cons && $cons->medicine_quantity ? $cons->medicine_quantity : '-' }}</td>
+                            @php
+                                $medicineLines = $cons?->medicines?->filter(fn ($line) => trim((string) ($line->medicine ?: optional($line->item)->name)) !== '') ?? collect();
+                                $medicineNames = $medicineLines->isNotEmpty()
+                                    ? $medicineLines->map(fn ($line) => $line->medicine ?: optional($line->item)->name)->implode(', ')
+                                    : ($cons && $cons->medicine ? $cons->medicine : ($appt?->notes ?? $appt?->remarks ?? '-'));
+                                $medicineQuantities = $medicineLines->isNotEmpty()
+                                    ? $medicineLines->map(fn ($line) => rtrim(rtrim(number_format((float) $line->quantity, 2, '.', ''), '0'), '.'))->implode(', ')
+                                    : ($cons && $cons->medicine_quantity ? $cons->medicine_quantity : '-');
+                            @endphp
+                            <td>{{ $medicineNames }}</td>
+                            <td>{{ $medicineQuantities }}</td>
                             <td>{{ $cons && $cons->pulse_rate ? $cons->pulse_rate . ' bpm' : '-' }}</td>
                             <td>{{ $cons && $cons->respiratory_rate ? $cons->respiratory_rate . ' /min' : '-' }}</td>
                             <td>{{ $cons && $cons->temperature ? $cons->temperature . '°C' : '-' }}</td>

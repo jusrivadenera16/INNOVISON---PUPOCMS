@@ -433,6 +433,147 @@
     .medicine-quantity-group.is-visible {
         display: block;
     }
+    .medicine-entries {
+        display: grid;
+        gap: 12px;
+    }
+    .medicine-entry {
+        display: none;
+        padding: 14px;
+        border: 1px solid rgba(127, 29, 45, .16);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 5px 14px rgba(127, 29, 45, .05);
+    }
+    .medicine-entry.is-visible {
+        display: block;
+        animation: medicineEntryIn .2s ease;
+    }
+    .medicine-entry-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .medicine-entry-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #7f1d2d;
+        font-size: .8rem;
+        font-weight: 800;
+        letter-spacing: .02em;
+        text-transform: uppercase;
+    }
+    .medicine-entry-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        background: #7f1d2d;
+        color: #fff;
+        font-size: .72rem;
+    }
+    .medicine-remove-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border: 1px solid rgba(127, 29, 45, .2);
+        border-radius: 7px;
+        background: #fff7f8;
+        color: #991b1b;
+        cursor: pointer;
+        transition: background-color .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .medicine-remove-button:hover,
+    .medicine-remove-button:focus-visible {
+        border-color: #7f1d2d;
+        background: #7f1d2d;
+        color: #fff;
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .medicine-remove-button svg {
+        width: 16px;
+        height: 16px;
+    }
+    .medicine-entry .form-group {
+        margin-bottom: 10px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+    .medicine-entry .form-group:last-child {
+        margin-bottom: 0;
+    }
+    .medicine-entry .medicine-quantity-group {
+        display: none;
+    }
+    .medicine-entry .medicine-quantity-group.is-visible {
+        display: block;
+    }
+    .medicine-entry .form-control {
+        min-height: 42px;
+    }
+    .medicine-add-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 12px;
+    }
+    .medicine-add-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        width: 100%;
+        min-height: 40px;
+        padding: 9px 14px;
+        border: 1px dashed rgba(127, 29, 45, .42);
+        border-radius: 8px;
+        background: #fffafb;
+        color: #7f1d2d;
+        font-size: .8rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background-color .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+    }
+    .medicine-add-button:hover,
+    .medicine-add-button:focus-visible {
+        border-color: #7f1d2d;
+        background: #7f1d2d;
+        color: #fff;
+        transform: translateY(-1px);
+        outline: none;
+    }
+    .medicine-add-button:disabled {
+        cursor: not-allowed;
+        opacity: .45;
+        transform: none;
+    }
+    .medicine-add-button svg {
+        width: 17px;
+        height: 17px;
+    }
+    .medicine-selection-count {
+        flex: 0 0 auto;
+        color: #7f1d2d;
+        font-size: .74rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+    @keyframes medicineEntryIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
     .form-actions {
         display: flex;
         align-items: center;
@@ -1657,6 +1798,27 @@
     .consultation-main .btn-cancel:focus::before {
         transform: translateX(0);
     }
+    .consultation-form-alert {
+        display: grid;
+        gap: 5px;
+        margin: 0 0 18px;
+        padding: 13px 16px;
+        border: 1px solid #fca5a5;
+        border-left: 4px solid #b91c1c;
+        border-radius: 10px;
+        background: #fff1f2;
+        color: #7f1d1d;
+        font-size: .84rem;
+        line-height: 1.45;
+    }
+    .consultation-form-alert strong {
+        color: #991b1b;
+        font-weight: 800;
+    }
+    .consultation-form-alert ul {
+        margin: 3px 0 0 18px;
+        padding: 0;
+    }
 
     /* Dark mode overrides for the consultation form's health-profile styling. */
     html[data-theme="dark"] .consultation-main {
@@ -1813,6 +1975,62 @@
         border-color: #facc15;
         color: #70131b;
     }
+    html[data-theme="dark"] .consultation-main .medicine-entry {
+        border-color: #3b475b;
+        background: #111827;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, .24);
+    }
+    html[data-theme="dark"] .consultation-main .medicine-entry-title {
+        color: #facc15;
+    }
+    html[data-theme="dark"] .consultation-main .medicine-entry-number {
+        background: #8f2230;
+        color: #facc15;
+    }
+    html[data-theme="dark"] .consultation-main .medicine-remove-button {
+        border-color: #536076;
+        background: #202a3a;
+        color: #fca5a5;
+    }
+    html[data-theme="dark"] .consultation-main .medicine-remove-button:hover,
+    html[data-theme="dark"] .consultation-main .medicine-remove-button:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+    }
+    html[data-theme="dark"] .consultation-main .medicine-add-button {
+        border-color: rgba(250, 204, 21, .46);
+        background: #182235;
+        color: #facc15;
+    }
+    html[data-theme="dark"] .consultation-main .medicine-add-button:hover,
+    html[data-theme="dark"] .consultation-main .medicine-add-button:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+    }
+    html[data-theme="dark"] .consultation-main .medicine-selection-count {
+        color: #facc15;
+    }
+    html[data-theme="dark"] .consultation-main .selected-stock {
+        border-color: rgba(250, 204, 21, .24);
+        background: #2b2114;
+        color: #facc15;
+    }
+    html[data-theme="dark"] .consultation-main .selected-stock.low {
+        border-color: rgba(248, 113, 113, .3);
+        background: #351b24;
+        color: #fca5a5;
+    }
+    html[data-theme="dark"] .consultation-form-alert {
+        border-color: rgba(248, 113, 113, .46);
+        border-left-color: #f87171;
+        background: #351b24;
+        color: #fecaca;
+    }
+    html[data-theme="dark"] .consultation-form-alert strong {
+        color: #fca5a5;
+    }
     @media (max-width: 820px) {
         .consultation-main .patient-header {
             grid-template-columns: 1fr;
@@ -1834,9 +2052,9 @@
 
 @section('content')
 @php
-    $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
-    $walkinStoreRoute = $role === \App\Models\User::ROLE_ADMIN ? 'assistant.walkin.store' : 'walkin.store';
-    $walkinIndexRoute = $role === \App\Models\User::ROLE_ADMIN ? 'assistant.walkin.index' : 'walkin.index';
+    $isAssistantWorkspace = request()->is('assistant/*');
+    $walkinStoreRoute = $isAssistantWorkspace ? 'assistant.walkin.store' : 'walkin.store';
+    $walkinIndexRoute = $isAssistantWorkspace ? 'assistant.walkin.index' : 'walkin.index';
     $studentDisplayRole = \App\Models\Appointment::normalizeUserType($student->user_role ?? $student->user_type ?? 'Student');
     $isAssistedIntake = ($user_source ?? '') === 'assisted';
     $studentDocuments = $studentDocuments ?? [];
@@ -1899,6 +2117,22 @@
                 </div>
             </div>
         </header>
+
+        @if(session('error') || $errors->any())
+            <div class="consultation-form-alert" role="alert">
+                <strong>Consultation was not saved.</strong>
+                @if(session('error'))
+                    <span>{{ session('error') }}</span>
+                @endif
+                @if($errors->any())
+                    <ul>
+                        @foreach($errors->all() as $validationError)
+                            <li>{{ $validationError }}</li>
+                        @endforeach
+                    </ul>
+                @endif
+            </div>
+        @endif
 
         <form action="{{ route($walkinStoreRoute) }}" method="POST" id="consultationForm">
             @csrf
@@ -2044,44 +2278,76 @@
                         </div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="consultMedicineSelect">Select Medicine (Inventory)</label>
-                    <div class="medicine-selection-row">
-                        <select name="item_id" id="consultMedicineSelect" class="form-control" data-clinic-select>
-                            <option value="">-- No Medicine Issued --</option>
-                            @foreach($items as $item)
-                                @php
-                                    $availableDispensingQuantity = $item->hasDispensingConversion()
-                                        ? $item->availableDispensingQuantity()
-                                        : (float) $item->quantity;
-                                    $issueUnit = $item->hasDispensingConversion()
-                                        ? ($item->dispensing_unit ?: $item->unit)
-                                        : ($item->unit ?: 'pcs');
-                                    $stockDisplay = rtrim(rtrim(number_format((float) $item->quantity, 2, '.', ''), '0'), '.');
-                                    $availableDisplay = rtrim(rtrim(number_format($availableDispensingQuantity, 2, '.', ''), '0'), '.');
-                                    $isLowStock = (float) $item->quantity <= (float) ($item->minimum_stock ?? 0);
-                                @endphp
-                                <option
-                                    value="{{ $item->id }}"
-                                    data-stock-unit="{{ $item->unit ?: 'pcs' }}"
-                                    data-dispensing-unit="{{ $issueUnit }}"
-                                    data-has-conversion="{{ $item->hasDispensingConversion() ? '1' : '0' }}"
-                                    data-units-per-stock="{{ $item->units_per_stock_unit ?: 1 }}"
-                                    data-available-dispensing="{{ $availableDispensingQuantity }}"
-                                    data-low-stock="{{ $isLowStock ? '1' : '0' }}"
-                                    {{ (string) old('item_id') === (string) $item->id ? 'selected' : '' }}
-                                >
-                                    {{ $item->name }} (Available: {{ $availableDisplay }} {{ $issueUnit }}@if($item->hasDispensingConversion()) | {{ $stockDisplay }} {{ $item->unit }}@endif)
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="selected-stock" id="selectedMedicineStock" aria-live="polite"></div>
+                @php
+                    $oldMedicineIds = old('item_id', []);
+                    $oldMedicineQuantities = old('issued_quantity', []);
+                    $oldMedicineIds = is_array($oldMedicineIds) ? $oldMedicineIds : [$oldMedicineIds];
+                    $oldMedicineQuantities = is_array($oldMedicineQuantities) ? $oldMedicineQuantities : [$oldMedicineQuantities];
+                @endphp
+                <div class="medicine-entries" id="medicineEntries">
+                    @for($medicineIndex = 0; $medicineIndex < 5; $medicineIndex++)
+                        @php
+                            $oldMedicineId = trim((string) ($oldMedicineIds[$medicineIndex] ?? ''));
+                            $oldMedicineQuantity = $oldMedicineQuantities[$medicineIndex] ?? '';
+                        @endphp
+                        <div class="medicine-entry {{ $medicineIndex === 0 || $oldMedicineId !== '' ? 'is-visible' : '' }}" data-medicine-entry data-index="{{ $medicineIndex }}">
+                            <div class="medicine-entry-head">
+                                <div class="medicine-entry-title">
+                                    <span class="medicine-entry-number">{{ $medicineIndex + 1 }}</span>
+                                    <span>Medicine {{ str_pad((string) ($medicineIndex + 1), 2, '0', STR_PAD_LEFT) }}</span>
+                                </div>
+                                <button type="button" class="medicine-remove-button" data-remove-medicine aria-label="Remove medicine {{ $medicineIndex + 1 }}" title="Remove medicine">
+                                    <x-outline-icon name="trash" />
+                                </button>
+                            </div>
+                            <div class="form-group">
+                                <label for="consultMedicineSelect{{ $medicineIndex }}">Select Medicine (Inventory)</label>
+                                <div class="medicine-selection-row">
+                                    <select name="item_id[]" id="consultMedicineSelect{{ $medicineIndex }}" class="form-control" data-medicine-select data-clinic-select>
+                                        <option value="">-- No Medicine Issued --</option>
+                                        @foreach($items as $item)
+                                            @php
+                                                $availableDispensingQuantity = $item->hasDispensingConversion()
+                                                    ? $item->availableDispensingQuantity()
+                                                    : (float) $item->quantity;
+                                                $issueUnit = $item->hasDispensingConversion()
+                                                    ? ($item->dispensing_unit ?: $item->unit)
+                                                    : ($item->unit ?: 'pcs');
+                                                $stockDisplay = rtrim(rtrim(number_format((float) $item->quantity, 2, '.', ''), '0'), '.');
+                                                $availableDisplay = rtrim(rtrim(number_format($availableDispensingQuantity, 2, '.', ''), '0'), '.');
+                                                $isLowStock = (float) $item->quantity <= (float) ($item->minimum_stock ?? 0);
+                                            @endphp
+                                            <option
+                                                value="{{ $item->id }}"
+                                                data-stock-unit="{{ $item->unit ?: 'pcs' }}"
+                                                data-dispensing-unit="{{ $issueUnit }}"
+                                                data-has-conversion="{{ $item->hasDispensingConversion() ? '1' : '0' }}"
+                                                data-units-per-stock="{{ $item->units_per_stock_unit ?: 1 }}"
+                                                data-available-dispensing="{{ $availableDispensingQuantity }}"
+                                                data-low-stock="{{ $isLowStock ? '1' : '0' }}"
+                                                {{ $oldMedicineId === (string) $item->id ? 'selected' : '' }}
+                                            >
+                                                {{ $item->name }} (Available: {{ $availableDisplay }} {{ $issueUnit }}@if($item->hasDispensingConversion()) | {{ $stockDisplay }} {{ $item->unit }}@endif)
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="selected-stock" data-selected-stock aria-live="polite"></div>
+                            </div>
+                            <div class="form-group medicine-quantity-group" data-medicine-quantity-group>
+                                <label data-quantity-label for="consultIssuedQuantityInput{{ $medicineIndex }}">Quantity to Issue</label>
+                                <input type="number" name="issued_quantity[]" id="consultIssuedQuantityInput{{ $medicineIndex }}" class="form-control" data-medicine-quantity min="0" step="0.01" placeholder="Enter amount" value="{{ $oldMedicineQuantity }}">
+                                <div class="form-help" data-quantity-help>Select a medicine to see the dispensing unit and available stock.</div>
+                            </div>
+                        </div>
+                    @endfor
                 </div>
-                <div class="form-group medicine-quantity-group" id="consultMedicineQuantityGroup">
-                    <label id="consultIssuedQuantityLabel" for="consultIssuedQuantityInput">Quantity to Issue</label>
-                    <input type="number" name="issued_quantity" id="consultIssuedQuantityInput" class="form-control" min="0" step="0.01" placeholder="Enter amount" value="{{ old('issued_quantity') }}">
-                    <div class="form-help" id="consultIssuedQuantityHelp">Select a medicine to see the dispensing unit and available stock.</div>
+                <div class="medicine-add-row">
+                    <button type="button" class="medicine-add-button" id="addMedicineButton">
+                        <x-outline-icon name="plus-circle" />
+                        <span>Add Another Medicine</span>
+                    </button>
+                    <span class="medicine-selection-count" id="medicineSelectionCount">0 of 5 selected</span>
                 </div>
             </section>
 
@@ -2257,14 +2523,19 @@
                 </thead>
                 <tbody>
                     @php
-                        $recentConsultations = $student ? \App\Models\Consultation::where('user_id', $student->id)->orderByDesc('created_at')->get() : collect();
+                        $recentConsultations = $student ? \App\Models\Consultation::with(['medicineItem', 'medicines.item'])->where('user_id', $student->id)->orderByDesc('created_at')->get() : collect();
                     @endphp
                     @if($student && $recentConsultations->count())
                         @forelse($recentConsultations as $consultation)
                             @php
-                                $consultMedicine = trim((string) (optional($consultation->medicineItem)->name ?: $consultation->medicine));
+                                $consultationMedicineLines = $consultation->medicines->filter(fn ($line) => trim((string) ($line->medicine ?: optional($line->item)->name)) !== '');
+                                $consultMedicine = $consultationMedicineLines->isNotEmpty()
+                                    ? $consultationMedicineLines->map(fn ($line) => $line->medicine ?: optional($line->item)->name)->implode(', ')
+                                    : trim((string) (optional($consultation->medicineItem)->name ?: $consultation->medicine));
                                 $consultStaff = trim((string) ($consultation->attending_staff_name ?: optional($consultation->attendingStaff)->name));
-                                $consultQuantity = (float) $consultation->medicine_quantity;
+                                $consultQuantity = $consultationMedicineLines->isNotEmpty()
+                                    ? $consultationMedicineLines->map(fn ($line) => rtrim(rtrim(number_format((float) $line->quantity, 2, '.', ''), '0'), '.'))->implode(', ')
+                                    : ((float) $consultation->medicine_quantity > 0 ? rtrim(rtrim(number_format((float) $consultation->medicine_quantity, 2, '.', ''), '0'), '.') : '');
                                 $consultTimeIn = $consultation->time_in ?: optional($consultation->created_at)->format('H:i:s');
                                 $consultTimeOut = $consultation->time_out ?: optional($consultation->updated_at)->format('H:i:s');
                                 $consultComplaint = trim((string) $consultation->reason_for_visit);
@@ -2286,7 +2557,7 @@
                                     </span>
                                 </td>
                                 <td>{{ $consultMedicine !== '' && strtolower($consultMedicine) !== 'none' ? $consultMedicine : 'No medicine issued' }}</td>
-                                <td class="treatment-quantity-col">{{ $consultQuantity > 0 ? rtrim(rtrim(number_format($consultQuantity, 2, '.', ''), '0'), '.') : '-' }}</td>
+                                <td class="treatment-quantity-col">{{ $consultQuantity !== '' ? $consultQuantity : '-' }}</td>
                                 <td>{{ $consultStaff ?: 'Clinic Staff' }}</td>
                             </tr>
                         @empty
@@ -2323,9 +2594,14 @@
                 <tbody>
                     @forelse($studentTreatments as $treatment)
                         @php
-                            $treatmentMedicine = trim((string) (optional($treatment->medicineItem)->name ?: $treatment->medicine));
+                            $treatmentMedicineLines = $treatment->medicines->filter(fn ($line) => trim((string) ($line->medicine ?: optional($line->item)->name)) !== '');
+                            $treatmentMedicine = $treatmentMedicineLines->isNotEmpty()
+                                ? $treatmentMedicineLines->map(fn ($line) => $line->medicine ?: optional($line->item)->name)->implode(', ')
+                                : trim((string) (optional($treatment->medicineItem)->name ?: $treatment->medicine));
                             $treatmentStaff = trim((string) ($treatment->attending_staff_name ?: optional($treatment->attendingStaff)->name));
-                            $treatmentQuantity = (float) $treatment->medicine_quantity;
+                            $treatmentQuantity = $treatmentMedicineLines->isNotEmpty()
+                                ? $treatmentMedicineLines->map(fn ($line) => rtrim(rtrim(number_format((float) $line->quantity, 2, '.', ''), '0'), '.'))->implode(', ')
+                                : ((float) $treatment->medicine_quantity > 0 ? rtrim(rtrim(number_format((float) $treatment->medicine_quantity, 2, '.', ''), '0'), '.') : '');
                             $treatmentTimeIn = $treatment->time_in ?: optional($treatment->created_at)->format('H:i:s');
                             $treatmentTimeOut = $treatment->time_out ?: optional($treatment->updated_at)->format('H:i:s');
                             $treatmentComplaint = trim((string) $treatment->reason_for_visit);
@@ -2347,7 +2623,7 @@
                                 </span>
                             </td>
                             <td>{{ $treatmentMedicine !== '' && strtolower($treatmentMedicine) !== 'none' ? $treatmentMedicine : 'No medicine issued' }}</td>
-                            <td class="treatment-quantity-col">{{ $treatmentQuantity > 0 ? rtrim(rtrim(number_format($treatmentQuantity, 2, '.', ''), '0'), '.') : '-' }}</td>
+                            <td class="treatment-quantity-col">{{ $treatmentQuantity !== '' ? $treatmentQuantity : '-' }}</td>
                             <td>{{ $treatmentStaff ?: 'Clinic Staff' }}</td>
                         </tr>
                     @empty
@@ -2363,12 +2639,9 @@
 
 <script>
     (function () {
-        const medicineSelect = document.getElementById('consultMedicineSelect');
-        const quantityLabel = document.getElementById('consultIssuedQuantityLabel');
-        const quantityHelp = document.getElementById('consultIssuedQuantityHelp');
-        const quantityInput = document.getElementById('consultIssuedQuantityInput');
-        const quantityGroup = document.getElementById('consultMedicineQuantityGroup');
-        const selectedStock = document.getElementById('selectedMedicineStock');
+        const medicineEntries = Array.from(document.querySelectorAll('[data-medicine-entry]'));
+        const addMedicineButton = document.getElementById('addMedicineButton');
+        const medicineSelectionCount = document.getElementById('medicineSelectionCount');
         const utilityPanel = document.getElementById('right-utility-panel');
         const utilityRail = document.getElementById('consultationUtilityRail');
         const utilityButtons = Array.from(document.querySelectorAll('[data-utility-target]'));
@@ -2594,15 +2867,20 @@
             }
         };
 
-        const updateMedicineStock = function () {
-            const selected = medicineSelect.options[medicineSelect.selectedIndex];
-            document.querySelectorAll('[data-inventory-item]').forEach(function (item) {
-                item.classList.toggle('selected', Boolean(selected && selected.value && item.dataset.inventoryItem === selected.value));
-            });
+        const updateMedicineEntry = function (entry) {
+            const select = entry.querySelector('[data-medicine-select]');
+            const quantityGroup = entry.querySelector('[data-medicine-quantity-group]');
+            const quantityInput = entry.querySelector('[data-medicine-quantity]');
+            const quantityLabel = entry.querySelector('[data-quantity-label]');
+            const quantityHelp = entry.querySelector('[data-quantity-help]');
+            const selectedStock = entry.querySelector('[data-selected-stock]');
+            const selected = select?.options[select.selectedIndex];
+
+            if (!select || !quantityInput || !quantityGroup || !quantityLabel || !quantityHelp || !selectedStock) return;
 
             quantityInput.setCustomValidity('');
             if (!selected || !selected.value) {
-                quantityGroup?.classList.remove('is-visible');
+                quantityGroup.classList.remove('is-visible');
                 quantityLabel.textContent = 'Quantity to Issue';
                 quantityHelp.textContent = 'Select a medicine to see the dispensing unit and available stock.';
                 quantityInput.placeholder = 'Enter amount';
@@ -2614,7 +2892,6 @@
             }
 
             const dispensingUnit = selected.dataset.dispensingUnit || selected.dataset.stockUnit || 'unit';
-            quantityGroup?.classList.add('is-visible');
             const stockUnit = selected.dataset.stockUnit || 'pcs';
             const availableValue = Number(selected.dataset.availableDispensing || 0);
             const available = formatQty(availableValue);
@@ -2622,6 +2899,7 @@
             const unitsPerStock = formatQty(selected.dataset.unitsPerStock || 1);
             const isLowStock = selected.dataset.lowStock === '1';
 
+            quantityGroup.classList.add('is-visible');
             quantityLabel.textContent = 'Quantity to Issue (' + dispensingUnit + ')';
             quantityInput.placeholder = 'Enter ' + dispensingUnit + ' quantity';
             quantityInput.max = String(availableValue);
@@ -2631,6 +2909,70 @@
             selectedStock.className = 'selected-stock visible' + (isLowStock ? ' low' : '');
             selectedStock.textContent = (isLowStock ? 'Low stock: ' : 'Available: ') + available + ' ' + dispensingUnit;
         };
+
+        const updateMedicineSelections = function () {
+            const selectedIds = medicineEntries
+                .map(function (entry) { return entry.querySelector('[data-medicine-select]')?.value || ''; })
+                .filter(Boolean);
+
+            document.querySelectorAll('[data-inventory-item]').forEach(function (item) {
+                item.classList.toggle('selected', selectedIds.includes(item.dataset.inventoryItem));
+            });
+
+            if (medicineSelectionCount) {
+                medicineSelectionCount.textContent = selectedIds.length + ' of 5 selected';
+            }
+            if (addMedicineButton) {
+                addMedicineButton.disabled = medicineEntries.every(function (entry) {
+                    return entry.classList.contains('is-visible');
+                });
+            }
+        };
+
+        const showNextMedicineEntry = function () {
+            const nextEntry = medicineEntries.find(function (entry) {
+                return !entry.classList.contains('is-visible');
+            });
+
+            if (!nextEntry) return null;
+            nextEntry.classList.add('is-visible');
+            updateMedicineEntry(nextEntry);
+            updateMedicineSelections();
+            nextEntry.querySelector('[data-medicine-select]')?.focus();
+            return nextEntry;
+        };
+
+        medicineEntries.forEach(function (entry) {
+            const select = entry.querySelector('[data-medicine-select]');
+            const quantityInput = entry.querySelector('[data-medicine-quantity]');
+            const removeButton = entry.querySelector('[data-remove-medicine]');
+
+            select?.addEventListener('change', function () {
+                updateMedicineEntry(entry);
+                updateMedicineSelections();
+            });
+            quantityInput?.addEventListener('input', function () {
+                const selected = select?.options[select.selectedIndex];
+                const available = selected && selected.value ? Number(selected.dataset.availableDispensing || 0) : 0;
+                const requested = Number(quantityInput.value || 0);
+                quantityInput.setCustomValidity(requested > available ? 'Quantity cannot exceed the available medicine stock.' : '');
+            });
+            removeButton?.addEventListener('click', function () {
+                if (select) {
+                    select.value = '';
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                if (quantityInput) quantityInput.value = '';
+
+                if (entry.dataset.index !== '0') {
+                    entry.classList.remove('is-visible');
+                }
+                updateMedicineEntry(entry);
+                updateMedicineSelections();
+            });
+        });
+
+        addMedicineButton?.addEventListener('click', showNextMedicineEntry);
 
         const closeClinicSelects = function (exceptShell) {
             document.querySelectorAll('.clinic-select-shell.is-open').forEach(function (shell) {
@@ -2665,7 +3007,7 @@
             // Add search input for searchable dropdowns
             let searchInput = null;
             const isConditionSelect = select.id === 'consultCondition';
-            const isMedicineSelect = select.id === 'consultMedicineSelect';
+            const isMedicineSelect = select.matches('[data-medicine-select]');
             const isSearchable = isConditionSelect || isMedicineSelect;
 
             if (isSearchable) {
@@ -2759,20 +3101,29 @@
         issueButtons.forEach(function (button) {
             button.addEventListener('click', function () {
                 const itemId = button.dataset.issueMedicine || '';
-                const option = Array.from(medicineSelect.options).find(function (medicineOption) {
-                    return medicineOption.value === itemId;
+                let targetEntry = medicineEntries.find(function (entry) {
+                    const select = entry.querySelector('[data-medicine-select]');
+                    return entry.classList.contains('is-visible') && select && !select.value;
                 });
-                if (!option) return;
+
+                if (!targetEntry) targetEntry = showNextMedicineEntry();
+                const medicineSelect = targetEntry?.querySelector('[data-medicine-select]');
+                const option = medicineSelect
+                    ? Array.from(medicineSelect.options).find(function (medicineOption) {
+                        return medicineOption.value === itemId;
+                    })
+                    : null;
+                if (!medicineSelect || !option) return;
 
                 medicineSelect.value = itemId;
                 medicineSelect.dispatchEvent(new Event('change', { bubbles: true }));
                 closeUtility();
-                medicineSelect.closest('.consult-card')?.scrollIntoView({
+                targetEntry.closest('.consult-card')?.scrollIntoView({
                     behavior: 'smooth',
                     block: 'center'
                 });
                 window.setTimeout(function () {
-                    quantityInput.focus();
+                    targetEntry.querySelector('[data-medicine-quantity]')?.focus();
                 }, 350);
             });
         });
@@ -2794,13 +3145,6 @@
             setInventorySearchOpen(true);
         });
 
-        quantityInput.addEventListener('input', function () {
-            const selected = medicineSelect.options[medicineSelect.selectedIndex];
-            const available = selected && selected.value ? Number(selected.dataset.availableDispensing || 0) : 0;
-            const requested = Number(quantityInput.value || 0);
-            quantityInput.setCustomValidity(requested > available ? 'Quantity cannot exceed the available medicine stock.' : '');
-        });
-        medicineSelect.addEventListener('change', updateMedicineStock);
         utilityButtons.forEach(function (button) {
             button.setAttribute('aria-expanded', 'false');
             button.addEventListener('click', function () {
@@ -2854,7 +3198,8 @@
             }, 850);
         });
 
-        updateMedicineStock();
+        medicineEntries.forEach(updateMedicineEntry);
+        updateMedicineSelections();
     })();
 </script>
 @endsection

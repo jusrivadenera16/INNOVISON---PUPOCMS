@@ -729,8 +729,13 @@
                             $courseDepartment = trim(implode(' / ', array_filter([$course, $yearSection])));
                             $complaint = trim((string) $consultation->reason_for_visit);
                             $impression = trim((string) $consultation->comments);
-                            $medicineName = trim((string) (optional($consultation->medicineItem)->name ?: $consultation->medicine));
-                            $medicineQuantity = (float) $consultation->medicine_quantity;
+                            $medicineLines = $consultation->medicines->filter(fn ($line) => trim((string) ($line->medicine ?: optional($line->item)->name)) !== '');
+                            $medicineName = $medicineLines->isNotEmpty()
+                                ? $medicineLines->map(fn ($line) => $line->medicine ?: optional($line->item)->name)->implode(', ')
+                                : trim((string) (optional($consultation->medicineItem)->name ?: $consultation->medicine));
+                            $medicineQuantity = $medicineLines->isNotEmpty()
+                                ? $medicineLines->map(fn ($line) => rtrim(rtrim(number_format((float) $line->quantity, 2, '.', ''), '0'), '.'))->implode(', ')
+                                : ((float) $consultation->medicine_quantity > 0 ? rtrim(rtrim(number_format((float) $consultation->medicine_quantity, 2, '.', ''), '0'), '.') : '');
                             $staffName = trim((string) ($consultation->attending_staff_name ?: optional($consultation->attendingStaff)->name));
                             $timeIn = $consultation->time_in ?: optional($consultation->created_at)->format('H:i:s');
                             $timeOut = $consultation->time_out ?: optional($consultation->updated_at)->format('H:i:s');
@@ -765,7 +770,7 @@
                                 @endif
                             </td>
                             <td class="quantity-cell">
-                                {{ $medicineQuantity > 0 ? rtrim(rtrim(number_format($medicineQuantity, 2, '.', ''), '0'), '.') : '-' }}
+                                {{ $medicineQuantity !== '' ? $medicineQuantity : '-' }}
                             </td>
                             <td>{{ $staffName ?: 'Clinic Staff' }}</td>
                         </tr>
