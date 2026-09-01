@@ -9,6 +9,7 @@ use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
 use App\Models\EmployeeHealthProfile;
 use App\Models\HealthProfileStaff;
+use App\Models\AdminHub;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\ActivityLog;
@@ -263,6 +264,106 @@ class WalkInController extends Controller
     private function findUserByClinicIdNumber(string $identifier): ?User
     {
         return $this->findUserByEmployeeIdNumber($identifier);
+    }
+
+    private function findAdminHubByEmployeeLookup(string $identifier): ?AdminHub
+    {
+        $identifier = trim($identifier);
+        if ($identifier === '' || !\Schema::hasTable('admin_hub')) {
+            return null;
+        }
+
+        $normalizedIdentifier = strtoupper($identifier);
+
+        return AdminHub::query()
+            ->when(AdminHub::hasColumn('user_id'), fn ($query) => $query->with('user'))
+            ->where(function ($query) use ($identifier, $normalizedIdentifier) {
+                foreach (['employee_number', 'admin_uuid', 'email'] as $column) {
+                    if (AdminHub::hasColumn($column)) {
+                        $query->orWhere($column, $identifier)
+                            ->orWhereRaw('UPPER(TRIM(' . $column . ')) = ?', [$normalizedIdentifier]);
+                    }
+                }
+            })
+            ->first();
+    }
+
+    private function resolveLocalUserFromAdminHub(AdminHub $adminHub): ?User
+    {
+        if (AdminHub::hasColumn('user_id') && !empty($adminHub->user_id)) {
+            $linkedUser = User::find($adminHub->user_id);
+            if ($linkedUser) {
+                return $linkedUser;
+            }
+        }
+
+        $adminUuid = trim((string) ($adminHub->admin_uuid ?? ''));
+        if ($adminUuid !== '') {
+            $linkedUser = User::query()->where('student_id', $adminUuid)->first();
+            if ($linkedUser) {
+                return $linkedUser;
+            }
+        }
+
+        $email = trim((string) ($adminHub->email ?? ''));
+        if ($email !== '') {
+            $linkedUser = User::query()->where('email', $email)->first();
+            if ($linkedUser) {
+                return $linkedUser;
+            }
+        }
+
+        $employeeNumber = trim((string) ($adminHub->employee_number ?? ''));
+        if ($employeeNumber !== '' && \Schema::hasColumn('users', 'employee_number')) {
+            $linkedUser = User::query()->where('employee_number', $employeeNumber)->first();
+            if ($linkedUser) {
+                return $linkedUser;
+            }
+        }
+
+        $nameParts = [
+            trim((string) ($adminHub->first_name ?? '')),
+            trim((string) ($adminHub->middle_name ?? '')),
+            trim((string) ($adminHub->last_name ?? '')),
+            trim((string) ($adminHub->suffix_name ?? '')),
+        ];
+        $displayName = trim(implode(' ', array_filter($nameParts)))
+            ?: trim((string) ($adminHub->name ?? ''));
+
+        $user = new User();
+        $user->first_name = trim((string) ($adminHub->first_name ?? '')) ?: 'Faculty';
+        $user->middle_name = trim((string) ($adminHub->middle_name ?? '')) ?: null;
+        $user->last_name = trim((string) ($adminHub->last_name ?? '')) ?: 'User';
+        if (\Schema::hasColumn('users', 'suffix_name')) {
+            $user->suffix_name = trim((string) ($adminHub->suffix_name ?? '')) ?: null;
+        }
+        $user->name = $displayName;
+        $user->email = $email !== '' ? $email : Str::slug($employeeNumber ?: $adminUuid ?: Str::random(8), '.') . '@admin-hub.local';
+        $user->student_id = $this->resolveUniqueStudentId($adminUuid ?: ($employeeNumber !== '' ? 'admin-hub-' . $employeeNumber : 'admin-hub-' . Str::lower(Str::random(10))));
+        if (\Schema::hasColumn('users', 'employee_number')) {
+            $user->employee_number = $employeeNumber !== '' ? $employeeNumber : null;
+        }
+        if (\Schema::hasColumn('users', 'user_role')) {
+            $user->user_role = User::ROLE_ADMIN;
+        }
+        if (\Schema::hasColumn('users', 'idp_role')) {
+            $user->idp_role = 'faculty';
+        }
+        if (\Schema::hasColumn('users', 'user_type')) {
+            $user->user_type = 'faculty';
+        }
+        if (\Schema::hasColumn('users', 'status')) {
+            $user->status = trim((string) ($adminHub->status ?? 'active')) ?: 'active';
+        }
+        $user->password = Hash::make(Str::random(32));
+        $user->save();
+
+        if (AdminHub::hasColumn('user_id') && empty($adminHub->user_id)) {
+            $adminHub->user_id = $user->id;
+            $adminHub->save();
+        }
+
+        return $user;
     }
 
     private function findHealthProfileByReference(string $referenceNumber): ?HealthProfile
@@ -1490,6 +1591,15 @@ class WalkInController extends Controller
             if ($student) {
                 $lookupStatus = 'local_employee_id';
                 $lookupMessage = 'Employee or student ID number found in local records.';
+            } else {
+                $adminHub = $this->findAdminHubByEmployeeLookup($lookup);
+                if ($adminHub) {
+                    $student = $this->resolveLocalUserFromAdminHub($adminHub);
+                    if ($student) {
+                        $lookupStatus = 'local_admin_hub';
+                        $lookupMessage = 'Employee record found in Admin Hub.';
+                    }
+                }
             }
         } elseif (
             $lookup !== ''

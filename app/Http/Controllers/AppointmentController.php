@@ -2165,9 +2165,10 @@ class AppointmentController extends Controller
             (string) ($user->idp_role ?? ''),
             (string) data_get($user, 'adminProfile.access_level', ''),
             (string) data_get($user, 'adminHubProfile.role', ''),
+            (string) data_get($user, 'adminHubProfile.access_level', ''),
         ]))));
 
-        foreach (['faculty', 'admin', 'staff', 'employee', 'dependent'] as $needle) {
+        foreach (['faculty', 'admin', 'staff', 'employee', 'dependent', 'designee'] as $needle) {
             if (str_contains($markers, $needle)) {
                 return true;
             }
@@ -4121,7 +4122,7 @@ public function showHealthForm()
 
     // Refresh user from database to ensure all fields are populated
     if ($user) {
-        $user = User::with('adminProfile')->find($user->id);
+        $user = User::with(['adminProfile', 'adminHubProfile'])->find($user->id);
     }
 
     if ($this->shouldUseEmployeeHealthForm($user)) {
@@ -4168,7 +4169,7 @@ public function showEmployeeHealthForm()
     /** @var \App\Models\User|null $user */
     $user = Auth::guard('student')->user() ?: Auth::user();
     if ($user) {
-        $user = User::with(['adminProfile', 'employeeHealthProfile'])->find($user->id);
+        $user = User::with(['adminProfile', 'adminHubProfile', 'employeeHealthProfile'])->find($user->id);
     }
 
     if (!$user) {
