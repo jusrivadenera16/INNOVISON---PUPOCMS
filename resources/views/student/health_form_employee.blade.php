@@ -2595,14 +2595,18 @@
                                     <select id="course_college" name="course_college" class="form-select clinic-select-native">
                                         <option value="">Select course or Not Applicable</option>
                                         @foreach($employeeCourseOptions as $courseOption)
-                                            @php($courseValue = $courseOption['name'] ?? $courseOption['label'] ?? $courseOption['code'] ?? '')
+                                            @php
+                                                $courseValue = $courseOption['name'] ?? $courseOption['label'] ?? $courseOption['code'] ?? '';
+                                            @endphp
                                             <option value="{{ $courseValue }}" {{ $selectedEmployeeCourse === $courseValue ? 'selected' : '' }}>{{ $courseOption['label'] ?? $courseValue }}</option>
                                         @endforeach
                                     </select>
                                     <button type="button" class="clinic-select-display" aria-haspopup="listbox" aria-expanded="false">Select course or Not Applicable</button>
                                     <div class="clinic-select-menu" role="listbox" aria-label="Course or college options">
                                         @foreach($employeeCourseOptions as $courseOption)
-                                            @php($courseValue = $courseOption['name'] ?? $courseOption['label'] ?? $courseOption['code'] ?? '')
+                                            @php
+                                                $courseValue = $courseOption['name'] ?? $courseOption['label'] ?? $courseOption['code'] ?? '';
+                                            @endphp
                                             <button type="button" class="clinic-select-option" data-select-value="{{ $courseValue }}">{{ $courseOption['label'] ?? $courseValue }}</button>
                                         @endforeach
                                     </div>
@@ -2669,7 +2673,9 @@
                     <h2 class="section-title step-page-title" data-title-letter="M">Past Medical History</h2>
                     <p class="step-fill-note">Select all conditions that apply and provide details where needed.</p>
                     <h3 class="section-title" style="font-size:1rem;margin-bottom:10px;">Childhood Illness</h3>
-                    @php($pastMedicalItems = ['Asthma', 'Heart Disease', 'Seizure Disorder', 'Others', 'Chicken Pox', 'Measles', 'Hypertension'])
+                    @php
+                        $pastMedicalItems = ['Asthma', 'Heart Disease', 'Seizure Disorder', 'Others', 'Chicken Pox', 'Measles', 'Hypertension'];
+                    @endphp
                     <div class="checkbox-grid">
                         @foreach($pastMedicalItems as $item)
                             <label class="checkbox-card">
@@ -2728,7 +2734,9 @@
                 <div class="step-panel {{ $startStep === 3 ? '' : 'is-hidden' }}" id="stepPanel3">
                     <h2 class="section-title step-page-title" data-title-letter="F">Family History</h2>
                     <p class="step-fill-note">Select all family medical history that applies.</p>
-                    @php($familyHistoryItems = ['Diabetes', 'PTB', 'Hypertension', 'Cancer'])
+                    @php
+                        $familyHistoryItems = ['Diabetes', 'PTB', 'Hypertension', 'Cancer'];
+                    @endphp
                     <div class="checkbox-grid">
                         @foreach($familyHistoryItems as $item)
                             <label class="checkbox-card">
