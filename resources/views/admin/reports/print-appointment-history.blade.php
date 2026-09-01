@@ -168,6 +168,19 @@
                             $timeIn = $cons?->time_in ?: $appt?->time;
                             $complaint = trim((string) ($appt?->problem ?: $cons?->reason_for_visit));
                             $impression = trim((string) ($cons?->comments ?? ''));
+                            $referralLabels = [
+                                'hospital_without_nurse' => 'Refer to Hospital (Without Nurse)',
+                                'hospital_with_nurse' => 'Refer to Hospital (With Nurse)',
+                                'general' => 'Referral (General)',
+                                'others' => 'Others',
+                            ];
+                            $referralType = trim((string) ($cons?->referral_type ?? ''));
+                            $referral = $referralType !== '' && $referralType !== 'none'
+                                ? ($referralLabels[$referralType] ?? $referralType)
+                                : '';
+                            if ($referral !== '' && trim((string) ($cons?->referral_details ?? '')) !== '') {
+                                $referral .= ': ' . trim((string) $cons->referral_details);
+                            }
                         @endphp
                         <tr>
                             <td>{{ $appt?->apt_id ?: 'N/A' }}</td>
@@ -194,6 +207,9 @@
                             <td>
                                 <strong>Complaint:</strong> {{ $complaint !== '' ? $complaint : '-' }}<br>
                                 <strong>Impression:</strong> {{ $impression !== '' ? $impression : '-' }}
+                                @if($referral !== '')
+                                    <br><strong>Referral:</strong> {{ $referral }}
+                                @endif
                             </td>
                         </tr>
                     @endforeach

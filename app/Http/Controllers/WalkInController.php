@@ -2138,6 +2138,8 @@ PROMPT;
             'covid_positive_date' => 'required_if:covid_status,Yes|nullable|date|before_or_equal:today',
             'reason_for_visit' => 'nullable|string|max:255',
             'certificate_type' => 'nullable|in:none,excused_letter,coc_ijt,coc_ladderized',
+            'referral_type' => 'nullable|in:none,hospital_without_nurse,hospital_with_nurse,general,others',
+            'referral_details' => 'required_if:referral_type,others|nullable|string|max:500',
             'item_id' => 'nullable|array|max:5',
             // Empty medicine rows are allowed; duplicate selected medicines are checked below.
             'item_id.*' => 'nullable|integer|exists:items,id',
@@ -2389,6 +2391,8 @@ PROMPT;
                 'covid_positive_date'  => $request->input('covid_positive_date'),
                 'reason_for_visit'     => $request->input('reason_for_visit'),
                 'certificate_type'     => $request->input('certificate_type') ?: 'none',
+                'referral_type'        => $request->input('referral_type') ?: 'none',
+                'referral_details'     => $request->input('referral_type') === 'others' ? $request->input('referral_details') : null,
                 // Keep the first line in the legacy columns for existing reports and exports.
                 'medicine'             => $firstMedicine['medicine'] ?? 'None',
                 'item_id'              => $firstMedicine['item_id'] ?? null,

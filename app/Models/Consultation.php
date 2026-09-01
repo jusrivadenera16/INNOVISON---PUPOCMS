@@ -16,7 +16,7 @@ class Consultation extends Model
     'user_id', 'attending_staff_id', 'attending_staff_name', 'name', 'consultation_date',
     'time_in', 'time_out', 'user_type', 'user_role', 'consultation_source', 'service',
     'medical_condition_id', 'height', 'weight', 'temperature', 'blood_pressure', 'pulse_rate',
-    'respiratory_rate', 'covid_status', 'covid_positive_date', 'reason_for_visit', 'certificate_type', 'medicine', 'item_id',
+    'respiratory_rate', 'covid_status', 'covid_positive_date', 'reason_for_visit', 'certificate_type', 'referral_type', 'referral_details', 'medicine', 'item_id',
     'medicine_quantity', 'comments'
 ];
 

@@ -729,6 +729,19 @@
                             $courseDepartment = trim(implode(' / ', array_filter([$course, $yearSection])));
                             $complaint = trim((string) $consultation->reason_for_visit);
                             $impression = trim((string) $consultation->comments);
+                            $referralLabels = [
+                                'hospital_without_nurse' => 'Refer to Hospital (Without Nurse)',
+                                'hospital_with_nurse' => 'Refer to Hospital (With Nurse)',
+                                'general' => 'Referral (General)',
+                                'others' => 'Others',
+                            ];
+                            $referralType = trim((string) ($consultation->referral_type ?? ''));
+                            $referral = $referralType !== '' && $referralType !== 'none'
+                                ? ($referralLabels[$referralType] ?? $referralType)
+                                : '';
+                            if ($referral !== '' && trim((string) ($consultation->referral_details ?? '')) !== '') {
+                                $referral .= ': ' . trim((string) $consultation->referral_details);
+                            }
                             $medicineLines = $consultation->medicines->filter(fn ($line) => trim((string) ($line->medicine ?: optional($line->item)->name)) !== '');
                             $medicineName = $medicineLines->isNotEmpty()
                                 ? $medicineLines->map(fn ($line) => $line->medicine ?: optional($line->item)->name)->implode(', ')
@@ -762,6 +775,12 @@
                                     <span class="complaint-impression-label">Impression</span>
                                     <span class="complaint-impression-value">{{ $impression ?: 'No assessment recorded' }}</span>
                                 </span>
+                                @if($referral !== '')
+                                    <span class="complaint-impression-entry">
+                                        <span class="complaint-impression-label">Referral</span>
+                                        <span class="complaint-impression-value">{{ $referral }}</span>
+                                    </span>
+                                @endif
                             </td>
                             <td>
                                 {{ $medicineName !== '' && strtolower($medicineName) !== 'none' ? $medicineName : 'No medicine issued' }}

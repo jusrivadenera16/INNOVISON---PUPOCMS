@@ -640,6 +640,19 @@
                                     : $cons?->medicine_quantity;
                                 $complaint = trim((string) ($appt?->problem ?: $cons?->reason_for_visit));
                                 $impression = trim((string) ($cons?->comments ?? ''));
+                                $referralLabels = [
+                                    'hospital_without_nurse' => 'Refer to Hospital (Without Nurse)',
+                                    'hospital_with_nurse' => 'Refer to Hospital (With Nurse)',
+                                    'general' => 'Referral (General)',
+                                    'others' => 'Others',
+                                ];
+                                $referralType = trim((string) ($cons?->referral_type ?? ''));
+                                $referral = $referralType !== '' && $referralType !== 'none'
+                                    ? ($referralLabels[$referralType] ?? $referralType)
+                                    : '';
+                                if ($referral !== '' && trim((string) ($cons?->referral_details ?? '')) !== '') {
+                                    $referral .= ': ' . trim((string) $cons->referral_details);
+                                }
                                 $staff = $cons
                                     ? (optional($cons->attendingStaff)->name ?? $cons->attending_staff_name ?? '-')
                                     : '-';
@@ -673,6 +686,9 @@
                                 <td class="appt-notes">
                                     <strong>Complaint:</strong> {{ $complaint !== '' ? $complaint : 'No complaint recorded' }}<br>
                                     <strong>Impression:</strong> {{ $impression !== '' ? $impression : 'No assessment recorded' }}
+                                    @if($referral !== '')
+                                        <br><strong>Referral:</strong> {{ $referral }}
+                                    @endif
                                 </td>
                             </tr>
                         @empty
