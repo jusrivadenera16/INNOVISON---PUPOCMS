@@ -155,6 +155,9 @@ Route::middleware(['auth:student', 'account.active', 'idp.session', 'audit'])->g
         Route::get('/student/health-form', [AppointmentController::class, 'showHealthForm'])->name('health.form');
         Route::get('/student/health-form/employee', [AppointmentController::class, 'showEmployeeHealthForm'])->name('health.form.employee');
         Route::get('/student/health-form/staff', [AppointmentController::class, 'showStaffHealthForm'])->name('health.form.staff');
+        Route::redirect('/health-form', '/student/health-form');
+        Route::redirect('/health-form/employee', '/student/health-form/employee');
+        Route::redirect('/health-form/staff', '/student/health-form/staff');
         Route::post('/student/health-form', [AppointmentController::class, 'storeHealthForm'])
             ->name('store.health.form.fallback');
         Route::post('/student/health-form/employee', [AppointmentController::class, 'storeEmployeeHealthForm'])->name('store.health.form.employee');
