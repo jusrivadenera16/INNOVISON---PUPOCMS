@@ -5493,6 +5493,16 @@
             ->values();
         $summaryAppointments = $appointmentCollection
             ->filter(fn ($appointment) => in_array(strtolower(trim((string) $appointment->status)), $summaryStatuses, true))
+            ->sort(function ($first, $second) {
+                $firstScheduledAt = \Carbon\Carbon::parse($first->date . ' ' . $first->time)->timestamp;
+                $secondScheduledAt = \Carbon\Carbon::parse($second->date . ' ' . $second->time)->timestamp;
+
+                if ($firstScheduledAt === $secondScheduledAt) {
+                    return ($second->id ?? 0) <=> ($first->id ?? 0);
+                }
+
+                return $secondScheduledAt <=> $firstScheduledAt;
+            })
             ->values();
         $appointmentPresentation = function ($appointment) use ($appointmentHasMedicalCondition, $basePrefix, $consultationStatuses): array {
             $user = $appointment->user;
