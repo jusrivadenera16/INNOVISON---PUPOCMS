@@ -126,7 +126,9 @@ class AdminController extends Controller
             return;
         }
 
-        $realStudentNumberQuery = function ($builder): void {
+        $studentNumberPattern = '^[0-9]{4}-[0-9]{5}-[A-Za-z]{2}-[0-9]+$';
+
+        $realStudentNumberQuery = function ($builder) use ($studentNumberPattern): void {
             $builder->where(function ($numberQuery) {
                 $numberQuery->whereNotNull('student_number')
                     ->where('student_number', '!=', '')
@@ -139,22 +141,33 @@ class AdminController extends Controller
                             ->orWhereColumn('student_number', '!=', 'reference_number');
                     });
             })
-                ->orWhereHas('user', function ($userQuery) {
+                ->orWhere(function ($numberQuery) use ($studentNumberPattern) {
+                    $numberQuery->whereNotNull('student_number')
+                        ->where('student_number', '!=', '')
+                        ->whereRaw('student_number REGEXP ?', [$studentNumberPattern]);
+                })
+                ->orWhereHas('user', function ($userQuery) use ($studentNumberPattern) {
                     $userQuery->whereNotNull('student_number')
                         ->where('student_number', '!=', '')
                         ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
                         ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
                         ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%'])
-                        ->where(function ($identityQuery) {
+                        ->where(function ($identityQuery) use ($studentNumberPattern) {
                             $identityQuery->whereNull('reference_number')
                                 ->orWhere('reference_number', '')
-                                ->orWhereColumn('student_number', '!=', 'reference_number');
+                                ->orWhereColumn('student_number', '!=', 'reference_number')
+                                ->orWhereRaw('student_number REGEXP ?', [$studentNumberPattern]);
                         });
                 });
         };
 
         if ($userTypeFilter === 'student') {
-            $query->where($realStudentNumberQuery);
+            $query->where(function ($builder) use ($realStudentNumberQuery) {
+                $builder->where($realStudentNumberQuery)
+                    ->orWhereHas('user', function ($userQuery) {
+                        $userQuery->whereRaw("LOWER(COALESCE(user_type, '')) LIKE ?", ['%student%']);
+                    });
+            });
 
             return;
         }
@@ -170,9 +183,9 @@ class AdminController extends Controller
                             ->orWhereRaw('UPPER(student_number) LIKE ?', ['TEST-LOCAL%'])
                             ->orWhereColumn('student_number', 'reference_number');
                     })
-                        ->whereDoesntHave('user', function ($userQuery) {
-                            $userQuery->whereNotNull('student_number')
-                                ->where('student_number', '!=', '')
+                            ->whereDoesntHave('user', function ($userQuery) {
+                                $userQuery->whereNotNull('student_number')
+                                    ->where('student_number', '!=', '')
                                 ->whereRaw('UPPER(student_number) NOT LIKE ?', ['CLN-%'])
                                 ->whereRaw('UPPER(student_number) NOT LIKE ?', ['LOC-%'])
                                 ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%'])
@@ -180,9 +193,12 @@ class AdminController extends Controller
                                     $identityQuery->whereNull('reference_number')
                                         ->orWhere('reference_number', '')
                                         ->orWhereColumn('student_number', '!=', 'reference_number');
-                                });
-                        });
-                })
+                                    });
+                            })
+                            ->whereDoesntHave('user', function ($userQuery) {
+                                $userQuery->whereRaw("LOWER(COALESCE(user_type, '')) LIKE ?", ['%student%']);
+                            });
+                    })
                     ->orWhereHas('user', function ($userQuery) {
                         $userQuery->whereRaw("LOWER(COALESCE(user_type, user_role, '')) LIKE ?", ['%applicant%']);
                     });
@@ -3768,20 +3784,10 @@ class AdminController extends Controller
 
             $age = (int) ($profileData['age'] ?? optional($healthProfile)->age ?? 0);
             $isMinorStudent = $age < 18;
-            $guardianSignatureSrc = null;
-            if ($isMinorStudent) {
-                try {
-                    $guardianFiles = $this->healthFiles()->files('health_profiles/guardian_signatures');
-                    if (!empty($guardianFiles)) {
-                        $latestGuardianFile = collect($guardianFiles)->sortByDesc(fn ($f) => $this->healthFiles()->lastModified($f) ?? 0)->first();
-                        if ($latestGuardianFile) {
-                            $guardianSignatureSrc = app(\App\Services\StoredImageDataUri::class)->fromStorage($latestGuardianFile);
-                        }
-                    }
-                } catch (\Throwable $e) {
-                    // Ignore and proceed without guardian sig image if not found
-                }
-            }
+            $guardianSignaturePath = ltrim((string) ($profileData['guardian_signature'] ?? optional($healthProfile)->guardian_signature ?? ''), '/');
+            $guardianSignatureSrc = $isMinorStudent && $guardianSignaturePath !== '' && $this->healthFiles()->exists($guardianSignaturePath)
+                ? app(\App\Services\StoredImageDataUri::class)->fromStorage($guardianSignaturePath)
+                : null;
 
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('student.print_declaration_form', [
                 'user' => $user,

@@ -874,7 +874,15 @@ class AppointmentController extends Controller
         ?array $applicantData = null,
         ?string $lookupOutcome = null
     ): bool {
-        if ($this->isApplicantAccount($user) || $lookupOutcome === 'found') {
+        if ($this->isApplicantAccount($user)) {
+            return false;
+        }
+
+        if ($this->isStudentAccount($user)) {
+            return true;
+        }
+
+        if ($lookupOutcome === 'found') {
             return false;
         }
 
@@ -1331,17 +1339,15 @@ class AppointmentController extends Controller
                 : 'admission';
         }
 
-        if ($lookupOutcome === 'found' || ($applicantIdentity['available'] ?? false) === true) {
-            return 'admission';
-        }
-
         if (
             $normalizedIdpRole === 'student'
             || strtolower(trim((string) ($user->user_type ?? ''))) === 'student'
         ) {
-            return $lookupOutcome === 'unavailable'
-                ? 'verification_unavailable'
-                : 'admission';
+            return 'student_number';
+        }
+
+        if ($lookupOutcome === 'found' || ($applicantIdentity['available'] ?? false) === true) {
+            return 'admission';
         }
 
         if (in_array($normalizedIdpRole, ['student', 'guest', 'faculty', 'admin', 'superadmin', 'super_admin'], true)) {
@@ -3068,20 +3074,12 @@ public function account(Request $request)
                 : null;
 
             $isMinorStudent = (int) ($healthProfile->age ?? 0) < 18;
-            $guardianSignatureSrc = null;
-            if ($isMinorStudent) {
-                try {
-                    $guardianFiles = $this->healthFiles()->files('health_profiles/guardian_signatures');
-                    if (!empty($guardianFiles)) {
-                        $latestGuardianFile = collect($guardianFiles)->sortByDesc(fn ($f) => $this->healthFiles()->lastModified($f) ?? 0)->first();
-                        if ($latestGuardianFile) {
-                            $guardianSignatureSrc = app(\App\Services\StoredImageDataUri::class)->fromStorage($latestGuardianFile);
-                        }
-                    }
-                } catch (\Throwable $e) {
-                    // Ignore and proceed without guardian sig image if not found
-                }
-            }
+            $guardianSignaturePath = Schema::hasColumn('health_profiles', 'guardian_signature')
+                ? ltrim((string) ($healthProfile->guardian_signature ?? ''), '/')
+                : '';
+            $guardianSignatureSrc = $isMinorStudent && $guardianSignaturePath !== '' && $this->healthFiles()->exists($guardianSignaturePath)
+                ? app(\App\Services\StoredImageDataUri::class)->fromStorage($guardianSignaturePath)
+                : null;
 
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('student.print_declaration_form', [
                 'user' => $user,
@@ -4525,6 +4523,8 @@ public function storeEmployeeHealthForm(Request $request)
         'employee_signature_method' => ['required', 'in:draw,upload'],
         'employee_signature' => ['nullable', 'string'],
         'uploaded_signature' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
+        'employee_health_form_category' => ['required', Rule::in(['Faculty Member', 'Administrative Personnel'])],
+        'employee_consent_acknowledged' => ['accepted'],
         'employee_health_profile_certified' => ['accepted'],
     ], [
         'employee_number.unique' => 'This employee number is already registered. Please use the correct employee number for this account.',
@@ -4597,9 +4597,52 @@ public function storeEmployeeHealthForm(Request $request)
             ? $this->healthFiles()->store($request->file($field), $directory)
             : null;
     }
+
+    $employeeHealthDeclarationPath = $employeeRequirementPaths['health_declaration'];
+    if (empty($employeeHealthDeclarationPath) && !empty($signaturePath)) {
+        $employeeCategory = $validated['employee_health_form_category'];
+        $employeePurpose = $employeeCategory === 'Administrative Personnel'
+            ? 'administrative personnel'
+            : 'a faculty member';
+        $employeeEndorsement = $employeeCategory === 'Administrative Personnel'
+            ? 'fitness as administrative personnel'
+            : 'fitness as a faculty member';
+        $employeeSignatureSrc = app(\App\Services\StoredImageDataUri::class)->fromStorage($signaturePath);
+
+        $declarationPdf = Pdf::loadView('student.print_declaration_form', [
+            'user' => $user,
+            'studentFullName' => $fullName,
+            'categorySelected' => $employeeCategory,
+            'purposeUnderline1' => $employeePurpose,
+            'purposeUnderline2' => $employeeEndorsement,
+            'studentSignatureSrc' => $employeeSignatureSrc,
+            'signatureDate' => now()->format('m/d/Y'),
+            'remarks' => '',
+            'isMinor' => false,
+            'guardianName' => '',
+            'guardianSignatureSrc' => null,
+            'hideGuardianBlock' => true,
+            'signatureAlt' => 'Employee Signature',
+            'signatureCaption' => "Employee's Signature Over Printed Name/ Date",
+            'fallbackSignerName' => 'EMPLOYEE NAME',
+        ])->setPaper('letter', 'portrait');
+
+        $declarationIdentifier = preg_replace('/[^A-Za-z0-9\-_]+/', '-', (string) (
+            $validated['employee_number']
+            ?: $user->employee_number
+            ?: $user->id
+        )) ?: 'employee-' . $user->id;
+        $employeeHealthDeclarationPath = 'health_profile_employees/health_declarations/declaration-'
+            . $declarationIdentifier . '-' . now()->format('Ymd-His') . '.pdf';
+        $this->healthFiles()->put($employeeHealthDeclarationPath, $declarationPdf->output());
+    }
+
     $profile = EmployeeHealthProfile::create([
         'user_id' => $user->id,
         'employee_number' => $validated['employee_number'] ?? null,
+        ...(\Schema::hasColumn('health_profile_emp', 'health_form_category') ? [
+            'health_form_category' => $validated['employee_health_form_category'],
+        ] : []),
         'first_name' => $validated['first_name'],
         'middle_name' => $validated['middle_name'] ?? null,
         'last_name' => $validated['last_name'],
@@ -4632,8 +4675,12 @@ public function storeEmployeeHealthForm(Request $request)
         'traveled_abroad' => $request->boolean('traveled_abroad'),
         'has_disability' => $request->boolean('has_disability'),
         'disability_type' => $request->boolean('has_disability') ? ($validated['disability_type'] ?? null) : null,
-        'student_photo' => $employeeRequirementPaths['student_photo'],
-        'health_declaration' => $employeeRequirementPaths['health_declaration'],
+        ...(\Schema::hasColumn('health_profile_emp', 'employee_photo') ? [
+            'employee_photo' => $employeeRequirementPaths['student_photo'],
+        ] : [
+            'student_photo' => $employeeRequirementPaths['student_photo'],
+        ]),
+        'health_declaration' => $employeeHealthDeclarationPath,
         'medical_certificate' => $employeeRequirementPaths['medical_certificate'],
         'chest_xray_document' => $employeeRequirementPaths['chest_xray_document'],
         'pwd_id_proof' => $employeeRequirementPaths['pwd_id_proof'],
@@ -5137,10 +5184,12 @@ public function storeHealthForm(Request $request)
         'med_cert_findings' => $applicantDocumentsRequired ? 'required|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review' : 'nullable|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review',
         'med_cert_findings_details' => 'required_if:med_cert_findings,With Findings|nullable|string|max:1000',
         'signature_method' => 'required|in:draw,upload',
-        'consent_acknowledged' => 'accepted',
         'consent_acknowledged' => $isDedicatedStudentForm ? 'accepted' : 'nullable',
         'digital_signature_data' => 'nullable|string',
         'digital_signature_upload' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
+        'guardian_signature_method' => $isDedicatedStudentForm ? 'nullable|in:draw,upload' : 'nullable',
+        'guardian_signature_data' => 'nullable|string',
+        'guardian_signature_upload' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
         'digital_signature_existing' => 'nullable|string|max:255',
         'health_profile_certified' => 'accepted',
     ]);
@@ -5326,6 +5375,15 @@ public function storeHealthForm(Request $request)
         $medicalCertificatePath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'medical_certificate', 'health_profiles/medical_certificates', $oldPaths);
         $healthDeclarationPath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'health_declaration', 'health_profiles/health_declarations', $oldPaths);
         $digitalSignaturePath = $this->storeDigitalSignatureOrKeep($request, $existingHealthProfile, $oldPaths);
+        $isMinorStudent = (int) $request->input('age', 0) < 18;
+        $guardianSignaturePath = Schema::hasColumn('health_profiles', 'guardian_signature')
+            ? trim((string) optional($existingHealthProfile)->guardian_signature)
+            : null;
+
+        if (!$isMinorStudent && $guardianSignaturePath !== null && $guardianSignaturePath !== '') {
+            $oldPaths['guardian_signature'] = ltrim($guardianSignaturePath, '/');
+            $guardianSignaturePath = null;
+        }
 
         if (($isDedicatedStudentForm || empty($healthDeclarationPath)) && !empty($digitalSignaturePath)) {
             $categorySelected = trim((string) $request->input('health_form_category', ''));
@@ -5344,12 +5402,13 @@ public function storeHealthForm(Request $request)
             ]))) ?: ($user->name ?? '');
 
             $studentSignatureSrc = app(\App\Services\StoredImageDataUri::class)->fromStorage($digitalSignaturePath);
-            $isMinorStudent = (int) $request->input('age', 0) < 18;
 
-            $guardianSignaturePath = null;
             $guardianSignatureSrc = null;
             if ($isMinorStudent) {
                 if ($request->hasFile('guardian_signature_upload')) {
+                    if ($guardianSignaturePath !== null && $guardianSignaturePath !== '') {
+                        $oldPaths['guardian_signature'] = ltrim($guardianSignaturePath, '/');
+                    }
                     $guardianSignaturePath = $this->healthFiles()->store(
                         $request->file('guardian_signature_upload'),
                         'health_profiles/guardian_signatures'
@@ -5359,6 +5418,9 @@ public function storeHealthForm(Request $request)
                     if ($guardianSigData !== '' && preg_match('/^data:image\/(png|jpe?g);base64,/', $guardianSigData, $gSigMatches)) {
                         $decodedGuardianSig = base64_decode(substr($guardianSigData, strpos($guardianSigData, ',') + 1), true);
                         if ($decodedGuardianSig !== false && strlen($decodedGuardianSig) >= 200) {
+                            if ($guardianSignaturePath !== null && $guardianSignaturePath !== '') {
+                                $oldPaths['guardian_signature'] = ltrim($guardianSignaturePath, '/');
+                            }
                             $gSigExt = str_starts_with(strtolower($gSigMatches[1]), 'jp') ? 'jpg' : 'png';
                             $guardianSignaturePath = 'health_profiles/guardian_signatures/guardian_sig_' . uniqid('', true) . '.' . $gSigExt;
                             $this->healthFiles()->put($guardianSignaturePath, $decodedGuardianSig);
@@ -5391,6 +5453,11 @@ public function storeHealthForm(Request $request)
             $generatedRelPath = 'health_profiles/health_declarations/' . $generatedFilename;
             $this->healthFiles()->put($generatedRelPath, $declarationPdf->output());
             $healthDeclarationPath = $generatedRelPath;
+        }
+
+        $submittedHealthFormCategory = trim((string) $request->input('health_form_category', ''));
+        if ($submittedHealthFormCategory === '') {
+            $submittedHealthFormCategory = optional($pendingHealthFormRequest)->category ?: ($isDedicatedStudentForm ? 'Student' : 'General');
         }
 
         $healthProfileData = [
@@ -5456,6 +5523,16 @@ public function storeHealthForm(Request $request)
                 'verified_at'        => null,
             ];
 
+        if (Schema::hasColumn('health_profiles', 'guardian_signature')) {
+            $healthProfileData['guardian_signature'] = $isDedicatedStudentForm && $isMinorStudent
+                ? $guardianSignaturePath
+                : null;
+        }
+
+        if (\Schema::hasColumn('health_profiles', 'health_form_category')) {
+            $healthProfileData['health_form_category'] = $submittedHealthFormCategory;
+        }
+
         if (\Schema::hasColumn('health_profiles', 'suffix_name')) {
             $healthProfileData['suffix_name'] = $this->normalizeOptionalNamePart($request->input('suffix_name'));
         }
@@ -5480,7 +5557,7 @@ public function storeHealthForm(Request $request)
         $healthFormSubmission = app(HealthFormPdfSnapshotService::class)->recordSubmittedWithoutPdf(
             $healthProfile->fresh('user'),
             $user,
-            $request->input('health_form_category', 'General'),
+            $submittedHealthFormCategory,
             trim((string) $request->input('health_form_request_remarks')),
             $isHealthFormCorrectionMode && !$pendingHealthFormRequest
         );

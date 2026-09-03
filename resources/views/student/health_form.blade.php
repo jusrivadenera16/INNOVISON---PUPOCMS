@@ -2595,7 +2595,7 @@
                             <li>If you are a PWD, upload your PWD ID in Step 5. Upload your formal 2x2 photo as JPG or PNG.</li>
                             <li>Download and print your Health Information Form before proceeding to Clinic for Assessment.</li>
                             <li>Complete the required e-signature for the Health Information Form.</li>
-                            <li>If you are 17 years old or below, ask your parent or guardian to sign the form as well.</li>
+                            <li>If you are 17 years old or below, upload a declaration form that is also signed by your parent or guardian.</li>
                             <li>Don't forget to bring your hard copy of requirements and printed 2 by 2 photo to the clinic.</li>
                         </ol>
                     </div>

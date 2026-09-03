@@ -3101,18 +3101,20 @@ PROMPT;
                 );
             }
 
-            // Conditional applicants remain uncleared in PUPTAS until compliance is resolved.
+            // Save the local decision first; PUPTAS sync happens after the DB transaction.
             $webhookResult = $isLocalOnlyApproval
                 ? [
                     'success' => false,
                     'skipped' => true,
                     'message' => 'Local employee record decision saved without PUPTAS sync.',
                 ]
-                : $webhookService->sendMedicalClearance(
-                    $referenceNumber,
-                    $idpStudentId,
-                    !$hasPendingFinding
-                );
+                : [
+                    'success' => false,
+                    'skipped' => true,
+                    'message' => $hasPendingFinding
+                        ? 'PUPTAS sync skipped because the student is not yet medically cleared.'
+                        : 'PUPTAS sync pending after local approval save.',
+                ];
 
             $profile = DB::transaction(function () use (
                 $student,
@@ -3208,19 +3210,10 @@ PROMPT;
                 $approvalDate = $hasPendingFinding ? null : now();
                 $profile->verified_at = $approvalDate;
                 $profile->approved_by_user_id = $hasPendingFinding ? null : auth()->id();
-                $profile->puptas_sync_status = ($webhookResult['skipped'] ?? false)
-                    ? null
-                    : (($webhookResult['success'] ?? false) ? 'synced' : 'failed');
-                $profile->puptas_synced_at = ($webhookResult['success'] ?? false)
-                    && !($webhookResult['skipped'] ?? false)
-                        ? now()
-                        : null;
+                $profile->puptas_sync_status = null;
+                $profile->puptas_synced_at = null;
                 $profile->puptas_sync_message = $webhookResult['message'] ?? null;
                 $profile->final_review_draft_data = null;
-                if ($isLocalOnlyApproval && !($webhookResult['success'] ?? false) && !($webhookResult['skipped'] ?? false)) {
-                    $profile->puptas_sync_message = trim((string) ($profile->puptas_sync_message ?? ''))
-                        ?: 'Local approval saved. PUPTAS sync still needs a matching Admission reference.';
-                }
 
                 if (!$profile->medical_assessment_upload && $pendingAssessment) {
                     $profile->medical_assessment_upload = $pendingAssessment->file_path;
@@ -3238,6 +3231,24 @@ PROMPT;
 
                 return $profile;
             });
+
+            if (!$isLocalOnlyApproval && !$hasPendingFinding) {
+                $profile->puptas_sync_status = 'syncing';
+                $profile->puptas_sync_message = 'Local approval saved. Syncing approved health clearance to PUPTAS.';
+                $profile->puptas_synced_at = null;
+                $profile->save();
+
+                $webhookResult = $webhookService->sendMedicalClearance(
+                    $referenceNumber,
+                    $idpStudentId,
+                    true
+                );
+
+                $profile->puptas_sync_status = ($webhookResult['success'] ?? false) ? 'synced' : 'failed';
+                $profile->puptas_synced_at = ($webhookResult['success'] ?? false) ? now() : null;
+                $profile->puptas_sync_message = $webhookResult['message'] ?? null;
+                $profile->save();
+            }
 
             Log::info('Applicant reference decision saved', [
                 'reference_number' => $referenceNumber,

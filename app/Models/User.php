@@ -88,7 +88,6 @@ class User extends Authenticatable
      * The attributes that should be cast to native types.
      */
     protected $casts = [
-        'email_verified_at' => 'datetime',
         'is_admin' => 'boolean',
         'api_pin_enabled' => 'boolean',
         'api_pin_page_enabled' => 'boolean',

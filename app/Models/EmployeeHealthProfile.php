@@ -14,6 +14,8 @@ class EmployeeHealthProfile extends Model
     protected $fillable = [
         'user_id',
         'employee_number',
+        'health_form_category',
+        'employee_photo',
         'first_name',
         'middle_name',
         'last_name',
@@ -132,6 +134,16 @@ class EmployeeHealthProfile extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getStudentPhotoAttribute($value)
+    {
+        return $value ?: ($this->attributes['employee_photo'] ?? null);
+    }
+
+    public function setStudentPhotoAttribute($value): void
+    {
+        $this->attributes[\Schema::hasColumn($this->getTable(), 'employee_photo') ? 'employee_photo' : 'student_photo'] = $value;
     }
 
     public function approvedBy()

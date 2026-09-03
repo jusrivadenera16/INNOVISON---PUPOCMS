@@ -230,17 +230,6 @@ class AppointmentControllerPuptasIdentityTest extends TestCase
 
         $this->assertFalse($method->invoke($controller, $applicant, null, null, 'not_found'));
 
-        $misclassifiedApplicant = new User();
-        $misclassifiedApplicant->user_role = User::ROLE_STUDENT;
-        $misclassifiedApplicant->idp_role = 'student';
-
-        $this->assertFalse($method->invoke(
-            $controller,
-            $misclassifiedApplicant,
-            null,
-            ['user' => ['reference_number' => '2026-1111-1111', 'firstname' => 'Test', 'lastname' => 'Applicant']],
-            'found'
-        ));
     }
 
     public function test_current_students_and_ojt_accounts_can_use_manual_student_number_mode(): void
@@ -257,24 +246,20 @@ class AppointmentControllerPuptasIdentityTest extends TestCase
         $this->assertTrue($method->invoke($controller, $student, null, null, 'not_found'));
     }
 
-    public function test_non_applicant_idp_roles_use_clinic_reference_mode(): void
+    public function test_current_student_idp_role_uses_student_number_mode_even_when_puptas_has_data(): void
     {
         $controller = new AppointmentController();
         $method = new ReflectionMethod($controller, 'resolveHealthReferenceMode');
         $method->setAccessible(true);
 
-        foreach (['student', 'guest', 'faculty', 'admin', 'superadmin'] as $idpRole) {
-            $user = new User();
-            $user->idp_role = $idpRole;
-            $user->user_role = in_array($idpRole, ['admin', 'superadmin'], true)
-                ? $idpRole
-                : User::ROLE_STUDENT;
+        $user = new User();
+        $user->idp_role = 'student';
+        $user->user_role = User::ROLE_STUDENT;
+        $user->user_type = 'Student';
 
-            $this->assertSame(
-                'clinic',
-                $method->invoke($controller, $user, new Admin(), ['reference_number' => 'STALE-PUPTAS-REFERENCE'], 'found'),
-                "Expected {$idpRole} to use clinic reference mode."
-            );
-        }
+        $this->assertSame(
+            'student_number',
+            $method->invoke($controller, $user, new Admin(), ['reference_number' => 'STALE-PUPTAS-REFERENCE'], 'found')
+        );
     }
 }

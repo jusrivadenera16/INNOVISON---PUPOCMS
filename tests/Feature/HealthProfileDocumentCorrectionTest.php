@@ -14,7 +14,6 @@ class HealthProfileDocumentCorrectionTest extends TestCase
     public function test_it_keeps_an_approved_record_approved_when_document_correction_is_requested(): void
     {
         $user = User::factory()->create([
-            'email' => 'student@example.com',
             'first_name' => 'Student',
             'last_name' => 'User',
             'user_role' => User::ROLE_STUDENT,

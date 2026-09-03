@@ -1780,6 +1780,34 @@
             transform: translateX(0);
         }
 
+        .btn-health-submit.is-saving,
+        .btn-health-submit:disabled {
+            cursor: wait;
+            color: #ffffff !important;
+            opacity: 0.86;
+            transform: none;
+            background: linear-gradient(135deg, var(--clinic-maroon) 0%, var(--clinic-maroon-dark) 100%);
+            box-shadow: 0 8px 18px rgba(127, 29, 45, 0.2);
+        }
+
+        .btn-health-submit.is-saving::before,
+        .btn-health-submit:disabled::before {
+            transform: translateX(-105%) !important;
+        }
+
+        .btn-health-submit.is-saving::after,
+        .btn-health-submit:disabled::after {
+            animation: none !important;
+        }
+
+        .btn-health-back:disabled,
+        .btn-health-next:disabled {
+            cursor: wait;
+            opacity: 0.72;
+            transform: none;
+            box-shadow: none;
+        }
+
         .btn-health-next span {
             order: 1;
         }
@@ -1849,6 +1877,19 @@
         .step-panel.is-hidden {
             display: none;
         }
+
+        .student-consent-modal[hidden] { display: none !important; }
+        .student-consent-modal { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 18px; background: rgba(15, 23, 42, .68); backdrop-filter: blur(7px); }
+        .student-consent-card { position: relative; width: min(680px, 100%); max-height: calc(100vh - 36px); overflow-y: auto; padding: 28px 30px 24px; border: 1px solid rgba(127, 29, 45, .2); border-radius: 14px; background: #fffdf8; color: #1f2937; box-shadow: 0 25px 70px rgba(15, 23, 42, .32); }
+        .student-consent-close { position: absolute; top: 16px; right: 18px; width: 34px; height: 34px; border: 1px solid #d1d5db; border-radius: 50%; background: #fff; color: #7f1d2d; font-size: 22px; line-height: 1; cursor: pointer; }
+        .student-consent-kicker { margin: 0 42px 8px 0; color: #7f1d2d; font-size: 11px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+        .student-consent-card h2 { margin: 0 42px 18px 0; color: #64111d; font-size: 21px; line-height: 1.2; }
+        .student-consent-copy p { margin: 0 0 12px; font-size: 13px; line-height: 1.45; text-align: justify; }
+        .student-consent-agreement { display: flex; align-items: flex-start; gap: 9px; margin-top: 18px; color: #64111d; font-size: 13px; font-weight: 800; line-height: 1.35; cursor: pointer; }
+        .student-consent-agreement input { width: 17px; height: 17px; margin-top: 1px; accent-color: #7f1d2d; flex: 0 0 auto; }
+        .student-consent-continue { display: block; width: 100%; margin-top: 20px; padding: 11px 18px; border: 1px solid #7f1d2d; border-radius: 8px; background: #7f1d2d; color: #fff; font-weight: 800; cursor: pointer; }
+        .student-consent-continue:hover, .student-consent-continue:focus-visible { border-color: #facc15; background: #facc15; color: #000; outline: none; }
+        @media (max-width: 560px) { .student-consent-card { padding: 24px 18px 20px; } .student-consent-card h2 { font-size: 18px; } }
 
         .step-one-grid {
             display: grid;
@@ -2486,6 +2527,7 @@
 
             <form action="{{ route('store.health.form.employee') }}" method="POST" enctype="multipart/form-data" id="employeeHealthForm">
                 @csrf
+                <input type="hidden" name="employee_consent_acknowledged" id="employeeConsentAcknowledged" value="{{ old('employee_consent_acknowledged') ? '1' : '' }}">
 
                 @php
                     $streetFallback = $employeeValue('street_address');
@@ -2731,6 +2773,44 @@
                     </div>
                 </div>
 
+                <div class="student-consent-modal" id="employeeConsentModal" role="dialog" aria-modal="true" aria-labelledby="employeeConsentTitle" hidden>
+                    <section class="student-consent-card">
+                        <button type="button" class="student-consent-close" id="employeeConsentClose" aria-label="Close consent form">&times;</button>
+                        <p class="student-consent-kicker">Data Privacy Consent</p>
+                        <h2 id="employeeConsentTitle">Declaration of Medical Information and Data Subject Consent Form</h2>
+
+                        @php
+                            $initialEmployeeCategory = old('employee_health_form_category', data_get($employeeProfile ?? null, 'health_form_category', ''));
+                            $initialEmployeeCategory = in_array($initialEmployeeCategory, ['Faculty Member', 'Administrative Personnel'], true)
+                                ? $initialEmployeeCategory
+                                : '';
+                        @endphp
+                        <div class="student-consent-purpose-wrap" style="margin: 0 0 16px;">
+                            <label for="employeeConsentPurpose" style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: #7f1d2d; text-transform: uppercase; letter-spacing: .05em;">
+                                Purpose of Medical Clearance <span style="color: #dc2626;">*</span>
+                            </label>
+                            <select id="employeeConsentPurpose" name="employee_health_form_category" class="form-select" style="width: 100%; padding: 8px 12px; border: 1.5px solid #7f1d2d; border-radius: 8px; font-size: 13.5px; font-weight: 700; background-color: #ffffff; color: #1f2937;" required>
+                                <option value="" disabled {{ $initialEmployeeCategory === '' ? 'selected' : '' }}>-- Select Purpose of Medical Clearance --</option>
+                                <option value="Faculty Member" {{ $initialEmployeeCategory === 'Faculty Member' ? 'selected' : '' }}>Faculty Member</option>
+                                <option value="Administrative Personnel" {{ $initialEmployeeCategory === 'Administrative Personnel' ? 'selected' : '' }}>Administrative Personnel</option>
+                            </select>
+                        </div>
+
+                        <div class="student-consent-copy">
+                            <p>
+                                I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my on-site consultation for the issuance of medical clearance as <u id="employeeConsentDynamicPurpose" style="font-weight: 700;">{{ $initialEmployeeCategory === 'Faculty Member' ? 'a faculty member' : ($initialEmployeeCategory === 'Administrative Personnel' ? 'administrative personnel' : '[Select Purpose]') }}</u> are true, correct and complete to the best of my knowledge. I have fully disclosed all the medical condition that may affect in the assessment to endorse my <u id="employeeConsentDynamicEndorsement" style="font-weight: 700;">{{ $initialEmployeeCategory === 'Faculty Member' ? 'fitness as a faculty member' : ($initialEmployeeCategory === 'Administrative Personnel' ? 'fitness as administrative personnel' : '[Select Purpose]') }}</u> of PUP Taguig Campus.
+                            </p>
+                            <p>I also understand that the PUP Medical Services and University will not be liable for any untoward incident that may arise due to my failure to disclose accurate information or intentionally providing false and deceptive information.</p>
+                            <p>In compliance with the Data Privacy Act of 2012 and its implementing Rules and Regulations, I voluntarily consent to the collection, processing and storage of my personal and health information for the purpose/s of health assessment, treatment/ or research (following research ethics guidelines) for the improvement of healthcare services.</p>
+                        </div>
+                        <label class="student-consent-agreement">
+                            <input type="checkbox" id="employeeConsentCheckbox" required>
+                            <span>I have read and agree to this declaration and consent.</span>
+                        </label>
+                        <button type="button" class="student-consent-continue" id="employeeConsentContinue">Continue</button>
+                    </section>
+                </div>
+
                 <div class="step-panel {{ $startStep === 3 ? '' : 'is-hidden' }}" id="stepPanel3">
                     <h2 class="section-title step-page-title" data-title-letter="F">Family History</h2>
                     <p class="step-fill-note">Select all family medical history that applies.</p>
@@ -2896,7 +2976,7 @@
                     </div>
                     <div class="btn-row">
                         <button type="button" class="btn btn-health btn-health-back" data-step-back="5"><span>Back</span></button>
-                        <button type="submit" class="btn btn-health btn-health-submit"><span>Save Health Record</span></button>
+                        <button type="submit" class="btn btn-health btn-health-submit" id="employeeHealthSubmit"><span data-submit-label>Save Health Record</span></button>
                     </div>
                 </div>
 
@@ -2960,6 +3040,14 @@
             const errorModal = document.getElementById('healthErrorModal');
             const errorMessage = document.getElementById('healthErrorMessage');
             const errorContinue = document.getElementById('healthErrorContinue');
+            const employeeConsentModal = document.getElementById('employeeConsentModal');
+            const employeeConsentPurpose = document.getElementById('employeeConsentPurpose');
+            const employeeConsentDynamicPurpose = document.getElementById('employeeConsentDynamicPurpose');
+            const employeeConsentDynamicEndorsement = document.getElementById('employeeConsentDynamicEndorsement');
+            const employeeConsentCheckbox = document.getElementById('employeeConsentCheckbox');
+            const employeeConsentAcknowledged = document.getElementById('employeeConsentAcknowledged');
+            const employeeConsentContinue = document.getElementById('employeeConsentContinue');
+            const employeeConsentClose = document.getElementById('employeeConsentClose');
             const signatureCanvas = document.getElementById('employeeSignaturePad');
             const signatureInput = document.getElementById('employee_signature');
             const signatureStatus = document.getElementById('employeeSignatureStatus');
@@ -2984,8 +3072,12 @@
             const employeeDisabilityTypeInput = document.getElementById('disability_type');
             const employeePwdRequirementCard = document.getElementById('employeePwdRequirementCard');
             const uploadInputs = Array.from(document.querySelectorAll('[data-upload-input]'));
+            const submitButton = document.getElementById('employeeHealthSubmit');
+            const submitButtonLabel = submitButton?.querySelector('[data-submit-label]');
+            const stepButtons = Array.from(document.querySelectorAll('[data-step-next], [data-step-back]'));
             let currentStep = {{ (int) $startStep }};
             let maxVisitedStep = currentStep;
+            let isSubmitting = false;
             let resizeSignatureCanvas = () => {};
 
             function closeClinicSelect(wrap) {
@@ -3060,6 +3152,56 @@
                 errorModal?.setAttribute('aria-hidden', 'true');
             }
 
+            function updateEmployeeConsentDynamicText() {
+                const selected = employeeConsentPurpose?.value || '';
+                if (selected === 'Faculty Member') {
+                    if (employeeConsentDynamicPurpose) employeeConsentDynamicPurpose.textContent = 'a faculty member';
+                    if (employeeConsentDynamicEndorsement) employeeConsentDynamicEndorsement.textContent = 'fitness as a faculty member';
+                } else if (selected === 'Administrative Personnel') {
+                    if (employeeConsentDynamicPurpose) employeeConsentDynamicPurpose.textContent = 'administrative personnel';
+                    if (employeeConsentDynamicEndorsement) employeeConsentDynamicEndorsement.textContent = 'fitness as administrative personnel';
+                } else {
+                    if (employeeConsentDynamicPurpose) employeeConsentDynamicPurpose.textContent = '[Select Purpose]';
+                    if (employeeConsentDynamicEndorsement) employeeConsentDynamicEndorsement.textContent = '[Select Purpose]';
+                }
+            }
+
+            function openEmployeeConsent() {
+                if (!employeeConsentModal) return;
+                updateEmployeeConsentDynamicText();
+                employeeConsentModal.hidden = false;
+                window.setTimeout(() => {
+                    if (!employeeConsentPurpose?.value) {
+                        employeeConsentPurpose?.focus();
+                    } else {
+                        employeeConsentCheckbox?.focus();
+                    }
+                }, 30);
+            }
+
+            function closeEmployeeConsent() {
+                if (!employeeConsentModal) return;
+                employeeConsentModal.hidden = true;
+            }
+
+            function hasEmployeeConsent() {
+                return Boolean(employeeConsentAcknowledged?.value && employeeConsentPurpose?.value);
+            }
+
+            function setSubmitSaving() {
+                isSubmitting = true;
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.classList.add('is-saving');
+                }
+                stepButtons.forEach((button) => {
+                    button.disabled = true;
+                });
+                if (submitButtonLabel) {
+                    submitButtonLabel.textContent = 'Saving...';
+                }
+            }
+
             function setStep(step) {
                 currentStep = Math.min(totalSteps, Math.max(1, Number(step) || 1));
                 maxVisitedStep = Math.max(maxVisitedStep, currentStep);
@@ -3087,14 +3229,50 @@
                 return true;
             }
 
-            document.querySelectorAll('[data-step-next], [data-step-back]').forEach((button) => {
+            stepButtons.forEach((button) => {
                 button.addEventListener('click', () => {
+                    if (isSubmitting) return;
                     const next = button.dataset.stepNext ? Number(button.dataset.stepNext) : null;
                     const back = button.dataset.stepBack ? Number(button.dataset.stepBack) : null;
                     if (next && !validateStep(currentStep)) return;
+                    if (currentStep === 1 && next === 2 && !hasEmployeeConsent()) {
+                        openEmployeeConsent();
+                        return;
+                    }
                     setStep(next || back || currentStep);
                     panels[currentStep - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 });
+            });
+
+            employeeConsentPurpose?.addEventListener('change', () => {
+                if (employeeConsentAcknowledged) employeeConsentAcknowledged.value = '';
+                updateEmployeeConsentDynamicText();
+            });
+
+            employeeConsentCheckbox?.addEventListener('change', () => {
+                if (employeeConsentAcknowledged) employeeConsentAcknowledged.value = '';
+            });
+
+            employeeConsentClose?.addEventListener('click', closeEmployeeConsent);
+            employeeConsentModal?.addEventListener('click', (event) => {
+                if (event.target === employeeConsentModal) closeEmployeeConsent();
+            });
+
+            employeeConsentContinue?.addEventListener('click', () => {
+                if (!employeeConsentPurpose?.value) {
+                    showError('Please select your purpose of medical clearance.');
+                    employeeConsentPurpose?.focus();
+                    return;
+                }
+                if (!employeeConsentCheckbox?.checked) {
+                    showError('Please confirm that you have read and agree to the consent form.');
+                    employeeConsentCheckbox?.focus();
+                    return;
+                }
+                if (employeeConsentAcknowledged) employeeConsentAcknowledged.value = '1';
+                closeEmployeeConsent();
+                setStep(2);
+                panels[1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
 
             function calculateAgeFromBirthday() {
@@ -3414,6 +3592,18 @@
             });
 
             form.addEventListener('submit', (event) => {
+                if (isSubmitting) {
+                    event.preventDefault();
+                    return;
+                }
+
+                if (!hasEmployeeConsent()) {
+                    event.preventDefault();
+                    setStep(1);
+                    openEmployeeConsent();
+                    return;
+                }
+
                 if (!validateStep(currentStep)) {
                     event.preventDefault();
                     return;
@@ -3429,11 +3619,15 @@
 
                 if (!validateSignatureChoice()) {
                     event.preventDefault();
+                    return;
                 }
+
+                setSubmitSaving();
             });
 
             const initialMessage = errorModal?.dataset.initialMessage || '';
             if (initialMessage) showError(initialMessage);
+            updateEmployeeConsentDynamicText();
             clinicSelects.forEach(initializeClinicSelect);
             syncPastMedicalOthers();
             syncEmployeeConditionalDetails(hospitalizationRadios, hospitalizationDetailsWrap, hospitalizationDetailsInput);
