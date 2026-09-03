@@ -372,6 +372,7 @@ class ReportsController extends Controller
                 'user.healthProfile',
                 'medicalCondition.category',
                 'medicineItem',
+                'medicines.item',
                 'attendingStaff.adminProfile',
             ])
             ->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()])
@@ -944,7 +945,7 @@ class ReportsController extends Controller
                     ->get();
 
                 $consultationRecords = Consultation::where('user_id', $userId)
-                    ->with(['user', 'attendingStaff'])
+                    ->with(['user', 'attendingStaff', 'medicineItem', 'medicines.item'])
                     ->orderByDesc('consultation_date')
                     ->orderByDesc('time_in')
                     ->get();
@@ -1066,7 +1067,7 @@ class ReportsController extends Controller
             ->get();
 
         $consultationRecords = Consultation::where('user_id', $userId)
-            ->with(['user', 'attendingStaff'])
+            ->with(['user', 'attendingStaff', 'medicineItem', 'medicines.item'])
             ->orderByDesc('consultation_date')
             ->orderByDesc('time_in')
             ->get();
@@ -1768,14 +1769,34 @@ class ReportsController extends Controller
 //for changing category
 public function update(Request $request, $id)
 {
-    $request->validate(['category_id' => 'required|exists:categories,id']);
-    
     $condition = MedicalConditions::findOrFail($id);
-    $condition->update([
-        'category_id' => $request->category_id
+
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'category_id' => 'required|exists:categories,id',
     ]);
 
-    return back()->with('success', 'Category updated successfully!');
+    $normalizedName = mb_strtolower(trim((string) $validated['name']));
+    $duplicateExists = MedicalConditions::query()
+        ->where('id', '!=', $condition->id)
+        ->whereRaw('LOWER(TRIM(name)) = ?', [$normalizedName])
+        ->exists();
+
+    if ($duplicateExists) {
+        return redirect()
+            ->back()
+            ->withInput()
+            ->withErrors([
+                'name' => 'This medical condition already exists in the MAR list.',
+            ]);
+    }
+
+    $condition->update([
+        'name' => trim((string) $validated['name']),
+        'category_id' => $validated['category_id'],
+    ]);
+
+    return back()->with('success', 'Condition updated successfully!');
 }
 // Para sa Export Hub Landing Page
 public function exportHub() 

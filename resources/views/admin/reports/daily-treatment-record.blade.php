@@ -729,8 +729,26 @@
                             $courseDepartment = trim(implode(' / ', array_filter([$course, $yearSection])));
                             $complaint = trim((string) $consultation->reason_for_visit);
                             $impression = trim((string) $consultation->comments);
-                            $medicineName = trim((string) (optional($consultation->medicineItem)->name ?: $consultation->medicine));
-                            $medicineQuantity = (float) $consultation->medicine_quantity;
+                            $referralLabels = [
+                                'hospital_without_nurse' => 'Refer to Hospital (Without Nurse)',
+                                'hospital_with_nurse' => 'Refer to Hospital (With Nurse)',
+                                'general' => 'Referral (General)',
+                                'others' => 'Others',
+                            ];
+                            $referralType = trim((string) ($consultation->referral_type ?? ''));
+                            $referral = $referralType !== '' && $referralType !== 'none'
+                                ? ($referralLabels[$referralType] ?? $referralType)
+                                : '';
+                            if ($referral !== '' && trim((string) ($consultation->referral_details ?? '')) !== '') {
+                                $referral .= ': ' . trim((string) $consultation->referral_details);
+                            }
+                            $medicineLines = $consultation->medicines->filter(fn ($line) => trim((string) ($line->medicine ?: optional($line->item)->name)) !== '');
+                            $medicineName = $medicineLines->isNotEmpty()
+                                ? $medicineLines->map(fn ($line) => $line->medicine ?: optional($line->item)->name)->implode(', ')
+                                : trim((string) (optional($consultation->medicineItem)->name ?: $consultation->medicine));
+                            $medicineQuantity = $medicineLines->isNotEmpty()
+                                ? $medicineLines->map(fn ($line) => rtrim(rtrim(number_format((float) $line->quantity, 2, '.', ''), '0'), '.'))->implode(', ')
+                                : ((float) $consultation->medicine_quantity > 0 ? rtrim(rtrim(number_format((float) $consultation->medicine_quantity, 2, '.', ''), '0'), '.') : '');
                             $staffName = trim((string) ($consultation->attending_staff_name ?: optional($consultation->attendingStaff)->name));
                             $timeIn = $consultation->time_in ?: optional($consultation->created_at)->format('H:i:s');
                             $timeOut = $consultation->time_out ?: optional($consultation->updated_at)->format('H:i:s');
@@ -757,6 +775,12 @@
                                     <span class="complaint-impression-label">Impression</span>
                                     <span class="complaint-impression-value">{{ $impression ?: 'No assessment recorded' }}</span>
                                 </span>
+                                @if($referral !== '')
+                                    <span class="complaint-impression-entry">
+                                        <span class="complaint-impression-label">Referral</span>
+                                        <span class="complaint-impression-value">{{ $referral }}</span>
+                                    </span>
+                                @endif
                             </td>
                             <td>
                                 {{ $medicineName !== '' && strtolower($medicineName) !== 'none' ? $medicineName : 'No medicine issued' }}
@@ -765,7 +789,7 @@
                                 @endif
                             </td>
                             <td class="quantity-cell">
-                                {{ $medicineQuantity > 0 ? rtrim(rtrim(number_format($medicineQuantity, 2, '.', ''), '0'), '.') : '-' }}
+                                {{ $medicineQuantity !== '' ? $medicineQuantity : '-' }}
                             </td>
                             <td>{{ $staffName ?: 'Clinic Staff' }}</td>
                         </tr>

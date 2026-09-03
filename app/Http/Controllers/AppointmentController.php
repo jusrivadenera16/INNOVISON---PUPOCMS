@@ -2165,9 +2165,10 @@ class AppointmentController extends Controller
             (string) ($user->idp_role ?? ''),
             (string) data_get($user, 'adminProfile.access_level', ''),
             (string) data_get($user, 'adminHubProfile.role', ''),
+            (string) data_get($user, 'adminHubProfile.access_level', ''),
         ]))));
 
-        foreach (['faculty', 'admin', 'staff', 'employee', 'dependent'] as $needle) {
+        foreach (['faculty', 'admin', 'staff', 'employee', 'dependent', 'designee'] as $needle) {
             if (str_contains($markers, $needle)) {
                 return true;
             }
@@ -4118,13 +4119,14 @@ public function showHealthForm()
 {
     /** @var \App\Models\User $user */
     $user = Auth::user();
+    $isDedicatedStudentForm = request()->routeIs('health.form.student');
 
     // Refresh user from database to ensure all fields are populated
     if ($user) {
-        $user = User::with('adminProfile')->find($user->id);
+        $user = User::with(['adminProfile', 'adminHubProfile'])->find($user->id);
     }
 
-    if ($this->shouldUseEmployeeHealthForm($user)) {
+    if (!$isDedicatedStudentForm && $this->shouldUseEmployeeHealthForm($user)) {
         return redirect()->route('health.form.employee');
     }
 
@@ -4149,6 +4151,15 @@ public function showHealthForm()
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
     $healthFormPrefill = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $existingHealthProfile);
     $healthFormPrefill['pending_health_form_request'] = $pendingHealthFormRequest;
+    if ($isDedicatedStudentForm) {
+        $healthFormPrefill['reference_mode'] = 'student_number';
+        $healthFormPrefill['reference_number'] = '';
+        $healthFormPrefill['manual_student_number_allowed'] = true;
+        $healthFormPrefill['reference_requires_validation'] = false;
+        $healthFormPrefill['step_1_title'] = 'Student ID';
+        $healthFormPrefill['step_1_description'] = 'Enter your Student ID, then complete your health information.';
+        $healthFormPrefill['reference_label'] = 'Student ID / Student Number';
+    }
     $this->persistResolvedUserProfileFields($user, $healthFormPrefill);
     $this->persistResolvedReferenceNumber($user, $healthFormPrefill['reference_number'] ?? '');
     $calculatedAge = $healthFormPrefill['age'] ?? null;
@@ -4160,7 +4171,10 @@ public function showHealthForm()
     $displayReferenceNumber = $healthFormPrefill['reference_number'] ?? '';
     $prefill = $healthFormPrefill;
 
-    return view('student.health_form', compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest'));
+    return view(
+        $isDedicatedStudentForm ? 'student.health_form_student' : 'student.health_form',
+        compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest')
+    );
 }
 
 public function showEmployeeHealthForm()
@@ -4168,7 +4182,7 @@ public function showEmployeeHealthForm()
     /** @var \App\Models\User|null $user */
     $user = Auth::guard('student')->user() ?: Auth::user();
     if ($user) {
-        $user = User::with(['adminProfile', 'employeeHealthProfile'])->find($user->id);
+        $user = User::with(['adminProfile', 'adminHubProfile', 'employeeHealthProfile'])->find($user->id);
     }
 
     if (!$user) {
@@ -4409,7 +4423,7 @@ public function storeEmployeeHealthForm(Request $request)
         'traveled_abroad' => ['nullable', 'boolean'],
         'has_disability' => ['nullable', 'boolean'],
         'disability_type' => ['required_if:has_disability,1', 'nullable', 'string', 'max:255'],
-        'student_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
+        'student_photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
         'health_declaration' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
         'medical_certificate' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
         'chest_xray_document' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
@@ -4641,22 +4655,25 @@ public function validateHealthFormReference(Request $request)
     $studentNumberReference = $user ? $this->enrolledStudentReferenceNumber($user, $existingHealthProfile) : '';
     $storedAdmissionReference = $user ? $this->resolveReferenceNumber($user, $existingHealthProfile) : '';
 
+    $isStudentFormVerification = $request->input('form_mode') === 'student';
     if ($user && $this->wantsManualStudentNumberMode($request)) {
-        $manualModeLookup = $this->fetchPuptasApplicantLookupForUser($user);
-        $manualModeApplicantData = is_array($manualModeLookup['data'] ?? null)
-            ? $manualModeLookup['data']
-            : null;
+        if (!$isStudentFormVerification) {
+            $manualModeLookup = $this->fetchPuptasApplicantLookupForUser($user);
+            $manualModeApplicantData = is_array($manualModeLookup['data'] ?? null)
+                ? $manualModeLookup['data']
+                : null;
 
-        if (!$this->canUseManualStudentNumberMode(
-            $user,
-            $existingHealthProfile,
-            $manualModeApplicantData,
-            (string) ($manualModeLookup['outcome'] ?? 'not_found')
-        )) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Admission applicants must verify their Admission Reference and cannot use the Student ID option.',
-            ], 403);
+            if (!$this->canUseManualStudentNumberMode(
+                $user,
+                $existingHealthProfile,
+                $manualModeApplicantData,
+                (string) ($manualModeLookup['outcome'] ?? 'not_found')
+            )) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This Student ID option is only available for current students and OJT students.',
+                ], 403);
+            }
         }
 
         $validated = $request->validate([
@@ -4666,11 +4683,17 @@ public function validateHealthFormReference(Request $request)
         $studentNumberReference = $this->normalizeManualStudentNumber($validated['reference_number']);
         $this->persistResolvedStudentNumber($user, $existingHealthProfile, $studentNumberReference);
         $this->persistResolvedReferenceNumber($user, $studentNumberReference, $existingHealthProfile);
+        $guisisResult = app(GuisisApiService::class)->getStudentByStudentNumberDetailed($studentNumberReference);
+        $guisisMessage = ($guisisResult['ok'] ?? false)
+            ? 'Student ID verified from GUISIS.'
+            : ((int) ($guisisResult['status'] ?? 0) === 404
+                ? 'Student ID accepted. No matching GUISIS record was found.'
+                : 'Student ID accepted. GUISIS verification is currently unavailable.');
 
         return response()->json([
             'success' => true,
             'reference_number' => $studentNumberReference,
-            'message' => 'Student ID accepted. Admission cross-check is bypassed for current students and OJT students.',
+            'message' => $guisisMessage,
         ]);
     }
 
@@ -4885,6 +4908,7 @@ public function storeHealthForm(Request $request)
 {
     /** @var \App\Models\User|null $user */
     $user = Auth::user();
+    $isDedicatedStudentForm = $request->routeIs('store.health.form.student');
     if ($this->shouldUseEmployeeHealthForm($user)) {
         return redirect()->route('health.form.employee')
             ->with('info', 'Please use the Faculty, Administrative Employee, and Dependent Health Examination Record.');
@@ -4917,20 +4941,22 @@ public function storeHealthForm(Request $request)
     $manualStudentNumberReference = '';
 
     if ($manualStudentNumberRequested) {
-        $manualModeLookup = $this->fetchPuptasApplicantLookupForUser($user);
-        $manualModeApplicantData = is_array($manualModeLookup['data'] ?? null)
-            ? $manualModeLookup['data']
-            : null;
+        if (!$isDedicatedStudentForm) {
+            $manualModeLookup = $this->fetchPuptasApplicantLookupForUser($user);
+            $manualModeApplicantData = is_array($manualModeLookup['data'] ?? null)
+                ? $manualModeLookup['data']
+                : null;
 
-        if (!$this->canUseManualStudentNumberMode(
-            $user,
-            $existingHealthProfile,
-            $manualModeApplicantData,
-            (string) ($manualModeLookup['outcome'] ?? 'not_found')
-        )) {
-            throw ValidationException::withMessages([
-                'reference_number' => 'Admission applicants must verify their Admission Reference and cannot use the Student ID option.',
-            ]);
+            if (!$this->canUseManualStudentNumberMode(
+                $user,
+                $existingHealthProfile,
+                $manualModeApplicantData,
+                (string) ($manualModeLookup['outcome'] ?? 'not_found')
+            )) {
+                throw ValidationException::withMessages([
+                    'reference_number' => 'This Student ID option is only available for current students and OJT students.',
+                ]);
+            }
         }
 
         $request->validate([
@@ -4984,7 +5010,7 @@ public function storeHealthForm(Request $request)
     ]);
 
     $isStudentNumberReferenceMode = $referenceMode === 'student_number';
-    $manualStudentDocumentsRequired = $manualStudentNumberReference !== '';
+    $manualStudentDocumentsRequired = !$isDedicatedStudentForm && $manualStudentNumberReference !== '';
     $applicantDocumentsRequired = $referenceMode === 'admission' || $manualStudentDocumentsRequired;
     $referenceNumberRules = $isStudentNumberReferenceMode
         ? ['required', 'string', 'max:120', 'regex:/^\d{4}-\d{5}-[A-Za-z]{2}-\d+$/']
@@ -5047,6 +5073,7 @@ public function storeHealthForm(Request $request)
         'med_cert_findings' => $applicantDocumentsRequired ? 'required|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review' : 'nullable|string|in:No Findings / Normal,With Findings,Not Sure / For Clinic Review',
         'med_cert_findings_details' => 'required_if:med_cert_findings,With Findings|nullable|string|max:1000',
         'signature_method' => 'required|in:draw,upload',
+        'consent_acknowledged' => 'accepted',
         'digital_signature_data' => 'nullable|string',
         'digital_signature_upload' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
         'digital_signature_existing' => 'nullable|string|max:255',

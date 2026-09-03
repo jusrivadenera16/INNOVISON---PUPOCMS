@@ -631,10 +631,28 @@
                                 $visitDate = $cons?->consultation_date ?: $appt?->date;
                                 $timeIn = $cons?->time_in ?: $appt?->time;
                                 $service = $cons?->service ?: $appt?->service;
-                                $medicine = trim((string) ($cons?->medicine ?? ''));
-                                $quantity = $cons?->medicine_quantity;
+                                $medicineLines = $cons?->medicines?->filter(fn ($line) => trim((string) ($line->medicine ?: optional($line->item)->name)) !== '') ?? collect();
+                                $medicine = $medicineLines->isNotEmpty()
+                                    ? $medicineLines->map(fn ($line) => $line->medicine ?: optional($line->item)->name)->implode(', ')
+                                    : trim((string) ($cons?->medicine ?? ''));
+                                $quantity = $medicineLines->isNotEmpty()
+                                    ? $medicineLines->map(fn ($line) => rtrim(rtrim(number_format((float) $line->quantity, 2, '.', ''), '0'), '.'))->implode(', ')
+                                    : $cons?->medicine_quantity;
                                 $complaint = trim((string) ($appt?->problem ?: $cons?->reason_for_visit));
                                 $impression = trim((string) ($cons?->comments ?? ''));
+                                $referralLabels = [
+                                    'hospital_without_nurse' => 'Refer to Hospital (Without Nurse)',
+                                    'hospital_with_nurse' => 'Refer to Hospital (With Nurse)',
+                                    'general' => 'Referral (General)',
+                                    'others' => 'Others',
+                                ];
+                                $referralType = trim((string) ($cons?->referral_type ?? ''));
+                                $referral = $referralType !== '' && $referralType !== 'none'
+                                    ? ($referralLabels[$referralType] ?? $referralType)
+                                    : '';
+                                if ($referral !== '' && trim((string) ($cons?->referral_details ?? '')) !== '') {
+                                    $referral .= ': ' . trim((string) $cons->referral_details);
+                                }
                                 $staff = $cons
                                     ? (optional($cons->attendingStaff)->name ?? $cons->attending_staff_name ?? '-')
                                     : '-';
@@ -668,6 +686,9 @@
                                 <td class="appt-notes">
                                     <strong>Complaint:</strong> {{ $complaint !== '' ? $complaint : 'No complaint recorded' }}<br>
                                     <strong>Impression:</strong> {{ $impression !== '' ? $impression : 'No assessment recorded' }}
+                                    @if($referral !== '')
+                                        <br><strong>Referral:</strong> {{ $referral }}
+                                    @endif
                                 </td>
                             </tr>
                         @empty
