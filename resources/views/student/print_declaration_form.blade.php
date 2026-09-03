@@ -32,9 +32,9 @@
         body {
             margin: 0;
             padding: 0;
-            color: #111827;
+            color: #000000 !important;
             font-family: Arial, sans-serif;
-            font-size: 12px;
+            font-size: 20px;
             line-height: 1.5;
         }
 
