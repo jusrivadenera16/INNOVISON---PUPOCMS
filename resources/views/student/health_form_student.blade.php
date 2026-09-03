@@ -4701,9 +4701,6 @@
             togglePwdRequirements();
             toggleAllergyDetails();
             setStep(currentStep);
-            if (!studentConsentAcknowledged?.value) {
-                window.setTimeout(openStudentConsent, 0);
-            }
         })();
     </script>
 
