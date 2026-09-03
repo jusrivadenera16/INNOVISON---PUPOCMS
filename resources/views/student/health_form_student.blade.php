@@ -1933,6 +1933,20 @@
             display: none;
         }
 
+        .student-consent-modal[hidden] { display: none !important; }
+        .student-consent-modal { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 18px; background: rgba(15, 23, 42, .68); backdrop-filter: blur(7px); }
+        .student-consent-card { position: relative; width: min(680px, 100%); max-height: calc(100vh - 36px); overflow-y: auto; padding: 28px 30px 24px; border: 1px solid rgba(127, 29, 45, .2); border-radius: 14px; background: #fffdf8; color: #1f2937; box-shadow: 0 25px 70px rgba(15, 23, 42, .32); }
+        .student-consent-close { position: absolute; top: 16px; right: 18px; width: 34px; height: 34px; border: 1px solid #d1d5db; border-radius: 50%; background: #fff; color: #7f1d2d; font-size: 22px; line-height: 1; cursor: pointer; }
+        .student-consent-kicker { margin: 0 42px 8px 0; color: #7f1d2d; font-size: 11px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+        .student-consent-card h2 { margin: 0 42px 18px 0; color: #64111d; font-size: 21px; line-height: 1.2; }
+        .student-consent-copy p { margin: 0 0 12px; font-size: 13px; line-height: 1.45; text-align: justify; }
+        .student-consent-guardian-note { margin: 14px 0; padding: 10px 12px; border-left: 3px solid #facc15; background: #fff7d6; color: #64111d; font-size: 12px; font-weight: 700; line-height: 1.4; }
+        .student-consent-agreement { display: flex; align-items: flex-start; gap: 9px; margin-top: 18px; color: #64111d; font-size: 13px; font-weight: 800; line-height: 1.35; cursor: pointer; }
+        .student-consent-agreement input { width: 17px; height: 17px; margin-top: 1px; accent-color: #7f1d2d; flex: 0 0 auto; }
+        .student-consent-continue { display: block; width: 100%; margin-top: 20px; padding: 11px 18px; border: 1px solid #7f1d2d; border-radius: 8px; background: #7f1d2d; color: #fff; font-weight: 800; cursor: pointer; }
+        .student-consent-continue:hover, .student-consent-continue:focus-visible { border-color: #facc15; background: #facc15; color: #000; outline: none; }
+        @media (max-width: 560px) { .student-consent-card { padding: 24px 18px 20px; } .student-consent-card h2 { font-size: 18px; } }
+
         .step-one-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2388,67 +2402,23 @@
                 $isDocumentRequested = fn ($documentKey) => in_array($documentKey, $requestedCorrectionDocuments, true);
                 $hasExistingDocument = fn ($documentKey) => trim((string) ($existingCorrectionDocuments[$documentKey] ?? '')) !== '';
                 $documentOpenUrl = fn ($documentKey) => route('student.health_record.document', ['document' => $documentKey]);
-                $displayFirstName = trim((string) (
-                    ($prefill['puptas_first_name'] ?? '')
-                    ?: ($prefill['first_name'] ?? '')
-                ));
-                $displayMiddleName = trim((string) (
-                    ($prefill['puptas_middle_name'] ?? '')
-                    ?: ($prefill['middle_name'] ?? '')
-                ));
-                $displayLastName = trim((string) (
-                    ($prefill['puptas_last_name'] ?? '')
-                    ?: ($prefill['last_name'] ?? '')
-                ));
-                $displaySuffixName = trim((string) (
-                    ($prefill['puptas_suffix_name'] ?? '')
-                    ?: ($prefill['suffix_name'] ?? '')
-                ));
+                $displayFirstName = trim((string) ($prefill['first_name'] ?? ''));
+                $displayMiddleName = trim((string) ($prefill['middle_name'] ?? ''));
+                $displayLastName = trim((string) ($prefill['last_name'] ?? ''));
+                $displaySuffixName = trim((string) ($prefill['suffix_name'] ?? ''));
 
-                $displayReferenceNumber = trim((string) ($prefill['reference_number'] ?? ''));
-                $referenceMode = trim((string) ($prefill['reference_mode'] ?? 'admission'));
-                $manualStudentNumberAllowed = (bool) ($prefill['manual_student_number_allowed'] ?? false);
-                $selectedReferenceMode = old('reference_mode_selected', $referenceMode === 'student_number' ? 'student_number' : 'admission');
-                $selectedReferenceMode = in_array($selectedReferenceMode, ['admission', 'student_number'], true) ? $selectedReferenceMode : 'admission';
-                if (!$manualStudentNumberAllowed) {
-                    $selectedReferenceMode = 'admission';
-                }
-                $manualStudentModeSelected = $selectedReferenceMode === 'student_number';
-                $referenceRequiresValidation = (bool) ($prefill['reference_requires_validation'] ?? true);
-                $referenceVerificationUnavailable = $referenceMode === 'verification_unavailable';
-                $puptasVerificationStatus = (int) ($prefill['puptas_verification_http_status'] ?? 0);
-                $puptasVerificationMessage = trim((string) ($prefill['puptas_verification_message'] ?? ''));
-                $applicantDocumentsRequired = $referenceMode === 'admission' || $manualStudentModeSelected;
-                $stepOneTitle = trim((string) ($prefill['step_1_title'] ?? 'Admission Reference'));
-                $stepOneDescription = trim((string) ($prefill['step_1_description'] ?? 'Confirm your admission reference, complete your health information, then upload the required clinic documents.'));
-                $referenceLabel = trim((string) ($prefill['reference_label'] ?? 'Admission Reference Number'));
-                if ($manualStudentModeSelected) {
-                    $stepOneTitle = 'Student ID';
-                    $stepOneDescription = 'Enter your Student ID if you are already enrolled or visiting for OJT clinic requirements, then complete the same health form and upload the required clinic documents.';
-                    $referenceLabel = 'Student ID / Student Number';
-                }
-                $referenceDisplayFallback = $referenceMode === 'admission'
-                    ? 'No Reference Received'
-                    : ($referenceMode === 'student_number'
-                        ? 'No Student Number Yet'
-                        : ($referenceVerificationUnavailable ? 'Verification Temporarily Unavailable' : 'No Clinic Reference Yet'));
-                if ($manualStudentModeSelected && $displayReferenceNumber === '') {
-                    $referenceDisplayFallback = 'Enter Student ID';
-                }
-                $referenceStatusDefault = $referenceRequiresValidation
-                    ? 'Your Admission Reference Number will automatically appear once your account has been tagged for medical processing in PUPTAS.'
-                    : ($referenceVerificationUnavailable
-                        ? ($puptasVerificationMessage !== ''
-                            ? $puptasVerificationMessage . ' No clinic reference was generated.'
-                            : ($puptasVerificationStatus === 429
-                                ? 'PUPTAS verification is temporarily rate limited. No clinic reference was generated. Please try again later.'
-                                : 'PUPTAS verification is temporarily unavailable. No clinic reference was generated. Please try again later.'))
-                        : ($referenceMode === 'student_number'
-                            ? 'Your official student number from GUISIS will be used as your clinic reference.'
-                            : 'This clinic reference is generated and managed inside the clinic system for local staff, admin, faculty, and guest records.'));
-                if ($manualStudentModeSelected) {
-                    $referenceStatusDefault = 'Enter your Student ID, then click the check icon. Admission cross-check will be bypassed for current students and OJT students.';
-                }
+                $displayReferenceNumber = '';
+                $referenceMode = 'student_number';
+                $manualStudentNumberAllowed = true;
+                $selectedReferenceMode = 'student_number';
+                $manualStudentModeSelected = true;
+                $referenceRequiresValidation = true;
+                $referenceVerificationUnavailable = false;
+                $stepOneTitle = 'Student ID';
+                $stepOneDescription = 'Enter your Student ID, then complete your health information.';
+                $referenceLabel = 'Student ID / Student Number';
+                $referenceDisplayFallback = 'Enter Student ID';
+                $referenceStatusDefault = 'Enter your Student ID, then click the check icon.';
                 $courseOptions = $prefill['course_options'] ?? [];
                 $courseApplicable = (bool) ($prefill['course_applicable'] ?? false);
                 $selectedCourseCode = old('course_code', $prefill['course_code'] ?? '');
@@ -2495,12 +2465,13 @@
             </div>
             <div class="stepper-spacer"></div>
 
-            <form action="{{ route('store.health.form') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('store.health.form.student') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <input type="hidden" name="reference_mode_selected" value="admission">
+                <input type="hidden" name="reference_mode_selected" value="student_number">
                 <input type="hidden" id="course_college" name="course_college" value="{{ $courseApplicable ? $selectedCourseName : '' }}">
                 <input type="hidden" name="health_form_category" value="{{ optional($pendingHealthFormRequest ?? null)->category ?: 'General' }}">
                 <input type="hidden" name="health_form_request_remarks" value="{{ optional($pendingHealthFormRequest ?? null)->remarks ?: '' }}">
+                <input type="hidden" name="consent_acknowledged" id="consentAcknowledged" value="">
 
                 <div class="step-panel {{ $startStep === 1 ? '' : 'is-hidden' }}" id="stepPanel1">
                     <div class="form-intro">
@@ -2545,7 +2516,7 @@
                                     type="button"
                                     class="reference-edit-btn"
                                     id="editReferenceBtn"
-                                    aria-label="{{ $displayReferenceNumber !== '' ? 'Reference already verified' : 'Add admission reference' }}"
+                                    aria-label="Add student ID"
                                     aria-expanded="false"
                                     title="{{ $displayReferenceNumber !== '' ? 'Reference already verified' : 'Add reference number' }}"
                                 >
@@ -2576,7 +2547,7 @@
                                 </div>
                             @endif
                             <p class="reference-verify-status {{ $displayReferenceNumber === '' ? '' : 'is-success' }}" id="referenceVerifyStatus" aria-live="polite">
-                                {{ $displayReferenceNumber === '' ? $referenceStatusDefault : ($referenceRequiresValidation ? 'Reference already verified from the Admission System.' : ($referenceMode === 'student_number' ? 'Student number is ready for use inside the clinic system.' : 'Clinic reference is ready for use inside the clinic system.')) }}
+                                {{ $referenceStatusDefault }}
                             </p>
                             @error('reference_number')
                                 <p class="reference-field-error">{{ $message }}</p>
@@ -2587,16 +2558,13 @@
                     <div class="upload-instruction-card">
                         <strong>Instructions for Completing Your Health Profile</strong>
                         <ol>
-                            <li>Review your {{ strtolower($stepOneTitle) }} and name before proceeding.</li>
+                            <li>Review your Student ID and name before proceeding.</li>
                             <li>Complete every required field in Personal Information using accurate and current details.</li>
                             <li>Answer the Medical History, allergy, disability, smoking, and alcohol questions truthfully.</li>
                             <li>Provide your COVID-19 vaccination status and dose details, when applicable.</li>
-                            <li>{{ $applicantDocumentsRequired ? 'Prepare clear PDF or image copies of your medical certificate and official chest X-ray report.' : 'Upload medical certificate, health declaration, and chest X-ray documents only if they are available or requested by the clinic.' }}</li>
-                            <li>If you are a PWD, upload your PWD ID in Step 5. Upload your formal 2x2 photo as JPG or PNG.</li>
-                            <li>Download and print your Health Information Form before proceeding to Clinic for Assessment.</li>
-                            <li>Complete the required e-signature for the Health Information Form.</li>
-                            <li>If you are 17 years old or below, ask your parent or guardian to sign the form as well.</li>
-                            <li>Don't forget to bring your hard copy of requirements and printed 2 by 2 photo to the clinic.</li>
+                            <li>Upload your formal 2x2 photo as JPG or PNG. This is the only document required for this form.</li>
+                            <li>Medical certificate, health declaration, chest X-ray, and PWD documents are optional and may be submitted later through My Account or when requested by the clinic.</li>
+                            <li>Complete the required e-signature for the Declaration of Medical Information and Data Subject Consent Form.</li>
                         </ol>
                     </div>
 
@@ -2702,14 +2670,13 @@
                             <label class="form-label" for="school_year">School Year <span class="required">*</span></label>
                             <input
                                 id="school_year"
-                                class="form-control field-maroon{{ !empty($prefill['school_year_from_puptas']) ? ' identity-readonly' : '' }}"
+                                class="form-control field-maroon"
                                 name="school_year"
                                 value="{{ old('school_year', $prefill['school_year'] ?? '') }}"
                                 placeholder="YYYY-YYYY"
                                 pattern="\d{4}-\d{4}"
                                 inputmode="numeric"
                                 required
-                                {{ !empty($prefill['school_year_from_puptas']) ? 'readonly' : '' }}
                             >
                         </div>
                         @if(!empty($prefill['year_level']))
@@ -2969,6 +2936,44 @@
                     </div>
                 </div>
 
+                <div class="student-consent-modal" id="studentConsentModal" role="dialog" aria-modal="true" aria-labelledby="studentConsentTitle" hidden>
+                    <section class="student-consent-card">
+                        <button type="button" class="student-consent-close" id="studentConsentClose" aria-label="Close consent form">&times;</button>
+                        <p class="student-consent-kicker">Data Privacy Consent</p>
+                        <h2 id="studentConsentTitle">Declaration of Medical Information and Data Subject Consent Form</h2>
+                        <div class="student-consent-copy">
+                            <p>I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my consultation for the issuance of medical clearance are true, correct and complete to the best of my knowledge. I have fully disclosed all medical conditions that may affect my assessment and enrolment as a student of PUP Taguig Campus.</p>
+                            <p>I also understand that the PUP Medical Services and University will not be liable for any untoward incident that may arise due to my failure to disclose accurate information or intentionally providing false or deceptive information.</p>
+                            <p>In compliance with the Data Privacy Act of 2012 and its implementing rules and regulations, I voluntarily consent to the collection, processing and storage of my personal and health information for health assessment, treatment, or research following applicable research ethics guidelines.</p>
+                        </div>
+                        <p class="student-consent-guardian-note" id="studentConsentGuardianNote" hidden>Because you are 17 years old or below, a parent or guardian must also sign the printed consent form.</p>
+                        <label class="student-consent-agreement">
+                            <input type="checkbox" id="studentConsentCheckbox" required>
+                            <span>I have read and agree to this declaration and consent.</span>
+                        </label>
+                        <button type="button" class="student-consent-continue" id="studentConsentContinue">Continue</button>
+                    </section>
+                </div>
+
+                <div class="student-consent-modal" id="studentConsentModal" role="dialog" aria-modal="true" aria-labelledby="studentConsentTitle" hidden>
+                    <section class="student-consent-card">
+                        <button type="button" class="student-consent-close" id="studentConsentClose" aria-label="Close consent form">&times;</button>
+                        <p class="student-consent-kicker">Data Privacy Consent</p>
+                        <h2 id="studentConsentTitle">Declaration of Medical Information and Data Subject Consent Form</h2>
+                        <div class="student-consent-copy">
+                            <p>I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my consultation for the issuance of medical clearance are true, correct and complete to the best of my knowledge. I have fully disclosed all medical conditions that may affect my assessment and enrolment as a student of PUP Taguig Campus.</p>
+                            <p>I also understand that the PUP Medical Services and University will not be liable for any untoward incident that may arise due to my failure to disclose accurate information or intentionally providing false or deceptive information.</p>
+                            <p>In compliance with the Data Privacy Act of 2012 and its implementing rules and regulations, I voluntarily consent to the collection, processing and storage of my personal and health information for health assessment, treatment, or research following applicable research ethics guidelines.</p>
+                        </div>
+                        <p class="student-consent-guardian-note" id="studentConsentGuardianNote" hidden>Because you are 17 years old or below, a parent or guardian must also sign the printed consent form.</p>
+                        <label class="student-consent-agreement">
+                            <input type="checkbox" id="studentConsentCheckbox">
+                            <span>I have read and agree to this declaration and consent.</span>
+                        </label>
+                        <button type="button" class="student-consent-continue" id="studentConsentContinue">Continue</button>
+                    </section>
+                </div>
+
                 <div class="step-panel {{ $startStep === 3 ? '' : 'is-hidden' }}" id="stepPanel3">
                     <h2 class="section-title step-page-title" data-title-letter="M">Medical History</h2>
                     <div class="form-field mb-3">
@@ -3163,7 +3168,7 @@
                             @elseif($isHealthFormCorrectionMode && $pwdRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new PWD ID Proof.</div>
                             @endif
-                            <small>Required only when PWD. Allowed: PDF only, max 1MB. Compress the file if needed to meet the size requirement.</small>
+                            <small>Required when PWD is selected. Allowed: PDF only, max 1MB.</small>
                         </div>
                         @php
                             $photoRequested = $isDocumentRequested('student_photo');
@@ -3208,9 +3213,10 @@
                             @endif
                             <small>Allowed: JPG/PNG only, max 1MB. Compress the image if needed to meet the size requirement.</small>
                         </div>
+                        @if($isHealthFormCorrectionMode && $declarationRequested)
                         <div class="requirement-card">
                             <div class="requirement-card-header">
-                                <strong>Declaration of Medical Information and Data Subject Consent Form @if($applicantDocumentsRequired)<span class="required">*</span>@endif</strong>
+                                <strong>Declaration of Medical Information and Data Subject Consent Form</strong>
                                 <span class="requirement-badge">PDF/IMG</span>
                             </div>
                             <p class="requirement-guideline">Upload the signed, clear, and readable Declaration of Medical Information and Data Subject Consent Form.</p>
@@ -3232,24 +3238,26 @@
                                     <a href="{{ $documentOpenUrl('health_declaration') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input type="file" name="health_declaration" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ (($applicantDocumentsRequired && !$isHealthFormCorrectionMode) || ($isHealthFormCorrectionMode && $declarationRequested)) ? 'required' : '' }} {{ $declarationLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            <input type="file" name="health_declaration" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ ($isHealthFormCorrectionMode && $declarationRequested) ? 'required' : '' }} {{ $declarationLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($declarationLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $declarationRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new declaration form.</div>
                             @endif
-                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : '' }}Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.</small>
+                            <small>Optional during initial submission. Allowed: PDF, JPG, JPEG, or PNG, max 1MB.</small>
                         </div>
+                        @endif
                         @php
                             $medicalCertificateRequested = $isDocumentRequested('medical_certificate');
                             $medicalCertificateUploaded = $hasExistingDocument('medical_certificate');
                             $medicalCertificateLocked = $isHealthFormCorrectionMode && !$medicalCertificateRequested && $medicalCertificateUploaded;
                             $selectedMedCertFindings = old('med_cert_findings', $prefill['med_cert_findings'] ?? '');
                         @endphp
+                        @if($isHealthFormCorrectionMode && $medicalCertificateRequested)
                         <div class="requirement-card {{ old('doctor_name', $prefill['doctor_name'] ?? '') || old('med_cert_date', $prefill['med_cert_date'] ?? '') || $selectedMedCertFindings || old('med_cert_findings_details', $prefill['med_cert_findings_details'] ?? '') ? 'has-old-data' : '' }}" data-requirement-card>
                             <div class="requirement-card-header">
-                                <strong>Medical Certificate @if($applicantDocumentsRequired)<span class="required">*</span>@endif</strong>
+                                <strong>Medical Certificate</strong>
                                 <span class="requirement-badge">PDF/IMG</span>
                             </div>
                             <p class="requirement-guideline">Please ensure the doctor's signature and PRC License Number are clearly visible.</p>
@@ -3271,27 +3279,27 @@
                                     <a href="{{ $documentOpenUrl('medical_certificate') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input type="file" name="medical_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ (($applicantDocumentsRequired && !$isHealthFormCorrectionMode) || ($isHealthFormCorrectionMode && $medicalCertificateRequested)) ? 'required' : '' }} {{ $medicalCertificateLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            <input type="file" name="medical_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ ($isHealthFormCorrectionMode && $medicalCertificateRequested) ? 'required' : '' }} {{ $medicalCertificateLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($medicalCertificateLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $medicalCertificateRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new medical certificate.</div>
                             @endif
-                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : '' }}Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.</small>
+                            <small>Optional during initial submission. Allowed: PDF, JPG, JPEG, or PNG, max 1MB.</small>
                             <div class="requirement-extra">
                                 <div class="form-field span-2">
-                                    <label class="form-label" for="doctor_name">Doctor's Full Name @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
-                                    <input id="doctor_name" type="text" name="doctor_name" class="form-control" value="{{ old('doctor_name', $prefill['doctor_name'] ?? '') }}" maxlength="255" {{ $applicantDocumentsRequired ? 'required' : '' }} data-requirement-extra-field>
+                                    <label class="form-label" for="doctor_name">Doctor's Full Name</label>
+                                    <input id="doctor_name" type="text" name="doctor_name" class="form-control" value="{{ old('doctor_name', $prefill['doctor_name'] ?? '') }}" maxlength="255" data-requirement-extra-field>
                                 </div>
                                 <div class="form-field">
-                                    <label class="form-label" for="med_cert_date">Date of Certificate @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
-                                    <input id="med_cert_date" type="date" name="med_cert_date" class="form-control" value="{{ old('med_cert_date', $prefill['med_cert_date'] ?? '') }}" {{ $applicantDocumentsRequired ? 'required' : '' }} data-requirement-extra-field>
+                                    <label class="form-label" for="med_cert_date">Date of Certificate</label>
+                                    <input id="med_cert_date" type="date" name="med_cert_date" class="form-control" value="{{ old('med_cert_date', $prefill['med_cert_date'] ?? '') }}" data-requirement-extra-field>
                                 </div>
                                 <div class="form-field">
-                                    <label class="form-label" for="med_cert_findings">Findings @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
+                                    <label class="form-label" for="med_cert_findings">Findings</label>
                                     <div class="clinic-select-wrap" data-clinic-select>
-                                        <select id="med_cert_findings" name="med_cert_findings" class="form-select clinic-select-native" {{ $applicantDocumentsRequired ? 'required' : '' }} data-requirement-extra-field>
+                                        <select id="med_cert_findings" name="med_cert_findings" class="form-select clinic-select-native" data-requirement-extra-field>
                                             <option value="">Select findings</option>
                                             <option value="No Findings / Normal" {{ $selectedMedCertFindings === 'No Findings / Normal' ? 'selected' : '' }}>No Findings / Normal</option>
                                             <option value="With Findings" {{ $selectedMedCertFindings === 'With Findings' ? 'selected' : '' }}>With Findings</option>
@@ -3319,15 +3327,17 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
                         @php
                             $xrayRequested = $isDocumentRequested('chest_xray_result');
                             $xrayUploaded = $hasExistingDocument('chest_xray_result');
                             $xrayLocked = $isHealthFormCorrectionMode && !$xrayRequested && $xrayUploaded;
                             $selectedXrayFindings = old('xray_findings', $prefill['xray_findings'] ?? '');
                         @endphp
+                        @if($isHealthFormCorrectionMode && $xrayRequested)
                         <div class="requirement-card {{ old('xray_date', $prefill['xray_date'] ?? '') || $selectedXrayFindings || old('xray_findings_details', $prefill['xray_findings_details'] ?? '') ? 'has-old-data' : '' }}" data-requirement-card>
                             <div class="requirement-card-header">
-                                <strong>Chest X-ray Result @if($applicantDocumentsRequired)<span class="required">*</span>@endif</strong>
+                                <strong>Chest X-ray Result</strong>
                                 <span class="requirement-badge">PDF/IMG</span>
                             </div>
                             <p class="requirement-guideline">Please upload the official radiologist's written report, not the actual film scanning image.</p>
@@ -3349,23 +3359,23 @@
                                     <a href="{{ $documentOpenUrl('chest_xray_result') }}" target="_blank" rel="noopener">Open</a>
                                 </div>
                             @endif
-                            <input type="file" name="chest_xray_result" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ (($applicantDocumentsRequired && !$isHealthFormCorrectionMode) || ($isHealthFormCorrectionMode && $xrayRequested)) ? 'required' : '' }} {{ $xrayLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
+                            <input type="file" name="chest_xray_result" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" {{ ($isHealthFormCorrectionMode && $xrayRequested) ? 'required' : '' }} {{ $xrayLocked ? 'disabled' : '' }} data-requirement-file data-upload-input>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             @if($xrayLocked)
                                 <div class="file-locked-note">Preview only. The clinic did not request replacement for this file.</div>
                             @elseif($isHealthFormCorrectionMode && $xrayRequested)
                                 <div class="file-locked-note">Replacement requested by the clinic. Upload a new Chest X-ray Result.</div>
                             @endif
-                            <small>{{ $applicantDocumentsRequired ? 'Required for applicants. ' : '' }}Allowed: PDF, JPG, JPEG, or PNG, max 1MB. Compress the file if needed to meet the size requirement.</small>
+                            <small>Optional during initial submission. Allowed: PDF, JPG, JPEG, or PNG, max 1MB.</small>
                             <div class="requirement-extra">
                                 <div class="form-field">
-                                    <label class="form-label" for="xray_date">Date of Examination @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
-                                    <input id="xray_date" type="date" name="xray_date" class="form-control" value="{{ old('xray_date', $prefill['xray_date'] ?? '') }}" {{ $applicantDocumentsRequired ? 'required' : '' }} data-requirement-extra-field>
+                                    <label class="form-label" for="xray_date">Date of Examination</label>
+                                    <input id="xray_date" type="date" name="xray_date" class="form-control" value="{{ old('xray_date', $prefill['xray_date'] ?? '') }}" data-requirement-extra-field>
                                 </div>
                                 <div class="form-field">
-                                    <label class="form-label" for="xray_findings">Findings @if($applicantDocumentsRequired)<span class="required">*</span>@endif</label>
+                                    <label class="form-label" for="xray_findings">Findings</label>
                                     <div class="clinic-select-wrap" data-clinic-select>
-                                        <select id="xray_findings" name="xray_findings" class="form-select clinic-select-native" {{ $applicantDocumentsRequired ? 'required' : '' }} data-requirement-extra-field>
+                                        <select id="xray_findings" name="xray_findings" class="form-select clinic-select-native" data-requirement-extra-field>
                                             <option value="">Select findings</option>
                                             <option value="Normal" {{ $selectedXrayFindings === 'Normal' ? 'selected' : '' }}>Normal</option>
                                             <option value="With Findings" {{ $selectedXrayFindings === 'With Findings' ? 'selected' : '' }}>With Findings</option>
@@ -3393,6 +3403,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
                     </div>
                     <div class="btn-row">
                         <button type="button" class="btn btn-health btn-health-back" data-step-back="4">
@@ -3412,7 +3423,7 @@
 
                 <div class="step-panel {{ $startStep === 6 ? '' : 'is-hidden' }}" id="stepPanel6">
                     <h2 class="section-title step-page-title" data-title-letter="E">E-Signature</h2>
-                    <p class="step-fill-note">Draw your signature or upload a clear signature image to certify your Health Profile.</p>
+                    <p class="step-fill-note">Draw your signature or upload a clear signature image for the Declaration of Medical Information and Data Subject Consent Form.</p>
                     <input type="text" id="digital_signature_data" name="digital_signature_data" value="{{ old('digital_signature_data') }}" class="visually-hidden" data-signature-field>
                     <input type="hidden" id="digital_signature_existing" name="digital_signature_existing" value="{{ $prefill['digital_signature'] ?? '' }}">
                     <div class="esign-method-grid" aria-label="Choose your signature method">
@@ -3491,7 +3502,7 @@
                                 <path d="M17 21v-8H7v8"></path>
                                 <path d="M7 3v5h8"></path>
                             </svg>
-                            <span>Save Health Profile</span>
+                            <span data-submit-label>Save Health Profile</span>
                         </button>
                     </div>
                 </div>
@@ -3542,7 +3553,7 @@
                 window.setTimeout(dismissToast, 5200);
             });
 
-            const form = document.querySelector('form[action="{{ route('store.health.form') }}"]');
+            const form = document.querySelector('form[action="{{ route('store.health.form.student') }}"]');
             const totalSteps = 6;
             const stepNames = @json($healthFormSteps);
             const stepPanels = Array.from({ length: totalSteps }, (_, index) => document.getElementById(`stepPanel${index + 1}`));
@@ -3554,6 +3565,12 @@
             const healthErrorModal = document.getElementById('healthErrorModal');
             const healthErrorMessage = document.getElementById('healthErrorMessage');
             const healthErrorContinue = document.getElementById('healthErrorContinue');
+            const studentConsentModal = document.getElementById('studentConsentModal');
+            const studentConsentCheckbox = document.getElementById('studentConsentCheckbox');
+            const studentConsentAcknowledged = document.getElementById('consentAcknowledged');
+            const studentConsentContinue = document.getElementById('studentConsentContinue');
+            const studentConsentClose = document.getElementById('studentConsentClose');
+            const studentConsentGuardianNote = document.getElementById('studentConsentGuardianNote');
             const nextToStep2Btn = document.getElementById('nextToStep2');
             const referenceInput = document.getElementById('reference_number');
             const referenceEditorInput = document.getElementById('reference_editor');
@@ -3606,7 +3623,7 @@
             const signatureMethodRadios = Array.from(document.querySelectorAll('input[name="signature_method"]'));
             const signatureDrawPanel = document.getElementById('signatureDrawPanel');
             const signatureUploadPanel = document.getElementById('signatureUploadPanel');
-            const healthFormStoreUrl = @json(route('store.health.form'));
+            const healthFormStoreUrl = @json(route('store.health.form.student'));
             let currentStep = {{ $startStep }};
             let maxVisitedStep = {{ $startStep }};
             let isSubmitting = false;
@@ -3617,8 +3634,7 @@
             const referenceVerificationUnavailable = @json($referenceVerificationUnavailable);
 
             function selectedReferenceMode() {
-                const selectedMode = referenceModeRadios.find((radio) => radio.checked && !radio.disabled)?.value || 'admission';
-                return selectedMode === 'student_number' && !manualStudentNumberAllowed ? 'admission' : selectedMode;
+                return 'student_number';
             }
 
             function syncReferenceModeUi() {
@@ -3639,11 +3655,7 @@
                         referenceDisplayValue.textContent = isStudentMode ? 'Enter Student ID' : 'No Reference Received';
                     }
                     referencePanel?.classList.add('is-missing');
-                    setReferenceStatus(isStudentMode
-                        ? 'Enter your Student ID, then click the check icon. Admission cross-check will be bypassed for current students and OJT students.'
-                        : 'Enter the reference exactly as shown by Admissions, then click the check icon. If you do not have a reference, contact Admissions or clinic staff.',
-                        ''
-                    );
+                    setReferenceStatus('Enter your Student ID, then click the check icon.', '');
                 }
             }
 
@@ -3901,12 +3913,13 @@
 
                 isReferenceValidating = true;
                 editReferenceBtn?.setAttribute('disabled', 'disabled');
-                setReferenceStatus(isStudentMode ? 'Saving Student ID for clinic use...' : 'Checking reference number with the Admission System...');
+                setReferenceStatus('Checking your Student ID...');
 
                 try {
                     const endpoint = new URL('{{ route('student.health_form.reference.validate') }}', window.location.origin);
                     endpoint.searchParams.set('reference_number', normalizedReference);
                     endpoint.searchParams.set('reference_mode_selected', selectedReferenceMode());
+                    endpoint.searchParams.set('form_mode', 'student');
 
                     const response = await fetch(endpoint.toString(), {
                         method: 'GET',
@@ -4501,7 +4514,7 @@
                     return;
                 }
                 if (isReferenceLocked()) {
-                    setReferenceStatus('Reference already verified from the Admission System.', 'is-success');
+                    setReferenceStatus('Student ID is ready for use inside the clinic system.', 'is-success');
                     return;
                 }
 
@@ -4511,17 +4524,14 @@
                 }
 
                 clearValidationBubble();
-                setReferenceStatus('Enter the reference exactly as shown by Admissions, then click the check icon. If you do not have a reference, contact Admissions or clinic staff.');
+                setReferenceStatus('Enter your Student ID, then click the check icon.');
                 setReferenceEditor(true);
             });
             referenceEditorInput?.addEventListener('input', () => {
                 referenceEditorInput.value = referenceEditorInput.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
                 referenceEditorInput.setCustomValidity('');
                 if (!isReferenceLocked()) {
-                    setReferenceStatus(referenceRequiresValidation
-                        ? 'Enter the reference exactly as shown by Admissions, then click the check icon. If you do not have a reference, contact Admissions or clinic staff.'
-                        : 'Clinic reference is generated and managed inside the clinic system.'
-                    );
+                    setReferenceStatus('Enter your Student ID, then click the check icon.');
                 }
             });
             document.addEventListener('click', (event) => {
@@ -4548,6 +4558,46 @@
                 field.addEventListener('change', () => syncMaroonFieldState(field));
             });
 
+            function isMinorStudent() {
+                const birthday = birthdayInput?.value ? new Date(`${birthdayInput.value}T00:00:00`) : null;
+                if (!birthday || Number.isNaN(birthday.getTime())) return false;
+                const today = new Date();
+                let age = today.getFullYear() - birthday.getFullYear();
+                if (today.getMonth() < birthday.getMonth() || (today.getMonth() === birthday.getMonth() && today.getDate() < birthday.getDate())) age -= 1;
+                return age < 18;
+            }
+
+            function closeStudentConsent() {
+                if (!studentConsentModal) return;
+                studentConsentModal.hidden = true;
+                document.body.style.overflow = '';
+            }
+
+            function resetStudentConsent() {
+                if (studentConsentAcknowledged) studentConsentAcknowledged.value = '';
+                if (studentConsentCheckbox) studentConsentCheckbox.checked = false;
+            }
+
+            function openStudentConsent() {
+                if (!studentConsentModal) return;
+                studentConsentGuardianNote?.toggleAttribute('hidden', !isMinorStudent());
+                studentConsentModal.hidden = false;
+                document.body.style.overflow = 'hidden';
+                studentConsentCheckbox?.focus();
+            }
+
+            studentConsentClose?.addEventListener('click', closeStudentConsent);
+            studentConsentContinue?.addEventListener('click', () => {
+                if (!studentConsentCheckbox?.checked) {
+                    showError('Please confirm that you have read and agree to the consent form.');
+                    return;
+                }
+                if (studentConsentAcknowledged) studentConsentAcknowledged.value = '1';
+                closeStudentConsent();
+                setStep(3);
+                stepPanels[2]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+
             nextToStep2Btn?.addEventListener('click', () => {
                 const normalizedReference = (referenceInput?.value || '').trim();
 
@@ -4559,19 +4609,8 @@
                 if (normalizedReference === '') {
                     if (referenceInput) {
                         const isStudentMode = selectedReferenceMode() === 'student_number';
-                        referenceInput.setCustomValidity(isStudentMode
-                            ? 'Student ID is required before continuing.'
-                            : (referenceRequiresValidation
-                                ? 'Admission Reference is required before continuing.'
-                                : 'Clinic Reference is required before continuing.')
-                        );
-                        setReferenceStatus(isStudentMode
-                            ? 'Enter and accept your Student ID before continuing.'
-                            : (referenceRequiresValidation
-                                ? 'Verify your Admission Reference before continuing.'
-                                : 'Clinic Reference is required before continuing.'),
-                            'is-error'
-                        );
+                        referenceInput.setCustomValidity('Student ID is required before continuing.');
+                        setReferenceStatus('Enter and accept your Student ID before continuing.', 'is-error');
                         showValidationBubble(referenceInput);
                     }
                     return;
@@ -4594,6 +4633,13 @@
 
                     const targetStep = nextStep || backStep;
                     if (!targetStep) return;
+                    if (backStep === 2 && currentStep === 3) {
+                        resetStudentConsent();
+                    }
+                    if (currentStep === 2 && targetStep === 3 && !studentConsentAcknowledged?.value) {
+                        openStudentConsent();
+                        return;
+                    }
                     setStep(targetStep);
                     stepPanels[targetStep - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 });
@@ -4642,6 +4688,7 @@
                     btn.style.pointerEvents = 'none';
                     btn.style.opacity = '0.72';
                 });
+                event.submitter?.querySelector('[data-submit-label]')?.replaceChildren('Saving...');
 
                 form.action = healthFormStoreUrl;
                 form.method = 'POST';
@@ -4654,6 +4701,9 @@
             togglePwdRequirements();
             toggleAllergyDetails();
             setStep(currentStep);
+            if (!studentConsentAcknowledged?.value) {
+                window.setTimeout(openStudentConsent, 0);
+            }
         })();
     </script>
 

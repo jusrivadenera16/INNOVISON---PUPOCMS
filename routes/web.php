@@ -153,6 +153,7 @@ Route::middleware(['auth:student', 'account.active', 'idp.session', 'audit'])->g
 
         // 1. Route para ipakita ang blankong form
         Route::get('/student/health-form', [AppointmentController::class, 'showHealthForm'])->name('health.form');
+        Route::get('/student/health-form/student', [AppointmentController::class, 'showHealthForm'])->name('health.form.student');
         Route::get('/student/health-form/employee', [AppointmentController::class, 'showEmployeeHealthForm'])->name('health.form.employee');
         Route::get('/student/health-form/staff', [AppointmentController::class, 'showStaffHealthForm'])->name('health.form.staff');
         Route::redirect('/health-form', '/student/health-form');
@@ -171,6 +172,7 @@ Route::middleware(['auth:student', 'account.active', 'idp.session', 'audit'])->g
 
         // 2. Route para i-save ang data (Dito galing ang form submit)
         Route::post('/student/store-health-form', [AppointmentController::class, 'storeHealthForm'])->name('store.health.form');
+        Route::post('/student/health-form/student', [AppointmentController::class, 'storeHealthForm'])->name('store.health.form.student');
         Route::get('/student/store-health-form', function () {
             return redirect()->route('health.form')
                 ->with('error', 'Your previous submission was interrupted. Please review the form, re-upload your files, and submit again.');

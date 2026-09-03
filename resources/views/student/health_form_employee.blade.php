@@ -2445,7 +2445,7 @@
                     2 => 'Past Medical History',
                     3 => 'Family History',
                     4 => 'Personal History',
-                    5 => 'Requirements',
+                    5 => '2x2 Photo',
                     6 => 'E-Signature',
                 ];
                 $selectedEmployeeCourse = old('course_college', $employeeValue('course_college', $user->course ?? ''));
@@ -2810,58 +2810,18 @@
                 </div>
 
                 <div class="step-panel {{ $startStep === 5 ? '' : 'is-hidden' }}" id="stepPanel5">
-                    <h2 class="section-title step-page-title" data-title-letter="R">Clinic Requirements</h2>
-                    <p class="step-fill-note">Upload available clinic documents. These files are optional and may also be completed during clinic assessment.</p>
+                    <h2 class="section-title step-page-title" data-title-letter="P">2x2 Photo</h2>
+                    <p class="step-fill-note">Upload your required 2x2 photo. Other clinic documents can be submitted later through My Account.</p>
                     <div class="requirement-grid">
                         <div class="requirement-card">
                             <div class="requirement-card-header">
-                                <strong>2x2 Photo (Image)</strong>
+                                <strong>2x2 Photo (Required)</strong>
                                 <span class="requirement-badge">JPG/PNG</span>
                             </div>
-                            <p class="requirement-guideline">Upload a formal front-facing photo on a plain white background if available.</p>
-                            <input type="file" name="student_photo" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" data-upload-input data-preview-kind="image">
+                            <p class="requirement-guideline">Upload a formal front-facing photo on a plain white background.</p>
+                            <input type="file" name="student_photo" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" data-upload-input data-preview-kind="image" required>
                             <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
                             <small>Allowed: JPG/PNG only, max 1MB.</small>
-                        </div>
-                        <div class="requirement-card">
-                            <div class="requirement-card-header">
-                                <strong>Declaration of Medical Information and Data Subject Consent Form</strong>
-                                <span class="requirement-badge">PDF/IMG</span>
-                            </div>
-                            <p class="requirement-guideline">Upload the signed, clear, and readable declaration form if available.</p>
-                            <input type="file" name="health_declaration" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" data-upload-input>
-                            <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
-                            <small>Allowed: PDF, JPG, JPEG, or PNG, max 1MB.</small>
-                        </div>
-                        <div class="requirement-card">
-                            <div class="requirement-card-header">
-                                <strong>Medical Certificate</strong>
-                                <span class="requirement-badge">PDF/IMG</span>
-                            </div>
-                            <p class="requirement-guideline">Upload a clear medical certificate if already available.</p>
-                            <input type="file" name="medical_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" data-upload-input>
-                            <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
-                            <small>Allowed: PDF, JPG, JPEG, or PNG, max 1MB.</small>
-                        </div>
-                        <div class="requirement-card">
-                            <div class="requirement-card-header">
-                                <strong>Chest X-ray Result</strong>
-                                <span class="requirement-badge">PDF/IMG</span>
-                            </div>
-                            <p class="requirement-guideline">Upload the official radiologist's written report if available.</p>
-                            <input type="file" name="chest_xray_document" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" data-upload-input>
-                            <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
-                            <small>Allowed: PDF, JPG, JPEG, or PNG, max 1MB.</small>
-                        </div>
-                        <div class="requirement-card {{ (string) $selectedEmployeePwd === '1' ? '' : 'is-hidden' }}" id="employeePwdRequirementCard">
-                            <div class="requirement-card-header">
-                                <strong>PWD ID Proof</strong>
-                                <span class="requirement-badge">PDF/IMG</span>
-                            </div>
-                            <p class="requirement-guideline">Upload a clear copy of your valid PWD ID if available.</p>
-                            <input type="file" name="pwd_id_proof" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" data-upload-input>
-                            <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
-                            <small>Allowed: PDF, JPG, JPEG, or PNG, max 1MB.</small>
                         </div>
                     </div>
                     <div class="btn-row">

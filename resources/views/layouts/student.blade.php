@@ -3432,6 +3432,8 @@
         $studentHealthFormStartRoute = $studentUsesEmployeeHealthForm
             ? route('health.form.employee')
             : route('health.form');
+        $studentApplicantHealthFormRoute = route('health.form');
+        $studentCurrentHealthFormRoute = route('health.form.student');
         $studentHealthFormTitle = $studentUsesEmployeeHealthForm
             ? 'Health Examination Record'
             : 'Health Information Form';
@@ -3610,7 +3612,7 @@
                 </div>
             </div>
             <div class="health-profile-prompt-actions" style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
-                <a class="health-profile-fill-button" href="{{ $studentHealthFormStartRoute }}">
+                <a class="health-profile-fill-button" href="{{ $studentHealthFormStartRoute }}" data-health-role-selector-trigger>
                     <span>Get Started</span>
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M5 12h14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
@@ -3886,6 +3888,211 @@
             }
         }
     </style>
+    @endif
+
+    @if($showHealthFormModal && !$studentUsesEmployeeHealthForm)
+    <div id="healthRoleSelectorModal" class="health-role-selector-modal" role="dialog" aria-modal="true" aria-labelledby="healthRoleSelectorTitle" hidden>
+        <section class="health-role-selector-card">
+            <button type="button" class="health-role-selector-close" data-health-role-selector-close aria-label="Close role selector">
+                <x-outline-icon name="x-mark" />
+            </button>
+            <div class="health-role-selector-heading">
+                <div>
+                    <span class="health-role-selector-kicker">Access Type</span>
+                    <h2 id="healthRoleSelectorTitle">How would you like to continue?</h2>
+                    <p>Select the account type that applies to you.</p>
+                </div>
+            </div>
+            <div class="health-role-options" role="radiogroup" aria-label="Choose your role">
+                <label class="health-role-option" data-health-role-option>
+                    <input type="radio" name="health_form_role" value="applicant" data-health-role-route="{{ $studentApplicantHealthFormRoute }}">
+                    <span class="health-role-radio" aria-hidden="true"></span>
+                    <span class="health-role-icon" aria-hidden="true"><x-outline-icon name="academic-cap" /></span>
+                    <span class="health-role-copy">
+                        <strong>Applicants</strong>
+                        <small>Use your application reference number.</small>
+                    </span>
+                    <span class="health-role-check" aria-hidden="true"><x-outline-icon name="check" /></span>
+                </label>
+                <label class="health-role-option" data-health-role-option>
+                    <input type="radio" name="health_form_role" value="student" data-health-role-route="{{ $studentCurrentHealthFormRoute }}">
+                    <span class="health-role-radio" aria-hidden="true"></span>
+                    <span class="health-role-icon" aria-hidden="true"><x-outline-icon name="identification" /></span>
+                    <span class="health-role-copy">
+                        <strong>Current Student / OJT</strong>
+                        <small>Use your Student ID.</small>
+                    </span>
+                    <span class="health-role-check" aria-hidden="true"><x-outline-icon name="check" /></span>
+                </label>
+            </div>
+            <div class="health-role-selector-actions">
+                <a class="health-role-continue" id="healthRoleSelectorContinue" href="#">Continue</a>
+            </div>
+        </section>
+    </div>
+    <style>
+        .health-role-selector-modal[hidden] { display: none !important; }
+        .health-role-selector-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000001;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, .62);
+            backdrop-filter: blur(8px);
+        }
+        .health-role-selector-card {
+            position: relative;
+            width: min(610px, 100%);
+            padding: 24px 26px 22px;
+            border: 1px solid rgba(127, 29, 45, .14);
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 28px 80px rgba(15, 23, 42, .32);
+        }
+        .health-role-selector-close {
+            position: absolute;
+            top: 22px;
+            right: 24px;
+            display: grid;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            border: 1px solid #d1d5db;
+            border-radius: 50%;
+            background: #fff;
+            color: #7f1d2d;
+            cursor: pointer;
+            isolation: isolate;
+            overflow: hidden;
+            transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+        }
+        .health-role-selector-close::after,
+        .health-role-continue::after {
+            position: absolute;
+            top: -35%;
+            bottom: -35%;
+            left: -80%;
+            width: 34%;
+            background: linear-gradient(105deg, transparent, rgba(255, 249, 190, .18) 28%, rgba(255, 249, 190, .9) 50%, rgba(255, 249, 190, .18) 72%, transparent);
+            content: "";
+            transform: skewX(-18deg);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .health-role-selector-close:hover::after,
+        .health-role-selector-close:focus-visible::after,
+        .health-role-continue:hover::after,
+        .health-role-continue:focus-visible::after {
+            animation: health-role-light-sweep .7s ease-out;
+        }
+        @keyframes health-role-light-sweep {
+            0% { left: -80%; opacity: 0; }
+            18% { opacity: .9; }
+            82% { opacity: .9; }
+            100% { left: 135%; opacity: 0; }
+        }
+        .health-role-selector-close:hover,
+        .health-role-selector-close:focus-visible {
+            border-color: #facc15;
+            background: #facc15;
+            color: #000;
+            transform: translateY(-1px);
+            outline: none;
+        }
+        .health-role-selector-close svg { position: relative; z-index: 1; width: 20px; height: 20px; }
+        .health-role-selector-heading { display: flex; align-items: flex-start; padding: 4px 46px 20px 8px; }
+        .health-role-selector-kicker { display: block; margin-bottom: 8px; color: #7f1d2d; font-size: 11px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; }
+        .health-role-selector-heading h2 { margin: 0; color: #64111d; font-size: 24px; line-height: 1.2; }
+        .health-role-selector-heading p { margin: 8px 0 0; color: #4b5563; font-size: 16px; }
+        .health-role-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        .health-role-option { position: relative; display: grid; grid-template-columns: 24px 54px minmax(0, 1fr) 24px; align-items: center; gap: 10px; min-height: 108px; padding: 14px; border: 1px solid #d1d5db; border-radius: 12px; cursor: pointer; transition: border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease; }
+        .health-role-option:hover,
+        .health-role-option:focus-within {
+            border-color: rgba(127, 29, 45, .62);
+            background: #fffdf8;
+            box-shadow: 0 10px 22px rgba(127, 29, 45, .14);
+            transform: translateY(-3px);
+        }
+        .health-role-option.is-selected { border-color: #9f1239; background: #fffaf0; box-shadow: 0 8px 18px rgba(127, 29, 45, .1); }
+        .health-role-option input { position: absolute; opacity: 0; pointer-events: none; }
+        .health-role-radio { width: 23px; height: 23px; border: 2px solid #b8b8b8; border-radius: 50%; }
+        .health-role-option.is-selected .health-role-radio { border-color: #7f1d2d; box-shadow: inset 0 0 0 5px #fff; background: #7f1d2d; }
+        .health-role-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #fff1d6; color: #7f1d2d; }
+        .health-role-icon svg { width: 30px; height: 30px; }
+        .health-role-copy { display: grid; gap: 8px; }
+        .health-role-copy strong { color: #64111d; font-size: 16px; line-height: 1.2; }
+        .health-role-copy small { color: #4b5563; font-size: 13px; }
+        .health-role-check { display: none; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #7f1d2d; color: #fff; }
+        .health-role-option.is-selected .health-role-check { display: grid; }
+        .health-role-check svg { width: 15px; height: 15px; }
+        .health-role-selector-actions { display: flex; justify-content: center; margin-top: 24px; }
+        .health-role-continue { position: relative; isolation: isolate; overflow: hidden; display: none; align-items: center; justify-content: center; width: 100%; padding: 10px 24px; border: 1px solid #9f1239; border-radius: 6px; background: #7f1d2d; color: #fff; font-size: 16px; font-weight: 700; text-align: center; text-decoration: none; cursor: pointer; transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+        .health-role-continue.is-visible { display: inline-flex; }
+        .health-role-continue:hover,
+        .health-role-continue:focus-visible {
+            border-color: #facc15;
+            background: #facc15;
+            color: #000;
+            box-shadow: 0 10px 22px rgba(127, 29, 45, .16);
+            transform: translateY(-2px);
+            outline: none;
+        }
+        @media (max-width: 620px) {
+            .health-role-selector-card { padding: 28px 18px 24px; }
+            .health-role-selector-heading h2 { font-size: 20px; }
+            .health-role-options { grid-template-columns: 1fr; gap: 12px; }
+            .health-role-option { min-height: 100px; padding: 14px; }
+            .health-role-selector-actions { margin-top: 24px; }
+        }
+    </style>
+    <script>
+        (function () {
+            const promptModal = document.getElementById('healthFormModal');
+            const roleModal = document.getElementById('healthRoleSelectorModal');
+            const trigger = promptModal?.querySelector('[data-health-role-selector-trigger]');
+            const continueLink = document.getElementById('healthRoleSelectorContinue');
+            const options = Array.from(roleModal?.querySelectorAll('[data-health-role-option]') || []);
+            if (!promptModal || !roleModal || !trigger || !continueLink) return;
+
+            function closeRoleSelector() {
+                roleModal.hidden = true;
+                promptModal.style.display = 'flex';
+                document.body.style.overflow = '';
+            }
+
+            trigger.addEventListener('click', function (event) {
+                event.preventDefault();
+                promptModal.style.display = 'none';
+                roleModal.hidden = false;
+                document.body.style.overflow = 'hidden';
+                options[0]?.querySelector('input')?.focus();
+            });
+
+            options.forEach(function (option) {
+                option.addEventListener('click', function () {
+                    const input = option.querySelector('input');
+                    if (!input) return;
+                    input.checked = true;
+                    options.forEach((item) => item.classList.toggle('is-selected', item === option));
+                    continueLink.href = input.dataset.healthRoleRoute || '#';
+                    continueLink.textContent = input.value === 'applicant'
+                        ? 'Continue as Applicants'
+                        : 'Continue as Current Student / OJT';
+                    continueLink.classList.add('is-visible');
+                });
+            });
+
+            roleModal.querySelectorAll('[data-health-role-selector-close]').forEach((button) => button.addEventListener('click', closeRoleSelector));
+            roleModal.addEventListener('click', (event) => {
+                if (event.target === roleModal) closeRoleSelector();
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !roleModal.hidden) closeRoleSelector();
+            });
+        })();
+    </script>
     @endif
 
     @if($showHealthFormActionModal)
