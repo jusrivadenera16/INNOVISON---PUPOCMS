@@ -3146,9 +3146,24 @@ class AdminController extends Controller
 
         foreach ($records as $summaryRecord) {
             $summarySource = (string) ($summaryRecord->record_source ?? 'health');
-            $summaryHasRequirements = in_array($summarySource, ['employee', 'staff'], true) || filled($summaryRecord->medical_certificate)
-                && filled($summaryRecord->chest_xray_result)
-                && filled($summaryRecord->student_photo);
+            $user = optional($summaryRecord->user);
+            $rawType = strtolower(trim((string) (
+                $user->user_type
+                ?: $user->idp_role
+                ?: $user->user_role
+                ?: ''
+            )));
+            $isApplicant = str_contains($rawType, 'applicant');
+            if (!$isApplicant && $summarySource === 'health') {
+                $refNum = strtoupper(trim((string) ($summaryRecord->reference_number ?: $user->reference_number)));
+                $studNum = strtoupper(trim((string) ($summaryRecord->student_number ?: $user->student_number)));
+                $isApplicant = ($studNum === '' || \Illuminate\Support\Str::startsWith($studNum, ['CLN-', 'LOC-', 'TEST-LOCAL']) || ($refNum !== '' && $studNum === $refNum));
+            }
+
+            $summaryHasRequirements = !$isApplicant
+                || (filled($summaryRecord->medical_certificate)
+                    && filled($summaryRecord->chest_xray_result)
+                    && filled($summaryRecord->student_photo));
             $summaryStatus = trim((string) ($summaryRecord->clearance_status ?? ''));
             $summaryIsApproved = in_array($summaryStatus, ['Issued', 'Fully Cleared'], true);
             $summaryIsConditional = !$summaryIsApproved && (
