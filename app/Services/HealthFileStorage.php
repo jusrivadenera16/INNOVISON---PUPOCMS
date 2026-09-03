@@ -60,6 +60,17 @@ class HealthFileStorage
         return is_string($mimeType) && $mimeType !== '' ? $mimeType : null;
     }
 
+    public function lastModified(?string $value): ?int
+    {
+        $resolved = $this->resolve($value);
+        if (!$resolved) {
+            return null;
+        }
+        [$disk, $path] = $resolved;
+
+        return $disk->lastModified($path) ?: null;
+    }
+
     public function put(string $path, $contents, array $options = []): bool
     {
         $path = $this->normalizePath($path);
@@ -118,6 +129,17 @@ class HealthFileStorage
         }
 
         return $deleted;
+    }
+
+    public function files(string $directory = ''): array
+    {
+        $directory = $this->normalizePath($directory);
+        $files = $this->writeDisk()->files($directory);
+        if (empty($files) && $this->writeDiskName() !== $this->legacyDiskName()) {
+            $files = $this->legacyDisk()->files($directory);
+        }
+
+        return $files ?: [];
     }
 
     public function download(?string $value, ?string $name = null, array $headers = [])

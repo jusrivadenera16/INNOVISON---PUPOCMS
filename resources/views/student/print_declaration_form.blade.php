@@ -33,9 +33,9 @@
             margin: 0;
             padding: 0;
             color: #111827;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 12.5px;
-            line-height: 1.45;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.5;
         }
 
         .header-table {
@@ -51,31 +51,32 @@
         }
 
         .header-logo-left {
-            width: 78px;
+            width: 90px;
             text-align: left;
         }
 
         .header-logo-left img {
-            width: 72px;
-            height: 72px;
+            width: 80px;
+            height: 80px;
             object-fit: contain;
         }
 
         .header-center {
             text-align: left;
-            padding-left: 8px !important;
-            line-height: 1.18;
+            padding-left: 4px !important;
+            line-height: 1.22;
         }
 
         .header-center .gov-title {
-            font-size: 10px;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 8.04px;
             color: #374151;
             margin: 0;
         }
 
         .header-center .univ-title {
             font-family: "Times New Roman", Times, serif;
-            font-size: 13.5px;
+            font-size: 8.96px;
             font-weight: bold;
             color: #111827;
             text-transform: uppercase;
@@ -84,20 +85,22 @@
         }
 
         .header-center .office-title {
-            font-size: 10.5px;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 8.04px;
             color: #374151;
             margin: 0;
         }
 
         .header-center .dept-title {
-            font-size: 11.5px;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 8.96px;
             font-weight: bold;
             color: #111827;
             margin: 1px 0 0;
         }
 
         .header-campus-tag {
-            text-align: center;
+            text-align: left;
             font-size: 12px;
             font-weight: normal;
             color: #111827;
@@ -105,12 +108,12 @@
         }
 
         .header-logo-right {
-            width: 82px;
+            width: 90px;
             text-align: right;
         }
 
         .header-logo-right img {
-            width: 76px;
+            width: 84px;
             height: auto;
             object-fit: contain;
         }
@@ -122,8 +125,8 @@
         }
 
         .form-title {
-            margin: 16px 0 20px;
-            font-size: 15px;
+            margin: 18px 0 20px;
+            font-size: 16px;
             font-weight: bold;
             text-align: center;
             color: #000000;
@@ -137,8 +140,9 @@
 
         .declaration-p {
             margin: 0 0 16px;
-            font-size: 12.5px;
-            line-height: 1.55;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.6;
             text-align: justify;
             text-justify: inter-word;
             color: #111827;
@@ -153,7 +157,7 @@
 
         .signature-block-table {
             width: 100%;
-            margin-top: 28px;
+            margin-top: 24px;
             border-collapse: collapse;
             table-layout: fixed;
         }
@@ -182,8 +186,8 @@
         .student-signature-preview {
             display: block;
             margin: 0 auto -22px;
-            max-height: 48px;
-            max-width: 170px;
+            max-height: 52px;
+            max-width: 175px;
             object-fit: contain;
             position: relative;
         }
@@ -191,7 +195,7 @@
         .sig-underline {
             border-bottom: 1px solid #000000;
             min-height: 18px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: bold;
             text-transform: uppercase;
             padding-bottom: 2px;
@@ -200,19 +204,19 @@
 
         .sig-caption {
             margin-top: 3px;
-            font-size: 11px;
+            font-size: 12px;
             color: #111827;
         }
 
         .remarks-line {
             margin: 14px 0 20px;
-            font-size: 12px;
+            font-size: 13px;
             text-align: left;
         }
 
         .minor-note {
             margin-top: 6px;
-            font-size: 11px;
+            font-size: 11.5px;
             line-height: 1.35;
             color: #111827;
             text-align: justify;
@@ -220,7 +224,7 @@
 
         .footer-table {
             position: fixed;
-            bottom: 0;
+            bottom: 25px;
             left: 0;
             right: 0;
             width: 100%;
@@ -236,8 +240,8 @@
 
         .footer-left {
             width: 56%;
-            font-size: 8.5px;
-            line-height: 1.25;
+            font-size: 9.5px;
+            line-height: 1.3;
             color: #374151;
         }
 
@@ -248,7 +252,7 @@
 
         .footer-motto {
             margin-top: 5px;
-            font-size: 9.5px;
+            font-size: 10.5px;
             font-weight: bold;
             color: #111827;
             letter-spacing: 0.02em;
@@ -262,7 +266,7 @@
 
         .footer-badge-img {
             max-width: 100%;
-            height: 38px;
+            height: 44px;
             object-fit: contain;
         }
     </style>

@@ -3727,6 +3727,71 @@ class AdminController extends Controller
             }
         }
 
+        if ($document === 'health_declaration') {
+            $user = $submission->user ?? optional($submission->healthProfile)->user;
+            $healthProfile = $submission->healthProfile;
+
+            $categorySelected = trim((string) ($submission->category ?: optional($healthProfile)->health_form_category ?: ''));
+            if ($categorySelected === '') {
+                $categorySelected = 'Student';
+            }
+            $isOjt = stripos($categorySelected, 'ojt') !== false || stripos($categorySelected, 'on-the-job') !== false;
+            $purposeUnderline1 = $isOjt ? 'On-the-Job Training (OJT)' : 'enrolled student';
+            $purposeUnderline2 = $isOjt ? 'On-the-Job Training (OJT)' : 'enrolment as a student';
+
+            $studentFullName = trim(implode(' ', array_filter([
+                $user?->first_name,
+                $user?->middle_name,
+                $user?->last_name,
+                $user?->suffix_name,
+            ]))) ?: ($user?->name ?? '');
+
+            $digitalSignaturePath = ltrim((string) ($profileData['digital_signature'] ?? optional($healthProfile)->digital_signature ?? ''), '/');
+            $studentSignatureSrc = $digitalSignaturePath !== '' && $this->healthFiles()->exists($digitalSignaturePath)
+                ? app(\App\Services\StoredImageDataUri::class)->fromStorage($digitalSignaturePath)
+                : null;
+
+            $age = (int) ($profileData['age'] ?? optional($healthProfile)->age ?? 0);
+            $isMinorStudent = $age < 18;
+            $guardianSignatureSrc = null;
+            if ($isMinorStudent) {
+                try {
+                    $guardianFiles = $this->healthFiles()->files('health_profiles/guardian_signatures');
+                    if (!empty($guardianFiles)) {
+                        $latestGuardianFile = collect($guardianFiles)->sortByDesc(fn ($f) => $this->healthFiles()->lastModified($f) ?? 0)->first();
+                        if ($latestGuardianFile) {
+                            $guardianSignatureSrc = app(\App\Services\StoredImageDataUri::class)->fromStorage($latestGuardianFile);
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    // Ignore and proceed without guardian sig image if not found
+                }
+            }
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('student.print_declaration_form', [
+                'user' => $user,
+                'studentFullName' => $studentFullName,
+                'studentNumber' => $profileData['student_number'] ?? optional($healthProfile)->student_number ?? optional($healthProfile)->reference_number,
+                'course' => $profileData['course_college'] ?? optional($healthProfile)->course_college,
+                'age' => $age,
+                'guardianName' => $profileData['guardian_name'] ?? optional($healthProfile)->guardian_name,
+                'isMinor' => $isMinorStudent,
+                'categorySelected' => $categorySelected,
+                'purposeUnderline1' => $purposeUnderline1,
+                'purposeUnderline2' => $purposeUnderline2,
+                'studentSignatureSrc' => $studentSignatureSrc,
+                'guardianSignatureSrc' => $guardianSignatureSrc,
+                'signatureDate' => optional($submission->submitted_at ?? optional($healthProfile)->updated_at)->format('m/d/Y') ?: now()->format('m/d/Y'),
+                'remarks' => '',
+            ])->setPaper('letter', 'portrait');
+
+            return $pdf->stream('declaration-form-' . ($submission->id) . '.pdf', [
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+            ]);
+        }
+
         $path = ltrim((string) ($profileData[$document] ?? ''), '/');
         $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
         abort_if($path === '' || !$this->healthFiles()->exists($path), 404, 'Historical document not found.');
