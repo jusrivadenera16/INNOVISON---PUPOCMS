@@ -5094,6 +5094,21 @@ public function storeHealthForm(Request $request)
         ]);
     }
 
+    $isMinorStudent = (int) $request->input('age', 0) < 18;
+    if ($isMinorStudent && $isDedicatedStudentForm) {
+        $guardianSignatureMethod = (string) $request->input('guardian_signature_method', 'draw');
+        if ($guardianSignatureMethod === 'draw' && trim((string) $request->input('guardian_signature_data')) === '') {
+            throw ValidationException::withMessages([
+                'guardian_signature_data' => 'Please have your parent/guardian draw their signature.',
+            ]);
+        }
+        if ($guardianSignatureMethod === 'upload' && !$request->hasFile('guardian_signature_upload')) {
+            throw ValidationException::withMessages([
+                'guardian_signature_upload' => 'Please upload your parent/guardian\'s signature file.',
+            ]);
+        }
+    }
+
     if ($user && $this->isHealthCourseApplicable($user) && $resolvedCourseCode === '') {
         throw ValidationException::withMessages([
             'course_code' => 'Please select the correct course/program.',
@@ -5267,6 +5282,30 @@ public function storeHealthForm(Request $request)
             $studentSignatureSrc = app(\App\Services\StoredImageDataUri::class)->fromStorage($digitalSignaturePath);
             $isMinorStudent = (int) $request->input('age', 0) < 18;
 
+            $guardianSignaturePath = null;
+            $guardianSignatureSrc = null;
+            if ($isMinorStudent) {
+                if ($request->hasFile('guardian_signature_upload')) {
+                    $guardianSignaturePath = $this->healthFiles()->store(
+                        $request->file('guardian_signature_upload'),
+                        'health_profiles/guardian_signatures'
+                    );
+                } else {
+                    $guardianSigData = trim((string) $request->input('guardian_signature_data'));
+                    if ($guardianSigData !== '' && preg_match('/^data:image\/(png|jpe?g);base64,/', $guardianSigData, $gSigMatches)) {
+                        $decodedGuardianSig = base64_decode(substr($guardianSigData, strpos($guardianSigData, ',') + 1), true);
+                        if ($decodedGuardianSig !== false && strlen($decodedGuardianSig) >= 200) {
+                            $gSigExt = str_starts_with(strtolower($gSigMatches[1]), 'jp') ? 'jpg' : 'png';
+                            $guardianSignaturePath = 'health_profiles/guardian_signatures/guardian_sig_' . uniqid('', true) . '.' . $gSigExt;
+                            $this->healthFiles()->put($guardianSignaturePath, $decodedGuardianSig);
+                        }
+                    }
+                }
+                if ($guardianSignaturePath) {
+                    $guardianSignatureSrc = app(\App\Services\StoredImageDataUri::class)->fromStorage($guardianSignaturePath);
+                }
+            }
+
             $declarationPdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('student.print_declaration_form', [
                 'user' => $user,
                 'studentFullName' => $studentFullName,
@@ -5279,6 +5318,7 @@ public function storeHealthForm(Request $request)
                 'purposeUnderline1' => $purposeUnderline1,
                 'purposeUnderline2' => $purposeUnderline2,
                 'studentSignatureSrc' => $studentSignatureSrc,
+                'guardianSignatureSrc' => $guardianSignatureSrc,
                 'signatureDate' => now()->format('m/d/Y'),
                 'remarks' => trim((string) $request->input('health_form_request_remarks')),
             ])->setPaper('letter', 'portrait');

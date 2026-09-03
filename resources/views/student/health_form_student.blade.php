@@ -1029,7 +1029,8 @@
         }
 
         #digitalSignaturePad,
-        #staffSignaturePad {
+        #staffSignaturePad,
+        #guardianSignaturePad {
             display: block;
             width: 100%;
             height: 220px;
@@ -2351,7 +2352,8 @@
                 grid-template-columns: 1fr;
             }
 
-            #digitalSignaturePad {
+            #digitalSignaturePad,
+            #guardianSignaturePad {
                 height: 160px;
             }
 
@@ -3493,6 +3495,65 @@
                             @endif
                         </div>
                     </div>
+
+                    <div class="guardian-signature-section" id="guardianSignatureSection" style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed #d1d5db;" hidden>
+                        <h3 style="font-size: 15px; font-weight: 800; color: #7f1d2d; margin-bottom: 4px;">Parent / Guardian's Signature <span class="required" style="color: #dc2626;">*</span></h3>
+                        <p class="step-fill-note" style="margin-bottom: 12px;">Because you are 17 years old or below, your parent or legal guardian must also affix their signature for the Declaration and Consent Form.</p>
+                        <input type="text" id="guardian_signature_data" name="guardian_signature_data" value="{{ old('guardian_signature_data') }}" class="visually-hidden" data-guardian-signature-field>
+                        <div class="esign-method-grid" aria-label="Choose guardian signature method" style="margin-bottom: 14px;">
+                            <input class="esign-method-radio" type="radio" name="guardian_signature_method" id="guardian_signature_method_draw" value="draw" checked>
+                            <label class="esign-method-card" for="guardian_signature_method_draw">
+                                <span class="esign-method-dot" aria-hidden="true"></span>
+                                <span class="esign-method-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"><path d="M4 20c3.5-7.5 5.5-11.5 7.5-12.5 1.5-.8 3 .4 2.4 2-.8 2.2-3.6 4.1-3.2 5.2.3.8 1.7.7 3.4-.2 1.4-.8 2.4-.3 2.6.7.2.8.8 1.2 1.7.8l1.6-.7"></path><path d="m14.5 4.5 2-2 2.5 2.5-2 2"></path></svg>
+                                </span>
+                                <span class="esign-method-copy">
+                                    <strong>Draw Guardian Signature</strong>
+                                    <span>Draw signature here</span>
+                                    <span class="esign-method-badge">Recommended</span>
+                                </span>
+                            </label>
+                            <input class="esign-method-radio" type="radio" name="guardian_signature_method" id="guardian_signature_method_upload" value="upload">
+                            <label class="esign-method-card" for="guardian_signature_method_upload">
+                                <span class="esign-method-dot" aria-hidden="true"></span>
+                                <span class="esign-method-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M20 16.5a4.5 4.5 0 0 1-4.5 4.5h-7A4.5 4.5 0 0 1 4 16.5"></path></svg>
+                                </span>
+                                <span class="esign-method-copy">
+                                    <strong>Upload Guardian Signature</strong>
+                                    <span>Upload an image file (PNG/JPG) of signature</span>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="esign-grid esign-mode-panel" id="guardianSignatureDrawPanel">
+                            <div class="esign-card">
+                                <h3>Draw Guardian Signature</h3>
+                                <p>Use your mouse, touchpad, or finger. You can clear and redraw anytime before saving.</p>
+                                <div class="signature-pad-wrap">
+                                    <canvas id="guardianSignaturePad" aria-label="Draw guardian signature"></canvas>
+                                </div>
+                                <div class="esign-actions">
+                                    <button type="button" class="esign-secondary-btn" id="clearGuardianSignatureBtn">
+                                        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.4 2.2 2.2 3.4 6.8 8l-4.6 4.6 1.2 1.2L8 9.2l4.6 4.6 1.2-1.2L9.2 8l4.6-4.6-1.2-1.2L8 6.8 3.4 2.2Z"></path></svg>
+                                        <span>Clear</span>
+                                    </button>
+                                </div>
+                                <div class="esign-status" id="guardianSignatureDrawStatus">No guardian signature drawn yet.</div>
+                            </div>
+                        </div>
+                        <div class="esign-grid esign-mode-panel is-hidden" id="guardianSignatureUploadPanel">
+                            <div class="esign-card">
+                                <h3>Upload Guardian Signature</h3>
+                                <input id="guardian_signature_upload" type="file" name="guardian_signature_upload" class="esign-upload-input" accept=".png,.jpg,.jpeg,image/png,image/jpeg" data-upload-input data-preview-kind="image">
+                                <ol class="esign-upload-instructions">
+                                    <li>Upload a clear PNG or JPG image of guardian's signature.</li>
+                                    <li>Maximum file size is 1MB.</li>
+                                </ol>
+                                <div class="upload-preview-card" data-upload-preview aria-live="polite"></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="certify-row final-certification">
                         <input id="health_profile_certified" type="checkbox" name="health_profile_certified" value="1" required {{ old('health_profile_certified') ? 'checked' : '' }}>
                         <label for="health_profile_certified">
@@ -3636,12 +3697,22 @@
             const signatureMethodRadios = Array.from(document.querySelectorAll('input[name="signature_method"]'));
             const signatureDrawPanel = document.getElementById('signatureDrawPanel');
             const signatureUploadPanel = document.getElementById('signatureUploadPanel');
+            const guardianSignatureSection = document.getElementById('guardianSignatureSection');
+            const guardianSignatureCanvas = document.getElementById('guardianSignaturePad');
+            const guardianSignatureDataInput = document.getElementById('guardian_signature_data');
+            const guardianSignatureUploadInput = document.getElementById('guardian_signature_upload');
+            const guardianSignatureDrawStatus = document.getElementById('guardianSignatureDrawStatus');
+            const clearGuardianSignatureBtn = document.getElementById('clearGuardianSignatureBtn');
+            const guardianSignatureMethodRadios = Array.from(document.querySelectorAll('input[name="guardian_signature_method"]'));
+            const guardianSignatureDrawPanel = document.getElementById('guardianSignatureDrawPanel');
+            const guardianSignatureUploadPanel = document.getElementById('guardianSignatureUploadPanel');
             const healthFormStoreUrl = @json(route('store.health.form.student'));
             let currentStep = {{ $startStep }};
             let maxVisitedStep = {{ $startStep }};
             let isSubmitting = false;
             let isReferenceValidating = false;
             let resizeSignatureCanvas = () => {};
+            let resizeGuardianSignatureCanvas = () => {};
             const referenceRequiresValidation = referencePanel?.dataset.referenceRequiresValidation === 'true';
             const manualStudentNumberAllowed = referencePanel?.dataset.manualStudentModeAllowed === 'true';
             const referenceVerificationUnavailable = @json($referenceVerificationUnavailable);
@@ -3754,25 +3825,27 @@
                     exportCanvas.width = signatureCanvas.width;
                     exportCanvas.height = signatureCanvas.height;
                     const exportContext = exportCanvas.getContext('2d');
-                    exportContext.fillStyle = '#ffffff';
-                    exportContext.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
                     exportContext.drawImage(signatureCanvas, 0, 0);
 
-                    return exportCanvas.toDataURL('image/jpeg', 0.92);
+                    return exportCanvas.toDataURL('image/png');
                 }
 
                 function resizeCanvas() {
                     const ratio = Math.max(window.devicePixelRatio || 1, 1);
                     const rect = signatureCanvas.getBoundingClientRect();
-                    const previousData = hasDrawing ? signatureDataUrl() : '';
+                    const previousData = (hasDrawing ? signatureDataUrl() : '') || (signatureDataInput.value || '');
                     signatureCanvas.width = Math.max(1, Math.floor(rect.width * ratio));
                     signatureCanvas.height = Math.max(1, Math.floor(rect.height * ratio));
                     context.setTransform(ratio, 0, 0, ratio, 0, 0);
                     applySignatureStroke();
 
                     if (previousData) {
+                        hasDrawing = true;
                         const image = new Image();
-                        image.onload = () => context.drawImage(image, 0, 0, rect.width, rect.height);
+                        image.onload = () => {
+                            context.drawImage(image, 0, 0, rect.width, rect.height);
+                            if (signatureDrawStatus) signatureDrawStatus.textContent = 'Drawn signature ready.';
+                        };
                         image.src = previousData;
                     }
                 }
@@ -3861,6 +3934,196 @@
             signatureMethodRadios.forEach((radio) => {
                 radio.addEventListener('change', syncSignatureMethod);
             });
+
+            function syncGuardianSignatureMethod() {
+                const selectedMethod = guardianSignatureMethodRadios.find((radio) => radio.checked)?.value || 'draw';
+                const isUpload = selectedMethod === 'upload';
+                guardianSignatureDrawPanel?.classList.toggle('is-hidden', isUpload);
+                guardianSignatureUploadPanel?.classList.toggle('is-hidden', !isUpload);
+
+                if (isUpload) {
+                    if (guardianSignatureDataInput) guardianSignatureDataInput.value = '';
+                    const ctx = guardianSignatureCanvas?.getContext('2d');
+                    ctx?.clearRect(0, 0, guardianSignatureCanvas.width, guardianSignatureCanvas.height);
+                    if (guardianSignatureDrawStatus) guardianSignatureDrawStatus.textContent = 'No guardian signature drawn yet.';
+                } else {
+                    if (guardianSignatureUploadInput) {
+                        guardianSignatureUploadInput.value = '';
+                        renderUploadPreview(guardianSignatureUploadInput);
+                    }
+                    window.requestAnimationFrame(() => resizeGuardianSignatureCanvas());
+                }
+
+                syncGuardianSignatureValidity();
+            }
+
+            guardianSignatureMethodRadios.forEach((radio) => {
+                radio.addEventListener('change', syncGuardianSignatureMethod);
+            });
+
+            function hasGuardianSignatureValue() {
+                const selectedMethod = guardianSignatureMethodRadios.find((radio) => radio.checked)?.value || 'draw';
+                if (selectedMethod === 'upload') {
+                    return Boolean(guardianSignatureUploadInput?.files && guardianSignatureUploadInput.files.length > 0);
+                }
+                return Boolean((guardianSignatureDataInput?.value || '').trim());
+            }
+
+            function syncGuardianSignatureValidity() {
+                if (!guardianSignatureDataInput) return;
+                if (!isMinorStudent()) {
+                    guardianSignatureDataInput.setCustomValidity('');
+                    return;
+                }
+                const selectedMethod = guardianSignatureMethodRadios.find((radio) => radio.checked)?.value || 'draw';
+                const message = hasGuardianSignatureValue()
+                    ? ''
+                    : (selectedMethod === 'upload' ? 'Please upload the guardian signature file.' : 'Please draw the guardian signature.');
+                guardianSignatureDataInput.setCustomValidity(message);
+            }
+
+            function toggleGuardianSignatureSection() {
+                const showGuardian = isMinorStudent();
+                if (guardianSignatureSection) {
+                    guardianSignatureSection.hidden = !showGuardian;
+                }
+                if (guardianSignatureDataInput) {
+                    guardianSignatureDataInput.disabled = !showGuardian;
+                }
+                if (guardianSignatureUploadInput) {
+                    guardianSignatureUploadInput.disabled = !showGuardian;
+                }
+                syncGuardianSignatureValidity();
+                if (showGuardian) {
+                    window.requestAnimationFrame(() => resizeGuardianSignatureCanvas());
+                }
+            }
+
+            function setupGuardianSignaturePad() {
+                if (!guardianSignatureCanvas || !guardianSignatureDataInput) {
+                    syncGuardianSignatureValidity();
+                    return;
+                }
+
+                const ctx = guardianSignatureCanvas.getContext('2d');
+                let drawing = false;
+                let hasDrawing = Boolean(guardianSignatureDataInput.value);
+
+                function applyStroke() {
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.lineWidth = 3.5;
+                    ctx.strokeStyle = '#000000';
+                    ctx.fillStyle = '#000000';
+                }
+
+                function guardianDataUrl() {
+                    const ec = document.createElement('canvas');
+                    ec.width = guardianSignatureCanvas.width;
+                    ec.height = guardianSignatureCanvas.height;
+                    const ectx = ec.getContext('2d');
+                    ectx.drawImage(guardianSignatureCanvas, 0, 0);
+
+                    return ec.toDataURL('image/png');
+                }
+
+                function resizeCanvas() {
+                    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                    const rect = guardianSignatureCanvas.getBoundingClientRect();
+                    const previousData = (hasDrawing ? guardianDataUrl() : '') || (guardianSignatureDataInput.value || '');
+                    guardianSignatureCanvas.width = Math.max(1, Math.floor(rect.width * ratio));
+                    guardianSignatureCanvas.height = Math.max(1, Math.floor(rect.height * ratio));
+                    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+                    applyStroke();
+
+                    if (previousData) {
+                        hasDrawing = true;
+                        const image = new Image();
+                        image.onload = () => {
+                            ctx.drawImage(image, 0, 0, rect.width, rect.height);
+                            if (guardianSignatureDrawStatus) guardianSignatureDrawStatus.textContent = 'Guardian signature ready.';
+                        };
+                        image.src = previousData;
+                    }
+                }
+
+                function posFromEvent(event) {
+                    const rect = guardianSignatureCanvas.getBoundingClientRect();
+                    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+                }
+
+                function startDrawing(event) {
+                    event.preventDefault();
+                    guardianSignatureCanvas.setPointerCapture?.(event.pointerId);
+                    drawing = true;
+                    const pt = posFromEvent(event);
+                    applyStroke();
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, 1.8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(pt.x, pt.y);
+                    hasDrawing = true;
+                    guardianSignatureDataInput.value = guardianDataUrl();
+                    if (guardianSignatureDrawStatus) guardianSignatureDrawStatus.textContent = 'Guardian signature ready.';
+                    if (guardianSignatureUploadInput) guardianSignatureUploadInput.value = '';
+                    syncGuardianSignatureValidity();
+                }
+
+                function draw(event) {
+                    if (!drawing) return;
+                    event.preventDefault();
+                    const pt = posFromEvent(event);
+                    ctx.lineTo(pt.x, pt.y);
+                    ctx.stroke();
+                    hasDrawing = true;
+                    guardianSignatureDataInput.value = guardianDataUrl();
+                    if (guardianSignatureDrawStatus) guardianSignatureDrawStatus.textContent = 'Guardian signature ready.';
+                    if (guardianSignatureUploadInput) guardianSignatureUploadInput.value = '';
+                    syncGuardianSignatureValidity();
+                }
+
+                function stopDrawing(event) {
+                    if (!drawing) return;
+                    drawing = false;
+                    guardianSignatureCanvas.releasePointerCapture?.(event.pointerId);
+                    ctx.closePath();
+                }
+
+                function clearGuardianSignature(clearUpload = true) {
+                    ctx.save();
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                    ctx.clearRect(0, 0, guardianSignatureCanvas.width, guardianSignatureCanvas.height);
+                    ctx.restore();
+                    applyStroke();
+                    hasDrawing = false;
+                    guardianSignatureDataInput.value = '';
+                    if (clearUpload && guardianSignatureUploadInput) {
+                        guardianSignatureUploadInput.value = '';
+                        renderUploadPreview(guardianSignatureUploadInput);
+                    }
+                    if (guardianSignatureDrawStatus) guardianSignatureDrawStatus.textContent = 'No guardian signature drawn yet.';
+                    syncGuardianSignatureValidity();
+                }
+
+                resizeGuardianSignatureCanvas = resizeCanvas;
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+                guardianSignatureCanvas.addEventListener('pointerdown', startDrawing);
+                guardianSignatureCanvas.addEventListener('pointermove', draw);
+                guardianSignatureCanvas.addEventListener('pointerup', stopDrawing);
+                guardianSignatureCanvas.addEventListener('pointercancel', stopDrawing);
+                guardianSignatureCanvas.addEventListener('pointerleave', stopDrawing);
+                clearGuardianSignatureBtn?.addEventListener('click', clearGuardianSignature);
+                guardianSignatureUploadInput?.addEventListener('change', () => {
+                    if (guardianSignatureUploadInput.files && guardianSignatureUploadInput.files.length > 0) {
+                        clearGuardianSignature(false);
+                        if (guardianSignatureDrawStatus) guardianSignatureDrawStatus.textContent = 'Uploaded guardian signature will be used.';
+                    }
+                    syncGuardianSignatureValidity();
+                });
+                syncGuardianSignatureValidity();
+            }
 
             function isReferenceLocked() {
                 return referencePanel?.dataset.referenceLocked === 'true';
@@ -3997,7 +4260,10 @@
                     panel?.classList.toggle('is-hidden', index + 1 !== normalizedStep);
                 });
                 if (normalizedStep === 6) {
-                    window.requestAnimationFrame(() => resizeSignatureCanvas());
+                    window.requestAnimationFrame(() => {
+                        resizeSignatureCanvas();
+                        resizeGuardianSignatureCanvas();
+                    });
                 }
 
                 const progressPercent = Math.round((maxVisitedStep / totalSteps) * 100);
@@ -4014,6 +4280,7 @@
                 clearValidationBubble();
                 if (step === 6) {
                     syncSignatureValidity();
+                    syncGuardianSignatureValidity();
                 }
                 const fields = Array.from(panel.querySelectorAll('input, select, textarea'))
                     .filter((field) => !field.disabled);
@@ -4035,6 +4302,7 @@
             function validateWholeForm() {
                 syncHomeAddressValue();
                 syncSignatureValidity();
+                syncGuardianSignatureValidity();
                 const fields = Array.from(form?.querySelectorAll('input, select, textarea') || [])
                     .filter((field) => !field.disabled);
                 const firstInvalid = fields.find((field) => !field.checkValidity());
@@ -4060,6 +4328,9 @@
             }
 
             function validationMessageForField(field) {
+                if (field.validationMessage) {
+                    return field.validationMessage;
+                }
                 if (field.type === 'file' && field.required && field.validity?.valueMissing) {
                     const requirementName = field.closest('.requirement-card, .upload-card')
                         ?.querySelector('.requirement-card-header strong, .form-label, h3')
@@ -4078,9 +4349,6 @@
                 }
                 if (field.validity?.rangeOverflow) {
                     return 'Date must not be later than December 31, 2025.';
-                }
-                if (field.validationMessage && field.dataset.validationMessage) {
-                    return field.dataset.validationMessage;
                 }
                 return 'Please complete the required field.';
             }
@@ -4486,8 +4754,12 @@
             }
 
             birthdayInput?.addEventListener('change', updateAgeFromBirthday);
+            birthdayInput?.addEventListener('change', toggleGuardianSignatureSection);
             setupSignaturePad();
+            setupGuardianSignaturePad();
             syncSignatureMethod();
+            syncGuardianSignatureMethod();
+            toggleGuardianSignatureSection();
             form?.addEventListener('input', clearValidationBubble);
             form?.addEventListener('change', clearValidationBubble);
             numericContactInputs.forEach((input) => {

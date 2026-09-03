@@ -181,12 +181,11 @@
 
         .student-signature-preview {
             display: block;
-            margin: 0 auto -18px;
+            margin: 0 auto -22px;
             max-height: 48px;
             max-width: 170px;
             object-fit: contain;
             position: relative;
-            z-index: 2;
         }
 
         .sig-underline {
@@ -197,7 +196,6 @@
             text-transform: uppercase;
             padding-bottom: 2px;
             position: relative;
-            z-index: 1;
         }
 
         .sig-caption {
@@ -221,8 +219,11 @@
         }
 
         .footer-table {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
             width: 100%;
-            margin-top: 45px;
             border-collapse: collapse;
             table-layout: fixed;
         }
@@ -331,6 +332,9 @@
                 </div>
 
                 <div class="sig-box" style="margin-top: 24px; margin-bottom: 0;">
+                    @if(!empty($guardianSignatureSrc))
+                        <img src="{{ $guardianSignatureSrc }}" alt="Guardian Signature" class="student-signature-preview">
+                    @endif
                     <div class="sig-underline">
                         {{ $guardian !== '' ? $guardian . ' / ' . $sigDate : '' }}
                     </div>
