@@ -5248,6 +5248,47 @@ public function storeHealthForm(Request $request)
         $healthDeclarationPath = $this->storeHealthProfileFileOrKeep($request, $existingHealthProfile, 'health_declaration', 'health_profiles/health_declarations', $oldPaths);
         $digitalSignaturePath = $this->storeDigitalSignatureOrKeep($request, $existingHealthProfile, $oldPaths);
 
+        if (($isDedicatedStudentForm || empty($healthDeclarationPath)) && !empty($digitalSignaturePath)) {
+            $categorySelected = trim((string) $request->input('health_form_category', ''));
+            if ($categorySelected === '') {
+                $categorySelected = optional($pendingHealthFormRequest)->category ?: 'Student';
+            }
+            $isOjt = stripos($categorySelected, 'ojt') !== false || stripos($categorySelected, 'on-the-job') !== false;
+            $purposeUnderline1 = $isOjt ? 'On-the-Job Training (OJT)' : 'enrolled student';
+            $purposeUnderline2 = $isOjt ? 'On-the-Job Training (OJT)' : 'enrolment as a student';
+
+            $studentFullName = trim(implode(' ', array_filter([
+                $user->first_name,
+                $user->middle_name,
+                $user->last_name,
+                $user->suffix_name,
+            ]))) ?: ($user->name ?? '');
+
+            $studentSignatureSrc = app(\App\Services\StoredImageDataUri::class)->fromStorage($digitalSignaturePath);
+            $isMinorStudent = (int) $request->input('age', 0) < 18;
+
+            $declarationPdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('student.print_declaration_form', [
+                'user' => $user,
+                'studentFullName' => $studentFullName,
+                'studentNumber' => $officialReference,
+                'course' => $resolvedCourseCollege,
+                'age' => $request->input('age'),
+                'guardianName' => $request->input('guardian_name'),
+                'isMinor' => $isMinorStudent,
+                'categorySelected' => $categorySelected,
+                'purposeUnderline1' => $purposeUnderline1,
+                'purposeUnderline2' => $purposeUnderline2,
+                'studentSignatureSrc' => $studentSignatureSrc,
+                'signatureDate' => now()->format('m/d/Y'),
+                'remarks' => trim((string) $request->input('health_form_request_remarks')),
+            ])->setPaper('letter', 'portrait');
+
+            $generatedFilename = 'declaration-' . $user->id . '-' . now()->format('Ymd-His') . '.pdf';
+            $generatedRelPath = 'health_profiles/health_declarations/' . $generatedFilename;
+            $this->healthFiles()->put($generatedRelPath, $declarationPdf->output());
+            $healthDeclarationPath = $generatedRelPath;
+        }
+
         $healthProfileData = [
                 'student_id'         => $request->student_id,
                 'student_number'     => $referenceMode === 'student_number' ? $officialReference : $this->resolveStudentNumber($user, $existingHealthProfile, $accountApplicantData),

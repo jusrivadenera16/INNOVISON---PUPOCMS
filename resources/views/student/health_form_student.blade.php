@@ -2941,33 +2941,43 @@
                         <button type="button" class="student-consent-close" id="studentConsentClose" aria-label="Close consent form">&times;</button>
                         <p class="student-consent-kicker">Data Privacy Consent</p>
                         <h2 id="studentConsentTitle">Declaration of Medical Information and Data Subject Consent Form</h2>
+                        
+                        @php
+                            $pendingCategory = optional($pendingHealthFormRequest)->category;
+                            $isOjtCategory = $pendingCategory && (stripos($pendingCategory, 'ojt') !== false || stripos($pendingCategory, 'on-the-job') !== false);
+                            $isStudentCategory = $pendingCategory && (stripos($pendingCategory, 'student') !== false || stripos($pendingCategory, 'enrolment') !== false || stripos($pendingCategory, 'general') !== false);
+                            $initialCategory = $isOjtCategory ? 'On-the-Job Training (OJT)' : ($isStudentCategory ? 'Student' : '');
+                        @endphp
+
+                        <div class="student-consent-purpose-wrap" style="margin: 0 0 16px;">
+                            <label for="studentConsentPurpose" style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: #7f1d2d; text-transform: uppercase; letter-spacing: .05em;">
+                                Purpose of Medical Clearance <span style="color: #dc2626;">*</span>
+                            </label>
+                            <select id="studentConsentPurpose" name="health_form_category" class="form-select" style="width: 100%; padding: 8px 12px; border: 1.5px solid #7f1d2d; border-radius: 8px; font-size: 13.5px; font-weight: 700; background-color: #ffffff; color: #1f2937;" required>
+                                @if(!$pendingCategory)
+                                    <option value="" disabled {{ old('health_form_category', $initialCategory) === '' ? 'selected' : '' }}>-- Select Purpose of Medical Clearance --</option>
+                                    <option value="Student" {{ old('health_form_category', $initialCategory) === 'Student' ? 'selected' : '' }}>Student (Enrolment / Annual Medical Clearance)</option>
+                                    <option value="On-the-Job Training (OJT)" {{ old('health_form_category', $initialCategory) === 'On-the-Job Training (OJT)' ? 'selected' : '' }}>On-the-Job Training (OJT)</option>
+                                @elseif($isOjtCategory)
+                                    <option value="On-the-Job Training (OJT)" selected>On-the-Job Training (OJT)</option>
+                                    <option value="Student">Student (Enrolment / Annual Medical Clearance)</option>
+                                @else
+                                    <option value="Student" selected>Student (Enrolment / Annual Medical Clearance)</option>
+                                    <option value="On-the-Job Training (OJT)">On-the-Job Training (OJT)</option>
+                                @endif
+                            </select>
+                        </div>
+
                         <div class="student-consent-copy">
-                            <p>I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my consultation for the issuance of medical clearance are true, correct and complete to the best of my knowledge. I have fully disclosed all medical conditions that may affect my assessment and enrolment as a student of PUP Taguig Campus.</p>
-                            <p>I also understand that the PUP Medical Services and University will not be liable for any untoward incident that may arise due to my failure to disclose accurate information or intentionally providing false or deceptive information.</p>
-                            <p>In compliance with the Data Privacy Act of 2012 and its implementing rules and regulations, I voluntarily consent to the collection, processing and storage of my personal and health information for health assessment, treatment, or research following applicable research ethics guidelines.</p>
+                            <p id="studentConsentCertParagraph">
+                                I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my on-site consultation for the issuance of medical clearance for <u id="consentDynamicPurpose" style="font-weight: 700;">{{ $initialCategory === 'On-the-Job Training (OJT)' ? 'On-the-Job Training (OJT)' : ($initialCategory === 'Student' ? 'enrolled student' : '[Select Purpose]') }}</u> are true, correct and complete to the best of my knowledge. I have fully disclosed all the medical condition that may affect in the assessment to endorse my <u id="consentDynamicEndorsement" style="font-weight: 700;">{{ $initialCategory === 'On-the-Job Training (OJT)' ? 'On-the-Job Training (OJT)' : ($initialCategory === 'Student' ? 'enrolment as a student' : '[Select Purpose]') }}</u> of PUP Taguig Campus
+                            </p>
+                            <p>I also understand that the PUP Medical Services and University will not be liable for any untoward incident that may arise due to my failure to disclose accurate information or intentionally providing false and deceptive information.</p>
+                            <p>In compliance with the Data Privacy Act of 2012 and its implementing Rules and Regulations, I voluntarily consent to the collection, processing and storage of my personal and health information for the purpose/s of health assessment, treatment/ or research (following research ethics guidelines) for the improvement of healthcare services.</p>
                         </div>
                         <p class="student-consent-guardian-note" id="studentConsentGuardianNote" hidden>Because you are 17 years old or below, a parent or guardian must also sign the printed consent form.</p>
                         <label class="student-consent-agreement">
                             <input type="checkbox" id="studentConsentCheckbox" required>
-                            <span>I have read and agree to this declaration and consent.</span>
-                        </label>
-                        <button type="button" class="student-consent-continue" id="studentConsentContinue">Continue</button>
-                    </section>
-                </div>
-
-                <div class="student-consent-modal" id="studentConsentModal" role="dialog" aria-modal="true" aria-labelledby="studentConsentTitle" hidden>
-                    <section class="student-consent-card">
-                        <button type="button" class="student-consent-close" id="studentConsentClose" aria-label="Close consent form">&times;</button>
-                        <p class="student-consent-kicker">Data Privacy Consent</p>
-                        <h2 id="studentConsentTitle">Declaration of Medical Information and Data Subject Consent Form</h2>
-                        <div class="student-consent-copy">
-                            <p>I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my consultation for the issuance of medical clearance are true, correct and complete to the best of my knowledge. I have fully disclosed all medical conditions that may affect my assessment and enrolment as a student of PUP Taguig Campus.</p>
-                            <p>I also understand that the PUP Medical Services and University will not be liable for any untoward incident that may arise due to my failure to disclose accurate information or intentionally providing false or deceptive information.</p>
-                            <p>In compliance with the Data Privacy Act of 2012 and its implementing rules and regulations, I voluntarily consent to the collection, processing and storage of my personal and health information for health assessment, treatment, or research following applicable research ethics guidelines.</p>
-                        </div>
-                        <p class="student-consent-guardian-note" id="studentConsentGuardianNote" hidden>Because you are 17 years old or below, a parent or guardian must also sign the printed consent form.</p>
-                        <label class="student-consent-agreement">
-                            <input type="checkbox" id="studentConsentCheckbox">
                             <span>I have read and agree to this declaration and consent.</span>
                         </label>
                         <button type="button" class="student-consent-continue" id="studentConsentContinue">Continue</button>
@@ -3566,6 +3576,9 @@
             const healthErrorMessage = document.getElementById('healthErrorMessage');
             const healthErrorContinue = document.getElementById('healthErrorContinue');
             const studentConsentModal = document.getElementById('studentConsentModal');
+            const studentConsentPurpose = document.getElementById('studentConsentPurpose');
+            const consentDynamicPurpose = document.getElementById('consentDynamicPurpose');
+            const consentDynamicEndorsement = document.getElementById('consentDynamicEndorsement');
             const studentConsentCheckbox = document.getElementById('studentConsentCheckbox');
             const studentConsentAcknowledged = document.getElementById('consentAcknowledged');
             const studentConsentContinue = document.getElementById('studentConsentContinue');
@@ -4578,16 +4591,42 @@
                 if (studentConsentCheckbox) studentConsentCheckbox.checked = false;
             }
 
+            function updateConsentDynamicText() {
+                const selected = studentConsentPurpose?.value || '';
+                if (selected === 'On-the-Job Training (OJT)') {
+                    if (consentDynamicPurpose) consentDynamicPurpose.textContent = 'On-the-Job Training (OJT)';
+                    if (consentDynamicEndorsement) consentDynamicEndorsement.textContent = 'On-the-Job Training (OJT)';
+                } else if (selected === 'Student') {
+                    if (consentDynamicPurpose) consentDynamicPurpose.textContent = 'enrolled student';
+                    if (consentDynamicEndorsement) consentDynamicEndorsement.textContent = 'enrolment as a student';
+                } else {
+                    if (consentDynamicPurpose) consentDynamicPurpose.textContent = '[Select Purpose]';
+                    if (consentDynamicEndorsement) consentDynamicEndorsement.textContent = '[Select Purpose]';
+                }
+            }
+
+            studentConsentPurpose?.addEventListener('change', updateConsentDynamicText);
+
             function openStudentConsent() {
                 if (!studentConsentModal) return;
                 studentConsentGuardianNote?.toggleAttribute('hidden', !isMinorStudent());
+                updateConsentDynamicText();
                 studentConsentModal.hidden = false;
                 document.body.style.overflow = 'hidden';
-                studentConsentCheckbox?.focus();
+                if (!studentConsentPurpose?.value) {
+                    studentConsentPurpose?.focus();
+                } else {
+                    studentConsentCheckbox?.focus();
+                }
             }
 
             studentConsentClose?.addEventListener('click', closeStudentConsent);
             studentConsentContinue?.addEventListener('click', () => {
+                if (!studentConsentPurpose?.value) {
+                    showError('Please select the Purpose of your Medical Clearance before proceeding.');
+                    studentConsentPurpose?.focus();
+                    return;
+                }
                 if (!studentConsentCheckbox?.checked) {
                     showError('Please confirm that you have read and agree to the consent form.');
                     return;
