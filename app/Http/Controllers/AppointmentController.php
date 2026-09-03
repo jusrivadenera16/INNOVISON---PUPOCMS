@@ -5074,6 +5074,7 @@ public function storeHealthForm(Request $request)
         'med_cert_findings_details' => 'required_if:med_cert_findings,With Findings|nullable|string|max:1000',
         'signature_method' => 'required|in:draw,upload',
         'consent_acknowledged' => 'accepted',
+        'consent_acknowledged' => $isDedicatedStudentForm ? 'accepted' : 'nullable',
         'digital_signature_data' => 'nullable|string',
         'digital_signature_upload' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
         'digital_signature_existing' => 'nullable|string|max:255',
