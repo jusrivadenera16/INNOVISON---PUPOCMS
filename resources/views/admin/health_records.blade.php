@@ -5888,12 +5888,58 @@
         $pendingApprovalRecordIds = [];
         $pendingConditionalRecordIds = [];
 
+        $resolveHealthRecordUserType = function ($record) {
+            $user = optional($record->user);
+            $rawType = strtolower(trim((string) (
+                $user->user_type
+                ?: $user->idp_role
+                ?: $user->user_role
+                ?: ''
+            )));
+
+            if (str_contains($rawType, 'dependent')) {
+                return 'Dependent';
+            }
+            if (str_contains($rawType, 'admin') || str_contains($rawType, 'nurse') || str_contains($rawType, 'clinic staff') || str_contains($rawType, 'clinic_staff')) {
+                return 'Admin';
+            }
+            if (str_contains($rawType, 'applicant')) {
+                return 'Applicant';
+            }
+            if (str_contains($rawType, 'faculty')) {
+                return 'Faculty';
+            }
+            if (in_array((string) ($record->record_source ?? 'health'), ['employee', 'staff'], true)) {
+                return 'Faculty';
+            }
+
+            $referenceNumbers = collect([
+                $record->reference_number ?? null,
+                $user->reference_number,
+            ])->map(fn ($value) => strtoupper(trim((string) $value)))
+                ->filter()
+                ->unique();
+            $hasStudentNumber = collect([
+                $record->student_number ?? null,
+                $user->student_number,
+            ])->map(fn ($value) => strtoupper(trim((string) $value)))
+                ->filter()
+                ->contains(function ($studentNumber) use ($referenceNumbers) {
+                    return !\Illuminate\Support\Str::startsWith($studentNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
+                        && !$referenceNumbers->contains($studentNumber);
+                });
+
+            return $hasStudentNumber ? 'Student' : 'Applicant';
+        };
+
         foreach ($records as $summaryRecord) {
             $summaryRecordSource = (string) ($summaryRecord->record_source ?? 'health');
             $summaryRecordKey = (string) ($summaryRecord->record_key ?? ($summaryRecordSource . ':' . $summaryRecord->id));
-            $summaryHasRequirements = in_array($summaryRecordSource, ['employee', 'staff'], true) || filled($summaryRecord->medical_certificate)
-                && filled($summaryRecord->chest_xray_result)
-                && filled($summaryRecord->student_photo);
+            $summaryUserType = $resolveHealthRecordUserType($summaryRecord);
+            $summaryHasRequirements = $summaryUserType !== 'Applicant'
+                || (filled($summaryRecord->medical_certificate)
+                    && filled($summaryRecord->chest_xray_result)
+                    && filled($summaryRecord->student_photo));
             $summaryStatus = trim((string) ($summaryRecord->clearance_status ?? ''));
             $summaryIsApproved = in_array($summaryStatus, ['Issued', 'Fully Cleared'], true);
             $summaryIsConditional = !$summaryIsApproved && (
@@ -5978,49 +6024,6 @@
             $display = trim($code . ($suffix !== '' ? ' ' . $suffix : ''));
 
             return $display !== '' ? $display : trim((string) $courseName);
-        };
-        $resolveHealthRecordUserType = function ($record) {
-            $user = optional($record->user);
-            $rawType = strtolower(trim((string) (
-                $user->user_type
-                ?: $user->idp_role
-                ?: $user->user_role
-                ?: ''
-            )));
-
-            if (str_contains($rawType, 'dependent')) {
-                return 'Dependent';
-            }
-            if (str_contains($rawType, 'admin') || str_contains($rawType, 'nurse') || str_contains($rawType, 'clinic staff') || str_contains($rawType, 'clinic_staff')) {
-                return 'Admin';
-            }
-            if (str_contains($rawType, 'applicant')) {
-                return 'Applicant';
-            }
-            if (str_contains($rawType, 'faculty')) {
-                return 'Faculty';
-            }
-            if (in_array((string) ($record->record_source ?? 'health'), ['employee', 'staff'], true)) {
-                return 'Faculty';
-            }
-
-            $referenceNumbers = collect([
-                $record->reference_number ?? null,
-                $user->reference_number,
-            ])->map(fn ($value) => strtoupper(trim((string) $value)))
-                ->filter()
-                ->unique();
-            $hasStudentNumber = collect([
-                $record->student_number ?? null,
-                $user->student_number,
-            ])->map(fn ($value) => strtoupper(trim((string) $value)))
-                ->filter()
-                ->contains(function ($studentNumber) use ($referenceNumbers) {
-                    return !\Illuminate\Support\Str::startsWith($studentNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
-                        && !$referenceNumbers->contains($studentNumber);
-                });
-
-            return $hasStudentNumber ? 'Student' : 'Applicant';
         };
     @endphp
 

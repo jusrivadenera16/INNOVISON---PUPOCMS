@@ -4004,7 +4004,10 @@
         .health-role-selector-close svg { position: relative; z-index: 1; width: 20px; height: 20px; }
         .health-role-selector-heading { display: flex; align-items: flex-start; padding: 4px 46px 20px 8px; }
         .health-role-selector-kicker { display: block; margin-bottom: 8px; color: #7f1d2d; font-size: 11px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; }
-        .health-role-selector-heading h2 { margin: 0; color: #64111d; font-size: 24px; line-height: 1.2; }
+        .health-role-selector-heading h2,
+        #healthRoleSelectorTitle { margin: 0; color: #000000 !important; font-size: 24px; line-height: 1.2; }
+        html[data-theme="dark"] .health-role-selector-heading h2,
+        html[data-theme="dark"] #healthRoleSelectorTitle { color: #000000 !important; }
         .health-role-selector-heading p { margin: 8px 0 0; color: #4b5563; font-size: 16px; }
         .health-role-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
         .health-role-option { position: relative; display: grid; grid-template-columns: 24px 54px minmax(0, 1fr) 24px; align-items: center; gap: 10px; min-height: 108px; padding: 14px; border: 1px solid #d1d5db; border-radius: 12px; cursor: pointer; transition: border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease; }
