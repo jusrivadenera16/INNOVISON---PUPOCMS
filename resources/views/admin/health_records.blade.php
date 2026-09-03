@@ -5913,6 +5913,19 @@
                 return 'Faculty';
             }
 
+            $explicitUserType = strtolower(trim((string) ($user->user_type ?? '')));
+            if (str_contains($explicitUserType, 'student')) {
+                return 'Student';
+            }
+
+            $isOfficialStudentNumber = function ($value): bool {
+                $studentNumber = strtoupper(trim((string) $value));
+
+                return $studentNumber !== ''
+                    && !\Illuminate\Support\Str::startsWith($studentNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
+                    && preg_match('/^\d{4}-\d{5}-[A-Z]{2}-\d+$/', $studentNumber) === 1;
+            };
+
             $referenceNumbers = collect([
                 $record->reference_number ?? null,
                 $user->reference_number,
@@ -5924,9 +5937,9 @@
                 $user->student_number,
             ])->map(fn ($value) => strtoupper(trim((string) $value)))
                 ->filter()
-                ->contains(function ($studentNumber) use ($referenceNumbers) {
+                ->contains(function ($studentNumber) use ($referenceNumbers, $isOfficialStudentNumber) {
                     return !\Illuminate\Support\Str::startsWith($studentNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
-                        && !$referenceNumbers->contains($studentNumber);
+                        && ($isOfficialStudentNumber($studentNumber) || !$referenceNumbers->contains($studentNumber));
                 });
 
             return $hasStudentNumber ? 'Student' : 'Applicant';

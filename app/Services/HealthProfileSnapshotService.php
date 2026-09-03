@@ -17,6 +17,7 @@ class HealthProfileSnapshotService
         'chest_xray_result',
         'pwd_id_proof',
         'digital_signature',
+        'guardian_signature',
     ];
 
     public function capture(HealthProfile $profile): array

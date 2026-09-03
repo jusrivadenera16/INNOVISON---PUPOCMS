@@ -12,7 +12,10 @@
     $fullName = trim((string) ($studentFullName ?? ''));
     $sigDate = $signatureDate ?? now()->format('m/d/Y');
     $guardian = trim((string) ($guardianName ?? ''));
-    $showGuardian = !empty($isMinor) || $guardian !== '';
+    $signatureAlt = $signatureAlt ?? 'Student Signature';
+    $signatureCaption = $signatureCaption ?? "Student's Signature Over Printed Name/ Date";
+    $fallbackSignerName = $fallbackSignerName ?? 'STUDENT NAME';
+    $showGuardian = empty($hideGuardianBlock ?? false);
 @endphp
 
 <!DOCTYPE html>
@@ -636,8 +639,8 @@
 
                         <img
                             src="{{ $studentSignatureSrc }}"
-                            alt="Student Signature"
-                            class="student-signature-preview"
+                                alt="{{ $signatureAlt }}"
+                                class="student-signature-preview"
                         >
 
                     @endif
@@ -647,7 +650,7 @@
 
                         {{ $fullName !== ''
                             ? $fullName
-                            : 'STUDENT NAME'
+                            : $fallbackSignerName
                         }}
 
                         /
@@ -658,7 +661,7 @@
 
 
                     <div class="sig-caption">
-                        Student's Signature Over Printed Name/ Date
+                        {{ $signatureCaption }}
                     </div>
 
 
@@ -680,40 +683,42 @@
 
                 {{-- GUARDIAN SIGNATURE --}}
 
-                <div class="sig-box guardian-signature-box">
+                @if($showGuardian)
+                    <div class="sig-box guardian-signature-box">
 
-                    @if(!empty($guardianSignatureSrc))
+                        @if(!empty($guardianSignatureSrc))
 
-                        <img
-                            src="{{ $guardianSignatureSrc }}"
-                            alt="Guardian Signature"
-                            class="student-signature-preview"
-                        >
+                            <img
+                                src="{{ $guardianSignatureSrc }}"
+                                alt="Guardian Signature"
+                                class="student-signature-preview"
+                            >
 
-                    @endif
+                        @endif
 
 
-                    <div class="sig-underline">
+                        <div class="sig-underline">
 
-                        {{ $guardian !== ''
-                            ? $guardian . ' / ' . $sigDate
-                            : ''
-                        }}
+                            {{ $guardian !== ''
+                                ? $guardian . ' / ' . $sigDate
+                                : ''
+                            }}
+
+                        </div>
+
+
+                        <div class="sig-caption">
+                            Guardian's Signature Over Printed Name/ Date
+                        </div>
+
+
+                        <div class="minor-note">
+                            Both student and guardian will affix their signature if the student is aged below 18 years old.
+                        </div>
+
 
                     </div>
-
-
-                    <div class="sig-caption">
-                        Guardian's Signature Over Printed Name/ Date
-                    </div>
-
-
-                    <div class="minor-note">
-                        Both student and guardian will affix their signature if the student is aged below 18 years old.
-                    </div>
-
-
-                </div>
+                @endif
 
 
             </td>
