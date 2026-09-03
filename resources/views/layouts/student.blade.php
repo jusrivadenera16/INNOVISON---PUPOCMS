@@ -4078,8 +4078,8 @@
                     options.forEach((item) => item.classList.toggle('is-selected', item === option));
                     continueLink.href = input.dataset.healthRoleRoute || '#';
                     continueLink.textContent = input.value === 'applicant'
-                        ? 'Continue as Applicants'
-                        : 'Continue as Current Student / OJT';
+                        ? 'Continue as Applicant'
+                        : 'Continue as Student / OJT';
                     continueLink.classList.add('is-visible');
                 });
             });
