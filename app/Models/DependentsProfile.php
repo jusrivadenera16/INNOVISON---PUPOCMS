@@ -28,6 +28,7 @@ class DependentsProfile extends Model
         'province',
         'home_address',
         'contact_no',
+        'landline',
         'emergency_contact_name',
         'emergency_contact_no',
         'submitted_at',

@@ -192,6 +192,10 @@ class LoginController extends Controller
             return;
         }
 
+        if (str_starts_with($redirectPath, '/student/dependent-profile')) {
+            return;
+        }
+
         if ($this->isDependentProfileUser($user)) {
             $dependentProfileExists = Schema::hasTable('dependents_profiles')
                 && DependentsProfile::query()->where('user_id', $user->id)->exists();
@@ -223,22 +227,52 @@ class LoginController extends Controller
 
     private function isDependentProfileUser(User $user): bool
     {
-        $markers = strtolower(trim(implode(' ', array_filter([
-            (string) ($user->user_type ?? ''),
-            (string) ($user->idp_role ?? ''),
-        ]))));
+        $userType = strtolower(trim((string) ($user->user_type ?? '')));
+        $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
 
-        if ($markers === '') {
+        $hasDependentMarker = str_contains($userType, 'dependent')
+            || str_contains($userType, 'guest')
+            || str_contains($idpRole, 'dependent')
+            || str_contains($idpRole, 'guest');
+
+        if (!$hasDependentMarker) {
             return false;
         }
 
-        foreach (['student', 'applicant', 'faculty', 'admin', 'staff', 'employee', 'designee', 'non-teaching', 'non teaching'] as $excluded) {
-            if (str_contains($markers, $excluded)) {
-                return false;
+        foreach ([$userType, $idpRole] as $marker) {
+            if ($marker === '' || str_contains($marker, 'dependent') || str_contains($marker, 'guest')) {
+                continue;
+            }
+
+            foreach (['student', 'applicant', 'faculty', 'admin', 'staff', 'employee', 'designee', 'non-teaching', 'non teaching'] as $excluded) {
+                if (str_contains($marker, $excluded)) {
+                    return false;
+                }
             }
         }
 
-        return str_contains($markers, 'dependent') || str_contains($markers, 'guest');
+        if (Schema::hasTable('admins') && $this->findLinkedAdminProfile($user)) {
+            return false;
+        }
+
+        if (
+            Schema::hasColumn('users', 'employee_number')
+            && trim((string) ($user->employee_number ?? '')) !== ''
+            && !str_contains($idpRole, 'dependent')
+            && !str_contains($idpRole, 'guest')
+        ) {
+            return false;
+        }
+
+        if (
+            trim((string) ($user->reference_number ?? '')) !== ''
+            && !str_contains($idpRole, 'dependent')
+            && !str_contains($idpRole, 'guest')
+        ) {
+            return false;
+        }
+
+        return true;
     }
 
     private function findLinkedAdminProfile(User $user): ?Admin

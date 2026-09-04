@@ -1757,6 +1757,12 @@ class WalkInController extends Controller
                 $rawClearanceStatus !== '' => $rawClearanceStatus,
                 default => 'Awaiting Uploads',
             };
+            $approvalDateSource = $recordType === 'employee'
+                ? (optional($employeeProfile)->verified_at ?: optional($employeeProfile)->certified_at)
+                : optional($healthProfile)->verified_at;
+            $resolvedApprovedAt = $approvalDateSource
+                ? \Carbon\Carbon::parse($approvalDateSource)->format('M d, Y, g:i A')
+                : null;
 
             if ($previewOnly) {
                 return response()->json([
@@ -1778,6 +1784,7 @@ class WalkInController extends Controller
                     'contact_number' => $resolvedContactNumber,
                     'clinic_status' => $resolvedClinicStatus,
                     'clearance_status' => $rawClearanceStatus,
+                    'approved_at' => $resolvedApprovedAt,
                     'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                     'health_profile_id' => optional($healthProfile)->id,
                     'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
@@ -1836,6 +1843,7 @@ class WalkInController extends Controller
                 'contact_number' => $resolvedContactNumber,
                 'clinic_status' => $resolvedClinicStatus,
                 'clearance_status' => $rawClearanceStatus,
+                'approved_at' => $resolvedApprovedAt,
                 'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                 'health_profile_id' => optional($healthProfile)->id,
                 'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,

@@ -2185,22 +2185,52 @@ class AppointmentController extends Controller
             return false;
         }
 
-        $markers = strtolower(trim(implode(' ', array_filter([
-            (string) ($user->user_type ?? ''),
-            (string) ($user->idp_role ?? ''),
-        ]))));
+        $userType = strtolower(trim((string) ($user->user_type ?? '')));
+        $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
 
-        if ($markers === '') {
+        $hasDependentMarker = str_contains($userType, 'dependent')
+            || str_contains($userType, 'guest')
+            || str_contains($idpRole, 'dependent')
+            || str_contains($idpRole, 'guest');
+
+        if (!$hasDependentMarker) {
             return false;
         }
 
-        foreach (['student', 'applicant', 'faculty', 'admin', 'staff', 'employee', 'designee', 'non-teaching', 'non teaching'] as $excluded) {
-            if (str_contains($markers, $excluded)) {
-                return false;
+        foreach ([$userType, $idpRole] as $marker) {
+            if ($marker === '' || str_contains($marker, 'dependent') || str_contains($marker, 'guest')) {
+                continue;
+            }
+
+            foreach (['student', 'applicant', 'faculty', 'admin', 'staff', 'employee', 'designee', 'non-teaching', 'non teaching'] as $excluded) {
+                if (str_contains($marker, $excluded)) {
+                    return false;
+                }
             }
         }
 
-        return str_contains($markers, 'dependent') || str_contains($markers, 'guest');
+        if ($this->resolveLinkedAdminProfile($user)) {
+            return false;
+        }
+
+        if (
+            Schema::hasColumn('users', 'employee_number')
+            && trim((string) ($user->employee_number ?? '')) !== ''
+            && !str_contains($idpRole, 'dependent')
+            && !str_contains($idpRole, 'guest')
+        ) {
+            return false;
+        }
+
+        if (
+            trim((string) ($user->reference_number ?? '')) !== ''
+            && !str_contains($idpRole, 'dependent')
+            && !str_contains($idpRole, 'guest')
+        ) {
+            return false;
+        }
+
+        return true;
     }
 
     private function hasSubmittedDependentProfile(?User $user): bool
@@ -4319,7 +4349,7 @@ public function showHealthForm()
         $user = User::with(['adminProfile', 'adminHubProfile'])->find($user->id);
     }
 
-    if (!$isDedicatedStudentForm && $this->isDependentProfileUser($user)) {
+    if ($this->isDependentProfileUser($user)) {
         return redirect()->route('dependent.profile.form');
     }
 
@@ -4353,10 +4383,17 @@ public function showHealthForm()
     $healthFormPrefill = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $existingHealthProfile);
     $healthFormPrefill['pending_health_form_request'] = $pendingHealthFormRequest;
     if ($isDedicatedStudentForm) {
+        $requestedStudentReference = $pendingHealthFormRequest
+            ? trim((string) (
+                $this->enrolledStudentReferenceNumber($user, $existingHealthProfile)
+                ?: optional($existingHealthProfile)->student_number
+                ?: ($user->student_number ?? '')
+            ))
+            : '';
         $healthFormPrefill['reference_mode'] = 'student_number';
-        $healthFormPrefill['reference_number'] = '';
+        $healthFormPrefill['reference_number'] = $requestedStudentReference;
         $healthFormPrefill['manual_student_number_allowed'] = true;
-        $healthFormPrefill['reference_requires_validation'] = false;
+        $healthFormPrefill['reference_requires_validation'] = $requestedStudentReference === '';
         $healthFormPrefill['step_1_title'] = 'Student ID';
         $healthFormPrefill['step_1_description'] = 'Enter your Student ID, then complete your health information.';
         $healthFormPrefill['reference_label'] = 'Student ID / Student Number';
@@ -4433,6 +4470,7 @@ public function showDependentProfileForm()
         'province' => trim((string) ($dependentProfile->province ?? '')),
         'home_address' => trim((string) ($dependentProfile->home_address ?? '')),
         'contact_no' => trim((string) ($dependentProfile->contact_no ?? $user->contact_no ?? '')),
+        'landline' => trim((string) ($dependentProfile->landline ?? '')),
         'emergency_contact_name' => trim((string) ($dependentProfile->emergency_contact_name ?? '')),
         'emergency_contact_no' => trim((string) ($dependentProfile->emergency_contact_no ?? '')),
     ];
@@ -4489,10 +4527,17 @@ public function storeDependentProfile(Request $request)
         'municipality' => ['required', 'string', 'max:120'],
         'province' => ['required', 'string', 'max:120'],
         'contact_no' => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'landline' => ['nullable', 'string', 'max:20', 'regex:/^(?:[0-9+\-\s()]+|N\/?A|NONE)$/i'],
         'emergency_contact_name' => ['required', 'string', 'max:255'],
         'emergency_contact_no' => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
         'dependent_profile_certified' => ['accepted'],
     ]);
+
+    $validated['first_name'] = trim((string) ($user->first_name ?? '')) ?: $validated['first_name'];
+    $validated['middle_name'] = trim((string) ($user->middle_name ?? '')) ?: ($validated['middle_name'] ?? null);
+    $validated['last_name'] = trim((string) ($user->last_name ?? '')) ?: $validated['last_name'];
+    $validated['suffix_name'] = trim((string) ($user->suffix_name ?? '')) ?: ($validated['suffix_name'] ?? null);
+    $validated['email'] = trim((string) ($user->email ?? '')) ?: $validated['email'];
 
     $validated['middle_name'] = $this->normalizeOptionalNamePart($validated['middle_name'] ?? null);
     $validated['suffix_name'] = $this->normalizeOptionalNamePart($validated['suffix_name'] ?? null);
@@ -4525,6 +4570,7 @@ public function storeDependentProfile(Request $request)
             'province' => $validated['province'],
             'home_address' => $homeAddress,
             'contact_no' => $validated['contact_no'],
+            'landline' => trim((string) ($validated['landline'] ?? '')) ?: null,
             'emergency_contact_name' => $validated['emergency_contact_name'],
             'emergency_contact_no' => $validated['emergency_contact_no'],
             'submitted_at' => now(),
@@ -4671,6 +4717,7 @@ private function ensureEmployeeHealthDeclaration(EmployeeHealthProfile $profile,
             'signatureAlt' => 'Employee Signature',
             'signatureCaption' => "Employee's Signature Over Printed Name/ Date",
             'fallbackSignerName' => 'EMPLOYEE NAME',
+            'postRemarksNote' => 'Both employee and clinic staff will affix their signature if required by the Medical Clinic.',
         ])->setPaper('letter', 'portrait');
 
         $identifier = preg_replace('/[^A-Za-z0-9\-_]+/', '-', (string) (
@@ -5041,6 +5088,7 @@ public function storeEmployeeHealthForm(Request $request)
             'signatureAlt' => 'Employee Signature',
             'signatureCaption' => "Employee's Signature Over Printed Name/ Date",
             'fallbackSignerName' => 'EMPLOYEE NAME',
+            'postRemarksNote' => 'Both employee and clinic staff will affix their signature if required by the Medical Clinic.',
         ])->setPaper('letter', 'portrait');
 
         $declarationIdentifier = preg_replace('/[^A-Za-z0-9\-_]+/', '-', (string) (
@@ -5187,6 +5235,14 @@ public function validateHealthFormReference(Request $request)
 {
     /** @var \App\Models\User|null $user */
     $user = Auth::guard('student')->user() ?: Auth::user();
+    if ($this->isDependentProfileUser($user)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Please complete the Dependent Information Form assigned to your account.',
+            'redirect_url' => route('dependent.profile.form'),
+        ], 403);
+    }
+
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
     $existingHealthProfile = $user
         ? HealthProfile::query()->where('user_id', $user->id)->first()
@@ -5466,6 +5522,11 @@ public function storeHealthForm(Request $request)
     /** @var \App\Models\User|null $user */
     $user = Auth::guard('student')->user() ?: Auth::user();
     $isDedicatedStudentForm = $request->routeIs('store.health.form.student');
+    if ($this->isDependentProfileUser($user)) {
+        return redirect()->route('dependent.profile.form')
+            ->with('info', 'Please complete the Dependent Information Form assigned to your account.');
+    }
+
     if ($this->shouldUseEmployeeHealthForm($user)) {
         return redirect()->route('health.form.employee')
             ->with('info', 'Please use the Faculty, Administrative Employee, and Dependent Health Examination Record.');

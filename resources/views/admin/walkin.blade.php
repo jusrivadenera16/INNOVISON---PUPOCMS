@@ -3989,6 +3989,173 @@
         border-color: #facc15;
     }
 
+    .applicant-approved-result {
+        display: none;
+        padding: 14px;
+        border: 1px solid #86efac;
+        border-radius: 8px;
+        background:
+            radial-gradient(circle at top right, rgba(34, 197, 94, .10), transparent 38%),
+            linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
+        color: #064e3b;
+    }
+
+    .applicant-approved-result.is-visible {
+        display: grid;
+        grid-template-columns: 58px minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+    }
+
+    .applicant-approved-result-icon {
+        display: grid;
+        place-items: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 999px;
+        background: #059669;
+        color: #ffffff;
+    }
+
+    .applicant-approved-result-icon svg {
+        width: 29px;
+        height: 29px;
+        stroke-width: 2.8;
+    }
+
+    .applicant-approved-result-copy {
+        display: grid;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .applicant-approved-result-copy strong {
+        color: #047857;
+        font-size: 22px;
+        font-weight: 900;
+        line-height: 1.1;
+    }
+
+    .applicant-approved-result-copy p {
+        margin: 0;
+        color: #064e3b;
+        font-size: 15px;
+        line-height: 1.35;
+    }
+
+    .applicant-approved-result-meta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(6, 78, 59, .14);
+        color: #475569;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .applicant-approved-result-meta svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .applicant-approved-close-row {
+        display: none;
+        justify-content: flex-end;
+        margin-top: 18px;
+    }
+
+    .applicant-approved-close-row.is-visible {
+        display: flex;
+    }
+
+    .applicant-approved-close-btn {
+        min-width: 140px;
+        min-height: 44px;
+        border: 1px solid #dbe3ef;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #172033;
+        font-size: 13px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: background .18s ease, border-color .18s ease, color .18s ease;
+    }
+
+    .applicant-approved-close-btn:hover,
+    .applicant-approved-close-btn:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        outline: none;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-approved-result-only {
+        width: min(760px, 100%);
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-modal-body {
+        padding: 16px 18px;
+        min-height: auto;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-ref-panel {
+        gap: 0;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-approved-result {
+        padding: 12px 14px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-approved-result.is-visible {
+        grid-template-columns: 44px minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-approved-result-icon {
+        width: 38px;
+        height: 38px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-approved-result-icon svg {
+        width: 23px;
+        height: 23px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-approved-result-copy {
+        gap: 7px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-approved-result-copy strong {
+        font-size: 18px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-approved-result-copy p {
+        font-size: 13px;
+        line-height: 1.35;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-approved-result-meta {
+        padding-top: 8px;
+        font-size: 11px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-final-review-action-row,
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-ref-actions,
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-approved-close-row,
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only #applicantRefStatus {
+        display: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+    }
+
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-result {
         position: relative;
         min-height: 86px;
@@ -8615,6 +8782,72 @@
         color: inherit !important;
     }
 
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-encode-workflow .applicant-ref-instruction {
+        border-color: rgba(251, 191, 36, .26) !important;
+        background: #151e2d !important;
+        color: #fde68a !important;
+        box-shadow: 0 10px 22px rgba(0, 0, 0, .2) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-encode-workflow .applicant-ref-instruction * {
+        color: inherit !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-encode-workflow .applicant-ref-cancel-btn {
+        border-color: rgba(148, 163, 184, .28) !important;
+        background: #1e293b !important;
+        color: #f8fafc !important;
+        box-shadow: 0 10px 22px rgba(0, 0, 0, .2) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-encode-workflow .applicant-ref-cancel-btn:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-encode-workflow .applicant-ref-cancel-btn:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-approved-result {
+        border-color: rgba(52, 211, 153, .55) !important;
+        background:
+            radial-gradient(circle at top right, rgba(16, 185, 129, .14), transparent 40%),
+            linear-gradient(135deg, #10231f 0%, #111827 100%) !important;
+        color: #d1fae5 !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, .28);
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-approved-result-only,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-modal-body,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-ref-panel {
+        background: #0f172a !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-approved-result-copy strong {
+        color: #6ee7b7 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-approved-result-copy p,
+    html[data-theme="dark"] #applicantRefModal .applicant-approved-result-meta {
+        color: #d1fae5 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-approved-result-meta {
+        border-top-color: rgba(110, 231, 183, .16) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-approved-close-btn {
+        border-color: rgba(148, 163, 184, .28) !important;
+        background: #1e293b !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-approved-close-btn:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-approved-close-btn:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+    }
+
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-ref-status.info,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .ocr-status.info {
         border-color: rgba(96, 165, 250, .35) !important;
@@ -9205,6 +9438,22 @@
                         <label for="applicantRefInput" id="lookupModalFieldLabel">Reference Number</label>
                         <input type="text" id="applicantRefInput" class="applicant-ref-input" placeholder="Enter reference number">
                     </div>
+                    </div>
+
+                    <div class="applicant-approved-result" id="applicantAlreadyApprovedResult" aria-live="polite">
+                        <span class="applicant-approved-result-icon" aria-hidden="true"><x-outline-icon name="check" /></span>
+                        <div class="applicant-approved-result-copy">
+                            <strong>Approved</strong>
+                            <p id="applicantAlreadyApprovedMessage">This applicant's health profile has already been cleared by the clinic. No further assessment is required.</p>
+                            <div class="applicant-approved-result-meta">
+                                <x-outline-icon name="calendar-days" />
+                                <span id="applicantAlreadyApprovedMeta">Approved at: -</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="applicant-approved-close-row" id="applicantAlreadyApprovedCloseRow">
+                        <button type="button" class="applicant-approved-close-btn" id="closeApplicantAlreadyApprovedResult">Close</button>
                     </div>
 
                     <div class="applicant-file-actions" id="applicantFileActions">
@@ -11571,6 +11820,11 @@
         const lookupModalEntryButtonText = document.getElementById('lookupModalEntryButtonText');
         const lookupModalHelpCopy = document.getElementById('lookupModalHelpCopy');
         const lookupModalFieldLabel = document.getElementById('lookupModalFieldLabel');
+        const alreadyApprovedResult = document.getElementById('applicantAlreadyApprovedResult');
+        const alreadyApprovedMessage = document.getElementById('applicantAlreadyApprovedMessage');
+        const alreadyApprovedMeta = document.getElementById('applicantAlreadyApprovedMeta');
+        const alreadyApprovedCloseRow = document.getElementById('applicantAlreadyApprovedCloseRow');
+        const alreadyApprovedCloseButton = document.getElementById('closeApplicantAlreadyApprovedResult');
         const previewPanel    = document.getElementById('applicantDocumentPreviewPanel');
         const previewTitle    = document.getElementById('applicantDocumentPreviewTitle');
         const previewFrame    = document.getElementById('applicantDocumentPreviewFrame');
@@ -11889,6 +12143,7 @@
             if (!findBtn) return;
 
             setReviewDraftButtonVisible(false);
+            hideAlreadyApprovedResult();
 
             findBtn.textContent = 'Find';
             findBtn.disabled = false;
@@ -11908,6 +12163,69 @@
             findBtn.removeEventListener('click', saveStudentAssessment);
             findBtn.removeEventListener('click', enterSavedReviewEditMode);
             findBtn.addEventListener('click', doLookup);
+        }
+
+        function hideAlreadyApprovedResult() {
+            alreadyApprovedResult?.classList.remove('is-visible');
+            alreadyApprovedCloseRow?.classList.remove('is-visible');
+            modalShell?.classList.remove('is-approved-result-only');
+        }
+
+        function showAlreadyApprovedResult(data) {
+            const approvedDate = data.approved_at
+                || data.verified_at
+                || data.certified_at
+                || data.updated_at
+                || '';
+            const isEmployee = isClinicLookupMode();
+            const personType = isEmployee ? 'employee' : 'applicant';
+            if (lookupModalTitle) lookupModalTitle.textContent = isEmployee ? 'Employee Assessment' : 'Encode Assessment';
+            if (lookupModalSubtitle) lookupModalSubtitle.textContent = `Review the ${personType}'s clinic assessment status.`;
+            if (alreadyApprovedMessage) {
+                alreadyApprovedMessage.textContent = `This ${personType}'s health profile has already been cleared by the clinic. No further assessment is required.`;
+            }
+            if (alreadyApprovedMeta) {
+                alreadyApprovedMeta.textContent = `Approved at: ${approvedDate || '-'}`;
+            }
+            modalShell?.classList.add('is-approved-result-only');
+            alreadyApprovedResult?.classList.add('is-visible');
+            alreadyApprovedCloseRow?.classList.add('is-visible');
+            if (refStatus) {
+                refStatus.className = 'ocr-status';
+                refStatus.textContent = '';
+                refStatus.hidden = true;
+                refStatus.style.display = 'none';
+            }
+            if (defaultPane) defaultPane.style.display = 'none';
+            document.querySelector('.applicant-ref-lookup-row')?.style.setProperty('display', 'none');
+            if (foundCard) {
+                foundCard.style.display = 'none';
+                foundCard.dataset.initials = 'AP';
+            }
+            if (foundName) foundName.textContent = '';
+            if (lookupDetails) lookupDetails.style.display = 'none';
+            lookupDetails?.classList.remove('is-summary-visible');
+            if (informationDetails) {
+                informationDetails.classList.remove('is-visible');
+                informationDetails.setAttribute('aria-hidden', 'true');
+            }
+            informationButton?.classList.remove('is-visible');
+            informationButton?.setAttribute('aria-expanded', 'false');
+            medicalConditionButton?.classList.remove('is-visible');
+            medicalConditionButton?.setAttribute('aria-expanded', 'false');
+            documentsButton?.classList.remove('is-visible');
+            pendingHistoryButton?.classList.remove('is-visible');
+            pendingHistoryButton?.setAttribute('aria-expanded', 'false');
+            pendingHistoryWrap?.classList.remove('is-open');
+            savedAssessmentButton?.classList.remove('is-visible');
+            renderDocuments([]);
+
+            if (findBtn) {
+                findBtn.disabled = true;
+                findBtn.textContent = 'Already Approved';
+            }
+
+            alreadyApprovedCloseButton?.focus({ preventScroll: true });
         }
 
         function closeDocumentPreview() {
@@ -12051,6 +12369,7 @@
         }
 
         function resetLookupState() {
+            hideAlreadyApprovedResult();
             if (modalShell) modalShell.classList.remove('has-lookup-result');
             if (modalShell && !isClinicLookupMode()) {
                 modalShell.classList.remove('is-employee-lookup');
@@ -13684,69 +14003,18 @@
                             : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.')));
 
                     if (isAlreadyApproved && !isStudentRecord) {
-                        setStatus('approved', isClinicLookupMode()
-                            ? "Employee's record is already cleared."
-                            : 'Applicant Already Approved. This health profile has already been cleared by the clinic.');
-                        if (foundCard && foundName) {
-                            foundName.textContent = (applicantName || ref) + ' ✓';
-                            foundCard.dataset.initials = getApplicantInitials(applicantName || ref);
-                            foundCard.style.display = 'flex';
-                        }
                         showLookupDetails(data, ref);
+                        showAlreadyApprovedResult(data);
                         populateEmployeeDraft(data.employee_draft_data || {});
                         populateApplicantFinalReviewDraft(data.applicant_final_review_draft_data || {});
-                        if (foundCard) {
-                            foundCard.style.display = 'none';
-                            foundCard.dataset.initials = 'AP';
-                        }
-                        if (foundName) foundName.textContent = '';
-                        if (lookupDetails) lookupDetails.style.display = 'none';
-                        lookupDetails?.classList.remove('is-summary-visible');
-                        if (informationDetails) {
-                            informationDetails.classList.remove('is-visible');
-                            informationDetails.setAttribute('aria-hidden', 'true');
-                        }
-                        if (informationButton) {
-                            informationButton.classList.remove('is-visible');
-                            informationButton.setAttribute('aria-expanded', 'false');
-                        }
-                        if (documentsButton) documentsButton.classList.remove('is-visible');
-                        renderDocuments([]);
                         const approvedMedicalConditionSection = document.querySelector('.applicant-medical-condition-section');
                         if (approvedMedicalConditionSection) {
                             approvedMedicalConditionSection.classList.remove('show');
                             approvedMedicalConditionSection.style.removeProperty('display');
                         }
 
-                        // Hide input sections and show only results
-                        if (defaultPane) defaultPane.style.display = 'none';
-
-                        // Hide only the input form row, keep action buttons visible
-                        const lookupRow = document.querySelector('.applicant-ref-lookup-row');
-                        if (lookupRow) lookupRow.style.display = 'none';
-
                         isApprovalMode = false;
                         setReviewDraftButtonVisible(false);
-                        if (findBtn) {
-                            findBtn.removeEventListener('click', doLookup);
-                            findBtn.removeEventListener('click', doApprove);
-                            findBtn.removeEventListener('click', saveApplicantEncoding);
-                            findBtn.removeEventListener('click', saveStudentAssessment);
-                            findBtn.removeEventListener('click', enterSavedReviewEditMode);
-
-                            findBtn.textContent = '✓ Already Approved';
-                            findBtn.disabled = true;
-                            findBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-                            findBtn.style.color = '#000000';
-                            findBtn.style.opacity = '1';
-                            findBtn.style.cursor = 'not-allowed';
-                            findBtn.style.fontWeight = '700';
-                            findBtn.style.fontSize = '14px';
-                            findBtn.style.letterSpacing = '0.5px';
-                            findBtn.style.boxShadow = '0 8px 16px rgba(16, 185, 129, 0.25)';
-                            findBtn.style.border = '2px solid #059669';
-                            findBtn.onclick = null;
-                        }
                     } else {
                         setStatus(isLocalOnlyLookup ? 'info' : 'success', lookupFoundMessage);
                         if (foundCard && foundName) {
@@ -14980,6 +15248,16 @@
         if (openBtn) openBtn.addEventListener('click', function (e) { e.preventDefault(); openApplicantsModal(); });
         if (openClinicBtn) openClinicBtn.addEventListener('click', function (e) { e.preventDefault(); openClinicLookupModal(); });
         if (closeBtn) closeBtn.addEventListener('click', closeApplicantsModal);
+        if (alreadyApprovedCloseButton) {
+            alreadyApprovedCloseButton.addEventListener('click', function () {
+                hideAlreadyApprovedResult();
+                if (isFinalReviewWorkflow()) {
+                    showFinalReviewList();
+                    return;
+                }
+                closeApplicantsModal();
+            });
+        }
         if (backdrop) backdrop.addEventListener('click', function (e) { if (e.target === backdrop) closeApplicantsModal(); });
         if (closeHealthInfoModalButton) closeHealthInfoModalButton.addEventListener('click', closeHealthInfoModal);
         if (healthInfoModal) healthInfoModal.addEventListener('click', function (event) {

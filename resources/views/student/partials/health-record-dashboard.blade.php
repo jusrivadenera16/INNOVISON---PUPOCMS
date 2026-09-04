@@ -117,7 +117,7 @@
         $latestStatusKey = $isIssuedStatus ? 'approved' : ($healthFormSubmitted ? 'submitted' : 'requested');
     }
     $latestIsRequested = $latestStatusKey === 'requested';
-    $latestIsApproved = $latestStatusKey === 'approved' || $isIssuedStatus;
+    $latestIsApproved = !$latestIsRequested && ($latestStatusKey === 'approved' || (!$latestHealthSubmission && $isIssuedStatus));
     $latestIsSubmitted = in_array($latestStatusKey, ['submitted', 'approved', 'needs_correction'], true)
         || (!$latestHealthSubmission && $healthFormSubmitted);
     $latestSubmittedSource = optional($latestHealthSubmission)->submitted_at

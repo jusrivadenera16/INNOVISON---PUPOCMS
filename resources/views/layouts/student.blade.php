@@ -3428,18 +3428,30 @@
             (string) data_get($studentUser, 'adminHubProfile.role', ''),
             (string) data_get($studentUser, 'adminProfile.access_level', ''),
         ]))));
-        $studentDependentMarkers = strtolower(trim(implode(' ', array_filter([
-            (string) data_get($studentUser, 'user_type', ''),
-            (string) data_get($studentUser, 'idp_role', ''),
-        ]))));
-        $studentUsesDependentProfile = false;
-        if ($studentDependentMarkers !== '') {
-            $studentUsesDependentProfile = (
-                str_contains($studentDependentMarkers, 'dependent')
-                || str_contains($studentDependentMarkers, 'guest')
-            ) && !collect(['student', 'applicant', 'faculty', 'admin', 'staff', 'employee', 'designee', 'non-teaching', 'non teaching'])
-                ->contains(fn ($needle) => str_contains($studentDependentMarkers, $needle));
-        }
+        $studentUserTypeMarker = strtolower(trim((string) data_get($studentUser, 'user_type', '')));
+        $studentIdpRoleMarker = strtolower(trim((string) data_get($studentUser, 'idp_role', '')));
+        $studentHasDependentMarker = str_contains($studentUserTypeMarker, 'dependent')
+            || str_contains($studentUserTypeMarker, 'guest')
+            || str_contains($studentIdpRoleMarker, 'dependent')
+            || str_contains($studentIdpRoleMarker, 'guest');
+        $studentHasDependentExcludedMarker = collect([$studentUserTypeMarker, $studentIdpRoleMarker])
+            ->filter(fn ($marker) => $marker !== '' && !str_contains($marker, 'dependent') && !str_contains($marker, 'guest'))
+            ->contains(fn ($marker) => collect(['student', 'applicant', 'faculty', 'admin', 'staff', 'employee', 'designee', 'non-teaching', 'non teaching'])
+                ->contains(fn ($needle) => str_contains($marker, $needle)));
+        $studentUsesDependentProfile = $studentHasDependentMarker
+            && !$studentHasDependentExcludedMarker
+            && !$studentUser?->adminProfile
+            && !$studentUser?->adminHubProfile
+            && (
+                trim((string) data_get($studentUser, 'employee_number', '')) === ''
+                || str_contains($studentIdpRoleMarker, 'dependent')
+                || str_contains($studentIdpRoleMarker, 'guest')
+            )
+            && (
+                trim((string) data_get($studentUser, 'reference_number', '')) === ''
+                || str_contains($studentIdpRoleMarker, 'dependent')
+                || str_contains($studentIdpRoleMarker, 'guest')
+            );
         $studentUsesEmployeeHealthForm = false;
         foreach (['faculty', 'admin', 'staff', 'employee', 'designee', 'non-teaching', 'non teaching'] as $studentHealthFormNeedle) {
             if (str_contains($studentHealthFormMarkers, $studentHealthFormNeedle)) {
@@ -3454,7 +3466,7 @@
         $studentCurrentHealthFormRoute = route('health.form.student');
         $studentHealthFormTitle = $studentUsesEmployeeHealthForm
             ? 'Health Examination Record'
-            : ($studentUsesDependentProfile ? 'Dependent Information Form' : 'Health Information Form');
+            : ($studentUsesDependentProfile ? 'Information Form' : 'Health Information Form');
         $showHealthFormModal = $studentUser
             && !(bool) ($studentUser->is_health_profile_completed ?? false)
             && ($studentUsesEmployeeHealthForm
@@ -3547,7 +3559,7 @@
 
     @if($showHealthFormModal)
     <div id="healthFormModal" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; z-index: 999999 !important;">
-        <div class="health-profile-prompt-card" style="background: #fff; border-radius: 24px; padding: 40px; max-width: 580px; width: 92%; text-align: center; box-shadow: 0 25px 80px rgba(0,0,0,0.4); margin: auto; position: relative; border-top: 2px solid #ffc107; border-bottom: 2px solid #ffc107;">
+        <div class="health-profile-prompt-card{{ $studentUsesDependentProfile ? ' is-dependent-prompt' : '' }}" style="background: #fff; border-radius: 24px; padding: 40px; max-width: 580px; width: 92%; text-align: center; box-shadow: 0 25px 80px rgba(0,0,0,0.4); margin: auto; position: relative; border-top: 2px solid #ffc107; border-bottom: 2px solid #ffc107;">
             <div class="health-profile-orb" aria-hidden="true">
                 <div class="health-profile-orb-inner">
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -3563,7 +3575,7 @@
                 {{ $studentHealthFormTitle }}
             </div>
             <h2 class="health-profile-prompt-title" style="color: #1f2937; font-size: 24px; font-weight: 800; margin: 0 0 16px;">
-                {{ $studentUsesDependentProfile ? 'Complete Your Dependent Information' : 'Complete Your Health Profile' }}
+                {{ $studentUsesDependentProfile ? 'Complete Your Information' : 'Complete Your Health Profile' }}
                 <span class="health-profile-required">Required</span>
             </h2>
             <p class="health-profile-prompt-copy" style="color: #4b5563; font-size: 13px; line-height: 1.45; margin: -8px 0 12px;">
@@ -3809,6 +3821,26 @@
             font-weight: 900;
             line-height: 1.22;
         }
+        #healthFormModal .health-profile-prompt-card.is-dependent-prompt .health-profile-prompt-copy {
+            max-width: 360px;
+            margin: -4px auto 14px !important;
+            color: #374151 !important;
+            font-size: 13px !important;
+            line-height: 1.5 !important;
+        }
+        #healthFormModal .health-profile-prompt-card.is-dependent-prompt .health-profile-prepare {
+            text-align: center;
+        }
+        #healthFormModal .health-profile-prompt-card.is-dependent-prompt .health-profile-prepare > strong {
+            text-align: center;
+        }
+        #healthFormModal .health-profile-prompt-card.is-dependent-prompt .health-profile-prepare-grid {
+            grid-template-columns: repeat(2, minmax(112px, 132px));
+            justify-content: center;
+        }
+        #healthFormModal .health-profile-prompt-card.is-dependent-prompt .health-profile-prepare-grid div {
+            padding: 0 18px;
+        }
         #healthFormModal .health-profile-time {
             margin: 0 0 10px;
             color: #475569;
@@ -3935,7 +3967,7 @@
     </style>
     @endif
 
-    @if($showHealthFormModal && !$studentUsesEmployeeHealthForm)
+    @if($showHealthFormModal && !$studentUsesEmployeeHealthForm && !$studentUsesDependentProfile)
     <div id="healthRoleSelectorModal" class="health-role-selector-modal" role="dialog" aria-modal="true" aria-labelledby="healthRoleSelectorTitle" hidden>
         <section class="health-role-selector-card">
             <button type="button" class="health-role-selector-close" data-health-role-selector-close aria-label="Close role selector">

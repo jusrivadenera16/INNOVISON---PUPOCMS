@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dependent Information Form</title>
+    <title>Information Form</title>
     <script
         src="{{ asset('js/sienna-accessibility-custom.umd.js') }}?v={{ filemtime(public_path('js/sienna-accessibility-custom.umd.js')) }}"
         data-asw-position="bottom-right"
@@ -80,42 +80,35 @@
         }
 
         .profile-brand strong,
-        .profile-progress strong {
+        .profile-brand span {
             display: block;
+        }
+
+        .profile-brand strong {
             font-size: 14px;
             font-weight: 900;
             line-height: 1.15;
             text-transform: uppercase;
         }
 
-        .profile-brand span,
-        .profile-progress span {
+        .profile-brand span {
             display: block;
+        }
+
+        .profile-form-title {
+            color: #fde68a;
+            font-size: 15px;
+            font-weight: 900;
+            line-height: 1.2;
+            text-align: right;
+            text-transform: uppercase;
+        }
+
+        .profile-brand span {
             margin-top: 3px;
             color: #fde68a;
             font-size: 12px;
             font-weight: 800;
-        }
-
-        .profile-progress {
-            min-width: 148px;
-            text-align: right;
-        }
-
-        .profile-progress-bar {
-            height: 8px;
-            margin-top: 8px;
-            overflow: hidden;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .profile-progress-bar i {
-            display: block;
-            width: 100%;
-            height: 100%;
-            border-radius: inherit;
-            background: linear-gradient(90deg, var(--clinic-yellow), #f59e0b);
         }
 
         .profile-body {
@@ -189,6 +182,15 @@
             grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
+        .field-grid.four {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .field-stack {
+            display: grid;
+            gap: 14px;
+        }
+
         .form-field.span-2 {
             grid-column: span 2;
         }
@@ -223,6 +225,153 @@
             box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.24);
         }
 
+        .form-control[readonly] {
+            background: #eef2f7;
+            color: #475569;
+            cursor: not-allowed;
+        }
+
+        .dependent-select-wrap {
+            position: relative;
+        }
+
+        .dependent-select-js .form-select.select-enhanced-original {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            min-height: 1px !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .dependent-select-button {
+            width: 100%;
+            min-height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 14px;
+            border: 1.5px solid #d9bfc3;
+            border-radius: 8px;
+            background: var(--field);
+            color: #111827;
+            font: inherit;
+            font-size: 0.94rem;
+            text-align: left;
+            box-shadow: none;
+            cursor: pointer;
+            transition: border-color .22s ease, box-shadow .22s ease;
+        }
+
+        .dependent-select-button:focus-visible,
+        .dependent-select-wrap.is-open .dependent-select-button {
+            outline: none;
+            border-color: var(--clinic-yellow);
+            box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.24);
+        }
+
+        .dependent-select-value {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .dependent-select-chevron {
+            width: 18px;
+            height: 18px;
+            flex: 0 0 auto;
+            color: var(--clinic-maroon);
+            transition: transform .22s ease;
+        }
+
+        .dependent-select-wrap.is-open .dependent-select-chevron {
+            transform: rotate(180deg);
+        }
+
+        .dependent-select-menu {
+            position: absolute;
+            top: calc(100% + 7px);
+            left: 0;
+            right: 0;
+            z-index: 40;
+            display: none;
+            max-height: 240px;
+            overflow-y: auto;
+            padding: 7px;
+            border: 1px solid rgba(127, 29, 45, 0.18);
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 18px 34px rgba(15, 23, 42, 0.18);
+        }
+
+        .dependent-select-wrap.is-open .dependent-select-menu {
+            display: grid;
+            gap: 6px;
+        }
+
+        .dependent-select-option {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            width: 100%;
+            min-height: 40px;
+            padding: 9px 12px;
+            border: 1px solid rgba(127, 29, 45, 0.13);
+            border-radius: 6px;
+            background: #ffffff;
+            color: var(--clinic-maroon);
+            font: inherit;
+            font-size: 0.9rem;
+            font-weight: 800;
+            text-align: left;
+            cursor: pointer;
+            transition: background .22s ease, color .22s ease, border-color .22s ease;
+        }
+
+        .dependent-select-option::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(254, 243, 199, 0.88) 48%, transparent 100%);
+            transform: translateX(-102%);
+            transition: transform .48s ease;
+            pointer-events: none;
+        }
+
+        .dependent-select-option > span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .dependent-select-option:hover,
+        .dependent-select-option:focus-visible {
+            border-color: #eab308;
+            background: var(--clinic-yellow);
+            color: #70131b;
+            outline: none;
+        }
+
+        .dependent-select-option:hover::before,
+        .dependent-select-option:focus-visible::before {
+            transform: translateX(0);
+        }
+
+        .dependent-select-option.is-selected {
+            border-color: var(--clinic-maroon);
+            background: var(--clinic-maroon);
+            color: #ffffff;
+        }
+
+        .dependent-select-option.is-selected:hover,
+        .dependent-select-option.is-selected:focus-visible {
+            border-color: var(--clinic-maroon);
+            background: var(--clinic-maroon);
+            color: #ffffff;
+        }
+
         .certify-row {
             display: grid;
             grid-template-columns: 20px minmax(0, 1fr);
@@ -244,6 +393,21 @@
             accent-color: var(--clinic-maroon);
         }
 
+        .contact-table {
+            display: grid;
+            gap: 12px;
+        }
+
+        .contact-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            padding: 14px;
+            border: 1px solid rgba(127, 29, 45, 0.12);
+            border-radius: 8px;
+            background: rgba(248, 250, 252, 0.72);
+        }
+
         .btn-row {
             display: flex;
             justify-content: flex-end;
@@ -253,6 +417,7 @@
 
         .btn-health {
             position: relative;
+            isolation: isolate;
             overflow: hidden;
             min-height: 46px;
             display: inline-flex;
@@ -269,11 +434,39 @@
             box-shadow: 0 10px 22px rgba(127, 29, 29, .22);
         }
 
+        .btn-health::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(254, 243, 199, 0.82) 48%, transparent 100%);
+            transform: translateX(-110%);
+            transition: transform .62s ease;
+            pointer-events: none;
+        }
+
+        .btn-health > * {
+            position: relative;
+            z-index: 1;
+        }
+
         .btn-health:hover,
         .btn-health:focus-visible {
             border-color: #eab308;
             background: #facc15;
             color: #70131b;
+        }
+
+        .btn-health:hover::before,
+        .btn-health:focus-visible::before {
+            transform: translateX(110%);
+        }
+
+        .btn-health.btn-back {
+            border-color: rgba(127, 29, 45, 0.2);
+            background: #ffffff;
+            color: var(--clinic-maroon);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, .12);
         }
 
         .alert {
@@ -292,7 +485,7 @@
                 padding: 14px 16px;
             }
 
-            .profile-progress {
+            .profile-form-title {
                 text-align: left;
             }
 
@@ -301,7 +494,9 @@
             }
 
             .field-grid,
-            .field-grid.three {
+            .field-grid.three,
+            .field-grid.four,
+            .contact-row {
                 grid-template-columns: 1fr;
             }
 
@@ -326,14 +521,9 @@
                 <img src="{{ asset('images/pup_logo.png') }}" alt="PUP Logo">
                 <div>
                     <strong>PUP Taguig<br>Medical Clinic</strong>
-                    <span>Dependent Information Form</span>
                 </div>
             </div>
-            <div class="profile-progress">
-                <strong>Step 1 of 1</strong>
-                <span>100% Complete</span>
-                <div class="profile-progress-bar" aria-hidden="true"><i></i></div>
-            </div>
+            <div class="profile-form-title">Information Form</div>
         </div>
 
         <main class="profile-body">
@@ -357,20 +547,64 @@
                 <div class="alert alert-danger">{{ $errors->first() }}</div>
             @endif
 
-            <form action="{{ route('dependent.profile.store') }}" method="POST">
+            <form action="{{ route('dependent.profile.store') }}" method="POST" id="dependent_profile_form">
                 @csrf
                 <input type="hidden" id="home_address" name="home_address" value="{{ old('home_address', $prefill['home_address'] ?? '') }}">
 
                 <section class="profile-section">
                     <h2>Personal Information</h2>
-                    <div class="field-grid three">
+                    <div class="field-stack">
+                    <div class="field-grid four">
+                        <div class="form-field">
+                            <label class="form-label" for="first_name">First Name <span class="required">*</span></label>
+                            <input id="first_name" name="first_name" class="form-control" value="{{ old('first_name', $prefill['first_name'] ?? '') }}" required maxlength="120" readonly aria-readonly="true">
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="middle_name">Middle Name</label>
+                            <input id="middle_name" name="middle_name" class="form-control" value="{{ old('middle_name', $prefill['middle_name'] ?? '') }}" maxlength="120" readonly aria-readonly="true">
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="last_name">Last Name <span class="required">*</span></label>
+                            <input id="last_name" name="last_name" class="form-control" value="{{ old('last_name', $prefill['last_name'] ?? '') }}" required maxlength="120" readonly aria-readonly="true">
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="suffix_name">Suffix</label>
+                            <input id="suffix_name" name="suffix_name" class="form-control" value="{{ old('suffix_name', $prefill['suffix_name'] ?? '') }}" maxlength="120" readonly aria-readonly="true">
+                        </div>
+                    </div>
+
+                    <div class="field-grid">
+                        <div class="form-field">
+                            <label class="form-label" for="email">Email Address <span class="required">*</span></label>
+                            <input id="email" name="email" type="email" class="form-control" value="{{ old('email', $prefill['email'] ?? '') }}" required maxlength="255" readonly aria-readonly="true">
+                        </div>
                         <div class="form-field">
                             <label class="form-label" for="id_number">ID Number</label>
                             <input id="id_number" name="id_number" class="form-control" value="{{ old('id_number', $prefill['id_number'] ?? '') }}" maxlength="120">
                         </div>
+                    </div>
+
+                    <div class="field-grid">
                         <div class="form-field">
-                            <label class="form-label" for="email">Email Address <span class="required">*</span></label>
-                            <input id="email" name="email" type="email" class="form-control" value="{{ old('email', $prefill['email'] ?? '') }}" required maxlength="255">
+                            <label class="form-label" for="birthday">Birthday <span class="required">*</span></label>
+                            <input id="birthday" name="birthday" type="date" class="form-control" value="{{ old('birthday', $prefill['birthday'] ?? '') }}" required max="{{ now()->toDateString() }}">
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="age">Age <span class="required">*</span></label>
+                            <input id="age" name="age" type="number" min="0" max="120" class="form-control" value="{{ old('age', $prefill['age'] ?? '') }}" required>
+                        </div>
+                    </div>
+
+                    <div class="field-grid">
+                        <div class="form-field">
+                            <label class="form-label" for="sex">Sex <span class="required">*</span></label>
+                            @php($selectedSex = old('sex', $prefill['sex'] ?? ''))
+                            <select id="sex" name="sex" class="form-select" required>
+                                <option value="" disabled {{ $selectedSex === '' ? 'selected' : '' }}>Select sex</option>
+                                @foreach(['Male', 'Female'] as $sex)
+                                    <option value="{{ $sex }}" {{ $selectedSex === $sex ? 'selected' : '' }}>{{ $sex }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="form-field">
                             <label class="form-label" for="civil_status">Civil Status <span class="required">*</span></label>
@@ -382,40 +616,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="form-field">
-                            <label class="form-label" for="first_name">First Name <span class="required">*</span></label>
-                            <input id="first_name" name="first_name" class="form-control" value="{{ old('first_name', $prefill['first_name'] ?? '') }}" required maxlength="120">
-                        </div>
-                        <div class="form-field">
-                            <label class="form-label" for="middle_name">Middle Name</label>
-                            <input id="middle_name" name="middle_name" class="form-control" value="{{ old('middle_name', $prefill['middle_name'] ?? '') }}" maxlength="120">
-                        </div>
-                        <div class="form-field">
-                            <label class="form-label" for="last_name">Last Name <span class="required">*</span></label>
-                            <input id="last_name" name="last_name" class="form-control" value="{{ old('last_name', $prefill['last_name'] ?? '') }}" required maxlength="120">
-                        </div>
-                        <div class="form-field">
-                            <label class="form-label" for="suffix_name">Suffix</label>
-                            <input id="suffix_name" name="suffix_name" class="form-control" value="{{ old('suffix_name', $prefill['suffix_name'] ?? '') }}" maxlength="120">
-                        </div>
-                        <div class="form-field">
-                            <label class="form-label" for="birthday">Birthday <span class="required">*</span></label>
-                            <input id="birthday" name="birthday" type="date" class="form-control" value="{{ old('birthday', $prefill['birthday'] ?? '') }}" required max="{{ now()->toDateString() }}">
-                        </div>
-                        <div class="form-field">
-                            <label class="form-label" for="age">Age <span class="required">*</span></label>
-                            <input id="age" name="age" type="number" min="0" max="120" class="form-control" value="{{ old('age', $prefill['age'] ?? '') }}" required>
-                        </div>
-                        <div class="form-field">
-                            <label class="form-label" for="sex">Sex <span class="required">*</span></label>
-                            @php($selectedSex = old('sex', $prefill['sex'] ?? ''))
-                            <select id="sex" name="sex" class="form-select" required>
-                                <option value="" disabled {{ $selectedSex === '' ? 'selected' : '' }}>Select sex</option>
-                                @foreach(['Male', 'Female'] as $sex)
-                                    <option value="{{ $sex }}" {{ $selectedSex === $sex ? 'selected' : '' }}>{{ $sex }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                    </div>
                     </div>
                 </section>
 
@@ -443,18 +644,26 @@
 
                 <section class="profile-section">
                     <h2>Contact Information</h2>
-                    <div class="field-grid">
-                        <div class="form-field">
-                            <label class="form-label" for="contact_no">Contact Number <span class="required">*</span></label>
-                            <input id="contact_no" name="contact_no" class="form-control" value="{{ old('contact_no', $prefill['contact_no'] ?? '') }}" required inputmode="numeric" maxlength="20">
+                    <div class="contact-table">
+                        <div class="contact-row">
+                            <div class="form-field">
+                                <label class="form-label" for="contact_no">Contact Number <span class="required">*</span></label>
+                                <input id="contact_no" name="contact_no" class="form-control" value="{{ old('contact_no', $prefill['contact_no'] ?? '') }}" required inputmode="numeric" maxlength="20">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="landline">Landline</label>
+                                <input id="landline" name="landline" class="form-control" value="{{ old('landline', $prefill['landline'] ?? '') }}" maxlength="20">
+                            </div>
                         </div>
-                        <div class="form-field">
-                            <label class="form-label" for="emergency_contact_name">Emergency Contact Name <span class="required">*</span></label>
-                            <input id="emergency_contact_name" name="emergency_contact_name" class="form-control" value="{{ old('emergency_contact_name', $prefill['emergency_contact_name'] ?? '') }}" required maxlength="255">
-                        </div>
-                        <div class="form-field">
-                            <label class="form-label" for="emergency_contact_no">Emergency Contact Number <span class="required">*</span></label>
-                            <input id="emergency_contact_no" name="emergency_contact_no" class="form-control" value="{{ old('emergency_contact_no', $prefill['emergency_contact_no'] ?? '') }}" required inputmode="numeric" maxlength="20">
+                        <div class="contact-row">
+                            <div class="form-field">
+                                <label class="form-label" for="emergency_contact_name">Emergency Person <span class="required">*</span></label>
+                                <input id="emergency_contact_name" name="emergency_contact_name" class="form-control" value="{{ old('emergency_contact_name', $prefill['emergency_contact_name'] ?? '') }}" required maxlength="255">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="emergency_contact_no">Emergency Contact Number <span class="required">*</span></label>
+                                <input id="emergency_contact_no" name="emergency_contact_no" class="form-control" value="{{ old('emergency_contact_no', $prefill['emergency_contact_no'] ?? '') }}" required inputmode="numeric" maxlength="20">
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -465,9 +674,9 @@
                 </label>
 
                 <div class="btn-row">
-                    <a href="{{ url('/student/home') }}" class="btn-health">Back</a>
-                    <button type="submit" class="btn-health">
-                        <span>Save Information</span>
+                    <a href="{{ url('/student/home') }}" class="btn-health btn-back"><span>Back</span></a>
+                    <button type="submit" class="btn-health" id="dependent_profile_submit">
+                        <span data-submit-label>Save Information</span>
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path d="M5 12h14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="m13 6 6 6-6 6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
@@ -482,10 +691,16 @@
 
     <script>
         (function () {
+            document.documentElement.classList.add('dependent-select-js');
+
             const birthday = document.getElementById('birthday');
             const age = document.getElementById('age');
             const homeAddress = document.getElementById('home_address');
             const addressParts = Array.from(document.querySelectorAll('[data-address-part]'));
+            const form = document.getElementById('dependent_profile_form');
+            const submitButton = document.getElementById('dependent_profile_submit');
+            const submitLabel = submitButton?.querySelector('[data-submit-label]');
+            const enhancedSelects = [];
 
             function calculateAge(value) {
                 if (!value) return '';
@@ -515,10 +730,120 @@
                     .join(', ');
             }
 
+            function closeSelect(wrapper) {
+                wrapper.classList.remove('is-open');
+                const button = wrapper.querySelector('.dependent-select-button');
+                if (button) button.setAttribute('aria-expanded', 'false');
+            }
+
+            function closeOtherSelects(activeWrapper) {
+                enhancedSelects.forEach(({ wrapper }) => {
+                    if (wrapper !== activeWrapper) closeSelect(wrapper);
+                });
+            }
+
+            function enhanceSelect(select) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'dependent-select-wrap';
+                select.classList.add('select-enhanced-original');
+                select.parentNode.insertBefore(wrapper, select);
+                wrapper.appendChild(select);
+
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'dependent-select-button';
+                button.setAttribute('aria-haspopup', 'listbox');
+                button.setAttribute('aria-expanded', 'false');
+                button.innerHTML = `
+                    <span class="dependent-select-value"></span>
+                    <svg class="dependent-select-chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                `;
+
+                const menu = document.createElement('div');
+                menu.className = 'dependent-select-menu';
+                menu.setAttribute('role', 'listbox');
+
+                const valueLabel = button.querySelector('.dependent-select-value');
+                const choices = Array.from(select.options).filter((option) => !option.disabled);
+
+                function updateSelectedLabel() {
+                    const selected = select.options[select.selectedIndex];
+                    valueLabel.textContent = selected ? selected.textContent : 'Select option';
+                    menu.querySelectorAll('.dependent-select-option').forEach((optionButton) => {
+                        optionButton.classList.toggle('is-selected', optionButton.dataset.value === select.value);
+                    });
+                }
+
+                choices.forEach((option) => {
+                    const optionButton = document.createElement('button');
+                    optionButton.type = 'button';
+                    optionButton.className = 'dependent-select-option';
+                    optionButton.dataset.value = option.value;
+                    optionButton.setAttribute('role', 'option');
+                    const optionLabel = document.createElement('span');
+                    optionLabel.textContent = option.textContent;
+                    optionButton.appendChild(optionLabel);
+                    optionButton.addEventListener('click', () => {
+                        select.value = option.value;
+                        select.dispatchEvent(new Event('change', { bubbles: true }));
+                        updateSelectedLabel();
+                        closeSelect(wrapper);
+                        button.focus();
+                    });
+                    menu.appendChild(optionButton);
+                });
+
+                button.addEventListener('click', () => {
+                    const willOpen = !wrapper.classList.contains('is-open');
+                    closeOtherSelects(wrapper);
+                    wrapper.classList.toggle('is-open', willOpen);
+                    button.setAttribute('aria-expanded', String(willOpen));
+                });
+
+                button.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') {
+                        closeSelect(wrapper);
+                        button.focus();
+                    }
+                });
+
+                select.addEventListener('change', updateSelectedLabel);
+                select.addEventListener('invalid', () => {
+                    button.focus();
+                    closeOtherSelects(wrapper);
+                    wrapper.classList.add('is-open');
+                    button.setAttribute('aria-expanded', 'true');
+                });
+
+                wrapper.appendChild(button);
+                wrapper.appendChild(menu);
+                enhancedSelects.push({ wrapper, select, button });
+                updateSelectedLabel();
+            }
+
             birthday?.addEventListener('change', syncAge);
             addressParts.forEach((input) => {
                 input.addEventListener('input', syncAddress);
                 input.addEventListener('change', syncAddress);
+            });
+            document.querySelectorAll('.form-select').forEach(enhanceSelect);
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('.dependent-select-wrap')) {
+                    enhancedSelects.forEach(({ wrapper }) => closeSelect(wrapper));
+                }
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    enhancedSelects.forEach(({ wrapper }) => closeSelect(wrapper));
+                }
+            });
+            form?.addEventListener('submit', () => {
+                if (!submitButton || !submitLabel) return;
+                submitButton.disabled = true;
+                submitButton.setAttribute('aria-busy', 'true');
+                submitLabel.textContent = 'Saving...';
             });
             syncAddress();
         })();

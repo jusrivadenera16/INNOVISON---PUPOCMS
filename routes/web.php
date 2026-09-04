@@ -566,7 +566,7 @@ Route::get('/dev-login/{id}', function ($id) {
         }
 
         Auth::guard('student')->login($user);
-        return redirect('/student/account')->with('success', 'Logged in as ' . $user->name);
+        return redirect(resolveWorkspaceRedirectForUser($user))->with('success', 'Logged in as ' . $user->name);
     }
 
     return 'User not found!';
