@@ -5913,11 +5913,6 @@
                 return 'Faculty';
             }
 
-            $explicitUserType = strtolower(trim((string) ($user->user_type ?? '')));
-            if (str_contains($explicitUserType, 'student')) {
-                return 'Student';
-            }
-
             $isOfficialStudentNumber = function ($value): bool {
                 $studentNumber = strtoupper(trim((string) $value));
 
@@ -5925,6 +5920,20 @@
                     && !\Illuminate\Support\Str::startsWith($studentNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
                     && preg_match('/^\d{4}-\d{5}-[A-Z]{2}-\d+$/', $studentNumber) === 1;
             };
+
+            $isApproved = in_array(trim((string) ($record->clearance_status ?? '')), ['Issued', 'Fully Cleared'], true);
+            $referenceNumber = strtoupper(trim((string) ($record->reference_number ?? '')));
+            if (!$isApproved
+                && $referenceNumber !== ''
+                && !\Illuminate\Support\Str::startsWith($referenceNumber, ['CLN-', 'LOC-', 'TEST-LOCAL'])
+                && !$isOfficialStudentNumber($referenceNumber)) {
+                return 'Applicant';
+            }
+
+            $explicitUserType = strtolower(trim((string) ($user->user_type ?? '')));
+            if (str_contains($explicitUserType, 'student')) {
+                return 'Student';
+            }
 
             $referenceNumbers = collect([
                 $record->reference_number ?? null,

@@ -5370,7 +5370,21 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     $healthRecordsUserType = strtolower(trim((string) request('user_type', '')));
     $healthRecordsHasHealthProfiles = \Illuminate\Support\Facades\Schema::hasTable('health_profiles');
     $healthRecordsHasStaffProfiles = \Illuminate\Support\Facades\Schema::hasTable('health_profile_emp');
-    $healthRecordsCountRealStudents = function () use ($healthRecordsHasHealthProfiles) {
+    $healthRecordsStudentNumberPattern = '^[0-9]{4}-[0-9]{5}-[A-Za-z]{2}-[0-9]+$';
+    $healthRecordsIssuedStatuses = ['Issued', 'Fully Cleared'];
+    $healthRecordsPendingAdmissionReferenceQuery = function ($query) use ($healthRecordsStudentNumberPattern, $healthRecordsIssuedStatuses) {
+        $query->where(function ($statusQuery) use ($healthRecordsIssuedStatuses) {
+            $statusQuery->whereNull('clearance_status')
+                ->orWhereNotIn('clearance_status', $healthRecordsIssuedStatuses);
+        })
+            ->whereNotNull('reference_number')
+            ->where('reference_number', '!=', '')
+            ->whereRaw('UPPER(reference_number) NOT LIKE ?', ['CLN-%'])
+            ->whereRaw('UPPER(reference_number) NOT LIKE ?', ['LOC-%'])
+            ->whereRaw('UPPER(reference_number) NOT LIKE ?', ['TEST-LOCAL%'])
+            ->whereRaw('reference_number NOT REGEXP ?', [$healthRecordsStudentNumberPattern]);
+    };
+    $healthRecordsCountRealStudents = function () use ($healthRecordsHasHealthProfiles, $healthRecordsStudentNumberPattern, $healthRecordsIssuedStatuses) {
         if (!$healthRecordsHasHealthProfiles) {
             return 0;
         }
@@ -5393,17 +5407,27 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                             ->whereRaw('UPPER(student_number) NOT LIKE ?', ['TEST-LOCAL%']);
                     });
             })
+            ->where(function ($builder) use ($healthRecordsStudentNumberPattern, $healthRecordsIssuedStatuses) {
+                $builder->whereIn('clearance_status', $healthRecordsIssuedStatuses)
+                    ->orWhereNull('reference_number')
+                    ->orWhere('reference_number', '')
+                    ->orWhereRaw('UPPER(reference_number) LIKE ?', ['CLN-%'])
+                    ->orWhereRaw('UPPER(reference_number) LIKE ?', ['LOC-%'])
+                    ->orWhereRaw('UPPER(reference_number) LIKE ?', ['TEST-LOCAL%'])
+                    ->orWhereRaw('reference_number REGEXP ?', [$healthRecordsStudentNumberPattern]);
+            })
             ->count();
     };
-    $healthRecordsCountApplicants = function () use ($healthRecordsHasHealthProfiles) {
+    $healthRecordsCountApplicants = function () use ($healthRecordsHasHealthProfiles, $healthRecordsPendingAdmissionReferenceQuery) {
         if (!$healthRecordsHasHealthProfiles) {
             return 0;
         }
 
         return \App\Models\HealthProfile::query()
             ->notPulledOut()
-            ->where(function ($builder) {
-                $builder->where(function ($missingNumberQuery) {
+            ->where(function ($builder) use ($healthRecordsPendingAdmissionReferenceQuery) {
+                $builder->where($healthRecordsPendingAdmissionReferenceQuery)
+                    ->orWhere(function ($missingNumberQuery) {
                     $missingNumberQuery->where(function ($profileNumberQuery) {
                         $profileNumberQuery->whereNull('student_number')
                             ->orWhere('student_number', '')

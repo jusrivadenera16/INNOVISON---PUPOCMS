@@ -127,6 +127,20 @@ class AdminController extends Controller
         }
 
         $studentNumberPattern = '^[0-9]{4}-[0-9]{5}-[A-Za-z]{2}-[0-9]+$';
+        $issuedClearanceStatuses = ['Issued', 'Fully Cleared'];
+
+        $pendingAdmissionReferenceQuery = function ($builder) use ($studentNumberPattern, $issuedClearanceStatuses): void {
+            $builder->where(function ($statusQuery) use ($issuedClearanceStatuses) {
+                $statusQuery->whereNull('clearance_status')
+                    ->orWhereNotIn('clearance_status', $issuedClearanceStatuses);
+            })
+                ->whereNotNull('reference_number')
+                ->where('reference_number', '!=', '')
+                ->whereRaw('UPPER(reference_number) NOT LIKE ?', ['CLN-%'])
+                ->whereRaw('UPPER(reference_number) NOT LIKE ?', ['LOC-%'])
+                ->whereRaw('UPPER(reference_number) NOT LIKE ?', ['TEST-LOCAL%'])
+                ->whereRaw('reference_number NOT REGEXP ?', [$studentNumberPattern]);
+        };
 
         $realStudentNumberQuery = function ($builder) use ($studentNumberPattern): void {
             $builder->where(function ($numberQuery) {
@@ -167,14 +181,24 @@ class AdminController extends Controller
                     ->orWhereHas('user', function ($userQuery) {
                         $userQuery->whereRaw("LOWER(COALESCE(user_type, '')) LIKE ?", ['%student%']);
                     });
-            });
+            })
+                ->where(function ($builder) use ($studentNumberPattern, $issuedClearanceStatuses) {
+                    $builder->whereIn('clearance_status', $issuedClearanceStatuses)
+                        ->orWhereNull('reference_number')
+                        ->orWhere('reference_number', '')
+                        ->orWhereRaw('UPPER(reference_number) LIKE ?', ['CLN-%'])
+                        ->orWhereRaw('UPPER(reference_number) LIKE ?', ['LOC-%'])
+                        ->orWhereRaw('UPPER(reference_number) LIKE ?', ['TEST-LOCAL%'])
+                        ->orWhereRaw('reference_number REGEXP ?', [$studentNumberPattern]);
+                });
 
             return;
         }
 
         if ($userTypeFilter === 'applicant') {
-            $query->where(function ($builder) {
-                $builder->where(function ($missingNumberQuery) {
+            $query->where(function ($builder) use ($pendingAdmissionReferenceQuery) {
+                $builder->where($pendingAdmissionReferenceQuery)
+                    ->orWhere(function ($missingNumberQuery) {
                     $missingNumberQuery->where(function ($profileNumberQuery) {
                         $profileNumberQuery->whereNull('student_number')
                             ->orWhere('student_number', '')
