@@ -3513,6 +3513,11 @@
         } elseif ($studentPendingHealthFormRequest) {
             $studentHealthActionMode = 'new';
         }
+        $studentHealthFormActionRoute = $studentHealthActionMode === 'new'
+            && !$studentUsesEmployeeHealthForm
+            && !$studentUsesDependentProfile
+                ? route('health.form.student')
+                : $studentHealthFormStartRoute;
         $showHealthFormActionModal = !$showHealthFormModal
             && session('show_health_form_action_prompt')
             && $studentHealthActionMode !== null;
@@ -4209,7 +4214,7 @@
 
             <footer class="health-form-action-actions">
                 <button type="button" class="health-form-action-later" data-health-form-action-close>Review Later</button>
-                <a href="{{ $studentHealthFormStartRoute }}" class="health-form-action-primary" data-health-form-action-primary>
+                <a href="{{ $studentHealthFormActionRoute }}" class="health-form-action-primary" data-health-form-action-primary>
                     @if($studentHealthActionMode === 'correction')
                         <x-outline-icon name="pencil-square" />
                         <span>Edit Health Form</span>

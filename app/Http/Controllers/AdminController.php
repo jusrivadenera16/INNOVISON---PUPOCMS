@@ -55,6 +55,26 @@ class AdminController extends Controller
         return app(HealthFileStorage::class);
     }
 
+    private function shouldGenerateStudentDeclarationTemplate(?HealthProfile $healthProfile, ?string $category = null, ?string $referenceNumber = null): bool
+    {
+        $category = strtolower(trim((string) ($category ?? $healthProfile?->health_form_category ?? '')));
+        if ($category === '' || $category === 'general') {
+            return false;
+        }
+
+        if (str_contains($category, 'ojt') || str_contains($category, 'on-the-job') || str_contains($category, 'student')) {
+            return true;
+        }
+
+        $referenceNumber = strtoupper(trim((string) ($referenceNumber ?? $healthProfile?->reference_number ?? '')));
+        $looksLikeApplicantReference = (bool) preg_match('/^\d{4}-\d{4}-\d{4}/', $referenceNumber)
+            || (bool) preg_match('/^\d{4}-[A-Z]+-\d+/', $referenceNumber);
+
+        return !$looksLikeApplicantReference
+            && $referenceNumber !== ''
+            && trim((string) ($healthProfile?->student_number ?? '')) !== '';
+    }
+
     private function updateCurrentHealthFormSubmissionStatus(HealthProfile $profile, string $status): ?HealthFormSubmission
     {
         $submission = HealthFormSubmission::query()
@@ -116,9 +136,10 @@ class AdminController extends Controller
         if (in_array($userTypeFilter, ['faculty', 'admin', 'dependent'], true)) {
             $query->whereHas('user', function ($userQuery) use ($aliases) {
                 $userQuery->where(function ($builder) use ($aliases) {
-                    foreach ($aliases as $index => $alias) {
-                        $method = $index === 0 ? 'whereRaw' : 'orWhereRaw';
-                        $builder->{$method}("LOWER(COALESCE(user_type, user_role, '')) LIKE ?", ['%' . $alias . '%']);
+                    foreach ($aliases as $alias) {
+                        foreach (['user_type', 'user_role', 'idp_role'] as $roleColumn) {
+                            $builder->orWhereRaw("LOWER(COALESCE({$roleColumn}, '')) LIKE ?", ['%' . $alias . '%']);
+                        }
                     }
                 });
             });
@@ -179,7 +200,11 @@ class AdminController extends Controller
             $query->where(function ($builder) use ($realStudentNumberQuery) {
                 $builder->where($realStudentNumberQuery)
                     ->orWhereHas('user', function ($userQuery) {
-                        $userQuery->whereRaw("LOWER(COALESCE(user_type, '')) LIKE ?", ['%student%']);
+                        $userQuery->where(function ($builder) {
+                            foreach (['user_type', 'user_role', 'idp_role'] as $roleColumn) {
+                                $builder->orWhereRaw("LOWER(COALESCE({$roleColumn}, '')) LIKE ?", ['%student%']);
+                            }
+                        });
                     });
             })
                 ->where(function ($builder) use ($studentNumberPattern, $issuedClearanceStatuses) {
@@ -220,11 +245,19 @@ class AdminController extends Controller
                                     });
                             })
                             ->whereDoesntHave('user', function ($userQuery) {
-                                $userQuery->whereRaw("LOWER(COALESCE(user_type, '')) LIKE ?", ['%student%']);
+                                $userQuery->where(function ($builder) {
+                                    foreach (['user_type', 'user_role', 'idp_role'] as $roleColumn) {
+                                        $builder->orWhereRaw("LOWER(COALESCE({$roleColumn}, '')) LIKE ?", ['%student%']);
+                                    }
+                                });
                             });
                     })
                     ->orWhereHas('user', function ($userQuery) {
-                        $userQuery->whereRaw("LOWER(COALESCE(user_type, user_role, '')) LIKE ?", ['%applicant%']);
+                        $userQuery->where(function ($builder) {
+                            foreach (['user_type', 'user_role', 'idp_role'] as $roleColumn) {
+                                $builder->orWhereRaw("LOWER(COALESCE({$roleColumn}, '')) LIKE ?", ['%applicant%']);
+                            }
+                        });
                     });
             });
         }
@@ -253,9 +286,10 @@ class AdminController extends Controller
 
         $query->whereHas('user', function ($userQuery) use ($aliases) {
             $userQuery->where(function ($builder) use ($aliases) {
-                foreach ($aliases as $index => $alias) {
-                    $method = $index === 0 ? 'whereRaw' : 'orWhereRaw';
-                    $builder->{$method}("LOWER(COALESCE(user_type, user_role, idp_role, '')) LIKE ?", ['%' . $alias . '%']);
+                foreach ($aliases as $alias) {
+                    foreach (['user_type', 'user_role', 'idp_role'] as $roleColumn) {
+                        $builder->orWhereRaw("LOWER(COALESCE({$roleColumn}, '')) LIKE ?", ['%' . $alias . '%']);
+                    }
                 }
             });
         });
@@ -3185,25 +3219,6 @@ class AdminController extends Controller
         ];
 
         foreach ($records as $summaryRecord) {
-            $summarySource = (string) ($summaryRecord->record_source ?? 'health');
-            $user = optional($summaryRecord->user);
-            $rawType = strtolower(trim((string) (
-                $user->user_type
-                ?: $user->idp_role
-                ?: $user->user_role
-                ?: ''
-            )));
-            $isApplicant = str_contains($rawType, 'applicant');
-            if (!$isApplicant && $summarySource === 'health') {
-                $refNum = strtoupper(trim((string) ($summaryRecord->reference_number ?: $user->reference_number)));
-                $studNum = strtoupper(trim((string) ($summaryRecord->student_number ?: $user->student_number)));
-                $isApplicant = ($studNum === '' || \Illuminate\Support\Str::startsWith($studNum, ['CLN-', 'LOC-', 'TEST-LOCAL']) || ($refNum !== '' && $studNum === $refNum));
-            }
-
-            $summaryHasRequirements = !$isApplicant
-                || (filled($summaryRecord->medical_certificate)
-                    && filled($summaryRecord->chest_xray_result)
-                    && filled($summaryRecord->student_photo));
             $summaryStatus = trim((string) ($summaryRecord->clearance_status ?? ''));
             $summaryIsApproved = in_array($summaryStatus, ['Issued', 'Fully Cleared'], true);
             $summaryIsConditional = !$summaryIsApproved && (
@@ -3216,7 +3231,7 @@ class AdminController extends Controller
                 $stats['with_conditions']++;
             }
 
-            if ($summaryHasRequirements && !$summaryIsConditional && in_array($summaryStatus, ['Pending', 'For Verification', ''], true)) {
+            if (!$summaryIsConditional && in_array($summaryStatus, ['Pending', 'For Verification', ''], true)) {
                 $stats['pending_approval']++;
             }
 
@@ -3786,7 +3801,28 @@ class AdminController extends Controller
             $user = $submission->user ?? optional($submission->healthProfile)->user;
             $healthProfile = $submission->healthProfile;
 
+            $path = ltrim((string) ($profileData[$document] ?? optional($healthProfile)->health_declaration ?? ''), '/');
+            $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+            if ($path !== '' && $this->healthFiles()->exists($path)) {
+                $disk = $this->healthFiles();
+                $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
+
+                return response()->file($disk->path($path), [
+                    'Content-Type' => $mimeType,
+                    'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
+                    'X-Content-Type-Options' => 'nosniff',
+                    'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                    'Pragma' => 'no-cache',
+                ]);
+            }
+
             $categorySelected = trim((string) ($submission->category ?: optional($healthProfile)->health_form_category ?: ''));
+            abort_unless($this->shouldGenerateStudentDeclarationTemplate(
+                $healthProfile,
+                $categorySelected,
+                (string) ($profileData['reference_number'] ?? optional($healthProfile)->reference_number ?? '')
+            ), 404, 'Historical document not found.');
+
             if ($categorySelected === '') {
                 $categorySelected = 'Student';
             }
@@ -4095,6 +4131,21 @@ public function updateClearance(Request $request, $id)
                     ->update([
                         'status' => HealthProfileCorrectionRequest::STATUS_APPROVED,
                         'reviewed_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                HealthFormSubmission::query()
+                    ->where(function ($query) use ($record) {
+                        $query->where('health_profile_id', $record->id)
+                            ->orWhere('user_id', $record->user_id);
+                    })
+                    ->whereIn('status', [
+                        HealthFormSubmission::STATUS_SUBMITTED,
+                        HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                    ])
+                    ->update([
+                        'status' => HealthFormSubmission::STATUS_APPROVED,
+                        'approved_at' => $record->verified_at ?: now(),
                         'updated_at' => now(),
                     ]);
 

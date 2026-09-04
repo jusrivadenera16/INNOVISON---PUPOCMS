@@ -186,6 +186,7 @@ Route::middleware(['auth:student', 'account.active', 'idp.session', 'audit'])->g
         Route::get('/student/health-form/print', [AppointmentController::class, 'printHealthForm'])->name('student.health_form.print');
         Route::get('/student/health-form/download', [AppointmentController::class, 'downloadHealthForm'])->name('student.health_form.download');
         Route::get('/student/health-form/submissions/{submission}', [AppointmentController::class, 'showHealthFormSubmissionPdf'])->name('student.health_form.submission');
+        Route::get('/student/health-form/submissions/{submission}/documents/{document}', [AppointmentController::class, 'showHealthFormSubmissionDocument'])->name('student.health_form.submission.document');
         Route::get('/student/health-record/document/{document}', [AppointmentController::class, 'showStudentHealthRecordDocument'])
             ->name('student.health_record.document');
         Route::get('/student/health-record/signature', [AppointmentController::class, 'showStudentHealthRecordSignature'])

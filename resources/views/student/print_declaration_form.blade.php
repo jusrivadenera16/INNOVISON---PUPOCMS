@@ -12,6 +12,7 @@
     $fullName = trim((string) ($studentFullName ?? ''));
     $sigDate = $signatureDate ?? now()->format('m/d/Y');
     $guardian = trim((string) ($guardianName ?? ''));
+    $isMinorStudent = isset($isMinor) ? (bool) $isMinor : ((int) ($age ?? 0) < 18);
     $signatureAlt = $signatureAlt ?? 'Student Signature';
     $signatureCaption = $signatureCaption ?? "Student's Signature Over Printed Name/ Date";
     $fallbackSignerName = $fallbackSignerName ?? 'STUDENT NAME';
@@ -686,7 +687,7 @@
                 @if($showGuardian)
                     <div class="sig-box guardian-signature-box">
 
-                        @if(!empty($guardianSignatureSrc))
+                        @if($isMinorStudent && !empty($guardianSignatureSrc))
 
                             <img
                                 src="{{ $guardianSignatureSrc }}"
@@ -699,7 +700,7 @@
 
                         <div class="sig-underline">
 
-                            {{ $guardian !== ''
+                            {{ $isMinorStudent && $guardian !== ''
                                 ? $guardian . ' / ' . $sigDate
                                 : ''
                             }}

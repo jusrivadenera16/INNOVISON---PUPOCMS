@@ -3296,6 +3296,21 @@ PROMPT;
                         'error' => $exception->getMessage(),
                     ]);
                 }
+
+                HealthFormSubmission::query()
+                    ->where(function ($query) use ($profile) {
+                        $query->where('health_profile_id', $profile->id)
+                            ->orWhere('user_id', $profile->user_id);
+                    })
+                    ->whereIn('status', [
+                        HealthFormSubmission::STATUS_SUBMITTED,
+                        HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                    ])
+                    ->update([
+                        'status' => HealthFormSubmission::STATUS_APPROVED,
+                        'approved_at' => $profile->verified_at ?: now(),
+                        'updated_at' => now(),
+                    ]);
             } elseif ($needsHealthFormCorrection) {
                 $submission = HealthFormSubmission::query()
                     ->where(function ($query) use ($profile) {
@@ -3505,6 +3520,24 @@ PROMPT;
                     $profile->approved_by_user_id = auth()->id();
                     $profile->pending_reason = null;
                     $hasAssessmentValue = true;
+
+                    $student->is_health_profile_completed = 1;
+                    $student->save();
+
+                    HealthFormSubmission::query()
+                        ->where(function ($query) use ($profile) {
+                            $query->where('health_profile_id', $profile->id)
+                                ->orWhere('user_id', $profile->user_id);
+                        })
+                        ->whereIn('status', [
+                            HealthFormSubmission::STATUS_SUBMITTED,
+                            HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                        ])
+                        ->update([
+                            'status' => HealthFormSubmission::STATUS_APPROVED,
+                            'approved_at' => $profile->verified_at ?: now(),
+                            'updated_at' => now(),
+                        ]);
                 } elseif ($clearanceDecision === 'pending') {
                     $profile->clearance_status = 'Pending/Conditional';
                     $profile->documents_valid = false;

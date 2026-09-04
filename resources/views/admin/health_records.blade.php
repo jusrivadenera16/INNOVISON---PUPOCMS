@@ -681,18 +681,19 @@
         color: #000000 !important;
     }
     .readonly-copy-btn {
+        position: relative;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         width: 28px;
         height: 28px;
         flex: 0 0 28px;
-        border: 1.5px solid #7f1d2d;
+        border: 1.5px solid #d6a900;
         border-radius: 7px;
-        background: #ffffff;
+        background: #facc15;
         color: #7f1d2d;
         cursor: pointer;
-        transition: all .18s ease;
+        transition: background-color .22s ease, border-color .22s ease, color .22s ease, transform .18s ease, box-shadow .18s ease;
         padding: 4px;
     }
     .readonly-copy-btn svg {
@@ -701,20 +702,80 @@
         stroke-width: 2;
     }
     .readonly-copy-btn:hover {
-        background: #7f1d2d;
+        background: #fbbf24;
         border-color: #7f1d2d;
-        color: #ffffff;
+        color: #7f1d2d;
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(127, 29, 45, 0.2);
+        box-shadow: 0 4px 12px rgba(250, 204, 21, 0.28);
     }
     .readonly-copy-btn.is-copied {
-        background: #dcfce7;
-        border-color: #86efac;
-        color: #166534;
+        background: #fef3c7;
+        border-color: #facc15;
+        color: #7f1d2d;
+        animation: readonlyCopyFlash 1s ease;
     }
     .readonly-copy-btn.is-copied:hover {
-        background: #dcfce7;
-        box-shadow: 0 4px 12px rgba(22, 101, 52, 0.2);
+        background: #fef3c7;
+        color: #7f1d2d;
+        box-shadow: 0 4px 12px rgba(250, 204, 21, 0.26);
+    }
+    .readonly-copy-btn::after {
+        content: "Copied!";
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 8px);
+        z-index: 10;
+        padding: 5px 8px;
+        border: 1px solid rgba(112, 19, 27, 0.14);
+        border-radius: 999px;
+        background: #fff7cc;
+        color: #7f1d2d;
+        font-size: 10px;
+        font-weight: 900;
+        line-height: 1;
+        white-space: nowrap;
+        box-shadow: 0 10px 20px rgba(112, 19, 27, 0.16);
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, 4px) scale(.94);
+        transition: opacity .18s ease, transform .18s ease;
+    }
+    .readonly-copy-btn::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 3px);
+        z-index: 9;
+        width: 8px;
+        height: 8px;
+        border-right: 1px solid rgba(112, 19, 27, 0.14);
+        border-bottom: 1px solid rgba(112, 19, 27, 0.14);
+        background: #fff7cc;
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, 4px) rotate(45deg) scale(.9);
+        transition: opacity .18s ease, transform .18s ease;
+    }
+    .readonly-copy-btn.is-copied::after,
+    .readonly-copy-btn.is-copied::before {
+        opacity: 1;
+    }
+    .readonly-copy-btn.is-copied::after {
+        transform: translate(-50%, 0) scale(1);
+    }
+    .readonly-copy-btn.is-copied::before {
+        transform: translate(-50%, 0) rotate(45deg) scale(1);
+    }
+    @keyframes readonlyCopyFlash {
+        0% {
+            background: #fef3c7;
+        }
+        72% {
+            background: #fef3c7;
+        }
+        100% {
+            background: #facc15;
+        }
     }
     .readonly-record-pill.condition-pill {
         background: #eff6ff;
@@ -4657,6 +4718,23 @@
         border-color: #facc15 !important;
         color: #70131B !important;
     }
+    html[data-theme="dark"] .readonly-copy-btn.is-copied,
+    html[data-theme="dark"] .readonly-copy-btn.is-copied:hover {
+        background: #fef3c7 !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+        box-shadow: 0 4px 12px rgba(250, 204, 21, 0.22) !important;
+    }
+    html[data-theme="dark"] .readonly-copy-btn::after {
+        border-color: rgba(250, 204, 21, .28);
+        background: #020617;
+        color: #facc15;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, .26);
+    }
+    html[data-theme="dark"] .readonly-copy-btn::before {
+        border-color: rgba(250, 204, 21, .28);
+        background: #020617;
+    }
     html[data-theme="dark"] .readonly-modal-pagination {
         background: #111827 !important;
         border-color: rgba(250, 204, 21, .18) !important;
@@ -5632,10 +5710,20 @@
     }
     html[data-theme="dark"] #healthTable .btn-action.btn-view:hover,
     html[data-theme="dark"] #healthTable .btn-action.btn-view:focus-visible {
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
         box-shadow:
             0 16px 28px rgba(0, 0, 0, .50),
             0 6px 16px rgba(250, 204, 21, .22),
             0 0 0 1px rgba(250, 204, 21, .30) !important;
+    }
+    html[data-theme="dark"] #healthTable .btn-action.btn-view:hover span,
+    html[data-theme="dark"] #healthTable .btn-action.btn-view:focus-visible span,
+    html[data-theme="dark"] #healthTable .btn-action.btn-view:hover svg,
+    html[data-theme="dark"] #healthTable .btn-action.btn-view:focus-visible svg {
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+        stroke: #70131B !important;
     }
     @media (max-width: 768px) {
         .health-records-overview-head {
@@ -5957,11 +6045,6 @@
         foreach ($records as $summaryRecord) {
             $summaryRecordSource = (string) ($summaryRecord->record_source ?? 'health');
             $summaryRecordKey = (string) ($summaryRecord->record_key ?? ($summaryRecordSource . ':' . $summaryRecord->id));
-            $summaryUserType = $resolveHealthRecordUserType($summaryRecord);
-            $summaryHasRequirements = $summaryUserType !== 'Applicant'
-                || (filled($summaryRecord->medical_certificate)
-                    && filled($summaryRecord->chest_xray_result)
-                    && filled($summaryRecord->student_photo));
             $summaryStatus = trim((string) ($summaryRecord->clearance_status ?? ''));
             $summaryIsApproved = in_array($summaryStatus, ['Issued', 'Fully Cleared'], true);
             $summaryIsConditional = !$summaryIsApproved && (
@@ -5974,7 +6057,7 @@
                 $healthSummaryStats['with_conditions']++;
             }
 
-            if ($summaryHasRequirements && !$summaryIsConditional && in_array($summaryStatus, ['Pending', 'For Verification', ''], true)) {
+            if (!$summaryIsConditional && in_array($summaryStatus, ['Pending', 'For Verification', ''], true)) {
                 $healthSummaryStats['pending_approval']++;
                 $pendingApprovalRecordIds[] = $summaryRecordKey;
             }
@@ -7251,12 +7334,15 @@
 
         function markCopied(button) {
             var originalLabel = button.getAttribute('aria-label') || 'Copy reference number';
+            window.clearTimeout(button._copyResetTimer);
+            button.classList.remove('is-copied');
+            void button.offsetWidth;
             button.classList.add('is-copied');
             button.setAttribute('aria-label', 'Copied');
-            window.setTimeout(function () {
+            button._copyResetTimer = window.setTimeout(function () {
                 button.classList.remove('is-copied');
                 button.setAttribute('aria-label', originalLabel);
-            }, 1200);
+            }, 1000);
         }
 
         function fallbackCopy(text, button) {
@@ -7960,15 +8046,19 @@
             const markCopied = function () {
                 const originalLabel = button ? (button.getAttribute('aria-label') || 'Copy reference number') : 'Copy reference number';
                 if (button) {
+                    window.clearTimeout(button._copyResetTimer);
+                    button.classList.remove('is-copied');
+                    void button.offsetWidth;
                     button.setAttribute('aria-label', 'Copied');
                     button.classList.add('is-copied');
                 }
-                window.setTimeout(function () {
+                if (!button) return;
+                button._copyResetTimer = window.setTimeout(function () {
                     if (button) {
                         button.setAttribute('aria-label', originalLabel);
                         button.classList.remove('is-copied');
                     }
-                }, 1200);
+                }, 1000);
             };
 
             const fallbackCopy = function () {
@@ -8457,6 +8547,7 @@
 
         const formatter = new Intl.NumberFormat();
         let healthRecordStatsTimer = null;
+        let healthRecordStatsRequest = null;
 
         function currentQueryString() {
             const params = new URLSearchParams(window.location.search);
@@ -8485,10 +8576,14 @@
                 return;
             }
 
+            if (healthRecordStatsRequest) {
+                return;
+            }
+
             const query = currentQueryString();
             const url = query ? `${statEndpoint}?${query}` : statEndpoint;
 
-            fetch(url, {
+            healthRecordStatsRequest = fetch(url, {
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
@@ -8509,6 +8604,9 @@
                 })
                 .catch(function () {
                     // Stats are convenience-only. Keep the current page usable if polling fails.
+                })
+                .finally(function () {
+                    healthRecordStatsRequest = null;
                 });
         }
 

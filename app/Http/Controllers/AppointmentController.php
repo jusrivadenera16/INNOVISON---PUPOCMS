@@ -339,7 +339,7 @@ class AppointmentController extends Controller
                 'time' => $pendingHealthFormRequest->requested_at
                     ? $pendingHealthFormRequest->requested_at->diffForHumans()
                     : 'New health form request',
-                'link' => route('health.form'),
+                'link' => route('health.form.student'),
             ];
         }
 
@@ -570,6 +570,24 @@ class AppointmentController extends Controller
             || str_starts_with($value, 'LOC-')
             || (bool) preg_match('/^\d{4}-\d{4}-\d{4}/', $value)
             || (bool) preg_match('/^\d{4}-[A-Z]+-\d+/', $value);
+    }
+
+    private function shouldGenerateStudentDeclarationTemplate(?HealthProfile $healthProfile, ?string $category = null, ?string $referenceNumber = null): bool
+    {
+        $category = strtolower(trim((string) ($category ?? $healthProfile?->health_form_category ?? '')));
+        if ($category === '' || $category === 'general') {
+            return false;
+        }
+
+        if (str_contains($category, 'ojt') || str_contains($category, 'on-the-job') || str_contains($category, 'student')) {
+            return true;
+        }
+
+        $referenceNumber = trim((string) ($referenceNumber ?? $healthProfile?->reference_number ?? ''));
+
+        return $referenceNumber !== ''
+            && !$this->looksLikeReferenceIdentifier($referenceNumber)
+            && trim((string) ($healthProfile?->student_number ?? '')) !== '';
     }
 
     private function formatDisplayNameParts(?string $firstName, ?string $middleName, ?string $lastName, ?string $suffixName = ''): string
@@ -1624,10 +1642,10 @@ class AppointmentController extends Controller
                 optional($healthProfile)->home_address
                 ?: ($resolvedAddress !== '' ? $resolvedAddress : trim((string) (optional($linkedAdminProfile)->address ?? '')))
             )),
-            'home_address_street' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_street') : '')),
-            'home_address_barangay' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_barangay') : '')),
-            'home_address_city_municipality' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_city_municipality') : '')),
-            'home_address_province' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_province') : '')),
+            'home_address_street' => trim((string) (optional($healthProfile)->street ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_street') : ''))),
+            'home_address_barangay' => trim((string) (optional($healthProfile)->barangay ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_barangay') : ''))),
+            'home_address_city_municipality' => trim((string) (optional($healthProfile)->municipality ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_city_municipality') : ''))),
+            'home_address_province' => trim((string) (optional($healthProfile)->province ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_province') : ''))),
             'zipcode' => $resolvedZipcode,
             'school_year' => (string) (optional($healthProfile)->school_year ?? $this->resolveSchoolYear($applicantData, $user)),
             'height' => (string) ($this->extractMeasurementNumber(optional($healthProfile)->height ?? $user->height ?? '') ?? ''),
@@ -3146,6 +3164,23 @@ public function account(Request $request)
         }
 
         if ($document === 'health_declaration') {
+            $path = ltrim((string) $healthProfile->health_declaration, '/');
+            $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+            if ($path !== '' && $this->healthFiles()->exists($path)) {
+                $disk = $this->healthFiles();
+                $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
+
+                return response()->file($disk->path($path), [
+                    'Content-Type' => $mimeType,
+                    'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
+                    'X-Content-Type-Options' => 'nosniff',
+                    'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                    'Pragma' => 'no-cache',
+                ]);
+            }
+
+            abort_unless($this->shouldGenerateStudentDeclarationTemplate($healthProfile), 404, 'Uploaded document not found.');
+
             $healthProfile->loadMissing('user');
             $user = $healthProfile->user;
 
@@ -4275,8 +4310,8 @@ public function updateContact(Request $request)
 
 public function showHealthForm()
 {
-    /** @var \App\Models\User $user */
-    $user = Auth::user();
+    /** @var \App\Models\User|null $user */
+    $user = Auth::guard('student')->user() ?: Auth::user();
     $isDedicatedStudentForm = request()->routeIs('health.form.student');
 
     // Refresh user from database to ensure all fields are populated
@@ -4304,6 +4339,10 @@ public function showHealthForm()
             ->first()
         : null;
 
+    if (!$isDedicatedStudentForm && $pendingHealthFormRequest && !$isHealthFormCorrectionMode) {
+        return redirect()->route('health.form.student');
+    }
+
     if ($this->hasSubmittedHealthProfile($user) && !$isHealthFormCorrectionMode && !$pendingHealthFormRequest) {
         return redirect('/student/account?view=health-record')
             ->with('info', 'You have already submitted your health profile.');
@@ -4321,6 +4360,17 @@ public function showHealthForm()
         $healthFormPrefill['step_1_title'] = 'Student ID';
         $healthFormPrefill['step_1_description'] = 'Enter your Student ID, then complete your health information.';
         $healthFormPrefill['reference_label'] = 'Student ID / Student Number';
+    } else {
+        $healthFormPrefill['reference_mode'] = 'admission';
+        $healthFormPrefill['reference_number'] = trim((string) (
+            optional($existingHealthProfile)->reference_number
+            ?: ($user->reference_number ?? '')
+        ));
+        $healthFormPrefill['manual_student_number_allowed'] = false;
+        $healthFormPrefill['reference_requires_validation'] = true;
+        $healthFormPrefill['step_1_title'] = 'Admission Reference Number';
+        $healthFormPrefill['step_1_description'] = 'Enter your Admission Reference Number, then complete your health information and upload the required clinic documents.';
+        $healthFormPrefill['reference_label'] = 'Admission Reference Number';
     }
     $this->persistResolvedUserProfileFields($user, $healthFormPrefill);
     $this->persistResolvedReferenceNumber($user, $healthFormPrefill['reference_number'] ?? '');
@@ -4686,10 +4736,10 @@ private function buildEmployeeHealthFormPrefill(User $user, ?EmployeeHealthProfi
         'course_college' => trim((string) (optional($employeeProfile)->course_college ?: $user->course)),
         'school_year' => trim((string) (optional($employeeProfile)->school_year ?: $user->year)),
         'contact_no' => trim((string) (optional($employeeProfile)->contact_no ?: $user->contact_no ?: optional($linkedAdminProfile)->contact_no)),
-        'street_address' => $addressParts[0] ?? '',
-        'barangay' => $addressParts[1] ?? '',
-        'city_municipality' => $addressParts[2] ?? '',
-        'province' => $addressParts[3] ?? '',
+        'street_address' => trim((string) (optional($employeeProfile)->street ?: ($addressParts[0] ?? ''))),
+        'barangay' => trim((string) (optional($employeeProfile)->barangay ?: ($addressParts[1] ?? ''))),
+        'city_municipality' => trim((string) (optional($employeeProfile)->municipality ?: ($addressParts[2] ?? ''))),
+        'province' => trim((string) (optional($employeeProfile)->province ?: ($addressParts[3] ?? ''))),
         'emergency_contact_person' => trim((string) (optional($employeeProfile)->emergency_contact_person ?: optional($linkedAdminProfile)->emergency_contact_person)),
         'emergency_contact_no' => trim((string) (optional($employeeProfile)->emergency_contact_no ?: optional($linkedAdminProfile)->emergency_contact_no)),
     ];
@@ -5015,6 +5065,18 @@ public function storeEmployeeHealthForm(Request $request)
         'suffix_name' => $validated['suffix_name'] ?? null,
         'name' => $fullName,
         'home_address' => $homeAddress,
+        ...(\Schema::hasColumn('health_profile_emp', 'street') ? [
+            'street' => $validated['street_address'],
+        ] : []),
+        ...(\Schema::hasColumn('health_profile_emp', 'barangay') ? [
+            'barangay' => $validated['barangay'],
+        ] : []),
+        ...(\Schema::hasColumn('health_profile_emp', 'municipality') ? [
+            'municipality' => $validated['city_municipality'],
+        ] : []),
+        ...(\Schema::hasColumn('health_profile_emp', 'province') ? [
+            'province' => $validated['province'],
+        ] : []),
         'contact_no' => $validated['contact_no'],
         'emergency_contact_person' => $validated['emergency_contact_person'],
         'emergency_contact_no' => $validated['emergency_contact_no'],
@@ -5124,7 +5186,7 @@ public function storeStaffHealthForm(Request $request)
 public function validateHealthFormReference(Request $request)
 {
     /** @var \App\Models\User|null $user */
-    $user = Auth::user();
+    $user = Auth::guard('student')->user() ?: Auth::user();
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
     $existingHealthProfile = $user
         ? HealthProfile::query()->where('user_id', $user->id)->first()
@@ -5132,8 +5194,26 @@ public function validateHealthFormReference(Request $request)
     $studentNumberReference = $user ? $this->enrolledStudentReferenceNumber($user, $existingHealthProfile) : '';
     $storedAdmissionReference = $user ? $this->resolveReferenceNumber($user, $existingHealthProfile) : '';
 
-    $isStudentFormVerification = $request->input('form_mode') === 'student';
-    if ($user && $this->wantsManualStudentNumberMode($request)) {
+    $formMode = strtolower(trim((string) $request->input('form_mode')));
+    $isStudentFormVerification = $formMode === 'student';
+    $isApplicantFormVerification = $formMode === 'applicant';
+    $requestedReferenceMode = trim((string) $request->input('reference_mode_selected'));
+    $isAdmissionFormVerification = $isApplicantFormVerification
+        || (!$isStudentFormVerification && $requestedReferenceMode === 'admission');
+
+    $submittedReference = strtoupper(trim((string) $request->input('reference_number')));
+    if ($isAdmissionFormVerification && $this->isLocalHealthFormTestReference($submittedReference)) {
+        $this->persistResolvedReferenceNumber($user, $submittedReference, $existingHealthProfile);
+        RateLimiter::clear($this->healthReferenceAttemptKey($request, $user));
+
+        return response()->json([
+            'success' => true,
+            'reference_number' => $submittedReference,
+            'message' => 'Local test reference verified. This is only allowed in local testing.',
+        ]);
+    }
+
+    if ($user && !$isAdmissionFormVerification && $this->wantsManualStudentNumberMode($request)) {
         if (!$isStudentFormVerification) {
             $manualModeLookup = $this->fetchPuptasApplicantLookupForUser($user);
             $manualModeApplicantData = is_array($manualModeLookup['data'] ?? null)
@@ -5175,7 +5255,7 @@ public function validateHealthFormReference(Request $request)
     }
 
     $accountLookup = null;
-    if ($studentNumberReference !== '') {
+    if (!$isAdmissionFormVerification && $studentNumberReference !== '') {
         $referenceMode = 'student_number';
         $accountApplicantData = null;
         $accountLookupOutcome = 'skipped_student_number';
@@ -5384,7 +5464,7 @@ private function isLocalHealthFormTestReference(string $referenceNumber): bool
 public function storeHealthForm(Request $request)
 {
     /** @var \App\Models\User|null $user */
-    $user = Auth::user();
+    $user = Auth::guard('student')->user() ?: Auth::user();
     $isDedicatedStudentForm = $request->routeIs('store.health.form.student');
     if ($this->shouldUseEmployeeHealthForm($user)) {
         return redirect()->route('health.form.employee')
@@ -5407,6 +5487,10 @@ public function storeHealthForm(Request $request)
             ->first()
         : null;
 
+    if (!$isDedicatedStudentForm && $pendingHealthFormRequest && !$isHealthFormCorrectionMode) {
+        return redirect()->route('health.form.student');
+    }
+
     if ($this->hasSubmittedHealthProfile($user) && !$isHealthFormCorrectionMode && !$pendingHealthFormRequest) {
         return redirect('/student/account?view=health-record')
             ->with('info', 'Your health profile is already submitted.');
@@ -5414,7 +5498,9 @@ public function storeHealthForm(Request $request)
 
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
     $studentNumberReference = $user ? $this->enrolledStudentReferenceNumber($user, $existingHealthProfile) : '';
-    $manualStudentNumberRequested = $this->wantsManualStudentNumberMode($request);
+    $manualStudentNumberRequested = $isDedicatedStudentForm
+        && $this->wantsManualStudentNumberMode($request);
+    $admissionReferenceRequested = !$isDedicatedStudentForm;
     $manualStudentNumberReference = '';
 
     if ($manualStudentNumberRequested) {
@@ -5448,7 +5534,7 @@ public function storeHealthForm(Request $request)
         $studentNumberReference = $manualStudentNumberReference;
         $accountApplicantData = null;
         $referenceMode = 'student_number';
-    } elseif ($studentNumberReference !== '') {
+    } elseif (!$admissionReferenceRequested && $studentNumberReference !== '') {
         $accountApplicantData = null;
         $referenceMode = 'student_number';
     } else {
@@ -5751,7 +5837,7 @@ public function storeHealthForm(Request $request)
             $guardianSignaturePath = null;
         }
 
-        if (($isDedicatedStudentForm || empty($healthDeclarationPath)) && !empty($digitalSignaturePath)) {
+        if ($isDedicatedStudentForm && !empty($digitalSignaturePath)) {
             $categorySelected = trim((string) $request->input('health_form_category', ''));
             if ($categorySelected === '') {
                 $categorySelected = optional($pendingHealthFormRequest)->category ?: 'Student';
@@ -5832,6 +5918,18 @@ public function storeHealthForm(Request $request)
                 'reference_number'   => $officialReference,
                 'school_year'        => $request->school_year,
                 'home_address'       => $request->home_address,
+                ...(\Schema::hasColumn('health_profiles', 'street') ? [
+                    'street' => trim((string) $request->input('home_address_street')),
+                ] : []),
+                ...(\Schema::hasColumn('health_profiles', 'barangay') ? [
+                    'barangay' => trim((string) $request->input('home_address_barangay')),
+                ] : []),
+                ...(\Schema::hasColumn('health_profiles', 'municipality') ? [
+                    'municipality' => trim((string) $request->input('home_address_city_municipality')),
+                ] : []),
+                ...(\Schema::hasColumn('health_profiles', 'province') ? [
+                    'province' => trim((string) $request->input('home_address_province')),
+                ] : []),
                 'zipcode'            => $request->zipcode,
                 'birthday'           => $request->input('birthday'),
                 'student_photo'      => $photoPath,
@@ -6128,6 +6226,113 @@ public function showHealthFormSubmissionPdf(HealthFormSubmission $submission)
         'Pragma' => 'no-cache',
         'Expires' => '0',
     ]);
+}
+
+public function showHealthFormSubmissionDocument(HealthFormSubmission $submission, string $document)
+{
+    abort_unless(in_array($document, HealthProfileSnapshotService::DOCUMENT_FIELDS, true), 404);
+
+    /** @var \App\Models\User|null $user */
+    $user = Auth::guard('student')->user();
+    abort_unless($user && (int) $submission->user_id === (int) $user->id, 403);
+
+    $healthProfile = $submission->healthProfile;
+    $profileData = $submission->snapshotProfile();
+    if ($profileData === []) {
+        $latestSubmission = HealthFormSubmission::query()
+            ->where('user_id', $submission->user_id)
+            ->whereIn('status', [
+                HealthFormSubmission::STATUS_SUBMITTED,
+                HealthFormSubmission::STATUS_APPROVED,
+                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+            ])
+            ->latest('submitted_at')
+            ->latest('approved_at')
+            ->latest('id')
+            ->first();
+
+        if ($latestSubmission && (int) $latestSubmission->id === (int) $submission->id) {
+            $profileData = $healthProfile?->attributesToArray() ?? [];
+        }
+    }
+
+    $path = ltrim((string) ($profileData[$document] ?? ''), '/');
+    if ($path === '' && $document === 'chest_xray_result') {
+        $path = ltrim((string) ($profileData['chest_xray_document'] ?? ''), '/');
+    }
+    $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+
+    if ($path !== '' && $this->healthFiles()->exists($path)) {
+        $disk = $this->healthFiles();
+        $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
+
+        return response()->file($disk->path($path), [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+        ]);
+    }
+
+    if ($document === 'health_declaration') {
+        $categorySelected = trim((string) ($submission->category ?: optional($healthProfile)->health_form_category ?: ''));
+        abort_unless($this->shouldGenerateStudentDeclarationTemplate(
+            $healthProfile,
+            $categorySelected,
+            (string) ($profileData['reference_number'] ?? optional($healthProfile)->reference_number ?? '')
+        ), 404, 'Historical document not found.');
+
+        $healthProfile?->loadMissing('user');
+        $submissionUser = $submission->user ?? $healthProfile?->user;
+        if ($categorySelected === '') {
+            $categorySelected = 'Student';
+        }
+        $isOjt = stripos($categorySelected, 'ojt') !== false || stripos($categorySelected, 'on-the-job') !== false;
+        $purposeUnderline1 = $isOjt ? 'On-the-Job Training (OJT)' : 'enrolled student';
+        $purposeUnderline2 = $isOjt ? 'On-the-Job Training (OJT)' : 'enrolment as a student';
+        $studentFullName = trim(implode(' ', array_filter([
+            $submissionUser?->first_name,
+            $submissionUser?->middle_name,
+            $submissionUser?->last_name,
+            $submissionUser?->suffix_name,
+        ]))) ?: ($submissionUser?->name ?? '');
+        $digitalSignaturePath = ltrim((string) ($profileData['digital_signature'] ?? optional($healthProfile)->digital_signature ?? ''), '/');
+        $studentSignatureSrc = $digitalSignaturePath !== '' && $this->healthFiles()->exists($digitalSignaturePath)
+            ? app(\App\Services\StoredImageDataUri::class)->fromStorage($digitalSignaturePath)
+            : null;
+        $age = (int) ($profileData['age'] ?? optional($healthProfile)->age ?? 0);
+        $isMinorStudent = $age < 18;
+        $guardianSignaturePath = ltrim((string) ($profileData['guardian_signature'] ?? optional($healthProfile)->guardian_signature ?? ''), '/');
+        $guardianSignatureSrc = $isMinorStudent && $guardianSignaturePath !== '' && $this->healthFiles()->exists($guardianSignaturePath)
+            ? app(\App\Services\StoredImageDataUri::class)->fromStorage($guardianSignaturePath)
+            : null;
+
+        $pdf = Pdf::loadView('student.print_declaration_form', [
+            'user' => $submissionUser,
+            'studentFullName' => $studentFullName,
+            'studentNumber' => $profileData['student_number'] ?? optional($healthProfile)->student_number ?? optional($healthProfile)->reference_number,
+            'course' => $profileData['course_college'] ?? optional($healthProfile)->course_college,
+            'age' => $age,
+            'guardianName' => $profileData['guardian_name'] ?? optional($healthProfile)->guardian_name,
+            'isMinor' => $isMinorStudent,
+            'categorySelected' => $categorySelected,
+            'purposeUnderline1' => $purposeUnderline1,
+            'purposeUnderline2' => $purposeUnderline2,
+            'studentSignatureSrc' => $studentSignatureSrc,
+            'guardianSignatureSrc' => $guardianSignatureSrc,
+            'signatureDate' => optional($submission->submitted_at ?? optional($healthProfile)->updated_at)->format('m/d/Y') ?: now()->format('m/d/Y'),
+            'remarks' => '',
+        ])->setPaper('letter', 'portrait');
+
+        return $pdf->stream('declaration-form-' . $submission->id . '.pdf', [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
+    }
+
+    abort(404, 'Historical document not found.');
 }
 
 private function buildStudentHealthFormPdf(HealthProfile $profile)

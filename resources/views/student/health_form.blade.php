@@ -2497,7 +2497,8 @@
 
             <form action="{{ route('store.health.form') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <input type="hidden" name="reference_mode_selected" value="admission">
+                <input type="hidden" name="reference_mode_selected" value="{{ $selectedReferenceMode }}">
+                <input type="hidden" name="form_mode" value="applicant">
                 <input type="hidden" id="course_college" name="course_college" value="{{ $courseApplicable ? $selectedCourseName : '' }}">
                 <input type="hidden" name="health_form_category" value="{{ optional($pendingHealthFormRequest ?? null)->category ?: 'General' }}">
                 <input type="hidden" name="health_form_request_remarks" value="{{ optional($pendingHealthFormRequest ?? null)->remarks ?: '' }}">
@@ -3615,9 +3616,12 @@
             const referenceRequiresValidation = referencePanel?.dataset.referenceRequiresValidation === 'true';
             const manualStudentNumberAllowed = referencePanel?.dataset.manualStudentModeAllowed === 'true';
             const referenceVerificationUnavailable = @json($referenceVerificationUnavailable);
+            const initialReferenceMode = @json($selectedReferenceMode);
 
             function selectedReferenceMode() {
-                const selectedMode = referenceModeRadios.find((radio) => radio.checked && !radio.disabled)?.value || 'admission';
+                const checkedMode = referenceModeRadios.find((radio) => radio.type !== 'hidden' && radio.checked && !radio.disabled)?.value;
+                const hiddenMode = referenceModeRadios.find((input) => input.type === 'hidden' && !input.disabled)?.value;
+                const selectedMode = checkedMode || hiddenMode || initialReferenceMode || 'admission';
                 return selectedMode === 'student_number' && !manualStudentNumberAllowed ? 'admission' : selectedMode;
             }
 
@@ -3878,7 +3882,7 @@
 
             async function validateReferenceNumber() {
                 if (!referenceEditorInput || !referenceInput || isReferenceValidating) {
-                    return;
+                    return false;
                 }
 
                 const isStudentMode = selectedReferenceMode() === 'student_number';
@@ -3896,7 +3900,7 @@
                     setReferenceStatus(message, 'is-error');
                     showValidationBubble(referenceEditorInput);
                     referenceEditorInput.focus();
-                    return;
+                    return false;
                 }
 
                 isReferenceValidating = true;
@@ -3906,7 +3910,8 @@
                 try {
                     const endpoint = new URL('{{ route('student.health_form.reference.validate') }}', window.location.origin);
                     endpoint.searchParams.set('reference_number', normalizedReference);
-                    endpoint.searchParams.set('reference_mode_selected', selectedReferenceMode());
+                    endpoint.searchParams.set('reference_mode_selected', 'admission');
+                    endpoint.searchParams.set('form_mode', 'applicant');
 
                     const response = await fetch(endpoint.toString(), {
                         method: 'GET',
@@ -3930,7 +3935,7 @@
                             showValidationBubble(referenceEditorInput);
                             referenceEditorInput.focus();
                         }
-                        return;
+                        return false;
                     }
 
                     referenceInput.value = payload.reference_number || normalizedReference;
@@ -3941,10 +3946,12 @@
                     setReferenceStatus(payload.message || (isStudentMode ? 'Student ID accepted.' : 'Reference number verified successfully.'), 'is-success');
                     referenceEditorInput.setCustomValidity('');
                     setReferenceEditor(false);
+                    return true;
                 } catch (error) {
                     referenceEditorInput.setCustomValidity('Reference number could not be verified right now.');
                     setReferenceStatus('Reference number could not be verified right now.', 'is-error');
                     showValidationBubble(referenceEditorInput);
+                    return false;
                 } finally {
                     isReferenceValidating = false;
                     editReferenceBtn?.removeAttribute('disabled');
@@ -4497,11 +4504,12 @@
                 input.addEventListener('change', () => renderUploadPreview(input));
             });
             editReferenceBtn?.addEventListener('click', () => {
-                if (!referenceRequiresValidation) {
+                const isStudentMode = selectedReferenceMode() === 'student_number';
+                if (!referenceRequiresValidation && !isStudentMode) {
                     return;
                 }
                 if (isReferenceLocked()) {
-                    setReferenceStatus('Reference already verified from the Admission System.', 'is-success');
+                    setReferenceStatus(isStudentMode ? 'Student ID is ready for use inside the clinic system.' : 'Reference already verified from the Admission System.', 'is-success');
                     return;
                 }
 
@@ -4511,16 +4519,22 @@
                 }
 
                 clearValidationBubble();
-                setReferenceStatus('Enter the reference exactly as shown by Admissions, then click the check icon. If you do not have a reference, contact Admissions or clinic staff.');
+                setReferenceStatus(isStudentMode
+                    ? 'Enter your Student ID, then click the check icon. Admission cross-check will be bypassed for current students and OJT students.'
+                    : 'Enter the reference exactly as shown by Admissions, then click the check icon. If you do not have a reference, contact Admissions or clinic staff.'
+                );
                 setReferenceEditor(true);
             });
             referenceEditorInput?.addEventListener('input', () => {
-                referenceEditorInput.value = referenceEditorInput.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
+                const isStudentMode = selectedReferenceMode() === 'student_number';
+                referenceEditorInput.value = referenceEditorInput.value.toUpperCase().replace(isStudentMode ? /[^A-Z0-9\-_]/g : /[^A-Z0-9-]/g, '').slice(0, 20);
                 referenceEditorInput.setCustomValidity('');
                 if (!isReferenceLocked()) {
-                    setReferenceStatus(referenceRequiresValidation
-                        ? 'Enter the reference exactly as shown by Admissions, then click the check icon. If you do not have a reference, contact Admissions or clinic staff.'
-                        : 'Clinic reference is generated and managed inside the clinic system.'
+                    setReferenceStatus(isStudentMode
+                        ? 'Enter your Student ID, then click the check icon. Admission cross-check will be bypassed for current students and OJT students.'
+                        : (referenceRequiresValidation
+                            ? 'Enter the reference exactly as shown by Admissions, then click the check icon. If you do not have a reference, contact Admissions or clinic staff.'
+                            : 'Clinic reference is generated and managed inside the clinic system.')
                     );
                 }
             });
@@ -4548,7 +4562,16 @@
                 field.addEventListener('change', () => syncMaroonFieldState(field));
             });
 
-            nextToStep2Btn?.addEventListener('click', () => {
+            nextToStep2Btn?.addEventListener('click', async () => {
+                const isStudentMode = selectedReferenceMode() === 'student_number';
+                const shouldValidateReference = referenceRequiresValidation || isStudentMode;
+                if (shouldValidateReference && !isReferenceLocked()) {
+                    const referenceAccepted = await validateReferenceNumber();
+                    if (!referenceAccepted) {
+                        return;
+                    }
+                }
+
                 const normalizedReference = (referenceInput?.value || '').trim();
 
                 if (referenceInput) {
@@ -4558,7 +4581,6 @@
 
                 if (normalizedReference === '') {
                     if (referenceInput) {
-                        const isStudentMode = selectedReferenceMode() === 'student_number';
                         referenceInput.setCustomValidity(isStudentMode
                             ? 'Student ID is required before continuing.'
                             : (referenceRequiresValidation

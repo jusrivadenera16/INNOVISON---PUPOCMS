@@ -2719,7 +2719,7 @@
         .admin-action-loader {
             position: fixed;
             inset: 0;
-            z-index: 600000;
+            z-index: 2147483400;
             border-radius: 0;
         }
 
@@ -5444,7 +5444,11 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                         });
                 })
                     ->orWhereHas('user', function ($userQuery) {
-                        $userQuery->whereRaw("LOWER(COALESCE(user_type, user_role, '')) LIKE ?", ['%applicant%']);
+                        $userQuery->where(function ($builder) {
+                            foreach (['user_type', 'user_role', 'idp_role'] as $roleColumn) {
+                                $builder->orWhereRaw("LOWER(COALESCE({$roleColumn}, '')) LIKE ?", ['%applicant%']);
+                            }
+                        });
                     });
             })
             ->count();
@@ -5453,9 +5457,10 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         $applyRoleAliases = function ($query) use ($aliases) {
             $query->whereHas('user', function ($userQuery) use ($aliases) {
                 $userQuery->where(function ($builder) use ($aliases) {
-                    foreach ($aliases as $index => $alias) {
-                        $method = $index === 0 ? 'whereRaw' : 'orWhereRaw';
-                        $builder->{$method}("LOWER(COALESCE(user_type, user_role, idp_role, '')) LIKE ?", ['%' . $alias . '%']);
+                    foreach ($aliases as $alias) {
+                        foreach (['user_type', 'user_role', 'idp_role'] as $roleColumn) {
+                            $builder->orWhereRaw("LOWER(COALESCE({$roleColumn}, '')) LIKE ?", ['%' . $alias . '%']);
+                        }
                     }
                 });
             });

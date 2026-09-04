@@ -5582,13 +5582,42 @@
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-student-lookup .employee-physical-assessment-panel {
-        border-color: #0284c7;
-        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        padding: 0 18px 18px;
+        border-color: rgba(112, 19, 27, .2);
+        background: #fff8f8;
     }
 
     #applicantRefModal .applicant-modal-shell.is-student-lookup .applicant-vitals-grid label span[style*="#dc2626"],
-    #applicantRefModal .applicant-modal-shell.is-student-lookup .applicant-findings-label span[style*="#dc2626"] {
+    #applicantRefModal .applicant-modal-shell.is-student-lookup .applicant-findings-label span[style*="#dc2626"],
+    #applicantRefModal .applicant-modal-shell.is-student-lookup .employee-physical-assessment-panel label > span[style*="color:#dc2626"] {
         display: none !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-student-lookup .employee-physical-assessment-panel .applicant-screening-panel-title {
+        margin: 0 -18px 16px;
+        padding: 15px 18px;
+        border-bottom: 1px solid rgba(112, 19, 27, .16);
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-student-lookup .employee-physical-assessment-panel .applicant-vitals-grid {
+        gap: 16px 14px;
+        padding: 0 2px 2px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-student-lookup .employee-physical-assessment-panel .applicant-condition-field {
+        gap: 7px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-student-lookup .employee-physical-assessment-panel .vital-status {
+        display: block !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        font-size: 11px;
+        line-height: 1.25;
+        box-shadow: none !important;
     }
 
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template h5 {
@@ -5727,6 +5756,15 @@
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .applicant-vitals-grid,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .bmi-gauge-card {
         display: none !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .employee-physical-assessment-panel .applicant-vitals-grid {
+        display: grid !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .employee-physical-assessment-panel .bmi-gauge-card {
+        display: block !important;
+        margin-top: 12px;
     }
 
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col {
@@ -6304,13 +6342,16 @@
     }
 
     .applicant-findings-option input:checked + span {
-        border-color: #70131b;
-        background: #70131b;
-        color: #facc15;
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        box-shadow: 0 10px 18px rgba(202, 138, 4, .18);
     }
 
     .applicant-findings-option:hover span,
-    .applicant-findings-option input:focus-visible + span {
+    .applicant-findings-option input:focus-visible + span,
+    .applicant-findings-option:hover input:checked + span,
+    .applicant-findings-option input:checked:focus-visible + span {
         border-color: #facc15;
         background: #facc15;
         color: #70131b;
@@ -7233,6 +7274,189 @@
         display: none;
     }
 
+    .clinic-error-card {
+        padding-top: 32px;
+    }
+
+    .clinic-error-icon {
+        width: 76px;
+        height: 76px;
+        display: grid;
+        place-items: center;
+        margin: 4px auto 20px;
+        border-radius: 999px;
+        background: #fff1f2;
+        color: #9f1239;
+        box-shadow: 0 12px 24px rgba(159, 18, 57, .14);
+    }
+
+    .clinic-error-icon svg {
+        width: 36px;
+        height: 36px;
+        stroke-width: 2.7;
+    }
+
+    .clinic-error-card strong {
+        color: #70131b;
+    }
+
+    .clinic-error-card p {
+        max-width: 340px;
+    }
+
+    .clinic-error-continue {
+        width: 100%;
+        min-height: 50px;
+        border: 0;
+        border-radius: 9px;
+        background: linear-gradient(135deg, #70131B, #9a1b2c);
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 16px 34px rgba(112, 19, 27, .20);
+        transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+
+    .clinic-error-continue:hover,
+    .clinic-error-continue:focus-visible {
+        transform: translateY(-1px);
+        filter: brightness(1.05);
+        box-shadow: 0 18px 38px rgba(112, 19, 27, .26);
+        outline: none;
+    }
+
+    .clinic-confirm-card {
+        padding-top: 34px;
+    }
+
+    .clinic-confirm-icon {
+        width: 76px;
+        height: 76px;
+        display: grid;
+        place-items: center;
+        margin: 4px auto 20px;
+        border-radius: 999px;
+        background: #fff7d6;
+        color: #70131b;
+        box-shadow: 0 12px 24px rgba(202, 138, 4, .14);
+    }
+
+    .clinic-confirm-icon svg {
+        width: 34px;
+        height: 34px;
+        stroke-width: 2.7;
+    }
+
+    .clinic-confirm-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .clinic-confirm-cancel,
+    .clinic-confirm-approve {
+        min-height: 48px;
+        border-radius: 9px;
+        font-size: 14px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, background .18s ease, color .18s ease;
+    }
+
+    .clinic-confirm-cancel {
+        border: 1px solid rgba(112, 19, 27, .22);
+        background: #ffffff;
+        color: #70131b;
+    }
+
+    .clinic-confirm-approve {
+        border: 0;
+        background: linear-gradient(135deg, #70131B, #9a1b2c);
+        color: #ffffff;
+        box-shadow: 0 16px 34px rgba(112, 19, 27, .20);
+    }
+
+    .clinic-confirm-cancel:hover,
+    .clinic-confirm-cancel:focus-visible,
+    .clinic-confirm-approve:hover,
+    .clinic-confirm-approve:focus-visible {
+        transform: translateY(-1px);
+        outline: none;
+    }
+
+    .clinic-confirm-cancel:hover,
+    .clinic-confirm-cancel:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+    }
+
+    .clinic-confirm-approve:hover,
+    .clinic-confirm-approve:focus-visible {
+        filter: brightness(1.05);
+        box-shadow: 0 18px 38px rgba(112, 19, 27, .26);
+    }
+
+    .clinic-confirm-approve:disabled,
+    .clinic-confirm-cancel:disabled {
+        cursor: wait;
+        opacity: .82;
+        transform: none;
+        filter: none;
+    }
+
+    html[data-theme="dark"] .clinic-success-overlay {
+        background: rgba(2, 6, 23, .74);
+    }
+
+    html[data-theme="dark"] .clinic-success-card {
+        border-color: rgba(250, 204, 21, .16);
+        background: #111827;
+        box-shadow: 0 24px 54px rgba(0, 0, 0, .48);
+    }
+
+    html[data-theme="dark"] .clinic-success-card strong {
+        color: #fde68a;
+    }
+
+    html[data-theme="dark"] .clinic-success-card p {
+        color: #cbd5e1;
+    }
+
+    html[data-theme="dark"] .clinic-success-card hr {
+        border-top-color: rgba(250, 204, 21, .16);
+    }
+
+    html[data-theme="dark"] .clinic-success-close {
+        background: #30151d;
+        color: #fde68a;
+    }
+
+    html[data-theme="dark"] .clinic-success-check {
+        background: radial-gradient(circle at 35% 24%, #facc15 0%, #d97706 62%, #92400e 100%);
+        color: #451a03;
+        box-shadow: 0 12px 26px rgba(250, 204, 21, .18);
+    }
+
+    html[data-theme="dark"] .clinic-error-icon {
+        background: #30151d;
+        color: #facc15;
+        box-shadow: 0 12px 24px rgba(250, 204, 21, .12);
+    }
+
+    html[data-theme="dark"] .clinic-confirm-icon {
+        background: #30151d;
+        color: #facc15;
+        box-shadow: 0 12px 24px rgba(250, 204, 21, .12);
+    }
+
+    html[data-theme="dark"] .clinic-confirm-cancel {
+        border-color: rgba(250, 204, 21, .2);
+        background: #151e2d;
+        color: #fde68a;
+    }
+
     @keyframes clinicSuccessPop {
         from { opacity: 0; transform: scale(.72) translateY(18px); }
         to { opacity: 1; transform: scale(1) translateY(0); }
@@ -7276,7 +7500,7 @@
     html[data-theme="dark"] .applicant-findings-option input:checked + span {
         background: #facc15;
         border-color: #facc15;
-        color: #111827;
+        color: #70131b;
     }
 
     html[data-theme="dark"] .applicant-condition-field label {
@@ -7812,6 +8036,72 @@
         border-color: rgba(148, 163, 184, .38);
     }
 
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .employee-physical-assessment-panel {
+        background: linear-gradient(180deg, #3a0712, #170713) !important;
+        border-color: rgba(250, 204, 21, .32) !important;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, .32) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .employee-physical-assessment-panel .applicant-screening-panel-title {
+        background: rgba(112, 19, 27, .92) !important;
+        border-bottom-color: rgba(250, 204, 21, .24) !important;
+        color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .applicant-ref-result,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .applicant-lookup-details {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+        color: #f8fafc !important;
+        box-shadow: none !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .applicant-ref-result::before,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .applicant-found-copy,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .applicant-found-copy strong {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .applicant-vitals-grid {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .applicant-vitals-grid .applicant-condition-field {
+        background: transparent !important;
+        border-color: transparent !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .applicant-condition-field label,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .applicant-findings-option span {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .applicant-condition-input,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .applicant-condition-textarea {
+        background: #111827 !important;
+        border-color: rgba(250, 204, 21, .24) !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .employee-physical-assessment-panel .vital-status {
+        background: transparent !important;
+        border: 0 !important;
+        color: #cbd5e1 !important;
+        box-shadow: none !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .employee-physical-assessment-panel .vital-status.is-normal {
+        color: #86efac !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .employee-physical-assessment-panel .vital-status.is-warning {
+        color: #fde68a !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .employee-physical-assessment-panel .vital-status.is-danger {
+        color: #fca5a5 !important;
+    }
+
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .bmi-gauge-card {
         display: block !important;
         margin-top: 12px;
@@ -7824,6 +8114,18 @@
         margin: 0;
         padding: 0;
         border: 0;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus[hidden] {
+        display: none !important;
+        min-height: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        overflow: hidden !important;
     }
 
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup,
@@ -7951,18 +8253,57 @@
         background: transparent !important;
     }
 
+    #applicantRefModal #applicantRefStatus.ocr-status:not(.is-visible) {
+        display: none !important;
+        min-height: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        overflow: hidden !important;
+    }
+
+    #applicantRefModal #applicantRefStatus.ocr-status.is-visible {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus:empty,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.info:empty,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.success:empty,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.error:empty,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.approved:empty,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.encoded:empty {
+        display: none !important;
+        min-height: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        overflow: hidden !important;
+    }
+
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-input {
         background: #111827 !important;
         background-image: none !important;
         border: 1px solid rgba(250, 204, 21, 0.18) !important;
-        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
     }
 
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-input {
+        box-shadow: none !important;
+    }
+
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-input:focus {
         border-color: rgba(250, 204, 21, 0.46) !important;
-        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.10), 0 18px 34px rgba(0, 0, 0, 0.30) !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.10) !important;
     }
 
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-cancel-btn,
@@ -7993,16 +8334,18 @@
     }
 
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn {
-        background: #70131B !important;
+        background: #111827 !important;
         background-image: none !important;
         border: 1px solid rgba(250, 204, 21, 0.18) !important;
-        box-shadow: 0 14px 28px rgba(112, 19, 27, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.20), 0 4px 12px rgba(0, 0, 0, 0.12) !important;
         color: #ffffff !important;
     }
 
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn {
-        background: transparent !important;
+        background: #111827 !important;
         background-image: none !important;
+        border-color: rgba(250, 204, 21, 0.18) !important;
+        color: #ffffff !important;
         box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.22) !important;
     }
 
@@ -8359,6 +8702,16 @@
         color: #f8fafc !important;
     }
 
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-findings-option:hover span,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-findings-option input:focus-visible + span,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-findings-option input:checked + span,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-findings-option:hover input:checked + span {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131b !important;
+        box-shadow: 0 10px 18px rgba(250, 204, 21, .2) !important;
+    }
+
     /* Nested Final Review information modals. */
     html[data-theme="dark"] #applicantHealthInfoModal .applicant-modal-body,
     html[data-theme="dark"] #applicantMedicalConditionModal .applicant-modal-body,
@@ -8476,6 +8829,120 @@
         border-color: rgba(250, 204, 21, .26) !important;
         background: #1e293b !important;
         color: #fde68a !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.ocr-status,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.ocr-status.info:not(.is-visible),
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.ocr-status.success:not(.is-visible),
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.ocr-status.error:not(.is-visible),
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.ocr-status.approved:not(.is-visible),
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.ocr-status.encoded:not(.is-visible),
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.ocr-status.is-visible:empty {
+        display: none !important;
+        min-height: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        overflow: hidden !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.ocr-status.is-visible:not(:empty) {
+        display: block !important;
+        height: auto !important;
+        margin-top: 12px !important;
+        padding: 12px 14px !important;
+        overflow: visible !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup:not(.has-lookup-result) .applicant-file-actions {
+        display: none !important;
+        min-height: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        overflow: hidden !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input {
+        background: #111827 !important;
+        background-image: none !important;
+        border: 1px solid rgba(250, 204, 21, 0.32) !important;
+        color: #f8fafc !important;
+        -webkit-text-fill-color: #f8fafc !important;
+        box-shadow: none !important;
+        filter: none !important;
+        outline: none !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:hover,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:focus,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:focus {
+        background: #111827 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+        box-shadow: none !important;
+        filter: none !important;
+        outline: none !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn {
+        background: #111827 !important;
+        background-image: none !important;
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.22) !important;
+        color: #ffffff !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn svg,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn span,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn svg,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn span {
+        color: #ffffff !important;
+        stroke: currentColor !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible {
+        background: #facc15 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-2px);
+        box-shadow: 0 22px 38px rgba(112, 19, 27, 0.28) !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover svg,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus svg,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible svg,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover span,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus span,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible span,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover svg,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus svg,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible svg,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover span,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus span,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible span {
+        color: #70131B !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn::after {
+        content: none !important;
+        display: none !important;
     }
 
 </style>
@@ -8776,7 +9243,7 @@
                         </button>
                     </div>
 
-                    <div id="applicantRefStatus" class="ocr-status"></div>
+                    <div id="applicantRefStatus" class="ocr-status" hidden></div>
 
                     <div id="applicantFoundCard" class="applicant-ref-result" data-initials="AP">
                         <div class="applicant-found-copy">
@@ -9423,6 +9890,33 @@
             <p>The data has been successfully encoded and saved in the system.</p>
             <hr>
             <button type="button" class="clinic-success-continue" data-success-close>OK, Continue</button>
+        </div>
+    </div>
+
+    <div class="clinic-success-overlay" id="applicantFinalReviewErrorOverlay" role="alertdialog" aria-modal="true" aria-labelledby="applicantFinalReviewErrorTitle" aria-describedby="applicantFinalReviewErrorMessage" aria-hidden="true">
+        <div class="clinic-success-card clinic-error-card">
+            <div class="clinic-error-icon" aria-hidden="true">
+                <x-outline-icon name="exclamation-triangle" />
+            </div>
+            <strong id="applicantFinalReviewErrorTitle">Unable to Continue</strong>
+            <p id="applicantFinalReviewErrorMessage">Please review the required fields before continuing.</p>
+            <hr>
+            <button type="button" class="clinic-error-continue" data-final-review-error-close>Continue</button>
+        </div>
+    </div>
+
+    <div class="clinic-success-overlay" id="applicantFinalReviewConfirmOverlay" role="dialog" aria-modal="true" aria-labelledby="applicantFinalReviewConfirmTitle" aria-describedby="applicantFinalReviewConfirmMessage" aria-hidden="true">
+        <div class="clinic-success-card clinic-confirm-card">
+            <div class="clinic-confirm-icon" aria-hidden="true">
+                <x-outline-icon name="question-mark-circle" />
+            </div>
+            <strong id="applicantFinalReviewConfirmTitle">Confirm Decision</strong>
+            <p id="applicantFinalReviewConfirmMessage">Are you sure you want to approve this decision?</p>
+            <hr>
+            <div class="clinic-confirm-actions">
+                <button type="button" class="clinic-confirm-cancel" data-final-review-confirm-cancel>Cancel</button>
+                <button type="button" class="clinic-confirm-approve" id="applicantFinalReviewConfirmApprove">Approve</button>
+            </div>
         </div>
     </div>
 
@@ -11099,6 +11593,11 @@
         const approvalOverlay = document.getElementById('applicantApprovalOverlay');
         const approvalOverlayTitle = document.getElementById('applicantApprovalOverlayTitle');
         const approvalOverlayMessage = document.getElementById('applicantApprovalOverlayMessage');
+        const finalReviewErrorOverlay = document.getElementById('applicantFinalReviewErrorOverlay');
+        const finalReviewErrorMessage = document.getElementById('applicantFinalReviewErrorMessage');
+        const finalReviewConfirmOverlay = document.getElementById('applicantFinalReviewConfirmOverlay');
+        const finalReviewConfirmMessage = document.getElementById('applicantFinalReviewConfirmMessage');
+        const finalReviewConfirmApprove = document.getElementById('applicantFinalReviewConfirmApprove');
 
         function setReviewDraftButtonVisible(visible) {
             if (reviewDraftBtn) {
@@ -11110,6 +11609,9 @@
         const encodeOverlay   = document.getElementById('applicantEncodeOverlay');
         let activeSuccessAction = null;
         let activeSuccessTimer = null;
+        let pendingFinalReviewApprovalData = null;
+        let pendingFinalReviewIsPendingDecision = false;
+        let finalReviewApprovalInProgress = false;
         let currentLookupRef  = '';
         let currentDocuments  = [];
         let currentLookupMode = 'applicant';
@@ -11242,10 +11744,80 @@
             activeSuccessTimer = setTimeout(() => closeClinicSuccessOverlay(overlay, true), options.duration || 3000);
         }
 
+        function closeFinalReviewErrorModal() {
+            if (!finalReviewErrorOverlay) return;
+            finalReviewErrorOverlay.classList.remove('is-open');
+            finalReviewErrorOverlay.setAttribute('aria-hidden', 'true');
+        }
+
+        function showFinalReviewErrorModal(message) {
+            if (!finalReviewErrorOverlay) return;
+            if (finalReviewErrorMessage) {
+                finalReviewErrorMessage.textContent = String(message || 'Please review the required fields before continuing.').trim();
+            }
+            finalReviewErrorOverlay.classList.add('is-open');
+            finalReviewErrorOverlay.setAttribute('aria-hidden', 'false');
+            finalReviewErrorOverlay.querySelector('[data-final-review-error-close]')?.focus({ preventScroll: true });
+        }
+
         document.querySelectorAll('[data-success-close]').forEach(function (button) {
             button.addEventListener('click', function () {
                 closeClinicSuccessOverlay(button.closest('.clinic-success-overlay'), true);
             });
+        });
+
+        document.querySelectorAll('[data-final-review-error-close]').forEach(function (button) {
+            button.addEventListener('click', closeFinalReviewErrorModal);
+        });
+
+        function setFinalReviewConfirmLoading(isLoading) {
+            finalReviewApprovalInProgress = Boolean(isLoading);
+            if (finalReviewConfirmApprove) {
+                finalReviewConfirmApprove.disabled = finalReviewApprovalInProgress;
+                finalReviewConfirmApprove.textContent = finalReviewApprovalInProgress
+                    ? 'Approving...'
+                    : (pendingFinalReviewIsPendingDecision ? 'Approve' : 'Approve');
+            }
+            finalReviewConfirmOverlay
+                ?.querySelectorAll('[data-final-review-confirm-cancel]')
+                .forEach((button) => { button.disabled = finalReviewApprovalInProgress; });
+        }
+
+        function closeFinalReviewConfirmModal() {
+            if (!finalReviewConfirmOverlay || finalReviewApprovalInProgress) return;
+            finalReviewConfirmOverlay.classList.remove('is-open');
+            finalReviewConfirmOverlay.setAttribute('aria-hidden', 'true');
+            pendingFinalReviewApprovalData = null;
+            pendingFinalReviewIsPendingDecision = false;
+            setFinalReviewConfirmLoading(false);
+        }
+
+        function openFinalReviewConfirmModal(approvalData, isPendingDecision) {
+            if (!finalReviewConfirmOverlay) {
+                submitFinalReviewApproval(approvalData, isPendingDecision);
+                return;
+            }
+
+            pendingFinalReviewApprovalData = approvalData;
+            pendingFinalReviewIsPendingDecision = Boolean(isPendingDecision);
+            if (finalReviewConfirmMessage) {
+                finalReviewConfirmMessage.textContent = pendingFinalReviewIsPendingDecision
+                    ? 'Are you sure you want to mark this applicant for pending compliance?'
+                    : 'Are you sure you want to approve and issue this clearance?';
+            }
+            setFinalReviewConfirmLoading(false);
+            finalReviewConfirmOverlay.classList.add('is-open');
+            finalReviewConfirmOverlay.setAttribute('aria-hidden', 'false');
+            finalReviewConfirmApprove?.focus({ preventScroll: true });
+        }
+
+        document.querySelectorAll('[data-final-review-confirm-cancel]').forEach(function (button) {
+            button.addEventListener('click', closeFinalReviewConfirmModal);
+        });
+
+        finalReviewConfirmApprove?.addEventListener('click', function () {
+            if (!pendingFinalReviewApprovalData || finalReviewApprovalInProgress) return;
+            submitFinalReviewApproval(pendingFinalReviewApprovalData, pendingFinalReviewIsPendingDecision);
         });
 
         function applyLookupMode(mode) {
@@ -11469,6 +12041,10 @@
                 backToFinalReviewList.classList.toggle('is-visible', isActive && currentApplicantWorkflow === 'final_review' && !isClinicLookupMode());
             }
             if (!isActive) resetLookupState();
+            if (isActive && refStatus && !String(refStatus.textContent || '').trim()) {
+                refStatus.hidden = true;
+                refStatus.style.display = 'none';
+            }
             if (isActive && refInput) {
                 setTimeout(() => refInput.focus(), 0);
             }
@@ -11485,7 +12061,12 @@
             closeHealthInfoModal();
             closeMedicalConditionModal();
             closeDocumentsModal();
-            if (refStatus) { refStatus.className = 'ocr-status'; refStatus.textContent = ''; }
+            if (refStatus) {
+                refStatus.className = 'ocr-status';
+                refStatus.textContent = '';
+                refStatus.hidden = true;
+                refStatus.style.display = 'none';
+            }
             if (foundCard) {
                 foundCard.style.display = 'none';
                 foundCard.dataset.initials = 'AP';
@@ -11659,8 +12240,21 @@
 
         function setStatus(type, msg) {
             if (!refStatus) return;
-            refStatus.className = 'ocr-status ' + type;
-            refStatus.textContent = msg;
+            const cleanMessage = String(msg || '').trim();
+            if (cleanMessage === '') {
+                refStatus.className = 'ocr-status';
+                refStatus.textContent = '';
+                refStatus.hidden = true;
+                refStatus.style.display = 'none';
+                return;
+            }
+            refStatus.hidden = false;
+            refStatus.style.display = 'block';
+            refStatus.className = 'ocr-status ' + type + ' is-visible';
+            refStatus.textContent = cleanMessage;
+            if (type === 'error' && isFinalReviewWorkflow()) {
+                showFinalReviewErrorModal(cleanMessage);
+            }
         }
 
         function setFinalReviewPhysicalReadonly(locked) {
@@ -13372,7 +13966,8 @@
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    setStatus('success', data.message || 'Student/OJT assessment saved.');
+                    const isApprovedDecision = clearanceDecisionInput?.value === 'approve';
+                    setStatus('success', data.message || (isApprovedDecision ? 'Medical clearance issued.' : 'Student/OJT assessment saved.'));
                     currentAssessmentReview = data.assessment_review && typeof data.assessment_review === 'object'
                         ? data.assessment_review
                         : currentAssessmentReview;
@@ -13380,10 +13975,29 @@
                     if (savedAssessmentButton) {
                         savedAssessmentButton.classList.toggle('is-visible', hasSavedAssessmentReview(currentAssessmentReview));
                     }
+                    if (isApprovedDecision && findBtn) {
+                        findBtn.textContent = '✓ Already Approved';
+                        findBtn.disabled = true;
+                        findBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                        findBtn.style.color = '#000000';
+                        findBtn.style.opacity = '1';
+                        findBtn.style.cursor = 'not-allowed';
+                    }
                     showClinicSuccessOverlay(approvalOverlay, {
-                        title: 'Assessment Saved',
-                        message: 'The student/OJT assessment has been saved to the health profile.',
+                        title: isApprovedDecision ? 'Medical Clearance Issued' : 'Assessment Saved',
+                        message: isApprovedDecision
+                            ? 'The student/OJT has been approved successfully.'
+                            : 'The student/OJT assessment has been saved to the health profile.',
                         duration: 2500,
+                        onDone: () => {
+                            if (isApprovedDecision) {
+                                closeApplicantsModal();
+                                isApprovalMode = false;
+                                resetLookupButtonToFind();
+                                resetLookupState();
+                                if (refInput) refInput.value = '';
+                            }
+                        }
                     });
                 } else {
                     setStatus('error', data.message || 'Failed to save student/OJT assessment.');
@@ -13481,8 +14095,6 @@
                 return;
             }
 
-            setStatus('info', isPendingDecision ? 'Saving pending compliance...' : 'Approving applicant...');
-
             const approvalData = {
                 reference_number: currentLookupRef,
                 lookup_scope: isClinicLookupMode() ? 'employee_local' : 'default',
@@ -13555,6 +14167,13 @@
                 approvalData.condition_remarks = '';
             }
 
+            openFinalReviewConfirmModal(approvalData, isPendingDecision);
+        }
+
+        function submitFinalReviewApproval(approvalData, isPendingDecision) {
+            setFinalReviewConfirmLoading(true);
+            setStatus('info', isPendingDecision ? 'Saving pending compliance...' : 'Approving applicant...');
+
             fetch("{{ route('admin.walkin.approve_applicant') }}", {
                 method: 'POST',
                 headers: {
@@ -13568,6 +14187,10 @@
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
+                    finalReviewConfirmOverlay?.classList.remove('is-open');
+                    finalReviewConfirmOverlay?.setAttribute('aria-hidden', 'true');
+                    pendingFinalReviewApprovalData = null;
+                    setFinalReviewConfirmLoading(false);
                     if (isFinalReviewWorkflow()) {
                         clearLocalApplicantFinalReviewDraft(currentLookupRef);
                     }
@@ -13596,10 +14219,20 @@
                         }
                     });
                 } else {
+                    finalReviewConfirmOverlay?.classList.remove('is-open');
+                    finalReviewConfirmOverlay?.setAttribute('aria-hidden', 'true');
+                    pendingFinalReviewApprovalData = null;
+                    setFinalReviewConfirmLoading(false);
                     setStatus('error', data.message || 'Failed to save applicant decision.');
                 }
             })
-            .catch(() => setStatus('error', 'Unable to save the applicant decision right now. Please try again.'));
+            .catch(() => {
+                finalReviewConfirmOverlay?.classList.remove('is-open');
+                finalReviewConfirmOverlay?.setAttribute('aria-hidden', 'true');
+                pendingFinalReviewApprovalData = null;
+                setFinalReviewConfirmLoading(false);
+                setStatus('error', 'Unable to save the applicant decision right now. Please try again.');
+            });
         }
 
         function collectReviewDraftData(lookupScope) {
@@ -13766,12 +14399,13 @@
         function syncCovidPositiveFields() {
             const selectedCovidValue = document.querySelector('input[name="applicant_covid_positive"]:checked')?.value || '';
             const isPositive = selectedCovidValue === 'Yes';
+            const shouldRequireCovidDate = isPositive && !isStudentLookupResult();
 
             if (covidPositiveDateField) {
                 covidPositiveDateField.style.display = isPositive ? 'flex' : 'none';
             }
             if (covidPositiveDateInput) {
-                covidPositiveDateInput.required = isPositive;
+                covidPositiveDateInput.required = shouldRequireCovidDate;
                 covidPositiveDateInput.disabled = !isPositive;
                 if (!isPositive) {
                     covidPositiveDateInput.value = '';
