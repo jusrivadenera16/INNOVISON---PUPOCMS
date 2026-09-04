@@ -6,10 +6,12 @@ use Illuminate\Http\Request;
 use App\Models\Admin;
 use App\Models\AdminHub;
 use App\Models\Announcement;
+use App\Models\ActivityLog;
 use App\Services\AnnouncementContent;
 use App\Models\Appointment;
 use App\Models\AppointmentFeedback;
 use App\Models\Consultation;
+use App\Models\DependentsProfile;
 use App\Models\HealthFormSubmission;
 use App\Models\HealthProfileCorrectionRequest;
 use App\Models\HealthProfile;
@@ -337,7 +339,7 @@ class AppointmentController extends Controller
                 'time' => $pendingHealthFormRequest->requested_at
                     ? $pendingHealthFormRequest->requested_at->diffForHumans()
                     : 'New health form request',
-                'link' => route('health.form'),
+                'link' => route('health.form.student'),
             ];
         }
 
@@ -568,6 +570,24 @@ class AppointmentController extends Controller
             || str_starts_with($value, 'LOC-')
             || (bool) preg_match('/^\d{4}-\d{4}-\d{4}/', $value)
             || (bool) preg_match('/^\d{4}-[A-Z]+-\d+/', $value);
+    }
+
+    private function shouldGenerateStudentDeclarationTemplate(?HealthProfile $healthProfile, ?string $category = null, ?string $referenceNumber = null): bool
+    {
+        $category = strtolower(trim((string) ($category ?? $healthProfile?->health_form_category ?? '')));
+        if ($category === '' || $category === 'general') {
+            return false;
+        }
+
+        if (str_contains($category, 'ojt') || str_contains($category, 'on-the-job') || str_contains($category, 'student')) {
+            return true;
+        }
+
+        $referenceNumber = trim((string) ($referenceNumber ?? $healthProfile?->reference_number ?? ''));
+
+        return $referenceNumber !== ''
+            && !$this->looksLikeReferenceIdentifier($referenceNumber)
+            && trim((string) ($healthProfile?->student_number ?? '')) !== '';
     }
 
     private function formatDisplayNameParts(?string $firstName, ?string $middleName, ?string $lastName, ?string $suffixName = ''): string
@@ -1622,10 +1642,10 @@ class AppointmentController extends Controller
                 optional($healthProfile)->home_address
                 ?: ($resolvedAddress !== '' ? $resolvedAddress : trim((string) (optional($linkedAdminProfile)->address ?? '')))
             )),
-            'home_address_street' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_street') : '')),
-            'home_address_barangay' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_barangay') : '')),
-            'home_address_city_municipality' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_city_municipality') : '')),
-            'home_address_province' => trim((string) ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_province') : '')),
+            'home_address_street' => trim((string) (optional($healthProfile)->street ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_street') : ''))),
+            'home_address_barangay' => trim((string) (optional($healthProfile)->barangay ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_barangay') : ''))),
+            'home_address_city_municipality' => trim((string) (optional($healthProfile)->municipality ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_city_municipality') : ''))),
+            'home_address_province' => trim((string) (optional($healthProfile)->province ?: ($useGuisisStudentPrefill ? data_get($guisisAccountData, 'home_address_province') : ''))),
             'zipcode' => $resolvedZipcode,
             'school_year' => (string) (optional($healthProfile)->school_year ?? $this->resolveSchoolYear($applicantData, $user)),
             'height' => (string) ($this->extractMeasurementNumber(optional($healthProfile)->height ?? $user->height ?? '') ?? ''),
@@ -2159,6 +2179,73 @@ class AppointmentController extends Controller
         return HealthProfile::query()->where('user_id', $user->id)->exists();
     }
 
+    private function isDependentProfileUser(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        $userType = strtolower(trim((string) ($user->user_type ?? '')));
+        $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
+
+        $hasDependentMarker = str_contains($userType, 'dependent')
+            || str_contains($userType, 'guest')
+            || str_contains($idpRole, 'dependent')
+            || str_contains($idpRole, 'guest');
+
+        if (!$hasDependentMarker) {
+            return false;
+        }
+
+        foreach ([$userType, $idpRole] as $marker) {
+            if ($marker === '' || str_contains($marker, 'dependent') || str_contains($marker, 'guest')) {
+                continue;
+            }
+
+            foreach (['student', 'applicant', 'faculty', 'admin', 'staff', 'employee', 'designee', 'non-teaching', 'non teaching'] as $excluded) {
+                if (str_contains($marker, $excluded)) {
+                    return false;
+                }
+            }
+        }
+
+        if ($this->resolveLinkedAdminProfile($user)) {
+            return false;
+        }
+
+        if (
+            Schema::hasColumn('users', 'employee_number')
+            && trim((string) ($user->employee_number ?? '')) !== ''
+            && !str_contains($idpRole, 'dependent')
+            && !str_contains($idpRole, 'guest')
+        ) {
+            return false;
+        }
+
+        if (
+            trim((string) ($user->reference_number ?? '')) !== ''
+            && !str_contains($idpRole, 'dependent')
+            && !str_contains($idpRole, 'guest')
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function hasSubmittedDependentProfile(?User $user): bool
+    {
+        if (!$user || !Schema::hasTable('dependents_profiles')) {
+            return false;
+        }
+
+        if ($user->relationLoaded('dependentProfile')) {
+            return $user->dependentProfile !== null;
+        }
+
+        return DependentsProfile::query()->where('user_id', $user->id)->exists();
+    }
+
     private function shouldUseEmployeeHealthForm(?User $user): bool
     {
         if (!$user) {
@@ -2174,7 +2261,7 @@ class AppointmentController extends Controller
             (string) data_get($user, 'adminHubProfile.access_level', ''),
         ]))));
 
-        foreach (['faculty', 'admin', 'staff', 'employee', 'dependent', 'designee'] as $needle) {
+        foreach (['faculty', 'admin', 'staff', 'employee', 'designee', 'non-teaching', 'non teaching'] as $needle) {
             if (str_contains($markers, $needle)) {
                 return true;
             }
@@ -2730,7 +2817,12 @@ public function account(Request $request)
         return redirect('/login-as-student')->with('error', 'Please login first.');
     }
 
-    $user->load(['healthProfile', 'employeeHealthProfile', 'adminProfile']);
+    $user->load(array_values(array_filter([
+        'healthProfile',
+        'employeeHealthProfile',
+        Schema::hasTable('dependents_profiles') ? 'dependentProfile' : null,
+        'adminProfile',
+    ])));
 
     // 2. Kunin ang appointments ng SPECIFIC user na naka-login
     $appointments = Appointment::where('user_id', $user->id)
@@ -2787,11 +2879,13 @@ public function account(Request $request)
         $request->except($notificationPageName),
         ['view' => 'notifications', 'filter' => $notificationFilter]
     ));
-    $studentUsesEmployeeHealthForm = $this->shouldUseEmployeeHealthForm($user);
+    $studentUsesDependentProfile = $this->isDependentProfileUser($user);
+    $studentUsesEmployeeHealthForm = !$studentUsesDependentProfile && $this->shouldUseEmployeeHealthForm($user);
     $hasSubmittedEmployeeHealthProfile = $this->hasSubmittedEmployeeHealthProfile($user);
+    $hasSubmittedDependentProfile = $this->hasSubmittedDependentProfile($user);
     $hasSubmittedHealthProfile = $studentUsesEmployeeHealthForm
         ? $hasSubmittedEmployeeHealthProfile
-        : $this->hasSubmittedHealthProfile($user);
+        : ($studentUsesDependentProfile ? $hasSubmittedDependentProfile : $this->hasSubmittedHealthProfile($user));
     $pendingHealthFormRequest = HealthFormSubmission::query()
         ->where('user_id', $user->id)
         ->where('status', HealthFormSubmission::STATUS_REQUESTED)
@@ -2805,7 +2899,40 @@ public function account(Request $request)
     // 5. Return view user
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
     $accountProfileData = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $user->healthProfile);
-    if ($studentUsesEmployeeHealthForm) {
+    if ($studentUsesDependentProfile) {
+        $dependentProfile = $user->dependentProfile;
+        $dependentFirstName = trim((string) (optional($dependentProfile)->first_name ?? $user->first_name ?? ''));
+        $dependentMiddleName = $this->normalizeOptionalNamePart(optional($dependentProfile)->middle_name ?? $user->middle_name ?? null);
+        $dependentLastName = trim((string) (optional($dependentProfile)->last_name ?? $user->last_name ?? ''));
+        $dependentSuffixName = trim((string) (optional($dependentProfile)->suffix_name ?? $user->suffix_name ?? ''));
+        $accountProfileData = array_merge($accountProfileData, [
+            'student_number' => '',
+            'employee_number' => trim((string) (optional($dependentProfile)->id_number ?? '')),
+            'first_name' => $dependentFirstName,
+            'middle_name' => $dependentMiddleName ?? '',
+            'last_name' => $dependentLastName,
+            'suffix_name' => $dependentSuffixName,
+            'full_name' => $this->formatDisplayNameParts(
+                $dependentFirstName,
+                $dependentMiddleName,
+                $dependentLastName,
+                $dependentSuffixName
+            ),
+            'email' => trim((string) (optional($dependentProfile)->email ?? $user->email ?? '')),
+            'course_college' => '',
+            'year' => '',
+            'section' => '',
+            'contact_number' => trim((string) (optional($dependentProfile)->contact_no ?? $user->contact_no ?? '')),
+            'home_address' => trim((string) optional($dependentProfile)->home_address),
+            'guardian_name' => trim((string) optional($dependentProfile)->emergency_contact_name),
+            'cellphone' => trim((string) optional($dependentProfile)->emergency_contact_no),
+            'birthday' => $this->normalizeDateValue(optional($dependentProfile)->birthday ?? $user->DOB ?? ''),
+            'age' => trim((string) optional($dependentProfile)->age),
+            'sex' => trim((string) (optional($dependentProfile)->sex ?? $user->gender ?? '')),
+            'civil_status' => trim((string) optional($dependentProfile)->civil_status),
+            'office' => '',
+        ]);
+    } elseif ($studentUsesEmployeeHealthForm) {
         $employeeProfileData = $this->buildEmployeeHealthFormPrefill($user, $user->employeeHealthProfile);
         $employeeMiddleName = $this->normalizeOptionalNamePart($employeeProfileData['middle_name'] ?? null);
         $employeeFirstName = trim((string) ($employeeProfileData['first_name'] ?? $user->first_name ?? ''));
@@ -2845,7 +2972,9 @@ public function account(Request $request)
     }
 
     // These fields belong to the submitted clinic Health Profile for now.
-    $profileSource = $studentUsesEmployeeHealthForm ? $user->employeeHealthProfile : $user->healthProfile;
+    $profileSource = $studentUsesEmployeeHealthForm
+        ? $user->employeeHealthProfile
+        : ($studentUsesDependentProfile ? $user->dependentProfile : $user->healthProfile);
     $profileBirthday = trim((string) (optional($profileSource)->birthday ?: $user->DOB));
     $profileAge = optional($profileSource)->age;
     if ($profileAge === null && $profileBirthday !== '') {
@@ -2860,8 +2989,15 @@ public function account(Request $request)
     $accountProfileData['sex'] = trim((string) (optional($profileSource)->sex ?: $user->gender));
     $accountProfileData['civil_status'] = trim((string) optional($profileSource)->civil_status);
     $accountProfileData['home_address'] = trim((string) optional($profileSource)->home_address) ?: ($accountProfileData['home_address'] ?? '');
-    $accountProfileData['guardian_name'] = trim((string) (optional($profileSource)->guardian_name ?? optional($profileSource)->emergency_contact_person)) ?: ($accountProfileData['guardian_name'] ?? '');
-    $accountProfileData['cellphone'] = trim((string) (optional($profileSource)->cellphone ?? optional($profileSource)->emergency_contact_no)) ?: ($accountProfileData['cellphone'] ?? '');
+    $accountProfileData['guardian_name'] = trim((string) (
+        optional($profileSource)->guardian_name
+        ?? optional($profileSource)->emergency_contact_person
+        ?? optional($profileSource)->emergency_contact_name
+    )) ?: ($accountProfileData['guardian_name'] ?? '');
+    $accountProfileData['cellphone'] = trim((string) (
+        optional($profileSource)->cellphone
+        ?? optional($profileSource)->emergency_contact_no
+    )) ?: ($accountProfileData['cellphone'] ?? '');
     $accountProfileData['contact_number'] = trim((string) ($user->contact_no ?? '')) ?: ($accountProfileData['contact_number'] ?? '');
 
     $guisisAccountData = $this->buildGuisisAccountData($user);
@@ -2902,6 +3038,10 @@ public function account(Request $request)
     $accountView = in_array((string) $request->query('view', 'profile'), ['profile', 'health-record', 'notifications'], true)
         ? (string) $request->query('view', 'profile')
         : 'profile';
+
+    if ($accountView === 'health-record' && $studentUsesEmployeeHealthForm && $user->employeeHealthProfile) {
+        $this->ensureEmployeeHealthDeclaration($user->employeeHealthProfile, $user);
+    }
 
     return view('student.account', compact(
         'user', 
@@ -2995,6 +3135,10 @@ public function account(Request $request)
 
             abort_unless(isset($employeeDocumentMap[$document]), 404);
 
+            if ($document === 'health_declaration') {
+                $this->ensureEmployeeHealthDeclaration($employeeProfile, $user);
+            }
+
             $path = ltrim((string) $employeeProfile->{$employeeDocumentMap[$document]}, '/');
             $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
 
@@ -3050,6 +3194,23 @@ public function account(Request $request)
         }
 
         if ($document === 'health_declaration') {
+            $path = ltrim((string) $healthProfile->health_declaration, '/');
+            $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+            if ($path !== '' && $this->healthFiles()->exists($path)) {
+                $disk = $this->healthFiles();
+                $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
+
+                return response()->file($disk->path($path), [
+                    'Content-Type' => $mimeType,
+                    'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
+                    'X-Content-Type-Options' => 'nosniff',
+                    'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                    'Pragma' => 'no-cache',
+                ]);
+            }
+
+            abort_unless($this->shouldGenerateStudentDeclarationTemplate($healthProfile), 404, 'Uploaded document not found.');
+
             $healthProfile->loadMissing('user');
             $user = $healthProfile->user;
 
@@ -4179,13 +4340,17 @@ public function updateContact(Request $request)
 
 public function showHealthForm()
 {
-    /** @var \App\Models\User $user */
-    $user = Auth::user();
+    /** @var \App\Models\User|null $user */
+    $user = Auth::guard('student')->user() ?: Auth::user();
     $isDedicatedStudentForm = request()->routeIs('health.form.student');
 
     // Refresh user from database to ensure all fields are populated
     if ($user) {
         $user = User::with(['adminProfile', 'adminHubProfile'])->find($user->id);
+    }
+
+    if ($this->isDependentProfileUser($user)) {
+        return redirect()->route('dependent.profile.form');
     }
 
     if (!$isDedicatedStudentForm && $this->shouldUseEmployeeHealthForm($user)) {
@@ -4204,6 +4369,10 @@ public function showHealthForm()
             ->first()
         : null;
 
+    if (!$isDedicatedStudentForm && $pendingHealthFormRequest && !$isHealthFormCorrectionMode) {
+        return redirect()->route('health.form.student');
+    }
+
     if ($this->hasSubmittedHealthProfile($user) && !$isHealthFormCorrectionMode && !$pendingHealthFormRequest) {
         return redirect('/student/account?view=health-record')
             ->with('info', 'You have already submitted your health profile.');
@@ -4214,13 +4383,31 @@ public function showHealthForm()
     $healthFormPrefill = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $existingHealthProfile);
     $healthFormPrefill['pending_health_form_request'] = $pendingHealthFormRequest;
     if ($isDedicatedStudentForm) {
+        $requestedStudentReference = $pendingHealthFormRequest
+            ? trim((string) (
+                $this->enrolledStudentReferenceNumber($user, $existingHealthProfile)
+                ?: optional($existingHealthProfile)->student_number
+                ?: ($user->student_number ?? '')
+            ))
+            : '';
         $healthFormPrefill['reference_mode'] = 'student_number';
-        $healthFormPrefill['reference_number'] = '';
+        $healthFormPrefill['reference_number'] = $requestedStudentReference;
         $healthFormPrefill['manual_student_number_allowed'] = true;
-        $healthFormPrefill['reference_requires_validation'] = false;
+        $healthFormPrefill['reference_requires_validation'] = $requestedStudentReference === '';
         $healthFormPrefill['step_1_title'] = 'Student ID';
         $healthFormPrefill['step_1_description'] = 'Enter your Student ID, then complete your health information.';
         $healthFormPrefill['reference_label'] = 'Student ID / Student Number';
+    } else {
+        $healthFormPrefill['reference_mode'] = 'admission';
+        $healthFormPrefill['reference_number'] = trim((string) (
+            optional($existingHealthProfile)->reference_number
+            ?: ($user->reference_number ?? '')
+        ));
+        $healthFormPrefill['manual_student_number_allowed'] = false;
+        $healthFormPrefill['reference_requires_validation'] = true;
+        $healthFormPrefill['step_1_title'] = 'Admission Reference Number';
+        $healthFormPrefill['step_1_description'] = 'Enter your Admission Reference Number, then complete your health information and upload the required clinic documents.';
+        $healthFormPrefill['reference_label'] = 'Admission Reference Number';
     }
     $this->persistResolvedUserProfileFields($user, $healthFormPrefill);
     $this->persistResolvedReferenceNumber($user, $healthFormPrefill['reference_number'] ?? '');
@@ -4237,6 +4424,183 @@ public function showHealthForm()
         $isDedicatedStudentForm ? 'student.health_form_student' : 'student.health_form',
         compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest')
     );
+}
+
+public function showDependentProfileForm()
+{
+    /** @var \App\Models\User|null $user */
+    $user = Auth::guard('student')->user() ?: Auth::user();
+    if ($user) {
+        $query = User::query();
+        if (Schema::hasTable('dependents_profiles')) {
+            $query->with('dependentProfile');
+        }
+        $user = $query->find($user->id);
+    }
+
+    if (!$user) {
+        return redirect('/login')->with('error', 'Please login first.');
+    }
+
+    if (!$this->isDependentProfileUser($user)) {
+        return redirect()->route($this->shouldUseEmployeeHealthForm($user) ? 'health.form.employee' : 'health.form')
+            ->with('info', 'Please use the form assigned to your account role.');
+    }
+
+    if ($this->hasSubmittedDependentProfile($user)) {
+        return redirect('/student/account')
+            ->with('info', 'Your dependent information is already saved.');
+    }
+
+    $dependentProfile = $user->dependentProfile;
+    $prefill = [
+        'id_number' => trim((string) ($dependentProfile->id_number ?? $user->student_number ?? $user->employee_number ?? '')),
+        'first_name' => trim((string) ($dependentProfile->first_name ?? $user->first_name ?? '')),
+        'middle_name' => trim((string) ($dependentProfile->middle_name ?? $user->middle_name ?? '')),
+        'last_name' => trim((string) ($dependentProfile->last_name ?? $user->last_name ?? '')),
+        'suffix_name' => trim((string) ($dependentProfile->suffix_name ?? $user->suffix_name ?? '')),
+        'email' => trim((string) ($dependentProfile->email ?? $user->email ?? '')),
+        'birthday' => $this->normalizeDateValue($dependentProfile->birthday ?? $user->DOB ?? ''),
+        'age' => trim((string) ($dependentProfile->age ?? '')),
+        'sex' => $this->normalizeSexValue((string) ($dependentProfile->sex ?? $user->gender ?? '')),
+        'civil_status' => trim((string) ($dependentProfile->civil_status ?? '')),
+        'street' => trim((string) ($dependentProfile->street ?? '')),
+        'barangay' => trim((string) ($dependentProfile->barangay ?? '')),
+        'municipality' => trim((string) ($dependentProfile->municipality ?? '')),
+        'province' => trim((string) ($dependentProfile->province ?? '')),
+        'home_address' => trim((string) ($dependentProfile->home_address ?? '')),
+        'contact_no' => trim((string) ($dependentProfile->contact_no ?? $user->contact_no ?? '')),
+        'landline' => trim((string) ($dependentProfile->landline ?? '')),
+        'emergency_contact_name' => trim((string) ($dependentProfile->emergency_contact_name ?? '')),
+        'emergency_contact_no' => trim((string) ($dependentProfile->emergency_contact_no ?? '')),
+    ];
+
+    if ($prefill['age'] === '' && $prefill['birthday'] !== '') {
+        try {
+            $prefill['age'] = (string) Carbon::parse($prefill['birthday'])->age;
+        } catch (\Throwable $exception) {
+            $prefill['age'] = '';
+        }
+    }
+
+    return view('student.dependent_profile_form', compact('user', 'prefill'));
+}
+
+public function storeDependentProfile(Request $request)
+{
+    /** @var \App\Models\User|null $user */
+    $user = Auth::guard('student')->user() ?: Auth::user();
+    if ($user) {
+        $query = User::query();
+        if (Schema::hasTable('dependents_profiles')) {
+            $query->with('dependentProfile');
+        }
+        $user = $query->find($user->id);
+    }
+
+    if (!$user) {
+        return redirect('/login')->with('error', 'Please login first.');
+    }
+
+    if (!$this->isDependentProfileUser($user)) {
+        return redirect()->route($this->shouldUseEmployeeHealthForm($user) ? 'health.form.employee' : 'health.form')
+            ->with('info', 'Please use the form assigned to your account role.');
+    }
+
+    if (!Schema::hasTable('dependents_profiles')) {
+        return back()->withInput()->with('error', 'Dependent profile storage is not ready yet. Please run the latest database migration.');
+    }
+
+    $validated = $request->validate([
+        'id_number' => ['nullable', 'string', 'max:120'],
+        'first_name' => ['required', 'string', 'max:120'],
+        'middle_name' => ['nullable', 'string', 'max:120'],
+        'last_name' => ['required', 'string', 'max:120'],
+        'suffix_name' => ['nullable', 'string', 'max:120'],
+        'email' => ['required', 'email', 'max:255'],
+        'birthday' => ['required', 'date', 'before_or_equal:today'],
+        'age' => ['required', 'integer', 'min:0', 'max:120'],
+        'sex' => ['required', 'string', 'max:40'],
+        'civil_status' => ['required', 'string', 'max:80'],
+        'street' => ['required', 'string', 'max:255'],
+        'barangay' => ['required', 'string', 'max:120'],
+        'municipality' => ['required', 'string', 'max:120'],
+        'province' => ['required', 'string', 'max:120'],
+        'contact_no' => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'landline' => ['nullable', 'string', 'max:20', 'regex:/^(?:[0-9+\-\s()]+|N\/?A|NONE)$/i'],
+        'emergency_contact_name' => ['required', 'string', 'max:255'],
+        'emergency_contact_no' => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
+        'dependent_profile_certified' => ['accepted'],
+    ]);
+
+    $validated['first_name'] = trim((string) ($user->first_name ?? '')) ?: $validated['first_name'];
+    $validated['middle_name'] = trim((string) ($user->middle_name ?? '')) ?: ($validated['middle_name'] ?? null);
+    $validated['last_name'] = trim((string) ($user->last_name ?? '')) ?: $validated['last_name'];
+    $validated['suffix_name'] = trim((string) ($user->suffix_name ?? '')) ?: ($validated['suffix_name'] ?? null);
+    $validated['email'] = trim((string) ($user->email ?? '')) ?: $validated['email'];
+
+    $validated['middle_name'] = $this->normalizeOptionalNamePart($validated['middle_name'] ?? null);
+    $validated['suffix_name'] = $this->normalizeOptionalNamePart($validated['suffix_name'] ?? null);
+    $validated['sex'] = $this->normalizeSexValue($validated['sex']) ?: $validated['sex'];
+    $homeAddress = trim(implode(', ', array_filter([
+        $validated['street'],
+        $validated['barangay'],
+        $validated['municipality'],
+        $validated['province'],
+    ])));
+
+    DependentsProfile::updateOrCreate(
+        ['user_id' => $user->id],
+        [
+            'idp_user_id' => trim((string) ($user->student_id ?? '')) ?: null,
+            'idp_role' => trim((string) ($user->idp_role ?? $user->user_type ?? '')) ?: null,
+            'id_number' => trim((string) ($validated['id_number'] ?? '')) ?: null,
+            'first_name' => $validated['first_name'],
+            'middle_name' => $validated['middle_name'] ?: null,
+            'last_name' => $validated['last_name'],
+            'suffix_name' => $validated['suffix_name'] ?: null,
+            'email' => $validated['email'],
+            'birthday' => $validated['birthday'],
+            'age' => $validated['age'],
+            'sex' => $validated['sex'],
+            'civil_status' => $validated['civil_status'],
+            'street' => $validated['street'],
+            'barangay' => $validated['barangay'],
+            'municipality' => $validated['municipality'],
+            'province' => $validated['province'],
+            'home_address' => $homeAddress,
+            'contact_no' => $validated['contact_no'],
+            'landline' => trim((string) ($validated['landline'] ?? '')) ?: null,
+            'emergency_contact_name' => $validated['emergency_contact_name'],
+            'emergency_contact_no' => $validated['emergency_contact_no'],
+            'submitted_at' => now(),
+        ]
+    );
+
+    $user->first_name = $validated['first_name'];
+    $user->middle_name = $validated['middle_name'] ?: null;
+    $user->last_name = $validated['last_name'];
+    if (Schema::hasColumn('users', 'suffix_name')) {
+        $user->suffix_name = $validated['suffix_name'] ?: null;
+    }
+    $user->email = $validated['email'];
+    $user->DOB = $validated['birthday'];
+    $user->gender = $validated['sex'];
+    $user->contact_no = $validated['contact_no'];
+    $user->is_health_profile_completed = 1;
+    $user->save();
+
+    ActivityLog::create([
+        'user_id' => $user->id,
+        'user_name' => $user->name,
+        'action' => 'Dependent Profile Saved',
+        'description' => 'Dependent saved personal clinic profile information.',
+        'ip_address' => $request->ip(),
+        'user_agent' => substr((string) $request->userAgent(), 0, 255),
+    ]);
+
+    return redirect('/student/account')
+        ->with('success', 'Dependent information saved successfully.');
 }
 
 public function showEmployeeHealthForm()
@@ -4280,6 +4644,105 @@ private function generateEmployeeHealthFormPdf(EmployeeHealthProfile $profile): 
     return app(EmployeeHealthFormPdfService::class)->generate($profile);
 }
 
+private function ensureEmployeeHealthDeclaration(EmployeeHealthProfile $profile, ?User $user = null): ?string
+{
+    $disk = $this->healthFiles();
+    $existingPath = $disk->normalizePath($profile->health_declaration ?? null);
+
+    if ($existingPath !== '' && $disk->exists($existingPath)) {
+        return $existingPath;
+    }
+
+    $signatureValue = trim((string) ($profile->uploaded_signature_path ?: $profile->staff_signature));
+    if ($signatureValue === '') {
+        return $existingPath !== '' ? $existingPath : null;
+    }
+
+    try {
+        if (str_starts_with($signatureValue, 'data:image/')) {
+            $employeeSignatureSrc = $signatureValue;
+        } else {
+            $signaturePath = $disk->normalizePath($signatureValue);
+            if ($signaturePath === '' || !$disk->exists($signaturePath)) {
+                return $existingPath !== '' ? $existingPath : null;
+            }
+
+            $employeeSignatureSrc = app(\App\Services\StoredImageDataUri::class)->fromStorage($signaturePath);
+        }
+
+        $user = $user ?: $profile->user;
+        $category = trim((string) ($profile->health_form_category ?? ''));
+        $categorySearch = strtolower(trim(implode(' ', array_filter([
+            $category,
+            (string) ($profile->office ?? ''),
+            (string) ($user?->user_role ?? ''),
+            (string) ($user?->role ?? ''),
+        ]))));
+        $isAdministrative = $category === 'Administrative Personnel'
+            || str_contains($categorySearch, 'administrative')
+            || str_contains($categorySearch, 'admin');
+        $employeeCategory = $isAdministrative ? 'Administrative Personnel' : 'Faculty Member';
+        $employeePurpose = $isAdministrative ? 'administrative personnel' : 'a faculty member';
+        $employeeEndorsement = $isAdministrative
+            ? 'fitness as administrative personnel'
+            : 'fitness as a faculty member';
+        $fullName = trim((string) ($profile->name ?? ''));
+        if ($fullName === '') {
+            $fullName = $this->formatDisplayNameParts(
+                $profile->first_name ?: $user?->first_name,
+                $profile->middle_name ?: $user?->middle_name,
+                $profile->last_name ?: $user?->last_name,
+                $profile->suffix_name ?: $user?->suffix_name
+            );
+        }
+
+        $signatureDateSource = $profile->certified_at ?: $profile->updated_at ?: $profile->created_at;
+        $signatureDate = $signatureDateSource
+            ? Carbon::parse($signatureDateSource)->format('m/d/Y')
+            : now()->format('m/d/Y');
+
+        $declarationPdf = Pdf::loadView('student.print_declaration_form', [
+            'user' => $user,
+            'studentFullName' => $fullName,
+            'categorySelected' => $employeeCategory,
+            'purposeUnderline1' => $employeePurpose,
+            'purposeUnderline2' => $employeeEndorsement,
+            'studentSignatureSrc' => $employeeSignatureSrc,
+            'signatureDate' => $signatureDate,
+            'remarks' => '',
+            'isMinor' => false,
+            'guardianName' => '',
+            'guardianSignatureSrc' => null,
+            'hideGuardianBlock' => true,
+            'signatureAlt' => 'Employee Signature',
+            'signatureCaption' => "Employee's Signature Over Printed Name/ Date",
+            'fallbackSignerName' => 'EMPLOYEE NAME',
+            'postRemarksNote' => 'Both employee and clinic staff will affix their signature if required by the Medical Clinic.',
+        ])->setPaper('letter', 'portrait');
+
+        $identifier = preg_replace('/[^A-Za-z0-9\-_]+/', '-', (string) (
+            $profile->employee_number
+            ?: $user?->employee_number
+            ?: $profile->id
+        )) ?: 'employee-' . $profile->id;
+        $generatedPath = 'health_profile_employees/health_declarations/declaration-'
+            . $identifier . '-' . now()->format('Ymd-His') . '.pdf';
+
+        $disk->put($generatedPath, $declarationPdf->output());
+        $profile->forceFill(['health_declaration' => $generatedPath])->save();
+
+        return $generatedPath;
+    } catch (\Throwable $exception) {
+        Log::warning('Unable to generate employee health declaration PDF.', [
+            'employee_health_profile_id' => $profile->id,
+            'user_id' => $profile->user_id,
+            'error' => $exception->getMessage(),
+        ]);
+
+        return $existingPath !== '' ? $existingPath : null;
+    }
+}
+
 public function showStaffHealthForm()
 {
     return $this->showEmployeeHealthForm();
@@ -4320,10 +4783,10 @@ private function buildEmployeeHealthFormPrefill(User $user, ?EmployeeHealthProfi
         'course_college' => trim((string) (optional($employeeProfile)->course_college ?: $user->course)),
         'school_year' => trim((string) (optional($employeeProfile)->school_year ?: $user->year)),
         'contact_no' => trim((string) (optional($employeeProfile)->contact_no ?: $user->contact_no ?: optional($linkedAdminProfile)->contact_no)),
-        'street_address' => $addressParts[0] ?? '',
-        'barangay' => $addressParts[1] ?? '',
-        'city_municipality' => $addressParts[2] ?? '',
-        'province' => $addressParts[3] ?? '',
+        'street_address' => trim((string) (optional($employeeProfile)->street ?: ($addressParts[0] ?? ''))),
+        'barangay' => trim((string) (optional($employeeProfile)->barangay ?: ($addressParts[1] ?? ''))),
+        'city_municipality' => trim((string) (optional($employeeProfile)->municipality ?: ($addressParts[2] ?? ''))),
+        'province' => trim((string) (optional($employeeProfile)->province ?: ($addressParts[3] ?? ''))),
         'emergency_contact_person' => trim((string) (optional($employeeProfile)->emergency_contact_person ?: optional($linkedAdminProfile)->emergency_contact_person)),
         'emergency_contact_no' => trim((string) (optional($employeeProfile)->emergency_contact_no ?: optional($linkedAdminProfile)->emergency_contact_no)),
     ];
@@ -4625,6 +5088,7 @@ public function storeEmployeeHealthForm(Request $request)
             'signatureAlt' => 'Employee Signature',
             'signatureCaption' => "Employee's Signature Over Printed Name/ Date",
             'fallbackSignerName' => 'EMPLOYEE NAME',
+            'postRemarksNote' => 'Both employee and clinic staff will affix their signature if required by the Medical Clinic.',
         ])->setPaper('letter', 'portrait');
 
         $declarationIdentifier = preg_replace('/[^A-Za-z0-9\-_]+/', '-', (string) (
@@ -4649,6 +5113,18 @@ public function storeEmployeeHealthForm(Request $request)
         'suffix_name' => $validated['suffix_name'] ?? null,
         'name' => $fullName,
         'home_address' => $homeAddress,
+        ...(\Schema::hasColumn('health_profile_emp', 'street') ? [
+            'street' => $validated['street_address'],
+        ] : []),
+        ...(\Schema::hasColumn('health_profile_emp', 'barangay') ? [
+            'barangay' => $validated['barangay'],
+        ] : []),
+        ...(\Schema::hasColumn('health_profile_emp', 'municipality') ? [
+            'municipality' => $validated['city_municipality'],
+        ] : []),
+        ...(\Schema::hasColumn('health_profile_emp', 'province') ? [
+            'province' => $validated['province'],
+        ] : []),
         'contact_no' => $validated['contact_no'],
         'emergency_contact_person' => $validated['emergency_contact_person'],
         'emergency_contact_no' => $validated['emergency_contact_no'],
@@ -4758,7 +5234,15 @@ public function storeStaffHealthForm(Request $request)
 public function validateHealthFormReference(Request $request)
 {
     /** @var \App\Models\User|null $user */
-    $user = Auth::user();
+    $user = Auth::guard('student')->user() ?: Auth::user();
+    if ($this->isDependentProfileUser($user)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Please complete the Dependent Information Form assigned to your account.',
+            'redirect_url' => route('dependent.profile.form'),
+        ], 403);
+    }
+
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
     $existingHealthProfile = $user
         ? HealthProfile::query()->where('user_id', $user->id)->first()
@@ -4766,8 +5250,26 @@ public function validateHealthFormReference(Request $request)
     $studentNumberReference = $user ? $this->enrolledStudentReferenceNumber($user, $existingHealthProfile) : '';
     $storedAdmissionReference = $user ? $this->resolveReferenceNumber($user, $existingHealthProfile) : '';
 
-    $isStudentFormVerification = $request->input('form_mode') === 'student';
-    if ($user && $this->wantsManualStudentNumberMode($request)) {
+    $formMode = strtolower(trim((string) $request->input('form_mode')));
+    $isStudentFormVerification = $formMode === 'student';
+    $isApplicantFormVerification = $formMode === 'applicant';
+    $requestedReferenceMode = trim((string) $request->input('reference_mode_selected'));
+    $isAdmissionFormVerification = $isApplicantFormVerification
+        || (!$isStudentFormVerification && $requestedReferenceMode === 'admission');
+
+    $submittedReference = strtoupper(trim((string) $request->input('reference_number')));
+    if ($isAdmissionFormVerification && $this->isLocalHealthFormTestReference($submittedReference)) {
+        $this->persistResolvedReferenceNumber($user, $submittedReference, $existingHealthProfile);
+        RateLimiter::clear($this->healthReferenceAttemptKey($request, $user));
+
+        return response()->json([
+            'success' => true,
+            'reference_number' => $submittedReference,
+            'message' => 'Local test reference verified. This is only allowed in local testing.',
+        ]);
+    }
+
+    if ($user && !$isAdmissionFormVerification && $this->wantsManualStudentNumberMode($request)) {
         if (!$isStudentFormVerification) {
             $manualModeLookup = $this->fetchPuptasApplicantLookupForUser($user);
             $manualModeApplicantData = is_array($manualModeLookup['data'] ?? null)
@@ -4809,7 +5311,7 @@ public function validateHealthFormReference(Request $request)
     }
 
     $accountLookup = null;
-    if ($studentNumberReference !== '') {
+    if (!$isAdmissionFormVerification && $studentNumberReference !== '') {
         $referenceMode = 'student_number';
         $accountApplicantData = null;
         $accountLookupOutcome = 'skipped_student_number';
@@ -5018,8 +5520,13 @@ private function isLocalHealthFormTestReference(string $referenceNumber): bool
 public function storeHealthForm(Request $request)
 {
     /** @var \App\Models\User|null $user */
-    $user = Auth::user();
+    $user = Auth::guard('student')->user() ?: Auth::user();
     $isDedicatedStudentForm = $request->routeIs('store.health.form.student');
+    if ($this->isDependentProfileUser($user)) {
+        return redirect()->route('dependent.profile.form')
+            ->with('info', 'Please complete the Dependent Information Form assigned to your account.');
+    }
+
     if ($this->shouldUseEmployeeHealthForm($user)) {
         return redirect()->route('health.form.employee')
             ->with('info', 'Please use the Faculty, Administrative Employee, and Dependent Health Examination Record.');
@@ -5041,6 +5548,10 @@ public function storeHealthForm(Request $request)
             ->first()
         : null;
 
+    if (!$isDedicatedStudentForm && $pendingHealthFormRequest && !$isHealthFormCorrectionMode) {
+        return redirect()->route('health.form.student');
+    }
+
     if ($this->hasSubmittedHealthProfile($user) && !$isHealthFormCorrectionMode && !$pendingHealthFormRequest) {
         return redirect('/student/account?view=health-record')
             ->with('info', 'Your health profile is already submitted.');
@@ -5048,7 +5559,9 @@ public function storeHealthForm(Request $request)
 
     $linkedAdminProfile = $this->resolveLinkedAdminProfile($user);
     $studentNumberReference = $user ? $this->enrolledStudentReferenceNumber($user, $existingHealthProfile) : '';
-    $manualStudentNumberRequested = $this->wantsManualStudentNumberMode($request);
+    $manualStudentNumberRequested = $isDedicatedStudentForm
+        && $this->wantsManualStudentNumberMode($request);
+    $admissionReferenceRequested = !$isDedicatedStudentForm;
     $manualStudentNumberReference = '';
 
     if ($manualStudentNumberRequested) {
@@ -5082,7 +5595,7 @@ public function storeHealthForm(Request $request)
         $studentNumberReference = $manualStudentNumberReference;
         $accountApplicantData = null;
         $referenceMode = 'student_number';
-    } elseif ($studentNumberReference !== '') {
+    } elseif (!$admissionReferenceRequested && $studentNumberReference !== '') {
         $accountApplicantData = null;
         $referenceMode = 'student_number';
     } else {
@@ -5385,7 +5898,7 @@ public function storeHealthForm(Request $request)
             $guardianSignaturePath = null;
         }
 
-        if (($isDedicatedStudentForm || empty($healthDeclarationPath)) && !empty($digitalSignaturePath)) {
+        if ($isDedicatedStudentForm && !empty($digitalSignaturePath)) {
             $categorySelected = trim((string) $request->input('health_form_category', ''));
             if ($categorySelected === '') {
                 $categorySelected = optional($pendingHealthFormRequest)->category ?: 'Student';
@@ -5466,6 +5979,18 @@ public function storeHealthForm(Request $request)
                 'reference_number'   => $officialReference,
                 'school_year'        => $request->school_year,
                 'home_address'       => $request->home_address,
+                ...(\Schema::hasColumn('health_profiles', 'street') ? [
+                    'street' => trim((string) $request->input('home_address_street')),
+                ] : []),
+                ...(\Schema::hasColumn('health_profiles', 'barangay') ? [
+                    'barangay' => trim((string) $request->input('home_address_barangay')),
+                ] : []),
+                ...(\Schema::hasColumn('health_profiles', 'municipality') ? [
+                    'municipality' => trim((string) $request->input('home_address_city_municipality')),
+                ] : []),
+                ...(\Schema::hasColumn('health_profiles', 'province') ? [
+                    'province' => trim((string) $request->input('home_address_province')),
+                ] : []),
                 'zipcode'            => $request->zipcode,
                 'birthday'           => $request->input('birthday'),
                 'student_photo'      => $photoPath,
@@ -5762,6 +6287,113 @@ public function showHealthFormSubmissionPdf(HealthFormSubmission $submission)
         'Pragma' => 'no-cache',
         'Expires' => '0',
     ]);
+}
+
+public function showHealthFormSubmissionDocument(HealthFormSubmission $submission, string $document)
+{
+    abort_unless(in_array($document, HealthProfileSnapshotService::DOCUMENT_FIELDS, true), 404);
+
+    /** @var \App\Models\User|null $user */
+    $user = Auth::guard('student')->user();
+    abort_unless($user && (int) $submission->user_id === (int) $user->id, 403);
+
+    $healthProfile = $submission->healthProfile;
+    $profileData = $submission->snapshotProfile();
+    if ($profileData === []) {
+        $latestSubmission = HealthFormSubmission::query()
+            ->where('user_id', $submission->user_id)
+            ->whereIn('status', [
+                HealthFormSubmission::STATUS_SUBMITTED,
+                HealthFormSubmission::STATUS_APPROVED,
+                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+            ])
+            ->latest('submitted_at')
+            ->latest('approved_at')
+            ->latest('id')
+            ->first();
+
+        if ($latestSubmission && (int) $latestSubmission->id === (int) $submission->id) {
+            $profileData = $healthProfile?->attributesToArray() ?? [];
+        }
+    }
+
+    $path = ltrim((string) ($profileData[$document] ?? ''), '/');
+    if ($path === '' && $document === 'chest_xray_result') {
+        $path = ltrim((string) ($profileData['chest_xray_document'] ?? ''), '/');
+    }
+    $path = preg_replace('#^(?:public/)?storage/#', '', $path) ?? $path;
+
+    if ($path !== '' && $this->healthFiles()->exists($path)) {
+        $disk = $this->healthFiles();
+        $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
+
+        return response()->file($disk->path($path), [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . str_replace('"', '', basename($path)) . '"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+        ]);
+    }
+
+    if ($document === 'health_declaration') {
+        $categorySelected = trim((string) ($submission->category ?: optional($healthProfile)->health_form_category ?: ''));
+        abort_unless($this->shouldGenerateStudentDeclarationTemplate(
+            $healthProfile,
+            $categorySelected,
+            (string) ($profileData['reference_number'] ?? optional($healthProfile)->reference_number ?? '')
+        ), 404, 'Historical document not found.');
+
+        $healthProfile?->loadMissing('user');
+        $submissionUser = $submission->user ?? $healthProfile?->user;
+        if ($categorySelected === '') {
+            $categorySelected = 'Student';
+        }
+        $isOjt = stripos($categorySelected, 'ojt') !== false || stripos($categorySelected, 'on-the-job') !== false;
+        $purposeUnderline1 = $isOjt ? 'On-the-Job Training (OJT)' : 'enrolled student';
+        $purposeUnderline2 = $isOjt ? 'On-the-Job Training (OJT)' : 'enrolment as a student';
+        $studentFullName = trim(implode(' ', array_filter([
+            $submissionUser?->first_name,
+            $submissionUser?->middle_name,
+            $submissionUser?->last_name,
+            $submissionUser?->suffix_name,
+        ]))) ?: ($submissionUser?->name ?? '');
+        $digitalSignaturePath = ltrim((string) ($profileData['digital_signature'] ?? optional($healthProfile)->digital_signature ?? ''), '/');
+        $studentSignatureSrc = $digitalSignaturePath !== '' && $this->healthFiles()->exists($digitalSignaturePath)
+            ? app(\App\Services\StoredImageDataUri::class)->fromStorage($digitalSignaturePath)
+            : null;
+        $age = (int) ($profileData['age'] ?? optional($healthProfile)->age ?? 0);
+        $isMinorStudent = $age < 18;
+        $guardianSignaturePath = ltrim((string) ($profileData['guardian_signature'] ?? optional($healthProfile)->guardian_signature ?? ''), '/');
+        $guardianSignatureSrc = $isMinorStudent && $guardianSignaturePath !== '' && $this->healthFiles()->exists($guardianSignaturePath)
+            ? app(\App\Services\StoredImageDataUri::class)->fromStorage($guardianSignaturePath)
+            : null;
+
+        $pdf = Pdf::loadView('student.print_declaration_form', [
+            'user' => $submissionUser,
+            'studentFullName' => $studentFullName,
+            'studentNumber' => $profileData['student_number'] ?? optional($healthProfile)->student_number ?? optional($healthProfile)->reference_number,
+            'course' => $profileData['course_college'] ?? optional($healthProfile)->course_college,
+            'age' => $age,
+            'guardianName' => $profileData['guardian_name'] ?? optional($healthProfile)->guardian_name,
+            'isMinor' => $isMinorStudent,
+            'categorySelected' => $categorySelected,
+            'purposeUnderline1' => $purposeUnderline1,
+            'purposeUnderline2' => $purposeUnderline2,
+            'studentSignatureSrc' => $studentSignatureSrc,
+            'guardianSignatureSrc' => $guardianSignatureSrc,
+            'signatureDate' => optional($submission->submitted_at ?? optional($healthProfile)->updated_at)->format('m/d/Y') ?: now()->format('m/d/Y'),
+            'remarks' => '',
+        ])->setPaper('letter', 'portrait');
+
+        return $pdf->stream('declaration-form-' . $submission->id . '.pdf', [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
+    }
+
+    abort(404, 'Historical document not found.');
 }
 
 private function buildStudentHealthFormPdf(HealthProfile $profile)

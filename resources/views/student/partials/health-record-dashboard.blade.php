@@ -34,7 +34,7 @@
     };
     $healthSubmissionStatus = function ($submission) use ($healthFormSubmitted, $isIssuedStatus): array {
         $statusKey = strtolower(trim((string) optional($submission)->status));
-        if ($statusKey === '') {
+        if ($statusKey === '' || ($isIssuedStatus && $statusKey === 'submitted')) {
             $statusKey = !$healthFormSubmitted ? 'requested' : ($isIssuedStatus ? 'approved' : 'submitted');
         }
 
@@ -44,6 +44,18 @@
             'needs_correction' => ['Needs Correction', 'is-correction'],
             default => ['Under Review', 'is-review'],
         };
+    };
+    $healthSubmissionSnapshotProfile = function ($submission): array {
+        if (!$submission) {
+            return [];
+        }
+
+        try {
+            $profile = $submission->snapshotProfile();
+            return is_array($profile) ? $profile : [];
+        } catch (\Throwable $exception) {
+            return [];
+        }
     };
 
     $currentUserRoles = strtolower(trim(implode(' ', array_filter([
@@ -72,13 +84,40 @@
         $isStudentHealthRecord => 'Student Health Form',
         default => 'Applicant Health Form',
     };
+    $healthSubmissionFormType = function ($submission) use ($healthSubmissionSnapshotProfile, $resolvedHealthFormType, $isEmployeeHealthRecord, $isApplicantHealthRecord): string {
+        if ($isEmployeeHealthRecord) {
+            return 'Employee Health Form';
+        }
+
+        $snapshot = $healthSubmissionSnapshotProfile($submission);
+        $category = strtolower(trim((string) (optional($submission)->category ?: ($snapshot['health_form_category'] ?? ''))));
+        $referenceNumber = strtoupper(trim((string) ($snapshot['reference_number'] ?? '')));
+        $studentNumber = strtoupper(trim((string) ($snapshot['student_number'] ?? '')));
+        $looksLikeApplicantReference = (bool) preg_match('/^\d{4}-\d{4}-\d{4}/', $referenceNumber)
+            || (bool) preg_match('/^\d{4}-[A-Z]+-\d+/', $referenceNumber);
+
+        if (str_contains($category, 'ojt') || str_contains($category, 'on-the-job') || str_contains($category, 'student')) {
+            return 'Student Health Form';
+        }
+
+        if (
+            str_contains($category, 'applicant')
+            || $looksLikeApplicantReference
+            || ($category === 'general' && ($studentNumber === '' || $studentNumber === $referenceNumber))
+            || (!$submission && $isApplicantHealthRecord)
+        ) {
+            return 'Applicant Health Form';
+        }
+
+        return $resolvedHealthFormType;
+    };
     $latestStatus = $healthSubmissionStatus($latestHealthSubmission);
     $latestStatusKey = strtolower(trim((string) optional($latestHealthSubmission)->status));
-    if ($latestStatusKey === '') {
+    if ($latestStatusKey === '' || ($isIssuedStatus && $latestStatusKey === 'submitted')) {
         $latestStatusKey = $isIssuedStatus ? 'approved' : ($healthFormSubmitted ? 'submitted' : 'requested');
     }
     $latestIsRequested = $latestStatusKey === 'requested';
-    $latestIsApproved = $latestStatusKey === 'approved' || (!$latestHealthSubmission && $isIssuedStatus);
+    $latestIsApproved = !$latestIsRequested && ($latestStatusKey === 'approved' || (!$latestHealthSubmission && $isIssuedStatus));
     $latestIsSubmitted = in_array($latestStatusKey, ['submitted', 'approved', 'needs_correction'], true)
         || (!$latestHealthSubmission && $healthFormSubmitted);
     $latestSubmittedSource = optional($latestHealthSubmission)->submitted_at
@@ -92,7 +131,7 @@
     $latestFormId = $healthFormDisplayId($latestHealthSubmission);
     $latestCategory = trim((string) optional($latestHealthSubmission)->category);
     $latestSchoolYear = trim((string) (optional($latestHealthSubmission)->school_year ?: $recordAcademicYear));
-    $latestFormType = $resolvedHealthFormType;
+    $latestFormType = $healthSubmissionFormType($latestHealthSubmission);
     if (!$isEmployeeHealthRecord && $latestSchoolYear !== '') {
         $latestFormType .= ' (' . $latestSchoolYear . ')';
     }
@@ -114,6 +153,9 @@
     $latestPdfUrl = filled(optional($latestHealthSubmission)->pdf_path)
         ? route('student.health_form.submission', $latestHealthSubmission->id)
         : route('student.health_record.document', ['document' => 'health_form']);
+    $newStudentHealthFormRoute = $isEmployeeHealthRecord
+        ? $healthFormRoute
+        : route('health.form.student');
 
     $encodeAssessmentComplete = $isApplicantHealthWorkflow && $healthProfileRecord && (
         filled(optional($healthProfileRecord)->assessment_date)
@@ -173,6 +215,59 @@
             return $document;
         })
         ->values();
+    $healthSubmissionDocumentBlueprints = collect($healthRecordDocuments)->map(fn ($document) => [
+        'key' => $document['key'],
+        'title' => $document['title'],
+        'meta' => $document['meta'],
+        'is_image' => $document['is_image'],
+    ])->values();
+    $healthSubmissionDocumentGroups = $historyHealthSubmissionItems
+        ->filter(function ($submission) use ($healthFormSubmitted) {
+            $statusKey = strtolower(trim((string) optional($submission)->status));
+            return !$submission || ($healthFormSubmitted && $statusKey !== 'requested');
+        })
+        ->values()
+        ->map(function ($submission, $index) use ($healthSubmissionSnapshotProfile, $healthSubmissionDocumentBlueprints, $healthFormDisplayId, $healthRecordDate, $healthSubmissionFormType, $healthProfileRecord, $latestHealthSubmission, $healthRecordDocuments) {
+            $snapshot = $healthSubmissionSnapshotProfile($submission);
+            $useCurrentProfileFallback = !$submission
+                || ($snapshot === [] && optional($submission)->id === optional($latestHealthSubmission)->id);
+            $documents = $healthSubmissionDocumentBlueprints
+                ->map(function ($document) use ($submission, $snapshot, $useCurrentProfileFallback, $healthRecordDocuments) {
+                    $path = trim((string) ($snapshot[$document['key']] ?? ''));
+                    if ($path === '' && $document['key'] === 'chest_xray_result') {
+                        $path = trim((string) ($snapshot['chest_xray_document'] ?? ''));
+                    }
+                    if ($useCurrentProfileFallback && $path === '') {
+                        $currentDocument = collect($healthRecordDocuments)->firstWhere('key', $document['key']);
+                        $path = trim((string) ($currentDocument['path'] ?? ''));
+                    }
+                    if ($path === '') {
+                        return null;
+                    }
+
+                    $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                    $document['path'] = $path;
+                    $document['is_image'] = $document['is_image'] || in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true);
+                    $document['url'] = $submission
+                        ? route('student.health_form.submission.document', ['submission' => $submission->id, 'document' => $document['key']])
+                        : route('student.health_record.document', ['document' => $document['key']]);
+
+                    return $document;
+                })
+                ->filter()
+                ->values();
+
+            return [
+                'id' => $healthFormDisplayId($submission),
+                'type' => $healthSubmissionFormType($submission),
+                'date' => $healthRecordDate(optional($submission)->submitted_at ?: (!$submission ? optional($healthProfileRecord)->created_at : null), 'Not submitted'),
+                'is_latest' => $index === 0,
+                'documents' => $documents,
+            ];
+        })
+        ->filter(fn ($group) => $group['documents']->isNotEmpty())
+        ->values();
+    $healthSubmissionDocumentCount = $healthSubmissionDocumentGroups->sum(fn ($group) => $group['documents']->count());
 @endphp
 
 <div class="health-doc-layout">
@@ -231,7 +326,7 @@
                         </a>
                     @endif
                     @if($latestIsRequested)
-                        <a href="{{ $healthFormRoute }}" class="health-doc-action is-edit">
+                        <a href="{{ $newStudentHealthFormRoute }}" class="health-doc-action is-edit">
                             <x-outline-icon name="document-text" />
                             Fill Up New Health Form
                         </a>
@@ -306,13 +401,13 @@
                         @php
                             $historyStatus = $healthSubmissionStatus($submission);
                             $historyStatusKey = strtolower(trim((string) optional($submission)->status));
-                            if ($historyStatusKey === '') {
+                            if ($historyStatusKey === '' || ($isIssuedStatus && $historyStatusKey === 'submitted')) {
                                 $historyStatusKey = $isIssuedStatus ? 'approved' : 'submitted';
                             }
                             $historyIsLatest = $historyIndex === 0;
                             $historyIsInitial = !$submission || !$oldestHealthSubmission || optional($submission)->id === optional($oldestHealthSubmission)->id;
                             $historyYear = trim((string) (optional($submission)->school_year ?: $recordAcademicYear));
-                            $historyType = $resolvedHealthFormType;
+                            $historyType = $healthSubmissionFormType($submission);
                             $historyPurpose = trim((string) optional($submission)->remarks);
                             if ($historyPurpose === '') {
                                 $historyPurpose = $historyIsInitial && $isApplicantHealthRecord
@@ -337,14 +432,14 @@
                                 <small>{{ $historyPurpose }}</small>
                             </div>
                             <div data-label="Submitted At"><strong>{{ $healthRecordDate(optional($submission)->submitted_at ?: (!$submission ? $recordSubmittedSource : null), 'Not submitted') }}</strong></div>
-                            <div data-label="Approved At"><strong>{{ $healthRecordDate(optional($submission)->approved_at ?: (!$submission ? $recordApprovedSource : null), 'Pending') }}</strong></div>
+                            <div data-label="Approved At"><strong>{{ $healthRecordDate(optional($submission)->approved_at ?: ($historyStatusKey === 'approved' ? $recordApprovedSource : null), 'Pending') }}</strong></div>
                             <div data-label="Status"><span class="health-doc-status {{ $historyStatus[1] }}">{{ $historyStatus[0] }}</span></div>
                             <div class="health-doc-history-actions" data-label="Actions">
                                 @if($historyHasPdf && $historyStatusKey !== 'requested')
                                     <a href="{{ $historyPdfUrl }}" target="_blank" rel="noopener" aria-label="View Health Form" title="View Health Form"><x-outline-icon name="eye" /></a>
                                     <a href="{{ $historyPdfUrl }}" download aria-label="Download Health Form" title="Download Health Form"><x-outline-icon name="arrow-down-tray" /></a>
                                 @elseif($historyIsLatest && $historyStatusKey === 'requested')
-                                    <a href="{{ $healthFormRoute }}"><x-outline-icon name="document-text" /></a>
+                                    <a href="{{ $newStudentHealthFormRoute }}"><x-outline-icon name="document-text" /></a>
                                 @endif
                             </div>
                         </article>
@@ -415,36 +510,57 @@
                 <button type="button" class="record-modal-close" aria-label="Close uploaded files" onclick="closeHealthRecordModal()"><x-outline-icon name="x-mark" /></button>
                 <div class="record-modal-head-main">
                     <h2 class="record-modal-title" id="healthRecordModalTitle">Uploaded Documents</h2>
-                    <p class="record-modal-subtitle">View the files currently attached to your latest Health Form record.</p>
+                    <p class="record-modal-subtitle">View uploaded files for each Health Form record, newest first.</p>
                 </div>
             </div>
             <div class="record-modal-body" id="healthRecordModalBody">
                 <div class="health-doc-modal-summary">
                     <span><x-outline-icon name="clipboard-document-list" /></span>
-                    <span><strong>{{ $latestFormId }}</strong><small>{{ $visibleHealthRecordDocuments->count() }} {{ \Illuminate\Support\Str::plural('uploaded file', $visibleHealthRecordDocuments->count()) }}</small></span>
+                    <span>
+                        <strong>{{ $healthSubmissionDocumentGroups->count() }} {{ \Illuminate\Support\Str::plural('Health Form version', $healthSubmissionDocumentGroups->count()) }}</strong>
+                        <small>{{ $healthSubmissionDocumentCount }} {{ \Illuminate\Support\Str::plural('uploaded file', $healthSubmissionDocumentCount) }}</small>
+                    </span>
                 </div>
-                <div class="health-doc-modal-files">
-                    @forelse($visibleHealthRecordDocuments as $document)
-                        @php($documentUrl = route('student.health_record.document', ['document' => $document['key']]))
-                        <article class="health-doc-file-card">
-                            <div class="health-doc-file-preview">
-                                @if($document['is_image'])
-                                    <img src="{{ $documentUrl }}" alt="{{ $document['title'] }} preview">
-                                @else
-                                    <x-outline-icon name="document-text" />
-                                @endif
+                <div class="health-doc-version-list">
+                    @forelse($healthSubmissionDocumentGroups as $group)
+                        <details class="health-doc-version-group" {{ $loop->first ? 'open' : '' }}>
+                            <summary class="health-doc-version-toggle">
+                                <span class="health-doc-version-icon"><x-outline-icon name="clipboard-document-list" /></span>
+                                <span class="health-doc-version-copy">
+                                    <span>
+                                        <strong>{{ $group['id'] }}</strong>
+                                        @if($group['is_latest'])
+                                            <b>Latest</b>
+                                        @endif
+                                    </span>
+                                    <small>{{ $group['type'] }} | {{ $group['date'] }} | {{ $group['documents']->count() }} {{ \Illuminate\Support\Str::plural('file', $group['documents']->count()) }}</small>
+                                </span>
+                                <span class="health-doc-version-chevron"><x-outline-icon name="chevron-down" /></span>
+                            </summary>
+                            <div class="health-doc-modal-files health-doc-version-files">
+                                @foreach($group['documents'] as $document)
+                                    <article class="health-doc-file-card">
+                                        <div class="health-doc-file-preview">
+                                            @if($document['is_image'])
+                                                <img src="{{ $document['url'] }}" alt="{{ $document['title'] }} preview">
+                                            @else
+                                                <x-outline-icon name="document-text" />
+                                            @endif
+                                        </div>
+                                        <div class="health-doc-file-copy">
+                                            <strong>{{ $document['title'] }}</strong>
+                                            <small>{{ $document['meta'] }}</small>
+                                        </div>
+                                        <a href="{{ $document['url'] }}" target="_blank" rel="noopener noreferrer">View File <x-outline-icon name="chevron-right" /></a>
+                                    </article>
+                                @endforeach
                             </div>
-                            <div class="health-doc-file-copy">
-                                <strong>{{ $document['title'] }}</strong>
-                                <small>{{ $document['meta'] }}</small>
-                            </div>
-                            <a href="{{ $documentUrl }}" target="_blank" rel="noopener noreferrer">View File <x-outline-icon name="chevron-right" /></a>
-                        </article>
+                        </details>
                     @empty
                         <div class="health-doc-modal-empty">
                             <span><x-outline-icon name="document-text" /></span>
                             <strong>No uploaded documents</strong>
-                            <p>No supporting files are attached to the latest Health Form yet.</p>
+                            <p>No supporting files are attached to your Health Form records yet.</p>
                         </div>
                     @endforelse
                 </div>

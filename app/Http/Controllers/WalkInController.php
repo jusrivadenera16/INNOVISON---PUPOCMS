@@ -267,6 +267,28 @@ class WalkInController extends Controller
         return $this->findUserByEmployeeIdNumber($identifier);
     }
 
+    private function isStudentOjtHealthProfileUser(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        $markers = strtolower(trim(implode(' ', array_filter([
+            (string) ($user->user_type ?? ''),
+            (string) ($user->idp_role ?? ''),
+        ]))));
+
+        foreach (['faculty', 'admin', 'staff', 'employee', 'designee', 'non-teaching', 'non teaching', 'applicant', 'guest', 'dependent'] as $excluded) {
+            if ($markers !== '' && str_contains($markers, $excluded)) {
+                return false;
+            }
+        }
+
+        return str_contains($markers, 'student')
+            || str_contains($markers, 'ojt')
+            || trim((string) ($user->student_number ?? '')) !== '';
+    }
+
     private function findAdminHubByEmployeeLookup(string $identifier): ?AdminHub
     {
         $identifier = trim($identifier);
@@ -1675,6 +1697,9 @@ class WalkInController extends Controller
             $employeeProfile = $isEmployeeLookupScope
                 ? EmployeeHealthProfile::where('user_id', $student->id)->latest()->first()
                 : null;
+            $recordType = $isEmployeeLookupScope && $this->isStudentOjtHealthProfileUser($student)
+                ? 'student'
+                : ($isEmployeeLookupScope ? 'employee' : 'applicant');
             $resolvedReferenceNumber = trim((string) (
                 ($lookup !== '' && !$this->looksLikeUuid($lookup) ? $lookup : null)
                 ?: $student->reference_number
@@ -1732,6 +1757,12 @@ class WalkInController extends Controller
                 $rawClearanceStatus !== '' => $rawClearanceStatus,
                 default => 'Awaiting Uploads',
             };
+            $approvalDateSource = $recordType === 'employee'
+                ? (optional($employeeProfile)->verified_at ?: optional($employeeProfile)->certified_at)
+                : optional($healthProfile)->verified_at;
+            $resolvedApprovedAt = $approvalDateSource
+                ? \Carbon\Carbon::parse($approvalDateSource)->format('M d, Y, g:i A')
+                : null;
 
             if ($previewOnly) {
                 return response()->json([
@@ -1753,6 +1784,7 @@ class WalkInController extends Controller
                     'contact_number' => $resolvedContactNumber,
                     'clinic_status' => $resolvedClinicStatus,
                     'clearance_status' => $rawClearanceStatus,
+                    'approved_at' => $resolvedApprovedAt,
                     'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                     'health_profile_id' => optional($healthProfile)->id,
                     'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
@@ -1769,9 +1801,10 @@ class WalkInController extends Controller
                     'documents' => $this->healthProfileDocuments($request, $healthProfile),
                     'name_matches' => $lookupName !== '' ? $this->namesRoughlyMatch($lookupName, $student) : null,
                     'lookup_status' => $lookupStatus,
+                    'record_type' => $recordType,
                     'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_employee_reference', 'local_clinic_reference'], true)
                         ? $lookupStatus
-                        : 'puptas_or_local_user',
+                        : ($recordType === 'student' ? 'local_student_id' : 'puptas_or_local_user'),
                     'sync_warning' => $lookupStatus === 'local_health_profile'
                         ? 'Local health profile found. PUPTAS sync will only succeed if this saved reference matches the Admission System.'
                         : null,
@@ -1810,6 +1843,7 @@ class WalkInController extends Controller
                 'contact_number' => $resolvedContactNumber,
                 'clinic_status' => $resolvedClinicStatus,
                 'clearance_status' => $rawClearanceStatus,
+                'approved_at' => $resolvedApprovedAt,
                 'approved' => in_array($resolvedClinicStatus, ['Fully Cleared'], true),
                 'health_profile_id' => optional($healthProfile)->id,
                 'medical_assessment_upload' => optional($healthProfile)->medical_assessment_upload,
@@ -1825,9 +1859,10 @@ class WalkInController extends Controller
                 'employee_draft_data' => $employeeProfile?->draft_data ?: [],
                 'documents' => $this->healthProfileDocuments($request, $healthProfile),
                 'lookup_status' => $lookupStatus,
+                'record_type' => $recordType,
                 'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_employee_reference', 'local_clinic_reference'], true)
                     ? $lookupStatus
-                    : 'puptas_or_local_user',
+                    : ($recordType === 'student' ? 'local_student_id' : 'puptas_or_local_user'),
                 'sync_warning' => $lookupStatus === 'local_health_profile'
                     ? 'Local health profile found. PUPTAS sync will only succeed if this saved reference matches the Admission System.'
                     : null,
@@ -3269,6 +3304,21 @@ PROMPT;
                         'error' => $exception->getMessage(),
                     ]);
                 }
+
+                HealthFormSubmission::query()
+                    ->where(function ($query) use ($profile) {
+                        $query->where('health_profile_id', $profile->id)
+                            ->orWhere('user_id', $profile->user_id);
+                    })
+                    ->whereIn('status', [
+                        HealthFormSubmission::STATUS_SUBMITTED,
+                        HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                    ])
+                    ->update([
+                        'status' => HealthFormSubmission::STATUS_APPROVED,
+                        'approved_at' => $profile->verified_at ?: now(),
+                        'updated_at' => now(),
+                    ]);
             } elseif ($needsHealthFormCorrection) {
                 $submission = HealthFormSubmission::query()
                     ->where(function ($query) use ($profile) {
@@ -3350,6 +3400,221 @@ PROMPT;
             return response()->json([
                 'success' => false,
                 'message' => 'An error occurred during approval: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function saveStudentAssessment(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'reference_number' => ['required', 'string', 'max:120'],
+                'findings_status' => ['nullable', 'string', 'in:No Findings / Normal,With Findings'],
+                'clearance_decision' => ['nullable', 'string', 'in:approve,pending'],
+                'has_medical_condition' => ['nullable', 'boolean'],
+                'medical_condition' => ['nullable', 'string', 'max:1000'],
+                'condition_remarks' => ['nullable', 'string', 'max:2000'],
+                'med_assessment_remarks' => ['nullable', 'string', 'max:2000'],
+                'height' => ['nullable', 'string', 'max:20'],
+                'weight' => ['nullable', 'numeric', 'min:1', 'max:1100'],
+                'blood_pressure' => ['nullable', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
+                'pulse_rate' => ['nullable', 'integer', 'min:1', 'max:300'],
+                'respiratory_rate' => ['nullable', 'integer', 'min:1', 'max:120'],
+                'temperature' => ['nullable', 'numeric', 'min:30', 'max:45'],
+                'covid_positive' => ['nullable', 'string', 'in:Yes,No'],
+                'covid_positive_date' => ['nullable', 'date'],
+            ]);
+
+            $referenceNumber = trim((string) $validated['reference_number']);
+            $healthProfile = $this->findHealthProfileByReference($referenceNumber);
+            $student = $healthProfile?->user
+                ?: $this->findUserByEmployeeIdNumber($referenceNumber)
+                ?: $this->findUserByIdentifier($referenceNumber);
+
+            if (!$student || !$this->isStudentOjtHealthProfileUser($student)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Student/OJT health profile was not found for that student number.',
+                ], 404);
+            }
+
+            $height = null;
+            $heightInput = trim((string) ($validated['height'] ?? ''));
+            if ($heightInput !== '') {
+                $height = $this->normalizeHeightToDecimalFeet($heightInput);
+                if ($height === null) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'height' => ['Height must use feet and inches, e.g., 5\'6". Valid range: 1\'0"-10\'0".'],
+                    ]);
+                }
+            }
+
+            $profile = DB::transaction(function () use ($student, $healthProfile, $referenceNumber, $validated, $height, $heightInput) {
+                $profile = $healthProfile ?: HealthProfile::firstOrNew(['user_id' => $student->id]);
+                $profile->user_id = $student->id;
+                $profile->student_id = (string) ($profile->student_id ?: $student->student_id ?: $referenceNumber);
+                $profile->student_number = (string) ($profile->student_number ?: $student->student_number ?: $referenceNumber);
+                $profile->reference_number = (string) ($profile->reference_number ?: $student->reference_number ?: $student->student_number ?: $referenceNumber);
+                $profile->course_college = (string) ($profile->course_college ?: ($student->course ?? ''));
+                $profile->birthday = $profile->birthday ?: $student->DOB;
+                $profile->sex = (string) ($profile->sex ?: $student->gender);
+
+                $hasAssessmentValue = false;
+                $setIfPresent = function (string $inputKey, string $profileKey, callable $normalize = null) use ($validated, $profile, &$hasAssessmentValue): void {
+                    if (!array_key_exists($inputKey, $validated)) {
+                        return;
+                    }
+
+                    $value = $validated[$inputKey];
+                    if (is_string($value)) {
+                        $value = trim($value);
+                    }
+                    if ($value === '') {
+                        $value = null;
+                    }
+
+                    $profile->{$profileKey} = $normalize && $value !== null ? $normalize($value) : $value;
+                    if ($value !== null) {
+                        $hasAssessmentValue = true;
+                    }
+                };
+
+                if ($heightInput !== '') {
+                    $profile->height = $height;
+                    $hasAssessmentValue = true;
+                }
+                $setIfPresent('weight', 'weight');
+                $setIfPresent('blood_pressure', 'blood_pressure', fn ($value) => preg_replace('/\s+/', '', (string) $value));
+                $setIfPresent('pulse_rate', 'pulse_rate', fn ($value) => (int) $value);
+                $setIfPresent('respiratory_rate', 'respiratory_rate', fn ($value) => (int) $value);
+                $setIfPresent('temperature', 'temperature', fn ($value) => (float) $value);
+                $setIfPresent('covid_positive', 'covid_positive');
+                $setIfPresent('covid_positive_date', 'covid_positive_date');
+
+                $findingsStatus = trim((string) ($validated['findings_status'] ?? ''));
+                if ($findingsStatus !== '') {
+                    $profile->med_cert_findings = $findingsStatus;
+                    if (trim((string) $profile->xray_findings) === '') {
+                        $profile->xray_findings = $findingsStatus === 'No Findings / Normal' ? 'Normal' : 'With Findings';
+                    }
+                    $hasAssessmentValue = true;
+                }
+
+                $medicalCondition = trim((string) ($validated['medical_condition'] ?? ''));
+                $hasMedicalCondition = (bool) ($validated['has_medical_condition'] ?? false) && $medicalCondition !== '';
+                if ($hasMedicalCondition) {
+                    $profile->has_illness = 'Yes';
+                    $profile->other_illness = $medicalCondition;
+                    $profile->medical_condition_remarks = $medicalCondition;
+                    $hasAssessmentValue = true;
+                }
+
+                $medAssessmentRemarks = trim((string) ($validated['med_assessment_remarks'] ?? ''));
+                $conditionRemarks = trim((string) ($validated['condition_remarks'] ?? ''));
+                if ($medAssessmentRemarks !== '') {
+                    $profile->med_assessment_remarks = $medAssessmentRemarks;
+                    $profile->assessment_remarks = $medAssessmentRemarks;
+                    $hasAssessmentValue = true;
+                } elseif ($conditionRemarks !== '') {
+                    $profile->assessment_remarks = $conditionRemarks;
+                    $hasAssessmentValue = true;
+                }
+
+                $clearanceDecision = trim((string) ($validated['clearance_decision'] ?? ''));
+                if ($clearanceDecision === 'approve') {
+                    $profile->clearance_status = 'Fully Cleared';
+                    $profile->documents_valid = true;
+                    $profile->verified_at = now();
+                    $profile->approved_by_user_id = auth()->id();
+                    $profile->pending_reason = null;
+                    $hasAssessmentValue = true;
+
+                    $student->is_health_profile_completed = 1;
+                    $student->save();
+
+                    HealthFormSubmission::query()
+                        ->where(function ($query) use ($profile) {
+                            $query->where('health_profile_id', $profile->id)
+                                ->orWhere('user_id', $profile->user_id);
+                        })
+                        ->whereIn('status', [
+                            HealthFormSubmission::STATUS_SUBMITTED,
+                            HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                        ])
+                        ->update([
+                            'status' => HealthFormSubmission::STATUS_APPROVED,
+                            'approved_at' => $profile->verified_at ?: now(),
+                            'updated_at' => now(),
+                        ]);
+                } elseif ($clearanceDecision === 'pending') {
+                    $profile->clearance_status = 'Pending/Conditional';
+                    $profile->documents_valid = false;
+                    $profile->verified_at = null;
+                    $profile->approved_by_user_id = null;
+                    $profile->pending_reason = $conditionRemarks !== '' ? $conditionRemarks : $medAssessmentRemarks;
+                    $hasAssessmentValue = true;
+                }
+
+                if ($hasAssessmentValue) {
+                    $profile->assessment_date = $profile->assessment_date ?: now()->toDateString();
+                    $profile->physical_assessment_status = $profile->physical_assessment_status ?: 'Student/OJT Assessment Saved';
+                    if (!$profile->review_started_at) {
+                        $profile->review_started_at = now();
+                        $profile->review_started_by_user_id = auth()->id();
+                    }
+                }
+
+                $profile->save();
+
+                return $profile;
+            });
+
+            ActivityLog::create([
+                'user_id' => auth()->id(),
+                'user_name' => auth()->user()?->name ?? auth()->user()?->email ?? 'System',
+                'user_role' => strtolower((string) (auth()->user()?->user_role ?? '')),
+                'action' => 'Student/OJT Assessment Saved',
+                'module' => 'Patient Intake',
+                'event_type' => 'student_assessment_saved',
+                'description' => "Student/OJT assessment saved: {$referenceNumber}",
+                'route_name' => optional($request->route())->getName(),
+                'http_method' => 'POST',
+                'request_path' => '/' . ltrim((string) $request->path(), '/'),
+                'status_code' => 200,
+                'subject_type' => HealthProfile::class,
+                'subject_id' => (string) $profile->id,
+                'metadata' => [
+                    'reference_number' => $referenceNumber,
+                    'health_profile_id' => $profile->id,
+                    'clearance_status' => $profile->clearance_status,
+                ],
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 255),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Student/OJT assessment saved.',
+                'status' => $profile->clearance_status,
+                'health_profile_id' => $profile->id,
+                'assessment_review' => $this->healthProfileAssessmentReview($profile->fresh()),
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => collect($e->errors())->flatten()->first() ?: 'Please check the student assessment details.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Throwable $e) {
+            Log::error('Student/OJT assessment save exception', [
+                'error' => $e->getMessage(),
+                'reference_number' => $request->input('reference_number'),
+                'user_id' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to save the student/OJT assessment right now.',
             ], 500);
         }
     }

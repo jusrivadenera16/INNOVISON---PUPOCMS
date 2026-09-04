@@ -7208,6 +7208,93 @@
     .health-doc-modal-summary > span:last-child { display: grid; gap: 2px; }
     .health-doc-modal-summary strong { color: #850019; font-size: 12px; }
     .health-doc-modal-summary small { color: #64748b; font-size: 9px; }
+    .health-doc-version-list {
+        display: grid;
+        gap: 10px;
+    }
+    .health-doc-version-group {
+        overflow: hidden;
+        border: 1px solid rgba(159, 0, 30, .14);
+        border-radius: 7px;
+        background: #fff;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, .06);
+    }
+    .health-doc-version-toggle {
+        display: grid;
+        grid-template-columns: 38px minmax(0, 1fr) 28px;
+        align-items: center;
+        gap: 9px;
+        min-height: 58px;
+        padding: 10px 12px;
+        cursor: pointer;
+        list-style: none;
+    }
+    .health-doc-version-toggle::-webkit-details-marker { display: none; }
+    .health-doc-version-icon,
+    .health-doc-version-chevron {
+        display: grid;
+        place-items: center;
+        border-radius: 7px;
+    }
+    .health-doc-version-icon {
+        width: 34px;
+        height: 34px;
+        color: #facc15;
+        background: #8b1027;
+    }
+    .health-doc-version-icon svg { width: 17px; height: 17px; }
+    .health-doc-version-copy {
+        display: grid;
+        min-width: 0;
+        gap: 3px;
+    }
+    .health-doc-version-copy > span {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        min-width: 0;
+    }
+    .health-doc-version-copy strong {
+        min-width: 0;
+        color: #850019;
+        font-size: 12px;
+        font-weight: 900;
+        overflow-wrap: anywhere;
+    }
+    .health-doc-version-copy b {
+        display: inline-flex;
+        align-items: center;
+        min-height: 16px;
+        padding: 2px 7px;
+        border-radius: 999px;
+        color: #850019;
+        background: #fde68a;
+        font-size: 8px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    .health-doc-version-copy small {
+        color: #64748b;
+        font-size: 9px;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+    .health-doc-version-chevron {
+        width: 28px;
+        height: 28px;
+        color: #850019;
+        background: #fff8f9;
+        transition: transform .18s ease, background .18s ease, color .18s ease;
+    }
+    .health-doc-version-chevron svg { width: 14px; height: 14px; }
+    .health-doc-version-group[open] .health-doc-version-chevron {
+        transform: rotate(180deg);
+        color: #fff;
+        background: #850019;
+    }
+    .health-doc-version-files {
+        padding: 0 12px 12px;
+    }
     .health-doc-modal-files { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
     .health-doc-file-card {
         display: grid;
@@ -7303,6 +7390,8 @@
     .health-doc-side-card.is-help a { font-size: 11px; }
     .health-doc-modal-summary strong { font-size: 14px; }
     .health-doc-modal-summary small { font-size: 11px; }
+    .health-doc-version-copy strong { font-size: 13px; }
+    .health-doc-version-copy small { font-size: 11px; }
     .health-doc-file-copy strong { font-size: 12px; }
     .health-doc-file-copy small,
     .health-doc-file-card > a { font-size: 10px; }
@@ -7312,7 +7401,8 @@
     html[data-theme="dark"] .health-doc-card,
     html[data-theme="dark"] .health-doc-side-card,
     html[data-theme="dark"] .health-doc-history-row,
-    html[data-theme="dark"] .health-doc-file-card {
+    html[data-theme="dark"] .health-doc-file-card,
+    html[data-theme="dark"] .health-doc-version-group {
         border-color: rgba(250, 204, 21, .16);
         background: #111827;
         box-shadow: 0 13px 28px rgba(0, 0, 0, .28);
@@ -7324,13 +7414,15 @@
     html[data-theme="dark"] .health-doc-side-card h2 > span,
     html[data-theme="dark"] .health-doc-modal-summary > span:first-child,
     html[data-theme="dark"] .health-doc-file-preview,
+    html[data-theme="dark"] .health-doc-version-icon,
     html[data-theme="dark"] .health-doc-empty > span { color: #facc15; background: #30151d; }
     html[data-theme="dark"] .health-doc-form-id,
     html[data-theme="dark"] .health-doc-section-head h2,
     html[data-theme="dark"] .health-doc-side-card h2,
     html[data-theme="dark"] .health-doc-side-card.is-help a,
     html[data-theme="dark"] .health-doc-modal-summary strong,
-    html[data-theme="dark"] .health-doc-file-card > a { color: #fde68a; }
+    html[data-theme="dark"] .health-doc-file-card > a,
+    html[data-theme="dark"] .health-doc-version-copy strong { color: #fde68a; }
     html[data-theme="dark"] .health-doc-meta-item strong,
     html[data-theme="dark"] .health-doc-type strong,
     html[data-theme="dark"] .health-doc-history-row strong,
@@ -7348,7 +7440,23 @@
     html[data-theme="dark"] .health-doc-file-copy small,
     html[data-theme="dark"] .health-doc-modal-summary small,
     html[data-theme="dark"] .health-doc-modal-empty,
+    html[data-theme="dark"] .health-doc-version-copy small,
     html[data-theme="dark"] .health-doc-empty p { color: #aeb8c7; }
+    html[data-theme="dark"] .health-doc-version-toggle {
+        background: #111827;
+    }
+    html[data-theme="dark"] .health-doc-version-toggle:hover,
+    html[data-theme="dark"] .health-doc-version-toggle:focus-visible {
+        background: #151e2d;
+    }
+    html[data-theme="dark"] .health-doc-version-chevron {
+        color: #fde68a;
+        background: #151e2d;
+    }
+    html[data-theme="dark"] .health-doc-version-group[open] .health-doc-version-chevron {
+        color: #650012;
+        background: #facc15;
+    }
     html[data-theme="dark"] .health-doc-identity,
     html[data-theme="dark"] .health-doc-meta-item,
     html[data-theme="dark"] .health-doc-type { border-color: rgba(255, 255, 255, .09); }
@@ -8514,7 +8622,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         {{ $pendingHealthFormRequest->remarks ?: 'The clinic requested a fresh Health Information Form. Your latest details will be prefilled.' }}
                     </p>
                 </div>
-                <a href="{{ route('health.form') }}" class="btn-print-form pending">
+                <a href="{{ route('health.form.student') }}" class="btn-print-form pending">
                     <x-outline-icon name="document-text" />
                     Fill Up New Health Form
                 </a>

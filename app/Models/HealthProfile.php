@@ -14,7 +14,7 @@ class HealthProfile extends Model
         'user_id', 
         'student_id', 'student_number', 'reference_number', 'health_form_category',
         'suffix_name',
-        'school_year', 'home_address', 'zipcode', 'birthday', 'student_photo', 'health_declaration',
+        'school_year', 'home_address', 'street', 'barangay', 'municipality', 'province', 'zipcode', 'birthday', 'student_photo', 'health_declaration',
         'digital_signature', 'guardian_signature',
         'height', 'weight',
         'age', 'sex', 'civil_status', 'course_college', 'course_code',

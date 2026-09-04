@@ -12,10 +12,12 @@
     $fullName = trim((string) ($studentFullName ?? ''));
     $sigDate = $signatureDate ?? now()->format('m/d/Y');
     $guardian = trim((string) ($guardianName ?? ''));
+    $isMinorStudent = isset($isMinor) ? (bool) $isMinor : ((int) ($age ?? 0) < 18);
     $signatureAlt = $signatureAlt ?? 'Student Signature';
     $signatureCaption = $signatureCaption ?? "Student's Signature Over Printed Name/ Date";
     $fallbackSignerName = $fallbackSignerName ?? 'STUDENT NAME';
     $showGuardian = empty($hideGuardianBlock ?? false);
+    $postRemarksNote = trim((string) ($postRemarksNote ?? ''));
 @endphp
 
 <!DOCTYPE html>
@@ -292,12 +294,30 @@
         ========================================================= */
 
         .remarks-line {
+            display: table;
+            width: 100%;
             margin: 35px 0 8px;
             font-family: Arial, Helvetica, sans-serif;
             font-size: 12pt;
             line-height: 1.15;
             text-align: left;
             color: #000000;
+        }
+
+        .remarks-label,
+        .remarks-fill {
+            display: table-cell;
+            vertical-align: bottom;
+        }
+
+        .remarks-label {
+            width: 70px;
+            white-space: nowrap;
+        }
+
+        .remarks-fill {
+            height: 18px;
+            border-bottom: 1px solid #000000;
         }
 
 
@@ -673,9 +693,9 @@
 
                 <div class="remarks-line">
 
-                    Remarks:
+                    <span class="remarks-label">Remarks:</span>
 
-                    {{ $remarks ?? '' }}
+                    <span class="remarks-fill">{{ $remarks ?? '' }}</span>
 
                 </div>
 
@@ -686,7 +706,7 @@
                 @if($showGuardian)
                     <div class="sig-box guardian-signature-box">
 
-                        @if(!empty($guardianSignatureSrc))
+                        @if($isMinorStudent && !empty($guardianSignatureSrc))
 
                             <img
                                 src="{{ $guardianSignatureSrc }}"
@@ -699,7 +719,7 @@
 
                         <div class="sig-underline">
 
-                            {{ $guardian !== ''
+                            {{ $isMinorStudent && $guardian !== ''
                                 ? $guardian . ' / ' . $sigDate
                                 : ''
                             }}
@@ -717,6 +737,10 @@
                         </div>
 
 
+                    </div>
+                @elseif($postRemarksNote !== '')
+                    <div class="minor-note">
+                        {{ $postRemarksNote }}
                     </div>
                 @endif
 

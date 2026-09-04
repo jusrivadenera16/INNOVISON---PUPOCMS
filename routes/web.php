@@ -156,6 +156,7 @@ Route::middleware(['auth:student', 'account.active', 'idp.session', 'audit'])->g
         Route::get('/student/health-form/student', [AppointmentController::class, 'showHealthForm'])->name('health.form.student');
         Route::get('/student/health-form/employee', [AppointmentController::class, 'showEmployeeHealthForm'])->name('health.form.employee');
         Route::get('/student/health-form/staff', [AppointmentController::class, 'showStaffHealthForm'])->name('health.form.staff');
+        Route::get('/student/dependent-profile', [AppointmentController::class, 'showDependentProfileForm'])->name('dependent.profile.form');
         Route::redirect('/health-form', '/student/health-form');
         Route::redirect('/health-form/employee', '/student/health-form/employee');
         Route::redirect('/health-form/staff', '/student/health-form/staff');
@@ -163,6 +164,7 @@ Route::middleware(['auth:student', 'account.active', 'idp.session', 'audit'])->g
             ->name('store.health.form.fallback');
         Route::post('/student/health-form/employee', [AppointmentController::class, 'storeEmployeeHealthForm'])->name('store.health.form.employee');
         Route::post('/student/health-form/staff', [AppointmentController::class, 'storeStaffHealthForm'])->name('store.health.form.staff');
+        Route::post('/student/dependent-profile', [AppointmentController::class, 'storeDependentProfile'])->name('dependent.profile.store');
         Route::get('/student/health-form/reference/validate', [AppointmentController::class, 'validateHealthFormReference'])
             ->middleware('throttle:15,1')
             ->name('student.health_form.reference.validate');
@@ -184,6 +186,7 @@ Route::middleware(['auth:student', 'account.active', 'idp.session', 'audit'])->g
         Route::get('/student/health-form/print', [AppointmentController::class, 'printHealthForm'])->name('student.health_form.print');
         Route::get('/student/health-form/download', [AppointmentController::class, 'downloadHealthForm'])->name('student.health_form.download');
         Route::get('/student/health-form/submissions/{submission}', [AppointmentController::class, 'showHealthFormSubmissionPdf'])->name('student.health_form.submission');
+        Route::get('/student/health-form/submissions/{submission}/documents/{document}', [AppointmentController::class, 'showHealthFormSubmissionDocument'])->name('student.health_form.submission.document');
         Route::get('/student/health-record/document/{document}', [AppointmentController::class, 'showStudentHealthRecordDocument'])
             ->name('student.health_record.document');
         Route::get('/student/health-record/signature', [AppointmentController::class, 'showStudentHealthRecordSignature'])
@@ -326,6 +329,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::post('/admin/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.health-profile-information.update');
         Route::post('/admin/walkin/store', [WalkInController::class, 'store'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.store');
         Route::post('/admin/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->middleware('module.permission:walkin.encode_assessment')->name('admin.walkin.applicant_encoding');
+        Route::post('/admin/walkin/student-assessment', [WalkInController::class, 'saveStudentAssessment'])->middleware('module.permission:walkin.encode_assessment|walkin.employee_lookup')->name('admin.walkin.student_assessment');
         Route::post('/admin/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('admin.walkin.final_review.time_in');
         Route::post('/admin/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('admin.walkin.approve_applicant');
         Route::post('/admin/walkin/applicant-final-review-draft', [WalkInController::class, 'saveApplicantFinalReviewDraft'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('admin.walkin.applicant_final_review_draft');
@@ -492,6 +496,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::post('/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.health-profile-information.update');
         Route::post('/walkin/store', [WalkInController::class, 'store'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.store');
         Route::post('/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.applicant_encoding');
+        Route::post('/walkin/student-assessment', [WalkInController::class, 'saveStudentAssessment'])->middleware('module.permission:walkin.encode_assessment|walkin.employee_lookup')->name('walkin.student_assessment');
         Route::post('/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('walkin.final_review.time_in');
         Route::post('/walkin/approve-applicant', [WalkInController::class, 'approveApplicant'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('walkin.approve_applicant');
         Route::post('/walkin/applicant-final-review-draft', [WalkInController::class, 'saveApplicantFinalReviewDraft'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('walkin.applicant_final_review_draft');
@@ -561,7 +566,7 @@ Route::get('/dev-login/{id}', function ($id) {
         }
 
         Auth::guard('student')->login($user);
-        return redirect('/student/account')->with('success', 'Logged in as ' . $user->name);
+        return redirect(resolveWorkspaceRedirectForUser($user))->with('success', 'Logged in as ' . $user->name);
     }
 
     return 'User not found!';

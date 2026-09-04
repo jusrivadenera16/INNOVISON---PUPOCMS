@@ -2409,18 +2409,20 @@
                 $displayLastName = trim((string) ($prefill['last_name'] ?? ''));
                 $displaySuffixName = trim((string) ($prefill['suffix_name'] ?? ''));
 
-                $displayReferenceNumber = '';
+                $displayReferenceNumber = trim((string) ($prefill['reference_number'] ?? ''));
                 $referenceMode = 'student_number';
-                $manualStudentNumberAllowed = true;
+                $manualStudentNumberAllowed = (bool) ($prefill['manual_student_number_allowed'] ?? true);
                 $selectedReferenceMode = 'student_number';
                 $manualStudentModeSelected = true;
-                $referenceRequiresValidation = true;
+                $referenceRequiresValidation = (bool) ($prefill['reference_requires_validation'] ?? true);
                 $referenceVerificationUnavailable = false;
                 $stepOneTitle = 'Student ID';
                 $stepOneDescription = 'Enter your Student ID, then complete your health information.';
                 $referenceLabel = 'Student ID / Student Number';
                 $referenceDisplayFallback = 'Enter Student ID';
-                $referenceStatusDefault = 'Enter your Student ID, then click the check icon.';
+                $referenceStatusDefault = $displayReferenceNumber !== ''
+                    ? 'Student ID is ready for use inside the clinic system.'
+                    : 'Enter your Student ID, then click the check icon.';
                 $courseOptions = $prefill['course_options'] ?? [];
                 $courseApplicable = (bool) ($prefill['course_applicable'] ?? false);
                 $selectedCourseCode = old('course_code', $prefill['course_code'] ?? '');
