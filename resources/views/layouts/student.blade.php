@@ -3414,7 +3414,13 @@
     @auth('student')
     @php
         $studentUser = Auth::guard('student')->user();
-        $studentUser?->loadMissing('healthProfile', 'employeeHealthProfile', 'adminProfile', 'adminHubProfile');
+        $studentUser?->loadMissing(...array_values(array_filter([
+            'healthProfile',
+            'employeeHealthProfile',
+            \Illuminate\Support\Facades\Schema::hasTable('dependents_profiles') ? 'dependentProfile' : null,
+            'adminProfile',
+            'adminHubProfile',
+        ])));
         $studentHealthFormMarkers = strtolower(trim(implode(' ', array_filter([
             (string) data_get($studentUser, 'user_type', ''),
             (string) data_get($studentUser, 'user_role', ''),
@@ -3422,8 +3428,20 @@
             (string) data_get($studentUser, 'adminHubProfile.role', ''),
             (string) data_get($studentUser, 'adminProfile.access_level', ''),
         ]))));
+        $studentDependentMarkers = strtolower(trim(implode(' ', array_filter([
+            (string) data_get($studentUser, 'user_type', ''),
+            (string) data_get($studentUser, 'idp_role', ''),
+        ]))));
+        $studentUsesDependentProfile = false;
+        if ($studentDependentMarkers !== '') {
+            $studentUsesDependentProfile = (
+                str_contains($studentDependentMarkers, 'dependent')
+                || str_contains($studentDependentMarkers, 'guest')
+            ) && !collect(['student', 'applicant', 'faculty', 'admin', 'staff', 'employee', 'designee', 'non-teaching', 'non teaching'])
+                ->contains(fn ($needle) => str_contains($studentDependentMarkers, $needle));
+        }
         $studentUsesEmployeeHealthForm = false;
-        foreach (['faculty', 'admin', 'staff', 'employee', 'dependent'] as $studentHealthFormNeedle) {
+        foreach (['faculty', 'admin', 'staff', 'employee', 'designee', 'non-teaching', 'non teaching'] as $studentHealthFormNeedle) {
             if (str_contains($studentHealthFormMarkers, $studentHealthFormNeedle)) {
                 $studentUsesEmployeeHealthForm = true;
                 break;
@@ -3431,15 +3449,17 @@
         }
         $studentHealthFormStartRoute = $studentUsesEmployeeHealthForm
             ? route('health.form.employee')
-            : route('health.form');
+            : ($studentUsesDependentProfile ? route('dependent.profile.form') : route('health.form'));
         $studentApplicantHealthFormRoute = route('health.form');
         $studentCurrentHealthFormRoute = route('health.form.student');
         $studentHealthFormTitle = $studentUsesEmployeeHealthForm
             ? 'Health Examination Record'
-            : 'Health Information Form';
+            : ($studentUsesDependentProfile ? 'Dependent Information Form' : 'Health Information Form');
         $showHealthFormModal = $studentUser
             && !(bool) ($studentUser->is_health_profile_completed ?? false)
-            && ($studentUsesEmployeeHealthForm ? !$studentUser->employeeHealthProfile : !$studentUser->healthProfile);
+            && ($studentUsesEmployeeHealthForm
+                ? !$studentUser->employeeHealthProfile
+                : ($studentUsesDependentProfile ? !$studentUser->dependentProfile : !$studentUser->healthProfile));
         $studentActiveCorrectionRequest = $studentUser?->healthProfile
             ? \App\Models\HealthProfileCorrectionRequest::query()
                 ->where('health_profile_id', $studentUser->healthProfile->id)
@@ -3538,7 +3558,7 @@
                 {{ $studentHealthFormTitle }}
             </div>
             <h2 class="health-profile-prompt-title" style="color: #1f2937; font-size: 24px; font-weight: 800; margin: 0 0 16px;">
-                Complete Your Health Profile
+                {{ $studentUsesDependentProfile ? 'Complete Your Dependent Information' : 'Complete Your Health Profile' }}
                 <span class="health-profile-required">Required</span>
             </h2>
             <p class="health-profile-prompt-copy" style="color: #4b5563; font-size: 13px; line-height: 1.45; margin: -8px 0 12px;">
@@ -3549,6 +3569,25 @@
             <div class="health-profile-prepare">
                 <strong>Please prepare:</strong>
                 <div class="health-profile-prepare-grid">
+                    @if($studentUsesDependentProfile)
+                    <div>
+                        <span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                            </svg>
+                        </span>
+                        <small>Personal<br>Information</small>
+                    </div>
+                    <div>
+                        <span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106a1.125 1.125 0 0 0-1.173.417l-.97 1.293a1.125 1.125 0 0 1-1.21.38 12.035 12.035 0 0 1-7.143-7.143 1.125 1.125 0 0 1 .38-1.21l1.293-.97a1.125 1.125 0 0 0 .417-1.173L6.963 3.102A1.125 1.125 0 0 0 5.872 2.25H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+                            </svg>
+                        </span>
+                        <small>Contact<br>Details</small>
+                    </div>
+                    @endif
+                    @unless($studentUsesDependentProfile)
                     <div>
                         <span>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
@@ -3579,9 +3618,10 @@
                         </span>
                         <small>Required<br>Documents</small>
                     </div>
+                    @endunless
                 </div>
             </div>
-            <div class="health-profile-time">Estimated time: <strong>5–8 minutes</strong></div>
+            <div class="health-profile-time">Estimated time: <strong>{{ $studentUsesDependentProfile ? '2-3 minutes' : '5-8 minutes' }}</strong></div>
             <div class="health-profile-benefits">
                 <div>
                     <span>

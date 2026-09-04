@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\AdminHub;
 use App\Models\ActivityLog;
+use App\Models\DependentsProfile;
 use App\Models\HealthFormSubmission;
 use App\Models\User;
 use App\Services\ClinicWorkflowService;
@@ -191,6 +192,17 @@ class LoginController extends Controller
             return;
         }
 
+        if ($this->isDependentProfileUser($user)) {
+            $dependentProfileExists = Schema::hasTable('dependents_profiles')
+                && DependentsProfile::query()->where('user_id', $user->id)->exists();
+
+            if (!$dependentProfileExists) {
+                $request->session()->flash('show_health_profile_prompt', true);
+            }
+
+            return;
+        }
+
         $healthProfile = $user->healthProfile()->first();
         if (!$healthProfile) {
             $request->session()->flash('show_health_profile_prompt', true);
@@ -207,6 +219,26 @@ class LoginController extends Controller
         if ($hasHealthFormCorrection || $hasNewHealthFormRequest) {
             $request->session()->flash('show_health_form_action_prompt', true);
         }
+    }
+
+    private function isDependentProfileUser(User $user): bool
+    {
+        $markers = strtolower(trim(implode(' ', array_filter([
+            (string) ($user->user_type ?? ''),
+            (string) ($user->idp_role ?? ''),
+        ]))));
+
+        if ($markers === '') {
+            return false;
+        }
+
+        foreach (['student', 'applicant', 'faculty', 'admin', 'staff', 'employee', 'designee', 'non-teaching', 'non teaching'] as $excluded) {
+            if (str_contains($markers, $excluded)) {
+                return false;
+            }
+        }
+
+        return str_contains($markers, 'dependent') || str_contains($markers, 'guest');
     }
 
     private function findLinkedAdminProfile(User $user): ?Admin
@@ -1179,6 +1211,7 @@ class LoginController extends Controller
             return match ($normalizedIdpRole) {
                 'faculty' => 'Faculty',
                 'guest' => 'Guest',
+                'dependent' => 'Dependent',
                 'applicant' => 'Applicant',
                 'student' => 'Student',
                 default => 'Regular',
@@ -1203,7 +1236,7 @@ class LoginController extends Controller
             return $this->adminRoleValue();
         }
 
-        if (in_array($normalized, ['student', 'faculty', 'guest', 'applicant'], true)) {
+        if (in_array($normalized, ['student', 'faculty', 'guest', 'dependent', 'applicant'], true)) {
             return $this->studentRoleValue();
         }
 
@@ -1226,7 +1259,7 @@ class LoginController extends Controller
             return $this->adminRoleValue();
         }
 
-        if (count(array_intersect($normalizedRoles, ['student', 'faculty', 'guest', 'applicant'])) > 0) {
+        if (count(array_intersect($normalizedRoles, ['student', 'faculty', 'guest', 'dependent', 'applicant'])) > 0) {
             return $this->studentRoleValue();
         }
 
@@ -1585,7 +1618,7 @@ class LoginController extends Controller
                     $existingUser->user_type = 'Regular';
                 } elseif (
                     $normalizedLocalRole === User::ROLE_STUDENT
-                    && in_array($resolvedUserType, ['Faculty', 'Guest', 'Student', 'Applicant'], true)
+                    && in_array($resolvedUserType, ['Faculty', 'Guest', 'Dependent', 'Student', 'Applicant'], true)
                     && $existingUser->user_type !== $resolvedUserType
                 ) {
                     $existingUser->user_type = $resolvedUserType;

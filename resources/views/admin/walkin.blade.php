@@ -5577,6 +5577,20 @@
         line-height: 1.55;
     }
 
+    #applicantRefModal .applicant-modal-shell.is-student-lookup .employee-physical-exam-template {
+        display: none !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-student-lookup .employee-physical-assessment-panel {
+        border-color: #0284c7;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-student-lookup .applicant-vitals-grid label span[style*="#dc2626"],
+    #applicantRefModal .applicant-modal-shell.is-student-lookup .applicant-findings-label span[style*="#dc2626"] {
+        display: none !important;
+    }
+
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template h5 {
         display: inline-flex;
         align-items: center;
@@ -11103,11 +11117,13 @@
         let finalReviewPage = 1;
         let currentLookupRedirect = '';
         let currentAssessmentReview = {};
+        let currentRecordType = 'applicant';
         const canApproveFinalReview = @json($canApproveFinalReview);
         const getStudentUrl   = '{{ url($basePrefix . '/walkin/get-student') }}';
         const finalReviewApplicantsUrl = '{{ url($basePrefix . '/walkin/final-review-applicants') }}';
         const finalReviewTimeInUrl = '{{ url($basePrefix . '/walkin/final-review/time-in') }}';
         const saveEncodingUrl = '{{ url($basePrefix . '/walkin/applicant-encoding') }}';
+        const saveStudentAssessmentUrl = '{{ url($basePrefix . '/walkin/student-assessment') }}';
         const applicantFinalReviewDraftUrl = '{{ url($basePrefix . '/walkin/applicant-final-review-draft') }}';
         const healthInfoUpdateBaseUrl = '{{ url($basePrefix . '/walkin/health-profile-information') }}';
         const healthInfoTabs = document.getElementById('healthInfoTabs');
@@ -11122,6 +11138,10 @@
 
         function isClinicLookupMode() {
             return currentLookupMode === 'clinic';
+        }
+
+        function isStudentLookupResult() {
+            return currentRecordType === 'student';
         }
 
         function isEncodeWorkflow() {
@@ -11237,6 +11257,7 @@
             if (modalShell) {
                 modalShell.classList.toggle('is-employee-lookup', isClinicLookupMode());
                 modalShell.classList.toggle('is-applicant-lookup', !isClinicLookupMode());
+                modalShell.classList.remove('is-student-lookup');
                 if (isClinicLookupMode()) {
                     modalShell.classList.remove('is-encode-workflow', 'is-final-review-workflow', 'is-final-review-toolbar-stuck');
                 }
@@ -11312,6 +11333,7 @@
             findBtn.removeEventListener('click', doLookup);
             findBtn.removeEventListener('click', doApprove);
             findBtn.removeEventListener('click', saveApplicantEncoding);
+            findBtn.removeEventListener('click', saveStudentAssessment);
             findBtn.removeEventListener('click', enterSavedReviewEditMode);
             findBtn.addEventListener('click', doLookup);
         }
@@ -11514,6 +11536,7 @@
             currentLookupRef = '';
             currentLookupRedirect = '';
             currentAssessmentReview = {};
+            currentRecordType = isClinicLookupMode() ? 'employee' : 'applicant';
             if (!isClinicLookupMode()) currentApplicantWorkflow = 'select';
             if (defaultPane) defaultPane.style.display = 'flex';
             const introCopy = defaultPane?.querySelector('.applicant-ref-copy');
@@ -11575,7 +11598,7 @@
             resetLookupButtonToFind();
 
             if (modalShell) {
-                modalShell.classList.remove('is-final-review-toolbar-stuck');
+                modalShell.classList.remove('is-final-review-toolbar-stuck', 'is-student-lookup');
             }
             if (applicantFileActions) {
                 delete applicantFileActions.dataset.stickyOriginTop;
@@ -12841,6 +12864,8 @@
             const referenceNumber = data.reference_number || fallbackRef || '-';
             const studentNumber = data.student_number || '';
             const yearSection = [data.year || '', data.section || ''].filter(Boolean).join(' / ') || 'N/A';
+            currentRecordType = data.record_type || (isClinicLookupMode() ? 'employee' : 'applicant');
+            const isStudentRecord = isStudentLookupResult();
 
             console.log('Setting lookup values:', {
                 lookupRef: referenceNumber,
@@ -12887,7 +12912,10 @@
                 informationDetails.classList.remove('is-visible');
                 informationDetails.setAttribute('aria-hidden', 'true');
             }
-            if (modalShell) modalShell.classList.add('has-lookup-result');
+            if (modalShell) {
+                modalShell.classList.add('has-lookup-result');
+                modalShell.classList.toggle('is-student-lookup', isStudentRecord);
+            }
             renderDocuments(data.documents);
             if (informationButton) {
                 informationButton.classList.add('is-visible');
@@ -12936,13 +12964,17 @@
             renderPendingHistory(currentAssessmentReview);
 
             if (medicalConditionSection) {
-                const shouldShowAssessment = isEncodeWorkflow() || isFinalReviewWorkflow() || !hasSavedReview;
+                const shouldShowAssessment = isStudentRecord || isEncodeWorkflow() || isFinalReviewWorkflow() || !hasSavedReview;
                 medicalConditionSection.classList.toggle('show', shouldShowAssessment);
                 medicalConditionSection.style.display = shouldShowAssessment ? 'grid' : 'none';
             }
 
             if (nurseReviewPanel) {
                 nurseReviewPanel.style.display = isEncodeWorkflow() ? 'none' : '';
+            }
+            const physicalExamTitle = document.querySelector('#applicantRefModal .employee-physical-assessment-panel .applicant-screening-panel-title');
+            if (physicalExamTitle) {
+                physicalExamTitle.textContent = isStudentRecord ? 'Student/OJT Assessment' : 'PHYSICAL EXAMINATION';
             }
 
             populateAssessmentReview(currentAssessmentReview);
@@ -12954,6 +12986,12 @@
                     : 'Optional notes from the encoding station...';
             }
             setFinalReviewPhysicalReadonly(isFinalReviewWorkflow());
+            document.querySelectorAll('#applicantRefModal .applicant-vitals-grid input').forEach(function (input) {
+                input.required = !isStudentRecord;
+            });
+            document.querySelectorAll('input[name="applicant_findings_status"], input[name="applicant_clearance_decision"], input[name="applicant_covid_positive"]').forEach(function (input) {
+                input.required = !isStudentRecord;
+            });
 
             console.log('showLookupDetails completed');
             return hasSavedReview;
@@ -13000,7 +13038,7 @@
                 return;
             }
 
-            setStatus('info', isClinicLookupMode() ? 'Looking up employee record...' : 'Looking up applicant...');
+            setStatus('info', isClinicLookupMode() ? 'Looking up employee/student record...' : 'Looking up applicant...');
             if (foundCard) foundCard.style.display = 'none';
             if (documentsButton) documentsButton.classList.remove('is-visible');
             if (savedAssessmentButton) savedAssessmentButton.classList.remove('is-visible');
@@ -13038,17 +13076,20 @@
                         || data.approved === true
                         || data.approved === 1;
 
+                    const isStudentRecord = data.record_type === 'student';
                     const isLocalHealthProfile = data.lookup_source === 'local_health_profile';
                     const isLocalEmployeeReference = ['local_employee_reference', 'local_clinic_reference'].includes(data.lookup_source);
                     const isLocalEmployeeId = ['local_employee_id', 'local_clinic_id'].includes(data.lookup_source);
-                    const isLocalOnlyLookup = isLocalHealthProfile || isLocalEmployeeReference || isLocalEmployeeId;
+                    const isLocalOnlyLookup = isStudentRecord || isLocalHealthProfile || isLocalEmployeeReference || isLocalEmployeeId;
                     const lookupFoundMessage = isLocalHealthProfile
                         ? (data.sync_warning || 'Local health profile found. PUPTAS sync will still depend on a valid Admission reference.')
-                        : (isClinicLookupMode()
+                        : (isStudentRecord
+                            ? (applicantName ? 'Student/OJT health profile found: ' + applicantName + '.' : 'Student/OJT health profile found.')
+                            : (isClinicLookupMode()
                             ? (applicantName ? "Employee's record found: " + applicantName + '.' : "Employee's record found.")
-                            : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.'));
+                            : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.')));
 
-                    if (isAlreadyApproved) {
+                    if (isAlreadyApproved && !isStudentRecord) {
                         setStatus('approved', isClinicLookupMode()
                             ? "Employee's record is already cleared."
                             : 'Applicant Already Approved. This health profile has already been cleared by the clinic.');
@@ -13096,6 +13137,7 @@
                             findBtn.removeEventListener('click', doLookup);
                             findBtn.removeEventListener('click', doApprove);
                             findBtn.removeEventListener('click', saveApplicantEncoding);
+                            findBtn.removeEventListener('click', saveStudentAssessment);
                             findBtn.removeEventListener('click', enterSavedReviewEditMode);
 
                             findBtn.textContent = '✓ Already Approved';
@@ -13133,24 +13175,29 @@
                         if (lookupRow) lookupRow.style.display = 'none';
 
                         // Final approval is reserved for Super Admin, even when staff can review the record.
-                        const requiresFinalApproval = isFinalReviewWorkflow() || isClinicLookupMode();
+                        const requiresFinalApproval = isFinalReviewWorkflow() || (isClinicLookupMode() && !isStudentRecord);
                         const canSubmitDecision = !requiresFinalApproval || canApproveFinalReview;
                         isApprovalMode = !isEncodeWorkflow() && canSubmitDecision;
                         if (findBtn) {
-                            findBtn.textContent = alreadyEncodedForReview
+                            findBtn.textContent = isStudentRecord
+                                ? 'Save Student Assessment'
+                                : (alreadyEncodedForReview
                                 ? 'Already Encoded'
                                 : (isEncodeWorkflow()
                                 ? 'Save Assessment'
-                                : (!canSubmitDecision ? 'View Only' : (isFinalReviewWorkflow() ? 'Approve' : (hasSavedReview ? 'Edit Review' : 'Approve'))));
+                                : (!canSubmitDecision ? 'View Only' : (isFinalReviewWorkflow() ? 'Approve' : (hasSavedReview ? 'Edit Review' : 'Approve')))));
                             findBtn.disabled = alreadyEncodedForReview || !canSubmitDecision;
                             findBtn.style.opacity = (alreadyEncodedForReview || !canSubmitDecision) ? '0.72' : '1';
                             findBtn.style.cursor = (alreadyEncodedForReview || !canSubmitDecision) ? 'not-allowed' : 'pointer';
                             findBtn.removeEventListener('click', doLookup);
                             findBtn.removeEventListener('click', doApprove);
                             findBtn.removeEventListener('click', saveApplicantEncoding);
+                            findBtn.removeEventListener('click', saveStudentAssessment);
                             findBtn.removeEventListener('click', enterSavedReviewEditMode);
                             findBtn.onclick = null;
-                            if (alreadyEncodedForReview) {
+                            if (isStudentRecord) {
+                                findBtn.addEventListener('click', saveStudentAssessment);
+                            } else if (alreadyEncodedForReview) {
                                 // Encoded applicants must proceed through Final Review so the webhook approval flow stays separate.
                             } else if (isEncodeWorkflow()) {
                                 findBtn.addEventListener('click', saveApplicantEncoding);
@@ -13162,7 +13209,7 @@
                                 findBtn.addEventListener('click', doApprove);
                             }
                         }
-                        setReviewDraftButtonVisible(canApproveFinalReview && (isClinicLookupMode() || isFinalReviewWorkflow()));
+                        setReviewDraftButtonVisible(!isStudentRecord && canApproveFinalReview && (isClinicLookupMode() || isFinalReviewWorkflow()));
                         if (!hasSavedReview) syncFindingsReviewFields();
                     }
                 } else {
@@ -13262,6 +13309,87 @@
                 }
             })
             .catch(() => setStatus('error', 'Unable to save assessment right now. Please try again.'));
+        }
+
+        function saveStudentAssessment() {
+            if (!currentLookupRef || !isStudentLookupResult()) {
+                setStatus('error', 'No student/OJT record is open.');
+                return;
+            }
+
+            const medicalConditionInput = document.getElementById('applicantMedicalCondition');
+            const findingRemarksInput = document.getElementById('applicantFindingRemarks');
+            const conditionRemarksInput = document.getElementById('applicantConditionRemarks');
+            const normalRemarksInput = document.getElementById('applicantNormalRemarks');
+            const findingsStatusInput = document.querySelector('input[name="applicant_findings_status"]:checked');
+            const clearanceDecisionInput = document.querySelector('input[name="applicant_clearance_decision"]:checked');
+            const medicalConditionCheckbox = document.getElementById('applicantHasMedicalCondition');
+            const heightInput = document.getElementById('applicantHeight');
+            const weightInput = document.getElementById('applicantWeight');
+            const bloodPressureInput = document.getElementById('applicantBloodPressure');
+            const pulseRateInput = document.getElementById('applicantPulseRate');
+            const respiratoryRateInput = document.getElementById('applicantRespiratoryRate');
+            const temperatureInput = document.getElementById('applicantTemperature');
+            const covidPositiveInput = document.querySelector('input[name="applicant_covid_positive"]:checked');
+            const covidPositiveDateInput = document.getElementById('applicantCovidPositiveDate');
+
+            const heightValue = heightInput?.value ? parseHeightFeet(heightInput.value) : null;
+            if (heightInput?.value && (heightValue === null || heightValue < 1 || heightValue > 10)) {
+                setStatus('error', 'Height must use feet and inches, e.g., 5\'6".');
+                return;
+            }
+
+            setStatus('info', 'Saving student/OJT assessment...');
+
+            fetch(saveStudentAssessmentUrl, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    reference_number: currentLookupRef,
+                    findings_status: findingsStatusInput?.value || '',
+                    clearance_decision: clearanceDecisionInput?.value || '',
+                    height: heightInput?.value || '',
+                    weight: weightInput?.value || '',
+                    blood_pressure: bloodPressureInput?.value.trim() || '',
+                    pulse_rate: pulseRateInput?.value || '',
+                    respiratory_rate: respiratoryRateInput?.value || '',
+                    temperature: temperatureInput?.value || '',
+                    covid_positive: covidPositiveInput?.value || '',
+                    covid_positive_date: covidPositiveInput?.value === 'Yes' ? (covidPositiveDateInput?.value || '') : '',
+                    has_medical_condition: Boolean(medicalConditionCheckbox?.checked),
+                    medical_condition: medicalConditionCheckbox?.checked ? (medicalConditionInput?.value.trim() || '') : '',
+                    condition_remarks: conditionRemarksInput?.value.trim() || '',
+                    med_assessment_remarks: findingsStatusInput?.value === 'With Findings'
+                        ? (findingRemarksInput?.value.trim() || '')
+                        : (normalRemarksInput?.value.trim() || '')
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    setStatus('success', data.message || 'Student/OJT assessment saved.');
+                    currentAssessmentReview = data.assessment_review && typeof data.assessment_review === 'object'
+                        ? data.assessment_review
+                        : currentAssessmentReview;
+                    renderSavedAssessmentReview(currentAssessmentReview, currentLookupRef);
+                    if (savedAssessmentButton) {
+                        savedAssessmentButton.classList.toggle('is-visible', hasSavedAssessmentReview(currentAssessmentReview));
+                    }
+                    showClinicSuccessOverlay(approvalOverlay, {
+                        title: 'Assessment Saved',
+                        message: 'The student/OJT assessment has been saved to the health profile.',
+                        duration: 2500,
+                    });
+                } else {
+                    setStatus('error', data.message || 'Failed to save student/OJT assessment.');
+                }
+            })
+            .catch(() => setStatus('error', 'Unable to save the student/OJT assessment right now. Please try again.'));
         }
 
         function doApprove() {
