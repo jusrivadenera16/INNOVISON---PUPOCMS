@@ -2241,6 +2241,8 @@ class LoginController extends Controller
 
         Log::info('IDP callback resolved profile payload.', [
             'profile_keys' => array_keys($profile),
+            'idp_roles_payload_type' => gettype(data_get($profile, 'roles')),
+            'idp_roles_payload' => data_get($profile, 'roles'),
             'idp_roles' => $this->extractRawRoles($profile),
             'has_reference_number' => $this->firstNonEmptyScalar($profile, [
                 'reference_number',
