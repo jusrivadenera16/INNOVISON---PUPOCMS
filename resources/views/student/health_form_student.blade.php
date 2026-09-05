@@ -1944,6 +1944,8 @@
         .student-consent-guardian-note { margin: 14px 0; padding: 10px 12px; border-left: 3px solid #facc15; background: #fff7d6; color: #64111d; font-size: 12px; font-weight: 700; line-height: 1.4; }
         .student-consent-agreement { display: flex; align-items: flex-start; gap: 9px; margin-top: 18px; color: #64111d; font-size: 13px; font-weight: 800; line-height: 1.35; cursor: pointer; }
         .student-consent-agreement input { width: 17px; height: 17px; margin-top: 1px; accent-color: #7f1d2d; flex: 0 0 auto; }
+        .student-consent-purpose-wrap.is-invalid select { border-color: #7f1d2d !important; background-color: #fff7f7 !important; box-shadow: 0 0 0 3px rgba(127, 29, 45, .16) !important; }
+        .student-consent-agreement.is-invalid input { outline: 2px solid #7f1d2d; outline-offset: 2px; box-shadow: 0 0 0 4px rgba(127, 29, 45, .14); }
         .student-consent-continue { display: block; width: 100%; margin-top: 20px; padding: 11px 18px; border: 1px solid #7f1d2d; border-radius: 8px; background: #7f1d2d; color: #fff; font-weight: 800; cursor: pointer; }
         .student-consent-continue:hover, .student-consent-continue:focus-visible { border-color: #facc15; background: #facc15; color: #000; outline: none; }
         @media (max-width: 560px) { .student-consent-card { padding: 24px 18px 20px; } .student-consent-card h2 { font-size: 18px; } }
@@ -3643,6 +3645,8 @@
             const consentDynamicPurpose = document.getElementById('consentDynamicPurpose');
             const consentDynamicEndorsement = document.getElementById('consentDynamicEndorsement');
             const studentConsentCheckbox = document.getElementById('studentConsentCheckbox');
+            const studentConsentAgreement = studentConsentCheckbox?.closest('.student-consent-agreement');
+            const studentConsentPurposeWrap = studentConsentPurpose?.closest('.student-consent-purpose-wrap');
             const studentConsentAcknowledged = document.getElementById('consentAcknowledged');
             const studentConsentContinue = document.getElementById('studentConsentContinue');
             const studentConsentClose = document.getElementById('studentConsentClose');
@@ -4863,6 +4867,12 @@
             function resetStudentConsent() {
                 if (studentConsentAcknowledged) studentConsentAcknowledged.value = '';
                 if (studentConsentCheckbox) studentConsentCheckbox.checked = false;
+                clearStudentConsentValidation();
+            }
+
+            function clearStudentConsentValidation() {
+                studentConsentPurposeWrap?.classList.remove('is-invalid');
+                studentConsentAgreement?.classList.remove('is-invalid');
             }
 
             function updateConsentDynamicText() {
@@ -4879,7 +4889,13 @@
                 }
             }
 
-            studentConsentPurpose?.addEventListener('change', updateConsentDynamicText);
+            studentConsentPurpose?.addEventListener('change', () => {
+                studentConsentPurposeWrap?.classList.remove('is-invalid');
+                updateConsentDynamicText();
+            });
+            studentConsentCheckbox?.addEventListener('change', () => {
+                studentConsentAgreement?.classList.remove('is-invalid');
+            });
 
             function openStudentConsent() {
                 if (!studentConsentModal) return;
@@ -4897,14 +4913,18 @@
             studentConsentClose?.addEventListener('click', closeStudentConsent);
             studentConsentContinue?.addEventListener('click', () => {
                 if (!studentConsentPurpose?.value) {
-                    showError('Please select the Purpose of your Medical Clearance before proceeding.');
+                    studentConsentPurposeWrap?.classList.add('is-invalid');
+                    showErrorModal('Please select your purpose.');
                     studentConsentPurpose?.focus();
                     return;
                 }
                 if (!studentConsentCheckbox?.checked) {
-                    showError('Please confirm that you have read and agree to the consent form.');
+                    studentConsentAgreement?.classList.add('is-invalid');
+                    showErrorModal('Please confirm that you have read and agree to the consent form.');
+                    studentConsentCheckbox?.focus();
                     return;
                 }
+                clearStudentConsentValidation();
                 if (studentConsentAcknowledged) studentConsentAcknowledged.value = '1';
                 closeStudentConsent();
                 setStep(3);

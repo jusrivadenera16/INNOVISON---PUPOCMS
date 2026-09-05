@@ -49,8 +49,8 @@ class User extends Authenticatable
         'applicant' => 'Applicant',
         'student' => 'Student / OJT',
         'faculty' => 'Faculty',
-        'non_teaching_staff' => 'Non-teaching Staff / Admin Designee',
-        'dependent' => 'Guest / Dependent',
+        'non_teaching_staff' => 'Non-teaching Staff / Admins',
+        'dependent' => 'Guest',
     ];
 
     public function needsClinicAccountTypeSelection(): bool

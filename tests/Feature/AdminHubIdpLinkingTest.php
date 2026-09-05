@@ -536,9 +536,11 @@ class AdminHubIdpLinkingTest extends TestCase
     {
         $html = view('student.partials.clinic_account_type_selector', ['studentPendingAdmission' => false])->render();
         $this->assertSame(5, substr_count($html, 'name="clinic_account_type"'));
-        $this->assertStringContainsString('Non-teaching Staff / Admin Designee', $html);
-        $this->assertStringContainsString('Guest / Dependent', $html);
-        $this->assertStringContainsString('Saving...', $html);
+        $this->assertStringContainsString('Non-teaching Staff / Admins', $html);
+        $this->assertStringContainsString('Guest', $html);
+        $this->assertStringNotContainsString('Guest / Dependent', $html);
+        $this->assertStringContainsString('Confirm your account type', $html);
+        $this->assertStringContainsString('Proceeding...', $html);
         $locked = view('student.partials.clinic_account_type_selector', ['studentPendingAdmission' => true])->render();
         $this->assertSame(5, preg_match_all('/<input[^>]+type="radio"[^>]+disabled[^>]*>/', $locked));
         $this->assertStringContainsString(route('student.account_type.options'), $html);

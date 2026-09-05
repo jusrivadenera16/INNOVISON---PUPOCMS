@@ -4382,7 +4382,10 @@ public function showHealthForm()
             ->first()
         : null;
 
-    if (!$isDedicatedStudentForm && $pendingHealthFormRequest && !$isHealthFormCorrectionMode) {
+    if (!$isDedicatedStudentForm
+        && $pendingHealthFormRequest
+        && !$isHealthFormCorrectionMode
+        && $user?->clinicHealthFormAudience() === 'student') {
         return redirect()->route('health.form.student');
     }
 
@@ -5561,7 +5564,10 @@ public function storeHealthForm(Request $request)
             ->first()
         : null;
 
-    if (!$isDedicatedStudentForm && $pendingHealthFormRequest && !$isHealthFormCorrectionMode) {
+    if (!$isDedicatedStudentForm
+        && $pendingHealthFormRequest
+        && !$isHealthFormCorrectionMode
+        && $user?->clinicHealthFormAudience() === 'student') {
         return redirect()->route('health.form.student');
     }
 

@@ -3477,7 +3477,16 @@
         $studentHealthFormTitle = $studentUsesEmployeeHealthForm
             ? 'Health Examination Record'
             : ($studentUsesDependentProfile ? 'Information Form' : 'Health Information Form');
+        $studentGetStartedRequirementStatus = ($studentUser?->clinic_account_type === 'applicant') ? 'Mandatory' : 'Optional';
+        $studentIsClinicHealthFormRoute = request()->routeIs(
+            'health.form',
+            'health.form.student',
+            'health.form.employee',
+            'health.form.staff',
+            'dependent.profile.form'
+        );
         $showHealthFormModal = $studentUser
+            && !$studentIsClinicHealthFormRoute
             && ($studentNeedsAccountType || (!(bool) ($studentUser->is_health_profile_completed ?? false)
             && ($studentUsesEmployeeHealthForm
                 ? !$studentUser->employeeHealthProfile
@@ -3612,6 +3621,20 @@
                             </svg>
                         </span>
                         <small>Contact<br>Details</small>
+                    </div>
+                    <div>
+                        <span>
+                            <x-outline-icon name="heart-pulse" />
+                        </span>
+                        <small>Medical<br>Info</small>
+                        <em>{{ $studentGetStartedRequirementStatus }}</em>
+                    </div>
+                    <div>
+                        <span>
+                            <x-outline-icon name="document-text" />
+                        </span>
+                        <small>Documents</small>
+                        <em>{{ $studentGetStartedRequirementStatus }}</em>
                     </div>
                     @endif
                     @unless($studentUsesDependentProfile || $studentNeedsAccountType)
@@ -3795,7 +3818,7 @@
         #healthFormModal .health-profile-prepare-grid div {
             display: grid;
             justify-items: center;
-            gap: 6px;
+            gap: 5px;
             padding: 0 8px;
             border-right: 1px solid rgba(127, 29, 45, .14);
         }
@@ -3830,6 +3853,19 @@
             font-size: 10px;
             font-weight: 900;
             line-height: 1.22;
+        }
+        #healthFormModal .health-profile-prepare-grid div > em {
+            display: inline-block;
+            margin-top: 1px;
+            padding: 3px 7px;
+            border: 1px solid rgba(127, 29, 45, .18);
+            border-radius: 999px;
+            background: rgba(255, 228, 230, .82);
+            color: #9f1239;
+            font-style: normal;
+            font-size: 9px;
+            font-weight: 900;
+            line-height: 1;
         }
         #healthFormModal .health-profile-prompt-card.is-dependent-prompt .health-profile-prompt-copy {
             max-width: 360px;

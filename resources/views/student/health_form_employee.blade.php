@@ -1887,6 +1887,8 @@
         .student-consent-copy p { margin: 0 0 12px; font-size: 13px; line-height: 1.45; text-align: justify; }
         .student-consent-agreement { display: flex; align-items: flex-start; gap: 9px; margin-top: 18px; color: #64111d; font-size: 13px; font-weight: 800; line-height: 1.35; cursor: pointer; }
         .student-consent-agreement input { width: 17px; height: 17px; margin-top: 1px; accent-color: #7f1d2d; flex: 0 0 auto; }
+        .student-consent-purpose-wrap.is-invalid select { border-color: #7f1d2d !important; background-color: #fff7f7 !important; box-shadow: 0 0 0 3px rgba(127, 29, 45, .16) !important; }
+        .student-consent-agreement.is-invalid input { outline: 2px solid #7f1d2d; outline-offset: 2px; box-shadow: 0 0 0 4px rgba(127, 29, 45, .14); }
         .student-consent-continue { display: block; width: 100%; margin-top: 20px; padding: 11px 18px; border: 1px solid #7f1d2d; border-radius: 8px; background: #7f1d2d; color: #fff; font-weight: 800; cursor: pointer; }
         .student-consent-continue:hover, .student-consent-continue:focus-visible { border-color: #facc15; background: #facc15; color: #000; outline: none; }
         @media (max-width: 560px) { .student-consent-card { padding: 24px 18px 20px; } .student-consent-card h2 { font-size: 18px; } }
@@ -3045,6 +3047,8 @@
             const employeeConsentDynamicPurpose = document.getElementById('employeeConsentDynamicPurpose');
             const employeeConsentDynamicEndorsement = document.getElementById('employeeConsentDynamicEndorsement');
             const employeeConsentCheckbox = document.getElementById('employeeConsentCheckbox');
+            const employeeConsentAgreement = employeeConsentCheckbox?.closest('.student-consent-agreement');
+            const employeeConsentPurposeWrap = employeeConsentPurpose?.closest('.student-consent-purpose-wrap');
             const employeeConsentAcknowledged = document.getElementById('employeeConsentAcknowledged');
             const employeeConsentContinue = document.getElementById('employeeConsentContinue');
             const employeeConsentClose = document.getElementById('employeeConsentClose');
@@ -3152,6 +3156,11 @@
                 errorModal?.setAttribute('aria-hidden', 'true');
             }
 
+            function clearEmployeeConsentValidation() {
+                employeeConsentPurposeWrap?.classList.remove('is-invalid');
+                employeeConsentAgreement?.classList.remove('is-invalid');
+            }
+
             function updateEmployeeConsentDynamicText() {
                 const selected = employeeConsentPurpose?.value || '';
                 if (selected === 'Faculty Member') {
@@ -3181,6 +3190,7 @@
 
             function closeEmployeeConsent() {
                 if (!employeeConsentModal) return;
+                clearEmployeeConsentValidation();
                 employeeConsentModal.hidden = true;
             }
 
@@ -3246,11 +3256,13 @@
 
             employeeConsentPurpose?.addEventListener('change', () => {
                 if (employeeConsentAcknowledged) employeeConsentAcknowledged.value = '';
+                employeeConsentPurposeWrap?.classList.remove('is-invalid');
                 updateEmployeeConsentDynamicText();
             });
 
             employeeConsentCheckbox?.addEventListener('change', () => {
                 if (employeeConsentAcknowledged) employeeConsentAcknowledged.value = '';
+                employeeConsentAgreement?.classList.remove('is-invalid');
             });
 
             employeeConsentClose?.addEventListener('click', closeEmployeeConsent);
@@ -3260,15 +3272,18 @@
 
             employeeConsentContinue?.addEventListener('click', () => {
                 if (!employeeConsentPurpose?.value) {
-                    showError('Please select your purpose of medical clearance.');
+                    employeeConsentPurposeWrap?.classList.add('is-invalid');
+                    showError('Please select your purpose.');
                     employeeConsentPurpose?.focus();
                     return;
                 }
                 if (!employeeConsentCheckbox?.checked) {
+                    employeeConsentAgreement?.classList.add('is-invalid');
                     showError('Please confirm that you have read and agree to the consent form.');
                     employeeConsentCheckbox?.focus();
                     return;
                 }
+                clearEmployeeConsentValidation();
                 if (employeeConsentAcknowledged) employeeConsentAcknowledged.value = '1';
                 closeEmployeeConsent();
                 setStep(2);
