@@ -33,7 +33,18 @@ class RoleMiddleware
 
     private function hasRoleAccess($user, string $currentRole, array $allowedRoles): bool
     {
+        if (strtolower(trim((string) ($user->status ?? 'active'))) !== 'active') {
+            return false;
+        }
+
         if (in_array($currentRole, $allowedRoles, true)) {
+            if ($currentRole === User::ROLE_SUPERADMIN) {
+                $linkedAdmin = $this->findLinkedAdminProfile($user);
+
+                return strtolower(trim((string) ($linkedAdmin?->status ?? 'active'))) === 'active'
+                    && in_array(strtolower(trim((string) ($linkedAdmin?->access_level ?? ''))), ['superadmin', 'super_admin'], true);
+            }
+
             if ($currentRole === User::ROLE_ADMIN && in_array(User::ROLE_ADMIN, $allowedRoles, true)) {
                 return $this->isClinicStaffAdmin($user);
             }
@@ -88,7 +99,8 @@ class RoleMiddleware
         $linkedAdmin = $this->findLinkedAdminProfile($user);
         $accessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
 
-        return in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff'], true);
+        return strtolower(trim((string) ($linkedAdmin?->status ?? 'active'))) === 'active'
+            && in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff'], true);
     }
 
     private function isStudentAssistantPortalUser($user): bool

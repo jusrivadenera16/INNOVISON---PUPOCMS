@@ -30,9 +30,37 @@ class User extends Authenticatable
         };
     }
 
-    /**
-     * The attributes that are mass assignable.
-     */
+    public static function userTypeForIdpRole(?string $role): string
+    {
+        $role = str_replace(['-', ' '], '_', strtolower(trim((string) $role)));
+
+        return match ($role) {
+            'student', 'ojt', 'student_ojt' => 'Student',
+            'applicant' => 'Applicant',
+            'faculty' => 'Faculty',
+            'admin', 'staff', 'employee', 'designee', 'admin_designee',
+            'non_teaching', 'non_teaching_staff' => 'Admin',
+            'guest' => 'Guest',
+            default => 'Dependent',
+        };
+    }
+
+    public function idpHealthFormAudience(): ?string
+    {
+        // Local account access and legacy users retain their existing workflow.
+        if (self::normalizeRole($this->user_role) !== self::ROLE_STUDENT
+            || trim((string) $this->idp_role) === '') {
+            return null;
+        }
+
+        return match (self::userTypeForIdpRole($this->idp_role)) {
+            'Faculty', 'Admin' => 'employee',
+            'Student' => 'student',
+            'Applicant' => 'applicant',
+            default => 'dependent',
+        };
+    }
+
     /**
      * The attributes that are mass assignable.
      */

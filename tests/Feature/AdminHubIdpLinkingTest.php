@@ -4,12 +4,15 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AppointmentController;
+use App\Http\Middleware\RoleMiddleware;
 use App\Models\Admin;
 use App\Models\AdminHub;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use ReflectionMethod;
 use Tests\TestCase;
@@ -300,6 +303,173 @@ class AdminHubIdpLinkingTest extends TestCase
         ]);
 
         $this->assertNull($user->employee_number);
+    }
+
+    public function test_me_faculty_roles_correct_a_previously_student_account(): void
+    {
+        $identity = [
+            'id' => '45e0d8c6-a201-418b-901b-072f1c96225f',
+            'email' => 'faculty-role@example.test',
+            'first_name' => 'Faculty',
+            'last_name' => 'Test',
+        ];
+        $oldUser = $this->upsertFromIdp($identity + ['role' => 'student']);
+        Config::set('services.idp.base_url', 'https://idp.example.test');
+        Config::set('services.idp.profile_paths', ['/me']);
+        Http::fake(['*' => Http::response($identity + ['roles' => 'faculty'])]);
+
+        $controller = new LoginController();
+        $fetch = new ReflectionMethod($controller, 'fetchProfileFromIdp');
+        $merge = new ReflectionMethod($controller, 'mergeIdpProfilePayloads');
+        $profile = $merge->invoke($controller, $identity + ['role' => 'student'], $fetch->invoke($controller, 'test-token'));
+        $user = $this->upsertFromIdp($profile)->fresh();
+
+        $this->assertSame($oldUser->id, $user->id);
+        $this->assertSame('faculty', $user->idp_role);
+        $this->assertSame('Faculty', $user->user_type);
+        $this->assertSame(User::ROLE_STUDENT, $user->user_role);
+        $this->assertSame('employee', $user->idpHealthFormAudience());
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('admins', 0);
+
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/me'));
+        Http::assertSentCount(1);
+        $enrich = new ReflectionMethod($controller, 'enrichUserWithGuisisData');
+        $enrich->invoke($controller, $user);
+        Http::assertSentCount(1);
+    }
+
+    public function test_idp_classifications_save_without_creating_account_access(): void
+    {
+        $cases = [
+            ['student', 'Student', 'student'],
+            ['applicant', 'Applicant', 'applicant'],
+            ['faculty', 'Faculty', 'employee'],
+            ['admin', 'Admin', 'employee'],
+            ['non-teaching staff', 'Admin', 'employee'],
+            ['non_teaching_staff', 'Admin', 'employee'],
+            ['non teaching staff', 'Admin', 'employee'],
+            ['guest', 'Guest', 'dependent'],
+            ['dependent', 'Dependent', 'dependent'],
+            ['superadmin', 'Dependent', 'dependent'],
+            ['super_admin', 'Dependent', 'dependent'],
+            ['student_assistant', 'Dependent', 'dependent'],
+            ['custom_admin_role', 'Dependent', 'dependent'],
+            ['unknown', 'Dependent', 'dependent'],
+        ];
+        $controller = new AppointmentController();
+        $employee = new ReflectionMethod($controller, 'shouldUseEmployeeHealthForm');
+        $dependent = new ReflectionMethod($controller, 'isDependentProfileUser');
+        $login = new LoginController();
+        $prompt = new ReflectionMethod($login, 'isDependentProfileUser');
+        $redirect = new ReflectionMethod($login, 'resolveRedirectPathForUser');
+
+        foreach ($cases as $index => [$role, $type, $audience]) {
+            $user = $this->upsertFromIdp([
+                'id' => 'idp-role-' . $index,
+                'email' => 'role-' . $index . '@example.test',
+                'first_name' => 'Role',
+                'last_name' => 'Test',
+                'roles' => [$role],
+                'role' => 'student',
+            ])->fresh();
+
+            $this->assertSame($role, $user->idp_role);
+            $this->assertSame($type, $user->user_type, $role);
+            $this->assertSame(User::ROLE_STUDENT, $user->user_role, $role);
+            $this->assertSame($audience, $user->idpHealthFormAudience(), $role);
+            $this->assertSame($audience === 'employee', $employee->invoke($controller, $user), $role);
+            $this->assertSame($audience === 'dependent', $dependent->invoke($controller, $user), $role);
+            $this->assertSame($audience === 'dependent', $prompt->invoke($login, $user), $role);
+            $this->assertSame('/student/home', $redirect->invoke($login, $user), $role);
+            $this->assertFalse($this->canAccessAdminRoutes($user), $role);
+        }
+
+        $this->assertDatabaseCount('admins', 0);
+        $this->assertDatabaseCount('admin_hub', 0);
+    }
+
+    public function test_missing_roles_default_to_dependent_and_email_shortcuts_do_not_grant_access(): void
+    {
+        Config::set('services.idp.local_superadmin_identifiers', ['pupocms']);
+        $user = $this->upsertFromIdp([
+            'id' => 'missing-role-id',
+            'email' => 'pupocms@example.test',
+            'first_name' => 'No',
+            'last_name' => 'Role',
+        ]);
+
+        $this->assertSame('dependent', $user->idp_role);
+        $this->assertSame('Dependent', $user->user_type);
+        $this->assertSame(User::ROLE_STUDENT, $user->user_role);
+        $this->assertFalse($this->canAccessAdminRoutes($user));
+        $redirect = new ReflectionMethod(LoginController::class, 'resolveRedirectPathForUser');
+        $this->assertSame('/student/home', $redirect->invoke(new LoginController(), $user));
+    }
+
+    public function test_faculty_lookup_cannot_reclassify_other_idp_roles(): void
+    {
+        $this->mock(\App\Services\FacultySyncService::class)
+            ->shouldNotReceive('fetchFaculties');
+        $controller = new LoginController();
+        $enrich = new ReflectionMethod($controller, 'enrichUserWithFlssFacultyData');
+
+        foreach (['student', 'applicant', 'guest', 'superadmin', 'non-teaching staff'] as $role) {
+            $user = $this->upsertFromIdp([
+                'id' => 'faculty-lookup-' . $role,
+                'email' => str_replace(' ', '-', $role) . '@example.test',
+                'roles' => $role,
+            ]);
+            $userType = $user->user_type;
+            $enrich->invoke($controller, $user);
+            $this->assertSame($userType, $user->fresh()->user_type);
+        }
+    }
+
+    public function test_stale_superadmin_role_without_account_access_is_blocked_and_corrected_on_login(): void
+    {
+        $identity = ['id' => 'stale-superadmin-id', 'email' => 'stale@example.test'];
+        $user = $this->upsertFromIdp($identity + ['roles' => 'superadmin']);
+        $user->user_role = User::ROLE_SUPERADMIN;
+        $user->save();
+
+        $this->assertFalse($this->canAccessAdminRoutes($user));
+        $updated = $this->upsertFromIdp($identity + ['roles' => 'superadmin'])->fresh();
+        $this->assertSame(User::ROLE_STUDENT, $updated->user_role);
+        $this->assertSame('dependent', $updated->idpHealthFormAudience());
+        $this->assertDatabaseCount('admins', 0);
+    }
+
+    public function test_admin_routes_require_active_local_account_access(): void
+    {
+        foreach (['superadmin', 'clinic_staff'] as $accessLevel) {
+            $identity = ['id' => 'local-' . $accessLevel, 'email' => $accessLevel . '@example.test'];
+            $user = $this->upsertFromIdp($identity + ['roles' => 'guest']);
+            $admin = Admin::create([
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'access_level' => $accessLevel,
+                'status' => 'active',
+            ]);
+
+            $user = $this->upsertFromIdp($identity + ['roles' => 'guest']);
+            $this->assertSame($accessLevel === 'superadmin' ? User::ROLE_SUPERADMIN : User::ROLE_ADMIN, $user->user_role);
+            $this->assertTrue($this->canAccessAdminRoutes($user));
+
+            $admin->update(['status' => 'inactive']);
+            $this->assertFalse($this->canAccessAdminRoutes($user));
+            $user = $this->upsertFromIdp($identity + ['roles' => 'guest']);
+            $this->assertSame(User::ROLE_STUDENT, $user->user_role);
+            $this->assertFalse($this->canAccessAdminRoutes($user));
+        }
+    }
+
+    private function canAccessAdminRoutes(User $user): bool
+    {
+        $middleware = new RoleMiddleware();
+        $access = new ReflectionMethod($middleware, 'hasRoleAccess');
+
+        return $access->invoke($middleware, $user, User::normalizeRole($user->user_role), [User::ROLE_SUPERADMIN, User::ROLE_ADMIN]);
     }
 
     private function upsertFromIdp(array $profile): User

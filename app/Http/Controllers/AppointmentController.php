@@ -2185,6 +2185,10 @@ class AppointmentController extends Controller
             return false;
         }
 
+        if (($audience = $user->idpHealthFormAudience()) !== null) {
+            return $audience === 'dependent';
+        }
+
         $userType = strtolower(trim((string) ($user->user_type ?? '')));
         $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
 
@@ -2250,6 +2254,10 @@ class AppointmentController extends Controller
     {
         if (!$user) {
             return false;
+        }
+
+        if (($audience = $user->idpHealthFormAudience()) !== null) {
+            return $audience === 'employee';
         }
 
         $markers = strtolower(trim(implode(' ', array_filter([

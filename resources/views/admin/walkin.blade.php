@@ -9091,6 +9091,30 @@
         overflow: visible !important;
     }
 
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only #applicantRefStatus,
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only #applicantRefStatus.ocr-status,
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only #applicantRefStatus.ocr-status.is-visible,
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only #applicantRefStatus.ocr-status.is-visible:not(:empty),
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-ref-actions {
+        display: none !important;
+        min-height: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        background-image: none !important;
+        overflow: hidden !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-approved-result-only,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-modal-body,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-ref-panel {
+        background: #0f172a !important;
+        background-image: none !important;
+    }
+
     #applicantRefModal .applicant-modal-shell.is-employee-lookup:not(.has-lookup-result) .applicant-file-actions {
         display: none !important;
         min-height: 0 !important;

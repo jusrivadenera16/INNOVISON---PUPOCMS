@@ -3459,6 +3459,11 @@
                 break;
             }
         }
+        $studentIdpAudience = $studentUser?->idpHealthFormAudience();
+        if ($studentIdpAudience !== null) {
+            $studentUsesDependentProfile = $studentIdpAudience === 'dependent';
+            $studentUsesEmployeeHealthForm = $studentIdpAudience === 'employee';
+        }
         $studentHealthFormStartRoute = $studentUsesEmployeeHealthForm
             ? route('health.form.employee')
             : ($studentUsesDependentProfile ? route('dependent.profile.form') : route('health.form'));
