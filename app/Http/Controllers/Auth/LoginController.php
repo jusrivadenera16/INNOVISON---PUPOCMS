@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
@@ -27,6 +28,15 @@ class LoginController extends Controller
         'role', 'user_role', 'primary_role', 'user.role', 'user.user_role',
         'data.role', 'data.user_role', 'data.user.role', 'profile.role', 'data.profile.role',
         'authorities', 'user.authorities', 'data.authorities', 'data.user.authorities',
+    ];
+
+    private const IDP_ACCOUNT_TYPE_PATHS = [
+        'account_type', 'accountType',
+        'user.account_type', 'user.accountType',
+        'data.account_type', 'data.accountType',
+        'data.user.account_type', 'data.user.accountType',
+        'profile.account_type', 'profile.accountType',
+        'data.profile.account_type', 'data.profile.accountType',
     ];
 
     private function studentGuardName(): string
@@ -981,6 +991,8 @@ class LoginController extends Controller
             'role',
             'roles',
             'user_role',
+            'account_type',
+            'accountType',
             'student_number',
             'student_id',
             'reference_number',
@@ -1069,6 +1081,14 @@ class LoginController extends Controller
             }
         }
 
+        // A fresh account type must not be masked by older token role aliases.
+        foreach (self::IDP_ACCOUNT_TYPE_PATHS as $path) {
+            if (Arr::has($userInfoProfile, $path)) {
+                Arr::forget($tokenProfile, array_merge(self::IDP_ROLE_PATHS, self::IDP_ACCOUNT_TYPE_PATHS));
+                break;
+            }
+        }
+
         // Preserve admission fields that are only present in the token callback.
         return array_replace_recursive($tokenProfile, $userInfoProfile);
     }
@@ -1114,11 +1134,20 @@ class LoginController extends Controller
             }
 
             $response = Http::acceptJson()->timeout(20)->withToken($accessToken)->get($url);
-            if (!$response->successful() || !is_array($response->json())) {
+            $payload = $response->json();
+            Log::info('IDP profile endpoint response.', [
+                'endpoint_path' => parse_url($url, PHP_URL_PATH),
+                'status' => $response->status(),
+                'roles_present' => is_array($payload) && array_key_exists('roles', $payload),
+                'roles_type' => gettype(data_get($payload, 'roles')),
+                'roles_value' => data_get($payload, 'roles'),
+                'account_type_value' => is_array($payload) ? $this->extractIdpAccountType($payload) : null,
+            ]);
+            if (!$response->successful() || !is_array($payload)) {
                 continue;
             }
 
-            $profile = $this->extractProfilePayload($response->json());
+            $profile = $this->extractProfilePayload($payload);
             if ($profile !== null) {
                 return $profile;
             }
@@ -1160,6 +1189,18 @@ class LoginController extends Controller
         }
 
         return [];
+    }
+
+    private function extractIdpAccountType(array $profile): ?string
+    {
+        foreach (self::IDP_ACCOUNT_TYPE_PATHS as $path) {
+            $value = data_get($profile, $path);
+            if (is_string($value) && trim($value) !== '') {
+                return trim($value);
+            }
+        }
+
+        return null;
     }
 
     private function configuredIdpRolePrefix(): string
@@ -1498,9 +1539,13 @@ class LoginController extends Controller
         $lastName = $lastName !== '' ? $lastName : $splitLastName;
 
         $rawIdpRoles = $this->extractRawRoles($profile);
-        $rawIdpRole = $rawIdpRoles[0] ?? 'dependent';
+        $rawIdpRole = $rawIdpRoles[0] ?? $this->extractIdpAccountType($profile) ?? '';
         $idpRole = $this->normalizeIdpRoleToken((string) $rawIdpRole);
-        $idpRole = $idpRole !== '' ? $idpRole : 'dependent';
+        if ($idpRole === '') {
+            throw ValidationException::withMessages([
+                'idp' => 'Your account type could not be confirmed because the identity provider returned no usable role or account type. Please contact the clinic administrator.',
+            ]);
+        }
         $role = $this->mapIdpRolesToLocal($rawIdpRoles);
 
         $adminHubRole = $this->resolveLocalRoleFromAdminHub($emailSeed, $idpSubjectSeed);
@@ -2244,6 +2289,7 @@ class LoginController extends Controller
             'idp_roles_payload_type' => gettype(data_get($profile, 'roles')),
             'idp_roles_payload' => data_get($profile, 'roles'),
             'idp_roles' => $this->extractRawRoles($profile),
+            'idp_account_type' => $this->extractIdpAccountType($profile),
             'has_reference_number' => $this->firstNonEmptyScalar($profile, [
                 'reference_number',
                 'user.reference_number',
@@ -2262,7 +2308,16 @@ class LoginController extends Controller
             ]) !== null,
         ]);
 
-        $user = $this->upsertLocalUserFromIdpProfile($profile);
+        try {
+            $user = $this->upsertLocalUserFromIdpProfile($profile);
+        } catch (ValidationException $exception) {
+            Log::warning('IDP callback stopped because the account role could not be resolved.', [
+                'profile_keys' => array_keys($profile),
+                'idp_roles' => $this->extractRawRoles($profile),
+            ]);
+
+            return redirect('/login?idp_error=1')->withErrors($exception->errors());
+        }
         $user->user_role = User::normalizeRole($user->user_role);
         $user->save();
 

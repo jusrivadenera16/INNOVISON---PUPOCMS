@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 use ReflectionMethod;
 use Tests\TestCase;
 
@@ -305,6 +306,132 @@ class AdminHubIdpLinkingTest extends TestCase
         $this->assertNull($user->employee_number);
     }
 
+    public function test_documented_me_json_format_survives_fetch_merge_and_save(): void
+    {
+        Config::set('services.idp.base_url', 'https://idp.example.test');
+        Config::set('services.idp.profile_paths', ['/me']);
+        Config::set('services.idp.role_prefix', 'OCMS:');
+        $cases = [
+            ['student', 'student', 'Student', 'student'],
+            ['faculty', 'faculty', 'Faculty', 'employee'],
+            [' Student ', 'student', 'Student', 'student'],
+            ['OCMS:student', 'student', 'Student', 'student'],
+            ['OCMS:faculty', 'faculty', 'Faculty', 'employee'],
+            ['non-teaching staff', 'non-teaching staff', 'Admin', 'employee'],
+        ];
+        $sequence = Http::sequence();
+        foreach ($cases as $index => [$rawRole]) {
+            $sequence->push(json_encode([
+                'email' => 'documented-format-' . $index . '@example.test',
+                'first_name' => 'Format',
+                'id' => 'documented-format-' . $index,
+                'last_name' => 'Test',
+                'middle_name' => '',
+                'name_suffix' => '',
+                'roles' => $rawRole,
+            ]), 200, ['Content-Type' => 'application/json']);
+        }
+        Http::fake(['https://idp.example.test/me' => $sequence]);
+        $controller = new LoginController();
+        $fetch = new ReflectionMethod($controller, 'fetchProfileFromIdp');
+        $merge = new ReflectionMethod($controller, 'mergeIdpProfilePayloads');
+
+        foreach ($cases as [$rawRole, $savedRole, $userType, $audience]) {
+            $profile = $fetch->invoke($controller, 'format-test-token');
+            $this->assertSame($rawRole, $profile['roles']);
+            $profile = $merge->invoke($controller, ['role' => 'superadmin', 'roles' => ''], $profile);
+            $this->assertSame($rawRole, $profile['roles']);
+            $user = $this->upsertFromIdp($profile)->fresh();
+            $this->assertSame($savedRole, $user->idp_role);
+            $this->assertSame($userType, $user->user_type);
+            $this->assertSame($audience, $user->idpHealthFormAudience());
+            $this->assertSame(User::ROLE_STUDENT, $user->user_role);
+        }
+
+        Http::assertSentCount(count($cases));
+        foreach (Http::recorded() as [$request]) {
+            $this->assertSame('GET', $request->method());
+            $this->assertSame('https://idp.example.test/me', $request->url());
+            $this->assertSame([], $request->data());
+            $this->assertTrue($request->hasHeader('Accept', 'application/json'));
+            $this->assertTrue($request->hasHeader('Authorization', 'Bearer format-test-token'));
+        }
+    }
+
+    public function test_account_type_fallback_saves_classification_without_granting_admin_access(): void
+    {
+        $cases = [
+            ['account_type', 'Student', 'student', 'Student', 'student'],
+            ['account_type', 'Faculty', 'faculty', 'Faculty', 'employee'],
+            ['accountType', 'Non-teaching Staff', 'non-teaching staff', 'Admin', 'employee'],
+            ['data.user.account_type', 'Applicant', 'applicant', 'Applicant', 'applicant'],
+            ['user.accountType', 'Guest', 'guest', 'Guest', 'dependent'],
+            ['account_type', 'superadmin', 'superadmin', 'Dependent', 'dependent'],
+            ['account_type', 'custom role', 'custom role', 'Dependent', 'dependent'],
+        ];
+        foreach ($cases as $index => [$path, $accountType, $idpRole, $userType, $audience]) {
+            $identity = ['id' => 'account-type-' . $index, 'email' => 'account-type-' . $index . '@example.test'];
+            $oldUser = $this->upsertFromIdp($identity + ['roles' => 'dependent']);
+            $profile = $identity + ['roles' => ''];
+            data_set($profile, $path, $accountType);
+            $user = $this->upsertFromIdp($profile)->fresh();
+
+            $this->assertSame($oldUser->id, $user->id);
+            $this->assertSame($idpRole, $user->idp_role);
+            $this->assertSame($userType, $user->user_type);
+            $this->assertSame($audience, $user->idpHealthFormAudience());
+            $this->assertSame(User::ROLE_STUDENT, $user->user_role);
+            $this->assertFalse($this->canAccessAdminRoutes($user));
+        }
+        $this->assertDatabaseCount('admins', 0);
+        $this->assertDatabaseCount('admin_hub', 0);
+    }
+
+    public function test_nonempty_roles_keep_precedence_over_account_type(): void
+    {
+        $user = $this->upsertFromIdp([
+            'id' => 'roles-precedence',
+            'email' => 'roles-precedence@example.test',
+            'roles' => 'student',
+            'account_type' => 'Faculty',
+        ])->fresh();
+
+        $this->assertSame('student', $user->idp_role);
+        $this->assertSame('Student', $user->user_type);
+        $this->assertSame('student', $user->idpHealthFormAudience());
+    }
+
+    public function test_fresh_account_type_replaces_token_classification_before_saving(): void
+    {
+        $controller = new LoginController();
+        $merge = new ReflectionMethod($controller, 'mergeIdpProfilePayloads');
+        $profile = $merge->invoke($controller, [
+            'role' => 'student',
+            'account_type' => 'Student',
+            'id' => 'fresh-account-type',
+            'email' => 'fresh-account-type@example.test',
+        ], ['user' => ['accountType' => 'Faculty']]);
+        $user = $this->upsertFromIdp($profile)->fresh();
+
+        $this->assertSame('faculty', $user->idp_role);
+        $this->assertSame('employee', $user->idpHealthFormAudience());
+    }
+
+    public function test_token_account_type_can_supply_missing_me_classification(): void
+    {
+        $controller = new LoginController();
+        $merge = new ReflectionMethod($controller, 'mergeIdpProfilePayloads');
+        $profile = $merge->invoke($controller, [
+            'account_type' => 'Student',
+            'id' => 'token-account-type',
+            'email' => 'token-account-type@example.test',
+        ], ['roles' => '']);
+        $user = $this->upsertFromIdp($profile)->fresh();
+
+        $this->assertSame('student', $user->idp_role);
+        $this->assertSame('student', $user->idpHealthFormAudience());
+    }
+
     public function test_me_faculty_roles_correct_a_previously_student_account(): void
     {
         $identity = [
@@ -389,7 +516,7 @@ class AdminHubIdpLinkingTest extends TestCase
         $this->assertDatabaseCount('admin_hub', 0);
     }
 
-    public function test_missing_roles_default_to_dependent_and_email_shortcuts_do_not_grant_access(): void
+    public function test_email_shortcuts_do_not_grant_access(): void
     {
         Config::set('services.idp.local_superadmin_identifiers', ['pupocms']);
         $user = $this->upsertFromIdp([
@@ -397,6 +524,7 @@ class AdminHubIdpLinkingTest extends TestCase
             'email' => 'pupocms@example.test',
             'first_name' => 'No',
             'last_name' => 'Role',
+            'roles' => 'dependent',
         ]);
 
         $this->assertSame('dependent', $user->idp_role);
@@ -405,6 +533,86 @@ class AdminHubIdpLinkingTest extends TestCase
         $this->assertFalse($this->canAccessAdminRoutes($user));
         $redirect = new ReflectionMethod(LoginController::class, 'resolveRedirectPathForUser');
         $this->assertSame('/student/home', $redirect->invoke(new LoginController(), $user));
+    }
+
+    public function test_unresolved_roles_never_create_dependent_users(): void
+    {
+        foreach ([[], ['roles' => ''], ['roles' => null], ['roles' => []], ['roles' => '   '], ['roles' => 'ocms:']] as $rolePayload) {
+            try {
+                $this->upsertFromIdp($rolePayload + [
+                    'id' => 'unresolved-id',
+                    'email' => 'unresolved@example.test',
+                ]);
+                $this->fail('Unresolved roles must stop before saving a user.');
+            } catch (ValidationException $exception) {
+                $this->assertArrayHasKey('idp', $exception->errors());
+            }
+
+            $this->assertDatabaseCount('users', 0);
+            $this->assertDatabaseCount('admins', 0);
+        }
+    }
+
+    public function test_blank_roles_do_not_overwrite_a_saved_student_classification(): void
+    {
+        $identity = ['id' => 'student-blank-role', 'email' => 'student-blank@example.test'];
+        $user = $this->upsertFromIdp($identity + ['roles' => 'student']);
+        $original = $user->fresh()->getAttributes();
+
+        try {
+            $this->upsertFromIdp($identity + ['roles' => '', 'first_name' => 'Changed']);
+            $this->fail('A blank role must stop the account update.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('idp', $exception->errors());
+        }
+
+        $this->assertSame($original, $user->fresh()->getAttributes());
+        $this->assertSame('student', $user->fresh()->idpHealthFormAudience());
+    }
+
+    public function test_a_confirmed_student_role_repairs_an_earlier_dependent_fallback(): void
+    {
+        $identity = ['id' => 'student-repair', 'email' => 'student-repair@example.test'];
+        $oldUser = $this->upsertFromIdp($identity + ['roles' => 'dependent']);
+        $user = $this->upsertFromIdp($identity + ['roles' => 'student'])->fresh();
+
+        $this->assertSame($oldUser->id, $user->id);
+        $this->assertSame('student', $user->idp_role);
+        $this->assertSame('Student', $user->user_type);
+        $this->assertSame('student', $user->idpHealthFormAudience());
+        $this->assertDatabaseCount('users', 1);
+    }
+
+    public function test_callback_with_blank_me_roles_returns_an_error_before_login_or_saving(): void
+    {
+        Config::set('services.idp.enabled', true);
+        Config::set('services.idp.base_url', 'https://idp.example.test');
+        Config::set('services.idp.client_id', 'test-client');
+        Config::set('services.idp.client_secret', 'test-secret');
+        Config::set('services.idp.token_path', '/token');
+        Config::set('services.idp.profile_paths', ['/me']);
+        Http::fake([
+            'https://idp.example.test/token' => Http::response(['access_token' => 'test-token']),
+            'https://idp.example.test/me' => Http::response([
+                'id' => 'blank-callback-id',
+                'email' => 'blank-callback@example.test',
+                'first_name' => 'Student',
+                'last_name' => 'Test',
+                'roles' => '',
+            ]),
+            '*' => Http::response([], 500),
+        ]);
+
+        $request = \Illuminate\Http\Request::create('/auth/callback', 'GET', ['code' => 'test-code']);
+        $request->setLaravelSession($this->app['session.store']);
+        $response = (new LoginController())->handleIdpCallback($request);
+
+        $this->assertSame(url('/login?idp_error=1'), $response->getTargetUrl());
+        $this->assertTrue(session('errors')->has('idp'));
+        $this->assertGuest('student');
+        $this->assertGuest('admin');
+        $this->assertDatabaseCount('users', 0);
+        Http::assertSentCount(2);
     }
 
     public function test_faculty_lookup_cannot_reclassify_other_idp_roles(): void

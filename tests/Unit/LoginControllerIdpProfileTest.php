@@ -8,6 +8,22 @@ use Tests\TestCase;
 
 class LoginControllerIdpProfileTest extends TestCase
 {
+    public function test_account_type_is_preserved_when_it_is_outside_nested_identity_fields(): void
+    {
+        $controller = new LoginController();
+        $extract = new ReflectionMethod($controller, 'extractProfilePayload');
+        $accountType = new ReflectionMethod($controller, 'extractIdpAccountType');
+        $payload = [
+            'account_type' => 'Faculty',
+            'data' => ['id' => 'faculty-id', 'email' => 'faculty@example.test'],
+        ];
+
+        $profile = $extract->invoke($controller, $payload);
+        $this->assertSame('Faculty', $accountType->invoke($controller, $profile));
+        $this->assertSame('faculty-id', data_get($profile, 'data.id'));
+        $this->assertSame(['accountType' => 'Student'], $extract->invoke($controller, ['accountType' => 'Student']));
+    }
+
     public function test_fresh_roles_replace_stale_token_aliases_and_array_entries(): void
     {
         $controller = new LoginController();
