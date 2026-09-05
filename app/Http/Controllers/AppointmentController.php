@@ -1103,6 +1103,9 @@ class AppointmentController extends Controller
 
     private function isHealthCourseApplicable(User $user): bool
     {
+        if (($audience = $user->clinicHealthFormAudience()) !== null) {
+            return in_array($audience, ['student', 'applicant'], true);
+        }
         $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
         $userType = strtolower(trim((string) ($user->user_type ?? '')));
         $userRole = User::normalizeRole((string) ($user->user_role ?? ''));
@@ -1122,12 +1125,18 @@ class AppointmentController extends Controller
 
     private function isApplicantAccount(User $user): bool
     {
+        if (($audience = $user->clinicHealthFormAudience()) !== null) {
+            return $audience === 'applicant';
+        }
         return strtolower(trim((string) ($user->idp_role ?? ''))) === 'applicant'
             || strtolower(trim((string) ($user->user_type ?? ''))) === 'applicant';
     }
 
     private function isStudentAccount(User $user): bool
     {
+        if (($audience = $user->clinicHealthFormAudience()) !== null) {
+            return $audience === 'student';
+        }
         if ($this->isApplicantAccount($user)) {
             return false;
         }
@@ -1350,8 +1359,7 @@ class AppointmentController extends Controller
 
         $applicantIdentity = $this->normalizePuptasApplicantIdentity($applicantData);
         $normalizedIdpRole = strtolower(trim((string) ($user->idp_role ?? '')));
-        $isApplicantAccount = $normalizedIdpRole === 'applicant'
-            || strtolower(trim((string) ($user->user_type ?? ''))) === 'applicant';
+        $isApplicantAccount = $this->isApplicantAccount($user);
 
         if ($isApplicantAccount) {
             return $lookupOutcome === 'unavailable'
@@ -1359,10 +1367,7 @@ class AppointmentController extends Controller
                 : 'admission';
         }
 
-        if (
-            $normalizedIdpRole === 'student'
-            || strtolower(trim((string) ($user->user_type ?? ''))) === 'student'
-        ) {
+        if ($this->isStudentAccount($user)) {
             return 'student_number';
         }
 
@@ -2185,7 +2190,7 @@ class AppointmentController extends Controller
             return false;
         }
 
-        if (($audience = $user->idpHealthFormAudience()) !== null) {
+        if (($audience = $user->clinicHealthFormAudience()) !== null) {
             return $audience === 'dependent';
         }
 
@@ -2256,7 +2261,7 @@ class AppointmentController extends Controller
             return false;
         }
 
-        if (($audience = $user->idpHealthFormAudience()) !== null) {
+        if (($audience = $user->clinicHealthFormAudience()) !== null) {
             return $audience === 'employee';
         }
 

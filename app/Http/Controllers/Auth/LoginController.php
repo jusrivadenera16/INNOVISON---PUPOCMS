@@ -10,6 +10,7 @@ use App\Models\DependentsProfile;
 use App\Models\HealthFormSubmission;
 use App\Models\User;
 use App\Services\ClinicWorkflowService;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -19,7 +20,6 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
@@ -214,6 +214,11 @@ class LoginController extends Controller
             return;
         }
 
+        if ($user->needsClinicAccountTypeSelection()) {
+            $request->session()->flash('show_health_profile_prompt', true);
+            return;
+        }
+
         if ($this->isDependentProfileUser($user)) {
             $dependentProfileExists = Schema::hasTable('dependents_profiles')
                 && DependentsProfile::query()->where('user_id', $user->id)->exists();
@@ -245,7 +250,7 @@ class LoginController extends Controller
 
     private function isDependentProfileUser(User $user): bool
     {
-        if (($audience = $user->idpHealthFormAudience()) !== null) {
+        if (($audience = $user->clinicHealthFormAudience()) !== null) {
             return $audience === 'dependent';
         }
 
@@ -1539,13 +1544,8 @@ class LoginController extends Controller
         $lastName = $lastName !== '' ? $lastName : $splitLastName;
 
         $rawIdpRoles = $this->extractRawRoles($profile);
-        $rawIdpRole = $rawIdpRoles[0] ?? $this->extractIdpAccountType($profile) ?? '';
+        $rawIdpRole = $rawIdpRoles[0] ?? '';
         $idpRole = $this->normalizeIdpRoleToken((string) $rawIdpRole);
-        if ($idpRole === '') {
-            throw ValidationException::withMessages([
-                'idp' => 'Your account type could not be confirmed because the identity provider returned no usable role or account type. Please contact the clinic administrator.',
-            ]);
-        }
         $role = $this->mapIdpRolesToLocal($rawIdpRoles);
 
         $adminHubRole = $this->resolveLocalRoleFromAdminHub($emailSeed, $idpSubjectSeed);
@@ -1592,7 +1592,7 @@ class LoginController extends Controller
             ])));
             $existingUser->user_role = $role;
             if (Schema::hasColumn('users', 'idp_role')) {
-                $existingUser->idp_role = $idpRole;
+                $existingUser->idp_role = $idpRole !== '' ? $idpRole : null;
             }
             if (Schema::hasColumn('users', 'employee_number') && $employeeNumberSeed !== '') {
                 $existingUser->employee_number = $employeeNumberSeed;
@@ -1623,12 +1623,15 @@ class LoginController extends Controller
                 $normalizedLocalRole = User::normalizeRole($role);
                 $linkedAdmin = $this->findLinkedAdminProfile($existingUser);
                 $currentUserType = strtolower(trim((string) ($existingUser->user_type ?? '')));
-                $resolvedUserType = $this->defaultUserTypeForIdpRole($idpRole, $role);
+                $resolvedUserType = $normalizedLocalRole === User::ROLE_STUDENT
+                    ? $existingUser->clinicUserType()
+                    : $this->defaultUserTypeForIdpRole($idpRole, $role);
 
                 if ($normalizedLocalRole === User::ROLE_SUPERADMIN) {
                     $existingUser->user_type = 'Regular';
                 } elseif (
                     $normalizedLocalRole === User::ROLE_STUDENT
+                    && $resolvedUserType !== null
                     && $existingUser->user_type !== $resolvedUserType
                 ) {
                     $existingUser->user_type = $resolvedUserType;
@@ -1671,7 +1674,7 @@ class LoginController extends Controller
             'password' => Hash::make(Str::random(40)),
         ];
         if (Schema::hasColumn('users', 'idp_role')) {
-            $newUserAttributes['idp_role'] = $idpRole;
+            $newUserAttributes['idp_role'] = $idpRole !== '' ? $idpRole : null;
         }
         if (Schema::hasColumn('users', 'employee_number')) {
             $newUserAttributes['employee_number'] = $employeeNumberSeed !== '' ? $employeeNumberSeed : null;
@@ -1679,7 +1682,9 @@ class LoginController extends Controller
         $user = User::create($newUserAttributes);
 
         if ($this->usersTableHasUserTypeColumn() && empty($user->user_type)) {
-            $user->user_type = $this->defaultUserTypeForIdpRole($idpRole, $role);
+            $user->user_type = User::normalizeRole($role) === User::ROLE_STUDENT
+                ? $user->clinicUserType()
+                : $this->defaultUserTypeForIdpRole($idpRole, $role);
             $user->save();
         }
 
@@ -1692,9 +1697,7 @@ class LoginController extends Controller
     private function enrichUserWithPuptasData(User $user): void
     {
         try {
-            $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
-            $userType = strtolower(trim((string) ($user->user_type ?? '')));
-            $isStudentRole = $idpRole === 'student' || ($idpRole === '' && $userType === 'student');
+            $isStudentRole = in_array($user->clinicHealthFormAudience(), ['student', 'applicant'], true);
 
             // Only process students
             if (!$isStudentRole) {
@@ -1835,7 +1838,7 @@ class LoginController extends Controller
             return;
         }
 
-        if (trim((string) $user->idp_role) !== '' && User::userTypeForIdpRole($user->idp_role) !== 'Faculty') {
+        if ($user->clinic_account_type !== 'faculty' || $user->hasPendingAdmissionReference()) {
             return;
         }
 
@@ -1928,9 +1931,7 @@ class LoginController extends Controller
     private function enrichUserWithGuisisData(User $user): void
     {
         try {
-            $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
-            $userType = strtolower(trim((string) ($user->user_type ?? '')));
-            if ($idpRole !== 'student' && !($idpRole === '' && $userType === 'student')) {
+            if ($user->clinicHealthFormAudience() !== 'student') {
                 return;
             }
 
@@ -2237,8 +2238,17 @@ class LoginController extends Controller
             'code_length' => strlen($code),
         ]);
 
-        $tokenPayload = $this->exchangeCodeForTokens($code);
-        $request->session()->forget('idp_pkce_verifier');
+        try {
+            $tokenPayload = $this->exchangeCodeForTokens($code);
+        } catch (ConnectionException $exception) {
+            Log::warning('IDP callback connection failed.', ['stage' => 'token_exchange']);
+
+            return redirect('/login?idp_error=1')->withErrors([
+                'idp' => 'We could not connect to the identity provider to complete sign-in. Please try signing in again.',
+            ]);
+        } finally {
+            $request->session()->forget('idp_pkce_verifier');
+        }
         if ($tokenPayload === null) {
             Log::warning('IDP callback token exchange returned no payload.');
             return redirect('/login?idp_error=1')->withErrors([
@@ -2267,7 +2277,15 @@ class LoginController extends Controller
             $this->extractJwtClaims($tokenPayload['id_token'] ?? null),
             $this->extractJwtClaims($accessToken)
         );
-        $userInfoProfile = $this->fetchProfileFromIdp($accessToken);
+        try {
+            $userInfoProfile = $this->fetchProfileFromIdp($accessToken);
+        } catch (ConnectionException $exception) {
+            Log::warning('IDP callback connection failed.', ['stage' => 'profile_fetch']);
+
+            return redirect('/login?idp_error=1')->withErrors([
+                'idp' => 'We could not retrieve your profile from the identity provider. Please try signing in again.',
+            ]);
+        }
         $profile = $this->mergeIdpProfilePayloads(
             $this->mergeIdpProfilePayloads($tokenProfile, $jwtProfile),
             $userInfoProfile
@@ -2308,16 +2326,7 @@ class LoginController extends Controller
             ]) !== null,
         ]);
 
-        try {
-            $user = $this->upsertLocalUserFromIdpProfile($profile);
-        } catch (ValidationException $exception) {
-            Log::warning('IDP callback stopped because the account role could not be resolved.', [
-                'profile_keys' => array_keys($profile),
-                'idp_roles' => $this->extractRawRoles($profile),
-            ]);
-
-            return redirect('/login?idp_error=1')->withErrors($exception->errors());
-        }
+        $user = $this->upsertLocalUserFromIdpProfile($profile);
         $user->user_role = User::normalizeRole($user->user_role);
         $user->save();
 

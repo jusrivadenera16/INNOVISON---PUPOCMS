@@ -151,6 +151,15 @@ Route::middleware(['auth:student', 'account.active', 'idp.session', 'audit'])->g
 
         Route::get('/student/feedbacks', [AppointmentController::class, 'feedbackIndex'])->name('student.feedback.index');
 
+        Route::post('/student/account-type', [\App\Http\Controllers\ClinicAccountTypeController::class, 'store'])
+            ->middleware('throttle:10,1')
+            ->name('student.account_type.store');
+        Route::get('/student/account-type/options', [\App\Http\Controllers\ClinicAccountTypeController::class, 'options'])
+            ->middleware('throttle:15,1')
+            ->name('student.account_type.options');
+
+        Route::middleware(\App\Http\Middleware\EnsureClinicAccountType::class)->group(function () {
+
         // 1. Route para ipakita ang blankong form
         Route::get('/student/health-form', [AppointmentController::class, 'showHealthForm'])->name('health.form');
         Route::get('/student/health-form/student', [AppointmentController::class, 'showHealthForm'])->name('health.form.student');
@@ -201,6 +210,8 @@ Route::middleware(['auth:student', 'account.active', 'idp.session', 'audit'])->g
             ->name('student.health_record.e_signature');
         Route::post('/student/health-record/e-sign/remove', [AppointmentController::class, 'removeHealthRecordSignature'])
             ->name('student.health_record.e_signature.remove');
+
+        });
 
         Route::get('/student/account', [AppointmentController::class, 'account']);
         Route::get('/student/history', [AppointmentController::class, 'history']);
