@@ -206,7 +206,6 @@ class AppointmentControllerPuptasIdentityTest extends TestCase
         $user->user_role = User::ROLE_STUDENT;
         $user->idp_role = 'applicant';
         $user->user_type = 'Applicant';
-        $user->clinic_account_type = 'applicant';
         $user->setRelation('healthProfile', null);
 
         $this->assertSame(
@@ -229,7 +228,6 @@ class AppointmentControllerPuptasIdentityTest extends TestCase
         $applicant->user_role = User::ROLE_STUDENT;
         $applicant->idp_role = 'applicant';
         $applicant->user_type = 'Applicant';
-        $applicant->clinic_account_type = 'applicant';
         $applicant->setRelation('healthProfile', null);
 
         $this->assertFalse($method->invoke($controller, $applicant, null, null, 'not_found'));
@@ -246,7 +244,6 @@ class AppointmentControllerPuptasIdentityTest extends TestCase
         $student->user_role = User::ROLE_STUDENT;
         $student->idp_role = 'student';
         $student->user_type = 'Student';
-        $student->clinic_account_type = 'student';
         $student->setRelation('healthProfile', null);
 
         $this->assertTrue($method->invoke($controller, $student, null, null, 'not_found'));
@@ -262,7 +259,6 @@ class AppointmentControllerPuptasIdentityTest extends TestCase
         $user->idp_role = 'student';
         $user->user_role = User::ROLE_STUDENT;
         $user->user_type = 'Student';
-        $user->clinic_account_type = 'student';
         $user->setRelation('healthProfile', null);
 
         $this->assertSame(

@@ -1838,7 +1838,7 @@ class LoginController extends Controller
             return;
         }
 
-        if ($user->clinic_account_type !== 'faculty' || $user->hasPendingAdmissionReference()) {
+        if ($user->clinicAccountTypeKey() !== 'faculty' || $user->hasPendingAdmissionReference()) {
             return;
         }
 

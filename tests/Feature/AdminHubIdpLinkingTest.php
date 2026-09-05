@@ -45,7 +45,6 @@ class AdminHubIdpLinkingTest extends TestCase
             $table->string('user_role')->default('student');
             $table->string('idp_role')->nullable();
             $table->string('user_type')->nullable();
-            $table->string('clinic_account_type')->nullable();
             $table->string('status')->default('active');
             $table->string('password');
             $table->rememberToken();
@@ -362,7 +361,6 @@ class AdminHubIdpLinkingTest extends TestCase
             $user->refresh();
 
             $this->assertSame(route($route), $response->getData(true)['redirect']);
-            $this->assertSame($type, $user->clinic_account_type);
             $this->assertSame($label, $user->user_type);
             $this->assertSame('superadmin', $user->idp_role);
             $this->assertSame(User::ROLE_STUDENT, $user->user_role);
@@ -379,7 +377,6 @@ class AdminHubIdpLinkingTest extends TestCase
         $this->saveClinicType($user, 'faculty');
         foreach (['student', '', 'guest'] as $role) {
             $user = $this->upsertFromIdp($identity + ['roles' => $role, 'first_name' => 'Updated'])->fresh();
-            $this->assertSame('faculty', $user->clinic_account_type);
             $this->assertSame('Faculty', $user->user_type);
             $this->assertSame('employee', $user->clinicHealthFormAudience());
             $this->assertSame('Updated', $user->first_name);
@@ -397,7 +394,7 @@ class AdminHubIdpLinkingTest extends TestCase
                 'clinic_account_type' => 'faculty', 'user_role' => 'superadmin', 'idp_role' => 'faculty',
             ])->assertOk()->assertJson(['redirect' => route('health.form.employee')]);
         $this->assertDatabaseHas('users', [
-            'id' => $user->id, 'clinic_account_type' => 'faculty', 'user_role' => 'student', 'idp_role' => 'superadmin',
+                'id' => $user->id, 'user_type' => 'Faculty', 'user_role' => 'student', 'idp_role' => 'superadmin',
         ]);
         $this->postJson('/student/account-type', ['clinic_account_type' => 'student'])
             ->assertUnprocessable()->assertJsonValidationErrors('clinic_account_type');
@@ -417,7 +414,7 @@ class AdminHubIdpLinkingTest extends TestCase
         } catch (ValidationException $exception) {
             $this->assertArrayHasKey('clinic_account_type', $exception->errors());
         }
-        $this->assertSame('student', $user->fresh()->clinic_account_type);
+        $this->assertSame('Student', $user->fresh()->user_type);
     }
 
     public function test_unrecognized_and_privileged_local_choices_are_rejected(): void
@@ -430,7 +427,7 @@ class AdminHubIdpLinkingTest extends TestCase
             } catch (ValidationException $exception) {
                 $this->assertArrayHasKey('clinic_account_type', $exception->errors());
             }
-            $this->assertNull($user->fresh()->clinic_account_type);
+            $this->assertNull($user->fresh()->user_type);
         }
     }
 
@@ -528,7 +525,7 @@ class AdminHubIdpLinkingTest extends TestCase
         $this->assertAuthenticated('student');
         $this->assertGuest('admin');
         $this->assertTrue(session('show_health_profile_prompt'));
-        $this->assertDatabaseHas('users', ['email' => 'blank-callback@example.test', 'idp_role' => null, 'clinic_account_type' => null, 'user_type' => null]);
+        $this->assertDatabaseHas('users', ['email' => 'blank-callback@example.test', 'idp_role' => null, 'user_type' => null]);
         Http::assertSentCount(2);
     }
 
@@ -559,7 +556,7 @@ class AdminHubIdpLinkingTest extends TestCase
                 } catch (ValidationException $exception) {
                     $this->assertArrayHasKey('clinic_account_type', $exception->errors());
                 }
-                $this->assertNull($user->fresh()->clinic_account_type);
+                $this->assertNull($user->fresh()->user_type);
             }
             $this->saveClinicType($user, $allowed[0]);
             $this->assertSame(User::ROLE_STUDENT, $user->fresh()->user_role);
@@ -576,7 +573,7 @@ class AdminHubIdpLinkingTest extends TestCase
             ->assertOk()->assertJson(['allowed_types' => array_keys(User::CLINIC_ACCOUNT_TYPES)]);
         $this->postJson('/student/account-type', ['clinic_account_type' => 'faculty'])
             ->assertOk()->assertJson(['redirect' => route('health.form.employee')]);
-        $this->assertSame('faculty', $user->fresh()->clinic_account_type);
+        $this->assertSame('Faculty', $user->fresh()->user_type);
         $this->assertSame('student', $user->fresh()->user_role);
     }
 

@@ -35,7 +35,7 @@ class ClinicAccountTypeController extends Controller
                     'clinic_account_type' => 'Your admission reference is awaiting clearance. Please continue as an applicant.',
                 ]);
             }
-            if (!$user->needsClinicAccountTypeSelection() && $user->clinic_account_type !== $type) {
+            if (!$user->needsClinicAccountTypeSelection() && $user->clinicAccountTypeKey() !== $type) {
                 throw ValidationException::withMessages([
                     'clinic_account_type' => 'Your account type is already saved. Contact the clinic to request a correction.',
                 ]);
@@ -46,8 +46,7 @@ class ClinicAccountTypeController extends Controller
                 ]);
             }
 
-            $user->clinic_account_type = $type;
-            $user->user_type = $user->clinicUserType();
+            $user->user_type = User::userTypeForClinicAccountType($type);
             $user->save();
 
             return $user;

@@ -3512,10 +3512,19 @@
                         </label>
                         <select name="certificate_type" id="consultCertificate" class="form-control" data-clinic-select>
                             <option value="none" {{ old('certificate_type', 'none') === 'none' ? 'selected' : '' }}>No certificate / clearance</option>
-                            <option value="excused_letter" {{ old('certificate_type') === 'excused_letter' ? 'selected' : '' }}>Excused Letter</option>
-                            <option value="coc_ijt" {{ old('certificate_type') === 'coc_ijt' ? 'selected' : '' }}>COC for IJT</option>
-                            <option value="coc_ladderized" {{ old('certificate_type') === 'coc_ladderized' ? 'selected' : '' }}>COC for Ladderized</option>
+                            @foreach($clearanceTypes as $clearanceType)
+                                @if($clearanceType->subcategories->isNotEmpty())
+                                    <optgroup label="{{ $clearanceType->name }}">
+                                        @foreach($clearanceType->subcategories as $subcategory)
+                                            <option value="{{ $subcategory->code }}" {{ old('certificate_type') === $subcategory->code ? 'selected' : '' }}>
+                                                {{ $clearanceType->name }} - {{ $subcategory->name }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
+                            @endforeach
                         </select>
+                        <div class="form-help">Choose the specific subcategory configured under the clearance type.</div>
                     </div>
                 </div>
             </section>

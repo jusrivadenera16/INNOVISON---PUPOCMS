@@ -6,7 +6,9 @@
         $tabAccent = '#70131B';
         $tabTitlePrefix = '';
 
-        $medicalSettingsRoute = request()->routeIs('admin.reports.manage-mar') || request()->routeIs('admin.reports.manage-medicine-types');
+        $medicalSettingsRoute = request()->routeIs('admin.reports.manage-mar')
+            || request()->routeIs('admin.reports.manage-medicine-types')
+            || request()->routeIs('mar-clearance-types.*');
 
         if (request()->routeIs('admin.dashboard') || request()->routeIs('assistant.dashboard')) {
             $tabIcon = 'DB';
@@ -5348,6 +5350,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         request()->routeIs('admin.reports.manage-mar')
         || request()->routeIs('admin.reports.manage-medicine-types')
         || request()->routeIs('admin.reports.manage-health-form-categories')
+        || request()->routeIs('mar-clearance-types.*')
     );
     $reportNavUrl = fn (string $path = '') => $isStudentAssistant
         ? url('/assistant/reports' . ($path !== '' ? '/' . ltrim($path, '/') : ''))
@@ -5510,13 +5513,14 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         || request()->routeIs('admin.reports.manage-mar')
         || request()->routeIs('admin.reports.manage-medicine-types')
         || request()->routeIs('admin.reports.manage-health-form-categories')
+        || request()->routeIs('mar-clearance-types.*')
         || request()->routeIs('admin.user-management*')
         || Request::is('admin/user-management*');
     $settingsNavLinks = collect([
         ['label' => 'Personal Information', 'url' => route('admin.settings.personal'), 'active' => request()->routeIs('admin.settings.personal'), 'icon' => 'user-circle', 'permission' => 'settings.personal'],
         ['label' => 'Clinic Information', 'url' => route('admin.settings.clinic'), 'active' => request()->routeIs('admin.settings.clinic'), 'icon' => 'home', 'permission' => 'settings.clinic'],
         ['label' => 'System Preferences', 'url' => route('admin.settings.preferences'), 'active' => request()->routeIs('admin.settings.preferences'), 'icon' => 'code-bracket-square', 'permission' => 'settings.preferences'],
-        ['label' => 'Medical Configuration', 'url' => route('admin.settings.medical'), 'active' => request()->routeIs('admin.settings.medical') || request()->routeIs('admin.reports.manage-mar') || request()->routeIs('admin.reports.manage-medicine-types') || request()->routeIs('admin.reports.manage-health-form-categories'), 'icon' => 'clipboard-document-list', 'permission' => 'settings.medical'],
+        ['label' => 'Medical Configuration', 'url' => route('admin.settings.medical'), 'active' => request()->routeIs('admin.settings.medical') || request()->routeIs('admin.reports.manage-mar') || request()->routeIs('admin.reports.manage-medicine-types') || request()->routeIs('admin.reports.manage-health-form-categories') || request()->routeIs('mar-clearance-types.*'), 'icon' => 'clipboard-document-list', 'permission' => 'settings.medical'],
         ['label' => 'Users Management', 'url' => route('admin.user-management'), 'active' => request()->routeIs('admin.user-management*'), 'icon' => 'users', 'superadmin' => true],
         ['label' => 'FAQs', 'url' => route('admin.settings.faqs'), 'active' => request()->routeIs('admin.settings.faqs'), 'icon' => 'question-mark-circle', 'permission' => 'settings.faqs'],
     ])->filter(fn (array $link): bool => !empty($link['superadmin']) ? $isAdminLike : $canAccessModule($link['permission']))->values()->all();

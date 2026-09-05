@@ -56,7 +56,33 @@ class User extends Authenticatable
     public function needsClinicAccountTypeSelection(): bool
     {
         return self::normalizeRole($this->user_role) === self::ROLE_STUDENT
-            && !array_key_exists((string) $this->clinic_account_type, self::CLINIC_ACCOUNT_TYPES);
+            && $this->clinicAccountTypeKey() === null;
+    }
+
+    public static function userTypeForClinicAccountType(string $type): ?string
+    {
+        return match ($type) {
+            'applicant' => 'Applicant',
+            'student' => 'Student',
+            'faculty' => 'Faculty',
+            'non_teaching_staff' => 'Admin',
+            'dependent' => 'Dependent',
+            default => null,
+        };
+    }
+
+    public function clinicAccountTypeKey(): ?string
+    {
+        $userType = strtolower(trim((string) $this->user_type));
+
+        return match ($userType) {
+            'applicant' => 'applicant',
+            'student', 'ojt', 'student / ojt' => 'student',
+            'faculty' => 'faculty',
+            'admin', 'staff', 'employee', 'non-teaching staff', 'non-teaching staff / admins' => 'non_teaching_staff',
+            'guest', 'dependent' => 'dependent',
+            default => null,
+        };
     }
 
     public function allowedClinicAccountTypes(): array
@@ -112,7 +138,9 @@ class User extends Authenticatable
             return 'applicant';
         }
 
-        if ($this->clinic_account_type === 'applicant') {
+        $accountType = $this->clinicAccountTypeKey();
+
+        if ($accountType === 'applicant') {
             $profile = $this->relationLoaded('healthProfile') ? $this->healthProfile : (
                 \Illuminate\Support\Facades\Schema::hasTable('health_profiles') ? $this->healthProfile()->first() : null
             );
@@ -121,7 +149,7 @@ class User extends Authenticatable
             }
         }
 
-        return match ($this->clinic_account_type) {
+        return match ($accountType) {
             'faculty', 'non_teaching_staff' => 'employee',
             'student' => 'student',
             'applicant' => 'applicant',
@@ -132,13 +160,9 @@ class User extends Authenticatable
 
     public function clinicUserType(): ?string
     {
-        return match ($this->clinicHealthFormAudience()) {
-            'applicant' => 'Applicant',
-            'student' => 'Student',
-            'employee' => $this->clinic_account_type === 'faculty' ? 'Faculty' : 'Admin',
-            'dependent' => 'Dependent',
-            default => null,
-        };
+        $accountType = $this->clinicAccountTypeKey();
+
+        return $accountType !== null ? self::userTypeForClinicAccountType($accountType) : null;
     }
 
     public function clinicHealthFormRoute(): ?string

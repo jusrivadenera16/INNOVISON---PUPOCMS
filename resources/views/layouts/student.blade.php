@@ -3477,7 +3477,7 @@
         $studentHealthFormTitle = $studentUsesEmployeeHealthForm
             ? 'Health Examination Record'
             : ($studentUsesDependentProfile ? 'Information Form' : 'Health Information Form');
-        $studentGetStartedRequirementStatus = ($studentUser?->clinic_account_type === 'applicant') ? 'Mandatory' : 'Optional';
+        $studentGetStartedRequirementStatus = ($studentUser?->clinicAccountTypeKey() === 'applicant') ? 'Mandatory' : 'Optional';
         $studentIsClinicHealthFormRoute = request()->routeIs(
             'health.form',
             'health.form.student',

@@ -1622,6 +1622,25 @@
         margin-top: 0;
     }
 
+    body.mar-form-report .mar-service-table tbody td {
+        text-align: left !important;
+        vertical-align: middle !important;
+    }
+
+    body.mar-form-report .mar-service-table thead th,
+    body.mar-form-report .mar-service-table tbody td:nth-child(2),
+    body.mar-form-report .mar-service-table tbody td:nth-child(3),
+    body.mar-form-report .mar-service-table tbody td:nth-child(4),
+    body.mar-form-report .mar-service-table tbody td:nth-child(5) {
+        text-align: center !important;
+    }
+
+    body.mar-form-report .mar-service-table .bg-category,
+    body.mar-form-report .mar-service-table tr.bg-category td {
+        text-align: left !important;
+        padding-left: 10px !important;
+    }
+
     @media print {
         body.official-form-report {
             margin: 0;
@@ -1920,13 +1939,28 @@
                         })->count();
                     };
 
-                    $countCertificateByType = function ($consultations, string $certificateType, string $patientType) use ($countByPatientType) {
-                        $filtered = $consultations->filter(function ($consultation) use ($certificateType) {
-                            return trim((string) ($consultation->certificate_type ?? 'none')) === $certificateType;
+                    $countCertificateByType = function ($consultations, array $certificateTypes, string $patientType) use ($countByPatientType) {
+                        $filtered = $consultations->filter(function ($consultation) use ($certificateTypes) {
+                            return in_array(trim((string) ($consultation->certificate_type ?? 'none')), $certificateTypes, true);
                         });
 
                         return $countByPatientType($filtered, $patientType);
                     };
+
+                    $alphaLabel = function (int $index) {
+                        $label = '';
+                        $value = $index + 1;
+
+                        while ($value > 0) {
+                            $value--;
+                            $label = chr(65 + ($value % 26)) . $label;
+                            $value = intdiv($value, 26);
+                        }
+
+                        return $label;
+                    };
+
+                    $displayCount = fn ($value) => (int) $value > 0 ? $value : '';
 
                     $roman = function (int $value) {
                         $map = [
@@ -1946,10 +1980,40 @@
                     };
 
                     $consultationTotals = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
-                    $excusedLetterTotals = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
-                    $cocIjtTotals = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
-                    $cocLadderizedTotals = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
-                    $excusedLetterCategoryRows = collect();
+                    $allMarConsultations = collect($data)
+                        ->flatMap(fn ($category) => $category->medicalConditions->flatMap->consultations)
+                        ->unique('id')
+                        ->values();
+                    $clearanceGroups = collect($marClearanceTypes ?? [])->values()->map(function ($clearanceType, $index) use ($allMarConsultations, $countCertificateByType, $alphaLabel) {
+                        $buildRow = function (string $name, array $codes) use ($allMarConsultations, $countCertificateByType) {
+                            return [
+                                'name' => $name,
+                                'student' => $countCertificateByType($allMarConsultations, $codes, 'student'),
+                                'faculty' => $countCertificateByType($allMarConsultations, $codes, 'faculty'),
+                                'admin' => $countCertificateByType($allMarConsultations, $codes, 'admin'),
+                                'dependent' => $countCertificateByType($allMarConsultations, $codes, 'dependent'),
+                            ];
+                        };
+
+                        $rows = $clearanceType->subcategories->values()->map(function ($subcategory) use ($buildRow) {
+                            return $buildRow($subcategory->name, [(string) $subcategory->code]);
+                        });
+
+                        $legacyCodes = match ((string) $clearanceType->code) {
+                            'ojt' => ['ojt', 'coc_ijt'],
+                            default => [(string) $clearanceType->code],
+                        };
+                        $legacyRow = $buildRow('Unspecified', $legacyCodes);
+
+                        if (array_sum(array_intersect_key($legacyRow, array_flip(['student', 'faculty', 'admin', 'dependent']))) > 0) {
+                            $rows->push($legacyRow);
+                        }
+
+                        return [
+                            'label' => $alphaLabel($index) . '. ' . $clearanceType->name,
+                            'rows' => $rows->values(),
+                        ];
+                    });
                     $onlineTotals = [
                         'consultation' => ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0],
                         'medical_clearance' => ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0],
@@ -1962,29 +2026,6 @@
                 @foreach($data as $catIndex => $cat)
                     @php
                         $categoryConsultations = $cat->medicalConditions->flatMap->consultations;
-                        $categoryExcused = [
-                            'student' => $countCertificateByType($categoryConsultations, 'excused_letter', 'student'),
-                            'faculty' => $countCertificateByType($categoryConsultations, 'excused_letter', 'faculty'),
-                            'admin' => $countCertificateByType($categoryConsultations, 'excused_letter', 'admin'),
-                            'dependent' => $countCertificateByType($categoryConsultations, 'excused_letter', 'dependent'),
-                        ];
-
-                        if (array_sum($categoryExcused) > 0) {
-                            $excusedLetterCategoryRows->push([
-                                'label' => chr(65 + $catIndex) . '. ' . $cat->name,
-                                'student' => $categoryExcused['student'],
-                                'faculty' => $categoryExcused['faculty'],
-                                'admin' => $categoryExcused['admin'],
-                                'dependent' => $categoryExcused['dependent'],
-                                'total' => array_sum($categoryExcused),
-                            ]);
-                        }
-
-                        foreach (['student', 'faculty', 'admin', 'dependent'] as $type) {
-                            $excusedLetterTotals[$type] += $categoryExcused[$type];
-                            $cocIjtTotals[$type] += $countCertificateByType($categoryConsultations, 'coc_ijt', $type);
-                            $cocLadderizedTotals[$type] += $countCertificateByType($categoryConsultations, 'coc_ladderized', $type);
-                        }
 
                         $onlineConsultations = $categoryConsultations->filter(function ($consultation) {
                             return trim((string) ($consultation->consultation_source ?? '')) === 'online';
@@ -2014,7 +2055,7 @@
                     <tr class="bg-category">
                         <td colspan="6">{{ chr(65 + $catIndex) }}. {{ $cat->name }}</td>
                     </tr>
-                    @foreach($cat->medicalConditions as $conditionIndex => $condition)
+                    @forelse($cat->medicalConditions as $conditionIndex => $condition)
                         @php
                             $stu = $countByPatientType($condition->consultations, 'student');
                             $fac = $countByPatientType($condition->consultations, 'faculty');
@@ -2034,41 +2075,66 @@
                             <td>{{ $dep ?: '' }}</td>
                             <td></td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                        </tr>
+                    @endforelse
                 @endforeach
                 <tr class="bg-category">
                     <td>Total Consultation</td>
-                    <td>{{ $consultationTotals['student'] }}</td>
-                    <td>{{ $consultationTotals['faculty'] }}</td>
-                    <td>{{ $consultationTotals['admin'] }}</td>
-                    <td>{{ $consultationTotals['dependent'] }}</td>
+                    <td>{{ $displayCount($consultationTotals['student']) }}</td>
+                    <td>{{ $displayCount($consultationTotals['faculty']) }}</td>
+                    <td>{{ $displayCount($consultationTotals['admin']) }}</td>
+                    <td>{{ $displayCount($consultationTotals['dependent']) }}</td>
                     <td></td>
                 </tr>
-                <tr class="bg-category"><td colspan="6">{{ $roman(2) }}. MEDICAL CERTIFICATE / CLEARANCE - CERTIFICATE OF COMPLIANCE</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">A. Excused Letter</td><td>{{ $excusedLetterTotals['student'] }}</td><td>{{ $excusedLetterTotals['faculty'] }}</td><td>{{ $excusedLetterTotals['admin'] }}</td><td>{{ $excusedLetterTotals['dependent'] }}</td><td></td></tr>
-                @forelse($excusedLetterCategoryRows as $categoryRow)
-                    <tr><td class="text-left" style="padding-left: 30px;">{{ $categoryRow['label'] }}</td><td>{{ $categoryRow['student'] }}</td><td>{{ $categoryRow['faculty'] }}</td><td>{{ $categoryRow['admin'] }}</td><td>{{ $categoryRow['dependent'] }}</td><td>{{ $categoryRow['total'] }}</td></tr>
+                <tr class="bg-category"><td colspan="6">{{ $roman(2) }}. MEDICAL CERTIFICATE / CLEARANCE</td></tr>
+                @forelse($clearanceGroups as $clearanceGroup)
+                    <tr>
+                        <td class="text-left" style="padding-left: 15px; font-weight: bold;">{{ $clearanceGroup['label'] }}</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    @forelse($clearanceGroup['rows'] as $subcategoryIndex => $subcategoryRow)
+                        <tr>
+                            <td class="text-left" style="padding-left: 30px;">{{ $subcategoryIndex + 1 }}. {{ $subcategoryRow['name'] }}</td>
+                            <td>{{ $displayCount($subcategoryRow['student']) }}</td>
+                            <td>{{ $displayCount($subcategoryRow['faculty']) }}</td>
+                            <td>{{ $displayCount($subcategoryRow['admin']) }}</td>
+                            <td>{{ $displayCount($subcategoryRow['dependent']) }}</td>
+                            <td></td>
+                        </tr>
+                    @empty
+                        <tr><td class="text-left" style="padding-left: 30px;">1. &nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    @endforelse
                 @empty
-                    <tr><td class="text-left" style="padding-left: 30px;">No excused letter category recorded yet.</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
                 @endforelse
-                <tr><td class="text-left" style="padding-left: 15px;">B. COC for IJT</td><td>{{ $cocIjtTotals['student'] }}</td><td>{{ $cocIjtTotals['faculty'] }}</td><td>{{ $cocIjtTotals['admin'] }}</td><td>{{ $cocIjtTotals['dependent'] }}</td><td></td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">C. COC for Ladderized</td><td>{{ $cocLadderizedTotals['student'] }}</td><td>{{ $cocLadderizedTotals['faculty'] }}</td><td>{{ $cocLadderizedTotals['admin'] }}</td><td>{{ $cocLadderizedTotals['dependent'] }}</td><td></td></tr>
                 <tr class="bg-category"><td colspan="6">{{ $roman(3) }}. INJECTIONS</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">A. Injection Services</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">A. Injection Services</td><td></td><td></td><td></td><td></td><td></td></tr>
                 <tr class="bg-category"><td colspan="6">{{ $roman(4) }}. REFERRALS</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">A. Ref. to Hospital without nurse</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">B. Ref. to Hospital with nurse</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">C. Referral</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">A. Ref. to Hospital without nurse</td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">B. Ref. to Hospital with nurse</td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">C. Referral</td><td></td><td></td><td></td><td></td><td></td></tr>
                 <tr class="bg-category"><td colspan="6">{{ $roman(5) }}. OTHERS</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">A. Other Services</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">A. Other Services</td><td></td><td></td><td></td><td></td><td></td></tr>
                 <tr class="bg-category"><td colspan="6">{{ $roman(6) }}. ON-LINE CONSULTATION</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">A. Consultation</td><td>{{ $onlineTotals['consultation']['student'] }}</td><td>{{ $onlineTotals['consultation']['faculty'] }}</td><td>{{ $onlineTotals['consultation']['admin'] }}</td><td>{{ $onlineTotals['consultation']['dependent'] }}</td><td></td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">B. Medical Clearance</td><td>{{ $onlineTotals['medical_clearance']['student'] }}</td><td>{{ $onlineTotals['medical_clearance']['faculty'] }}</td><td>{{ $onlineTotals['medical_clearance']['admin'] }}</td><td>{{ $onlineTotals['medical_clearance']['dependent'] }}</td><td></td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">C. Others</td><td>{{ $onlineTotals['others']['student'] }}</td><td>{{ $onlineTotals['others']['faculty'] }}</td><td>{{ $onlineTotals['others']['admin'] }}</td><td>{{ $onlineTotals['others']['dependent'] }}</td><td></td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">A. Consultation</td><td>{{ $displayCount($onlineTotals['consultation']['student']) }}</td><td>{{ $displayCount($onlineTotals['consultation']['faculty']) }}</td><td>{{ $displayCount($onlineTotals['consultation']['admin']) }}</td><td>{{ $displayCount($onlineTotals['consultation']['dependent']) }}</td><td></td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">B. Medical Clearance</td><td>{{ $displayCount($onlineTotals['medical_clearance']['student']) }}</td><td>{{ $displayCount($onlineTotals['medical_clearance']['faculty']) }}</td><td>{{ $displayCount($onlineTotals['medical_clearance']['admin']) }}</td><td>{{ $displayCount($onlineTotals['medical_clearance']['dependent']) }}</td><td></td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">C. Others</td><td>{{ $displayCount($onlineTotals['others']['student']) }}</td><td>{{ $displayCount($onlineTotals['others']['faculty']) }}</td><td>{{ $displayCount($onlineTotals['others']['admin']) }}</td><td>{{ $displayCount($onlineTotals['others']['dependent']) }}</td><td></td></tr>
                 <tr class="bg-category"><td colspan="6">{{ $roman(7) }}. TRIAGE SURVEY</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">A. Online</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">A. Online</td><td></td><td></td><td></td><td></td><td></td></tr>
                 <tr class="bg-category"><td colspan="6">{{ $roman(8) }}. BULLETIN UPDATES</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">A. Bulletin Updates</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">A. Bulletin Updates</td><td></td><td></td><td></td><td></td><td></td></tr>
             </tbody>
         </table>
 

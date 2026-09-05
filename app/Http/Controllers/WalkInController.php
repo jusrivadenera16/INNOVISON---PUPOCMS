@@ -15,6 +15,8 @@ use App\Models\Item;
 use App\Models\ActivityLog;
 use App\Models\Consultation;
 use App\Models\ConsultationMedicine;
+use App\Models\MarClearanceSubcategory;
+use App\Models\MarClearanceType;
 use App\Services\PuptasWebhookService;
 use App\Services\StudentNotificationMailer;
 use App\Services\EmployeeHealthFormPdfService;
@@ -26,6 +28,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class WalkInController extends Controller
 {
@@ -1539,6 +1542,12 @@ class WalkInController extends Controller
             ->get();
 
         $conditions = \App\Models\MedicalConditions::with('category')->get();
+        $clearanceTypes = MarClearanceType::query()
+            ->where('is_active', true)
+            ->with('subcategories')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
         $studentDocuments = $this->healthProfileDocuments($request, $student->healthProfile);
         $studentTreatments = Consultation::query()
             ->with(['medicalCondition.category', 'medicineItem', 'medicines.item', 'attendingStaff'])
@@ -1571,6 +1580,7 @@ class WalkInController extends Controller
             'student',
             'items',
             'conditions',
+            'clearanceTypes',
             'latestAppointment',
             'user_source',
             'consultationDob',
@@ -1976,6 +1986,11 @@ class WalkInController extends Controller
 
     public function verifyStudentIdWithAi(Request $request)
     {
+        $clearanceSubcategoryCodes = MarClearanceSubcategory::query()
+            ->whereHas('clearanceType', fn ($query) => $query->where('is_active', true))
+            ->pluck('code')
+            ->all();
+
         $request->validate([
             'image_data' => 'required|string',
         ]);
@@ -2172,7 +2187,10 @@ PROMPT;
             'covid_status' => 'required|in:Yes,No',
             'covid_positive_date' => 'required_if:covid_status,Yes|nullable|date|before_or_equal:today',
             'reason_for_visit' => 'nullable|string|max:255',
-            'certificate_type' => 'nullable|in:none,excused_letter,coc_ijt,coc_ladderized',
+            'certificate_type' => ['nullable', Rule::in(array_merge(
+                ['none', 'excused_letter', 'coc_ijt', 'coc_ladderized'],
+                $clearanceSubcategoryCodes
+            ))],
             'referral_type' => 'nullable|in:none,hospital_without_nurse,hospital_with_nurse,general,others',
             'referral_details' => 'required_if:referral_type,others|nullable|string|max:500',
             'item_id' => 'nullable|array|max:5',

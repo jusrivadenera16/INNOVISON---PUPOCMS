@@ -12,6 +12,7 @@ use App\Models\ActivityLog;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\HealthProfile;
+use App\Models\MarClearanceType;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -880,14 +881,34 @@ class ReportsController extends Controller
         return $table;
     }
 
-    private function buildMarGadTables(Collection $categories, Carbon $dateFrom, Carbon $dateTo): array
+    private function buildMarGadTables(
+        Collection $categories,
+        Carbon $dateFrom,
+        Carbon $dateTo,
+        ?array $clearanceTypeCodes = null
+    ): array
     {
         $consultations = $categories->flatMap(function ($category) {
             return $category->medicalConditions->flatMap->consultations;
         })->unique('id')->values();
 
-        $certificateConsultations = $consultations->filter(function ($consultation) {
-            return in_array(trim((string) ($consultation->certificate_type ?? 'none')), ['excused_letter', 'coc_ijt', 'coc_ladderized'], true);
+        $certificateCodes = $clearanceTypeCodes === null
+            ? collect(['excused_letter', 'coc_ijt', 'coc_ladderized'])
+            : collect($clearanceTypeCodes)
+                ->flatMap(function ($code) {
+                    $normalizedCode = trim((string) $code);
+
+                    return match ($normalizedCode) {
+                        'ojt' => ['ojt', 'coc_ijt'],
+                        default => [$normalizedCode],
+                    };
+                })
+                ->filter(fn ($code) => $code !== '' && $code !== 'none')
+                ->unique()
+                ->values();
+
+        $certificateConsultations = $consultations->filter(function ($consultation) use ($certificateCodes) {
+            return $certificateCodes->contains(trim((string) ($consultation->certificate_type ?? 'none')));
         })->values();
 
         $onlineAppointments = Appointment::with('user.healthProfile')
@@ -3060,11 +3081,24 @@ public function printReport(Request $request)
 
     if ($type == 'mar') {
         $title = "MONTHLY ACCOMPLISHMENT REPORT";
+        $marClearanceTypes = MarClearanceType::query()
+            ->where('is_active', true)
+            ->with('subcategories')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
         // for categories
         $data = \App\Models\Category::with(['medicalConditions.consultations' => function($query) use ($dateFrom, $dateTo) {
             $query->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()]);
         }])->get();
-        $gadTables = $this->buildMarGadTables($data, $dateFrom, $dateTo);
+        $gadTables = $this->buildMarGadTables(
+            $data,
+            $dateFrom,
+            $dateTo,
+            $marClearanceTypes->flatMap(function (MarClearanceType $clearanceType) {
+                return collect([$clearanceType->code])->merge($clearanceType->subcategories->pluck('code'));
+            })->all()
+        );
     } 
     elseif ($type == 'inventory') {
         $title = match ($inventoryScope) {
@@ -3145,6 +3179,7 @@ public function printReport(Request $request)
             'inventoryReportAsOf' => $inventoryReportAsOf ?? null,
             'inventoryPreparedBy' => $inventoryPreparedBy ?? null,
             'gadTables' => $gadTables ?? [],
+            'marClearanceTypes' => $marClearanceTypes ?? collect(),
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'isPdf' => true,
@@ -3172,6 +3207,7 @@ public function printReport(Request $request)
         'inventoryReportAsOf' => $inventoryReportAsOf ?? null,
         'inventoryPreparedBy' => $inventoryPreparedBy ?? null,
         'gadTables' => $gadTables ?? [],
+        'marClearanceTypes' => $marClearanceTypes ?? collect(),
         'dateFrom' => $dateFrom,
         'dateTo' => $dateTo,
         'isPdf' => false,
