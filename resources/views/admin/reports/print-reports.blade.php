@@ -5,7 +5,7 @@
     $isInventoryReport = ($type ?? '') === 'inventory';
     $isAppointmentReport = ($type ?? '') === 'appointment';
     $isOfficialFormReport = in_array(($type ?? ''), ['inventory', 'mar', 'appointment'], true);
-    $pageMargin = $isMarReport ? '150px 18px 88px' : (($isInventoryReport || $isAppointmentReport) ? '24px 18px 88px' : '115px 28px 85px');
+    $pageMargin = $isMarReport ? '150px 48px 88px' : (($isInventoryReport || $isAppointmentReport) ? '24px 18px 88px' : '115px 28px 85px');
     $pupOfficialLogoSrc = $isPdfMode ? public_path('images/pup_logo_print.jpg') : asset('images/pup_logo_print.jpg');
     $bpOfficialLogoSrc = $isPdfMode ? public_path('images/bagong_pilipinas_logo_print.jpg') : asset('images/bagong_pilipinas_logo_print.jpg');
     $officialLogosAvailable = file_exists(public_path('images/pup_logo_print.jpg')) && file_exists(public_path('images/bagong_pilipinas_logo_print.jpg'));
@@ -13,6 +13,19 @@
     $footerBgAvailable = $isPdfMode ? file_exists(public_path('images/footer_bg_print.jpg')) : file_exists(public_path('images/footer_bg.png'));
     $marMonthStart = \Carbon\Carbon::parse(($monthFilter ?? now()->format('Y-m')) . '-01')->startOfMonth();
     $marReportAsOf = $marMonthStart->isCurrentMonth() ? now() : $marMonthStart->copy()->endOfMonth();
+    $resolveReportIdentity = static function ($staff, string $fallbackName = 'CLINIC STAFF', string $fallbackPosition = 'Clinic Staff', bool $useOfficeFallback = false): array {
+        $profile = data_get($staff, 'adminProfile') ?: $staff;
+        $name = trim((string) (data_get($profile, 'report_name') ?: data_get($staff, 'report_name') ?: data_get($staff, 'name')));
+        $position = trim((string) (data_get($profile, 'report_position') ?: data_get($staff, 'report_position')));
+        if ($position === '' && $useOfficeFallback) {
+            $position = trim((string) data_get($profile, 'office'));
+        }
+
+        return [
+            'name' => $name !== '' ? $name : $fallbackName,
+            'position' => $position !== '' ? $position : $fallbackPosition,
+        ];
+    };
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -1635,10 +1648,36 @@
         text-align: center !important;
     }
 
+    body.mar-form-report .mar-service-table th:first-child,
+    body.mar-form-report .mar-service-table td:first-child {
+        width: 30% !important;
+    }
+
+    body.mar-form-report .mar-service-table th:nth-child(2),
+    body.mar-form-report .mar-service-table th:nth-child(3),
+    body.mar-form-report .mar-service-table th:nth-child(4),
+    body.mar-form-report .mar-service-table th:nth-child(5),
+    body.mar-form-report .mar-service-table th:nth-child(6),
+    body.mar-form-report .mar-service-table td:nth-child(2),
+    body.mar-form-report .mar-service-table td:nth-child(3),
+    body.mar-form-report .mar-service-table td:nth-child(4),
+    body.mar-form-report .mar-service-table td:nth-child(5),
+    body.mar-form-report .mar-service-table td:nth-child(6) {
+        width: 14% !important;
+    }
+
     body.mar-form-report .mar-service-table .bg-category,
     body.mar-form-report .mar-service-table tr.bg-category td {
         text-align: left !important;
         padding-left: 10px !important;
+    }
+
+    body.mar-form-report .mar-service-table tr.bg-category td:nth-child(n+2) {
+        text-align: center !important;
+    }
+
+    body.mar-form-report .mar-service-table td.mar-numbered-service {
+        padding-left: 30px !important;
     }
 
     @media print {
@@ -1821,10 +1860,9 @@
             $combinedGad = $gadTables['combined'] ?? [];
             $freshmenClearanceGad = $gadTables['freshmen_clearance'] ?? [];
             $marPreparedBy = auth('admin')->user() ?? auth()->user();
-            $marPreparedByName = trim((string) optional($marPreparedBy)->name) ?: 'CLINIC STAFF';
-            $marPreparedByPosition = \App\Models\User::normalizeRole(optional($marPreparedBy)->user_role) === \App\Models\User::ROLE_ADMIN
-                ? 'Nurse / Clinic Staff'
-                : 'Clinic Staff';
+            $marPreparedIdentity = $resolveReportIdentity($marPreparedBy, 'CLINIC STAFF', 'Nurse / Clinic Staff');
+            $marPreparedByName = $marPreparedIdentity['name'];
+            $marPreparedByPosition = $marPreparedIdentity['position'];
         @endphp
 
         @unless($isPdfMode)
@@ -1902,49 +1940,36 @@
 
         <table class="mar-report-table mar-service-table">
             <colgroup>
-                <col>
-                <col class="metric-col">
-                <col class="metric-col">
-                <col class="metric-col">
-                <col class="metric-col">
-                <col class="metric-col">
+                <col style="width: 30%;">
+                <col class="metric-col" style="width: 14%;">
+                <col class="metric-col" style="width: 14%;">
+                <col class="metric-col" style="width: 14%;">
+                <col class="metric-col" style="width: 14%;">
+                <col class="metric-col" style="width: 14%;">
             </colgroup>
             <thead>
                 <tr>
-                    <th>MEDICAL SERVICE RENDERED</th>
-                    <th>STUDENTS</th>
-                    <th>FACULTY</th>
-                    <th>ADMIN</th>
-                    <th>DEPENDENTS</th>
-                    <th>REMARKS</th>
+                    <th style="width: 30%;">MEDICAL SERVICE RENDERED</th>
+                    <th style="width: 14%;">STUDENTS</th>
+                    <th style="width: 14%;">FACULTY</th>
+                    <th style="width: 14%;">ADMIN</th>
+                    <th style="width: 14%;">DEPENDENTS</th>
+                    <th style="width: 14%;">REMARKS</th>
                 </tr>
             </thead>
             <tbody>
                 @php
-                    $resolveConsultationPatientType = function ($consultation) {
-                        $value = strtolower(trim((string) ($consultation->user_role ?: $consultation->user_type ?: '')));
-
-                        return match ($value) {
-                            'student' => 'student',
-                            'faculty' => 'faculty',
-                            'admin', 'staff' => 'admin',
-                            'dependent', 'dependents' => 'dependent',
-                            default => null,
-                        };
+                    $marPatientTypeNormalizer = app(\App\Services\MarPatientTypeNormalizer::class);
+                    $resolveConsultationPatientType = function ($consultation) use ($marPatientTypeNormalizer) {
+                        return $marPatientTypeNormalizer->normalize(
+                            $consultation->user_role ?: $consultation->user_type ?: ''
+                        );
                     };
 
                     $countByPatientType = function ($consultations, string $type) use ($resolveConsultationPatientType) {
                         return $consultations->filter(function ($consultation) use ($resolveConsultationPatientType, $type) {
                             return $resolveConsultationPatientType($consultation) === $type;
                         })->count();
-                    };
-
-                    $countCertificateByType = function ($consultations, array $certificateTypes, string $patientType) use ($countByPatientType) {
-                        $filtered = $consultations->filter(function ($consultation) use ($certificateTypes) {
-                            return in_array(trim((string) ($consultation->certificate_type ?? 'none')), $certificateTypes, true);
-                        });
-
-                        return $countByPatientType($filtered, $patientType);
                     };
 
                     $alphaLabel = function (int $index) {
@@ -1980,37 +2005,49 @@
                     };
 
                     $consultationTotals = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
-                    $allMarConsultations = collect($data)
-                        ->flatMap(fn ($category) => $category->medicalConditions->flatMap->consultations)
-                        ->unique('id')
-                        ->values();
-                    $clearanceGroups = collect($marClearanceTypes ?? [])->values()->map(function ($clearanceType, $index) use ($allMarConsultations, $countCertificateByType, $alphaLabel) {
-                        $buildRow = function (string $name, array $codes) use ($allMarConsultations, $countCertificateByType) {
+                    $resolveIssuancePatientType = function ($issuance) use ($marPatientTypeNormalizer) {
+                        return $marPatientTypeNormalizer->normalize($issuance->user_type ?? '');
+                    };
+
+                    $countIssuancesBySubcategory = function ($issuances, int $subcategoryId, string $patientType) use ($resolveIssuancePatientType) {
+                        return $issuances->filter(function ($issuance) use ($subcategoryId, $resolveIssuancePatientType, $patientType) {
+                            return (int) $issuance->clearance_subcategory_id === $subcategoryId
+                                && $resolveIssuancePatientType($issuance) === $patientType;
+                        })->count();
+                    };
+                    $countIssuancesByParent = function ($issuances, int $clearanceTypeId, string $patientType) use ($resolveIssuancePatientType) {
+                        return $issuances->filter(function ($issuance) use ($clearanceTypeId, $resolveIssuancePatientType, $patientType) {
+                            return (int) $issuance->clearance_type_id === $clearanceTypeId
+                                && $issuance->clearance_subcategory_id === null
+                                && $resolveIssuancePatientType($issuance) === $patientType;
+                        })->count();
+                    };
+
+                    $clearanceGroups = collect($marClearanceTypes ?? [])->values()->map(function ($clearanceType, $index) use ($marClearanceIssuances, $countIssuancesBySubcategory, $countIssuancesByParent, $alphaLabel) {
+                        $parentRow = [
+                            'student' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'student'),
+                            'faculty' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'faculty'),
+                            'admin' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'admin'),
+                            'dependent' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'dependent'),
+                        ];
+                        $buildRow = function (string $name, int $subcategoryId) use ($marClearanceIssuances, $countIssuancesBySubcategory) {
                             return [
                                 'name' => $name,
-                                'student' => $countCertificateByType($allMarConsultations, $codes, 'student'),
-                                'faculty' => $countCertificateByType($allMarConsultations, $codes, 'faculty'),
-                                'admin' => $countCertificateByType($allMarConsultations, $codes, 'admin'),
-                                'dependent' => $countCertificateByType($allMarConsultations, $codes, 'dependent'),
+                                'student' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'student'),
+                                'faculty' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'faculty'),
+                                'admin' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'admin'),
+                                'dependent' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'dependent'),
                             ];
                         };
 
                         $rows = $clearanceType->subcategories->values()->map(function ($subcategory) use ($buildRow) {
-                            return $buildRow($subcategory->name, [(string) $subcategory->code]);
+                            return $buildRow($subcategory->name, (int) $subcategory->id);
                         });
-
-                        $legacyCodes = match ((string) $clearanceType->code) {
-                            'ojt' => ['ojt', 'coc_ijt'],
-                            default => [(string) $clearanceType->code],
-                        };
-                        $legacyRow = $buildRow('Unspecified', $legacyCodes);
-
-                        if (array_sum(array_intersect_key($legacyRow, array_flip(['student', 'faculty', 'admin', 'dependent']))) > 0) {
-                            $rows->push($legacyRow);
-                        }
 
                         return [
                             'label' => $alphaLabel($index) . '. ' . $clearanceType->name,
+                            'allow_direct_use' => (bool) $clearanceType->allow_direct_use,
+                            'parent' => $parentRow,
                             'rows' => $rows->values(),
                         ];
                     });
@@ -2068,7 +2105,7 @@
                             $consultationTotals['dependent'] += $dep;
                         @endphp
                         <tr>
-                            <td class="text-left" style="padding-left: 15px;">{{ $conditionIndex + 1 }}. {{ $condition->name }}</td>
+                            <td class="text-left mar-numbered-service" style="padding-left: 30px;">{{ $conditionIndex + 1 }}. {{ $condition->name }}</td>
                             <td>{{ $stu ?: '' }}</td>
                             <td>{{ $fac ?: '' }}</td>
                             <td>{{ $sta ?: '' }}</td>
@@ -2096,26 +2133,27 @@
                 </tr>
                 <tr class="bg-category"><td colspan="6">{{ $roman(2) }}. MEDICAL CERTIFICATE / CLEARANCE</td></tr>
                 @forelse($clearanceGroups as $clearanceGroup)
+                    @php
+                        $parentRow = $clearanceGroup['parent'];
+                    @endphp
                     <tr>
                         <td class="text-left" style="padding-left: 15px; font-weight: bold;">{{ $clearanceGroup['label'] }}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td>{{ $parentRow['student'] ?: '' }}</td>
+                        <td>{{ $parentRow['faculty'] ?: '' }}</td>
+                        <td>{{ $parentRow['admin'] ?: '' }}</td>
+                        <td>{{ $parentRow['dependent'] ?: '' }}</td>
                         <td></td>
                     </tr>
-                    @forelse($clearanceGroup['rows'] as $subcategoryIndex => $subcategoryRow)
+                    @foreach($clearanceGroup['rows'] as $subcategoryIndex => $subcategoryRow)
                         <tr>
-                            <td class="text-left" style="padding-left: 30px;">{{ $subcategoryIndex + 1 }}. {{ $subcategoryRow['name'] }}</td>
+                            <td class="text-left mar-numbered-service" style="padding-left: 30px;">{{ $subcategoryIndex + 1 }}. {{ $subcategoryRow['name'] }}</td>
                             <td>{{ $displayCount($subcategoryRow['student']) }}</td>
                             <td>{{ $displayCount($subcategoryRow['faculty']) }}</td>
                             <td>{{ $displayCount($subcategoryRow['admin']) }}</td>
                             <td>{{ $displayCount($subcategoryRow['dependent']) }}</td>
                             <td></td>
                         </tr>
-                    @empty
-                        <tr><td class="text-left" style="padding-left: 30px;">1. &nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
-                    @endforelse
+                    @endforeach
                 @empty
                     <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
                 @endforelse
@@ -2311,7 +2349,8 @@
                     </tr>
                     <tr>
                         <td>
-                            <div class="mar-closing-name">Nurse / Medical Staff</div>
+                            <div class="mar-closing-name">{{ $marPreparedByName }}</div>
+                            <div class="mar-closing-role">{{ $marPreparedByPosition }}</div>
                         </td>
                         <td>
                             <div class="mar-closing-name">Branch Director</div>
@@ -2328,11 +2367,9 @@
             $inventoryScope = $inventoryScope ?? 'all';
             $reportAsOf = $inventoryReportAsOf ?? \Carbon\Carbon::parse(($monthFilter ?? now()->format('Y-m')) . '-01')->endOfMonth();
             $preparedBy = $inventoryPreparedBy ?? null;
-            $preparedByName = trim((string) optional($preparedBy)->name) ?: 'CLINIC STAFF';
-            $preparedByOffice = trim((string) optional(optional($preparedBy)->adminProfile)->office);
-            $preparedByPosition = $preparedByOffice !== ''
-                ? $preparedByOffice
-                : (\App\Models\User::normalizeRole(optional($preparedBy)->user_role) === \App\Models\User::ROLE_ADMIN ? 'Nurse / Clinic Staff' : 'Clinic Staff');
+            $preparedByIdentity = $resolveReportIdentity($preparedBy, 'CLINIC STAFF', 'Nurse / Clinic Staff', true);
+            $preparedByName = $preparedByIdentity['name'];
+            $preparedByPosition = $preparedByIdentity['position'];
             $inventoryTitle = $inventoryScope === 'medicines'
                 ? 'Inventory of Medicines'
                 : 'Inventory of Supplies';
@@ -2484,8 +2521,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <div class="official-inventory-signature-name">&nbsp;</div>
-                        <div class="official-inventory-signature-role">&nbsp;</div>
+                        <div class="official-inventory-signature-name">{{ $preparedByName }}</div>
+                        <div class="official-inventory-signature-role">{{ $preparedByPosition }}</div>
                     </td>
                     <td>
                         <div class="official-inventory-signature-name">&nbsp;</div>
@@ -2501,10 +2538,9 @@
     @elseif($type == 'appointment')
         @php
             $appointmentPreparedBy = auth('admin')->user() ?? auth()->user();
-            $appointmentPreparedByName = trim((string) optional($appointmentPreparedBy)->name) ?: 'CLINIC STAFF';
-            $appointmentPreparedByPosition = \App\Models\User::normalizeRole(optional($appointmentPreparedBy)->user_role) === \App\Models\User::ROLE_ADMIN
-                ? 'Nurse / Clinic Staff'
-                : 'Clinic Staff';
+            $appointmentPreparedIdentity = $resolveReportIdentity($appointmentPreparedBy, 'CLINIC STAFF', 'Nurse / Clinic Staff');
+            $appointmentPreparedByName = $appointmentPreparedIdentity['name'];
+            $appointmentPreparedByPosition = $appointmentPreparedIdentity['position'];
             $appointmentReportAsOf = $dateTo ?? now();
         @endphp
 
@@ -2621,8 +2657,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <div class="official-inventory-signature-name">&nbsp;</div>
-                        <div class="official-inventory-signature-role">&nbsp;</div>
+                        <div class="official-inventory-signature-name">{{ $appointmentPreparedByName }}</div>
+                        <div class="official-inventory-signature-role">{{ $appointmentPreparedByPosition }}</div>
                     </td>
                     <td>
                         <div class="official-inventory-signature-name">&nbsp;</div>
@@ -2701,7 +2737,8 @@
         <div class="footer-signatures" style="margin-top: 40px;">
             <div class="sig-box">
                 <p>Prepared by:</p>
-                <div class="sig-line">NURSE / MEDICAL STAFF</div>
+                <div class="sig-line">{{ data_get($resolveReportIdentity(auth('admin')->user() ?? auth()->user(), 'CLINIC STAFF', 'Nurse / Medical Staff'), 'name') }}</div>
+                <div class="sig-line">{{ data_get($resolveReportIdentity(auth('admin')->user() ?? auth()->user(), 'CLINIC STAFF', 'Nurse / Medical Staff'), 'position') }}</div>
             </div>
             <div class="sig-box">
                 <p>Noted by:</p>

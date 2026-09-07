@@ -12,6 +12,7 @@ use App\Models\ActivityLog;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\HealthProfile;
+use App\Models\MarClearanceIssuance;
 use App\Models\MarClearanceType;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -617,13 +618,7 @@ class ReportsController extends Controller
 
     private function normalizeReportPatientType(?string $value): ?string
     {
-        return match (strtolower(trim((string) $value))) {
-            'student' => 'student',
-            'faculty' => 'faculty',
-            'admin', 'staff' => 'admin',
-            'dependent', 'dependents' => 'dependent',
-            default => null,
-        };
+        return app(\App\Services\MarPatientTypeNormalizer::class)->normalize($value);
     }
 
     private function normalizeReportGender(?string $value): ?string
@@ -1753,6 +1748,21 @@ class ReportsController extends Controller
     }])->get();
     $gadTables = $this->buildMarGadTables($categories, $dateFrom, $dateTo);
 
+    $marClearanceTypes = MarClearanceType::query()
+        ->where('is_active', true)
+        ->with('subcategories')
+        ->orderBy('sort_order')
+        ->orderBy('name')
+        ->get();
+    $marClearanceIssuances = MarClearanceIssuance::query()
+        ->with(['clearanceType', 'subcategory.clearanceType'])
+        ->where(function ($query) {
+            $query->whereHas('clearanceType', fn ($typeQuery) => $typeQuery->where('is_active', true))
+                ->orWhereHas('subcategory.clearanceType', fn ($typeQuery) => $typeQuery->where('is_active', true));
+        })
+        ->whereBetween('approved_at', [$dateFrom, $dateTo])
+        ->get();
+
     $allConditions = MedicalConditions::with('category')->get();
     $categoryList = Category::all();
     $totalToday = Consultation::whereDate('consultation_date', today())->count();
@@ -1765,7 +1775,9 @@ class ReportsController extends Controller
         'month' => $monthFilter,
         'dateFrom' => $dateFrom->toDateString(),
         'dateTo' => $dateTo->toDateString(),
-        'totalToday' => $totalToday
+        'totalToday' => $totalToday,
+        'marClearanceTypes' => $marClearanceTypes,
+        'marClearanceIssuances' => $marClearanceIssuances,
     ]);
 }
     // for managing mar
@@ -3087,6 +3099,14 @@ public function printReport(Request $request)
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
+        $marClearanceIssuances = MarClearanceIssuance::query()
+            ->with(['clearanceType', 'subcategory.clearanceType'])
+            ->where(function ($query) {
+                $query->whereHas('clearanceType', fn ($typeQuery) => $typeQuery->where('is_active', true))
+                    ->orWhereHas('subcategory.clearanceType', fn ($typeQuery) => $typeQuery->where('is_active', true));
+            })
+            ->whereBetween('approved_at', [$dateFrom, $dateTo])
+            ->get();
         // for categories
         $data = \App\Models\Category::with(['medicalConditions.consultations' => function($query) use ($dateFrom, $dateTo) {
             $query->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()]);
@@ -3180,6 +3200,7 @@ public function printReport(Request $request)
             'inventoryPreparedBy' => $inventoryPreparedBy ?? null,
             'gadTables' => $gadTables ?? [],
             'marClearanceTypes' => $marClearanceTypes ?? collect(),
+            'marClearanceIssuances' => $marClearanceIssuances ?? collect(),
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'isPdf' => true,
@@ -3208,6 +3229,7 @@ public function printReport(Request $request)
         'inventoryPreparedBy' => $inventoryPreparedBy ?? null,
         'gadTables' => $gadTables ?? [],
         'marClearanceTypes' => $marClearanceTypes ?? collect(),
+        'marClearanceIssuances' => $marClearanceIssuances ?? collect(),
         'dateFrom' => $dateFrom,
         'dateTo' => $dateTo,
         'isPdf' => false,

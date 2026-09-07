@@ -1013,7 +1013,7 @@
   <div id="loginLoadingOverlay" class="login-loading-overlay" aria-hidden="true">
       <div class="login-loading-card">
           <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="Loading" class="login-loading-logo">
-          <div class="login-loading-text">Signing in...</div>
+          <div class="login-loading-text">Logging in...</div>
       </div>
   </div>
 
@@ -1053,7 +1053,7 @@
               loadingOverlay.classList.add('show');
               loadingOverlay.setAttribute('aria-hidden', 'false');
               loginSubmitBtn.disabled = true;
-              loginSubmitBtn.textContent = 'Signing in...';
+              loginSubmitBtn.textContent = 'Logging in...';
 
               requestAnimationFrame(function () {
                   setTimeout(function () {

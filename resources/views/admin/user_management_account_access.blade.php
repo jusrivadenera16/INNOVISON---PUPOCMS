@@ -874,6 +874,48 @@
         line-height: 1.55;
     }
 
+    .um-report-identity {
+        margin: 16px 0;
+        padding: 14px 16px 2px;
+        border: 1px solid rgba(128, 0, 0, 0.14);
+        border-radius: 14px;
+        background: rgba(255, 250, 250, 0.72);
+    }
+
+    .um-report-identity__heading {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        color: #800000;
+    }
+
+    .um-report-identity__heading span {
+        color: #64748b;
+        font-size: .8rem;
+    }
+
+    .um-report-identity__heading strong {
+        font-size: .88rem;
+    }
+
+    .um-report-identity__grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    html[data-theme="dark"] .um-report-identity {
+        border-color: rgba(248, 113, 113, 0.24);
+        background: rgba(40, 15, 25, 0.52);
+    }
+
+    html[data-theme="dark"] .um-report-identity__heading,
+    html[data-theme="dark"] .um-report-identity__heading span {
+        color: #ffffff;
+    }
+
     .um-profile-list {
         display: grid;
         gap: 12px;
@@ -1261,6 +1303,19 @@
             padding: 14px 14px 30px;
         }
 
+        .um-report-identity__grid {
+            grid-template-columns: 1fr;
+        }
+
+        .um-report-identity__heading {
+            display: block;
+        }
+
+        .um-report-identity__heading span {
+            display: block;
+            margin-top: 4px;
+        }
+
         .um-card-head {
             flex-direction: column;
             align-items: stretch;
@@ -1408,7 +1463,9 @@
                             <strong>{{ ucfirst($record['status']) }}</strong>
                             <small>{{ $lastUpdated ? 'Updated ' . \Carbon\Carbon::parse($lastUpdated)->format('M j, g:i A') : 'No recent update' }}</small>
                         </div>
-                        <button type="button" class="access-console__manage">Manage</button>
+                        @if($record['can_edit'])
+                            <button type="button" class="access-console__manage">Manage</button>
+                        @endif
                     </article>
                 @empty
                     <div class="access-console__empty">No managed clinic accounts found yet.</div>
@@ -1854,6 +1911,8 @@
     const adminEmailWrap = document.getElementById('adminEmailWrap');
     const detailAdminEmail = document.getElementById('detailAdminEmail');
     const detailOffice = document.getElementById('detailOffice');
+    const detailReportName = document.getElementById('detailReportName');
+    const detailReportPosition = document.getElementById('detailReportPosition');
     const adminHubSection = document.getElementById('adminHubSection');
     const adminOfficeWrap = document.getElementById('adminOfficeWrap');
     const detailAdminProfileStatus = document.getElementById('detailAdminProfileStatus');
@@ -2058,11 +2117,15 @@
         const usesSeparateAdminEmail = managementView !== 'admin-hub' && isStudentAssistant;
 
         if (detailClinicRole) {
-            detailClinicRole.value = ({
+            const roleLabel = detailRole.value === 'super_admin'
+                && detailRole.dataset.displayRoleLabel === 'System Developer'
+                ? 'System Developer'
+                : ({
                 admin_clinic_staff: 'Clinic Staff',
                 student_assistant: 'Student Assistant',
                 super_admin: 'Super Admin',
-            })[detailRole.value] || 'Not assigned';
+                })[detailRole.value] || 'Not assigned';
+            detailClinicRole.value = roleLabel;
         }
 
         if (moduleAccessPreview) {
@@ -2186,6 +2249,9 @@
             return 'admin_clinic_staff';
         })();
         detailRole.value = normalizedRole;
+        detailRole.dataset.displayRoleLabel = row.dataset.roleLabel === 'System Developer'
+            ? 'System Developer'
+            : '';
         detailStatus.value = row.dataset.status || 'active';
         const meta = (() => {
             try {
@@ -2254,6 +2320,12 @@
         }
         if (detailOffice) {
             detailOffice.value = office;
+        }
+        if (detailReportName) {
+            detailReportName.value = String(meta.report_name || row.dataset.name || '').trim();
+        }
+        if (detailReportPosition) {
+            detailReportPosition.value = String(meta.report_position || '').trim();
         }
         if (detailLookupSource) {
             detailLookupSource.value = lookupSource;

@@ -2725,6 +2725,63 @@
             border-radius: 0;
         }
 
+        .admin-action-loader.is-brand-logout {
+            background:
+                radial-gradient(ellipse 42% 58% at 50% 50%, rgba(255, 246, 241, 0.78) 0%, rgba(244, 194, 197, 0.62) 20%, rgba(156, 36, 55, 0.52) 42%, transparent 70%),
+                radial-gradient(ellipse 88% 72% at 12% 50%, rgba(235, 118, 130, 0.38) 0%, rgba(139, 16, 32, 0.18) 42%, transparent 70%),
+                radial-gradient(ellipse 88% 72% at 88% 50%, rgba(235, 118, 130, 0.38) 0%, rgba(139, 16, 32, 0.18) 42%, transparent 70%),
+                linear-gradient(90deg, #4a0b18 0%, #8f1b2d 42%, #7a1425 50%, #8f1b2d 58%, #4a0b18 100%);
+        }
+
+        .admin-action-loader.is-brand-logout::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle, rgba(255, 255, 255, 0.22) 1px, transparent 1.5px),
+                radial-gradient(circle, rgba(250, 204, 21, 0.16) 1px, transparent 1.5px);
+            background-size: 54px 54px, 86px 86px;
+            background-position: 10px 12px, 36px 42px;
+            opacity: 0.55;
+            pointer-events: none;
+        }
+
+        .admin-action-brand-loader {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            display: none;
+            grid-template-rows: 1fr auto;
+            align-items: center;
+            justify-items: center;
+            gap: 22px;
+            padding: clamp(28px, 5vw, 52px);
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .admin-action-loader.is-brand-logout > .loading {
+            display: none;
+        }
+
+        .admin-action-loader.is-brand-logout .admin-action-brand-loader {
+            display: grid;
+        }
+
+        .admin-brand-logout-text {
+            margin-top: 0;
+        }
+
+        .admin-brand-logout-text > span:first-child {
+            opacity: 1;
+            transform: none;
+            animation: none;
+        }
+
+        .admin-brand-logout-text .admin-loader-message-dot {
+            animation: adminLoaderDotReveal 1.2s infinite ease-in-out;
+        }
+
         .main.is-navigation-loading .admin-content-loader,
         .admin-action-loader.is-active {
             display: inline-flex;
@@ -2735,14 +2792,47 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 64px;
-            height: 48px;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 64px;
+            min-height: 48px;
         }
 
         .admin-loader-overlay .loading svg {
             display: block;
             width: 64px;
             height: 48px;
+        }
+
+        .admin-loader-message {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            min-height: 20px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.34);
+        }
+
+        .admin-action-loader.has-message .admin-loader-message {
+            display: inline-flex;
+        }
+
+        .admin-loader-message-dot {
+            display: inline-block;
+            opacity: 0.18;
+            animation: adminLoaderDotReveal 1.2s infinite ease-in-out;
+        }
+
+        .admin-loader-message-dot:nth-child(2) {
+            animation-delay: 0.16s;
+        }
+
+        .admin-loader-message-dot:nth-child(3) {
+            animation-delay: 0.32s;
         }
 
         .admin-loader-overlay .loading svg polyline {
@@ -2771,6 +2861,17 @@
         @keyframes adminContentLoaderDash {
             72.5% { opacity: 0; }
             to { stroke-dashoffset: 0; }
+        }
+
+        @keyframes adminLoaderDotReveal {
+            0%, 100% {
+                opacity: 0.18;
+                transform: translateY(2px);
+            }
+            35%, 70% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .main table {
@@ -4320,6 +4421,15 @@
         html[data-theme="light"] .admin-loader-overlay {
             background: rgba(255, 255, 255, 0.92);
             color: #5a1421;
+        }
+
+        html[data-theme="light"] .admin-action-loader.is-brand-logout {
+            background:
+                radial-gradient(ellipse 42% 58% at 50% 50%, rgba(255, 246, 241, 0.78) 0%, rgba(244, 194, 197, 0.62) 20%, rgba(156, 36, 55, 0.52) 42%, transparent 70%),
+                radial-gradient(ellipse 88% 72% at 12% 50%, rgba(235, 118, 130, 0.38) 0%, rgba(139, 16, 32, 0.18) 42%, transparent 70%),
+                radial-gradient(ellipse 88% 72% at 88% 50%, rgba(235, 118, 130, 0.38) 0%, rgba(139, 16, 32, 0.18) 42%, transparent 70%),
+                linear-gradient(90deg, #4a0b18 0%, #8f1b2d 42%, #7a1425 50%, #8f1b2d 58%, #4a0b18 100%);
+            color: #ffffff;
         }
 
         html[data-theme="light"] .admin-loader-overlay .loading svg .loader-trace {
@@ -6076,6 +6186,29 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" class="loader-trace"></polyline>
             <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" class="loader-pulse"></polyline>
         </svg>
+        <div class="admin-loader-message">
+            <span data-admin-loader-message-text>Logging out</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
+        </div>
+    </div>
+    <div class="admin-action-brand-loader" aria-hidden="true">
+        <div class="capsule-loader-content">
+            <div class="capsule-loader">
+                <div class="capsule-medicine">
+                    <i></i><i></i><i></i><i></i><i></i>
+                    <i></i><i></i><i></i><i></i><i></i>
+                    <i></i><i></i><i></i><i></i><i></i>
+                    <i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div class="side"></div>
+                <div class="side"></div>
+            </div>
+        </div>
+        <div class="loader-bottom-brand">
+            <img src="{{ $brandLogo }}" alt="Clinic Logo" class="loader-bottom-logo">
+            <div class="post-login-loader-text admin-brand-logout-text" aria-label="Logging out">
+                <span>Logging out</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -6514,13 +6647,19 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             content.setAttribute('aria-busy', 'false');
             contentLoader.setAttribute('aria-hidden', 'true');
             actionLoader.classList.remove('is-active');
+            actionLoader.classList.remove('has-message');
+            actionLoader.classList.remove('is-brand-logout');
             actionLoader.setAttribute('aria-hidden', 'true');
+            actionLoader.setAttribute('aria-label', 'Processing action');
             document.body.removeAttribute('aria-busy');
         };
 
         const showContentLoading = function () {
             actionLoader.classList.remove('is-active');
+            actionLoader.classList.remove('has-message');
+            actionLoader.classList.remove('is-brand-logout');
             actionLoader.setAttribute('aria-hidden', 'true');
+            actionLoader.setAttribute('aria-label', 'Processing action');
             document.body.removeAttribute('aria-busy');
             syncContentLoaderBounds();
             content.classList.add('is-navigation-loading');
@@ -6528,13 +6667,23 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             contentLoader.setAttribute('aria-hidden', 'false');
         };
 
-        const showActionLoading = function () {
+        const showActionLoading = function (message = '') {
             content.classList.remove('is-navigation-loading');
             content.setAttribute('aria-busy', 'false');
             contentLoader.setAttribute('aria-hidden', 'true');
             actionLoader.classList.add('is-active');
             actionLoader.setAttribute('aria-hidden', 'false');
             document.body.setAttribute('aria-busy', 'true');
+
+            const messageText = actionLoader.querySelector('[data-admin-loader-message-text]');
+            const normalizedMessage = String(message || '').trim();
+            if (messageText) {
+                messageText.textContent = normalizedMessage || 'Processing';
+            }
+            const isLogoutLoader = normalizedMessage.toLowerCase() === 'logging out';
+            actionLoader.classList.toggle('is-brand-logout', isLogoutLoader);
+            actionLoader.classList.toggle('has-message', normalizedMessage !== '' && !isLogoutLoader);
+            actionLoader.setAttribute('aria-label', normalizedMessage ? `${normalizedMessage}...` : 'Processing action');
         };
 
         window.AdminLoading = {
@@ -7945,7 +8094,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             }
         });
         confirmButton.addEventListener('click', function () {
-            window.AdminLoading?.showAction();
+            window.AdminLoading?.showAction('Logging out');
             form.submit();
         });
     }

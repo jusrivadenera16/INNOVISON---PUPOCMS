@@ -1289,7 +1289,6 @@
             opacity: 1;
             transition: opacity 0.6s ease, visibility 0.6s ease;
             visibility: visible;
-            animation: preloaderAutoHide .45s ease 1.15s forwards;
         }
 
         #preloader.hidden {
@@ -1308,14 +1307,6 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
-        }
-
-        @keyframes preloaderAutoHide {
-            to {
-                opacity: 0;
-                visibility: hidden;
-                pointer-events: none;
-            }
         }
 
         @keyframes pulseLogo {
@@ -9838,8 +9829,9 @@
         function hidePreloader() {
             if (preloader) {
                 setTimeout(() => {
+                    landingPanel?.classList.add('is-content-visible', 'is-visuals-visible');
                     preloader.classList.add('hidden');
-                }, 200);
+                }, 650);
             }
         }
 

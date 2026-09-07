@@ -16,7 +16,9 @@ use App\Models\ActivityLog;
 use App\Models\Consultation;
 use App\Models\ConsultationMedicine;
 use App\Models\MarClearanceSubcategory;
+use App\Models\MarClearanceSubcategorySource;
 use App\Models\MarClearanceType;
+use App\Services\MarClearanceIssuanceService;
 use App\Services\PuptasWebhookService;
 use App\Services\StudentNotificationMailer;
 use App\Services\EmployeeHealthFormPdfService;
@@ -44,6 +46,32 @@ class WalkInController extends Controller
         return in_array($source, ['online', 'walkin', 'assisted'], true)
             ? $source
             : 'walkin';
+    }
+
+    private function resolveApplicantClearanceTarget(?HealthProfile $profile): ?array
+    {
+        $category = strtolower(trim((string) optional($profile)->health_form_category));
+        if ($category === '' || $category === 'general' || $category === 'student') {
+            return null;
+        }
+
+        return $this->resolveClearanceTargetForWorkflow(
+            $profile->health_form_category,
+            MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW,
+            ['ojt', 'on the job', 'freshman', 'freshmen', 'returnee']
+        );
+    }
+
+    private function resolveClearanceTargetForWorkflow(
+        ?string $category,
+        string $sourceWorkflow,
+        array $additionalAliases = []
+    ): ?array {
+        return app(MarClearanceIssuanceService::class)->resolveClearanceTargetForWorkflow(
+            $category,
+            $sourceWorkflow,
+            $additionalAliases
+        );
     }
 
     private function normalizeHeightToDecimalFeet($value): ?string
@@ -1544,7 +1572,27 @@ class WalkInController extends Controller
         $conditions = \App\Models\MedicalConditions::with('category')->get();
         $clearanceTypes = MarClearanceType::query()
             ->where('is_active', true)
-            ->with('subcategories')
+            ->with([
+                'sources',
+                'subcategories' => function ($query) {
+                    $query->whereHas('sources', fn ($sourceQuery) => $sourceQuery->where(
+                        'source',
+                        MarClearanceSubcategorySource::CONSULTATION
+                    ));
+                },
+            ])
+            ->where(function ($query) {
+                $query->whereHas('subcategories.sources', fn ($sourceQuery) => $sourceQuery->where(
+                    'source',
+                    MarClearanceSubcategorySource::CONSULTATION
+                ))->orWhere(function ($directQuery) {
+                    $directQuery->where('allow_direct_use', true)
+                        ->whereHas('sources', fn ($sourceQuery) => $sourceQuery->where(
+                            'source',
+                            MarClearanceSubcategorySource::CONSULTATION
+                        ));
+                });
+            })
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
@@ -1986,11 +2034,6 @@ class WalkInController extends Controller
 
     public function verifyStudentIdWithAi(Request $request)
     {
-        $clearanceSubcategoryCodes = MarClearanceSubcategory::query()
-            ->whereHas('clearanceType', fn ($query) => $query->where('is_active', true))
-            ->pluck('code')
-            ->all();
-
         $request->validate([
             'image_data' => 'required|string',
         ]);
@@ -2172,6 +2215,24 @@ PROMPT;
             }
         }
 
+        $clearanceSubcategoryCodes = MarClearanceSubcategory::query()
+            ->whereHas('clearanceType', fn ($query) => $query->where('is_active', true))
+            ->whereHas('sources', fn ($query) => $query->where(
+                'source',
+                MarClearanceSubcategorySource::CONSULTATION
+            ))
+            ->pluck('code')
+            ->all();
+        $clearanceTypeCodes = MarClearanceType::query()
+            ->where('is_active', true)
+            ->where('allow_direct_use', true)
+            ->whereHas('sources', fn ($query) => $query->where(
+                'source',
+                MarClearanceSubcategorySource::CONSULTATION
+            ))
+            ->pluck('code')
+            ->all();
+
         $request->validate([
             'student_number' => 'required',
             'service'      => 'required',
@@ -2188,8 +2249,9 @@ PROMPT;
             'covid_positive_date' => 'required_if:covid_status,Yes|nullable|date|before_or_equal:today',
             'reason_for_visit' => 'nullable|string|max:255',
             'certificate_type' => ['nullable', Rule::in(array_merge(
-                ['none', 'excused_letter', 'coc_ijt', 'coc_ladderized'],
-                $clearanceSubcategoryCodes
+                ['none'],
+                $clearanceSubcategoryCodes,
+                $clearanceTypeCodes
             ))],
             'referral_type' => 'nullable|in:none,hospital_without_nurse,hospital_with_nurse,general,others',
             'referral_details' => 'required_if:referral_type,others|nullable|string|max:500',
@@ -2452,6 +2514,35 @@ PROMPT;
                 'medicine_quantity'    => $firstMedicine['quantity'] ?? 0,
                 'comments'             => $request->remarks,
             ]);
+
+            $certificateType = trim((string) ($request->input('certificate_type') ?: 'none'));
+            if ($certificateType !== 'none') {
+                $clearanceTarget = app(MarClearanceIssuanceService::class)
+                    ->resolveClearanceTargetByCodeForWorkflow(
+                        $certificateType,
+                        MarClearanceSubcategorySource::CONSULTATION
+                    );
+
+                if ($clearanceTarget) {
+                    try {
+                        app(MarClearanceIssuanceService::class)->recordApprovedClearanceTarget(
+                            $student,
+                            $clearanceTarget['clearanceType'],
+                            $clearanceTarget['subcategory'],
+                            MarClearanceSubcategorySource::CONSULTATION,
+                            (string) $consultation->id,
+                            now()
+                        );
+                    } catch (\Throwable $exception) {
+                        Log::warning('Consultation saved but MAR issuance could not be recorded.', [
+                            'consultation_id' => $consultation->id,
+                            'user_id' => $student->id,
+                            'certificate_type' => $certificateType,
+                            'error' => $exception->getMessage(),
+                        ]);
+                    }
+                }
+            }
 
             foreach ($medicineRecords as $medicineRecord) {
                 ConsultationMedicine::create([
@@ -2940,6 +3031,49 @@ PROMPT;
             return $employeeProfile->fresh('user');
         });
 
+        try {
+            $employeeIssuanceService = app(MarClearanceIssuanceService::class);
+            $employeeAliases = str_contains(strtolower((string) $employeeProfile->health_form_category), 'faculty')
+                ? ['faculty', 'staff', 'annual medical']
+                : ['administrative', 'admin', 'staff', 'annual medical'];
+            $employeeClearanceTarget = $this->resolveClearanceTargetForWorkflow(
+                $employeeProfile->health_form_category,
+                MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW,
+                $employeeAliases
+            );
+
+            if (!$hasPendingFinding && $employeeProfile->user && $employeeClearanceTarget) {
+                $employeeIssuanceService->recordApprovedClearanceTarget(
+                    $employeeProfile->user,
+                    $employeeClearanceTarget['clearanceType'],
+                    $employeeClearanceTarget['subcategory'],
+                    MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW,
+                    (string) $employeeProfile->id,
+                    $employeeProfile->verified_at ?: now()
+                );
+            } else {
+                $employeeIssuanceService->removeForSourceRecord(
+                    MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW,
+                    (string) $employeeProfile->id
+                );
+            }
+
+            if (!$hasPendingFinding && !$employeeClearanceTarget) {
+                Log::info('Employee approved without a configured MAR clearance mapping.', [
+                    'employee_profile_id' => $employeeProfile->id,
+                    'reference_number' => $referenceNumber,
+                    'health_form_category' => $employeeProfile->health_form_category,
+                ]);
+            }
+        } catch (\Throwable $exception) {
+            Log::warning('Employee MAR issuance synchronization failed.', [
+                'employee_profile_id' => $employeeProfile->id,
+                'reference_number' => $referenceNumber,
+                'clearance_status' => $clearanceStatus,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+
         ActivityLog::create([
             'user_id' => auth()->id(),
             'user_name' => auth()->user()?->name ?? auth()->user()?->email ?? 'System',
@@ -3285,6 +3419,42 @@ PROMPT;
                 return $profile;
             });
 
+            try {
+                $issuanceService = app(MarClearanceIssuanceService::class);
+                $applicantClearanceTarget = $this->resolveApplicantClearanceTarget($profile);
+
+                if (!$hasPendingFinding && $applicantClearanceTarget) {
+                    $issuanceService->recordApprovedClearanceTarget(
+                        $student,
+                        $applicantClearanceTarget['clearanceType'],
+                        $applicantClearanceTarget['subcategory'],
+                        MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW,
+                        (string) $profile->id,
+                        $profile->verified_at ?: now()
+                    );
+                } else {
+                    $issuanceService->removeForSourceRecord(
+                        MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW,
+                        (string) $profile->id
+                    );
+                }
+
+                if (!$hasPendingFinding && !$applicantClearanceTarget) {
+                    Log::info('Applicant approved without a configured MAR clearance mapping.', [
+                        'health_profile_id' => $profile->id,
+                        'reference_number' => $referenceNumber,
+                        'health_form_category' => $profile->health_form_category,
+                    ]);
+                }
+            } catch (\Throwable $exception) {
+                Log::warning('Applicant MAR issuance synchronization failed.', [
+                    'health_profile_id' => $profile->id,
+                    'reference_number' => $referenceNumber,
+                    'clearance_status' => $clearanceStatus,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+
             if (!$isLocalOnlyApproval && !$hasPendingFinding) {
                 $profile->puptas_sync_status = 'syncing';
                 $profile->puptas_sync_message = 'Local approval saved. Syncing approved health clearance to PUPTAS.';
@@ -3586,6 +3756,48 @@ PROMPT;
 
                 return $profile;
             });
+
+            if ($clearanceDecision !== '') {
+                try {
+                    $studentIssuanceService = app(MarClearanceIssuanceService::class);
+                    $studentClearanceTarget = $this->resolveClearanceTargetForWorkflow(
+                        $profile->health_form_category,
+                        MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW,
+                        ['ojt', 'on the job']
+                    );
+
+                    if ($clearanceDecision === 'approve' && $studentClearanceTarget) {
+                        $studentIssuanceService->recordApprovedClearanceTarget(
+                            $student,
+                            $studentClearanceTarget['clearanceType'],
+                            $studentClearanceTarget['subcategory'],
+                            MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW,
+                            (string) $profile->id,
+                            $profile->verified_at ?: now()
+                        );
+                    } else {
+                        $studentIssuanceService->removeForSourceRecord(
+                            MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW,
+                            (string) $profile->id
+                        );
+                    }
+
+                    if ($clearanceDecision === 'approve' && !$studentClearanceTarget) {
+                        Log::info('Student approved without a configured MAR clearance mapping.', [
+                            'health_profile_id' => $profile->id,
+                            'reference_number' => $referenceNumber,
+                            'health_form_category' => $profile->health_form_category,
+                        ]);
+                    }
+                } catch (\Throwable $exception) {
+                    Log::warning('Student MAR issuance synchronization failed.', [
+                        'health_profile_id' => $profile->id,
+                        'reference_number' => $referenceNumber,
+                        'clearance_status' => $profile->clearance_status,
+                        'error' => $exception->getMessage(),
+                    ]);
+                }
+            }
 
             ActivityLog::create([
                 'user_id' => auth()->id(),

@@ -549,16 +549,11 @@
     
 
     @php
-        $resolveConsultationPatientType = function ($consultation) {
-            $value = strtolower(trim((string) ($consultation->user_role ?: $consultation->user_type ?: '')));
-
-            return match ($value) {
-                'student' => 'student',
-                'faculty' => 'faculty',
-                'admin', 'staff' => 'admin',
-                'dependent', 'dependents' => 'dependent',
-                default => null,
-            };
+        $marPatientTypeNormalizer = app(\App\Services\MarPatientTypeNormalizer::class);
+        $resolveConsultationPatientType = function ($consultation) use ($marPatientTypeNormalizer) {
+            return $marPatientTypeNormalizer->normalize(
+                $consultation->user_role ?: $consultation->user_type ?: ''
+            );
         };
 
         $countByPatientType = function ($consultations, string $type) use ($resolveConsultationPatientType) {
@@ -567,13 +562,56 @@
             })->count();
         };
 
-        $countCertificateByType = function ($consultations, string $certificateType, string $patientType) use ($countByPatientType) {
-            $filtered = $consultations->filter(function ($consultation) use ($certificateType) {
-                return trim((string) ($consultation->certificate_type ?? 'none')) === $certificateType;
+        $resolveIssuancePatientType = function ($issuance) use ($marPatientTypeNormalizer) {
+            return $marPatientTypeNormalizer->normalize($issuance->user_type ?? '');
+        };
+        $countIssuancesBySubcategory = function ($issuances, int $subcategoryId, string $patientType) use ($resolveIssuancePatientType) {
+            return $issuances->filter(function ($issuance) use ($subcategoryId, $resolveIssuancePatientType, $patientType) {
+                return (int) $issuance->clearance_subcategory_id === $subcategoryId
+                    && $resolveIssuancePatientType($issuance) === $patientType;
+            })->count();
+        };
+        $countIssuancesByParent = function ($issuances, int $clearanceTypeId, string $patientType) use ($resolveIssuancePatientType) {
+            return $issuances->filter(function ($issuance) use ($clearanceTypeId, $resolveIssuancePatientType, $patientType) {
+                return (int) $issuance->clearance_type_id === $clearanceTypeId
+                    && $issuance->clearance_subcategory_id === null
+                    && $resolveIssuancePatientType($issuance) === $patientType;
+            })->count();
+        };
+        $alphaLabel = function (int $index) {
+            $label = '';
+            $value = $index + 1;
+            while ($value > 0) {
+                $value--;
+                $label = chr(65 + ($value % 26)) . $label;
+                $value = intdiv($value, 26);
+            }
+            return $label;
+        };
+        $clearanceGroups = collect($marClearanceTypes ?? [])->values()->map(function ($clearanceType, $index) use ($marClearanceIssuances, $countIssuancesBySubcategory, $countIssuancesByParent, $alphaLabel) {
+            $parentRow = [
+                'student' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'student'),
+                'faculty' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'faculty'),
+                'admin' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'admin'),
+                'dependent' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'dependent'),
+            ];
+            $rows = $clearanceType->subcategories->values()->map(function ($subcategory) use ($marClearanceIssuances, $countIssuancesBySubcategory) {
+                return [
+                    'name' => $subcategory->name,
+                    'student' => $countIssuancesBySubcategory($marClearanceIssuances, (int) $subcategory->id, 'student'),
+                    'faculty' => $countIssuancesBySubcategory($marClearanceIssuances, (int) $subcategory->id, 'faculty'),
+                    'admin' => $countIssuancesBySubcategory($marClearanceIssuances, (int) $subcategory->id, 'admin'),
+                    'dependent' => $countIssuancesBySubcategory($marClearanceIssuances, (int) $subcategory->id, 'dependent'),
+                ];
             });
 
-            return $countByPatientType($filtered, $patientType);
-        };
+            return [
+                'label' => $alphaLabel($index) . '. ' . $clearanceType->name,
+                'allow_direct_use' => (bool) $clearanceType->allow_direct_use,
+                'parent' => $parentRow,
+                'rows' => $rows,
+            ];
+        });
 
         $consultationTotals = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
         foreach ($categories as $cat) {
@@ -586,10 +624,6 @@
         }
         $consultationGrandTotal = array_sum($consultationTotals);
 
-        $excusedLetterTotals = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
-        $cocIjtTotals = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
-        $cocLadderizedTotals = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
-        $excusedLetterCategoryRows = collect();
         $onlineTotals = [
             'consultation' => ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0],
             'medical_clearance' => ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0],
@@ -598,30 +632,6 @@
 
         foreach ($categories as $cat) {
             $categoryConsultations = $cat->medicalConditions->flatMap->consultations;
-
-            $categoryExcused = [
-                'student' => $countCertificateByType($categoryConsultations, 'excused_letter', 'student'),
-                'faculty' => $countCertificateByType($categoryConsultations, 'excused_letter', 'faculty'),
-                'admin' => $countCertificateByType($categoryConsultations, 'excused_letter', 'admin'),
-                'dependent' => $countCertificateByType($categoryConsultations, 'excused_letter', 'dependent'),
-            ];
-
-            if (array_sum($categoryExcused) > 0) {
-                $excusedLetterCategoryRows->push([
-                    'label' => 'Category ' . $cat->code . ' - ' . $cat->name,
-                    'student' => $categoryExcused['student'],
-                    'faculty' => $categoryExcused['faculty'],
-                    'admin' => $categoryExcused['admin'],
-                    'dependent' => $categoryExcused['dependent'],
-                    'total' => array_sum($categoryExcused),
-                ]);
-            }
-
-            foreach (['student', 'faculty', 'admin', 'dependent'] as $type) {
-                $excusedLetterTotals[$type] += $categoryExcused[$type];
-                $cocIjtTotals[$type] += $countCertificateByType($categoryConsultations, 'coc_ijt', $type);
-                $cocLadderizedTotals[$type] += $countCertificateByType($categoryConsultations, 'coc_ladderized', $type);
-            }
 
             $onlineConsultations = $categoryConsultations->filter(function ($consultation) {
                 return trim((string) ($consultation->consultation_source ?? '')) === 'online';
@@ -699,43 +709,35 @@
                 <td class="text-center">{{ $consultationGrandTotal }}</td>
             </tr>
 
-            <tr class="section-row"><td colspan="6">ii. Medical Certificate / Clearance - Certificate of Compliance</td></tr>
-            <tr class="detail-row nested-row">
-                <td>A. Excused Letter</td>
-                <td class="text-center">{{ $excusedLetterTotals['student'] }}</td>
-                <td class="text-center">{{ $excusedLetterTotals['faculty'] }}</td>
-                <td class="text-center">{{ $excusedLetterTotals['admin'] }}</td>
-                <td class="text-center">{{ $excusedLetterTotals['dependent'] }}</td>
-                <td class="text-center">{{ array_sum($excusedLetterTotals) }}</td>
-            </tr>
-            @forelse($excusedLetterCategoryRows as $categoryRow)
-                <tr class="nested-row deep-nested-row">
-                    <td>{{ $categoryRow['label'] }}</td>
-                    <td class="text-center">{{ $categoryRow['student'] }}</td>
-                    <td class="text-center">{{ $categoryRow['faculty'] }}</td>
-                    <td class="text-center">{{ $categoryRow['admin'] }}</td>
-                    <td class="text-center">{{ $categoryRow['dependent'] }}</td>
-                    <td class="text-center">{{ $categoryRow['total'] }}</td>
+            <tr class="section-row"><td colspan="6">ii. Medical Certificate / Clearance</td></tr>
+            @forelse($clearanceGroups as $clearanceGroup)
+                @php
+                    $parentRow = $clearanceGroup['parent'];
+                    $parentTotal = $parentRow['student'] + $parentRow['faculty'] + $parentRow['admin'] + $parentRow['dependent'];
+                @endphp
+                <tr class="detail-row nested-row">
+                    <td>{{ $clearanceGroup['label'] }}</td>
+                    <td class="text-center">{{ $parentRow['student'] ?: '' }}</td>
+                    <td class="text-center">{{ $parentRow['faculty'] ?: '' }}</td>
+                    <td class="text-center">{{ $parentRow['admin'] ?: '' }}</td>
+                    <td class="text-center">{{ $parentRow['dependent'] ?: '' }}</td>
+                    <td class="text-center">{{ $parentTotal ?: '' }}</td>
                 </tr>
+                @forelse($clearanceGroup['rows'] as $subcategoryIndex => $subcategoryRow)
+                    <tr class="nested-row deep-nested-row">
+                        <td>{{ $subcategoryIndex + 1 }}. {{ $subcategoryRow['name'] }}</td>
+                        <td class="text-center">{{ $subcategoryRow['student'] ?: '' }}</td>
+                        <td class="text-center">{{ $subcategoryRow['faculty'] ?: '' }}</td>
+                        <td class="text-center">{{ $subcategoryRow['admin'] ?: '' }}</td>
+                        <td class="text-center">{{ $subcategoryRow['dependent'] ?: '' }}</td>
+                        <td class="text-center">{{ ($subcategoryRow['student'] + $subcategoryRow['faculty'] + $subcategoryRow['admin'] + $subcategoryRow['dependent']) ?: '' }}</td>
+                    </tr>
+                @empty
+                    <tr class="nested-row deep-nested-row"><td>&nbsp;</td><td class="text-center"></td><td class="text-center"></td><td class="text-center"></td><td class="text-center"></td><td class="text-center"></td></tr>
+                @endforelse
             @empty
-                <tr class="nested-row deep-nested-row"><td>No excused letter category recorded yet.</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td></tr>
+                <tr class="nested-row deep-nested-row"><td>&nbsp;</td><td class="text-center"></td><td class="text-center"></td><td class="text-center"></td><td class="text-center"></td><td class="text-center"></td></tr>
             @endforelse
-            <tr class="detail-row nested-row">
-                <td>B. COC for IJT</td>
-                <td class="text-center">{{ $cocIjtTotals['student'] }}</td>
-                <td class="text-center">{{ $cocIjtTotals['faculty'] }}</td>
-                <td class="text-center">{{ $cocIjtTotals['admin'] }}</td>
-                <td class="text-center">{{ $cocIjtTotals['dependent'] }}</td>
-                <td class="text-center">{{ array_sum($cocIjtTotals) }}</td>
-            </tr>
-            <tr class="detail-row nested-row">
-                <td>C. COC for Ladderized</td>
-                <td class="text-center">{{ $cocLadderizedTotals['student'] }}</td>
-                <td class="text-center">{{ $cocLadderizedTotals['faculty'] }}</td>
-                <td class="text-center">{{ $cocLadderizedTotals['admin'] }}</td>
-                <td class="text-center">{{ $cocLadderizedTotals['dependent'] }}</td>
-                <td class="text-center">{{ array_sum($cocLadderizedTotals) }}</td>
-            </tr>
 
             <tr class="section-row"><td colspan="6">iii. Injections</td></tr>
             <tr><td class="nested-row">Injection Services</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td></tr>

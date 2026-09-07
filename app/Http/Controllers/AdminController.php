@@ -47,6 +47,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Models\IntegrationClient;
 use App\Services\StudentNotificationMailer;
+use App\Services\MarClearanceIssuanceService;
 
 class AdminController extends Controller
 {
@@ -3423,6 +3424,15 @@ class AdminController extends Controller
         $profile->approved_by_user_id = null;
         $profile->puptas_synced_at = $previousPuptasSyncedAt ?? $profile->puptas_synced_at;
         $profile->save();
+        try {
+            app(MarClearanceIssuanceService::class)->syncApprovedHealthProfile($profile, false);
+        } catch (\Throwable $exception) {
+            \Log::warning('Health profile MAR issuance cleanup failed.', [
+                'health_profile_id' => $profile->id,
+                'clearance_status' => $profile->clearance_status,
+                'error' => $exception->getMessage(),
+            ]);
+        }
         $this->updateCurrentHealthFormSubmissionStatus($profile, HealthFormSubmission::STATUS_SUBMITTED);
 
         if ($profile->puptas_sync_status === null || $profile->puptas_sync_status === 'not_applicable') {
@@ -4067,6 +4077,19 @@ public function updateClearance(Request $request, $id)
     $record->resubmitted_at = $requestedStatus === 'Pending Resubmission' ? null : $record->resubmitted_at;
 
     if ($record->save()) {
+        try {
+            app(MarClearanceIssuanceService::class)->syncApprovedHealthProfile(
+                $record->fresh('user'),
+                $isApproval
+            );
+        } catch (\Throwable $exception) {
+            \Log::warning('Health profile MAR issuance synchronization failed.', [
+                'health_profile_id' => $record->id,
+                'clearance_status' => $requestedStatus,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+
         if ($requestedStatus === 'Pending Resubmission') {
             HealthProfileCorrectionRequest::query()->updateOrCreate(
                 [
@@ -4520,6 +4543,15 @@ public function updateClearance(Request $request, $id)
         $record->verified_at = null;
         $record->approved_by_user_id = null;
         $record->save();
+        try {
+            app(MarClearanceIssuanceService::class)->syncApprovedHealthProfile($record, false);
+        } catch (\Throwable $exception) {
+            \Log::warning('Health profile MAR issuance cleanup failed.', [
+                'health_profile_id' => $record->id,
+                'clearance_status' => $record->clearance_status,
+                'error' => $exception->getMessage(),
+            ]);
+        }
         $this->updateCurrentHealthFormSubmissionStatus($record, HealthFormSubmission::STATUS_SUBMITTED);
         HealthProfileCorrectionRequest::query()
             ->where('health_profile_id', $record->id)
@@ -4579,6 +4611,15 @@ public function updateClearance(Request $request, $id)
         $record->verified_at = null;
         $record->approved_by_user_id = null;
         $record->save();
+        try {
+            app(MarClearanceIssuanceService::class)->syncApprovedHealthProfile($record, false);
+        } catch (\Throwable $exception) {
+            \Log::warning('Health profile MAR issuance cleanup failed.', [
+                'health_profile_id' => $record->id,
+                'clearance_status' => $record->clearance_status,
+                'error' => $exception->getMessage(),
+            ]);
+        }
         $this->updateCurrentHealthFormSubmissionStatus($record, HealthFormSubmission::STATUS_SUBMITTED);
 
         ActivityLog::create([

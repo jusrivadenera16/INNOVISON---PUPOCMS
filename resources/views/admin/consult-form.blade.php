@@ -3513,6 +3513,11 @@
                         <select name="certificate_type" id="consultCertificate" class="form-control" data-clinic-select>
                             <option value="none" {{ old('certificate_type', 'none') === 'none' ? 'selected' : '' }}>No certificate / clearance</option>
                             @foreach($clearanceTypes as $clearanceType)
+                                @if($clearanceType->allow_direct_use && $clearanceType->sources->contains('source', \App\Models\MarClearanceSubcategorySource::CONSULTATION))
+                                    <option value="{{ $clearanceType->code }}" {{ old('certificate_type') === $clearanceType->code ? 'selected' : '' }}>
+                                        {{ $clearanceType->name }}
+                                    </option>
+                                @endif
                                 @if($clearanceType->subcategories->isNotEmpty())
                                     <optgroup label="{{ $clearanceType->name }}">
                                         @foreach($clearanceType->subcategories as $subcategory)

@@ -89,6 +89,7 @@ Route::get('/', function () {
     return view('landing', compact('landingAnnouncements'));
 })->name('landing');
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::view('/loader-preview', 'dev.loader-preview')->name('dev.loader-preview');
 Route::get('/login/portal', [LoginController::class, 'redirectToIdpPortal'])->name('login.portal');
 Route::get('/auth/callback', [LoginController::class, 'handleIdpCallback'])->name('auth.callback');
 Route::post('/login-action', [LoginController::class, 'login']);

@@ -367,6 +367,36 @@
             <p class="um-module-preview-note">Selected permissions are saved with this account and take effect on the user&apos;s next request.</p>
         </section>
     @endif
+    @if(($managementView ?? '') !== 'admin-hub')
+        <section class="um-report-identity" aria-labelledby="reportIdentityTitle">
+            <div class="um-report-identity__heading">
+                <strong id="reportIdentityTitle">Report identity</strong>
+                <span>These values appear on exported reports.</span>
+            </div>
+            <div class="um-report-identity__grid">
+                <div class="um-field">
+                    <label for="detailReportName">Name shown on reports</label>
+                    <input
+                        type="text"
+                        name="report_name"
+                        id="detailReportName"
+                        maxlength="255"
+                        placeholder="Example: Juan Delacruz, R.N."
+                    >
+                </div>
+                <div class="um-field">
+                    <label for="detailReportPosition">Position shown on reports</label>
+                    <input
+                        type="text"
+                        name="report_position"
+                        id="detailReportPosition"
+                        maxlength="255"
+                        placeholder="Example: Nurse II"
+                    >
+                </div>
+            </div>
+        </section>
+    @endif
     @if(($managementView ?? '') === 'admin-hub')
         <div class="um-field" id="adminOfficeWrap">
             <label for="detailOffice">Department / Office</label>

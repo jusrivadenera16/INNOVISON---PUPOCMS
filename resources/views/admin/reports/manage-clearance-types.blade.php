@@ -285,6 +285,65 @@
         font-size: .86rem;
         font-weight: 800;
     }
+    .clearance-subcategory-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 4px;
+        color: var(--clinic-muted);
+        font-size: .7rem;
+        font-weight: 700;
+    }
+    .clearance-source-chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 21px;
+        padding: 2px 7px;
+        border: 1px solid #ead1d5;
+        border-radius: 999px;
+        color: var(--clinic-maroon);
+        background: #fff8f8;
+        white-space: nowrap;
+    }
+    .clearance-parent-direct-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px 8px 72px;
+        border-top: 1px solid #eef1f5;
+        color: var(--clinic-muted);
+        font-size: .72rem;
+        font-weight: 700;
+    }
+    .clearance-parent-direct-meta strong { color: var(--clinic-maroon); }
+    .clearance-source-fields {
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+        border: 1px solid #eadde0;
+        border-radius: 8px;
+        background: #fffafa;
+    }
+    .clearance-source-fields[hidden] {
+        display: none;
+    }
+    .clearance-source-fields legend {
+        padding: 0 4px;
+        color: var(--clinic-deep);
+        font-size: .78rem;
+        font-weight: 900;
+    }
+    .clearance-source-option {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        color: var(--clinic-deep);
+        font-size: .78rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .clearance-source-option input { margin-top: 2px; accent-color: var(--clinic-maroon); }
     .clearance-subcategory-number {
         display: inline-flex;
         align-items: center;
@@ -473,6 +532,31 @@
         border-color: rgba(255, 255, 255, .14);
         background: rgba(35, 17, 25, .96);
     }
+    html[data-theme="dark"] .clearance-modal-body {
+        color: #f8fafc;
+        background: rgba(35, 17, 25, .96);
+    }
+    html[data-theme="dark"] .clearance-modal .form-control {
+        color: #f8fafc;
+        border-color: rgba(255, 255, 255, .22);
+        background: rgba(61, 39, 49, .92);
+    }
+    html[data-theme="dark"] .clearance-modal .form-control::placeholder {
+        color: #cbd5e1;
+        opacity: 1;
+    }
+    html[data-theme="dark"] .clearance-source-fields {
+        color: #f8fafc;
+        border-color: rgba(255, 255, 255, .2);
+        background: rgba(20, 18, 25, .72);
+    }
+    html[data-theme="dark"] .clearance-source-fields legend,
+    html[data-theme="dark"] .clearance-source-option {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .clearance-source-fields .clearance-modal-note {
+        color: #cbd5e1;
+    }
     html[data-theme="dark"] .clearance-type-header {
         background: linear-gradient(180deg, rgba(112, 19, 27, .75), rgba(55, 20, 30, .86));
     }
@@ -596,11 +680,13 @@
                     <button type="button" class="clearance-header-name" data-clearance-toggle aria-expanded="false">{{ $clearanceType->name }}</button>
 
                     <div class="clearance-parent-actions">
-                        <button type="button" class="clearance-btn clearance-btn--edit" onclick="openAddSubcategoryModal('{{ $clearanceType->id }}', @js($clearanceType->name))">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
-                            <span>Add</span>
-                        </button>
-                        <button type="button" class="clearance-btn clearance-btn--edit" onclick="openEditClearanceModal('{{ $clearanceType->id }}', @js($clearanceType->name))">
+                        @if(!$clearanceType->allow_direct_use || $clearanceType->subcategories->isNotEmpty())
+                            <button type="button" class="clearance-btn clearance-btn--edit" onclick="openAddSubcategoryModal('{{ $clearanceType->id }}', @js($clearanceType->name))">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+                                <span>Add</span>
+                            </button>
+                        @endif
+                        <button type="button" class="clearance-btn clearance-btn--edit" onclick="openEditClearanceModal('{{ $clearanceType->id }}', @js($clearanceType->name), @js((bool) $clearanceType->allow_direct_use), @js($clearanceType->sources->pluck('source')->values()))">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
                             <span>Edit</span>
                         </button>
@@ -620,14 +706,35 @@
                 </div>
 
                 <div class="clearance-type-body">
+                    @if($clearanceType->allow_direct_use)
+                        <div class="clearance-parent-direct-meta">
+                            <strong>Direct parent use:</strong>
+                            @forelse($clearanceType->sources as $typeSource)
+                                <span class="clearance-source-chip">{{ $sourceLabels[$typeSource->source] ?? $typeSource->source }}</span>
+                            @empty
+                                <span>No workflow selected</span>
+                            @endforelse
+                        </div>
+                    @endif
                     @forelse($clearanceType->subcategories as $subcategory)
                         <div class="clearance-subcategory-row">
                             <div class="clearance-subcategory-name">
                                 <span class="clearance-subcategory-number">{{ $loop->iteration }}</span>
-                                <span>{{ $subcategory->name }}</span>
+                                <div>
+                                    <div>{{ $subcategory->name }}</div>
+                                    @if($subcategory->sources->isNotEmpty())
+                                        <div class="clearance-subcategory-meta">
+                                            @foreach($subcategory->sources as $subcategorySource)
+                                                <span class="clearance-source-chip">{{ $sourceLabels[$subcategorySource->source] ?? $subcategorySource->source }}</span>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <div class="clearance-subcategory-meta">No workflow selected</div>
+                                    @endif
+                                </div>
                             </div>
                             <div class="clearance-subcategory-actions">
-                                <button type="button" class="clearance-btn clearance-btn--edit" onclick="openEditSubcategoryModal('{{ $subcategory->id }}', @js($subcategory->name), @js($clearanceType->name))">
+                                <button type="button" class="clearance-btn clearance-btn--edit" onclick="openEditSubcategoryModal('{{ $subcategory->id }}', @js($subcategory->name), @js($clearanceType->name), @js($subcategory->sources->pluck('source')->values()))">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
                                     <span>Edit</span>
                                 </button>
@@ -642,7 +749,9 @@
                             </div>
                         </div>
                     @empty
+                        @if(!$clearanceType->allow_direct_use)
                         <div class="clearance-subcategory-empty">No subcategories yet. Use Add to create the first one.</div>
+                        @endif
                     @endforelse
                 </div>
             </section>
@@ -686,6 +795,25 @@
                     Clearance / Certificate Name
                     <input type="text" name="name" class="form-control" value="{{ old('_clearance_form') === 'add' ? old('name') : '' }}" maxlength="160" placeholder="Example: Medical Certificate" required>
                 </label>
+
+                <fieldset class="clearance-source-fields">
+                    <legend>Use this category directly</legend>
+                    <label class="clearance-source-option">
+                        <input type="checkbox" name="allow_direct_use" data-direct-use-toggle value="1" {{ old('_clearance_form') === 'add' && old('allow_direct_use') ? 'checked' : '' }}>
+                        <span>Allow this category to be selected without a subcategory</span>
+                    </label>
+                    <small class="clearance-modal-note">Turn this on only when the category can be used by itself. Then choose where it is allowed.</small>
+                </fieldset>
+
+                <fieldset class="clearance-source-fields" data-direct-use-workflows hidden>
+                    <legend>Where can it be used directly?</legend>
+                    @foreach($sourceLabels as $source => $label)
+                        <label class="clearance-source-option">
+                            <input type="checkbox" name="sources[]" value="{{ $source }}" {{ old('_clearance_form') === 'add' && in_array($source, old('sources', []), true) ? 'checked' : '' }}>
+                            <span>{{ $label }}</span>
+                        </label>
+                    @endforeach
+                </fieldset>
 
                 <div class="clearance-modal-actions">
                     <button type="button" class="clearance-btn-cancel" onclick="closeAddClearanceModal()">Cancel</button>
@@ -731,6 +859,25 @@
                     <input type="text" name="name" id="editClearanceInput" class="form-control" maxlength="160" required>
                 </label>
 
+                <fieldset class="clearance-source-fields">
+                    <legend>Use this category directly</legend>
+                    <label class="clearance-source-option">
+                        <input type="checkbox" name="allow_direct_use" id="editClearanceDirectUse" data-direct-use-toggle value="1">
+                        <span>Allow this category to be selected without a subcategory</span>
+                    </label>
+                    <small class="clearance-modal-note">Turn this on only when the category can be used by itself. Then choose where it is allowed.</small>
+                </fieldset>
+
+                <fieldset class="clearance-source-fields" data-direct-use-workflows hidden>
+                    <legend>Where can it be used directly?</legend>
+                    @foreach($sourceLabels as $source => $label)
+                        <label class="clearance-source-option">
+                            <input type="checkbox" name="sources[]" value="{{ $source }}">
+                            <span>{{ $label }}</span>
+                        </label>
+                    @endforeach
+                </fieldset>
+
                 <div class="clearance-modal-actions">
                     <button type="button" class="clearance-btn-cancel" onclick="closeEditClearanceModal()">Cancel</button>
                     <button type="submit" class="clearance-btn-save">Save Changes</button>
@@ -773,6 +920,16 @@
                     Subcategory Name
                     <input type="text" name="name" id="addSubcategoryInput" class="form-control" maxlength="160" placeholder="Enter subcategory name" required>
                 </label>
+
+                <fieldset class="clearance-source-fields">
+                    <legend>Applicable workflow</legend>
+                    @foreach($sourceLabels as $source => $label)
+                        <label class="clearance-source-option">
+                            <input type="checkbox" name="sources[]" value="{{ $source }}" {{ in_array($source, old('_clearance_form') === 'add_subcategory' ? old('sources', []) : [], true) ? 'checked' : '' }}>
+                            <span>{{ $label }}</span>
+                        </label>
+                    @endforeach
+                </fieldset>
 
                 <div class="clearance-modal-actions">
                     <button type="button" class="clearance-btn-cancel" onclick="closeAddSubcategoryModal()">Cancel</button>
@@ -817,6 +974,16 @@
                     Subcategory Name
                     <input type="text" name="name" id="editSubcategoryInput" class="form-control" maxlength="160" required>
                 </label>
+
+                <fieldset class="clearance-source-fields">
+                    <legend>Applicable workflow</legend>
+                    @foreach($sourceLabels as $source => $label)
+                        <label class="clearance-source-option">
+                            <input type="checkbox" name="sources[]" value="{{ $source }}">
+                            <span>{{ $label }}</span>
+                        </label>
+                    @endforeach
+                </fieldset>
 
                 <div class="clearance-modal-actions">
                     <button type="button" class="clearance-btn-cancel" onclick="closeEditSubcategoryModal()">Cancel</button>
@@ -895,6 +1062,7 @@ function hideClearanceModal(modal) {
 }
 
 function openAddClearanceModal() {
+    syncDirectUseWorkflowVisibility(addClearanceModal);
     showClearanceModal(addClearanceModal);
     window.setTimeout(function() {
         addClearanceModal?.querySelector('input[name="name"]')?.focus();
@@ -905,12 +1073,15 @@ function closeAddClearanceModal() {
     hideClearanceModal(addClearanceModal);
 }
 
-function openEditClearanceModal(id, name) {
+function openEditClearanceModal(id, name, allowDirectUse, sources) {
     const route = @json(route('mar-clearance-types.update', ['marClearanceType' => '__ID__']));
     document.getElementById('editClearanceForm').action = route.replace('__ID__', id);
     document.getElementById('editClearanceId').value = id;
     document.getElementById('editClearanceInput').value = name;
     document.getElementById('editClearanceName').textContent = 'Editing: ' + name;
+    document.getElementById('editClearanceDirectUse').checked = Boolean(allowDirectUse);
+    setTypeSourceCheckboxes(editClearanceModal, sources);
+    syncDirectUseWorkflowVisibility(editClearanceModal);
     showClearanceModal(editClearanceModal);
     window.setTimeout(function() {
         document.getElementById('editClearanceInput')?.focus();
@@ -921,12 +1092,41 @@ function closeEditClearanceModal() {
     hideClearanceModal(editClearanceModal);
 }
 
+function setSubcategorySourceCheckboxes(modal, sources) {
+    const selectedSources = Array.isArray(sources) ? sources : [];
+    modal?.querySelectorAll('input[name="sources[]"]').forEach(function(input) {
+        input.checked = selectedSources.includes(input.value);
+    });
+}
+
+function setTypeSourceCheckboxes(modal, sources) {
+    const selectedSources = Array.isArray(sources) ? sources : [];
+    modal?.querySelectorAll('input[name="sources[]"]').forEach(function(input) {
+        input.checked = selectedSources.includes(input.value);
+    });
+}
+
+function syncDirectUseWorkflowVisibility(modal) {
+    const toggle = modal?.querySelector('[data-direct-use-toggle]');
+    const workflowFields = modal?.querySelector('[data-direct-use-workflows]');
+    if (!toggle || !workflowFields) return;
+
+    workflowFields.hidden = !toggle.checked;
+}
+
+document.querySelectorAll('[data-direct-use-toggle]').forEach(function(toggle) {
+    toggle.addEventListener('change', function() {
+        syncDirectUseWorkflowVisibility(toggle.closest('.clearance-modal'));
+    });
+});
+
 function openAddSubcategoryModal(clearanceTypeId, clearanceTypeName) {
     const route = @json(route('mar-clearance-subcategories.store', ['marClearanceType' => '__ID__']));
     document.getElementById('addSubcategoryForm').action = route.replace('__ID__', clearanceTypeId);
     document.getElementById('addSubcategoryTypeId').value = clearanceTypeId;
     document.getElementById('addSubcategoryTypeName').value = clearanceTypeName;
     document.getElementById('addSubcategoryParent').textContent = 'Clearance type: ' + clearanceTypeName;
+    setSubcategorySourceCheckboxes(addSubcategoryModal, @js(old('_clearance_form') === 'add_subcategory' ? old('sources', []) : []));
     showClearanceModal(addSubcategoryModal);
     window.setTimeout(function() {
         document.getElementById('addSubcategoryInput')?.focus();
@@ -937,13 +1137,14 @@ function closeAddSubcategoryModal() {
     hideClearanceModal(addSubcategoryModal);
 }
 
-function openEditSubcategoryModal(subcategoryId, subcategoryName, clearanceTypeName) {
+function openEditSubcategoryModal(subcategoryId, subcategoryName, clearanceTypeName, sources) {
     const route = @json(route('mar-clearance-subcategories.update', ['marClearanceSubcategory' => '__ID__']));
     document.getElementById('editSubcategoryForm').action = route.replace('__ID__', subcategoryId);
     document.getElementById('editSubcategoryId').value = subcategoryId;
     document.getElementById('editSubcategoryTypeName').value = clearanceTypeName;
     document.getElementById('editSubcategoryInput').value = subcategoryName;
     document.getElementById('editSubcategoryParent').textContent = 'Clearance type: ' + clearanceTypeName;
+    setSubcategorySourceCheckboxes(editSubcategoryModal, sources);
     showClearanceModal(editSubcategoryModal);
     window.setTimeout(function() {
         document.getElementById('editSubcategoryInput')?.focus();
@@ -991,12 +1192,12 @@ updateClearanceView();
 @if($errors->any() && old('_clearance_form') === 'add')
     openAddClearanceModal();
 @elseif($errors->any() && old('_clearance_form') === 'edit' && old('_clearance_type_id'))
-    openEditClearanceModal(@json(old('_clearance_type_id')), @json(old('name')));
+    openEditClearanceModal(@json(old('_clearance_type_id')), @json(old('name')), @js((bool) old('allow_direct_use')), @js(old('sources', [])));
 @elseif($errors->any() && old('_clearance_form') === 'add_subcategory' && old('_clearance_type_id'))
     openAddSubcategoryModal(@json(old('_clearance_type_id')), @json(old('_clearance_type_name')));
     document.getElementById('addSubcategoryInput').value = @json(old('name'));
 @elseif($errors->any() && old('_clearance_form') === 'edit_subcategory' && old('_clearance_subcategory_id'))
-    openEditSubcategoryModal(@json(old('_clearance_subcategory_id')), @json(old('name')), @json(old('_clearance_type_name')));
+    openEditSubcategoryModal(@json(old('_clearance_subcategory_id')), @json(old('name')), @json(old('_clearance_type_name')), @js(old('sources', [])));
 @endif
 </script>
 @endpush
