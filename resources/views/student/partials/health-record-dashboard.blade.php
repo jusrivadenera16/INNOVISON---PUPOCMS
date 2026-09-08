@@ -57,6 +57,14 @@
             return [];
         }
     };
+    $healthSubmissionCategory = function ($submission) use ($healthSubmissionSnapshotProfile): string {
+        $snapshot = $healthSubmissionSnapshotProfile($submission);
+
+        return trim((string) (
+            optional($submission)->category
+            ?: ($snapshot['health_form_category'] ?? '')
+        ));
+    };
 
     $currentUserRoles = strtolower(trim(implode(' ', array_filter([
         (string) ($user->user_role ?? ''),
@@ -84,32 +92,34 @@
         $isStudentHealthRecord => 'Student Health Form',
         default => 'Applicant Health Form',
     };
-    $healthSubmissionFormType = function ($submission) use ($healthSubmissionSnapshotProfile, $resolvedHealthFormType, $isEmployeeHealthRecord, $isApplicantHealthRecord): string {
-        if ($isEmployeeHealthRecord) {
-            return 'Employee Health Form';
-        }
-
+    $healthSubmissionFormType = function ($submission) use ($healthSubmissionSnapshotProfile, $healthSubmissionCategory, $resolvedHealthFormType, $isEmployeeHealthRecord, $isApplicantHealthRecord): string {
         $snapshot = $healthSubmissionSnapshotProfile($submission);
-        $category = strtolower(trim((string) (optional($submission)->category ?: ($snapshot['health_form_category'] ?? ''))));
+        $categoryLabel = $healthSubmissionCategory($submission);
+        $category = strtolower($categoryLabel);
         $referenceNumber = strtoupper(trim((string) ($snapshot['reference_number'] ?? '')));
         $studentNumber = strtoupper(trim((string) ($snapshot['student_number'] ?? '')));
         $looksLikeApplicantReference = (bool) preg_match('/^\d{4}-\d{4}-\d{4}/', $referenceNumber)
             || (bool) preg_match('/^\d{4}-[A-Z]+-\d+/', $referenceNumber);
 
+        $baseType = $isEmployeeHealthRecord ? 'Employee Health Form' : $resolvedHealthFormType;
         if (str_contains($category, 'ojt') || str_contains($category, 'on-the-job') || str_contains($category, 'student')) {
-            return 'Student Health Form';
-        }
-
-        if (
+            $baseType = 'Student Health Form';
+        } elseif (
             str_contains($category, 'applicant')
             || $looksLikeApplicantReference
             || ($category === 'general' && ($studentNumber === '' || $studentNumber === $referenceNumber))
             || (!$submission && $isApplicantHealthRecord)
         ) {
-            return 'Applicant Health Form';
+            $baseType = 'Applicant Health Form';
         }
 
-        return $resolvedHealthFormType;
+        if ($categoryLabel === '' || in_array($category, ['', 'general', 'student'], true)) {
+            return $baseType;
+        }
+
+        return str_ends_with($category, 'health form')
+            ? $categoryLabel
+            : $categoryLabel . ' Health Form';
     };
     $latestStatus = $healthSubmissionStatus($latestHealthSubmission);
     $latestStatusKey = strtolower(trim((string) optional($latestHealthSubmission)->status));
@@ -131,7 +141,8 @@
     $latestFormId = $healthFormDisplayId($latestHealthSubmission);
     $latestCategory = trim((string) optional($latestHealthSubmission)->category);
     $latestSchoolYear = trim((string) (optional($latestHealthSubmission)->school_year ?: $recordAcademicYear));
-    $latestFormType = $healthSubmissionFormType($latestHealthSubmission);
+    $latestFormTitle = $healthSubmissionFormType($latestHealthSubmission);
+    $latestFormType = $latestFormTitle;
     if (!$isEmployeeHealthRecord && $latestSchoolYear !== '') {
         $latestFormType .= ' (' . $latestSchoolYear . ')';
     }
@@ -273,7 +284,7 @@
 <div class="health-doc-layout">
     <div class="health-doc-main">
         <section class="health-doc-card health-doc-latest" aria-labelledby="latestHealthFormTitle">
-            <div class="health-doc-ribbon">Latest Health Form</div>
+            <div class="health-doc-ribbon">Latest {{ $latestFormTitle }}</div>
             @if($healthFormSubmitted || $latestHealthSubmission)
                 <div class="health-doc-latest-grid">
                     <div class="health-doc-identity">
@@ -409,6 +420,10 @@
                             $historyYear = trim((string) (optional($submission)->school_year ?: $recordAcademicYear));
                             $historyType = $healthSubmissionFormType($submission);
                             $historyPurpose = trim((string) optional($submission)->remarks);
+                            $historyCategory = $healthSubmissionCategory($submission);
+                            if ($historyCategory !== '' && !in_array(strtolower($historyCategory), ['general', 'student'], true)) {
+                                $historyPurpose = 'Purpose: ' . $historyCategory;
+                            }
                             if ($historyPurpose === '') {
                                 $historyPurpose = $historyIsInitial && $isApplicantHealthRecord
                                     ? 'First clinic Health Form submitted as applicant.'

@@ -5969,7 +5969,7 @@
     @php
         $healthSummaryStats = [
             'total' => $records->count(),
-            'with_conditions' => 0,
+            'with_conditions' => $issuedWithConditions ?? 0,
             'pending_approval' => 0,
             'pending_conditional' => 0,
         ];
@@ -6053,10 +6053,6 @@
                 || trim((string) ($summaryRecord->medical_condition_remarks ?? '')) !== ''
             );
 
-            if ($summaryIsApproved && $summaryRecord->hasMedicalCondition()) {
-                $healthSummaryStats['with_conditions']++;
-            }
-
             if (!$summaryIsConditional && in_array($summaryStatus, ['Pending', 'For Verification', ''], true)) {
                 $healthSummaryStats['pending_approval']++;
                 $pendingApprovalRecordIds[] = $summaryRecordKey;
@@ -6069,7 +6065,7 @@
         }
 
         $healthSummaryStats['total_approved'] = $healthProfileSummaryRecords->total();
-        $latestApprovedAt = $records
+        $latestApprovedAt = $issuedLatestApprovedAt ?? $records
             ->filter(function ($summaryRecord) {
                 return in_array(trim((string) ($summaryRecord->clearance_status ?? '')), ['Issued', 'Fully Cleared'], true)
                     && filled($summaryRecord->verified_at);

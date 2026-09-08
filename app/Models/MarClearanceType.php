@@ -25,6 +25,11 @@ class MarClearanceType extends Model
         return $this->hasMany(MarClearanceTypeSource::class, 'mar_clearance_type_id');
     }
 
+    public function sourceMappings(): HasMany
+    {
+        return $this->hasMany(MarClearanceSourceMapping::class, 'mar_clearance_type_id');
+    }
+
     public function issuances(): HasMany
     {
         return $this->hasMany(MarClearanceIssuance::class, 'clearance_type_id');

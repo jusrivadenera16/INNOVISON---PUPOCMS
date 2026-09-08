@@ -317,6 +317,19 @@
         font-weight: 700;
     }
     .clearance-parent-direct-meta strong { color: var(--clinic-maroon); }
+    .clearance-data-source-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 5px;
+        padding: 8px 14px 9px 72px;
+        border-top: 1px solid #eef1f5;
+        color: var(--clinic-muted);
+        font-size: .72rem;
+        font-weight: 700;
+    }
+    .clearance-data-source-meta strong { color: var(--clinic-maroon); }
+    .clearance-data-source-meta.is-unconfigured { color: #b45309; }
     .clearance-source-fields {
         display: grid;
         gap: 8px;
@@ -344,6 +357,156 @@
         cursor: pointer;
     }
     .clearance-source-option input { margin-top: 2px; accent-color: var(--clinic-maroon); }
+    .clearance-data-source-fields {
+        margin: 0;
+    }
+    .clearance-select-wrap {
+        position: relative;
+        display: block;
+        width: 100%;
+    }
+    .clearance-select-native {
+        position: absolute;
+        width: 1px !important;
+        height: 1px !important;
+        opacity: 0;
+        pointer-events: none;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+    .clearance-select-display {
+        position: relative;
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid #d9e1ec;
+        border-radius: 9px;
+        padding: 0 42px 0 12px;
+        color: #263241;
+        background: #fff;
+        font-size: .84rem;
+        font-weight: 800;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color .18s ease, box-shadow .18s ease;
+    }
+    .clearance-select-display::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: 15px;
+        width: 8px;
+        height: 8px;
+        border-right: 2px solid var(--clinic-maroon);
+        border-bottom: 2px solid var(--clinic-maroon);
+        transform: translateY(-65%) rotate(45deg);
+        transition: transform .18s ease;
+    }
+    .clearance-select-display:hover,
+    .clearance-select-display:focus,
+    .clearance-select-wrap.is-open .clearance-select-display {
+        outline: none;
+        border-color: rgba(143, 16, 36, .42);
+        box-shadow: 0 0 0 4px rgba(143, 16, 36, .08);
+    }
+    .clearance-select-wrap.is-open .clearance-select-display::after {
+        transform: translateY(-25%) rotate(225deg);
+    }
+    .clearance-select-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        z-index: 1500;
+        display: none;
+        flex-direction: column;
+        gap: 7px;
+        max-height: 210px;
+        overflow-y: auto;
+        padding: 10px;
+        border: 1px solid rgba(139, 0, 0, .12);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, .98);
+        box-shadow: 0 18px 34px rgba(15, 23, 42, .18);
+    }
+    .clearance-select-wrap.is-open .clearance-select-menu { display: flex; }
+    .clearance-select-wrap.is-open-up .clearance-select-menu {
+        top: auto;
+        bottom: calc(100% + 8px);
+    }
+    .clearance-select-option {
+        position: relative;
+        width: 100%;
+        min-height: 36px;
+        overflow: hidden;
+        border: 1px solid #efcfd4;
+        border-radius: 7px;
+        padding: 8px 11px;
+        color: var(--clinic-maroon);
+        background: #fff;
+        font-size: .78rem;
+        font-weight: 800;
+        text-align: left;
+        cursor: pointer;
+        transition: color .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .clearance-select-option:hover,
+    .clearance-select-option.is-selected {
+        color: #fff;
+        border-color: var(--clinic-maroon);
+        background: linear-gradient(135deg, var(--clinic-maroon), var(--clinic-deep));
+    }
+    .clearance-select-option:hover {
+        border-color: rgba(250, 204, 21, .9);
+        background: #facc15;
+        color: var(--clinic-maroon);
+        transform: translateY(-1px);
+    }
+    .clearance-data-source-fields .clearance-form-label {
+        text-transform: none;
+    }
+    .clearance-data-source-question {
+        margin: 0;
+        color: var(--clinic-deep);
+        font-size: .78rem;
+        font-weight: 800;
+        line-height: 1.4;
+    }
+    .clearance-data-source-help {
+        margin: 0;
+        color: var(--clinic-muted);
+        font-size: .76rem;
+        font-weight: 600;
+        line-height: 1.45;
+    }
+    .clearance-applicant-filter-fields {
+        gap: 10px;
+        margin-top: 4px;
+        background: rgba(255, 248, 248, .76);
+    }
+    .clearance-applicant-filter-group {
+        display: grid;
+        gap: 5px;
+        padding-top: 7px;
+        border-top: 1px solid #eadde0;
+    }
+    .clearance-applicant-filter-label {
+        color: var(--clinic-deep);
+        font-size: .76rem;
+        font-weight: 900;
+    }
+    .clearance-applicant-filter-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px 14px;
+    }
+    .clearance-applicant-filter-options .clearance-source-option {
+        font-size: .74rem;
+        font-weight: 700;
+    }
+    .clearance-data-source-dependent[hidden],
+    .clearance-parent-data-source[hidden] {
+        display: none;
+    }
     .clearance-subcategory-number {
         display: inline-flex;
         align-items: center;
@@ -412,6 +575,7 @@
         position: fixed;
         inset: 0;
         z-index: 1200;
+        overflow-y: auto;
         padding: 20px;
         background: rgba(10, 18, 31, .72);
         backdrop-filter: blur(6px);
@@ -419,6 +583,9 @@
     .clearance-modal-overlay.is-open { display: flex; }
     .clearance-modal {
         width: min(520px, 100%);
+        max-height: calc(100vh - 40px);
+        display: flex;
+        flex-direction: column;
         overflow: hidden;
         border: 1px solid rgba(255, 255, 255, .16);
         border-radius: 12px;
@@ -478,7 +645,11 @@
         flex: 0 0 auto;
         transition: color .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
     }
-    .clearance-modal-body { padding: 24px; }
+    .clearance-modal-body {
+        min-height: 0;
+        overflow-y: auto;
+        padding: 24px;
+    }
     .clearance-modal-note {
         margin: 0 0 18px;
         color: var(--clinic-muted);
@@ -511,6 +682,8 @@
         justify-content: flex-end;
         gap: 10px;
         margin-top: 6px;
+        padding-top: 4px;
+        background: inherit;
     }
 
     html[data-theme="dark"] .clearance-page {
@@ -557,6 +730,31 @@
     html[data-theme="dark"] .clearance-source-fields .clearance-modal-note {
         color: #cbd5e1;
     }
+    html[data-theme="dark"] .clearance-data-source-question { color: #f8fafc; }
+    html[data-theme="dark"] .clearance-select-display {
+        color: #f8fafc;
+        border-color: rgba(255, 255, 255, .22);
+        background: rgba(61, 39, 49, .92);
+    }
+    html[data-theme="dark"] .clearance-select-menu {
+        border-color: rgba(255, 255, 255, .14);
+        background: rgba(35, 17, 25, .98);
+    }
+    html[data-theme="dark"] .clearance-select-option {
+        color: #f8fafc;
+        border-color: rgba(255, 255, 255, .12);
+        background: rgba(18, 18, 18, .35);
+    }
+    html[data-theme="dark"] .clearance-select-option.is-selected {
+        color: #fff;
+        border-color: rgba(250, 204, 21, .28);
+        background: linear-gradient(135deg, var(--clinic-maroon), var(--clinic-deep));
+    }
+    html[data-theme="dark"] .clearance-select-option:hover {
+        color: var(--clinic-maroon);
+        border-color: rgba(250, 204, 21, .9);
+        background: #facc15;
+    }
     html[data-theme="dark"] .clearance-type-header {
         background: linear-gradient(180deg, rgba(112, 19, 27, .75), rgba(55, 20, 30, .86));
     }
@@ -568,6 +766,12 @@
     }
     html[data-theme="dark"] .clearance-subcategory-row,
     html[data-theme="dark"] .clearance-subcategory-empty { border-top-color: rgba(255, 255, 255, .1); }
+    html[data-theme="dark"] .clearance-data-source-meta { border-top-color: rgba(255, 255, 255, .1); }
+    html[data-theme="dark"] .clearance-data-source-meta.is-unconfigured { color: #fbbf24; }
+    html[data-theme="dark"] .clearance-data-source-help { color: #cbd5e1; }
+    html[data-theme="dark"] .clearance-applicant-filter-fields { background: rgba(35, 17, 25, .78); }
+    html[data-theme="dark"] .clearance-applicant-filter-group { border-top-color: rgba(255, 255, 255, .12); }
+    html[data-theme="dark"] .clearance-applicant-filter-label { color: #f8fafc; }
     html[data-theme="dark"] .clearance-btn--edit,
     html[data-theme="dark"] .clearance-btn-cancel,
     html[data-theme="dark"] .clearance-empty {
@@ -595,6 +799,9 @@
         .clearance-field { width: 100%; }
     }
     @media (max-width: 640px) {
+        .clearance-modal-overlay { padding: 12px; }
+        .clearance-modal { max-height: calc(100vh - 24px); }
+        .clearance-modal-body { padding: 18px; }
         .clearance-type-header {
             grid-template-columns: 30px 30px minmax(0, 1fr) 26px;
         }
@@ -667,6 +874,15 @@
 
     <div class="clearance-list" id="clearanceTypesList">
         @forelse($clearanceTypes as $clearanceType)
+            @php
+                $typeSourceMapping = $clearanceType->sourceMappings->firstWhere('is_active', true);
+                $typeCountPlacement = $typeSourceMapping || $clearanceType->allow_direct_use ? 'parent' : 'subcategories';
+                $typeSourcePayload = $typeSourceMapping ? [
+                    'source_key' => $typeSourceMapping->source_key,
+                    'source_category_id' => $typeSourceMapping->source_category_id,
+                    'source_config' => $typeSourceMapping->source_config,
+                ] : null;
+            @endphp
             <section
                 class="clearance-type-group"
                 data-clearance-group
@@ -680,13 +896,13 @@
                     <button type="button" class="clearance-header-name" data-clearance-toggle aria-expanded="false">{{ $clearanceType->name }}</button>
 
                     <div class="clearance-parent-actions">
-                        @if(!$clearanceType->allow_direct_use || $clearanceType->subcategories->isNotEmpty())
+                        @if($typeCountPlacement === 'subcategories')
                             <button type="button" class="clearance-btn clearance-btn--edit" onclick="openAddSubcategoryModal('{{ $clearanceType->id }}', @js($clearanceType->name))">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
                                 <span>Add</span>
                             </button>
                         @endif
-                        <button type="button" class="clearance-btn clearance-btn--edit" onclick="openEditClearanceModal('{{ $clearanceType->id }}', @js($clearanceType->name), @js((bool) $clearanceType->allow_direct_use), @js($clearanceType->sources->pluck('source')->values()))">
+                        <button type="button" class="clearance-btn clearance-btn--edit" onclick="openEditClearanceModal('{{ $clearanceType->id }}', @js($clearanceType->name), @js($typeCountPlacement), @js($typeSourcePayload))">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
                             <span>Edit</span>
                         </button>
@@ -706,35 +922,72 @@
                 </div>
 
                 <div class="clearance-type-body">
-                    @if($clearanceType->allow_direct_use)
-                        <div class="clearance-parent-direct-meta">
-                            <strong>Direct parent use:</strong>
-                            @forelse($clearanceType->sources as $typeSource)
-                                <span class="clearance-source-chip">{{ $sourceLabels[$typeSource->source] ?? $typeSource->source }}</span>
-                            @empty
-                                <span>No workflow selected</span>
-                            @endforelse
-                        </div>
+                    <div class="clearance-data-source-meta">
+                        <strong>Count placement:</strong>
+                        <span class="clearance-source-chip">{{ $typeCountPlacement === 'parent' ? 'Parent category' : 'Subcategories' }}</span>
+                    </div>
+                    @if($typeCountPlacement === 'parent')
+                        @if($typeSourceMapping)
+                            <div class="clearance-data-source-meta">
+                                <strong>MAR data source:</strong>
+                                <span class="clearance-source-chip">{{ $dataSourceLabels[$typeSourceMapping->source_key] ?? $typeSourceMapping->source_key }}</span>
+                                @if($typeSourceMapping->sourceCategory)
+                                    <span class="clearance-source-chip">{{ $typeSourceMapping->sourceCategory->name }}</span>
+                                @elseif(data_get($typeSourceMapping->source_config, 'employee_category'))
+                                    <span class="clearance-source-chip">{{ data_get($typeSourceMapping->source_config, 'employee_category') }}</span>
+                                @endif
+                                @if($typeSourceMapping->source_key === 'freshmen_applicants')
+                                    @foreach(data_get($typeSourceMapping->source_config, 'filters', []) as $filterKey => $filterValue)
+                                        @if(isset($applicantFilterOptions[$filterKey]['values'][$filterValue]))
+                                            <span class="clearance-source-chip">{{ $applicantFilterOptions[$filterKey]['label'] }}: {{ $applicantFilterOptions[$filterKey]['values'][$filterValue] }}</span>
+                                        @endif
+                                    @endforeach
+                                @endif
+                            </div>
+                        @else
+                            <div class="clearance-data-source-meta is-unconfigured">
+                                <strong>MAR data source:</strong> Not configured yet
+                            </div>
+                        @endif
                     @endif
                     @forelse($clearanceType->subcategories as $subcategory)
+                        @php
+                            $subcategorySourceMapping = $subcategory->sourceMappings->firstWhere('is_active', true);
+                            $subcategorySourcePayload = $subcategorySourceMapping ? [
+                                'source_key' => $subcategorySourceMapping->source_key,
+                                'source_category_id' => $subcategorySourceMapping->source_category_id,
+                                'source_config' => $subcategorySourceMapping->source_config,
+                            ] : null;
+                        @endphp
                         <div class="clearance-subcategory-row">
                             <div class="clearance-subcategory-name">
                                 <span class="clearance-subcategory-number">{{ $loop->iteration }}</span>
                                 <div>
                                     <div>{{ $subcategory->name }}</div>
-                                    @if($subcategory->sources->isNotEmpty())
-                                        <div class="clearance-subcategory-meta">
-                                            @foreach($subcategory->sources as $subcategorySource)
-                                                <span class="clearance-source-chip">{{ $sourceLabels[$subcategorySource->source] ?? $subcategorySource->source }}</span>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <div class="clearance-subcategory-meta">No workflow selected</div>
-                                    @endif
+                                    <div class="clearance-subcategory-meta">
+                                        @if($subcategorySourceMapping)
+                                            MAR data source:
+                                            <span class="clearance-source-chip">{{ $dataSourceLabels[$subcategorySourceMapping->source_key] ?? $subcategorySourceMapping->source_key }}</span>
+                                            @if($subcategorySourceMapping->sourceCategory)
+                                                <span class="clearance-source-chip">{{ $subcategorySourceMapping->sourceCategory->name }}</span>
+                                            @elseif(data_get($subcategorySourceMapping->source_config, 'employee_category'))
+                                                <span class="clearance-source-chip">{{ data_get($subcategorySourceMapping->source_config, 'employee_category') }}</span>
+                                            @endif
+                                            @if($subcategorySourceMapping->source_key === 'freshmen_applicants')
+                                                @foreach(data_get($subcategorySourceMapping->source_config, 'filters', []) as $filterKey => $filterValue)
+                                                    @if(isset($applicantFilterOptions[$filterKey]['values'][$filterValue]))
+                                                        <span class="clearance-source-chip">{{ $applicantFilterOptions[$filterKey]['label'] }}: {{ $applicantFilterOptions[$filterKey]['values'][$filterValue] }}</span>
+                                                    @endif
+                                                @endforeach
+                                            @endif
+                                        @else
+                                            MAR data source: Not configured yet
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                             <div class="clearance-subcategory-actions">
-                                <button type="button" class="clearance-btn clearance-btn--edit" onclick="openEditSubcategoryModal('{{ $subcategory->id }}', @js($subcategory->name), @js($clearanceType->name), @js($subcategory->sources->pluck('source')->values()))">
+                                <button type="button" class="clearance-btn clearance-btn--edit" onclick="openEditSubcategoryModal('{{ $subcategory->id }}', @js($subcategory->name), @js($clearanceType->name), @js($subcategorySourcePayload))">
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
                                     <span>Edit</span>
                                 </button>
@@ -749,7 +1002,7 @@
                             </div>
                         </div>
                     @empty
-                        @if(!$clearanceType->allow_direct_use)
+                        @if($typeCountPlacement === 'subcategories')
                         <div class="clearance-subcategory-empty">No subcategories yet. Use Add to create the first one.</div>
                         @endif
                     @endforelse
@@ -797,22 +1050,46 @@
                 </label>
 
                 <fieldset class="clearance-source-fields">
-                    <legend>Use this category directly</legend>
+                    <legend>Where should the count appear?</legend>
                     <label class="clearance-source-option">
-                        <input type="checkbox" name="allow_direct_use" data-direct-use-toggle value="1" {{ old('_clearance_form') === 'add' && old('allow_direct_use') ? 'checked' : '' }}>
-                        <span>Allow this category to be selected without a subcategory</span>
+                        <input type="radio" name="count_placement" value="parent" data-count-placement {{ old('_clearance_form') !== 'add' || old('count_placement', 'parent') === 'parent' ? 'checked' : '' }}>
+                        <span>Show the count on this parent category</span>
                     </label>
-                    <small class="clearance-modal-note">Turn this on only when the category can be used by itself. Then choose where it is allowed.</small>
+                    <label class="clearance-source-option">
+                        <input type="radio" name="count_placement" value="subcategories" data-count-placement {{ old('_clearance_form') === 'add' && old('count_placement') === 'subcategories' ? 'checked' : '' }}>
+                        <span>Show the counts on its subcategories</span>
+                    </label>
+                    <small class="clearance-modal-note">Choose the parent when this entry has no numbered subcategory. Choose subcategories when each numbered entry needs its own count.</small>
                 </fieldset>
 
-                <fieldset class="clearance-source-fields" data-direct-use-workflows hidden>
-                    <legend>Where can it be used directly?</legend>
-                    @foreach($sourceLabels as $source => $label)
+                <fieldset class="clearance-source-fields clearance-data-source-fields clearance-parent-data-source" data-parent-data-source>
+                    <legend>MAR data source</legend>
+                    <p class="clearance-data-source-question">Choose which approved records will provide the count.</p>
+                    @foreach($dataSourceLabels as $sourceKey => $sourceLabel)
                         <label class="clearance-source-option">
-                            <input type="checkbox" name="sources[]" value="{{ $source }}" {{ old('_clearance_form') === 'add' && in_array($source, old('sources', []), true) ? 'checked' : '' }}>
-                            <span>{{ $label }}</span>
+                            <input type="radio" name="source_key" value="{{ $sourceKey }}" data-data-source-key {{ old('_clearance_form') === 'add' && old('source_key') === $sourceKey ? 'checked' : '' }}>
+                            <span>{{ $sourceLabel }}</span>
                         </label>
                     @endforeach
+                    <label class="clearance-form-label clearance-data-source-dependent" data-health-source-category hidden>
+                        Existing health form category
+                        <span class="clearance-select-wrap" data-clearance-select data-select-placeholder="Select a health form category">
+                            <select name="source_category_id" class="form-control clearance-select-native">
+                                <option value="">Select a health form category</option>
+                                @foreach($healthFormCategories as $category)
+                                    <option value="{{ $category->id }}" {{ old('_clearance_form') === 'add' && (string) old('source_category_id') === (string) $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" class="clearance-select-display" aria-haspopup="listbox" aria-expanded="false">Select a health form category</button>
+                            <span class="clearance-select-menu" role="listbox" aria-label="Health form category options">
+                                @foreach($healthFormCategories as $category)
+                                    <button type="button" class="clearance-select-option" data-select-value="{{ $category->id }}">{{ $category->name }}</button>
+                                @endforeach
+                            </span>
+                        </span>
+                    </label>
+                    @include('admin.reports.partials.applicant-clearance-filters')
+                    <p class="clearance-data-source-help">This source is used only when the count is placed on the parent category.</p>
                 </fieldset>
 
                 <div class="clearance-modal-actions">
@@ -860,22 +1137,46 @@
                 </label>
 
                 <fieldset class="clearance-source-fields">
-                    <legend>Use this category directly</legend>
+                    <legend>Where should the count appear?</legend>
                     <label class="clearance-source-option">
-                        <input type="checkbox" name="allow_direct_use" id="editClearanceDirectUse" data-direct-use-toggle value="1">
-                        <span>Allow this category to be selected without a subcategory</span>
+                        <input type="radio" name="count_placement" value="parent" data-count-placement>
+                        <span>Show the count on this parent category</span>
                     </label>
-                    <small class="clearance-modal-note">Turn this on only when the category can be used by itself. Then choose where it is allowed.</small>
+                    <label class="clearance-source-option">
+                        <input type="radio" name="count_placement" value="subcategories" data-count-placement>
+                        <span>Show the counts on its subcategories</span>
+                    </label>
+                    <small class="clearance-modal-note">Choose the parent when this entry has no numbered subcategory. Choose subcategories when each numbered entry needs its own count.</small>
                 </fieldset>
 
-                <fieldset class="clearance-source-fields" data-direct-use-workflows hidden>
-                    <legend>Where can it be used directly?</legend>
-                    @foreach($sourceLabels as $source => $label)
+                <fieldset class="clearance-source-fields clearance-data-source-fields clearance-parent-data-source" data-parent-data-source>
+                    <legend>MAR data source</legend>
+                    <p class="clearance-data-source-question">Choose which approved records will provide the count.</p>
+                    @foreach($dataSourceLabels as $sourceKey => $sourceLabel)
                         <label class="clearance-source-option">
-                            <input type="checkbox" name="sources[]" value="{{ $source }}">
-                            <span>{{ $label }}</span>
+                            <input type="radio" name="source_key" value="{{ $sourceKey }}" data-data-source-key>
+                            <span>{{ $sourceLabel }}</span>
                         </label>
                     @endforeach
+                    <label class="clearance-form-label clearance-data-source-dependent" data-health-source-category hidden>
+                        Existing health form category
+                        <span class="clearance-select-wrap" data-clearance-select data-select-placeholder="Select a health form category">
+                            <select name="source_category_id" class="form-control clearance-select-native">
+                                <option value="">Select a health form category</option>
+                                @foreach($healthFormCategories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" class="clearance-select-display" aria-haspopup="listbox" aria-expanded="false">Select a health form category</button>
+                            <span class="clearance-select-menu" role="listbox" aria-label="Health form category options">
+                                @foreach($healthFormCategories as $category)
+                                    <button type="button" class="clearance-select-option" data-select-value="{{ $category->id }}">{{ $category->name }}</button>
+                                @endforeach
+                            </span>
+                        </span>
+                    </label>
+                    @include('admin.reports.partials.applicant-clearance-filters')
+                    <p class="clearance-data-source-help">This source is used only when the count is placed on the parent category.</p>
                 </fieldset>
 
                 <div class="clearance-modal-actions">
@@ -921,14 +1222,34 @@
                     <input type="text" name="name" id="addSubcategoryInput" class="form-control" maxlength="160" placeholder="Enter subcategory name" required>
                 </label>
 
-                <fieldset class="clearance-source-fields">
-                    <legend>Applicable workflow</legend>
-                    @foreach($sourceLabels as $source => $label)
+                <fieldset class="clearance-source-fields clearance-data-source-fields">
+                    <legend>MAR data source</legend>
+                    <p class="clearance-data-source-question">Choose which approved records will provide the count for this subcategory.</p>
+                    @foreach($dataSourceLabels as $sourceKey => $sourceLabel)
                         <label class="clearance-source-option">
-                            <input type="checkbox" name="sources[]" value="{{ $source }}" {{ in_array($source, old('_clearance_form') === 'add_subcategory' ? old('sources', []) : [], true) ? 'checked' : '' }}>
-                            <span>{{ $label }}</span>
+                            <input type="radio" name="source_key" value="{{ $sourceKey }}" data-data-source-key {{ old('_clearance_form') === 'add_subcategory' && old('source_key') === $sourceKey ? 'checked' : '' }}>
+                            <span>{{ $sourceLabel }}</span>
                         </label>
                     @endforeach
+                    <label class="clearance-form-label clearance-data-source-dependent" data-health-source-category hidden>
+                        Existing health form category
+                        <span class="clearance-select-wrap" data-clearance-select data-select-placeholder="Select a health form category">
+                            <select name="source_category_id" class="form-control clearance-select-native">
+                                <option value="">Select a health form category</option>
+                                @foreach($healthFormCategories as $category)
+                                    <option value="{{ $category->id }}" {{ old('_clearance_form') === 'add_subcategory' && (string) old('source_category_id') === (string) $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" class="clearance-select-display" aria-haspopup="listbox" aria-expanded="false">Select a health form category</button>
+                            <span class="clearance-select-menu" role="listbox" aria-label="Health form category options">
+                                @foreach($healthFormCategories as $category)
+                                    <button type="button" class="clearance-select-option" data-select-value="{{ $category->id }}">{{ $category->name }}</button>
+                                @endforeach
+                            </span>
+                        </span>
+                    </label>
+                    @include('admin.reports.partials.applicant-clearance-filters')
+                    <p class="clearance-data-source-help">This source determines which approved records are counted for this subcategory.</p>
                 </fieldset>
 
                 <div class="clearance-modal-actions">
@@ -975,14 +1296,34 @@
                     <input type="text" name="name" id="editSubcategoryInput" class="form-control" maxlength="160" required>
                 </label>
 
-                <fieldset class="clearance-source-fields">
-                    <legend>Applicable workflow</legend>
-                    @foreach($sourceLabels as $source => $label)
+                <fieldset class="clearance-source-fields clearance-data-source-fields">
+                    <legend>MAR data source</legend>
+                    <p class="clearance-data-source-question">Choose which approved records will provide the count for this subcategory.</p>
+                    @foreach($dataSourceLabels as $sourceKey => $sourceLabel)
                         <label class="clearance-source-option">
-                            <input type="checkbox" name="sources[]" value="{{ $source }}">
-                            <span>{{ $label }}</span>
+                            <input type="radio" name="source_key" value="{{ $sourceKey }}" data-data-source-key>
+                            <span>{{ $sourceLabel }}</span>
                         </label>
                     @endforeach
+                    <label class="clearance-form-label clearance-data-source-dependent" data-health-source-category hidden>
+                        Existing health form category
+                        <span class="clearance-select-wrap" data-clearance-select data-select-placeholder="Select a health form category">
+                            <select name="source_category_id" class="form-control clearance-select-native">
+                                <option value="">Select a health form category</option>
+                                @foreach($healthFormCategories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" class="clearance-select-display" aria-haspopup="listbox" aria-expanded="false">Select a health form category</button>
+                            <span class="clearance-select-menu" role="listbox" aria-label="Health form category options">
+                                @foreach($healthFormCategories as $category)
+                                    <button type="button" class="clearance-select-option" data-select-value="{{ $category->id }}">{{ $category->name }}</button>
+                                @endforeach
+                            </span>
+                        </span>
+                    </label>
+                    @include('admin.reports.partials.applicant-clearance-filters')
+                    <p class="clearance-data-source-help">This source determines which approved records are counted for this subcategory.</p>
                 </fieldset>
 
                 <div class="clearance-modal-actions">
@@ -1061,8 +1402,84 @@ function hideClearanceModal(modal) {
     }
 }
 
+function closeClearanceSelect(wrap) {
+    wrap?.classList.remove('is-open', 'is-open-up');
+    const display = wrap?.querySelector('.clearance-select-display');
+    display?.classList.remove('is-open');
+    display?.setAttribute('aria-expanded', 'false');
+}
+
+function syncClearanceSelect(wrap) {
+    const select = wrap?.querySelector('.clearance-select-native');
+    const display = wrap?.querySelector('.clearance-select-display');
+    const options = Array.from(wrap?.querySelectorAll('.clearance-select-option') || []);
+    if (!select || !display) return;
+
+    const selectedOption = select.options[select.selectedIndex];
+    display.textContent = selectedOption && selectedOption.value
+        ? selectedOption.text.trim()
+        : (wrap.dataset.selectPlaceholder || 'Select option');
+
+    options.forEach(function(option) {
+        option.classList.toggle('is-selected', option.dataset.selectValue === select.value);
+    });
+}
+
+function initializeClearanceSelect(wrap) {
+    const select = wrap?.querySelector('.clearance-select-native');
+    const display = wrap?.querySelector('.clearance-select-display');
+    const options = Array.from(wrap?.querySelectorAll('.clearance-select-option') || []);
+    if (!select || !display) return;
+
+    display.addEventListener('click', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const isOpen = wrap.classList.contains('is-open');
+        document.querySelectorAll('[data-clearance-select]').forEach(function(otherWrap) {
+            if (otherWrap !== wrap) closeClearanceSelect(otherWrap);
+        });
+
+        if (isOpen) {
+            closeClearanceSelect(wrap);
+            return;
+        }
+
+        const rect = wrap.getBoundingClientRect();
+        const menuHeight = Math.min(240, Math.max(48, options.length * 43 + 20));
+        const spaceBelow = window.innerHeight - rect.bottom;
+        wrap.classList.toggle('is-open-up', spaceBelow < menuHeight && rect.top > spaceBelow);
+        wrap.classList.add('is-open');
+        display.classList.add('is-open');
+        display.setAttribute('aria-expanded', 'true');
+    });
+
+    options.forEach(function(option) {
+        option.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            select.value = option.dataset.selectValue || '';
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            syncClearanceSelect(wrap);
+            closeClearanceSelect(wrap);
+        });
+    });
+
+    select.addEventListener('change', function() {
+        syncClearanceSelect(wrap);
+    });
+    syncClearanceSelect(wrap);
+}
+
+document.querySelectorAll('[data-clearance-select]').forEach(initializeClearanceSelect);
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('[data-clearance-select]')) {
+        document.querySelectorAll('[data-clearance-select]').forEach(closeClearanceSelect);
+    }
+});
+
 function openAddClearanceModal() {
-    syncDirectUseWorkflowVisibility(addClearanceModal);
+    syncCountPlacementVisibility(addClearanceModal);
+    syncDataSourceFields(addClearanceModal);
     showClearanceModal(addClearanceModal);
     window.setTimeout(function() {
         addClearanceModal?.querySelector('input[name="name"]')?.focus();
@@ -1073,15 +1490,18 @@ function closeAddClearanceModal() {
     hideClearanceModal(addClearanceModal);
 }
 
-function openEditClearanceModal(id, name, allowDirectUse, sources) {
+function openEditClearanceModal(id, name, countPlacement, dataSourceMapping) {
     const route = @json(route('mar-clearance-types.update', ['marClearanceType' => '__ID__']));
     document.getElementById('editClearanceForm').action = route.replace('__ID__', id);
     document.getElementById('editClearanceId').value = id;
     document.getElementById('editClearanceInput').value = name;
     document.getElementById('editClearanceName').textContent = 'Editing: ' + name;
-    document.getElementById('editClearanceDirectUse').checked = Boolean(allowDirectUse);
-    setTypeSourceCheckboxes(editClearanceModal, sources);
-    syncDirectUseWorkflowVisibility(editClearanceModal);
+    const placement = countPlacement === 'subcategories' ? 'subcategories' : 'parent';
+    editClearanceModal?.querySelectorAll('input[name="count_placement"]').forEach(function(input) {
+        input.checked = input.value === placement;
+    });
+    setDataSourceMapping(editClearanceModal, dataSourceMapping);
+    syncCountPlacementVisibility(editClearanceModal);
     showClearanceModal(editClearanceModal);
     window.setTimeout(function() {
         document.getElementById('editClearanceInput')?.focus();
@@ -1092,31 +1512,68 @@ function closeEditClearanceModal() {
     hideClearanceModal(editClearanceModal);
 }
 
-function setSubcategorySourceCheckboxes(modal, sources) {
-    const selectedSources = Array.isArray(sources) ? sources : [];
-    modal?.querySelectorAll('input[name="sources[]"]').forEach(function(input) {
-        input.checked = selectedSources.includes(input.value);
+function syncCountPlacementVisibility(modal) {
+    const placement = modal?.querySelector('input[name="count_placement"]:checked')?.value || 'parent';
+    const dataSourceFields = modal?.querySelector('[data-parent-data-source]');
+    if (!dataSourceFields) return;
+
+    dataSourceFields.hidden = placement !== 'parent';
+    dataSourceFields.querySelectorAll('input, select').forEach(function(input) {
+        input.disabled = placement !== 'parent';
     });
 }
 
-function setTypeSourceCheckboxes(modal, sources) {
-    const selectedSources = Array.isArray(sources) ? sources : [];
-    modal?.querySelectorAll('input[name="sources[]"]').forEach(function(input) {
-        input.checked = selectedSources.includes(input.value);
+function syncDataSourceFields(modal) {
+    const sourceKey = modal?.querySelector('[data-data-source-key]:checked')?.value || '';
+    const categoryField = modal?.querySelector('[data-health-source-category]');
+    const applicantFilterField = modal?.querySelector('[data-applicant-filter-fields]');
+
+    if (categoryField) {
+        categoryField.hidden = sourceKey !== 'health_form_category';
+        categoryField.querySelectorAll('select').forEach(function(input) { input.disabled = sourceKey !== 'health_form_category'; });
+    }
+
+    if (applicantFilterField) {
+        const shouldShow = sourceKey === 'freshmen_applicants';
+        applicantFilterField.hidden = !shouldShow;
+        applicantFilterField.querySelectorAll('input').forEach(function(input) { input.disabled = !shouldShow; });
+    }
+}
+
+function setApplicantFilters(modal, mapping) {
+    const data = mapping && typeof mapping === 'object' ? mapping : {};
+    const filters = data.filters || data.source_config?.filters || {};
+
+    modal?.querySelectorAll('[data-applicant-filter]').forEach(function(input) {
+        const filterKey = input.dataset.filterKey || '';
+        input.checked = (filters[filterKey] || '') === input.value;
     });
+    syncDataSourceFields(modal);
 }
 
-function syncDirectUseWorkflowVisibility(modal) {
-    const toggle = modal?.querySelector('[data-direct-use-toggle]');
-    const workflowFields = modal?.querySelector('[data-direct-use-workflows]');
-    if (!toggle || !workflowFields) return;
+function setDataSourceMapping(modal, mapping) {
+    const data = mapping && typeof mapping === 'object' ? mapping : {};
+    const sourceKey = data.source_key || '';
+    const categoryInput = modal?.querySelector('[name="source_category_id"]');
 
-    workflowFields.hidden = !toggle.checked;
+    modal?.querySelectorAll('[data-data-source-key]').forEach(function(input) {
+        input.checked = input.value === sourceKey;
+    });
+    if (categoryInput) categoryInput.value = data.source_category_id || '';
+    syncClearanceSelect(categoryInput?.closest('[data-clearance-select]'));
+    setApplicantFilters(modal, data);
+    syncDataSourceFields(modal);
 }
 
-document.querySelectorAll('[data-direct-use-toggle]').forEach(function(toggle) {
-    toggle.addEventListener('change', function() {
-        syncDirectUseWorkflowVisibility(toggle.closest('.clearance-modal'));
+document.querySelectorAll('[data-count-placement]').forEach(function(input) {
+    input.addEventListener('change', function() {
+        syncCountPlacementVisibility(input.closest('.clearance-modal'));
+    });
+});
+
+document.querySelectorAll('[data-data-source-key]').forEach(function(input) {
+    input.addEventListener('change', function() {
+        syncDataSourceFields(input.closest('.clearance-modal'));
     });
 });
 
@@ -1126,7 +1583,7 @@ function openAddSubcategoryModal(clearanceTypeId, clearanceTypeName) {
     document.getElementById('addSubcategoryTypeId').value = clearanceTypeId;
     document.getElementById('addSubcategoryTypeName').value = clearanceTypeName;
     document.getElementById('addSubcategoryParent').textContent = 'Clearance type: ' + clearanceTypeName;
-    setSubcategorySourceCheckboxes(addSubcategoryModal, @js(old('_clearance_form') === 'add_subcategory' ? old('sources', []) : []));
+    syncDataSourceFields(addSubcategoryModal);
     showClearanceModal(addSubcategoryModal);
     window.setTimeout(function() {
         document.getElementById('addSubcategoryInput')?.focus();
@@ -1137,14 +1594,14 @@ function closeAddSubcategoryModal() {
     hideClearanceModal(addSubcategoryModal);
 }
 
-function openEditSubcategoryModal(subcategoryId, subcategoryName, clearanceTypeName, sources) {
+function openEditSubcategoryModal(subcategoryId, subcategoryName, clearanceTypeName, dataSourceMapping) {
     const route = @json(route('mar-clearance-subcategories.update', ['marClearanceSubcategory' => '__ID__']));
     document.getElementById('editSubcategoryForm').action = route.replace('__ID__', subcategoryId);
     document.getElementById('editSubcategoryId').value = subcategoryId;
     document.getElementById('editSubcategoryTypeName').value = clearanceTypeName;
     document.getElementById('editSubcategoryInput').value = subcategoryName;
     document.getElementById('editSubcategoryParent').textContent = 'Clearance type: ' + clearanceTypeName;
-    setSubcategorySourceCheckboxes(editSubcategoryModal, sources);
+    setDataSourceMapping(editSubcategoryModal, dataSourceMapping);
     showClearanceModal(editSubcategoryModal);
     window.setTimeout(function() {
         document.getElementById('editSubcategoryInput')?.focus();
@@ -1191,13 +1648,33 @@ updateClearanceView();
 
 @if($errors->any() && old('_clearance_form') === 'add')
     openAddClearanceModal();
+    setApplicantFilters(addClearanceModal, { filters: @js(old('applicant_filters', [])) });
 @elseif($errors->any() && old('_clearance_form') === 'edit' && old('_clearance_type_id'))
-    openEditClearanceModal(@json(old('_clearance_type_id')), @json(old('name')), @js((bool) old('allow_direct_use')), @js(old('sources', [])));
+    openEditClearanceModal(
+        @json(old('_clearance_type_id')),
+        @json(old('name')),
+        @json(old('count_placement', 'parent')),
+        @js(old('source_key') ? [
+            'source_key' => old('source_key'),
+            'source_category_id' => old('source_category_id'),
+            'source_config' => ['filters' => old('applicant_filters', [])],
+        ] : null)
+    );
 @elseif($errors->any() && old('_clearance_form') === 'add_subcategory' && old('_clearance_type_id'))
     openAddSubcategoryModal(@json(old('_clearance_type_id')), @json(old('_clearance_type_name')));
     document.getElementById('addSubcategoryInput').value = @json(old('name'));
+    setApplicantFilters(addSubcategoryModal, { filters: @js(old('applicant_filters', [])) });
 @elseif($errors->any() && old('_clearance_form') === 'edit_subcategory' && old('_clearance_subcategory_id'))
-    openEditSubcategoryModal(@json(old('_clearance_subcategory_id')), @json(old('name')), @json(old('_clearance_type_name')), @js(old('sources', [])));
+    openEditSubcategoryModal(
+        @json(old('_clearance_subcategory_id')),
+        @json(old('name')),
+        @json(old('_clearance_type_name')),
+        @js(old('source_key') ? [
+            'source_key' => old('source_key'),
+            'source_category_id' => old('source_category_id'),
+            'source_config' => ['filters' => old('applicant_filters', [])],
+        ] : null)
+    );
 @endif
 </script>
 @endpush

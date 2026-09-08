@@ -60,6 +60,7 @@ class HealthProfile extends Model
         'puptas_synced_at',
         'puptas_sync_message',
         'final_review_draft_data',
+        'final_review_findings_status',
         'pullout_status',
         'pullout_reason',
         'pullout_request_remarks',
@@ -156,6 +157,17 @@ class HealthProfile extends Model
     public function latestHealthFormSubmission()
     {
         return $this->hasOne(HealthFormSubmission::class)->latestOfMany('submitted_at');
+    }
+
+    public function latestApprovedHealthFormSubmission()
+    {
+        return $this->hasOne(HealthFormSubmission::class)
+            ->whereIn('status', [
+                HealthFormSubmission::STATUS_APPROVED,
+                'Approved',
+            ])
+            ->whereNotNull('approved_at')
+            ->latestOfMany('approved_at');
     }
 
     public function hasMedicalCondition(): bool

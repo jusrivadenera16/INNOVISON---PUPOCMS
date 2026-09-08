@@ -12,9 +12,9 @@ use App\Models\ActivityLog;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\HealthProfile;
-use App\Models\MarClearanceIssuance;
 use App\Models\MarClearanceType;
 use App\Models\User;
+use App\Services\MarClearanceIssuanceService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -1754,14 +1754,8 @@ class ReportsController extends Controller
         ->orderBy('sort_order')
         ->orderBy('name')
         ->get();
-    $marClearanceIssuances = MarClearanceIssuance::query()
-        ->with(['clearanceType', 'subcategory.clearanceType'])
-        ->where(function ($query) {
-            $query->whereHas('clearanceType', fn ($typeQuery) => $typeQuery->where('is_active', true))
-                ->orWhereHas('subcategory.clearanceType', fn ($typeQuery) => $typeQuery->where('is_active', true));
-        })
-        ->whereBetween('approved_at', [$dateFrom, $dateTo])
-        ->get();
+    $marClearanceIssuances = app(MarClearanceIssuanceService::class)
+        ->issuancesForReportPeriod($dateFrom, $dateTo);
 
     $allConditions = MedicalConditions::with('category')->get();
     $categoryList = Category::all();
@@ -3099,14 +3093,8 @@ public function printReport(Request $request)
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
-        $marClearanceIssuances = MarClearanceIssuance::query()
-            ->with(['clearanceType', 'subcategory.clearanceType'])
-            ->where(function ($query) {
-                $query->whereHas('clearanceType', fn ($typeQuery) => $typeQuery->where('is_active', true))
-                    ->orWhereHas('subcategory.clearanceType', fn ($typeQuery) => $typeQuery->where('is_active', true));
-            })
-            ->whereBetween('approved_at', [$dateFrom, $dateTo])
-            ->get();
+        $marClearanceIssuances = app(MarClearanceIssuanceService::class)
+            ->issuancesForReportPeriod($dateFrom, $dateTo);
         // for categories
         $data = \App\Models\Category::with(['medicalConditions.consultations' => function($query) use ($dateFrom, $dateTo) {
             $query->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()]);

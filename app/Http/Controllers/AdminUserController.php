@@ -371,8 +371,6 @@ class AdminUserController extends Controller
             'employee_number' => ['nullable', 'string', 'max:255'],
             'access_level' => ['nullable', Rule::in(['clinic_staff', 'designee'])],
             'office' => ['nullable', 'string', 'max:255'],
-            'report_name' => ['nullable', 'string', 'max:255'],
-            'report_position' => ['nullable', 'string', 'max:255'],
             'module_permissions' => ['nullable', 'array'],
             'module_permissions.*' => ['string', Rule::in(app(ModulePermissionService::class)->all())],
         ]);
@@ -531,12 +529,6 @@ class AdminUserController extends Controller
             if (Admin::hasColumn('office')) {
                 $linkedAdmin->office = $request->input('office');
             }
-            if (Admin::hasColumn('report_name')) {
-                $linkedAdmin->report_name = trim((string) $request->input('report_name', '')) ?: null;
-            }
-            if (Admin::hasColumn('report_position')) {
-                $linkedAdmin->report_position = trim((string) $request->input('report_position', '')) ?: null;
-            }
             if (Admin::hasColumn('employee_number')) {
                 $linkedAdmin->employee_number = trim((string) (
                     $request->input('employee_number')
@@ -599,8 +591,6 @@ class AdminUserController extends Controller
             'admin_email' => ['nullable', 'email', 'max:255'],
             'access_level' => ['nullable', Rule::in(['clinic_staff', 'designee'])],
             'office' => ['nullable', 'string', 'max:255'],
-            'report_name' => ['nullable', 'string', 'max:255'],
-            'report_position' => ['nullable', 'string', 'max:255'],
             'module_permissions' => ['nullable', 'array'],
             'module_permissions.*' => ['string', Rule::in(app(ModulePermissionService::class)->all())],
             'first_name' => ['nullable', 'string', 'max:255'],
@@ -790,12 +780,6 @@ class AdminUserController extends Controller
             }
             if (Admin::hasColumn('office')) {
                 $linkedAdmin->office = $request->input('office');
-            }
-            if (Admin::hasColumn('report_name')) {
-                $linkedAdmin->report_name = trim((string) $request->input('report_name', '')) ?: null;
-            }
-            if (Admin::hasColumn('report_position')) {
-                $linkedAdmin->report_position = trim((string) $request->input('report_position', '')) ?: null;
             }
             if (Admin::hasColumn('employee_number')) {
                 $linkedAdmin->employee_number = trim((string) (
@@ -1308,8 +1292,6 @@ class AdminUserController extends Controller
                         'admin_login_email' => (string) ($linkedAdmin?->email_address ?? $linkedAdmin?->email ?? ''),
                         'admin_profile_id' => $linkedAdmin?->admin_id,
                         'admin_profile_name' => (string) ($linkedAdmin?->name ?? ''),
-                        'report_name' => (string) ($linkedAdmin?->report_name ?? ''),
-                        'report_position' => (string) ($linkedAdmin?->report_position ?? ''),
                         'admin_hub_profile_id' => $linkedAdminHub?->id,
                         'admin_hub_profile_name' => (string) ($linkedAdminHub?->name ?? ''),
                         'admin_uuid' => $adminUuid,
@@ -1409,8 +1391,6 @@ class AdminUserController extends Controller
                         'emergency_contact_person' => (string) ($admin->emergency_contact_person ?? ''),
                         'emergency_contact_no' => (string) ($admin->emergency_contact_no ?? ''),
                         'office' => (string) ($admin->office ?? ''),
-                        'report_name' => (string) ($admin->report_name ?? ''),
-                        'report_position' => (string) ($admin->report_position ?? ''),
                         'lookup_source' => 'admin_profile',
                         'updated_at' => optional($admin->updated_at)->toIso8601String(),
                     ],

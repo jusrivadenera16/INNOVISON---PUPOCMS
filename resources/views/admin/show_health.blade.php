@@ -2859,7 +2859,7 @@
 
             <div class="profile-meta"><div class="profile-meta-k">Guardian Name</div><div class="profile-meta-v">{{ $profile->guardian_name ?: 'N/A' }}</div></div>
             <div class="profile-meta"><div class="profile-meta-k">Guardian Contact</div><div class="profile-meta-v">{{ $profile->cellphone ?: ($profile->contact_no ?: 'N/A') }}</div></div>
-            <div class="profile-meta"><div class="profile-meta-k">Submitted At</div><div class="profile-meta-v">{{ optional($profile->created_at)->format('M d, Y h:i A') ?: 'N/A' }}</div></div>
+            <div class="profile-meta"><div class="profile-meta-k">Submitted At</div><div class="profile-meta-v">{{ optional(optional($currentHealthFormSubmission)->submitted_at ?: $profile->resubmitted_at ?: $profile->created_at)->format('M d, Y h:i A') ?: 'N/A' }}</div></div>
         </div>
     </div>
 
@@ -2872,7 +2872,7 @@
                 ->values();
             $currentProfileVersion = $currentProfileHistory['version'] ?? null;
             $profileVersionCount = $previousProfileHistory->count() + 1;
-            $currentProfileDate = optional($currentHealthFormSubmission)->submitted_at ?: $profile->updated_at;
+            $currentProfileDate = optional($currentHealthFormSubmission)->submitted_at ?: ($profile->resubmitted_at ?: $profile->created_at);
         @endphp
 
         <div class="profile-version-shell">
@@ -2952,7 +2952,7 @@
                             <div class="profile-timeline-step">
                                 <span class="timeline-node"><x-outline-icon name="check" /></span>
                                 <strong>Profile Submitted</strong>
-                                <span>{{ optional(optional($currentHealthFormSubmission)->submitted_at ?: $profile->created_at)->format('M d, Y h:i A') ?: 'N/A' }}</span>
+                                <span>{{ optional($currentProfileDate)->format('M d, Y h:i A') ?: 'N/A' }}</span>
                                 <small>Student submitted current health requirements</small>
                             </div>
                             <div class="profile-timeline-step">
@@ -3088,7 +3088,68 @@
                 @endif
             </div>
         @endif
-        <div class="doc-grid">
+        <div class="profile-version-shell profile-documents-version-shell">
+            <aside class="profile-version-sidebar" aria-label="Uploaded Documents versions">
+                <div class="profile-version-sidebar-head">
+                    <div>
+                        <h3>Document Versions</h3>
+                        <p>Select a version to review its saved files.</p>
+                    </div>
+                    <span class="profile-history-count">{{ $profileVersionCount }}</span>
+                </div>
+
+                <div class="profile-version-nav" role="tablist" aria-label="Uploaded Documents versions">
+                    <button
+                        type="button"
+                        class="profile-version-choice is-active"
+                        data-profile-version-target="currentHealthDocumentsVersion"
+                        role="tab"
+                        aria-selected="true"
+                    >
+                        <span class="profile-version-choice-number">{{ $currentProfileVersion ? 'V' . $currentProfileVersion : 'LIVE' }}</span>
+                        <span class="profile-version-choice-copy">
+                            <strong>Current Documents</strong>
+                            <small>{{ $currentProfileDate ? $currentProfileDate->format('M d, Y') : 'Latest saved files' }}</small>
+                        </span>
+                    </button>
+
+                    @foreach($previousProfileHistory as $history)
+                        @php
+                            $historySubmission = $history['submission'];
+                            $historyDate = $historySubmission->submitted_at
+                                ?: $historySubmission->requested_at
+                                ?: $historySubmission->created_at;
+                        @endphp
+                        <button
+                            type="button"
+                            class="profile-version-choice"
+                            data-profile-version-target="healthDocumentsVersion{{ $historySubmission->id }}"
+                            role="tab"
+                            aria-selected="false"
+                        >
+                            <span class="profile-version-choice-number">V{{ $history['version'] }}</span>
+                            <span class="profile-version-choice-copy">
+                                <strong>{{ $historySubmission->category ?: 'General Health Form' }}</strong>
+                                <small>{{ $historyDate ? $historyDate->format('M d, Y') : 'Date unavailable' }}</small>
+                            </span>
+                        </button>
+                    @endforeach
+                </div>
+            </aside>
+
+            <div class="profile-version-content">
+                <section class="profile-version-pane is-active" id="currentHealthDocumentsVersion" role="tabpanel">
+                    <div class="profile-version-pane-head">
+                        <div>
+                            <h3>Current Uploaded Documents</h3>
+                            <p>Latest files attached to the active Health Profile.</p>
+                        </div>
+                        <div class="profile-version-pane-badges">
+                            <span class="profile-history-badge is-current">Current</span>
+                        </div>
+                    </div>
+
+                    <div class="doc-grid">
             <div class="doc-file">
                 <h4>Health Information Form</h4>
                 @php
@@ -3239,6 +3300,103 @@
                 @else
                     <div class="doc-missing">No 2x2 student photo uploaded.</div>
                 @endif
+            </div>
+                    </div>
+                </section>
+
+                @php
+                    $historicalDocumentDefinitions = [
+                        'student_photo' => '2x2 Student Photo',
+                        'health_declaration' => 'Health Declaration',
+                        'medical_certificate' => 'Medical Certificate',
+                        'medical_assessment_upload' => 'Medical Assessment Copy',
+                        'chest_xray_result' => 'Chest X-ray Result',
+                        'pwd_id_proof' => 'PWD ID Proof',
+                    ];
+                @endphp
+
+                @foreach($previousProfileHistory as $history)
+                    @php
+                        $historySubmission = $history['submission'];
+                        $historyStatus = strtolower((string) $historySubmission->status);
+                        $historyStatusLabel = ucwords(str_replace('_', ' ', $historyStatus));
+                        $historyProfileData = $history['profile'];
+                        $historyDocumentCount = collect($historicalDocumentDefinitions)
+                            ->keys()
+                            ->filter(fn ($key) => filled($historyProfileData[$key] ?? null))
+                            ->count();
+                    @endphp
+                    <section class="profile-version-pane" id="healthDocumentsVersion{{ $historySubmission->id }}" role="tabpanel">
+                        <div class="profile-version-pane-head">
+                            <div>
+                                <h3>Version {{ $history['version'] }} - {{ $historySubmission->category ?: 'General Health Form' }}</h3>
+                                <p>Files preserved from this Health Form submission.</p>
+                            </div>
+                            <div class="profile-version-pane-badges">
+                                <span class="profile-history-badge is-{{ str_replace('_', '-', $historyStatus) }}">{{ $historyStatusLabel }}</span>
+                            </div>
+                        </div>
+
+                        <div class="profile-history-meta">
+                            <div><span>Submitted At</span><strong>{{ optional($historySubmission->submitted_at)->format('M d, Y h:i A') ?: 'N/A' }}</strong></div>
+                            <div><span>Approved At</span><strong>{{ optional($historySubmission->approved_at)->format('M d, Y h:i A') ?: 'N/A' }}</strong></div>
+                            <div><span>Saved Documents</span><strong>{{ $historyDocumentCount }}</strong></div>
+                        </div>
+
+                        @if($history['has_snapshot'] || filled($historySubmission->pdf_path))
+                            <div class="doc-grid">
+                                <div class="doc-file">
+                                    <h4>Health Information Form PDF</h4>
+                                    @if(filled($historySubmission->pdf_path))
+                                        @php
+                                            $historyHealthFormPdfUrl = route('admin.health_form_submissions.pdf', $historySubmission);
+                                        @endphp
+                                        <div class="doc-actions">
+                                            <a class="doc-link" href="{{ $historyHealthFormPdfUrl }}" target="_blank" rel="noopener">
+                                                <x-outline-icon name="document-text" /> Open
+                                            </a>
+                                        </div>
+                                        <div class="doc-preview"><iframe src="{{ $historyHealthFormPdfUrl }}" title="Saved Health Information Form"></iframe></div>
+                                    @else
+                                        <div class="doc-missing">No saved Health Information Form PDF.</div>
+                                    @endif
+                                </div>
+
+                                @foreach($historicalDocumentDefinitions as $documentKey => $documentLabel)
+                                    <div class="doc-file">
+                                        <h4>{{ $documentLabel }}</h4>
+                                        @if(filled($historyProfileData[$documentKey] ?? null))
+                                            @php
+                                                $historyDocumentUrl = route('admin.health_form_submissions.document', [
+                                                    'submission' => $historySubmission,
+                                                    'document' => $documentKey,
+                                                ]);
+                                            @endphp
+                                            <div class="doc-actions">
+                                                <a class="doc-link" href="{{ $historyDocumentUrl }}" target="_blank" rel="noopener">
+                                                    <x-outline-icon name="document-text" /> Open
+                                                </a>
+                                            </div>
+                                            <div class="doc-preview">
+                                                @if($isImageDocument($historyProfileData[$documentKey]))
+                                                    <img src="{{ $historyDocumentUrl }}" alt="{{ $documentLabel }}">
+                                                @else
+                                                    <iframe src="{{ $historyDocumentUrl }}" title="{{ $documentLabel }}"></iframe>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div class="doc-missing">No {{ strtolower($documentLabel) }} saved for this version.</div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="profile-history-empty-detail">
+                                This version is awaiting submission, so no historical documents are available yet.
+                            </div>
+                        @endif
+                    </section>
+                @endforeach
             </div>
         </div>
 
@@ -3832,14 +3990,15 @@
         button.addEventListener('click', function () {
             const targetId = button.getAttribute('data-profile-version-target');
             const targetPane = targetId ? document.getElementById(targetId) : null;
+            const versionShell = button.closest('.profile-version-shell');
             if (!targetPane) return;
 
-            document.querySelectorAll('[data-profile-version-target]').forEach(function (versionButton) {
+            versionShell?.querySelectorAll('[data-profile-version-target]').forEach(function (versionButton) {
                 const selected = versionButton === button;
                 versionButton.classList.toggle('is-active', selected);
                 versionButton.setAttribute('aria-selected', selected ? 'true' : 'false');
             });
-            document.querySelectorAll('.profile-version-pane').forEach(function (pane) {
+            versionShell?.querySelectorAll('.profile-version-pane').forEach(function (pane) {
                 pane.classList.toggle('is-active', pane === targetPane);
             });
         });

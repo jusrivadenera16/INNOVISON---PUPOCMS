@@ -3271,6 +3271,28 @@
     $studentDocuments = $studentDocuments ?? [];
     $studentPhotoDocument = collect($studentDocuments)->firstWhere('key', 'student_photo');
     $studentCourse = trim((string) ($student->course ?: optional($student->healthProfile)->course_college));
+    $dependentProfile = $student->relationLoaded('dependentProfile') ? $student->dependentProfile : $student->dependentProfile()->first();
+    $patientRoleMarkers = strtolower(trim(implode(' ', array_filter([
+        (string) ($student->user_role ?? ''),
+        (string) ($student->user_type ?? ''),
+        (string) ($student->idp_role ?? ''),
+        (string) $studentDisplayRole,
+    ]))));
+    $isDependentPatient = (bool) $dependentProfile || str_contains($patientRoleMarkers, 'dependent') || str_contains($patientRoleMarkers, 'guest');
+    $isEmployeePatient = !$isDependentPatient && (
+        str_contains($patientRoleMarkers, 'faculty')
+        || str_contains($patientRoleMarkers, 'admin')
+        || str_contains($patientRoleMarkers, 'employee')
+        || str_contains($patientRoleMarkers, 'staff')
+        || str_contains($patientRoleMarkers, 'designee')
+    );
+    $patientIdLabel = $isDependentPatient ? 'Patient ID Number' : ($isEmployeePatient ? 'Employee Number' : 'Student Number');
+    $patientIdNumber = $isDependentPatient
+        ? ($dependentProfile?->id_number ?: ($student->student_number ?: $student->student_id ?: 'N/A'))
+        : ($isEmployeePatient
+            ? ($student->employee_number ?: ($student->student_number ?: $student->student_id ?: 'N/A'))
+            : ($student->student_number ?: $student->student_id ?: 'N/A'));
+    $patientIdNumberForSubmit = $patientIdNumber === 'N/A' ? '' : $patientIdNumber;
     $studentInitials = collect(preg_split('/\s+/', trim((string) $student->name)) ?: [])
         ->filter()
         ->take(2)
@@ -3293,7 +3315,7 @@
                     <h2 class="patient-name">{{ $student->name }}</h2>
                     <div class="patient-badges">
                         <span class="patient-badge">{{ $studentDisplayRole }}</span>
-                        <span class="patient-badge">Student No. {{ $student->student_number ?: $student->student_id ?: 'N/A' }}</span>
+                        <span class="patient-badge">{{ $patientIdLabel }} {{ $patientIdNumber }}</span>
                         <span class="patient-badge">Appointment No. {{ optional($latestAppointment)->apt_id ?: 'N/A' }}</span>
                     </div>
                     <div class="patient-meta">
@@ -3347,7 +3369,7 @@
 
         <form action="{{ route($walkinStoreRoute) }}" method="POST" id="consultationForm">
             @csrf
-            <input type="hidden" name="student_number" value="{{ $student->student_number ?: $student->student_id }}">
+            <input type="hidden" name="student_number" value="{{ $patientIdNumberForSubmit }}">
             <input type="hidden" name="user_role" value="{{ $studentDisplayRole }}">
             <input type="hidden" name="user_type" value="{{ $user_source ?? 'walkin' }}">
             <input type="hidden" name="consultation_started_at" value="{{ old('consultation_started_at', $consultationStartedAt ?? now()->format('H:i:s')) }}">

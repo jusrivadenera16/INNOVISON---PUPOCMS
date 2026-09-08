@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Consultation;
+use App\Models\HealthFormCategory;
 use App\Models\MarClearanceIssuance;
 use App\Models\MarClearanceSubcategory;
 use App\Models\MarClearanceSubcategorySource;
@@ -10,9 +11,71 @@ use App\Models\MarClearanceType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class MarClearanceTypeController extends Controller
 {
+    private const DATA_SOURCE_KEYS = [
+        'freshmen_applicants',
+        'health_form_category',
+        'consultation',
+        'patient_intake',
+    ];
+
+    private const APPLICANT_FILTER_OPTIONS = [
+        'final_review_result' => [
+            'label' => 'Final Review Result',
+            'values' => [
+                'with_findings' => 'With Findings',
+                'no_findings' => 'No Findings / Normal',
+            ],
+        ],
+        'medical_condition' => [
+            'label' => 'Medical Condition',
+            'values' => [
+                'with_condition' => 'With Medical Condition',
+                'without_condition' => 'No Medical Condition',
+            ],
+        ],
+        'pwd_status' => [
+            'label' => 'PWD Status',
+            'values' => [
+                'pwd' => 'PWD',
+                'not_pwd' => 'Not PWD',
+            ],
+        ],
+        'pwd_document' => [
+            'label' => 'PWD Document',
+            'values' => [
+                'submitted' => 'PWD Document Submitted',
+                'not_submitted' => 'PWD Document Not Submitted',
+            ],
+        ],
+        'covid_status' => [
+            'label' => 'COVID-19 Status',
+            'values' => [
+                'positive' => 'COVID Positive',
+                'negative' => 'COVID Negative',
+            ],
+        ],
+        'medical_certificate_result' => [
+            'label' => 'Medical Certificate Result',
+            'values' => [
+                'with_findings' => 'With Findings',
+                'no_findings' => 'No Findings / Normal',
+                'not_sure' => 'Not Sure / For Clinic Review',
+            ],
+        ],
+        'chest_xray_result' => [
+            'label' => 'Chest X-ray Result',
+            'values' => [
+                'with_findings' => 'With Findings',
+                'normal' => 'Normal',
+                'not_sure' => 'Not Sure / For Clinic Review',
+            ],
+        ],
+    ];
+
     private const SUBCATEGORY_SOURCES = [
         MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW,
         MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW,
@@ -32,28 +95,53 @@ class MarClearanceTypeController extends Controller
         ];
     }
 
+    public function dataSourceLabels(): array
+    {
+        return [
+            'freshmen_applicants' => 'Freshmen Applicants',
+            'health_form_category' => 'Health Form Categories',
+            'consultation' => 'Consultation Records',
+            'patient_intake' => 'Patient Intake Records',
+        ];
+    }
+
     public function index()
     {
         $clearanceTypes = MarClearanceType::query()
             ->where('is_active', true)
-            ->with(['sources', 'subcategories.sources'])
+            ->with([
+                'sources',
+                'sourceMappings.sourceCategory',
+                'subcategories.sources',
+                'subcategories.sourceMappings.sourceCategory',
+            ])
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
 
         $sourceLabels = $this->subcategorySources();
+        $dataSourceLabels = $this->dataSourceLabels();
+        $healthFormCategories = HealthFormCategory::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+        $applicantFilterOptions = self::APPLICANT_FILTER_OPTIONS;
 
-        return view('admin.reports.manage-clearance-types', compact('clearanceTypes', 'sourceLabels'));
+        return view('admin.reports.manage-clearance-types', compact(
+            'clearanceTypes',
+            'sourceLabels',
+            'dataSourceLabels',
+            'healthFormCategories',
+            'applicantFilterOptions'
+        ));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validated = $request->validate(array_merge([
             'name' => ['required', 'string', 'max:160'],
-            'allow_direct_use' => ['nullable', 'boolean'],
-            'sources' => ['nullable', 'array'],
-            'sources.*' => ['string', 'in:' . implode(',', self::SUBCATEGORY_SOURCES)],
-        ]);
+            'count_placement' => ['required', Rule::in(['parent', 'subcategories'])],
+        ], $this->dataSourceRules($request->input('count_placement') === 'parent')));
 
         $name = trim($validated['name']);
         $existingType = MarClearanceType::query()
@@ -63,22 +151,21 @@ class MarClearanceTypeController extends Controller
             return back()->withInput()->withErrors(['name' => 'This clearance type already exists.']);
         }
 
-        $allowDirectUse = $request->boolean('allow_direct_use');
-        $sources = collect($validated['sources'] ?? [])->unique()->values()->all();
-        if ($allowDirectUse && $sources === []) {
-            return back()->withInput()->withErrors(['sources' => 'Select at least one workflow for direct parent use.']);
-        }
+        $parentReceivesCount = $validated['count_placement'] === 'parent';
+        $sourceKey = trim((string) ($validated['source_key'] ?? ''));
+        $sources = $this->workflowSourcesForDataSource($sourceKey);
 
         if ($existingType) {
-            DB::transaction(function () use ($existingType, $name, $allowDirectUse, $sources) {
+            DB::transaction(function () use ($existingType, $name, $parentReceivesCount, $sources, $validated) {
                 $existingType->update([
                     'name' => $name,
                     'sort_order' => (int) MarClearanceType::max('sort_order') + 1,
                     'is_active' => true,
-                    'allow_direct_use' => $allowDirectUse,
+                    'allow_direct_use' => $parentReceivesCount,
                 ]);
 
-                $this->syncTypeSources($existingType, $allowDirectUse ? $sources : []);
+                $this->syncTypeSources($existingType, $parentReceivesCount ? $sources : []);
+                $this->syncTypeSourceMapping($existingType, $parentReceivesCount ? $validated : null);
             });
 
             return back()->with('success', 'Archived clearance type restored.');
@@ -91,16 +178,17 @@ class MarClearanceTypeController extends Controller
             $code = $baseCode . '_' . $suffix++;
         }
 
-        DB::transaction(function () use ($code, $name, $allowDirectUse, $sources) {
+        DB::transaction(function () use ($code, $name, $parentReceivesCount, $sources, $validated) {
             $clearanceType = MarClearanceType::create([
                 'code' => $code,
                 'name' => $name,
                 'sort_order' => (int) MarClearanceType::max('sort_order') + 1,
                 'is_active' => true,
-                'allow_direct_use' => $allowDirectUse,
+                'allow_direct_use' => $parentReceivesCount,
             ]);
 
-            $this->syncTypeSources($clearanceType, $sources);
+            $this->syncTypeSources($clearanceType, $parentReceivesCount ? $sources : []);
+            $this->syncTypeSourceMapping($clearanceType, $parentReceivesCount ? $validated : null);
         });
 
         return back()->with('success', 'Clearance type added.');
@@ -108,13 +196,11 @@ class MarClearanceTypeController extends Controller
 
     public function update(Request $request, MarClearanceType $marClearanceType)
     {
-        $validated = $request->validate([
+        $validated = $request->validate(array_merge([
             'name' => ['required', 'string', 'max:160'],
             'sort_order' => ['nullable', 'integer', 'min:1', 'max:999'],
-            'allow_direct_use' => ['nullable', 'boolean'],
-            'sources' => ['nullable', 'array'],
-            'sources.*' => ['string', 'in:' . implode(',', self::SUBCATEGORY_SOURCES)],
-        ]);
+            'count_placement' => ['required', Rule::in(['parent', 'subcategories'])],
+        ], $this->dataSourceRules($request->input('count_placement') === 'parent')));
 
         $name = trim($validated['name']);
         $exists = MarClearanceType::query()
@@ -125,19 +211,18 @@ class MarClearanceTypeController extends Controller
             return back()->withInput()->withErrors(['name' => 'This clearance type already exists.']);
         }
 
-        $allowDirectUse = $request->boolean('allow_direct_use');
-        $sources = collect($validated['sources'] ?? [])->unique()->values()->all();
-        if ($allowDirectUse && $sources === []) {
-            return back()->withInput()->withErrors(['sources' => 'Select at least one workflow for direct parent use.']);
-        }
+        $parentReceivesCount = $validated['count_placement'] === 'parent';
+        $sourceKey = trim((string) ($validated['source_key'] ?? ''));
+        $sources = $this->workflowSourcesForDataSource($sourceKey);
 
-        DB::transaction(function () use ($marClearanceType, $name, $validated, $allowDirectUse, $sources) {
+        DB::transaction(function () use ($marClearanceType, $name, $validated, $parentReceivesCount, $sources) {
             $marClearanceType->update([
                 'name' => $name,
                 'sort_order' => $validated['sort_order'] ?? $marClearanceType->sort_order,
-                'allow_direct_use' => $allowDirectUse,
+                'allow_direct_use' => $parentReceivesCount,
             ]);
-            $this->syncTypeSources($marClearanceType, $allowDirectUse ? $sources : []);
+            $this->syncTypeSources($marClearanceType, $parentReceivesCount ? $sources : []);
+            $this->syncTypeSourceMapping($marClearanceType, $parentReceivesCount ? $validated : null);
         });
 
         return back()->with('success', 'Clearance type updated.');
@@ -168,11 +253,9 @@ class MarClearanceTypeController extends Controller
 
     public function storeSubcategory(Request $request, MarClearanceType $marClearanceType)
     {
-        $validated = $request->validate([
+        $validated = $request->validate(array_merge([
             'name' => ['required', 'string', 'max:160'],
-            'sources' => ['required', 'array', 'min:1'],
-            'sources.*' => ['string', 'in:' . implode(',', self::SUBCATEGORY_SOURCES)],
-        ]);
+        ], $this->dataSourceRules(true)));
 
         $name = trim($validated['name']);
         $exists = $marClearanceType->subcategories()
@@ -197,7 +280,11 @@ class MarClearanceTypeController extends Controller
                 'sort_order' => (int) $marClearanceType->subcategories()->max('sort_order') + 1,
             ]);
 
-            $this->syncSubcategorySources($subcategory, $validated['sources']);
+            $this->syncSubcategorySources(
+                $subcategory,
+                $this->workflowSourcesForDataSource((string) $validated['source_key'])
+            );
+            $this->syncSubcategorySourceMapping($subcategory, $validated);
         });
 
         return back()->with('success', 'Clearance subcategory added.');
@@ -205,11 +292,9 @@ class MarClearanceTypeController extends Controller
 
     public function updateSubcategory(Request $request, MarClearanceSubcategory $marClearanceSubcategory)
     {
-        $validated = $request->validate([
+        $validated = $request->validate(array_merge([
             'name' => ['required', 'string', 'max:160'],
-            'sources' => ['required', 'array', 'min:1'],
-            'sources.*' => ['string', 'in:' . implode(',', self::SUBCATEGORY_SOURCES)],
-        ]);
+        ], $this->dataSourceRules(true)));
 
         $name = trim($validated['name']);
         $exists = MarClearanceSubcategory::query()
@@ -224,7 +309,11 @@ class MarClearanceTypeController extends Controller
 
         DB::transaction(function () use ($marClearanceSubcategory, $name, $validated) {
             $marClearanceSubcategory->update(['name' => $name]);
-            $this->syncSubcategorySources($marClearanceSubcategory, $validated['sources']);
+            $this->syncSubcategorySources(
+                $marClearanceSubcategory,
+                $this->workflowSourcesForDataSource((string) $validated['source_key'])
+            );
+            $this->syncSubcategorySourceMapping($marClearanceSubcategory, $validated);
         });
 
         return back()->with('success', 'Clearance subcategory updated.');
@@ -277,5 +366,96 @@ class MarClearanceTypeController extends Controller
         $clearanceType->sources()->createMany(
             collect($sources)->unique()->map(fn (string $source) => ['source' => $source])->all()
         );
+    }
+
+    private function workflowSourcesForDataSource(?string $sourceKey): array
+    {
+        return match (trim((string) $sourceKey)) {
+            'freshmen_applicants' => [MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW],
+            'health_form_category' => [
+                MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW,
+                MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW,
+            ],
+            'consultation' => [MarClearanceSubcategorySource::CONSULTATION],
+            'patient_intake' => [MarClearanceSubcategorySource::PATIENT_INTAKE],
+            default => [],
+        };
+    }
+
+    private function dataSourceRules(bool $required): array
+    {
+        return array_merge([
+            'source_key' => [
+                $required ? 'required' : 'nullable',
+                'string',
+                Rule::in(self::DATA_SOURCE_KEYS),
+            ],
+            'source_category_id' => [
+                'nullable',
+                'integer',
+                'required_if:source_key,health_form_category',
+                Rule::exists('health_form_categories', 'id')
+                    ->where(fn ($query) => $query->where('is_active', true)),
+            ],
+        ], $this->applicantFilterRules());
+    }
+
+    private function applicantFilterRules(): array
+    {
+        $rules = [
+            'applicant_filters' => ['nullable', 'array'],
+        ];
+
+        foreach (self::APPLICANT_FILTER_OPTIONS as $filterKey => $filter) {
+            $rules['applicant_filters.' . $filterKey] = [
+                'nullable',
+                Rule::in(array_keys($filter['values'])),
+            ];
+        }
+
+        return $rules;
+    }
+
+    private function sourceMappingAttributes(array $validated): array
+    {
+        $sourceKey = trim((string) ($validated['source_key'] ?? ''));
+
+        return [
+            'source_key' => $sourceKey,
+            'source_category_id' => $sourceKey === 'health_form_category'
+                ? ($validated['source_category_id'] ?? null)
+                : null,
+            'source_config' => $sourceKey === 'freshmen_applicants'
+                ? $this->applicantSourceConfig($validated['applicant_filters'] ?? [])
+                : null,
+            'is_active' => true,
+        ];
+    }
+
+    private function applicantSourceConfig(array $filters): ?array
+    {
+        $filters = collect($filters)
+            ->filter(fn ($value, $key) => isset(self::APPLICANT_FILTER_OPTIONS[$key]) && trim((string) $value) !== '')
+            ->map(fn ($value) => trim((string) $value))
+            ->all();
+
+        return $filters === [] ? null : ['filters' => $filters];
+    }
+
+    private function syncTypeSourceMapping(MarClearanceType $clearanceType, ?array $validated): void
+    {
+        $clearanceType->sourceMappings()->delete();
+
+        if (!$validated || trim((string) ($validated['source_key'] ?? '')) === '') {
+            return;
+        }
+
+        $clearanceType->sourceMappings()->create($this->sourceMappingAttributes($validated));
+    }
+
+    private function syncSubcategorySourceMapping(MarClearanceSubcategory $subcategory, array $validated): void
+    {
+        $subcategory->sourceMappings()->delete();
+        $subcategory->sourceMappings()->create($this->sourceMappingAttributes($validated));
     }
 }

@@ -232,7 +232,7 @@
 
     .health-category-group-header {
         display: grid;
-        grid-template-columns: 34px 34px minmax(0, 1fr) auto auto 42px 28px;
+        grid-template-columns: 34px 34px minmax(0, 1fr) auto auto 42px 42px 28px;
         align-items: center;
         gap: 12px;
         width: 100%;
@@ -408,6 +408,12 @@
         padding: 0;
     }
 
+    .health-category-btn--edit {
+        color: var(--clinic-maroon);
+        border: 1px solid #efcfd4;
+        background: #fff;
+    }
+
     .btn-cancel {
         color: var(--clinic-maroon);
         border: 1px solid #f0d8cc;
@@ -527,6 +533,73 @@
         font-weight: 700;
     }
 
+    .health-category-audience-fieldset {
+        margin: 0;
+        padding: 14px;
+        border: 1px solid #ead4d7;
+        border-radius: 9px;
+        background: #fffafa;
+    }
+
+    .health-category-audience-fieldset legend {
+        width: auto;
+        margin: 0;
+        padding: 0 6px;
+        color: #6d0718;
+        font-size: .8rem;
+        font-weight: 900;
+    }
+
+    .health-category-audience-note {
+        margin: 0 0 12px;
+        color: #64748b;
+        font-size: .8rem;
+        font-weight: 700;
+    }
+
+    .health-category-audience-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .health-category-audience-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 36px;
+        padding: 8px 10px;
+        border: 1px solid #ead4d7;
+        border-radius: 7px;
+        color: #2c1820;
+        background: #fff;
+        font-size: .82rem;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .health-category-audience-option input {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: var(--clinic-maroon);
+    }
+
+    .health-category-audiences {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .health-category-audience-pill {
+        border-radius: 999px;
+        padding: 5px 9px;
+        color: var(--clinic-maroon);
+        background: #f8e7ea;
+        font-size: .72rem;
+        font-weight: 900;
+    }
+
     .modal-stack {
         display: grid;
         gap: 16px;
@@ -607,6 +680,30 @@
         background: rgba(255,255,255,.05);
     }
 
+    html[data-theme="dark"] .health-category-audience-fieldset,
+    body.dark-mode .health-category-audience-fieldset {
+        border-color: rgba(255,255,255,.16);
+        background: rgba(255,255,255,.04);
+    }
+
+    html[data-theme="dark"] .health-category-audience-fieldset legend,
+    body.dark-mode .health-category-audience-fieldset legend,
+    html[data-theme="dark"] .health-category-audience-option,
+    body.dark-mode .health-category-audience-option {
+        color: #f8fafc;
+    }
+
+    html[data-theme="dark"] .health-category-audience-option,
+    body.dark-mode .health-category-audience-option {
+        border-color: rgba(255,255,255,.14);
+        background: rgba(255,255,255,.05);
+    }
+
+    html[data-theme="dark"] .health-category-audience-note,
+    body.dark-mode .health-category-audience-note {
+        color: #cbd5e1;
+    }
+
     @media (max-width: 860px) {
         .health-categories-header,
         .health-categories-toolbar {
@@ -622,7 +719,7 @@
         }
 
         .health-category-group-header {
-            grid-template-columns: 30px 30px minmax(0, 1fr) 38px 24px;
+            grid-template-columns: 30px 30px minmax(0, 1fr) 38px 38px 24px;
         }
 
         .health-category-pill,
@@ -636,13 +733,18 @@
             grid-row: 3;
         }
 
-        .health-category-remove-form {
+        .health-category-edit-button {
             grid-column: 4;
             grid-row: 1 / 3;
         }
 
-        .health-category-chevron {
+        .health-category-remove-form {
             grid-column: 5;
+            grid-row: 1 / 3;
+        }
+
+        .health-category-chevron {
+            grid-column: 6;
             grid-row: 1 / 3;
         }
 
@@ -694,6 +796,10 @@
 
     <div class="health-categories-list" id="healthCategoriesList">
         @forelse($categories as $category)
+            @php
+                $linkedFormsCount = $category->submissions_count + $category->employee_profiles_count;
+                $linkedRecordsCount = $linkedFormsCount + $category->mar_source_mappings_count;
+            @endphp
             <section
                 class="health-category-group"
                 data-health-category-group
@@ -707,12 +813,24 @@
                     <button type="button" class="health-category-header-name" data-health-category-toggle aria-expanded="false">
                         <span class="health-category-name">{{ $category->name }}</span>
                     </button>
-                    <span class="health-category-pill">{{ $category->submissions_count }} {{ $category->submissions_count === 1 ? 'linked form' : 'linked forms' }}</span>
+                    <span class="health-category-pill">{{ $linkedFormsCount }} {{ $linkedFormsCount === 1 ? 'linked form' : 'linked forms' }}</span>
                     <span class="health-category-status {{ $category->is_active ? 'is-active' : 'is-archived' }}">{{ $category->is_active ? 'Active' : 'Archived' }}</span>
+                    <button
+                        type="button"
+                        class="health-category-btn health-category-btn--edit health-category-btn--icon health-category-edit-button"
+                        title="Edit category"
+                        aria-label="Edit {{ $category->name }}"
+                        data-edit-health-category
+                        data-edit-action="{{ route('health-form-categories.update', $category->id) }}"
+                        data-edit-name="{{ $category->name }}"
+                        data-edit-audiences='@json($category->available_for ?? [])'
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16 9.5-9.5a2.12 2.12 0 0 1 3 3L7 19H4v-3Z"></path><path d="m13.5 6.5 3 3"></path></svg>
+                    </button>
                     <form class="health-category-remove-form" action="{{ route('health-form-categories.destroy', $category->id) }}" method="POST" onsubmit="return confirmHealthCategoryDelete(event)">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="health-category-btn health-category-btn--delete health-category-btn--icon" title="{{ $category->submissions_count > 0 ? 'Archive category' : 'Remove category' }}" aria-label="{{ $category->submissions_count > 0 ? 'Archive category' : 'Remove category' }}">
+                        <button type="submit" class="health-category-btn health-category-btn--delete health-category-btn--icon" title="{{ $linkedRecordsCount > 0 ? 'Archive category' : 'Remove category' }}" aria-label="{{ $linkedRecordsCount > 0 ? 'Archive category' : 'Remove category' }}">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v5"></path><path d="M14 11v5"></path></svg>
                         </button>
                     </form>
@@ -723,13 +841,32 @@
 
                 <div class="health-category-body">
                     <div class="health-category-detail-row">
-                        <div class="health-category-detail">Linked Forms: {{ $category->submissions_count }}</div>
+                        <div class="health-category-detail">Linked Forms: {{ $linkedFormsCount }}</div>
+                    </div>
+                    <div class="health-category-detail-row">
+                        <div class="health-category-detail">MAR mappings: {{ $category->mar_source_mappings_count }}</div>
+                    </div>
+                    <div class="health-category-detail-row">
+                        <div class="health-category-detail">
+                            <span>
+                                Available for:
+                                @if(is_array($category->available_for) && count($category->available_for) > 0)
+                                    <span class="health-category-audiences">
+                                        @foreach($category->available_for as $audience)
+                                            <span class="health-category-audience-pill">{{ $audienceLabels[$audience] ?? $audience }}</span>
+                                        @endforeach
+                                    </span>
+                                @else
+                                    All existing workflows
+                                @endif
+                            </span>
+                        </div>
                     </div>
                     <div class="health-category-detail-row">
                         <div class="health-category-detail">Status: {{ $category->is_active ? 'Active' : 'Archived' }}</div>
                     </div>
                     <div class="health-category-detail-row">
-                        <div class="health-category-detail">{{ $category->submissions_count > 0 ? 'Removing this category will archive it because forms are linked.' : 'This category can be removed because no forms are linked.' }}</div>
+                        <div class="health-category-detail">{{ $linkedRecordsCount > 0 ? 'Removing this category will archive it because records or MAR mappings are linked.' : 'This category can be removed because no forms or MAR mappings are linked.' }}</div>
                     </div>
                 </div>
             </section>
@@ -768,9 +905,72 @@
                     <input type="text" name="name" class="form-control" placeholder="Health Form Category Name (e.g. OJT, Annual, Medical Clearance)" required>
                 </label>
 
+                <fieldset class="health-category-audience-fieldset">
+                    <legend>Where should this category appear?</legend>
+                    <p class="health-category-audience-note">Select the forms or agreements where users may choose this category.</p>
+                    <div class="health-category-audience-grid">
+                        @foreach($audienceLabels as $audience => $label)
+                            <label class="health-category-audience-option">
+                                <input type="checkbox" name="audiences[]" value="{{ $audience }}" {{ in_array($audience, old('audiences', []), true) ? 'checked' : '' }}>
+                                <span>{{ $label }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </fieldset>
+
                 <div class="modal-actions">
                     <button type="button" class="btn-cancel" onclick="closeAddHealthCategoryModal()"><span>Cancel</span></button>
                     <button type="submit" class="btn-save"><span>Save Category</span></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="editHealthCategoryModal" class="health-category-modal-overlay" aria-hidden="true">
+    <div class="health-category-modal-box" role="dialog" aria-modal="true" aria-labelledby="editHealthCategoryTitle">
+        <div class="standard-modal-header">
+            <div class="standard-modal-title">
+                <span class="standard-modal-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="m4 16 9.5-9.5a2.12 2.12 0 0 1 3 3L7 19H4v-3Z"></path><path d="m13.5 6.5 3 3"></path></svg>
+                </span>
+                <div>
+                    <h3 id="editHealthCategoryTitle">Edit Category</h3>
+                    <p>Update the category name and where it can appear.</p>
+                </div>
+            </div>
+            <button type="button" class="standard-modal-close" onclick="closeEditHealthCategoryModal()" aria-label="Close edit health form category modal">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            </button>
+        </div>
+
+        <div class="standard-modal-body">
+            <p class="standard-modal-note">Changes apply to future form selections and MAR source filtering.</p>
+
+            <form id="editHealthCategoryForm" method="POST" class="modal-stack">
+                @csrf
+                @method('PUT')
+                <label>
+                    <span class="sr-only">Health Form Category Name</span>
+                    <input type="text" id="editHealthCategoryName" name="name" class="form-control" placeholder="Health Form Category Name" required>
+                </label>
+
+                <fieldset class="health-category-audience-fieldset">
+                    <legend>Where should this category appear?</legend>
+                    <p class="health-category-audience-note">Select the forms or workflows where users may choose this category.</p>
+                    <div class="health-category-audience-grid">
+                        @foreach($audienceLabels as $audience => $label)
+                            <label class="health-category-audience-option">
+                                <input type="checkbox" name="audiences[]" value="{{ $audience }}">
+                                <span>{{ $label }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </fieldset>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeEditHealthCategoryModal()"><span>Cancel</span></button>
+                    <button type="submit" class="btn-save"><span>Save Changes</span></button>
                 </div>
             </form>
         </div>
@@ -784,6 +984,9 @@ const healthCategorySearch = document.getElementById('healthCategorySearch');
 const healthCategoriesCount = document.getElementById('healthCategoriesCount');
 const healthCategoriesEmpty = document.getElementById('healthCategoriesEmpty');
 const addHealthCategoryModal = document.getElementById('addHealthCategoryModal');
+const editHealthCategoryModal = document.getElementById('editHealthCategoryModal');
+const editHealthCategoryForm = document.getElementById('editHealthCategoryForm');
+const editHealthCategoryName = document.getElementById('editHealthCategoryName');
 
 function pluralizeHealthCategory(count) {
     return count === 1 ? 'health form category' : 'health form categories';
@@ -837,6 +1040,41 @@ function closeAddHealthCategoryModal() {
     addHealthCategoryModal?.setAttribute('aria-hidden', 'true');
 }
 
+function openEditHealthCategoryModal(button) {
+    if (!editHealthCategoryModal || !editHealthCategoryForm || !editHealthCategoryName) {
+        return;
+    }
+
+    editHealthCategoryForm.action = button.dataset.editAction || '';
+    editHealthCategoryName.value = button.dataset.editName || '';
+
+    let selectedAudiences = [];
+    try {
+        selectedAudiences = JSON.parse(button.dataset.editAudiences || '[]');
+    } catch (error) {
+        selectedAudiences = [];
+    }
+
+    editHealthCategoryForm.querySelectorAll('input[name="audiences[]"]').forEach(function(input) {
+        input.checked = selectedAudiences.includes(input.value);
+    });
+
+    editHealthCategoryModal.classList.add('is-open');
+    editHealthCategoryModal.setAttribute('aria-hidden', 'false');
+    editHealthCategoryName.focus();
+}
+
+function closeEditHealthCategoryModal() {
+    editHealthCategoryModal?.classList.remove('is-open');
+    editHealthCategoryModal?.setAttribute('aria-hidden', 'true');
+}
+
+document.querySelectorAll('[data-edit-health-category]').forEach(function(button) {
+    button.addEventListener('click', function() {
+        openEditHealthCategoryModal(button);
+    });
+});
+
 function confirmHealthCategoryDelete(event) {
     if (!confirm('Are you sure you want to remove or archive this Health Form category?')) {
         event.preventDefault();
@@ -851,11 +1089,15 @@ window.addEventListener('click', function(event) {
     if (event.target === addHealthCategoryModal) {
         closeAddHealthCategoryModal();
     }
+    if (event.target === editHealthCategoryModal) {
+        closeEditHealthCategoryModal();
+    }
 });
 
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         closeAddHealthCategoryModal();
+        closeEditHealthCategoryModal();
     }
 });
 

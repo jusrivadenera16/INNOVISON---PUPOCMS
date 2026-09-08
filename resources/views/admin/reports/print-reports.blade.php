@@ -1680,6 +1680,12 @@
         padding-left: 30px !important;
     }
 
+    body.mar-form-report .official-inventory-meta .meta-value.mar-report-identity-value,
+    body.mar-form-report .mar-closing-name.mar-report-identity-value,
+    body.mar-form-report .mar-closing-role.mar-report-identity-value {
+        text-transform: none !important;
+    }
+
     @media print {
         body.official-form-report {
             margin: 0;
@@ -1919,7 +1925,7 @@
                 <tr>
                     <td>
                         <span class="meta-label">Name:</span>
-                        <span class="meta-value">{{ $marPreparedByName }}</span>
+                        <span class="meta-value mar-report-identity-value">{{ $marPreparedByName }}</span>
                     </td>
                     <td>
                         <span class="meta-label">Date of Submission:</span>
@@ -1929,7 +1935,7 @@
                 <tr>
                     <td>
                         <span class="meta-label">Position:</span>
-                        <span class="meta-value">{{ $marPreparedByPosition }}</span>
+                        <span class="meta-value mar-report-identity-value">{{ $marPreparedByPosition }}</span>
                     </td>
                     <td>
                         <span class="meta-label">Unit / Department:</span>
@@ -2349,8 +2355,8 @@
                     </tr>
                     <tr>
                         <td>
-                            <div class="mar-closing-name">{{ $marPreparedByName }}</div>
-                            <div class="mar-closing-role">{{ $marPreparedByPosition }}</div>
+                            <div class="mar-closing-name mar-report-identity-value">{{ $marPreparedByName }}</div>
+                            <div class="mar-closing-role mar-report-identity-value">{{ $marPreparedByPosition }}</div>
                         </td>
                         <td>
                             <div class="mar-closing-name">Branch Director</div>

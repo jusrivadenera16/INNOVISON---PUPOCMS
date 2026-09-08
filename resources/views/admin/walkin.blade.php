@@ -3958,14 +3958,31 @@
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-actions {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1fr) repeat(3, minmax(118px, 170px)) !important;
         align-items: center;
-        gap: 12px;
+        justify-content: end;
+        gap: 10px !important;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-action-btn {
         width: 100%;
         min-width: 0;
+        min-height: 48px;
+        padding: 0 12px;
+        border-radius: 10px;
+        font-size: 13px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-cancel-btn {
+        grid-column: 2;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-draft-btn {
+        grid-column: 3;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-find-btn {
+        grid-column: 4;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-cancel-btn {
@@ -5717,6 +5734,14 @@
         scrollbar-width: thin;
     }
 
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-physical-stack {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        align-self: stretch;
+    }
+
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .employee-physical-assessment-panel .applicant-screening-panel-title {
         position: sticky;
         top: 0;
@@ -5920,18 +5945,12 @@
     }
 
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .applicant-screening-panel-copy,
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .applicant-vitals-grid,
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .bmi-gauge-card {
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .applicant-vitals-grid {
         display: none !important;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .employee-physical-assessment-panel .applicant-vitals-grid {
         display: grid !important;
-    }
-
-    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .employee-physical-assessment-panel .bmi-gauge-card {
-        display: block !important;
-        margin-top: 12px;
     }
 
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col {
@@ -5982,6 +6001,33 @@
         font-weight: 800;
     }
 
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options > span.employee-exam-option-heading {
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-skin-options {
+        align-items: start;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-skin-scars-group {
+        display: grid;
+        gap: 6px;
+        flex: 0 0 100%;
+        min-width: 0;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-skin-scars-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell {
+        width: 180px;
+        min-width: 180px;
+    }
+
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options select,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-line select {
         width: 180px;
@@ -6026,13 +6072,55 @@
         box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
     }
 
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-bmi-assessment-section {
+        padding: 16px 18px 18px;
+        border-color: rgba(112, 19, 27, 0.18);
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 248, 0.94)),
+            radial-gradient(circle at 12% 0%, rgba(250, 204, 21, 0.12), transparent 28%);
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-bmi-assessment-section .applicant-screening-panel-title {
+        margin: 0 0 12px;
+        color: #70131b;
+        font-size: 14px;
+        letter-spacing: 0.02em;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-bmi-assessment-section .bmi-gauge-card {
+        margin-top: 0;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-physical-stack .bmi-gauge-layout {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-physical-stack .bmi-gauge-meter {
+        width: min(300px, 100%);
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-physical-stack .bmi-gauge-summary {
+        margin-bottom: 6px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-physical-stack .bmi-gauge-summary strong {
+        font-size: 18px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-physical-stack .bmi-gauge-summary span,
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-physical-stack .bmi-gauge-details {
+        font-size: 12px;
+    }
+
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-section,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .bmi-gauge-card {
         box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.72);
     }
 
-    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-screening-panel {
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-screening-panel:not(.applicant-bmi-assessment-section) {
         padding: 0;
         border-radius: 10px;
         border-color: transparent;
@@ -6040,7 +6128,7 @@
         box-shadow: none;
     }
 
-    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-screening-panel {
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-screening-panel:not(.applicant-bmi-assessment-section) {
         padding: 18px;
         border-radius: 10px;
         border-color: #e5e7eb;
@@ -7442,7 +7530,7 @@
     }
 
     .clinic-error-card {
-        padding-top: 32px;
+        padding-top: 34px;
     }
 
     .clinic-error-icon {
@@ -8186,6 +8274,22 @@
         border-color: rgba(250, 204, 21, .55);
         color: #fde68a;
     }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell .premium-select-button,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell .premium-select-menu,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell .premium-select-option {
+        border-color: rgba(148, 163, 184, .34);
+        background: #0f172a;
+        color: #e2e8f0;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell .premium-select-button::after {
+        border-color: #facc15;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell .premium-select-option:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell .premium-select-option.is-selected {
+        border-color: #facc15;
+        background: #70131b;
+        color: #facc15;
+    }
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template input[type="text"],
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template input[type="date"] {
         background: #0f172a;
@@ -8269,9 +8373,20 @@
         color: #fca5a5 !important;
     }
 
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .bmi-gauge-card {
-        display: block !important;
-        margin-top: 12px;
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-bmi-assessment-section {
+        background: linear-gradient(180deg, #111827, #0f172a) !important;
+        border-color: rgba(250, 204, 21, .28) !important;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, .28) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-bmi-assessment-section .applicant-screening-panel-title {
+        color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-bmi-assessment-section .bmi-gauge-card {
+        background: rgba(15, 23, 42, 0.86) !important;
+        border-color: rgba(148, 163, 184, .28) !important;
+        box-shadow: none !important;
     }
 
     /* Do not reserve space for an empty lookup status under the employee ID field. */
@@ -8335,6 +8450,13 @@
         border-color: rgba(250, 204, 21, .18) !important;
         color: #f8fafc !important;
     }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-lookup-details,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-file-actions {
+        background: #111827 !important;
+        border-color: rgba(148, 163, 184, .22) !important;
+        color: #f8fafc !important;
+        box-shadow: none !important;
+    }
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.is-error,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .manual-lookup-status.is-error {
         background: rgba(127, 29, 29, .34) !important;
@@ -8354,8 +8476,10 @@
 
     #applicantRefModal .applicant-ref-actions.has-draft-action {
         display: grid !important;
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        grid-template-columns: minmax(0, 1fr) repeat(3, minmax(118px, 170px)) !important;
         align-items: center;
+        justify-content: end;
+        gap: 10px !important;
     }
 
     #applicantRefModal .applicant-ref-actions.has-draft-action .applicant-ref-cancel-btn {
@@ -8373,6 +8497,10 @@
     #applicantRefModal .applicant-ref-actions.has-draft-action .applicant-ref-action-btn {
         width: 100%;
         min-width: 0;
+        min-height: 48px;
+        padding: 0 12px;
+        border-radius: 10px;
+        font-size: 13px;
     }
 
     /* Applicant workflow and employee/student lookup dark-mode polish */
@@ -8501,11 +8629,11 @@
     }
 
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn {
-        background: #111827 !important;
+        background: #70131B !important;
         background-image: none !important;
-        border: 1px solid rgba(250, 204, 21, 0.18) !important;
-        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.20), 0 4px 12px rgba(0, 0, 0, 0.12) !important;
-        color: #ffffff !important;
+        border: 1px solid rgba(112, 19, 27, 0.42) !important;
+        box-shadow: 0 18px 34px rgba(112, 19, 27, 0.20), 0 4px 12px rgba(112, 19, 27, 0.12) !important;
+        color: #facc15 !important;
     }
 
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn {
@@ -8518,6 +8646,12 @@
 
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn svg,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn span {
+        color: #facc15 !important;
+        stroke: currentColor !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn svg,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn span {
         color: #ffffff !important;
         stroke: currentColor !important;
     }
@@ -9127,7 +9261,27 @@
         overflow: hidden !important;
     }
 
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input {
+        background: #ffffff !important;
+        background-image: none !important;
+        border: 1px solid rgba(112, 19, 27, 0.24) !important;
+        color: #111827 !important;
+        -webkit-text-fill-color: #111827 !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 10px 20px rgba(112, 19, 27, 0.06) !important;
+        filter: none !important;
+        outline: none !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:hover,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:focus {
+        background: #ffffff !important;
+        background-image: none !important;
+        border-color: rgba(112, 19, 27, 0.48) !important;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, 0.08), 0 10px 20px rgba(112, 19, 27, 0.08) !important;
+        filter: none !important;
+        outline: none !important;
+    }
+
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input {
         background: #111827 !important;
         background-image: none !important;
@@ -9139,8 +9293,6 @@
         outline: none !important;
     }
 
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:hover,
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:focus,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:hover,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:focus {
         background: #111827 !important;
@@ -9151,7 +9303,20 @@
         outline: none !important;
     }
 
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn {
+        background: #70131B !important;
+        background-image: none !important;
+        border: 1px solid rgba(112, 19, 27, 0.42) !important;
+        box-shadow: 0 18px 34px rgba(112, 19, 27, 0.20), 0 4px 12px rgba(112, 19, 27, 0.12) !important;
+        color: #facc15 !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn svg,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn span {
+        color: #facc15 !important;
+        stroke: currentColor !important;
+    }
+
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn {
         background: #111827 !important;
         background-image: none !important;
@@ -9160,8 +9325,6 @@
         color: #ffffff !important;
     }
 
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn svg,
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn span,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn svg,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn span {
         color: #ffffff !important;
@@ -9170,10 +9333,7 @@
 
     #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus,
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible,
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover,
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus,
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible {
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible {
         background: #facc15 !important;
         background-image: none !important;
         border-color: #facc15 !important;
@@ -9187,7 +9347,21 @@
     #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible svg,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover span,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus span,
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible span,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible span {
+        color: #70131B !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible {
+        background: #facc15 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-2px);
+        box-shadow: 0 22px 38px rgba(112, 19, 27, 0.28) !important;
+    }
+
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover svg,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus svg,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible svg,
@@ -9309,8 +9483,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" />
                         </svg>
                     </span>
-                    <h3 class="intake-option-title">Employees Module</h3>
-                    <p class="intake-option-copy">Enter an employee or student ID to view the permitted clinic record.</p>
+                    <h3 class="intake-option-title">Patient Record Lookup</h3>
+                    <p class="intake-option-copy">Search an employee, student, or dependent ID to open the permitted clinic record.</p>
                 </div>
             </a>
             @endif
@@ -9739,9 +9913,10 @@
                             </div>
                         </section>
 
-                        <section class="applicant-screening-panel employee-physical-assessment-panel">
-                            <h4 class="applicant-screening-panel-title">PHYSICAL EXAMINATION</h4>
-                            <div class="employee-physical-exam-template" aria-label="Physical examination">
+                        <div class="applicant-physical-stack">
+                            <section class="applicant-screening-panel employee-physical-assessment-panel">
+                                <h4 class="applicant-screening-panel-title">PHYSICAL EXAMINATION</h4>
+                                <div class="employee-physical-exam-template" aria-label="Physical examination">
                                 <div class="employee-exam-section">
                                     <strong>Vital Signs:</strong>
                                     <div class="employee-exam-options">
@@ -9815,11 +9990,11 @@
                                 <div class="employee-exam-section">
                                     <strong>Heart:</strong>
                                     <div class="employee-exam-options">
-                                        <span>Murmur:</span>
+                                        <span class="employee-exam-option-heading">Murmur:</span>
                                         <label><input type="radio" name="employee_exam_heart_murmur" value="present"> Present</label>
                                         <label><input type="radio" name="employee_exam_heart_murmur" value="absent"> Absent</label>
                                         <label><input type="radio" name="employee_exam_heart_murmur" value="na"> N/A</label>
-                                        <span>Rhythm:</span>
+                                        <span class="employee-exam-option-heading">Rhythm:</span>
                                         <label><input type="radio" name="employee_exam_heart_rhythm" value="regular"> Regular</label>
                                         <label><input type="radio" name="employee_exam_heart_rhythm" value="irregular"> Irregular</label>
                                         <label><input type="radio" name="employee_exam_heart_rhythm" value="na"> N/A</label>
@@ -9850,13 +10025,17 @@
                                 </div>
                                 <div class="employee-exam-section">
                                     <strong>Skin:</strong>
-                                    <div class="employee-exam-options">
+                                    <div class="employee-exam-options employee-skin-options">
                                         <label><input type="checkbox" name="employee_exam_skin[]" value="pallor"> Pallor</label>
                                         <label><input type="checkbox" name="employee_exam_skin[]" value="rashes"> Rashes</label>
                                         <label><input type="checkbox" name="employee_exam_skin[]" value="lesions"> Lesions</label>
-                                    <strong>Scars:</strong>
-                                        <label><input type="radio" name="employee_exam_scars" value="absent"> Absent</label>
-                                        <label><input type="radio" name="employee_exam_scars" value="present"> Present</label>
+                                        <div class="employee-skin-scars-group">
+                                            <span class="employee-exam-option-heading">Scars:</span>
+                                            <div class="employee-skin-scars-options">
+                                                <label><input type="radio" name="employee_exam_scars" value="absent"> Absent</label>
+                                                <label><input type="radio" name="employee_exam_scars" value="present"> Present</label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="employee-exam-section">
@@ -9886,8 +10065,8 @@
                                     </div>
                                     <label class="employee-exam-line"><strong>Follow up on:</strong> <input type="date" name="employee_exam_follow_up_on"></label>
                                 </div>
-                            </div>
-                            <div class="applicant-vitals-grid">
+                                </div>
+                                <div class="applicant-vitals-grid">
                                 <div class="applicant-condition-field">
                                     <label for="applicantHeight">Height <span style="color:#dc2626;">*</span></label>
                                     <input type="text" id="applicantHeight" name="height" class="applicant-condition-input vital-input" placeholder="e.g., 5'6&quot;" inputmode="text" required>
@@ -9947,8 +10126,12 @@
                                     <label for="applicantEncodeRemarks">Assessment Remarks <span style="color:#94a3b8;">(Optional)</span></label>
                                     <textarea id="applicantEncodeRemarks" name="encode_remarks" placeholder="Optional assessment notes from the encoding station..." class="applicant-condition-textarea" rows="3"></textarea>
                                 </div>
-                            </div>
-                            <div class="bmi-gauge-card" id="bmiGaugeCard" aria-live="polite">
+                                </div>
+                            </section>
+
+                            <section class="applicant-screening-panel applicant-bmi-assessment-section" aria-label="BMI assessment">
+                                <h4 class="applicant-screening-panel-title">BMI ASSESSMENT</h4>
+                                <div class="bmi-gauge-card" id="bmiGaugeCard" aria-live="polite">
                                 <div class="bmi-gauge-summary">
                                     <strong id="bmiGaugeTitle">BMI pending</strong>
                                     <span id="bmiGaugeCategory">Enter height and weight</span>
@@ -9979,8 +10162,9 @@
                                         <li id="bmiPonderal">Ponderal Index: --</li>
                                     </ul>
                                 </div>
-                            </div>
-                        </section>
+                                </div>
+                            </section>
+                        </div>
                     </div>
 
                     <div class="applicant-ref-actions">
@@ -10168,10 +10352,7 @@
 
     <div class="clinic-success-overlay" id="applicantFinalReviewErrorOverlay" role="alertdialog" aria-modal="true" aria-labelledby="applicantFinalReviewErrorTitle" aria-describedby="applicantFinalReviewErrorMessage" aria-hidden="true">
         <div class="clinic-success-card clinic-error-card">
-            <div class="clinic-error-icon" aria-hidden="true">
-                <x-outline-icon name="exclamation-triangle" />
-            </div>
-            <strong id="applicantFinalReviewErrorTitle">Unable to Continue</strong>
+            <strong id="applicantFinalReviewErrorTitle">Error</strong>
             <p id="applicantFinalReviewErrorMessage">Please review the required fields before continuing.</p>
             <hr>
             <button type="button" class="clinic-error-continue" data-final-review-error-close>Continue</button>
@@ -10237,7 +10418,7 @@
                     <div class="applicant-modal-head-copy">
                         <h3 id="headerTitle">OCR Ready</h3>
                         <span id="scanMethodBadge" class="scan-method-badge">OCR Active</span>
-                        <p id="headerSubtitle">Start with OCR ID scanning, or use manual student number entry when the card cannot be captured clearly.</p>
+                        <p id="headerSubtitle">Start with OCR scanning, or use manual Patient ID Number entry when the card cannot be captured clearly.</p>
                     </div>
                 </div>
                 <div class="applicant-modal-head-actions" style="display:none;">
@@ -10258,7 +10439,7 @@
                     <div id="scanForm" style="display: contents;">
                         <div id="scanStage" class="scan-stage">
                             <div id="scanner-container-scan" class="scan-surface" style="position:relative;">
-                                <p id="scanInlineNote" class="scan-inline-note">OCR mode is active. Align the physical ID inside the frame and continue once the ID number and name are matched locally.</p>
+                                <p id="scanInlineNote" class="scan-inline-note">OCR mode is active. Align the physical ID inside the frame and continue once the Patient ID Number and name are matched locally.</p>
                                 <div id="barcodeScanPanel">
                                     <div id="scan-loading">
                                         <div class="spinner"></div>
@@ -10268,16 +10449,16 @@
                                         <div id="readerScan" class="scanner-box">
                                             <div class="scan-line-overlay"></div>
                                             <div class="ocr-guide"></div>
-                                            <div class="ocr-guide-label">Align Student Number and Name</div>
+                                            <div class="ocr-guide-label">Align Patient ID Number and Name</div>
                                         </div>
-                                        <div id="ocrCameraIdle" class="ocr-camera-idle">Camera is Closed. Select Start Camera when you are ready to scan the student ID.</div>
+                                        <div id="ocrCameraIdle" class="ocr-camera-idle">Camera is Closed. Select Start Camera when you are ready to scan the physical ID.</div>
                                     </div>
                                     <div class="ocr-camera-controls">
                                         <button type="button" id="btnStartOcrCamera" class="btn-ocr btn-ocr-primary">Start Camera</button>
                                         <button type="button" id="btnCloseOcrCamera" class="btn-ocr btn-ocr-secondary" disabled>Close Camera</button>
                                     </div>
                                     <div class="ocr-actions" id="ocrScanActions" style="display:none;">
-                                        <button type="button" id="btnRunAiOcr" class="btn-ocr btn-ocr-primary" style="background:linear-gradient(135deg,#1d4ed8,#2563eb 55%,#3b82f6);box-shadow:0 12px 24px rgba(37,99,235,0.22);">Reading ID Number</button>
+                                        <button type="button" id="btnRunAiOcr" class="btn-ocr btn-ocr-primary" style="background:linear-gradient(135deg,#1d4ed8,#2563eb 55%,#3b82f6);box-shadow:0 12px 24px rgba(37,99,235,0.22);">Reading Patient ID</button>
                                         <button type="button" id="btnRetryOcr" class="btn-ocr btn-ocr-secondary">Clear OCR Result</button>
                                     </div>
                                 </div>
@@ -10309,13 +10490,13 @@
                                     <input type="text" id="ocr_student_name" class="form-control" readonly style="margin-bottom:0;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;box-shadow:inset 0 1px 0 rgba(255,255,255,0.95);font-weight:700;cursor:default;">
                                 </div>
                                 <div style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,#fdfefe,#f8fafc);border:1px solid #e2e8f0;">
-                                    <p class="ocr-result-label" style="margin:0;color:#334155;">ID Number</p>
+                                    <p class="ocr-result-label" style="margin:0;color:#334155;">Patient ID Number</p>
                                     <input type="text" id="ocr_student_number" class="form-control" readonly style="margin-bottom:0;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;box-shadow:inset 0 1px 0 rgba(255,255,255,0.95);font-weight:700;cursor:default;">
                                 </div>
                             </div>
                             <div id="ocrStatus" class="ocr-status info" style="display:block;">AI verification could not finish right now.</div>
                             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                                <div id="ocrConfidenceText" class="ocr-meta">ID number confidence: 10%</div>
+                            <div id="ocrConfidenceText" class="ocr-meta">Patient ID confidence: 10%</div>
                                 <div id="ocrLockBadge" class="ocr-lock-badge" style="display:none;">Locked on ID</div>
                             </div>
                             <div class="ocr-actions" style="margin-top:14px;">
@@ -10324,10 +10505,10 @@
                             </div>
                             <div class="manual-input-stack">
                                 <p class="manual-toggle-label">Alternative Lookup</p>
-                                <h4 class="manual-lookup-title">Employee's / Student Number Lookup</h4>
-                                <p class="manual-lookup-copy">Use the employee number or student number saved in local clinic records when OCR cannot read the physical ID clearly.</p>
+                                <h4 class="manual-lookup-title">Patient ID Number Lookup</h4>
+                                <p class="manual-lookup-copy">Use the Patient ID Number saved in local clinic records when OCR cannot read the physical ID clearly.</p>
                                 <form id="walkinFormManual" class="manual-lookup-form">
-                                    <input type="text" id="student_id_manual" placeholder="Enter employee or student number" class="form-control" required>
+                                    <input type="text" id="student_id_manual" placeholder="Enter Patient ID Number" class="form-control" required>
                                     <button type="submit" id="manualFindBtn" class="manual-find-btn" disabled>Find Record</button>
                                 </form>
                                 <div id="manualLookupStatus" class="manual-lookup-status" role="status" aria-live="polite"></div>
@@ -10404,15 +10585,15 @@
         <div id="scanStage" class="scan-stage">
             <div class="scan-method-bar">
                 <div>
-                <p id="scanMethodTitle" class="scan-method-title">OCR ID Scan</p>
-                <p id="scanMethodNote" class="scan-method-note">Use the camera to extract the student number from the physical ID card, or enter it manually.</p>
+                <p id="scanMethodTitle" class="scan-method-title">OCR Patient ID Scan</p>
+                <p id="scanMethodNote" class="scan-method-note">Use the camera to extract the Patient ID Number from the physical ID card, or enter it manually.</p>
                 <span id="scanMethodBadge" class="scan-method-badge">OCR Active</span>
                 </div>
                 <button type="button" id="btnSwitchScanMode" class="btn-scan-switch" style="display:none;">OCR Scan Active</button>
             </div>
 
             <div id="scanner-container-scan" class="scan-surface" style="position: relative;">
-                <p id="scanInlineNote" class="scan-inline-note">OCR mode is active. Align the physical ID inside the frame, or type the student number manually.</p>
+                <p id="scanInlineNote" class="scan-inline-note">OCR mode is active. Align the physical ID inside the frame, or type the Patient ID Number manually.</p>
                 <div id="barcodeScanPanel">
                     <div id="scan-loading">
                         <div class="spinner"></div>
@@ -10421,11 +10602,11 @@
                     <div id="readerScan" class="scanner-box">
                         <div class="scan-line-overlay"></div>
                         <div class="ocr-guide"></div>
-                        <div class="ocr-guide-label">Align Student Number and Name</div>
+                        <div class="ocr-guide-label">Align Patient ID Number and Name</div>
                     </div>
 
                     <div class="ocr-actions">
-                        <button type="button" id="btnRunAiOcr" class="btn-ocr btn-ocr-primary" style="background:linear-gradient(135deg, #1d4ed8, #2563eb 55%, #3b82f6); box-shadow:0 12px 24px rgba(37,99,235,0.22);">Reading ID Number</button>
+                        <button type="button" id="btnRunAiOcr" class="btn-ocr btn-ocr-primary" style="background:linear-gradient(135deg, #1d4ed8, #2563eb 55%, #3b82f6); box-shadow:0 12px 24px rgba(37,99,235,0.22);">Reading Patient ID</button>
                         <button type="button" id="btnRetryOcr" class="btn-ocr btn-ocr-secondary">Clear OCR Result</button>
                     </div>
 
@@ -10436,12 +10617,12 @@
                                 <input type="text" id="ocr_student_name" class="form-control" placeholder="Enter full name" style="margin-bottom:0;">
                             </div>
                             <div style="display:grid; grid-template-columns: 120px minmax(0, 1fr); gap:12px; align-items:center;">
-                                <p class="ocr-result-label" style="margin:0;">ID Number</p>
-                                <input type="text" id="ocr_student_number" class="form-control" placeholder="Enter ID number" style="margin-bottom:0;">
+                                <p class="ocr-result-label" style="margin:0;">Patient ID Number</p>
+                                <input type="text" id="ocr_student_number" class="form-control" placeholder="Enter Patient ID Number" style="margin-bottom:0;">
                             </div>
                         </div>
 
-                        <div id="ocrStatus" class="ocr-status info" style="display:block;">Live OCR is ready. Hold the ID steady inside the frame so we can detect the student number and fill the saved name from records.</div>
+                        <div id="ocrStatus" class="ocr-status info" style="display:block;">Live OCR is ready. Hold the ID steady inside the frame so we can detect the Patient ID Number and fill the saved name from records.</div>
                         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                             <div id="ocrConfidenceText" class="ocr-meta">OCR confidence will appear here after analysis.</div>
                             <div id="ocrLockBadge" class="ocr-lock-badge" style="display:none;">Locked on ID</div>
@@ -10459,13 +10640,13 @@
         
             <div class="text-center mt-3">
                 <button type="button" id="btnShowManual" style="background:none; border:none; color:#8B0000; text-decoration:underline; cursor:pointer; font-weight:600; font-size: 0.85rem;">
-                    Type Student Number Manually
+                    Type Patient ID Number Manually
                 </button>
             </div>
 
             <div id="manualInputArea" style="display:none;" class="mt-3">
                 <form id="walkinFormManual" class="d-flex gap-2">
-                    <input type="text" id="student_id_manual" placeholder="Enter employee or student number" class="form-control" style="margin-bottom:0;" required>
+                    <input type="text" id="student_id_manual" placeholder="Enter Patient ID Number" class="form-control" style="margin-bottom:0;" required>
                     <button type="submit" id="manualFindBtn" class="manual-find-btn" disabled>Find Record</button>
                 </form>
                 <div id="manualLookupStatus" class="manual-lookup-status" role="status" aria-live="polite"></div>
@@ -10508,8 +10689,8 @@
                         </div>
 
             <div class="mb-3 assisted-highlight-card">
-                <label style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Student Number / Reference ID</label>
-                <input type="text" id="reg_student_id" class="form-control mb-0" placeholder="Enter student number or reference ID" required>
+                <label style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Patient ID Number / Reference ID</label>
+                <input type="text" id="reg_student_id" class="form-control mb-0" placeholder="Enter Patient ID Number or reference ID" required>
                 <input type="hidden" id="reg_barcode">
             </div>
             
@@ -10809,7 +10990,7 @@
             if (closeOcrCameraBtn) closeOcrCameraBtn.disabled = !isActive;
             if (ocrCameraIdle) ocrCameraIdle.classList.toggle('is-hidden', isActive);
             if (ocrCameraIdle && !isActive && !isStarting) {
-                ocrCameraIdle.textContent = 'Camera is Closed. Select Start Camera when you are ready to scan the student ID.';
+                ocrCameraIdle.textContent = 'Camera is Closed. Select Start Camera when you are ready to scan the physical ID.';
             }
             if (ocrScanActions) ocrScanActions.style.display = isActive ? 'flex' : 'none';
             if (applicantOcrDetectedContent) applicantOcrDetectedContent.style.display = isActive ? 'block' : 'none';
@@ -10837,8 +11018,8 @@
                 );
                 attachVideoTrack();
                 setOcrCameraState(true);
-                buildStatus('Live OCR is scanning. Hold the student ID steady inside the frame.', 'info');
-                $('#ocrConfidenceText').text('Student number confidence will appear after scanning.');
+                buildStatus('Live OCR is scanning. Hold the physical ID steady inside the frame.', 'info');
+                $('#ocrConfidenceText').text('Patient ID confidence will appear after scanning.');
                 startLiveOcr();
             } catch (error) {
                 mainScanner = null;
@@ -10875,6 +11056,9 @@
         function buildStatus(message, type = 'info', extra = '') {
             const $status = $('#ocrStatus');
             $status.removeClass('info success error').addClass(type).html(`${message}${extra ? `<div class="ocr-meta">${extra}</div>` : ''}`);
+            if (type === 'error') {
+                showFinalReviewErrorModal(`${message}${extra ? ` ${extra}` : ''}`);
+            }
         }
 
         function normalizeSpaces(value) {
@@ -10994,7 +11178,7 @@
                 ocrNameLocked = true;
             }
 
-            $('#ocrConfidenceText').text(confidence ? `ID number confidence: ${confidence}%` : 'ID number confidence will appear here after analysis.');
+            $('#ocrConfidenceText').text(confidence ? `Patient ID confidence: ${confidence}%` : 'Patient ID confidence will appear here after analysis.');
             $('#ocrResultPanel').show();
             $('#btnConfirmOcr').prop('disabled', !($('#ocr_student_number').val().trim() && $('#ocr_student_name').val().trim()));
             $('#ocrLockBadge').toggle(isLocked);
@@ -11039,7 +11223,7 @@
 
             autoProceedInFlight = true;
             lastAutoProceedKey = autoProceedKey;
-            buildStatus(`Student number and name matched. Opening the ${getDestinationLabel()} now.`, 'success', 'Auto proceed');
+            buildStatus(`Patient ID Number and name matched. Opening the ${getDestinationLabel()} now.`, 'success', 'Auto proceed');
             verifyUser(normalizedStudentNumber, normalizedStudentName, true);
         }
 
@@ -11231,9 +11415,9 @@
                 if (stableStudentNumber) {
                     requestMatchedNamePreview(stableStudentNumber, stableStudentName || studentName, function(preview) {
                         if (preview.name_matches === false) {
-                            buildStatus('Student number matched an official record, but the scanned name still looks different. Please review the card before continuing.', 'info', 'Record name applied');
+                            buildStatus('Patient ID Number matched an official record, but the scanned name still looks different. Please review the card before continuing.', 'info', 'Record name applied');
                         } else {
-                            buildStatus('Student number matched an official record and the system applied the saved name automatically. Please review before continuing.', 'success', 'Record name applied');
+                            buildStatus('Patient ID Number matched an official record and the system applied the saved name automatically. Please review before continuing.', 'success', 'Record name applied');
                             attemptAutoProceed(
                                 stableStudentNumber,
                                 ($('#ocr_student_name').val() || preview.student_name || stableStudentName || studentName)
@@ -11244,21 +11428,21 @@
                     if (signature !== lastOcrSignature || !isAutoPass) {
                         buildStatus(
                             isLocked
-                                ? 'Live OCR locked onto the card. Please review the extracted ID number and name before continuing.'
+                                ? 'Live OCR locked onto the card. Please review the extracted Patient ID Number and name before continuing.'
                                 : allowNameAutofill
-                                    ? 'Live OCR found a stable student number and a usable name guess. Please review the extracted fields below.'
-                                    : 'Live OCR found a stable student number. The system is matching the saved name now.',
+                                    ? 'Live OCR found a stable Patient ID Number and a usable name guess. Please review the extracted fields below.'
+                                    : 'Live OCR found a stable Patient ID Number. The system is matching the saved name now.',
                             'success',
-                            `ID number confidence ${confidence}%`
+                            `Patient ID confidence ${confidence}%`
                         );
                         lastOcrSignature = signature;
                     }
                 } else if (stableStudentName) {
                     if (signature !== lastOcrSignature) {
                         buildStatus(
-                            'The name is stable now. Keep the ID steady and we will keep reading the student number.',
+                            'The name is stable now. Keep the ID steady and we will keep reading the Patient ID Number.',
                             'info',
-                            `ID number confidence ${confidence}%`
+                            `Patient ID confidence ${confidence}%`
                         );
                         lastOcrSignature = signature;
                     }
@@ -11269,7 +11453,7 @@
                     }, 7000);
                     verifyWithAi(true);
                 } else if (!isAutoPass) {
-                    buildStatus('OCR could not confidently read the ID number yet. You can keep the card steady, use AI ID-number reading, or type it manually.', 'error', `ID number confidence ${confidence}%`);
+                    buildStatus('OCR could not confidently read the Patient ID Number yet. You can keep the card steady, use AI reading, or type it manually.', 'error', `Patient ID confidence ${confidence}%`);
                 }
             } catch (error) {
                 if (!isAutoPass) {
@@ -11284,15 +11468,15 @@
         function verifyWithAi(isAutoAssist = false) {
             const canvas = capturePreparedIdCanvas(false);
             if (!canvas) {
-                buildStatus('Camera preview is not ready yet. Please wait a moment, then try AI student-number reading again.', 'error');
+                buildStatus('Camera preview is not ready yet. Please wait a moment, then try AI Patient ID reading again.', 'error');
                 return;
             }
 
-            $('#btnRunAiOcr').prop('disabled', true).text('Reading ID...');
+            $('#btnRunAiOcr').prop('disabled', true).text('Reading Patient ID...');
             buildStatus(
                 isAutoAssist
-                    ? 'Live OCR needs help, so we are sending the current camera image to AI to extract the student number.'
-                    : 'Sending the current camera image to AI to extract the student number.',
+                    ? 'Live OCR needs help, so we are sending the current camera image to AI to extract the Patient ID Number.'
+                    : 'Sending the current camera image to AI to extract the Patient ID Number.',
                 'info'
             );
 
@@ -11306,7 +11490,7 @@
                 success: function(res) {
                     const studentNumber = (res.student_number || '').trim();
                     const studentName = (res.student_name || '').trim();
-                    const note = (res.confidence_note || 'AI student-number reading completed.').trim();
+                    const note = (res.confidence_note || 'AI Patient ID reading completed.').trim();
 
                     if (studentNumber) {
                         $('#ocr_student_number').val(studentNumber);
@@ -11319,7 +11503,7 @@
                     if (studentNumber) {
                         requestMatchedNamePreview(studentNumber, '', function(preview) {
                             if (preview && preview.student_name) {
-                                buildStatus('AI read the student number and the system filled the saved name from records. Please review before continuing.', 'success', 'AI + records');
+                                buildStatus('AI read the Patient ID Number and the system filled the saved name from records. Please review before continuing.', 'success', 'AI + records');
                                 attemptAutoProceed(studentNumber, preview.student_name);
                                 return;
                             }
@@ -11342,10 +11526,10 @@
                 },
                 error: function(xhr) {
                     const response = xhr.responseJSON || {};
-                    buildStatus(response.message || 'AI student-number reading could not complete right now. Please keep using OCR or manual review.', 'error');
+                    buildStatus(response.message || 'AI Patient ID reading could not complete right now. Please keep using OCR or manual review.', 'error');
                 },
                 complete: function() {
-                    $('#btnRunAiOcr').prop('disabled', false).text('Reading ID Number');
+                    $('#btnRunAiOcr').prop('disabled', false).text('Reading Patient ID');
                 }
             });
         }
@@ -11367,6 +11551,10 @@
             const copy = document.createElement('span');
             copy.textContent = message;
             status.appendChild(copy);
+
+            if (type === 'error') {
+                showFinalReviewErrorModal(message);
+            }
         }
 
         function isSupportedClinicIdNumber(value) {
@@ -11374,7 +11562,7 @@
             if (!normalized) return false;
 
             const studentNumberPattern = /^\d{4}-\d{5}-[A-Z]{2}-\d+$/;
-            const employeeNumberPattern = /^[A-Z0-9-]{3,40}$/;
+            const employeeNumberPattern = /^[A-Z0-9-]{1,120}$/;
 
             return studentNumberPattern.test(normalized) || employeeNumberPattern.test(normalized);
         }
@@ -11384,7 +11572,7 @@
             const normalizedId = String(id || '').trim();
 
             if (!isSupportedClinicIdNumber(normalizedId)) {
-                const invalidMessage = 'Enter a valid employee number or student number from local clinic records.';
+                const invalidMessage = 'Enter a valid Patient ID Number from local clinic records.';
                 if (isManualLookup) {
                     setManualLookupStatus('error', invalidMessage);
                     $('#manualFindBtn').prop('disabled', false).text('Find Record');
@@ -11424,7 +11612,7 @@
                 } else {
                     const failureMessage = res.message
                         ? res.message
-                        : `No local employee or student record found for ID number ${normalizedId}. Please check the number and try again.`;
+                        : `No local patient record found for Patient ID Number ${normalizedId}. Please check the number and try again.`;
 
                     if (isManualLookup) {
                         setManualLookupStatus('error', failureMessage);
@@ -11477,11 +11665,11 @@
         function updateScanModeUI() {
             scanMethod = 'ocr';
             const isApplicantFlow = intakeTarget === 'assessment';
-            $('#scanMethodTitle').text('OCR ID Scan');
+            $('#scanMethodTitle').text('OCR Patient ID Scan');
             $('#scanMethodNote').text(
                 isApplicantFlow
-                        ? 'Use the live camera feed to extract the printed ID number from the physical ID card, then review the saved local record.'
-                        : 'Use the live camera feed to extract the printed ID number from the physical ID card, then fill the saved name from records.'
+                        ? 'Use the live camera feed to extract the printed Patient ID Number from the physical ID card, then review the saved local record.'
+                        : 'Use the live camera feed to extract the printed Patient ID Number from the physical ID card, then fill the saved name from records.'
             );
             $('#scanMethodBadge').text('OCR Active');
             $('#btnSwitchScanMode').hide();
@@ -11489,14 +11677,14 @@
             $('#headerTitle').text('OCR Ready');
             $('#headerSubtitle').text(
                 isApplicantFlow
-                        ? 'Choose OCR ID scanning or manual ID entry to identify the saved local clinic record.'
+                        ? 'Choose OCR scanning or manual Patient ID Number entry to identify the saved local clinic record.'
                         : ''
             );
             $('#headerIcon').text(isApplicantFlow ? 'AP' : 'SB');
             $('#scanInlineNote').text(
                 isApplicantFlow
-                        ? 'OCR mode is active. Align the physical ID inside the frame and continue once the ID number and name are matched locally.'
-                        : 'OCR mode is active. Align the physical ID inside the frame and the system will keep reading the ID number live, then match the saved name automatically.'
+                        ? 'OCR mode is active. Align the physical ID inside the frame and continue once the Patient ID Number and name are matched locally.'
+                        : 'OCR mode is active. Align the physical ID inside the frame and the system will keep reading the Patient ID Number live, then match the saved name automatically.'
             );
             $('#barcodeScanPanel').show();
             $('#btnShowManual').show();
@@ -11640,7 +11828,7 @@
             const studentName = $('#ocr_student_name').val().trim();
 
             if (!studentNumber || !studentName) {
-                buildStatus('Please review both extracted fields first. We need both the student number and the student name for confirmation.', 'error');
+                buildStatus('Please review both extracted fields first. We need both the Patient ID Number and the name for confirmation.', 'error');
                 return;
             }
 
@@ -11651,7 +11839,7 @@
             $('#ocr_student_number').val('');
             $('#ocr_student_name').val('');
             $('#btnConfirmOcr').prop('disabled', true);
-            $('#ocrConfidenceText').text('Student number confidence will appear here after analysis.');
+            $('#ocrConfidenceText').text('Patient ID confidence will appear here after analysis.');
             lastOcrSignature = '';
             ocrLockCount = 0;
             lastStudentNumberCandidate = '';
@@ -11696,7 +11884,10 @@
             const role = $('#reg_user_type').val();
             const email = $('#reg_email').val().trim();
 
-            if(!role) { alert("Please select a User Role!"); return; }
+            if (!role) {
+                showFinalReviewErrorModal('Please select a User Role.');
+                return;
+            }
 
             if (!email) {
                 $('#reg_email')[0].reportValidity();
@@ -11921,7 +12112,7 @@
         }
 
         function isStudentLookupResult() {
-            return currentRecordType === 'student';
+            return currentRecordType === 'student' || currentRecordType === 'dependent';
         }
 
         function isEncodeWorkflow() {
@@ -12595,7 +12786,7 @@
             refStatus.style.display = 'block';
             refStatus.className = 'ocr-status ' + type + ' is-visible';
             refStatus.textContent = cleanMessage;
-            if (type === 'error' && isFinalReviewWorkflow()) {
+            if (type === 'error') {
                 showFinalReviewErrorModal(cleanMessage);
             }
         }
@@ -12620,7 +12811,7 @@
                 input.disabled = Boolean(locked);
             });
 
-            const physicalPanel = document.querySelector('#applicantRefModal .applicant-medical-condition-section > section:not(.applicant-review-panel)');
+            const physicalPanel = document.querySelector('#applicantRefModal .employee-physical-assessment-panel');
             if (physicalPanel) {
                 physicalPanel.classList.toggle('is-readonly-review', Boolean(locked));
             }
@@ -13911,7 +14102,9 @@
             }
             const physicalExamTitle = document.querySelector('#applicantRefModal .employee-physical-assessment-panel .applicant-screening-panel-title');
             if (physicalExamTitle) {
-                physicalExamTitle.textContent = isStudentRecord ? 'Student/OJT Assessment' : 'PHYSICAL EXAMINATION';
+                physicalExamTitle.textContent = currentRecordType === 'dependent'
+                    ? 'Dependent Assessment'
+                    : (isStudentRecord ? 'Student/OJT Assessment' : 'PHYSICAL EXAMINATION');
             }
 
             populateAssessmentReview(currentAssessmentReview);
@@ -14013,18 +14206,20 @@
                         || data.approved === true
                         || data.approved === 1;
 
-                    const isStudentRecord = data.record_type === 'student';
+                    const isDependentRecord = data.record_type === 'dependent';
+                    const isStudentRecord = data.record_type === 'student' || isDependentRecord;
                     const isLocalHealthProfile = data.lookup_source === 'local_health_profile';
                     const isLocalEmployeeReference = ['local_employee_reference', 'local_clinic_reference'].includes(data.lookup_source);
                     const isLocalEmployeeId = ['local_employee_id', 'local_clinic_id'].includes(data.lookup_source);
-                    const isLocalOnlyLookup = isStudentRecord || isLocalHealthProfile || isLocalEmployeeReference || isLocalEmployeeId;
+                    const isLocalDependentId = data.lookup_source === 'local_dependent_id';
+                    const isLocalOnlyLookup = isStudentRecord || isLocalHealthProfile || isLocalEmployeeReference || isLocalEmployeeId || isLocalDependentId;
                     const lookupFoundMessage = isLocalHealthProfile
                         ? (data.sync_warning || 'Local health profile found. PUPTAS sync will still depend on a valid Admission reference.')
                         : (isStudentRecord
                             ? (applicantName ? 'Student/OJT health profile found: ' + applicantName + '.' : 'Student/OJT health profile found.')
                             : (isClinicLookupMode()
-                            ? (applicantName ? "Employee's record found: " + applicantName + '.' : "Employee's record found.")
-                            : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.')));
+                                ? (applicantName ? "Employee's record found: " + applicantName + '.' : "Employee's record found.")
+                                : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.')));
 
                     if (isAlreadyApproved && !isStudentRecord) {
                         showLookupDetails(data, ref);
@@ -14955,7 +15150,7 @@
             input.addEventListener('change', syncCovidPositiveFields);
         });
 
-        const finalReviewPhysicalPanel = document.querySelector('#applicantRefModal .applicant-medical-condition-section > section:not(.applicant-review-panel)');
+        const finalReviewPhysicalPanel = document.querySelector('#applicantRefModal .employee-physical-assessment-panel');
         if (finalReviewPhysicalPanel) {
             finalReviewPhysicalPanel.addEventListener('dblclick', function () {
                 if (!isFinalReviewWorkflow() || !canApproveFinalReview) return;
@@ -15427,6 +15622,9 @@
             select.classList.add('premium-select-native');
             const shell = document.createElement('div');
             shell.className = 'premium-select-shell';
+            if (select.id === 'employeeExamFit') {
+                shell.classList.add('employee-fit-select-shell');
+            }
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'premium-select-button';
@@ -15455,6 +15653,7 @@
             shell.appendChild(select);
             shell.appendChild(button);
             shell.appendChild(menu);
+            select.addEventListener('change', rebuild);
             button.addEventListener('click', function(event) {
                 event.stopPropagation();
                 document.querySelectorAll('.premium-select-shell.is-open').forEach(function(openShell) {
@@ -15464,7 +15663,7 @@
             });
             rebuild();
         }
-        document.querySelectorAll('.applicant-final-review-per-page').forEach(enhance);
+        document.querySelectorAll('.applicant-final-review-per-page, #employeeExamFit').forEach(enhance);
         document.addEventListener('click', function() {
             document.querySelectorAll('.premium-select-shell.is-open').forEach(function(shell) {
                 shell.classList.remove('is-open');

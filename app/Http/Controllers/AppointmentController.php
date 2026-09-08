@@ -12,6 +12,7 @@ use App\Models\Appointment;
 use App\Models\AppointmentFeedback;
 use App\Models\Consultation;
 use App\Models\DependentsProfile;
+use App\Models\HealthFormCategory;
 use App\Models\HealthFormSubmission;
 use App\Models\HealthProfileCorrectionRequest;
 use App\Models\HealthProfile;
@@ -2283,6 +2284,84 @@ class AppointmentController extends Controller
         return false;
     }
 
+    private function healthFormCategoriesForAudience(string $audience)
+    {
+        return HealthFormCategory::query()
+            ->where('is_active', true)
+            ->availableFor($audience)
+            ->orderBy('name')
+            ->get();
+    }
+
+    private function employeeHealthFormCategoryAudience(User $user): string
+    {
+        return $user->clinicAccountTypeKey() === 'faculty' ? 'faculty' : 'admin';
+    }
+
+    private function defaultEmployeeHealthFormCategory(string $audience): string
+    {
+        return (string) (HealthFormCategory::query()
+            ->where('is_active', true)
+            ->availableFor($audience)
+            ->orderBy('name')
+            ->get()
+            ->first(function (HealthFormCategory $category): bool {
+                $name = strtolower(trim((string) $category->name));
+
+                return str_contains($name, 'annual medical')
+                    || str_contains($name, 'annual')
+                    || str_contains($name, 'school year update');
+            })
+            ?->name ?? '');
+    }
+
+    private function normalizeStudentHealthFormCategory(?string $category): string
+    {
+        $category = trim((string) $category);
+        $normalized = strtolower($category);
+
+        if ($normalized === '' || $normalized === 'general') {
+            return '';
+        }
+
+        if (str_contains($normalized, 'ojt') || str_contains($normalized, 'on-the-job')) {
+            return 'OJT';
+        }
+
+        return $category;
+    }
+
+    private function studentDeclarationPurposeText(?string $category): array
+    {
+        $category = $this->normalizeStudentHealthFormCategory($category) ?: 'Student';
+
+        if ($category === 'OJT') {
+            return [
+                'purpose' => 'On-the-Job Training (OJT)',
+                'endorsement' => 'On-the-Job Training (OJT)',
+            ];
+        }
+
+        if (strtolower($category) === 'student') {
+            return [
+                'purpose' => 'currently enrolled student',
+                'endorsement' => 'status as a currently enrolled student',
+            ];
+        }
+
+        $normalized = strtolower($category);
+        $endorsement = match (true) {
+            str_contains($normalized, 'return to school') => 'return to school',
+            str_contains($normalized, 'transfer') => 'transfer as a student',
+            default => $normalized,
+        };
+
+        return [
+            'purpose' => $category,
+            'endorsement' => $endorsement,
+        ];
+    }
+
     private function hasSubmittedEmployeeHealthProfile(?User $user): bool
     {
         if (!$user) {
@@ -2453,6 +2532,41 @@ class AppointmentController extends Controller
         }
 
         return $existingPath !== '' ? $existingPath : null;
+    }
+
+    private function deleteHealthFileIfUnreferenced(?string $path): void
+    {
+        $normalizedPath = ltrim((string) $path, '/');
+        if ($normalizedPath === '' || str_starts_with($normalizedPath, 'data:image/')) {
+            return;
+        }
+
+        $normalizedPath = preg_replace('#^(?:public/)?storage/#', '', $normalizedPath) ?? $normalizedPath;
+        $snapshotFields = array_unique(array_merge(
+            HealthProfileSnapshotService::DOCUMENT_FIELDS,
+            ['digital_signature', 'guardian_signature']
+        ));
+        $isReferenced = HealthFormSubmission::query()
+            ->whereNotNull('profile_snapshot')
+            ->get(['profile_snapshot'])
+            ->contains(function (HealthFormSubmission $submission) use ($normalizedPath, $snapshotFields): bool {
+                $snapshot = $submission->snapshotProfile();
+
+                foreach ($snapshotFields as $field) {
+                    $snapshotPath = ltrim((string) ($snapshot[$field] ?? ''), '/');
+                    $snapshotPath = preg_replace('#^(?:public/)?storage/#', '', $snapshotPath) ?? $snapshotPath;
+
+                    if ($snapshotPath === $normalizedPath) {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
+
+        if (!$isReferenced && $this->healthFiles()->exists($normalizedPath)) {
+            $this->healthFiles()->delete($normalizedPath);
+        }
     }
 
     private function resolveStudentContext(?User $user): array
@@ -3231,9 +3345,9 @@ public function account(Request $request)
             if ($categorySelected === '') {
                 $categorySelected = 'Student';
             }
-            $isOjt = stripos($categorySelected, 'ojt') !== false || stripos($categorySelected, 'on-the-job') !== false;
-            $purposeUnderline1 = $isOjt ? 'On-the-Job Training (OJT)' : 'enrolled student';
-            $purposeUnderline2 = $isOjt ? 'On-the-Job Training (OJT)' : 'enrolment as a student';
+            $declarationPurpose = $this->studentDeclarationPurposeText($categorySelected);
+            $purposeUnderline1 = $declarationPurpose['purpose'];
+            $purposeUnderline2 = $declarationPurpose['endorsement'];
 
             $studentFullName = trim(implode(' ', array_filter([
                 $user?->first_name,
@@ -3465,10 +3579,7 @@ public function account(Request $request)
             $user->save();
 
             foreach ($oldPaths as $oldPath) {
-                $oldPath = preg_replace('#^(?:public/)?storage/#', '', $oldPath) ?? $oldPath;
-                if ($oldPath !== '' && $this->healthFiles()->exists($oldPath)) {
-                    $this->healthFiles()->delete($oldPath);
-                }
+                $this->deleteHealthFileIfUnreferenced($oldPath);
             }
 
             \App\Models\ActivityLog::create([
@@ -3604,9 +3715,13 @@ public function account(Request $request)
             $healthProfile->save();
 
             foreach ($oldPaths as $oldPath) {
-                $oldPath = preg_replace('#^(?:public/)?storage/#', '', $oldPath) ?? $oldPath;
-                if ($oldPath !== '' && $this->healthFiles()->exists($oldPath)) {
-                    $this->healthFiles()->delete($oldPath);
+                if ($usesEmployeeHealthForm) {
+                    $oldPath = preg_replace('#^(?:public/)?storage/#', '', $oldPath) ?? $oldPath;
+                    if ($oldPath !== '' && $this->healthFiles()->exists($oldPath)) {
+                        $this->healthFiles()->delete($oldPath);
+                    }
+                } else {
+                    $this->deleteHealthFileIfUnreferenced($oldPath);
                 }
             }
 
@@ -3787,12 +3902,16 @@ public function account(Request $request)
             $healthProfile->save();
 
             foreach ($oldPaths as $oldPath) {
-                if ($oldPath === '' || str_starts_with($oldPath, 'data:image/')) {
-                    continue;
-                }
-                $oldPath = preg_replace('#^(?:public/)?storage/#', '', ltrim($oldPath, '/')) ?? $oldPath;
-                if ($this->healthFiles()->exists($oldPath)) {
-                    $this->healthFiles()->delete($oldPath);
+                if ($usesEmployeeHealthForm) {
+                    if ($oldPath === '' || str_starts_with($oldPath, 'data:image/')) {
+                        continue;
+                    }
+                    $oldPath = preg_replace('#^(?:public/)?storage/#', '', ltrim($oldPath, '/')) ?? $oldPath;
+                    if ($this->healthFiles()->exists($oldPath)) {
+                        $this->healthFiles()->delete($oldPath);
+                    }
+                } else {
+                    $this->deleteHealthFileIfUnreferenced($oldPath);
                 }
             }
 
@@ -4399,13 +4518,16 @@ public function showHealthForm()
     $healthFormPrefill = $this->buildHealthFormPrefill($user, $linkedAdminProfile, $existingHealthProfile);
     $healthFormPrefill['pending_health_form_request'] = $pendingHealthFormRequest;
     if ($isDedicatedStudentForm) {
-        $requestedStudentReference = $pendingHealthFormRequest
-            ? trim((string) (
-                $this->enrolledStudentReferenceNumber($user, $existingHealthProfile)
-                ?: optional($existingHealthProfile)->student_number
-                ?: ($user->student_number ?? '')
-            ))
-            : '';
+        // Keep the GUISIS-resolved number from the shared prefill even when
+        // the student opened the initial form without a pending request.
+        $requestedStudentReference = trim((string) (
+            (($healthFormPrefill['reference_mode'] ?? '') === 'student_number'
+                ? ($healthFormPrefill['reference_number'] ?? '')
+                : '')
+            ?: $this->enrolledStudentReferenceNumber($user, $existingHealthProfile)
+            ?: optional($existingHealthProfile)->student_number
+            ?: ($user->student_number ?? '')
+        ));
         $healthFormPrefill['reference_mode'] = 'student_number';
         $healthFormPrefill['reference_number'] = $requestedStudentReference;
         $healthFormPrefill['manual_student_number_allowed'] = true;
@@ -4435,10 +4557,13 @@ public function showHealthForm()
     $displayLastName = $healthFormPrefill['last_name'] ?? '';
     $displayReferenceNumber = $healthFormPrefill['reference_number'] ?? '';
     $prefill = $healthFormPrefill;
+    $studentHealthFormCategories = $isDedicatedStudentForm
+        ? $this->healthFormCategoriesForAudience('student')
+        : collect();
 
     return view(
         $isDedicatedStudentForm ? 'student.health_form_student' : 'student.health_form',
-        compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest')
+        compact('user', 'calculatedAge', 'linkedAdminProfile', 'healthFormPrefill', 'displayFirstName', 'displayMiddleName', 'displayLastName', 'displayReferenceNumber', 'prefill', 'pendingHealthFormRequest', 'studentHealthFormCategories')
     );
 }
 
@@ -4651,8 +4776,22 @@ public function showEmployeeHealthForm()
             'label' => 'Not Applicable',
         ],
     ], $this->healthFormCourseOptions());
+    $healthFormCategories = $this->healthFormCategoriesForAudience(
+        $this->employeeHealthFormCategoryAudience($user)
+    );
+    $defaultEmployeeHealthFormCategory = $this->defaultEmployeeHealthFormCategory(
+        $this->employeeHealthFormCategoryAudience($user)
+    );
 
-    return view('student.health_form_employee', compact('user', 'employeeProfile', 'employeePrefill', 'displayName', 'employeeCourseOptions'));
+    return view('student.health_form_employee', compact(
+        'user',
+        'employeeProfile',
+        'employeePrefill',
+        'displayName',
+        'employeeCourseOptions',
+        'healthFormCategories',
+        'defaultEmployeeHealthFormCategory'
+    ));
 }
 
 private function generateEmployeeHealthFormPdf(EmployeeHealthProfile $profile): string
@@ -4687,21 +4826,9 @@ private function ensureEmployeeHealthDeclaration(EmployeeHealthProfile $profile,
         }
 
         $user = $user ?: $profile->user;
-        $category = trim((string) ($profile->health_form_category ?? ''));
-        $categorySearch = strtolower(trim(implode(' ', array_filter([
-            $category,
-            (string) ($profile->office ?? ''),
-            (string) ($user?->user_role ?? ''),
-            (string) ($user?->role ?? ''),
-        ]))));
-        $isAdministrative = $category === 'Administrative Personnel'
-            || str_contains($categorySearch, 'administrative')
-            || str_contains($categorySearch, 'admin');
-        $employeeCategory = $isAdministrative ? 'Administrative Personnel' : 'Faculty Member';
-        $employeePurpose = $isAdministrative ? 'administrative personnel' : 'a faculty member';
-        $employeeEndorsement = $isAdministrative
-            ? 'fitness as administrative personnel'
-            : 'fitness as a faculty member';
+        $employeeCategory = trim((string) ($profile->health_form_category ?? '')) ?: 'Medical Clearance';
+        $employeePurpose = strtolower($employeeCategory);
+        $employeeEndorsement = 'fitness for ' . strtolower($employeeCategory);
         $fullName = trim((string) ($profile->name ?? ''));
         if ($fullName === '') {
             $fullName = $this->formatDisplayNameParts(
@@ -4920,6 +5047,15 @@ public function storeEmployeeHealthForm(Request $request)
             ->with('info', 'Your health examination record has already been submitted for clinic review.');
     }
 
+    $employeeCategoryAudience = $this->employeeHealthFormCategoryAudience($user);
+    $defaultEmployeeHealthFormCategory = $this->defaultEmployeeHealthFormCategory($employeeCategoryAudience);
+    if (trim((string) $request->input('employee_health_form_category')) === ''
+        && $defaultEmployeeHealthFormCategory !== '') {
+        $request->merge([
+            'employee_health_form_category' => $defaultEmployeeHealthFormCategory,
+        ]);
+    }
+
     $validated = $request->validate([
         'employee_number' => [
             'nullable',
@@ -5002,7 +5138,16 @@ public function storeEmployeeHealthForm(Request $request)
         'employee_signature_method' => ['required', 'in:draw,upload'],
         'employee_signature' => ['nullable', 'string'],
         'uploaded_signature' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
-        'employee_health_form_category' => ['required', Rule::in(['Faculty Member', 'Administrative Personnel'])],
+        'employee_health_form_category' => [
+            'required',
+            'string',
+            'max:120',
+            Rule::exists('health_form_categories', 'name')
+                ->where(function ($query) use ($employeeCategoryAudience) {
+                    $query->where('is_active', true)
+                        ->whereJsonContains('available_for', $employeeCategoryAudience);
+                }),
+        ],
         'employee_consent_acknowledged' => ['accepted'],
         'employee_health_profile_certified' => ['accepted'],
     ], [
@@ -5080,12 +5225,8 @@ public function storeEmployeeHealthForm(Request $request)
     $employeeHealthDeclarationPath = $employeeRequirementPaths['health_declaration'];
     if (empty($employeeHealthDeclarationPath) && !empty($signaturePath)) {
         $employeeCategory = $validated['employee_health_form_category'];
-        $employeePurpose = $employeeCategory === 'Administrative Personnel'
-            ? 'administrative personnel'
-            : 'a faculty member';
-        $employeeEndorsement = $employeeCategory === 'Administrative Personnel'
-            ? 'fitness as administrative personnel'
-            : 'fitness as a faculty member';
+        $employeePurpose = strtolower($employeeCategory);
+        $employeeEndorsement = 'fitness for ' . strtolower($employeeCategory);
         $employeeSignatureSrc = app(\App\Services\StoredImageDataUri::class)->fromStorage($signaturePath);
 
         $declarationPdf = Pdf::loadView('student.print_declaration_form', [
@@ -5659,6 +5800,20 @@ public function storeHealthForm(Request $request)
         ? ['required', 'string', 'max:120', 'regex:/^\d{4}-\d{5}-[A-Za-z]{2}-\d+$/']
         : ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$/'];
 
+    $studentHealthFormCategoryValues = ['Student'];
+    if ($isDedicatedStudentForm) {
+        $studentHealthFormCategoryValues = array_values(array_unique(array_merge(
+            $studentHealthFormCategoryValues,
+            $this->healthFormCategoriesForAudience('student')->pluck('name')->all()
+        )));
+
+        $pendingStudentCategory = $this->normalizeStudentHealthFormCategory(optional($pendingHealthFormRequest)->category);
+        if ($pendingStudentCategory !== '') {
+            $studentHealthFormCategoryValues[] = $pendingStudentCategory;
+            $studentHealthFormCategoryValues = array_values(array_unique($studentHealthFormCategoryValues));
+        }
+    }
+
     $request->validate([
         'student_id'        => 'nullable|string|max:255',
         'reference_number'  => $referenceNumberRules,
@@ -5674,6 +5829,9 @@ public function storeHealthForm(Request $request)
         'suffix_name'        => 'nullable|string|max:120',
         'course_code'       => 'nullable|string|max:30',
         'course_college'    => 'nullable|string|max:255',
+        'health_form_category' => $isDedicatedStudentForm
+            ? ['required', 'string', 'max:120', Rule::in($studentHealthFormCategoryValues)]
+            : ['nullable', 'string', 'max:120'],
         'blood_type'        => 'required|string|max:20',
         'contact_no'        => ['required', 'string', 'max:20', 'regex:/^\d{11,20}$/'],
         'guardian_name'     => 'required|string|max:255',
@@ -5918,13 +6076,13 @@ public function storeHealthForm(Request $request)
         }
 
         if ($isDedicatedStudentForm && !empty($digitalSignaturePath)) {
-            $categorySelected = trim((string) $request->input('health_form_category', ''));
+            $categorySelected = $this->normalizeStudentHealthFormCategory($request->input('health_form_category', ''));
             if ($categorySelected === '') {
-                $categorySelected = optional($pendingHealthFormRequest)->category ?: 'Student';
+                $categorySelected = $this->normalizeStudentHealthFormCategory(optional($pendingHealthFormRequest)->category) ?: 'Student';
             }
-            $isOjt = stripos($categorySelected, 'ojt') !== false || stripos($categorySelected, 'on-the-job') !== false;
-            $purposeUnderline1 = $isOjt ? 'On-the-Job Training (OJT)' : 'enrolled student';
-            $purposeUnderline2 = $isOjt ? 'On-the-Job Training (OJT)' : 'enrolment as a student';
+            $declarationPurpose = $this->studentDeclarationPurposeText($categorySelected);
+            $purposeUnderline1 = $declarationPurpose['purpose'];
+            $purposeUnderline2 = $declarationPurpose['endorsement'];
 
             $studentFullName = trim(implode(' ', array_filter([
                 $user->first_name,
@@ -5990,6 +6148,9 @@ public function storeHealthForm(Request $request)
         $submittedHealthFormCategory = trim((string) $request->input('health_form_category', ''));
         if ($submittedHealthFormCategory === '') {
             $submittedHealthFormCategory = optional($pendingHealthFormRequest)->category ?: ($isDedicatedStudentForm ? 'Student' : 'General');
+        }
+        if ($isDedicatedStudentForm) {
+            $submittedHealthFormCategory = $this->normalizeStudentHealthFormCategory($submittedHealthFormCategory) ?: 'Student';
         }
 
         $healthProfileData = [
@@ -6088,10 +6249,7 @@ public function storeHealthForm(Request $request)
 
         if (!$pendingHealthFormRequest) {
             foreach ($oldPaths as $oldPath) {
-                $oldPath = preg_replace('#^(?:public/)?storage/#', '', $oldPath) ?? $oldPath;
-                if ($oldPath !== '' && $this->healthFiles()->exists($oldPath)) {
-                    $this->healthFiles()->delete($oldPath);
-                }
+                $this->deleteHealthFileIfUnreferenced($oldPath);
             }
         }
 
@@ -6368,9 +6526,9 @@ public function showHealthFormSubmissionDocument(HealthFormSubmission $submissio
         if ($categorySelected === '') {
             $categorySelected = 'Student';
         }
-        $isOjt = stripos($categorySelected, 'ojt') !== false || stripos($categorySelected, 'on-the-job') !== false;
-        $purposeUnderline1 = $isOjt ? 'On-the-Job Training (OJT)' : 'enrolled student';
-        $purposeUnderline2 = $isOjt ? 'On-the-Job Training (OJT)' : 'enrolment as a student';
+        $declarationPurpose = $this->studentDeclarationPurposeText($categorySelected);
+        $purposeUnderline1 = $declarationPurpose['purpose'];
+        $purposeUnderline2 = $declarationPurpose['endorsement'];
         $studentFullName = trim(implode(' ', array_filter([
             $submissionUser?->first_name,
             $submissionUser?->middle_name,

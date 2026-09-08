@@ -24,6 +24,11 @@ class MarClearanceSubcategory extends Model
         return $this->hasMany(MarClearanceSubcategorySource::class, 'mar_clearance_subcategory_id');
     }
 
+    public function sourceMappings(): HasMany
+    {
+        return $this->hasMany(MarClearanceSourceMapping::class, 'mar_clearance_subcategory_id');
+    }
+
     public function issuances(): HasMany
     {
         return $this->hasMany(MarClearanceIssuance::class, 'clearance_subcategory_id');

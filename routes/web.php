@@ -490,6 +490,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::post('/admin/medicine-types', [MedicineTypeController::class, 'store'])->name('medicine-types.store');
         Route::delete('/admin/medicine-types/{id}', [MedicineTypeController::class, 'destroy'])->name('medicine-types.destroy');
         Route::post('/admin/health-form-categories', [HealthFormCategoryController::class, 'store'])->name('health-form-categories.store');
+        Route::put('/admin/health-form-categories/{id}', [HealthFormCategoryController::class, 'update'])->name('health-form-categories.update');
         Route::delete('/admin/health-form-categories/{id}', [HealthFormCategoryController::class, 'destroy'])->name('health-form-categories.destroy');
     });
 

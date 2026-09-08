@@ -2782,25 +2782,33 @@
                         <h2 id="employeeConsentTitle">Declaration of Medical Information and Data Subject Consent Form</h2>
 
                         @php
-                            $initialEmployeeCategory = old('employee_health_form_category', data_get($employeeProfile ?? null, 'health_form_category', ''));
-                            $initialEmployeeCategory = in_array($initialEmployeeCategory, ['Faculty Member', 'Administrative Personnel'], true)
+                            $storedEmployeeCategory = data_get($employeeProfile ?? null, 'health_form_category', '');
+                            $initialEmployeeCategory = old(
+                                'employee_health_form_category',
+                                $storedEmployeeCategory !== ''
+                                    ? $storedEmployeeCategory
+                                    : ($defaultEmployeeHealthFormCategory ?? '')
+                            );
+                            $initialEmployeeCategory = collect($healthFormCategories ?? [])
+                                ->contains(fn ($category) => $category->name === $initialEmployeeCategory)
                                 ? $initialEmployeeCategory
                                 : '';
                         @endphp
                         <div class="student-consent-purpose-wrap" style="margin: 0 0 16px;">
                             <label for="employeeConsentPurpose" style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: #7f1d2d; text-transform: uppercase; letter-spacing: .05em;">
-                                Purpose of Medical Clearance <span style="color: #dc2626;">*</span>
+                                Health Form Category <span style="color: #dc2626;">*</span>
                             </label>
                             <select id="employeeConsentPurpose" name="employee_health_form_category" class="form-select" style="width: 100%; padding: 8px 12px; border: 1.5px solid #7f1d2d; border-radius: 8px; font-size: 13.5px; font-weight: 700; background-color: #ffffff; color: #1f2937;" required>
-                                <option value="" disabled {{ $initialEmployeeCategory === '' ? 'selected' : '' }}>-- Select Purpose of Medical Clearance --</option>
-                                <option value="Faculty Member" {{ $initialEmployeeCategory === 'Faculty Member' ? 'selected' : '' }}>Faculty Member</option>
-                                <option value="Administrative Personnel" {{ $initialEmployeeCategory === 'Administrative Personnel' ? 'selected' : '' }}>Administrative Personnel</option>
+                                <option value="" disabled {{ $initialEmployeeCategory === '' ? 'selected' : '' }}>-- Select Health Form Category --</option>
+                                @foreach($healthFormCategories ?? [] as $category)
+                                    <option value="{{ $category->name }}" {{ $initialEmployeeCategory === $category->name ? 'selected' : '' }}>{{ $category->name }}</option>
+                                @endforeach
                             </select>
                         </div>
 
                         <div class="student-consent-copy">
                             <p>
-                                I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my on-site consultation for the issuance of medical clearance as <u id="employeeConsentDynamicPurpose" style="font-weight: 700;">{{ $initialEmployeeCategory === 'Faculty Member' ? 'a faculty member' : ($initialEmployeeCategory === 'Administrative Personnel' ? 'administrative personnel' : '[Select Purpose]') }}</u> are true, correct and complete to the best of my knowledge. I have fully disclosed all the medical condition that may affect in the assessment to endorse my <u id="employeeConsentDynamicEndorsement" style="font-weight: 700;">{{ $initialEmployeeCategory === 'Faculty Member' ? 'fitness as a faculty member' : ($initialEmployeeCategory === 'Administrative Personnel' ? 'fitness as administrative personnel' : '[Select Purpose]') }}</u> of PUP Taguig Campus.
+                                I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my on-site consultation for the issuance of medical clearance for <u id="employeeConsentDynamicPurpose" style="font-weight: 700;">{{ $initialEmployeeCategory !== '' ? $initialEmployeeCategory : '[Select Category]' }}</u> are true, correct and complete to the best of my knowledge. I have fully disclosed all the medical condition that may affect in the assessment to endorse my <u id="employeeConsentDynamicEndorsement" style="font-weight: 700;">{{ $initialEmployeeCategory !== '' ? 'fitness for ' . strtolower($initialEmployeeCategory) : '[Select Category]' }}</u> of PUP Taguig Campus.
                             </p>
                             <p>I also understand that the PUP Medical Services and University will not be liable for any untoward incident that may arise due to my failure to disclose accurate information or intentionally providing false and deceptive information.</p>
                             <p>In compliance with the Data Privacy Act of 2012 and its implementing Rules and Regulations, I voluntarily consent to the collection, processing and storage of my personal and health information for the purpose/s of health assessment, treatment/ or research (following research ethics guidelines) for the improvement of healthcare services.</p>
@@ -3163,15 +3171,12 @@
 
             function updateEmployeeConsentDynamicText() {
                 const selected = employeeConsentPurpose?.value || '';
-                if (selected === 'Faculty Member') {
-                    if (employeeConsentDynamicPurpose) employeeConsentDynamicPurpose.textContent = 'a faculty member';
-                    if (employeeConsentDynamicEndorsement) employeeConsentDynamicEndorsement.textContent = 'fitness as a faculty member';
-                } else if (selected === 'Administrative Personnel') {
-                    if (employeeConsentDynamicPurpose) employeeConsentDynamicPurpose.textContent = 'administrative personnel';
-                    if (employeeConsentDynamicEndorsement) employeeConsentDynamicEndorsement.textContent = 'fitness as administrative personnel';
+                if (selected) {
+                    if (employeeConsentDynamicPurpose) employeeConsentDynamicPurpose.textContent = selected;
+                    if (employeeConsentDynamicEndorsement) employeeConsentDynamicEndorsement.textContent = 'fitness for ' + selected.toLowerCase();
                 } else {
-                    if (employeeConsentDynamicPurpose) employeeConsentDynamicPurpose.textContent = '[Select Purpose]';
-                    if (employeeConsentDynamicEndorsement) employeeConsentDynamicEndorsement.textContent = '[Select Purpose]';
+                    if (employeeConsentDynamicPurpose) employeeConsentDynamicPurpose.textContent = '[Select Category]';
+                    if (employeeConsentDynamicEndorsement) employeeConsentDynamicEndorsement.textContent = '[Select Category]';
                 }
             }
 

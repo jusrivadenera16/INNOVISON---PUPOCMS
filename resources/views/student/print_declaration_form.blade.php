@@ -7,8 +7,8 @@
     $hasBpLogo = file_exists($bpLogo);
     $hasFooterImg = file_exists($footerImg);
 
-    $purpose1 = $purposeUnderline1 ?? 'enrolled student';
-    $purpose2 = $purposeUnderline2 ?? 'enrollment as a student';
+    $purpose1 = $purposeUnderline1 ?? 'currently enrolled student';
+    $purpose2 = $purposeUnderline2 ?? 'status as a currently enrolled student';
     $fullName = trim((string) ($studentFullName ?? ''));
     $sigDate = $signatureDate ?? now()->format('m/d/Y');
     $guardian = trim((string) ($guardianName ?? ''));
@@ -205,7 +205,7 @@
         ========================================================= */
 
         .declaration-body {
-            width: 76%;
+            width: 86%;
             margin: 0 auto;
             padding: 0;
         }
@@ -219,12 +219,14 @@
             text-justify: inter-word;
             color: #000000;
             text-indent: 34px;
+            overflow-wrap: break-word;
         }
 
         .declaration-p u {
             font-weight: normal;
             text-decoration: underline;
             text-underline-offset: 2px;
+            overflow-wrap: break-word;
         }
 
 

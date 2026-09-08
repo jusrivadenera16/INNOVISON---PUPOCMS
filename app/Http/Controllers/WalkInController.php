@@ -9,6 +9,7 @@ use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
 use App\Models\EmployeeHealthProfile;
 use App\Models\HealthProfileStaff;
+use App\Models\DependentsProfile;
 use App\Models\AdminHub;
 use App\Models\InventoryMovement;
 use App\Models\Item;
@@ -233,7 +234,7 @@ class WalkInController extends Controller
 
         $normalizedIdentifier = strtoupper($identifier);
 
-        return User::with('healthProfile')
+        $user = User::with(['healthProfile', 'dependentProfile'])
             ->where(function ($query) use ($identifier) {
                 if (\Schema::hasColumn('users', 'employee_number')) {
                     $query->orWhere('employee_number', $identifier);
@@ -260,6 +261,18 @@ class WalkInController extends Controller
                 }
             })
             ->first();
+
+        if ($user) {
+            return $user;
+        }
+
+        $profile = $this->findHealthProfileByReference($identifier);
+        if ($profile?->user) {
+            $profile->user->setRelation('healthProfile', $profile);
+            return $profile->user->loadMissing('dependentProfile');
+        }
+
+        return $this->findUserByDependentIdNumber($identifier);
     }
 
     private function findUserByEmployeeIdNumber(string $identifier): ?User
@@ -271,7 +284,7 @@ class WalkInController extends Controller
 
         $normalizedIdentifier = strtoupper($identifier);
 
-        return User::with('healthProfile')
+        $user = User::with(['healthProfile', 'dependentProfile'])
             ->where(function ($query) use ($identifier) {
                 if (\Schema::hasColumn('users', 'employee_number')) {
                     $query->orWhere('employee_number', $identifier);
@@ -291,6 +304,18 @@ class WalkInController extends Controller
                 }
             })
             ->first();
+
+        if ($user) {
+            return $user;
+        }
+
+        $profile = $this->findHealthProfileByReference($identifier);
+        if ($profile?->user) {
+            $profile->user->setRelation('healthProfile', $profile);
+            return $profile->user->loadMissing('dependentProfile');
+        }
+
+        return $this->findUserByDependentIdNumber($identifier);
     }
 
     private function findUserByClinicIdNumber(string $identifier): ?User
@@ -298,10 +323,68 @@ class WalkInController extends Controller
         return $this->findUserByEmployeeIdNumber($identifier);
     }
 
+    private function findUserByDependentIdNumber(string $identifier): ?User
+    {
+        $identifier = trim($identifier);
+        if ($identifier === '' || !\Schema::hasTable('dependents_profiles')) {
+            return null;
+        }
+
+        $normalizedIdentifier = strtoupper($identifier);
+        $profile = DependentsProfile::query()
+            ->with('user.healthProfile')
+            ->where(function ($query) use ($identifier, $normalizedIdentifier) {
+                foreach (['id_number', 'idp_user_id', 'email'] as $column) {
+                    if (\Schema::hasColumn('dependents_profiles', $column)) {
+                        $query->orWhere($column, $identifier)
+                            ->orWhereRaw('UPPER(TRIM(' . $column . ')) = ?', [$normalizedIdentifier]);
+                    }
+                }
+            })
+            ->latest()
+            ->first();
+
+        return $profile?->user?->loadMissing('healthProfile', 'dependentProfile');
+    }
+
+    private function isDependentHealthProfileUser(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        $markers = strtolower(trim(implode(' ', array_filter([
+            (string) ($user->user_type ?? ''),
+            (string) ($user->user_role ?? ''),
+            (string) ($user->idp_role ?? ''),
+        ]))));
+
+        if ($markers !== '' && (str_contains($markers, 'dependent') || str_contains($markers, 'guest'))) {
+            return true;
+        }
+
+        if ($user->relationLoaded('dependentProfile') && $user->dependentProfile) {
+            return true;
+        }
+
+        return \Schema::hasTable('dependents_profiles')
+            && DependentsProfile::query()->where('user_id', $user->id)->exists();
+    }
+
     private function isStudentOjtHealthProfileUser(?User $user): bool
     {
         if (!$user) {
             return false;
+        }
+
+        $user->loadMissing('healthProfile');
+        $profileMarkers = strtolower(trim(implode(' ', array_filter([
+            (string) ($user->healthProfile?->health_form_category ?? ''),
+            (string) ($user->healthProfile?->student_number ?? ''),
+        ]))));
+
+        if ($profileMarkers !== '' && (str_contains($profileMarkers, 'student') || str_contains($profileMarkers, 'ojt'))) {
+            return true;
         }
 
         $markers = strtolower(trim(implode(' ', array_filter([
@@ -317,7 +400,8 @@ class WalkInController extends Controller
 
         return str_contains($markers, 'student')
             || str_contains($markers, 'ojt')
-            || trim((string) ($user->student_number ?? '')) !== '';
+            || trim((string) ($user->student_number ?? '')) !== ''
+            || trim((string) ($user->healthProfile?->student_number ?? '')) !== '';
     }
 
     private function findAdminHubByEmployeeLookup(string $identifier): ?AdminHub
@@ -418,6 +502,47 @@ class WalkInController extends Controller
         }
 
         return $user;
+    }
+
+    private function ensureWalkinHealthProfile(User $user): HealthProfile
+    {
+        $user->loadMissing('healthProfile', 'dependentProfile');
+        if ($user->healthProfile) {
+            return $user->healthProfile;
+        }
+
+        $dependentProfile = $user->dependentProfile;
+        $identifier = trim((string) (
+            $user->student_number
+            ?: $user->employee_number
+            ?: $dependentProfile?->id_number
+            ?: $user->student_id
+            ?: $user->id
+        ));
+
+        $profile = HealthProfile::create([
+            'user_id' => $user->id,
+            'student_id' => (string) ($user->student_id ?: $identifier),
+            'student_number' => (string) ($user->student_number ?: $dependentProfile?->id_number ?: ''),
+            'reference_number' => (string) ($user->reference_number ?: $identifier),
+            'health_form_category' => $this->isDependentHealthProfileUser($user) ? 'Dependent' : null,
+            'home_address' => (string) ($dependentProfile?->home_address ?? ''),
+            'street' => (string) ($dependentProfile?->street ?? ''),
+            'barangay' => (string) ($dependentProfile?->barangay ?? ''),
+            'municipality' => (string) ($dependentProfile?->municipality ?? ''),
+            'province' => (string) ($dependentProfile?->province ?? ''),
+            'birthday' => $dependentProfile?->birthday,
+            'age' => $dependentProfile?->age,
+            'sex' => (string) ($dependentProfile?->sex ?? $user->gender ?? ''),
+            'civil_status' => (string) ($dependentProfile?->civil_status ?? ''),
+            'landline' => (string) ($dependentProfile?->landline ?? ''),
+            'cellphone' => (string) ($dependentProfile?->contact_no ?? $user->contact_no ?? ''),
+            'clearance_status' => 'Pending',
+        ]);
+
+        $user->setRelation('healthProfile', $profile);
+
+        return $profile;
     }
 
     private function findHealthProfileByReference(string $referenceNumber): ?HealthProfile
@@ -1525,6 +1650,8 @@ class WalkInController extends Controller
         }
 
         abort_if(!$student, 404);
+        $student->loadMissing('healthProfile', 'dependentProfile');
+        $this->ensureWalkinHealthProfile($student);
         $user_source = $this->normalizeConsultationSource($request->query('source', 'walkin'));
         $consultationSessionKey = $this->consultationStartSessionKey(
             auth()->id(),
@@ -1681,6 +1808,14 @@ class WalkInController extends Controller
                         $lookupMessage = 'Employee record found in Admin Hub.';
                     }
                 }
+
+                if (!$student) {
+                    $student = $this->findUserByDependentIdNumber($lookup);
+                    if ($student) {
+                        $lookupStatus = 'local_dependent_id';
+                        $lookupMessage = 'Dependent ID number found in local records.';
+                    }
+                }
             }
         } elseif (
             $lookup !== ''
@@ -1750,14 +1885,32 @@ class WalkInController extends Controller
         }
 
         if ($student) {
+            $student->loadMissing('healthProfile', 'dependentProfile');
             $resolvedName = trim((string) ($student->name ?: trim(($student->first_name ?? '') . ' ' . ($student->last_name ?? ''))));
-            $healthProfile = HealthProfile::where('user_id', $student->id)->first();
+            $healthProfile = null;
+            if ($lookup !== '') {
+                $matchedHealthProfile = $this->findHealthProfileByReference($lookup);
+                if ($matchedHealthProfile && (int) $matchedHealthProfile->user_id === (int) $student->id) {
+                    $healthProfile = $matchedHealthProfile;
+                }
+            }
+            $healthProfile = $healthProfile
+                ?: ($student->relationLoaded('healthProfile') ? $student->healthProfile : null)
+                ?: HealthProfile::where('user_id', $student->id)->latest()->first();
+            if ($healthProfile) {
+                $student->setRelation('healthProfile', $healthProfile);
+            }
+            $dependentProfile = $isEmployeeLookupScope && $this->isDependentHealthProfileUser($student)
+                ? $student->dependentProfile
+                : null;
             $employeeProfile = $isEmployeeLookupScope
                 ? EmployeeHealthProfile::where('user_id', $student->id)->latest()->first()
                 : null;
-            $recordType = $isEmployeeLookupScope && $this->isStudentOjtHealthProfileUser($student)
-                ? 'student'
-                : ($isEmployeeLookupScope ? 'employee' : 'applicant');
+            $recordType = $isEmployeeLookupScope && $dependentProfile
+                ? 'dependent'
+                : ($isEmployeeLookupScope && $this->isStudentOjtHealthProfileUser($student)
+                    ? 'student'
+                    : ($isEmployeeLookupScope ? 'employee' : 'applicant'));
             $resolvedReferenceNumber = trim((string) (
                 ($lookup !== '' && !$this->looksLikeUuid($lookup) ? $lookup : null)
                 ?: $student->reference_number
@@ -1769,10 +1922,12 @@ class WalkInController extends Controller
             ));
             $resolvedYear = trim((string) ($student->year ?? ''));
             $resolvedSection = trim((string) ($student->section ?? ''));
-            $resolvedDob = !empty($student->DOB) ? (string) $student->DOB : '';
+            $resolvedDob = !empty($student->DOB)
+                ? (string) $student->DOB
+                : (string) ($dependentProfile?->birthday ?? '');
             $resolvedEmail = trim((string) ($student->email ?? ''));
-            $resolvedBirthday = trim((string) (optional($healthProfile)->birthday ?: $resolvedDob));
-            $resolvedAge = optional($healthProfile)->age;
+            $resolvedBirthday = trim((string) (optional($healthProfile)->birthday ?: ($dependentProfile?->birthday ?: $resolvedDob)));
+            $resolvedAge = optional($healthProfile)->age ?? $dependentProfile?->age;
             if (($resolvedAge === null || $resolvedAge === '') && $resolvedBirthday !== '') {
                 try {
                     $resolvedAge = \Carbon\Carbon::parse($resolvedBirthday)->age;
@@ -1782,15 +1937,18 @@ class WalkInController extends Controller
             }
             $resolvedHeight = trim((string) (optional($healthProfile)->height ?: ($student->height ?? '')));
             $resolvedWeight = trim((string) (optional($healthProfile)->weight ?: ($student->weight ?? '')));
-            $resolvedSex = trim((string) (optional($healthProfile)->sex ?: ($student->gender ?? '')));
-            $resolvedCivilStatus = trim((string) optional($healthProfile)->civil_status);
+            $resolvedSex = trim((string) (optional($healthProfile)->sex ?: ($dependentProfile?->sex ?: ($student->gender ?? ''))));
+            $resolvedCivilStatus = trim((string) (optional($healthProfile)->civil_status ?: $dependentProfile?->civil_status));
             $resolvedContactNumber = trim((string) (
                 optional($healthProfile)->cellphone
                 ?: optional($healthProfile)->landline
+                ?: $dependentProfile?->contact_no
+                ?: $dependentProfile?->landline
                 ?: ($student->contact_no ?? '')
             ));
             $walkinLookupIdentifier = (string) (
-                ($isEmployeeLookupScope ? ($student->employee_number ?: $student->student_number) : $student->student_number)
+                ($recordType === 'dependent' ? $dependentProfile?->id_number : null)
+                ?: ($isEmployeeLookupScope ? ($student->employee_number ?: $student->student_number) : $student->student_number)
                 ?: $resolvedReferenceNumber
                 ?: $student->student_id
                 ?: $student->id
@@ -1828,6 +1986,7 @@ class WalkInController extends Controller
                     'reference_number' => $resolvedReferenceNumber,
                     'student_number' => $student->student_number ?: '',
                     'student_id' => $student->student_id ?: '',
+                    'dependent_id_number' => $dependentProfile?->id_number ?: '',
                     'student_name' => $resolvedName,
                     'course' => $resolvedCourse,
                     'year' => $resolvedYear,
@@ -1860,9 +2019,9 @@ class WalkInController extends Controller
                     'name_matches' => $lookupName !== '' ? $this->namesRoughlyMatch($lookupName, $student) : null,
                     'lookup_status' => $lookupStatus,
                     'record_type' => $recordType,
-                    'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_employee_reference', 'local_clinic_reference'], true)
+                    'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_employee_reference', 'local_clinic_reference', 'local_dependent_id'], true)
                         ? $lookupStatus
-                        : ($recordType === 'student' ? 'local_student_id' : 'puptas_or_local_user'),
+                        : ($recordType === 'student' ? 'local_student_id' : ($recordType === 'dependent' ? 'local_dependent_id' : 'puptas_or_local_user')),
                     'sync_warning' => $lookupStatus === 'local_health_profile'
                         ? 'Local health profile found. PUPTAS sync will only succeed if this saved reference matches the Admission System.'
                         : null,
@@ -1874,9 +2033,9 @@ class WalkInController extends Controller
                 return response()->json([
                     'status' => 'name_mismatch',
                     'lookup_status' => $lookupStatus,
-                    'message' => 'The student number matched a record, but the extracted name does not match our saved name yet.',
+                    'message' => 'The Patient ID Number matched a record, but the extracted name does not match our saved name yet.',
                     'candidate' => [
-                        'student_number' => $student->student_number ?: $student->student_id,
+                        'student_number' => $walkinLookupIdentifier,
                         'name' => $resolvedName,
                     ],
                 ]);
@@ -1887,6 +2046,7 @@ class WalkInController extends Controller
                 'reference_number' => $resolvedReferenceNumber,
                 'student_number' => $student->student_number ?: '',
                 'student_id' => $student->student_id ?: '',
+                'dependent_id_number' => $dependentProfile?->id_number ?: '',
                 'student_name' => $resolvedName,
                 'course' => $resolvedCourse,
                 'year' => $resolvedYear,
@@ -1918,9 +2078,9 @@ class WalkInController extends Controller
                 'documents' => $this->healthProfileDocuments($request, $healthProfile),
                 'lookup_status' => $lookupStatus,
                 'record_type' => $recordType,
-                'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_employee_reference', 'local_clinic_reference'], true)
+                'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_employee_reference', 'local_clinic_reference', 'local_dependent_id'], true)
                     ? $lookupStatus
-                    : ($recordType === 'student' ? 'local_student_id' : 'puptas_or_local_user'),
+                    : ($recordType === 'student' ? 'local_student_id' : ($recordType === 'dependent' ? 'local_dependent_id' : 'puptas_or_local_user')),
                 'sync_warning' => $lookupStatus === 'local_health_profile'
                     ? 'Local health profile found. PUPTAS sync will only succeed if this saved reference matches the Admission System.'
                     : null,
@@ -2059,19 +2219,20 @@ class WalkInController extends Controller
             $model = 'gpt-4.1-mini';
         }
 
-        $prompt = <<<'PROMPT'
+$prompt = <<<'PROMPT'
 You are reading a school ID card for clinic intake.
-Your top priority is extracting the student number correctly.
+Your top priority is extracting the Patient ID Number correctly.
 Return strict JSON with these keys:
 student_number, first_name, surname, full_name, confidence_note
 
 Rules:
-- Focus on the student number first. It is the most important field.
-- Student number format may look like: 2025-00523-TG-0
-- Preserve hyphens in the student number.
-- If the student number is readable but the name is unclear, return the student number and leave the name fields empty.
+- Put the Patient ID Number in the student_number JSON key for compatibility.
+- Focus on the Patient ID Number first. It is the most important field.
+- A Patient ID Number may look like: 2025-00523-TG-0, 2026-000-000, or another saved local clinic ID.
+- Preserve hyphens in the Patient ID Number.
+- If the Patient ID Number is readable but the name is unclear, return the Patient ID Number and leave the name fields empty.
 - Only fill first_name, surname, and full_name when they are clearly readable from the card.
-- confidence_note should be a short plain-English note focused on how reliable the student number extraction is.
+- confidence_note should be a short plain-English note focused on how reliable the Patient ID Number extraction is.
 - Return JSON only. No markdown fence. No explanation.
 PROMPT;
 
@@ -2517,30 +2678,18 @@ PROMPT;
 
             $certificateType = trim((string) ($request->input('certificate_type') ?: 'none'));
             if ($certificateType !== 'none') {
-                $clearanceTarget = app(MarClearanceIssuanceService::class)
-                    ->resolveClearanceTargetByCodeForWorkflow(
-                        $certificateType,
-                        MarClearanceSubcategorySource::CONSULTATION
+                try {
+                    app(MarClearanceIssuanceService::class)->syncApprovedConsultation(
+                        $consultation,
+                        $student
                     );
-
-                if ($clearanceTarget) {
-                    try {
-                        app(MarClearanceIssuanceService::class)->recordApprovedClearanceTarget(
-                            $student,
-                            $clearanceTarget['clearanceType'],
-                            $clearanceTarget['subcategory'],
-                            MarClearanceSubcategorySource::CONSULTATION,
-                            (string) $consultation->id,
-                            now()
-                        );
-                    } catch (\Throwable $exception) {
-                        Log::warning('Consultation saved but MAR issuance could not be recorded.', [
-                            'consultation_id' => $consultation->id,
-                            'user_id' => $student->id,
-                            'certificate_type' => $certificateType,
-                            'error' => $exception->getMessage(),
-                        ]);
-                    }
+                } catch (\Throwable $exception) {
+                    Log::warning('Consultation saved but MAR issuance could not be recorded.', [
+                        'consultation_id' => $consultation->id,
+                        'user_id' => $student->id,
+                        'certificate_type' => $certificateType,
+                        'error' => $exception->getMessage(),
+                    ]);
                 }
             }
 
@@ -3033,38 +3182,10 @@ PROMPT;
 
         try {
             $employeeIssuanceService = app(MarClearanceIssuanceService::class);
-            $employeeAliases = str_contains(strtolower((string) $employeeProfile->health_form_category), 'faculty')
-                ? ['faculty', 'staff', 'annual medical']
-                : ['administrative', 'admin', 'staff', 'annual medical'];
-            $employeeClearanceTarget = $this->resolveClearanceTargetForWorkflow(
-                $employeeProfile->health_form_category,
-                MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW,
-                $employeeAliases
+            $employeeIssuanceService->syncApprovedEmployeeHealthProfile(
+                $employeeProfile,
+                !$hasPendingFinding
             );
-
-            if (!$hasPendingFinding && $employeeProfile->user && $employeeClearanceTarget) {
-                $employeeIssuanceService->recordApprovedClearanceTarget(
-                    $employeeProfile->user,
-                    $employeeClearanceTarget['clearanceType'],
-                    $employeeClearanceTarget['subcategory'],
-                    MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW,
-                    (string) $employeeProfile->id,
-                    $employeeProfile->verified_at ?: now()
-                );
-            } else {
-                $employeeIssuanceService->removeForSourceRecord(
-                    MarClearanceSubcategorySource::EMPLOYEE_NURSE_REVIEW,
-                    (string) $employeeProfile->id
-                );
-            }
-
-            if (!$hasPendingFinding && !$employeeClearanceTarget) {
-                Log::info('Employee approved without a configured MAR clearance mapping.', [
-                    'employee_profile_id' => $employeeProfile->id,
-                    'reference_number' => $referenceNumber,
-                    'health_form_category' => $employeeProfile->health_form_category,
-                ]);
-            }
         } catch (\Throwable $exception) {
             Log::warning('Employee MAR issuance synchronization failed.', [
                 'employee_profile_id' => $employeeProfile->id,
@@ -3348,6 +3469,9 @@ PROMPT;
                 $profile->birthday = $profile->birthday ?: $student->DOB;
                 $profile->sex = (string) ($profile->sex ?: $student->gender);
                 $profile->med_cert_findings = $findingsStatus;
+                if (\Schema::hasColumn('health_profiles', 'final_review_findings_status')) {
+                    $profile->final_review_findings_status = $findingsStatus;
+                }
                 $profile->xray_findings = trim((string) $profile->xray_findings) !== ''
                     ? $profile->xray_findings
                     : ($findingsStatus === 'No Findings / Normal' ? 'Normal' : 'With Findings');
@@ -3421,31 +3545,11 @@ PROMPT;
 
             try {
                 $issuanceService = app(MarClearanceIssuanceService::class);
-                $applicantClearanceTarget = $this->resolveApplicantClearanceTarget($profile);
-
-                if (!$hasPendingFinding && $applicantClearanceTarget) {
-                    $issuanceService->recordApprovedClearanceTarget(
-                        $student,
-                        $applicantClearanceTarget['clearanceType'],
-                        $applicantClearanceTarget['subcategory'],
-                        MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW,
-                        (string) $profile->id,
-                        $profile->verified_at ?: now()
-                    );
-                } else {
-                    $issuanceService->removeForSourceRecord(
-                        MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW,
-                        (string) $profile->id
-                    );
-                }
-
-                if (!$hasPendingFinding && !$applicantClearanceTarget) {
-                    Log::info('Applicant approved without a configured MAR clearance mapping.', [
-                        'health_profile_id' => $profile->id,
-                        'reference_number' => $referenceNumber,
-                        'health_form_category' => $profile->health_form_category,
-                    ]);
-                }
+                $issuanceService->syncApprovedHealthProfileForWorkflow(
+                    $profile->fresh('user'),
+                    MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW,
+                    !$hasPendingFinding
+                );
             } catch (\Throwable $exception) {
                 Log::warning('Applicant MAR issuance synchronization failed.', [
                     'health_profile_id' => $profile->id,
@@ -3619,12 +3723,24 @@ PROMPT;
                 ?: $this->findUserByEmployeeIdNumber($referenceNumber)
                 ?: $this->findUserByIdentifier($referenceNumber);
 
-            if (!$student || !$this->isStudentOjtHealthProfileUser($student)) {
+            $student?->loadMissing('healthProfile', 'dependentProfile');
+            $isAssessmentPatient = $student
+                && (
+                    $this->isStudentOjtHealthProfileUser($student)
+                    || $this->isDependentHealthProfileUser($student)
+                );
+
+            if (!$isAssessmentPatient) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Student/OJT health profile was not found for that student number.',
+                    'message' => 'Patient health profile was not found for that Patient ID Number.',
                 ], 404);
             }
+
+            $assessmentWorkflow = $this->isDependentHealthProfileUser($student)
+                ? MarClearanceSubcategorySource::PATIENT_INTAKE
+                : MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW;
+            $healthProfile = $healthProfile ?: $this->ensureWalkinHealthProfile($student);
 
             $height = null;
             $heightInput = trim((string) ($validated['height'] ?? ''));
@@ -3745,7 +3861,7 @@ PROMPT;
 
                 if ($hasAssessmentValue) {
                     $profile->assessment_date = $profile->assessment_date ?: now()->toDateString();
-                    $profile->physical_assessment_status = $profile->physical_assessment_status ?: 'Student/OJT Assessment Saved';
+                    $profile->physical_assessment_status = $profile->physical_assessment_status ?: 'Patient Assessment Saved';
                     if (!$profile->review_started_at) {
                         $profile->review_started_at = now();
                         $profile->review_started_by_user_id = auth()->id();
@@ -3757,38 +3873,16 @@ PROMPT;
                 return $profile;
             });
 
+            // Re-read this outside the transaction for the MAR synchronization below.
+            $clearanceDecision = trim((string) ($validated['clearance_decision'] ?? ''));
             if ($clearanceDecision !== '') {
                 try {
                     $studentIssuanceService = app(MarClearanceIssuanceService::class);
-                    $studentClearanceTarget = $this->resolveClearanceTargetForWorkflow(
-                        $profile->health_form_category,
-                        MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW,
-                        ['ojt', 'on the job']
+                    $studentIssuanceService->syncApprovedHealthProfileForWorkflow(
+                        $profile->fresh('user'),
+                        $assessmentWorkflow,
+                        $clearanceDecision === 'approve'
                     );
-
-                    if ($clearanceDecision === 'approve' && $studentClearanceTarget) {
-                        $studentIssuanceService->recordApprovedClearanceTarget(
-                            $student,
-                            $studentClearanceTarget['clearanceType'],
-                            $studentClearanceTarget['subcategory'],
-                            MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW,
-                            (string) $profile->id,
-                            $profile->verified_at ?: now()
-                        );
-                    } else {
-                        $studentIssuanceService->removeForSourceRecord(
-                            MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW,
-                            (string) $profile->id
-                        );
-                    }
-
-                    if ($clearanceDecision === 'approve' && !$studentClearanceTarget) {
-                        Log::info('Student approved without a configured MAR clearance mapping.', [
-                            'health_profile_id' => $profile->id,
-                            'reference_number' => $referenceNumber,
-                            'health_form_category' => $profile->health_form_category,
-                        ]);
-                    }
                 } catch (\Throwable $exception) {
                     Log::warning('Student MAR issuance synchronization failed.', [
                         'health_profile_id' => $profile->id,
