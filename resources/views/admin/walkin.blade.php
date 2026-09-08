@@ -226,6 +226,18 @@
         margin-top: 8px !important;
     }
 
+    body:has(.patient-intake-entry-shell) .main {
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.84)),
+            url('{{ asset("images/admin-bg-light.png") }}') center top / cover no-repeat fixed !important;
+    }
+
+    html[data-theme="dark"] body:has(.patient-intake-entry-shell) .main {
+        background:
+            linear-gradient(180deg, rgba(42, 14, 22, 0.78), rgba(42, 14, 22, 0.78)),
+            url('{{ asset("images/admin-bg-dark.png") }}') center top / cover no-repeat fixed !important;
+    }
+
     .walkin-strip-card::before {
         content: "";
         position: absolute;
@@ -8674,12 +8686,26 @@
 
     /* Final Walk-in intake surface pass: match Reports/Developer Tools */
     .patient-intake-entry-shell > .walkin-strip-card {
+        padding: 16px 16px 18px !important;
+        border-radius: 12px !important;
         border: 1px solid rgba(250, 204, 21, 0.20) !important;
         box-shadow: 0 18px 34px rgba(112, 19, 27, 0.08) !important;
     }
 
     .patient-intake-entry-shell > .walkin-strip-card::before {
+        left: 12px !important;
+        right: 12px !important;
         background: #70131B !important;
+    }
+
+    .patient-intake-entry-shell .intake-heading-kicker {
+        font-size: 13px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .patient-intake-entry-shell .intake-heading-title {
+        font-size: 20px !important;
+        line-height: 1.2 !important;
     }
 
     .patient-intake-entry-shell .intake-option-card,
@@ -8694,8 +8720,31 @@
         color: #ffffff !important;
     }
 
+    .patient-intake-entry-shell .intake-option-icon-wrap {
+        width: 48px !important;
+        height: 48px !important;
+        border-radius: 13px !important;
+        margin-bottom: 18px !important;
+    }
+
+    .patient-intake-entry-shell .intake-option-icon-wrap svg {
+        width: 21px !important;
+        height: 21px !important;
+    }
+
+    .patient-intake-entry-shell .intake-option-title {
+        font-size: 18px !important;
+        line-height: 1.25 !important;
+        margin-bottom: 10px !important;
+    }
+
+    .patient-intake-entry-shell .intake-option-copy {
+        font-size: 15px !important;
+        line-height: 1.42 !important;
+    }
+
     html[data-theme="dark"] .patient-intake-entry-shell > .walkin-strip-card {
-        background: transparent !important;
+        background: linear-gradient(180deg, #46131B 0%, #2E0D13 100%) !important;
         background-image: none !important;
         border-color: rgba(250, 204, 21, 0.20) !important;
         box-shadow: 0 18px 34px rgba(0, 0, 0, 0.18) !important;
@@ -8710,11 +8759,16 @@
     html[data-theme="dark"] .patient-intake-entry-shell .intake-option-scan,
     html[data-theme="dark"] .patient-intake-entry-shell .intake-option-assisted,
     html[data-theme="dark"] .patient-intake-entry-shell .intake-option-applicant {
-        background: transparent !important;
+        background: #2E0D13 !important;
         background-image: none !important;
         border: 1px solid rgba(250, 204, 21, 0.18) !important;
         box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.22) !important;
         color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .patient-intake-entry-shell .intake-option-card::before,
+    html[data-theme="dark"] .patient-intake-entry-shell .intake-option-card::after {
+        background: transparent !important;
     }
 
     .patient-intake-entry-shell .intake-option-card:hover,
