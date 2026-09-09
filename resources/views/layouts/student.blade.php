@@ -2834,6 +2834,7 @@
     </style>
 </head>
 <body>
+    @include('partials.post_login_terms_gate')
     <header class="site-header">
         <div class="container header-inner">
             <div class="header-left">
@@ -2975,7 +2976,7 @@
                             @endif
                             <li class="desktop-logout-item">
                                 <a href="#" class="desktop-account-logout"
-                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                onclick="event.preventDefault(); document.getElementById('logout-form').requestSubmit();">
                                     <span class="nav-dropdown-link-content">
                                         <x-outline-icon name="arrow-left-on-rectangle" class="nav-dropdown-link-icon" />
                                         <span>Logout</span>
@@ -2986,7 +2987,7 @@
                     </li>
                     <li class="standalone-logout-item">
                         <a href="#" class="logout-btn student-logout-btn"
-                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                        onclick="event.preventDefault(); document.getElementById('logout-form').requestSubmit();">
                             <x-outline-icon name="arrow-left-on-rectangle" />
                             <span>Logout</span>
                         </a>
@@ -3082,7 +3083,105 @@
         @yield('content')
     </main>
 
-    @include('partials.post_login_terms_gate')
+    @auth('student')
+        <div class="post-login-loader hidden" id="studentLogoutLoader" role="status" aria-live="polite" aria-label="Signing you out" aria-hidden="true">
+            <div class="post-login-loader-bg-icons" aria-hidden="true">
+                <span class="post-login-loader-bg-icon is-one">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 5v14"></path>
+                        <path d="M5 12h14"></path>
+                    </svg>
+                </span>
+                <span class="post-login-loader-bg-icon is-two">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M8 4h8"></path>
+                        <path d="M9 2h6v4H9z"></path>
+                        <path d="M7 5h10a2 2 0 0 1 2 2v13H5V7a2 2 0 0 1 2-2z"></path>
+                        <path d="M9 12h6"></path>
+                        <path d="M9 16h4"></path>
+                    </svg>
+                </span>
+                <span class="post-login-loader-bg-icon is-three">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M6 5v5a6 6 0 0 0 12 0V5"></path>
+                        <path d="M9 5H5"></path>
+                        <path d="M19 5h-4"></path>
+                        <path d="M12 16v2a3 3 0 0 0 6 0v-1"></path>
+                        <circle cx="19" cy="15" r="1.8"></circle>
+                    </svg>
+                </span>
+                <span class="post-login-loader-bg-icon is-four">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M8 3h8"></path>
+                        <path d="M10 3v5l-4 7a4 4 0 0 0 3.5 6h5a4 4 0 0 0 3.5-6l-4-7V3"></path>
+                        <path d="M8 15h8"></path>
+                    </svg>
+                </span>
+            </div>
+            <div class="post-login-loader-card">
+                <div class="capsule-loader-content" aria-hidden="true">
+                    <div class="capsule-loader">
+                        <div class="capsule-medicine">
+                            <i></i><i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i><i></i>
+                        </div>
+                        <div class="side"></div>
+                        <div class="side"></div>
+                    </div>
+                </div>
+                <div class="loader-bottom-brand">
+                    <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="Clinic Logo" class="loader-bottom-logo">
+                    <div class="post-login-logout-text" aria-hidden="true">
+                        <span>Signing you out</span><span class="post-login-logout-dots"><span class="post-login-logout-dot">.</span><span class="post-login-logout-dot">.</span><span class="post-login-logout-dot">.</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            (function () {
+                const loader = document.getElementById('studentLogoutLoader');
+                const logoutForms = [
+                    document.getElementById('logout-form'),
+                    document.getElementById('termsGateLogoutForm')
+                ].filter(Boolean);
+
+                if (!loader || logoutForms.length === 0) {
+                    return;
+                }
+
+                let isLoggingOut = false;
+
+                logoutForms.forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (isLoggingOut) {
+                            event.preventDefault();
+                            return;
+                        }
+
+                        event.preventDefault();
+                        isLoggingOut = true;
+                        loader.classList.remove('hidden');
+                        loader.setAttribute('aria-hidden', 'false');
+                        document.body.setAttribute('aria-busy', 'true');
+                        document.querySelectorAll('.desktop-account-logout, .student-logout-btn').forEach(function (trigger) {
+                            trigger.setAttribute('aria-disabled', 'true');
+                            trigger.style.pointerEvents = 'none';
+                        });
+
+                        window.requestAnimationFrame(function () {
+                            window.requestAnimationFrame(function () {
+                                HTMLFormElement.prototype.submit.call(form);
+                            });
+                        });
+                    });
+                });
+            })();
+        </script>
+    @endauth
+
     @include('partials.system_footer')
 
     <div class="student-quick-actions-wrap student-quick-actions-fab-wrap" data-nav-dropdown>

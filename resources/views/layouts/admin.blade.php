@@ -2912,9 +2912,17 @@
         }
 
         .admin-brand-logout-text {
-            --typing-width: 14ch;
-            --typing-count: 14;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 20px;
             margin-top: 0;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.34);
         }
 
         .main.is-navigation-loading .admin-content-loader,
@@ -5765,6 +5773,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     @stack('late-styles')
 </head>
 <body class="{{ (request()->routeIs('admin.inventory*') || request()->routeIs('assistant.inventory*')) ? 'admin-inventory-page' : '' }} {{ request()->boolean('embed') ? 'admin-embedded-view' : '' }}">
+@include('partials.post_login_terms_gate')
 @php
     $authUser = auth()->user();
     $currentRole = \App\Models\User::normalizeRole(optional($authUser)->user_role ?? '');
@@ -6568,7 +6577,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" class="loader-pulse"></polyline>
         </svg>
         <div class="admin-loader-message">
-            <span data-admin-loader-message-text>Logging out</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
+            <span data-admin-loader-message-text>Signing you out</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
         </div>
     </div>
     <div class="admin-action-brand-loader" aria-hidden="true">
@@ -6586,21 +6595,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         </div>
         <div class="loader-bottom-brand">
             <img src="{{ $brandLogo }}" alt="Clinic Logo" class="loader-bottom-logo">
-            <div class="post-login-loader-text admin-brand-logout-text" aria-label="Logging out">
-                <span style="--letter-index: 0;">L</span>
-                <span style="--letter-index: 1;">o</span>
-                <span style="--letter-index: 2;">g</span>
-                <span style="--letter-index: 3;">g</span>
-                <span style="--letter-index: 4;">i</span>
-                <span style="--letter-index: 5;">n</span>
-                <span style="--letter-index: 6;">g</span>
-                <span style="--letter-index: 7;">&nbsp;</span>
-                <span style="--letter-index: 8;">o</span>
-                <span style="--letter-index: 9;">u</span>
-                <span style="--letter-index: 10;">t</span>
-                <span style="--letter-index: 11;">.</span>
-                <span style="--letter-index: 12;">.</span>
-                <span style="--letter-index: 13;">.</span>
+            <div class="admin-brand-logout-text" aria-label="Signing you out">
+                <span>Signing you out</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
             </div>
         </div>
     </div>
@@ -6880,7 +6876,6 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     <p class="assistant-note"><strong>Clinical safety:</strong> responses support initial triage only, not a confirmed diagnosis. For emergencies, call local emergency services immediately.</p>
 </section>
 
-@include('partials.post_login_terms_gate')
 @hasSection('disable_voice_inputs')
 @else
 @include('partials.student_voice_input_support')
@@ -7086,7 +7081,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             if (messageText) {
                 messageText.textContent = normalizedMessage || 'Processing';
             }
-            const isLogoutLoader = normalizedMessage.toLowerCase() === 'logging out';
+            const isLogoutLoader = normalizedMessage.toLowerCase() === 'signing you out';
             actionLoader.classList.toggle('is-brand-logout', isLogoutLoader);
             actionLoader.classList.toggle('has-message', normalizedMessage !== '' && !isLogoutLoader);
             actionLoader.setAttribute('aria-label', normalizedMessage ? `${normalizedMessage}...` : 'Processing action');
@@ -8580,8 +8575,12 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             }
         });
         confirmButton.addEventListener('click', function () {
-            window.AdminLoading?.showAction('Logging out');
-            form.submit();
+            window.AdminLoading?.showAction('Signing you out');
+            window.requestAnimationFrame(function () {
+                window.requestAnimationFrame(function () {
+                    HTMLFormElement.prototype.submit.call(form);
+                });
+            });
         });
     }
 
