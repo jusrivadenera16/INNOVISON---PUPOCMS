@@ -10,8 +10,10 @@ use App\Models\DependentsProfile;
 use App\Models\HealthFormSubmission;
 use App\Models\User;
 use App\Services\ClinicWorkflowService;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
@@ -21,6 +23,22 @@ use Illuminate\Support\Str;
 
 class LoginController extends Controller
 {
+    private const IDP_ROLE_PATHS = [
+        'roles', 'user.roles', 'data.roles', 'data.user.roles', 'profile.roles', 'data.profile.roles',
+        'role', 'user_role', 'primary_role', 'user.role', 'user.user_role',
+        'data.role', 'data.user_role', 'data.user.role', 'profile.role', 'data.profile.role',
+        'authorities', 'user.authorities', 'data.authorities', 'data.user.authorities',
+    ];
+
+    private const IDP_ACCOUNT_TYPE_PATHS = [
+        'account_type', 'accountType',
+        'user.account_type', 'user.accountType',
+        'data.account_type', 'data.accountType',
+        'data.user.account_type', 'data.user.accountType',
+        'profile.account_type', 'profile.accountType',
+        'data.profile.account_type', 'data.profile.accountType',
+    ];
+
     private function studentGuardName(): string
     {
         return 'student';
@@ -190,6 +208,11 @@ class LoginController extends Controller
             return;
         }
 
+        if ($user->needsClinicAccountTypeSelection()) {
+            $request->session()->flash('show_health_profile_prompt', true);
+            return;
+        }
+
         if ($this->isDependentProfileUser($user)) {
             $dependentProfileExists = Schema::hasTable('dependents_profiles')
                 && DependentsProfile::query()->where('user_id', $user->id)->exists();
@@ -221,6 +244,10 @@ class LoginController extends Controller
 
     private function isDependentProfileUser(User $user): bool
     {
+        if (($audience = $user->clinicHealthFormAudience()) !== null) {
+            return $audience === 'dependent';
+        }
+
         $userType = strtolower(trim((string) ($user->user_type ?? '')));
         $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
 
@@ -421,6 +448,9 @@ class LoginController extends Controller
                 ->first();
 
             $accountAccessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
+            if (strtolower(trim((string) ($linkedAdmin?->status ?? 'active'))) !== 'active') {
+                return null;
+            }
             if (in_array($accountAccessLevel, ['superadmin', 'super_admin'], true)) {
                 return $this->superAdminRoleValue();
             }
@@ -451,6 +481,10 @@ class LoginController extends Controller
         $linkedAdmin = Schema::hasTable('admins') ? $this->findLinkedAdminProfile($user) : null;
         $accessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
 
+        if (strtolower(trim((string) ($linkedAdmin?->status ?? 'active'))) !== 'active') {
+            return null;
+        }
+
         if (in_array($accessLevel, ['superadmin', 'super_admin'], true)) {
             return $this->superAdminRoleValue();
         }
@@ -459,9 +493,7 @@ class LoginController extends Controller
             return $this->adminRoleValue();
         }
 
-        return User::normalizeRole((string) ($user->user_role ?? '')) === User::ROLE_SUPERADMIN
-            ? $this->superAdminRoleValue()
-            : null;
+        return null;
     }
 
     private function findLinkedAdminHubProfile(User $user): ?AdminHub
@@ -596,39 +628,8 @@ class LoginController extends Controller
         return $adminHub;
     }
 
-    private function resolveForcedLocalRole(string $email): ?string
-    {
-        $email = trim(strtolower($email));
-        if ($email === '') {
-            return null;
-        }
-
-        $localPart = Str::before($email, '@');
-        $identifiers = array_map(
-            static fn ($value) => trim(strtolower((string) $value)),
-            (array) config('services.idp.local_superadmin_identifiers', [])
-        );
-
-        foreach ($identifiers as $identifier) {
-            if ($identifier === '') {
-                continue;
-            }
-
-            if ($identifier === $email || $identifier === $localPart) {
-                return $this->superAdminRoleValue();
-            }
-        }
-
-        return null;
-    }
-
     private function resolveRedirectPathForUser(User $user): string
     {
-        $forcedRole = $this->resolveForcedLocalRole((string) ($user->email ?? ''));
-        if ($forcedRole !== null && User::normalizeRole($forcedRole) === User::ROLE_SUPERADMIN) {
-            return '/admin/dashboard';
-        }
-
         $normalizedRole = User::normalizeRole((string) ($user->user_role ?? ''));
         if ($normalizedRole === User::ROLE_SUPERADMIN) {
             return '/admin/dashboard';
@@ -989,6 +990,8 @@ class LoginController extends Controller
             'role',
             'roles',
             'user_role',
+            'account_type',
+            'accountType',
             'student_number',
             'student_id',
             'reference_number',
@@ -1069,8 +1072,23 @@ class LoginController extends Controller
             return $tokenProfile;
         }
 
-        // The token callback can contain admission fields such as the reference
-        // number while /me contains the fresher name and email. Keep both.
+        // Fresh roles replace token aliases, including nested and empty role lists.
+        foreach (self::IDP_ROLE_PATHS as $path) {
+            if (Arr::has($userInfoProfile, $path)) {
+                Arr::forget($tokenProfile, self::IDP_ROLE_PATHS);
+                break;
+            }
+        }
+
+        // A fresh account type must not be masked by older token role aliases.
+        foreach (self::IDP_ACCOUNT_TYPE_PATHS as $path) {
+            if (Arr::has($userInfoProfile, $path)) {
+                Arr::forget($tokenProfile, array_merge(self::IDP_ROLE_PATHS, self::IDP_ACCOUNT_TYPE_PATHS));
+                break;
+            }
+        }
+
+        // Preserve admission fields that are only present in the token callback.
         return array_replace_recursive($tokenProfile, $userInfoProfile);
     }
 
@@ -1115,11 +1133,20 @@ class LoginController extends Controller
             }
 
             $response = Http::acceptJson()->timeout(20)->withToken($accessToken)->get($url);
-            if (!$response->successful() || !is_array($response->json())) {
+            $payload = $response->json();
+            Log::info('IDP profile endpoint response.', [
+                'endpoint_path' => parse_url($url, PHP_URL_PATH),
+                'status' => $response->status(),
+                'roles_present' => is_array($payload) && array_key_exists('roles', $payload),
+                'roles_type' => gettype(data_get($payload, 'roles')),
+                'roles_value' => data_get($payload, 'roles'),
+                'account_type_value' => is_array($payload) ? $this->extractIdpAccountType($payload) : null,
+            ]);
+            if (!$response->successful() || !is_array($payload)) {
                 continue;
             }
 
-            $profile = $this->extractProfilePayload($response->json());
+            $profile = $this->extractProfilePayload($payload);
             if ($profile !== null) {
                 return $profile;
             }
@@ -1146,38 +1173,33 @@ class LoginController extends Controller
 
     private function extractRawRoles(array $profile): array
     {
-        $sources = [
-            data_get($profile, 'role'),
-            data_get($profile, 'user_role'),
-            data_get($profile, 'roles'),
-            data_get($profile, 'authorities'),
-            data_get($profile, 'data.role'),
-            data_get($profile, 'data.roles'),
-            data_get($profile, 'data.authorities'),
-        ];
-
-        $roles = [];
-        foreach ($sources as $source) {
-            if (is_string($source)) {
-                foreach (explode(',', $source) as $role) {
-                    $trimmed = trim($role);
-                    if ($trimmed !== '') {
-                        $roles[] = $trimmed;
-                    }
-                }
+        foreach (self::IDP_ROLE_PATHS as $path) {
+            if (!Arr::has($profile, $path)) {
                 continue;
             }
 
-            if (is_array($source)) {
-                foreach ($source as $role) {
-                    if (is_string($role) && trim($role) !== '') {
-                        $roles[] = trim($role);
-                    }
-                }
+            $source = data_get($profile, $path);
+            $roles = is_string($source) ? explode(',', $source) : (is_array($source) ? $source : []);
+
+            return array_values(array_unique(array_map('trim', array_filter(
+                $roles,
+                static fn ($role) => is_string($role) && trim($role) !== ''
+            ))));
+        }
+
+        return [];
+    }
+
+    private function extractIdpAccountType(array $profile): ?string
+    {
+        foreach (self::IDP_ACCOUNT_TYPE_PATHS as $path) {
+            $value = data_get($profile, $path);
+            if (is_string($value) && trim($value) !== '') {
+                return trim($value);
             }
         }
 
-        return array_values(array_unique($roles));
+        return null;
     }
 
     private function configuredIdpRolePrefix(): string
@@ -1236,14 +1258,7 @@ class LoginController extends Controller
         }
 
         if ($normalizedLocalRole === User::ROLE_STUDENT) {
-            return match ($normalizedIdpRole) {
-                'faculty' => 'Faculty',
-                'guest' => 'Guest',
-                'dependent' => 'Dependent',
-                'applicant' => 'Applicant',
-                'student' => 'Student',
-                default => 'Regular',
-            };
+            return User::userTypeForIdpRole($normalizedIdpRole);
         }
 
         return $this->isAssistantIdpRole($idpRole) ? 'Assistant' : 'Regular';
@@ -1256,19 +1271,7 @@ class LoginController extends Controller
             return null;
         }
 
-        if (in_array($normalized, ['superadmin', 'super_admin'], true)) {
-            return $this->superAdminRoleValue();
-        }
-
-        if (in_array($normalized, ['admin', 'student_assistant', 'assistant', 'studentassistant'], true)) {
-            return $this->adminRoleValue();
-        }
-
-        if (in_array($normalized, ['student', 'faculty', 'guest', 'dependent', 'applicant'], true)) {
-            return $this->studentRoleValue();
-        }
-
-        return null;
+        return $this->studentRoleValue();
     }
 
     private function resolveLocalRoleFromTokens(array $normalizedRoles): ?string
@@ -1278,20 +1281,7 @@ class LoginController extends Controller
             return null;
         }
 
-        if (in_array('superadmin', $normalizedRoles, true) || in_array('super_admin', $normalizedRoles, true)) {
-            return $this->superAdminRoleValue();
-        }
-
-        $hasAdmin = count(array_intersect($normalizedRoles, ['admin', 'student_assistant', 'assistant', 'studentassistant'])) > 0;
-        if ($hasAdmin) {
-            return $this->adminRoleValue();
-        }
-
-        if (count(array_intersect($normalizedRoles, ['student', 'faculty', 'guest', 'dependent', 'applicant'])) > 0) {
-            return $this->studentRoleValue();
-        }
-
-        return null;
+        return $this->studentRoleValue();
     }
 
     private function mapIdpRolesToLocal(array $roles, ?string $preferredRole = null): string
@@ -1547,26 +1537,13 @@ class LoginController extends Controller
         $firstName = $firstName !== '' ? $firstName : $splitFirstName;
         $lastName = $lastName !== '' ? $lastName : $splitLastName;
 
-        $preferredRole = $this->firstNonEmptyScalar($profile, [
-            'role',
-            'user_role',
-            'primary_role',
-            'data.role',
-            'user.role',
-            'data.user.role',
-        ]);
         $rawIdpRoles = $this->extractRawRoles($profile);
-        $rawIdpRole = $preferredRole ?: ($rawIdpRoles[0] ?? 'student');
+        $rawIdpRole = $rawIdpRoles[0] ?? '';
         $idpRole = $this->normalizeIdpRoleToken((string) $rawIdpRole);
-        $idpRole = $idpRole !== '' ? $idpRole : 'student';
-        $role = $this->mapIdpRolesToLocal($rawIdpRoles, $preferredRole);
-        $forcedRole = $this->resolveForcedLocalRole($emailSeed);
-        if ($forcedRole !== null) {
-            $role = $forcedRole;
-        }
+        $role = $this->mapIdpRolesToLocal($rawIdpRoles);
 
         $adminHubRole = $this->resolveLocalRoleFromAdminHub($emailSeed, $idpSubjectSeed);
-        if ($forcedRole === null && $adminHubRole !== null) {
+        if ($adminHubRole !== null) {
             $role = $adminHubRole;
         }
 
@@ -1591,7 +1568,7 @@ class LoginController extends Controller
 
         if ($existingUser) {
             $existingAccountAccessRole = $this->resolveExistingAccountAccessRole($existingUser);
-            if ($forcedRole === null && $existingAccountAccessRole !== null) {
+            if ($existingAccountAccessRole !== null) {
                 $role = $existingAccountAccessRole;
             }
 
@@ -1609,7 +1586,7 @@ class LoginController extends Controller
             ])));
             $existingUser->user_role = $role;
             if (Schema::hasColumn('users', 'idp_role')) {
-                $existingUser->idp_role = $idpRole;
+                $existingUser->idp_role = $idpRole !== '' ? $idpRole : null;
             }
             if (Schema::hasColumn('users', 'employee_number') && $employeeNumberSeed !== '') {
                 $existingUser->employee_number = $employeeNumberSeed;
@@ -1640,13 +1617,15 @@ class LoginController extends Controller
                 $normalizedLocalRole = User::normalizeRole($role);
                 $linkedAdmin = $this->findLinkedAdminProfile($existingUser);
                 $currentUserType = strtolower(trim((string) ($existingUser->user_type ?? '')));
-                $resolvedUserType = $this->defaultUserTypeForIdpRole($idpRole, $role);
+                $resolvedUserType = $normalizedLocalRole === User::ROLE_STUDENT
+                    ? $existingUser->clinicUserType()
+                    : $this->defaultUserTypeForIdpRole($idpRole, $role);
 
                 if ($normalizedLocalRole === User::ROLE_SUPERADMIN) {
                     $existingUser->user_type = 'Regular';
                 } elseif (
                     $normalizedLocalRole === User::ROLE_STUDENT
-                    && in_array($resolvedUserType, ['Faculty', 'Guest', 'Dependent', 'Student', 'Applicant'], true)
+                    && $resolvedUserType !== null
                     && $existingUser->user_type !== $resolvedUserType
                 ) {
                     $existingUser->user_type = $resolvedUserType;
@@ -1689,7 +1668,7 @@ class LoginController extends Controller
             'password' => Hash::make(Str::random(40)),
         ];
         if (Schema::hasColumn('users', 'idp_role')) {
-            $newUserAttributes['idp_role'] = $idpRole;
+            $newUserAttributes['idp_role'] = $idpRole !== '' ? $idpRole : null;
         }
         if (Schema::hasColumn('users', 'employee_number')) {
             $newUserAttributes['employee_number'] = $employeeNumberSeed !== '' ? $employeeNumberSeed : null;
@@ -1697,7 +1676,9 @@ class LoginController extends Controller
         $user = User::create($newUserAttributes);
 
         if ($this->usersTableHasUserTypeColumn() && empty($user->user_type)) {
-            $user->user_type = $this->defaultUserTypeForIdpRole($idpRole, $role);
+            $user->user_type = User::normalizeRole($role) === User::ROLE_STUDENT
+                ? $user->clinicUserType()
+                : $this->defaultUserTypeForIdpRole($idpRole, $role);
             $user->save();
         }
 
@@ -1710,9 +1691,7 @@ class LoginController extends Controller
     private function enrichUserWithPuptasData(User $user): void
     {
         try {
-            $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
-            $userType = strtolower(trim((string) ($user->user_type ?? '')));
-            $isStudentRole = $idpRole === 'student' || ($idpRole === '' && $userType === 'student');
+            $isStudentRole = in_array($user->clinicHealthFormAudience(), ['student', 'applicant'], true);
 
             // Only process students
             if (!$isStudentRole) {
@@ -1853,6 +1832,10 @@ class LoginController extends Controller
             return;
         }
 
+        if ($user->clinicAccountTypeKey() !== 'faculty' || $user->hasPendingAdmissionReference()) {
+            return;
+        }
+
         try {
             $searchTerms = array_values(array_unique(array_filter(array_map('trim', [
                 (string) ($user->email ?? ''),
@@ -1942,9 +1925,7 @@ class LoginController extends Controller
     private function enrichUserWithGuisisData(User $user): void
     {
         try {
-            $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
-            $userType = strtolower(trim((string) ($user->user_type ?? '')));
-            if ($idpRole !== 'student' && !($idpRole === '' && $userType === 'student')) {
+            if ($user->clinicHealthFormAudience() !== 'student') {
                 return;
             }
 
@@ -2251,8 +2232,17 @@ class LoginController extends Controller
             'code_length' => strlen($code),
         ]);
 
-        $tokenPayload = $this->exchangeCodeForTokens($code);
-        $request->session()->forget('idp_pkce_verifier');
+        try {
+            $tokenPayload = $this->exchangeCodeForTokens($code);
+        } catch (ConnectionException $exception) {
+            Log::warning('IDP callback connection failed.', ['stage' => 'token_exchange']);
+
+            return redirect('/login?idp_error=1')->withErrors([
+                'idp' => 'We could not connect to the identity provider to complete sign-in. Please try signing in again.',
+            ]);
+        } finally {
+            $request->session()->forget('idp_pkce_verifier');
+        }
         if ($tokenPayload === null) {
             Log::warning('IDP callback token exchange returned no payload.');
             return redirect('/login?idp_error=1')->withErrors([
@@ -2281,7 +2271,15 @@ class LoginController extends Controller
             $this->extractJwtClaims($tokenPayload['id_token'] ?? null),
             $this->extractJwtClaims($accessToken)
         );
-        $userInfoProfile = $this->fetchProfileFromIdp($accessToken);
+        try {
+            $userInfoProfile = $this->fetchProfileFromIdp($accessToken);
+        } catch (ConnectionException $exception) {
+            Log::warning('IDP callback connection failed.', ['stage' => 'profile_fetch']);
+
+            return redirect('/login?idp_error=1')->withErrors([
+                'idp' => 'We could not retrieve your profile from the identity provider. Please try signing in again.',
+            ]);
+        }
         $profile = $this->mergeIdpProfilePayloads(
             $this->mergeIdpProfilePayloads($tokenProfile, $jwtProfile),
             $userInfoProfile
@@ -2300,6 +2298,10 @@ class LoginController extends Controller
 
         Log::info('IDP callback resolved profile payload.', [
             'profile_keys' => array_keys($profile),
+            'idp_roles_payload_type' => gettype(data_get($profile, 'roles')),
+            'idp_roles_payload' => data_get($profile, 'roles'),
+            'idp_roles' => $this->extractRawRoles($profile),
+            'idp_account_type' => $this->extractIdpAccountType($profile),
             'has_reference_number' => $this->firstNonEmptyScalar($profile, [
                 'reference_number',
                 'user.reference_number',
@@ -2338,6 +2340,8 @@ class LoginController extends Controller
         Log::info('IDP callback upserted local user.', [
             'user_id' => $user->id,
             'user_role' => $user->user_role,
+            'idp_role' => $user->idp_role,
+            'user_type' => $user->user_type,
             'email' => $user->email,
         ]);
 

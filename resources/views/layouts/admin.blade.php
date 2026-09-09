@@ -6,7 +6,9 @@
         $tabAccent = '#70131B';
         $tabTitlePrefix = '';
 
-        $medicalSettingsRoute = request()->routeIs('admin.reports.manage-mar') || request()->routeIs('admin.reports.manage-medicine-types');
+        $medicalSettingsRoute = request()->routeIs('admin.reports.manage-mar')
+            || request()->routeIs('admin.reports.manage-medicine-types')
+            || request()->routeIs('mar-clearance-types.*');
 
         if (request()->routeIs('admin.dashboard') || request()->routeIs('assistant.dashboard')) {
             $tabIcon = 'DB';
@@ -983,6 +985,13 @@
             isolation: isolate;
         }
 
+        body:has(.post-login-loader) .quick-actions-wrap,
+        body:has(.admin-action-loader.is-active) .quick-actions-wrap {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
         .quick-actions-wrap,
         .quick-actions-wrap *,
         .quick-actions-toggle {
@@ -1028,17 +1037,91 @@
                 0 10px 22px rgba(95, 0, 18, 0.28);
         }
 
+        .quick-action-btn {
+            border-width: 1px;
+            border-color: rgba(250, 204, 21, 0.46);
+            box-shadow:
+                0 0 0 1px rgba(250, 204, 21, 0.05),
+                0 0 10px rgba(250, 204, 21, 0.12),
+                0 8px 16px rgba(95, 0, 18, 0.22);
+        }
+
         .quick-actions-toggle {
-            width: 66px;
-            height: 66px;
+            width: 72px;
+            height: 72px;
             border-radius: 999px;
+            position: relative;
+            overflow: visible;
+            isolation: isolate;
             background: linear-gradient(145deg, #9b111e, #6e1220 55%, #4f0b15);
             border: 2px solid #facc15;
             box-shadow:
                 0 0 0 3px rgba(250, 204, 21, 0.12),
-                0 0 18px rgba(250, 204, 21, 0.32),
+                0 0 20px rgba(250, 204, 21, 0.24),
+                0 0 36px rgba(250, 204, 21, 0.08),
                 0 12px 26px rgba(95, 0, 18, 0.34);
             animation: quickActionsGlow 2.2s ease-in-out infinite;
+        }
+
+        .quick-actions-toggle::before {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            padding: 2px;
+            border-radius: 999px;
+            background: conic-gradient(
+                from 18deg,
+                transparent 0deg 205deg,
+                rgba(255, 164, 35, 0.08) 220deg,
+                rgba(250, 204, 21, 0.42) 240deg,
+                #fff7b2 256deg,
+                #facc15 270deg,
+                rgba(255, 164, 35, 0.44) 291deg,
+                rgba(250, 204, 21, 0.08) 316deg,
+                transparent 334deg 360deg
+            );
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            filter:
+                drop-shadow(0 0 8px rgba(250, 204, 21, 0.78))
+                drop-shadow(0 0 18px rgba(250, 140, 0, 0.3));
+            pointer-events: none;
+            z-index: 0;
+            animation: quickToolsBorderSpin 3.4s linear infinite;
+        }
+
+        .quick-actions-toggle::after {
+            content: "";
+            position: absolute;
+            inset: -12px;
+            border-radius: 999px;
+            background: conic-gradient(
+                from 220deg,
+                transparent 0deg 184deg,
+                rgba(255, 142, 0, .04) 198deg,
+                rgba(255, 159, 24, .18) 218deg,
+                rgba(255, 193, 54, .42) 237deg,
+                rgba(255, 248, 196, .88) 252deg,
+                rgba(255, 193, 54, .62) 272deg,
+                rgba(255, 164, 35, .2) 302deg,
+                transparent 324deg 360deg
+            );
+            -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 21px), #000 calc(100% - 17px), #000 calc(100% - 8px), transparent calc(100% - 2px));
+            mask: radial-gradient(farthest-side, transparent calc(100% - 21px), #000 calc(100% - 17px), #000 calc(100% - 8px), transparent calc(100% - 2px));
+            filter:
+                blur(2.2px)
+                drop-shadow(0 0 6px rgba(250, 204, 21, .72))
+                drop-shadow(0 0 14px rgba(250, 140, 0, .2));
+            opacity: .86;
+            pointer-events: none;
+            z-index: 0;
+            animation: quickToolsTrailSpin 5.4s linear infinite;
+        }
+
+        .quick-actions-toggle > .quick-actions-toggle-icon,
+        .quick-actions-toggle > .quick-action-badge {
+            z-index: 1;
         }
 
         .quick-actions-toggle:hover,
@@ -1056,20 +1139,20 @@
             background: linear-gradient(145deg, #b01826, #7f1d2d 55%, #5a0f16);
             border-color: #fde047;
             box-shadow:
-                0 0 0 3px rgba(250, 204, 21, 0.18),
-                0 0 22px rgba(250, 204, 21, 0.34),
-                0 14px 28px rgba(95, 0, 18, 0.36);
-            transform: translateY(-1px) scale(1.04);
+                0 0 0 2px rgba(250, 204, 21, 0.14),
+                0 0 14px rgba(250, 204, 21, 0.28),
+                0 10px 20px rgba(95, 0, 18, 0.3);
+            transform: translateY(-1px) scale(1.02);
         }
 
         .quick-action-item:hover .quick-action-btn,
         .quick-action-item:hover .quick-action-logo {
             box-shadow:
-                0 0 0 3px rgba(250, 204, 21, 0.18),
-                0 0 10px rgba(255, 0, 102, 0.34),
-                0 0 18px rgba(0, 200, 255, 0.32),
-                0 0 26px rgba(255, 221, 0, 0.3),
-                0 14px 28px rgba(95, 0, 18, 0.36) !important;
+                0 0 0 2px rgba(250, 204, 21, 0.14),
+                0 0 8px rgba(255, 0, 102, 0.24),
+                0 0 13px rgba(0, 200, 255, 0.2),
+                0 0 18px rgba(255, 221, 0, 0.22),
+                0 10px 20px rgba(95, 0, 18, 0.3) !important;
         }
 
         .quick-action-item:hover .quick-action-btn svg,
@@ -1090,7 +1173,8 @@
             border-color: #fde047;
             box-shadow:
                 0 0 0 3px rgba(250, 204, 21, 0.18),
-                0 0 22px rgba(250, 204, 21, 0.4),
+                0 0 26px rgba(250, 204, 21, 0.34),
+                0 0 46px rgba(250, 204, 21, 0.12),
                 0 16px 30px rgba(95, 0, 18, 0.42);
             transform: translateY(-2px) scale(1.02);
         }
@@ -1187,8 +1271,48 @@
             color: #70131b;
         }
 
-        .quick-actions-wrap.is-open .quick-actions-toggle svg {
-            transform: rotate(135deg) scale(1.04);
+        .quick-actions-toggle-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 34px;
+            height: 34px;
+            margin: -17px 0 0 -17px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 8px;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .quick-actions-toggle-icon svg {
+            width: 28px;
+            height: 28px;
+            color: #ffffff;
+            stroke: currentColor;
+            transition: none;
+            animation: quickToolsIconColor 3.8s ease-in-out infinite;
+        }
+
+        .quick-actions-grid-icon {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+
+        .quick-actions-close-icon {
+            opacity: 0;
+            transform: rotate(-90deg) scale(0.68);
+        }
+
+        .quick-actions-wrap.is-open .quick-actions-grid-icon {
+            opacity: 0;
+            transform: rotate(90deg) scale(0.68);
+        }
+
+        .quick-actions-wrap.is-open .quick-actions-close-icon {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
         }
 
         .quick-actions-panel {
@@ -2568,8 +2692,18 @@
         .admin-logout-confirm-copy {
             margin: 12px 0 18px;
             color: #64748b;
-            font-size: 15px;
+            font-size: 14px;
             line-height: 1.35;
+        }
+
+        .admin-logout-confirm-copy-line {
+            display: block;
+        }
+
+        .admin-logout-confirm-copy-line.is-supporting {
+            margin-top: 3px;
+            font-size: 12.5px;
+            line-height: 1.3;
         }
 
         .admin-logout-confirm-actions {
@@ -2723,6 +2857,66 @@
             border-radius: 0;
         }
 
+        .admin-action-loader.is-brand-logout {
+            background:
+                radial-gradient(ellipse 20% 30% at 50% 45%, rgba(250, 204, 21, 0.14) 0%, rgba(250, 204, 21, 0.045) 34%, transparent 70%),
+                linear-gradient(90deg, #3f0816 0%, #4c0a1b 44%, #29040e 100%);
+        }
+
+        .admin-action-loader.is-brand-logout::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle, rgba(255, 255, 255, 0.22) 1px, transparent 1.5px),
+                radial-gradient(circle, rgba(250, 204, 21, 0.16) 1px, transparent 1.5px);
+            background-size: 54px 54px, 86px 86px;
+            background-position: 10px 12px, 36px 42px;
+            opacity: 0.55;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .admin-action-loader.is-brand-logout::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: url('{{ asset("images/PUPBG.jpg") }}?v={{ filemtime(public_path("images/PUPBG.jpg")) }}') left center / cover no-repeat;
+            opacity: 0.13;
+            filter: saturate(0.55) brightness(0.58) contrast(0.92);
+            -webkit-mask-image: linear-gradient(90deg, #000 0%, rgba(0, 0, 0, 0.72) 16%, rgba(0, 0, 0, 0.32) 34%, rgba(0, 0, 0, 0.08) 50%, transparent 64%);
+            mask-image: linear-gradient(90deg, #000 0%, rgba(0, 0, 0, 0.72) 16%, rgba(0, 0, 0, 0.32) 34%, rgba(0, 0, 0, 0.08) 50%, transparent 64%);
+            pointer-events: none;
+        }
+
+        .admin-action-brand-loader {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            display: none;
+            grid-template-rows: 1fr auto;
+            align-items: center;
+            justify-items: center;
+            gap: 22px;
+            padding: clamp(28px, 5vw, 52px);
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .admin-action-loader.is-brand-logout > .loading {
+            display: none;
+        }
+
+        .admin-action-loader.is-brand-logout .admin-action-brand-loader {
+            display: grid;
+        }
+
+        .admin-brand-logout-text {
+            --typing-width: 14ch;
+            --typing-count: 14;
+            margin-top: 0;
+        }
+
         .main.is-navigation-loading .admin-content-loader,
         .admin-action-loader.is-active {
             display: inline-flex;
@@ -2733,14 +2927,47 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 64px;
-            height: 48px;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 64px;
+            min-height: 48px;
         }
 
         .admin-loader-overlay .loading svg {
             display: block;
             width: 64px;
             height: 48px;
+        }
+
+        .admin-loader-message {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            min-height: 20px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.34);
+        }
+
+        .admin-action-loader.has-message .admin-loader-message {
+            display: inline-flex;
+        }
+
+        .admin-loader-message-dot {
+            display: inline-block;
+            opacity: 0.18;
+            animation: adminLoaderDotReveal 1.2s infinite ease-in-out;
+        }
+
+        .admin-loader-message-dot:nth-child(2) {
+            animation-delay: 0.16s;
+        }
+
+        .admin-loader-message-dot:nth-child(3) {
+            animation-delay: 0.32s;
         }
 
         .admin-loader-overlay .loading svg polyline {
@@ -2769,6 +2996,17 @@
         @keyframes adminContentLoaderDash {
             72.5% { opacity: 0; }
             to { stroke-dashoffset: 0; }
+        }
+
+        @keyframes adminLoaderDotReveal {
+            0%, 100% {
+                opacity: 0.18;
+                transform: translateY(2px);
+            }
+            35%, 70% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .main table {
@@ -4053,6 +4291,15 @@
                 0 10px 22px rgba(95, 0, 18, 0.28);
         }
 
+        html[data-theme="light"] .quick-action-btn {
+            border-width: 1px;
+            border-color: rgba(250, 204, 21, 0.46);
+            box-shadow:
+                0 0 0 1px rgba(250, 204, 21, 0.05),
+                0 0 10px rgba(250, 204, 21, 0.12),
+                0 8px 16px rgba(95, 0, 18, 0.22);
+        }
+
         html[data-theme="light"] .quick-action-logo,
         html[data-theme="dark"] .quick-action-logo {
             background: #ffffff !important;
@@ -4098,18 +4345,168 @@
             box-shadow: 6px -6px 12px rgba(250, 204, 21, 0.28);
         }
 
-        @keyframes quickActionsGlow {
+        .quick-action-item:hover .quick-action-btn,
+        .quick-action-item:focus-within .quick-action-btn {
+            color: #facc15 !important;
+            border-color: #facc15 !important;
+            box-shadow:
+                0 0 0 2px rgba(250, 204, 21, 0.14),
+                0 0 13px rgba(250, 204, 21, 0.32),
+                0 10px 20px rgba(95, 0, 18, 0.3) !important;
+        }
+
+        html[data-theme="light"] .quick-action-item:hover .quick-action-btn,
+        html[data-theme="light"] .quick-action-item:focus-within .quick-action-btn {
+            color: #facc15 !important;
+            border-color: #facc15 !important;
+            box-shadow:
+                0 0 0 2px rgba(250, 204, 21, 0.14),
+                0 0 13px rgba(250, 204, 21, 0.32),
+                0 10px 20px rgba(95, 0, 18, 0.3) !important;
+        }
+
+        .quick-action-btn {
+            position: relative;
+            isolation: isolate;
+            overflow: visible;
+        }
+
+        .quick-action-btn::before {
+            content: "";
+            position: absolute;
+            inset: -3px;
+            padding: 2px;
+            border-radius: 999px;
+            background: conic-gradient(
+                from 0deg,
+                rgba(250, 204, 21, 0.12) 0deg,
+                rgba(250, 204, 21, 0.12) 42deg,
+                #fde047 72deg,
+                #fff7b2 96deg,
+                rgba(250, 204, 21, 0.12) 132deg,
+                rgba(250, 204, 21, 0.12) 220deg,
+                #facc15 278deg,
+                rgba(250, 204, 21, 0.12) 320deg,
+                rgba(250, 204, 21, 0.12) 360deg
+            );
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.58));
+            opacity: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .quick-action-btn > svg {
+            position: relative;
+            z-index: 1;
+        }
+
+        .quick-action-item:hover .quick-action-btn::before,
+        .quick-action-item:focus-within .quick-action-btn::before {
+            opacity: 1;
+            animation: quickToolsBorderSpin 2.8s linear infinite;
+        }
+
+        .quick-action-item:hover .quick-action-btn svg,
+        .quick-action-item:focus-within .quick-action-btn svg {
+            color: #facc15 !important;
+            stroke: #facc15 !important;
+            filter: drop-shadow(0 0 5px rgba(250, 204, 21, 0.56)) !important;
+            animation: none !important;
+        }
+
+        .quick-action-btn.is-active {
+            color: #facc15 !important;
+            border-color: #facc15 !important;
+            box-shadow:
+                0 0 0 3px rgba(250, 204, 21, 0.16),
+                0 0 18px rgba(250, 204, 21, 0.48),
+                0 10px 22px rgba(95, 0, 18, 0.34) !important;
+        }
+
+        .quick-action-btn.is-active::before {
+            opacity: 1;
+            animation: quickToolsBorderSpin 2.8s linear infinite;
+        }
+
+        .quick-action-btn.is-active svg {
+            color: #facc15 !important;
+            stroke: #facc15 !important;
+            filter: drop-shadow(0 0 5px rgba(250, 204, 21, 0.56)) !important;
+            animation: none !important;
+        }
+
+        .quick-action-item.is-tooltip-visible .quick-action-tooltip {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateY(-50%) translateX(0) !important;
+        }
+
+        .quick-action-item.is-tooltip-hidden .quick-action-tooltip,
+        .quick-action-item.is-tooltip-hidden:hover .quick-action-tooltip,
+        .quick-action-item.is-tooltip-hidden:focus-within .quick-action-tooltip {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transform: translateY(-50%) translateX(6px) !important;
+        }
+
+            @keyframes quickActionsGlow {
             0%, 100% {
                 box-shadow:
                     0 0 0 3px rgba(250, 204, 21, 0.12),
-                    0 0 18px rgba(250, 204, 21, 0.28),
+                    0 0 20px rgba(250, 204, 21, 0.24),
+                    0 0 36px rgba(250, 204, 21, 0.08),
                     0 12px 26px rgba(95, 0, 18, 0.34);
             }
             50% {
                 box-shadow:
                     0 0 0 4px rgba(250, 204, 21, 0.16),
-                    0 0 24px rgba(250, 204, 21, 0.42),
+                    0 0 26px rgba(250, 204, 21, 0.34),
+                    0 0 44px rgba(250, 204, 21, 0.12),
                     0 14px 30px rgba(95, 0, 18, 0.4);
+            }
+        }
+
+        @keyframes quickToolsBorderSpin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes quickToolsTrailSpin {
+            from {
+                transform: rotate(-42deg) scale(.98);
+                opacity: .34;
+            }
+            28% {
+                opacity: .72;
+            }
+            58% {
+                opacity: .96;
+            }
+            78% {
+                opacity: .68;
+            }
+            to {
+                transform: rotate(318deg) scale(1.04);
+                opacity: .34;
+            }
+        }
+
+        @keyframes quickToolsIconColor {
+            0%, 26% {
+                color: #ffffff;
+            }
+            34%, 64% {
+                color: #facc15;
+            }
+            72%, 100% {
+                color: #ffffff;
             }
         }
 
@@ -4318,6 +4715,13 @@
         html[data-theme="light"] .admin-loader-overlay {
             background: rgba(255, 255, 255, 0.92);
             color: #5a1421;
+        }
+
+        html[data-theme="light"] .admin-action-loader.is-brand-logout {
+            background:
+                radial-gradient(ellipse 20% 30% at 50% 45%, rgba(250, 204, 21, 0.14) 0%, rgba(250, 204, 21, 0.045) 34%, transparent 70%),
+                linear-gradient(90deg, #3f0816 0%, #4c0a1b 44%, #29040e 100%);
+            color: #ffffff;
         }
 
         html[data-theme="light"] .admin-loader-overlay .loading svg .loader-trace {
@@ -5128,6 +5532,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         }
 
         .treatment-record-modal-close {
+            position: relative;
+            isolation: isolate;
             display: grid;
             place-items: center;
             width: 30px;
@@ -5135,25 +5541,66 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             flex: 0 0 30px;
             margin-left: auto;
             padding: 0;
+            overflow: hidden;
             border: 1px solid #facc15;
             border-radius: 50%;
-            background: linear-gradient(90deg, #8f2230 0 50%, #70131b 50% 100%);
-            background-size: 205% 100%;
-            background-position: 100% 0;
+            background: #70131b;
             color: #ffffff;
             font-size: 19px;
             line-height: 1;
             cursor: pointer;
-            transition: background-position 0.32s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+            transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+        }
+
+        .treatment-record-modal-close::before {
+            content: "";
+            position: absolute;
+            z-index: 0;
+            top: -45%;
+            bottom: -45%;
+            left: -135%;
+            width: 42%;
+            opacity: 0;
+            background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, .78) 48%, rgba(255, 255, 255, 0) 100%);
+            transform: skewX(-18deg);
+            pointer-events: none;
+        }
+
+        .treatment-record-modal-close > span {
+            position: relative;
+            z-index: 1;
         }
 
         .treatment-record-modal-close:hover,
         .treatment-record-modal-close:focus {
             border-color: #facc15;
-            background-position: 0 0;
-            color: #ffffff;
+            background: #facc15;
+            color: #70131b;
             box-shadow: 0 8px 18px rgba(15, 23, 42, 0.2);
             outline: none;
+            transform: translateY(-1px);
+        }
+
+        .treatment-record-modal-close:hover::before,
+        .treatment-record-modal-close:focus-visible::before {
+            animation: treatmentModalCloseSweep .85s ease both;
+        }
+
+        @keyframes treatmentModalCloseSweep {
+            0% {
+                opacity: 0;
+                transform: translateX(0) skewX(-18deg);
+            }
+            18% {
+                opacity: .72;
+            }
+            72% {
+                opacity: .72;
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(540%) skewX(-18deg);
+            }
         }
 
         .treatment-record-modal-expand {
@@ -5234,14 +5681,56 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         }
 
         body.admin-embedded-view .form-b-title-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
             align-items: center;
-            flex-direction: row;
-            justify-content: space-between;
+            gap: 20px;
         }
 
         body.admin-embedded-view .logbook-search {
             width: min(100%, 330px);
             flex: 0 1 330px;
+        }
+
+        /* Keep the Sienna accessibility panel above the quick-tools menu. */
+        :where(
+            .asw-container,
+            .asw-widget,
+            .asw-menu,
+            [class*="sienna"][role="dialog"],
+            [class*="sienna"][role="menu"],
+            [id*="sienna"][role="dialog"],
+            [id*="sienna"][role="menu"],
+            [class*="sienna-menu"],
+            [class*="sienna-panel"],
+            [id*="sienna-menu"],
+            [id*="sienna-panel"]
+        ) {
+            z-index: 2147483200 !important;
+        }
+
+        html[data-theme="dark"] .treatment-record-modal-dialog {
+            background: #111827 !important;
+            border-color: rgba(250, 204, 21, 0.58);
+            box-shadow: 0 22px 48px rgba(0, 0, 0, 0.46);
+        }
+
+        html[data-theme="dark"] .treatment-record-modal-frame {
+            background: #111827 !important;
+        }
+
+        html[data-theme="dark"] body.admin-embedded-view {
+            background: #111827 !important;
+        }
+
+        html[data-theme="light"] .treatment-record-modal-dialog {
+            background: #fff8f9 !important;
+            border-color: rgba(127, 29, 45, 0.28);
+            box-shadow: 0 22px 48px rgba(15, 23, 42, 0.22);
+        }
+
+        html[data-theme="light"] .treatment-record-modal-frame {
+            background: #f8fafc !important;
         }
 
         @media (max-width: 700px) {
@@ -5262,8 +5751,9 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             }
 
             body.admin-embedded-view .form-b-title-row {
+                display: grid;
+                grid-template-columns: 1fr;
                 align-items: stretch;
-                flex-direction: column;
             }
 
             body.admin-embedded-view .logbook-search {
@@ -5348,6 +5838,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         request()->routeIs('admin.reports.manage-mar')
         || request()->routeIs('admin.reports.manage-medicine-types')
         || request()->routeIs('admin.reports.manage-health-form-categories')
+        || request()->routeIs('mar-clearance-types.*')
     );
     $reportNavUrl = fn (string $path = '') => $isStudentAssistant
         ? url('/assistant/reports' . ($path !== '' ? '/' . ltrim($path, '/') : ''))
@@ -5510,13 +6001,14 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         || request()->routeIs('admin.reports.manage-mar')
         || request()->routeIs('admin.reports.manage-medicine-types')
         || request()->routeIs('admin.reports.manage-health-form-categories')
+        || request()->routeIs('mar-clearance-types.*')
         || request()->routeIs('admin.user-management*')
         || Request::is('admin/user-management*');
     $settingsNavLinks = collect([
         ['label' => 'Personal Information', 'url' => route('admin.settings.personal'), 'active' => request()->routeIs('admin.settings.personal'), 'icon' => 'user-circle', 'permission' => 'settings.personal'],
         ['label' => 'Clinic Information', 'url' => route('admin.settings.clinic'), 'active' => request()->routeIs('admin.settings.clinic'), 'icon' => 'home', 'permission' => 'settings.clinic'],
         ['label' => 'System Preferences', 'url' => route('admin.settings.preferences'), 'active' => request()->routeIs('admin.settings.preferences'), 'icon' => 'code-bracket-square', 'permission' => 'settings.preferences'],
-        ['label' => 'Medical Configuration', 'url' => route('admin.settings.medical'), 'active' => request()->routeIs('admin.settings.medical') || request()->routeIs('admin.reports.manage-mar') || request()->routeIs('admin.reports.manage-medicine-types') || request()->routeIs('admin.reports.manage-health-form-categories'), 'icon' => 'clipboard-document-list', 'permission' => 'settings.medical'],
+        ['label' => 'Medical Configuration', 'url' => route('admin.settings.medical'), 'active' => request()->routeIs('admin.settings.medical') || request()->routeIs('admin.reports.manage-mar') || request()->routeIs('admin.reports.manage-medicine-types') || request()->routeIs('admin.reports.manage-health-form-categories') || request()->routeIs('mar-clearance-types.*'), 'icon' => 'clipboard-document-list', 'permission' => 'settings.medical'],
         ['label' => 'Users Management', 'url' => route('admin.user-management'), 'active' => request()->routeIs('admin.user-management*'), 'icon' => 'users', 'superadmin' => true],
         ['label' => 'FAQs', 'url' => route('admin.settings.faqs'), 'active' => request()->routeIs('admin.settings.faqs'), 'icon' => 'question-mark-circle', 'permission' => 'settings.faqs'],
     ])->filter(fn (array $link): bool => !empty($link['superadmin']) ? $isAdminLike : $canAccessModule($link['permission']))->values()->all();
@@ -5815,9 +6307,12 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         </button>
         <div class="quick-actions-wrap" id="headerQuickActions">
             <button type="button" class="quick-actions-toggle" aria-label="Open quick actions" aria-expanded="false">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 5.25v13.5M5.25 12h13.5" />
-                </svg>
+                <span class="quick-actions-toggle-icon quick-actions-grid-icon" aria-hidden="true">
+                    <x-outline-icon name="squares-2x2" />
+                </span>
+                <span class="quick-actions-toggle-icon quick-actions-close-icon" aria-hidden="true">
+                    <x-outline-icon name="x-mark" />
+                </span>
                 @if($adminNotificationCount > 0)
                     <span class="quick-action-badge">{{ $adminNotificationCount }}</span>
                 @endif
@@ -6072,6 +6567,42 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" class="loader-trace"></polyline>
             <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" class="loader-pulse"></polyline>
         </svg>
+        <div class="admin-loader-message">
+            <span data-admin-loader-message-text>Logging out</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
+        </div>
+    </div>
+    <div class="admin-action-brand-loader" aria-hidden="true">
+        <div class="capsule-loader-content">
+            <div class="capsule-loader">
+                <div class="capsule-medicine">
+                    <i></i><i></i><i></i><i></i><i></i>
+                    <i></i><i></i><i></i><i></i><i></i>
+                    <i></i><i></i><i></i><i></i><i></i>
+                    <i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div class="side"></div>
+                <div class="side"></div>
+            </div>
+        </div>
+        <div class="loader-bottom-brand">
+            <img src="{{ $brandLogo }}" alt="Clinic Logo" class="loader-bottom-logo">
+            <div class="post-login-loader-text admin-brand-logout-text" aria-label="Logging out">
+                <span style="--letter-index: 0;">L</span>
+                <span style="--letter-index: 1;">o</span>
+                <span style="--letter-index: 2;">g</span>
+                <span style="--letter-index: 3;">g</span>
+                <span style="--letter-index: 4;">i</span>
+                <span style="--letter-index: 5;">n</span>
+                <span style="--letter-index: 6;">g</span>
+                <span style="--letter-index: 7;">&nbsp;</span>
+                <span style="--letter-index: 8;">o</span>
+                <span style="--letter-index: 9;">u</span>
+                <span style="--letter-index: 10;">t</span>
+                <span style="--letter-index: 11;">.</span>
+                <span style="--letter-index: 12;">.</span>
+                <span style="--letter-index: 13;">.</span>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -6082,7 +6613,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         </span>
         <h2 class="admin-logout-confirm-title" id="adminLogoutConfirmTitle">Logout</h2>
         <p class="admin-logout-confirm-copy" id="adminLogoutConfirmCopy">
-            Are you sure you want to logout? You will need to sign in again to access the admin workspace.
+            <span class="admin-logout-confirm-copy-line">Are you sure you want to logout?</span>
+            <span class="admin-logout-confirm-copy-line is-supporting">You will need to sign in again to access the admin workspace.</span>
         </p>
         <div class="admin-logout-confirm-actions">
             <button type="button" class="admin-logout-confirm-btn is-primary" id="adminLogoutConfirmSubmit">
@@ -6117,7 +6649,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 <h2 class="treatment-record-modal-title" id="treatmentRecordModalTitle">Daily Treatment Record</h2>
                 <p class="treatment-record-modal-subtitle">View the clinic's current digital Form B treatment logbook.</p>
             </div>
-            <button type="button" class="treatment-record-modal-close" id="closeTreatmentRecordModal" aria-label="Close Daily Treatment Record">&times;</button>
+            <button type="button" class="treatment-record-modal-close" id="closeTreatmentRecordModal" aria-label="Close Daily Treatment Record"><span aria-hidden="true">&times;</span></button>
         </header>
         <iframe
             class="treatment-record-modal-frame"
@@ -6374,6 +6906,16 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         }
     }
 
+    function syncAdminThemeToEmbeddedFrames(theme) {
+        document.querySelectorAll('#treatmentRecordModalFrame').forEach(function (frame) {
+            try {
+                frame.contentDocument?.documentElement?.setAttribute('data-theme', theme);
+            } catch (error) {
+                // Embedded pages are same-origin in the admin portal; ignore an unavailable document while loading.
+            }
+        });
+    }
+
     function applyAdminTheme(theme) {
         const normalizedTheme = theme === 'light' ? 'light' : 'dark';
         const toggle = document.getElementById('adminThemeToggle');
@@ -6382,6 +6924,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         const sunIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"></path></svg>';
 
         document.documentElement.setAttribute('data-theme', normalizedTheme);
+        syncAdminThemeToEmbeddedFrames(normalizedTheme);
 
         if (!toggle) {
             return;
@@ -6510,13 +7053,19 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             content.setAttribute('aria-busy', 'false');
             contentLoader.setAttribute('aria-hidden', 'true');
             actionLoader.classList.remove('is-active');
+            actionLoader.classList.remove('has-message');
+            actionLoader.classList.remove('is-brand-logout');
             actionLoader.setAttribute('aria-hidden', 'true');
+            actionLoader.setAttribute('aria-label', 'Processing action');
             document.body.removeAttribute('aria-busy');
         };
 
         const showContentLoading = function () {
             actionLoader.classList.remove('is-active');
+            actionLoader.classList.remove('has-message');
+            actionLoader.classList.remove('is-brand-logout');
             actionLoader.setAttribute('aria-hidden', 'true');
+            actionLoader.setAttribute('aria-label', 'Processing action');
             document.body.removeAttribute('aria-busy');
             syncContentLoaderBounds();
             content.classList.add('is-navigation-loading');
@@ -6524,13 +7073,23 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             contentLoader.setAttribute('aria-hidden', 'false');
         };
 
-        const showActionLoading = function () {
+        const showActionLoading = function (message = '') {
             content.classList.remove('is-navigation-loading');
             content.setAttribute('aria-busy', 'false');
             contentLoader.setAttribute('aria-hidden', 'true');
             actionLoader.classList.add('is-active');
             actionLoader.setAttribute('aria-hidden', 'false');
             document.body.setAttribute('aria-busy', 'true');
+
+            const messageText = actionLoader.querySelector('[data-admin-loader-message-text]');
+            const normalizedMessage = String(message || '').trim();
+            if (messageText) {
+                messageText.textContent = normalizedMessage || 'Processing';
+            }
+            const isLogoutLoader = normalizedMessage.toLowerCase() === 'logging out';
+            actionLoader.classList.toggle('is-brand-logout', isLogoutLoader);
+            actionLoader.classList.toggle('has-message', normalizedMessage !== '' && !isLogoutLoader);
+            actionLoader.setAttribute('aria-label', normalizedMessage ? `${normalizedMessage}...` : 'Processing action');
         };
 
         window.AdminLoading = {
@@ -6709,6 +7268,12 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             return;
         }
 
+        const setToggleActive = function (isActive) {
+            toggles.forEach(function (toggle) {
+                toggle.classList.toggle('is-active', isActive);
+            });
+        };
+
         const closeActionsMenu = function () {
             if (!actionsToggle || !actionsMenu) {
                 return;
@@ -6733,6 +7298,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 closeTimer = null;
             }
 
+            setToggleActive(true);
             panel.classList.remove('is-closing');
             window.requestAnimationFrame(function () {
                 panel.classList.add('is-open');
@@ -6760,6 +7326,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
             showUnreadSection();
             closeActionsMenu();
+            setToggleActive(false);
             panel.classList.remove('is-open');
             panel.classList.add('is-closing');
             releaseHeaderQuickActionsWhenIdle();
@@ -7252,6 +7819,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 element.style.border = '1px solid rgba(255,255,255,0.18)';
                 element.style.color = '#f8fafc';
                 element.style.boxShadow = '0 18px 38px rgba(15, 23, 42, 0.35)';
+                element.style.zIndex = '2147483200';
 
                 const header = element.querySelector('header, [class*="header"], [class*="title"], [class*="top"]');
                 if (header) {
@@ -7287,6 +7855,9 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 const style = document.createElement('style');
                 style.id = 'customSiennaTheme';
                 style.textContent = `
+                    :host {
+                        z-index: 2147483200 !important;
+                    }
                     :host, * {
                         --sienna-primary: #7f1d2d !important;
                         --sienna-secondary: #4b5563 !important;
@@ -7308,6 +7879,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                         background: linear-gradient(180deg, #7f1d2d 0%, #4b5563 100%) !important;
                         color: #f8fafc !important;
                         border-color: rgba(255,255,255,0.18) !important;
+                        z-index: 2147483200 !important;
                     }
                     button,
                     [role="button"],
@@ -7388,6 +7960,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             document.dispatchEvent(new CustomEvent('admin:close-quick-action-popups'));
             wrap.classList.remove('is-open');
             toggle.setAttribute('aria-expanded', 'false');
+            toggle.setAttribute('aria-label', 'Open quick actions');
 
             const scan = document.getElementById('headerQuickScan');
             const scanToggle = scan ? scan.querySelector('.quick-action-btn') : null;
@@ -7402,6 +7975,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         }
         wrap.classList.toggle('is-open', shouldOpen);
         toggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+        toggle.setAttribute('aria-label', shouldOpen ? 'Close quick actions' : 'Open quick actions');
         if (!shouldOpen) {
             const scan = document.getElementById('headerQuickScan');
             const scanToggle = scan ? scan.querySelector('.quick-action-btn') : null;
@@ -7461,6 +8035,50 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         document.addEventListener('click', handleQuickToggleEvent, true);
     }
 
+    function initQuickActionTooltips() {
+        document.querySelectorAll('#headerQuickActions .quick-action-item').forEach(function (item) {
+            if (item.dataset.quickTooltipBound === '1') {
+                return;
+            }
+
+            item.dataset.quickTooltipBound = '1';
+            let tooltipTimer = null;
+
+            const clearTooltipTimer = function () {
+                if (tooltipTimer !== null) {
+                    window.clearTimeout(tooltipTimer);
+                    tooltipTimer = null;
+                }
+            };
+
+            const showTooltip = function () {
+                clearTooltipTimer();
+                item.classList.remove('is-tooltip-hidden');
+                item.classList.add('is-tooltip-visible');
+                tooltipTimer = window.setTimeout(function () {
+                    item.classList.remove('is-tooltip-visible');
+                    item.classList.add('is-tooltip-hidden');
+                    tooltipTimer = null;
+                }, 1000);
+            };
+
+            const resetTooltip = function () {
+                clearTooltipTimer();
+                item.classList.remove('is-tooltip-visible');
+                if (item.contains(document.activeElement)) {
+                    item.classList.add('is-tooltip-hidden');
+                } else {
+                    item.classList.remove('is-tooltip-hidden');
+                }
+            };
+
+            item.addEventListener('mouseenter', showTooltip);
+            item.addEventListener('mouseleave', resetTooltip);
+            item.addEventListener('focusin', showTooltip);
+            item.addEventListener('focusout', resetTooltip);
+        });
+    }
+
     function initTreatmentRecordModal() {
         const openButton = document.getElementById('openTreatmentRecordModal');
         const modal = document.getElementById('treatmentRecordModal');
@@ -7468,10 +8086,29 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         const closeButton = document.getElementById('closeTreatmentRecordModal');
         const expandButton = document.getElementById('expandTreatmentRecordModal');
         const frame = document.getElementById('treatmentRecordModalFrame');
+        const openItem = openButton ? openButton.closest('.quick-action-item') : null;
 
         if (!openButton || !modal || !dialog || !closeButton || !expandButton || !frame) {
             return;
         }
+
+        const syncFrameTheme = function () {
+            const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+            try {
+                frame.contentDocument?.documentElement?.setAttribute('data-theme', theme);
+            } catch (error) {
+                // The frame can be unavailable before its first load event.
+            }
+        };
+
+        frame.addEventListener('load', syncFrameTheme);
+        syncFrameTheme();
+
+        const setOpenButtonActive = function (isActive) {
+            openButton.classList.toggle('is-active', isActive);
+            openItem?.classList.toggle('is-active', isActive);
+            openButton.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+        };
 
         const setExpanded = function (expanded) {
             modal.classList.toggle('is-expanded', expanded);
@@ -7494,6 +8131,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
             modal.classList.remove('is-open');
             modal.setAttribute('aria-hidden', 'true');
+            setOpenButtonActive(false);
             setExpanded(false);
             releaseHeaderQuickActionsWhenIdle();
             openButton.focus();
@@ -7506,6 +8144,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
 
             modal.classList.add('is-open');
             modal.setAttribute('aria-hidden', 'false');
+            setOpenButtonActive(true);
             toggleHeaderQuickActions(true);
         };
 
@@ -7941,7 +8580,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             }
         });
         confirmButton.addEventListener('click', function () {
-            window.AdminLoading?.showAction();
+            window.AdminLoading?.showAction('Logging out');
             form.submit();
         });
     }
@@ -8019,6 +8658,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         initSidebarDropdowns();
         initContentNavigationLoading();
         initHeaderQuickActionsToggle();
+        initQuickActionTooltips();
         initMedicineAlerts();
         initTreatmentRecordModal();
         initAdminLiveAlerts();

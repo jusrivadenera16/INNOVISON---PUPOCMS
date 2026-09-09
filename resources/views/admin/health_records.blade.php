@@ -4,6 +4,18 @@
 
 @push('styles')
 <style>
+    body:has(.health-records-overview) .main {
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.84)),
+            url('{{ asset("images/admin-bg-light.png") }}?v={{ is_file(public_path("images/admin-bg-light.png")) ? md5_file(public_path("images/admin-bg-light.png")) : "missing" }}') center center / 100% 100% no-repeat fixed !important;
+    }
+
+    html[data-theme="dark"] body:has(.health-records-overview) .main {
+        background:
+            linear-gradient(180deg, rgba(42, 14, 22, 0.78), rgba(42, 14, 22, 0.78)),
+            url('{{ asset("images/admin-bg-dark.png") }}?v={{ is_file(public_path("images/admin-bg-dark.png")) ? md5_file(public_path("images/admin-bg-dark.png")) : "missing" }}') center center / 100% 100% no-repeat fixed !important;
+    }
+
     /* Table & Card Styling */
     .card {
         background: #fff;
@@ -5969,7 +5981,7 @@
     @php
         $healthSummaryStats = [
             'total' => $records->count(),
-            'with_conditions' => 0,
+            'with_conditions' => $issuedWithConditions ?? 0,
             'pending_approval' => 0,
             'pending_conditional' => 0,
         ];
@@ -6053,10 +6065,6 @@
                 || trim((string) ($summaryRecord->medical_condition_remarks ?? '')) !== ''
             );
 
-            if ($summaryIsApproved && $summaryRecord->hasMedicalCondition()) {
-                $healthSummaryStats['with_conditions']++;
-            }
-
             if (!$summaryIsConditional && in_array($summaryStatus, ['Pending', 'For Verification', ''], true)) {
                 $healthSummaryStats['pending_approval']++;
                 $pendingApprovalRecordIds[] = $summaryRecordKey;
@@ -6069,7 +6077,7 @@
         }
 
         $healthSummaryStats['total_approved'] = $healthProfileSummaryRecords->total();
-        $latestApprovedAt = $records
+        $latestApprovedAt = $issuedLatestApprovedAt ?? $records
             ->filter(function ($summaryRecord) {
                 return in_array(trim((string) ($summaryRecord->clearance_status ?? '')), ['Issued', 'Fully Cleared'], true)
                     && filled($summaryRecord->verified_at);

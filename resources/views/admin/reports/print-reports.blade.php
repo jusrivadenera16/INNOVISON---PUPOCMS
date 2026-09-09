@@ -5,7 +5,7 @@
     $isInventoryReport = ($type ?? '') === 'inventory';
     $isAppointmentReport = ($type ?? '') === 'appointment';
     $isOfficialFormReport = in_array(($type ?? ''), ['inventory', 'mar', 'appointment'], true);
-    $pageMargin = $isMarReport ? '150px 18px 88px' : (($isInventoryReport || $isAppointmentReport) ? '24px 18px 88px' : '115px 28px 85px');
+    $pageMargin = $isMarReport ? '150px 48px 88px' : (($isInventoryReport || $isAppointmentReport) ? '24px 18px 88px' : '115px 28px 85px');
     $pupOfficialLogoSrc = $isPdfMode ? public_path('images/pup_logo_print.jpg') : asset('images/pup_logo_print.jpg');
     $bpOfficialLogoSrc = $isPdfMode ? public_path('images/bagong_pilipinas_logo_print.jpg') : asset('images/bagong_pilipinas_logo_print.jpg');
     $officialLogosAvailable = file_exists(public_path('images/pup_logo_print.jpg')) && file_exists(public_path('images/bagong_pilipinas_logo_print.jpg'));
@@ -13,6 +13,19 @@
     $footerBgAvailable = $isPdfMode ? file_exists(public_path('images/footer_bg_print.jpg')) : file_exists(public_path('images/footer_bg.png'));
     $marMonthStart = \Carbon\Carbon::parse(($monthFilter ?? now()->format('Y-m')) . '-01')->startOfMonth();
     $marReportAsOf = $marMonthStart->isCurrentMonth() ? now() : $marMonthStart->copy()->endOfMonth();
+    $resolveReportIdentity = static function ($staff, string $fallbackName = 'CLINIC STAFF', string $fallbackPosition = 'Clinic Staff', bool $useOfficeFallback = false): array {
+        $profile = data_get($staff, 'adminProfile') ?: $staff;
+        $name = trim((string) (data_get($profile, 'report_name') ?: data_get($staff, 'report_name') ?: data_get($staff, 'name')));
+        $position = trim((string) (data_get($profile, 'report_position') ?: data_get($staff, 'report_position')));
+        if ($position === '' && $useOfficeFallback) {
+            $position = trim((string) data_get($profile, 'office'));
+        }
+
+        return [
+            'name' => $name !== '' ? $name : $fallbackName,
+            'position' => $position !== '' ? $position : $fallbackPosition,
+        ];
+    };
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -1622,6 +1635,57 @@
         margin-top: 0;
     }
 
+    body.mar-form-report .mar-service-table tbody td {
+        text-align: left !important;
+        vertical-align: middle !important;
+    }
+
+    body.mar-form-report .mar-service-table thead th,
+    body.mar-form-report .mar-service-table tbody td:nth-child(2),
+    body.mar-form-report .mar-service-table tbody td:nth-child(3),
+    body.mar-form-report .mar-service-table tbody td:nth-child(4),
+    body.mar-form-report .mar-service-table tbody td:nth-child(5) {
+        text-align: center !important;
+    }
+
+    body.mar-form-report .mar-service-table th:first-child,
+    body.mar-form-report .mar-service-table td:first-child {
+        width: 30% !important;
+    }
+
+    body.mar-form-report .mar-service-table th:nth-child(2),
+    body.mar-form-report .mar-service-table th:nth-child(3),
+    body.mar-form-report .mar-service-table th:nth-child(4),
+    body.mar-form-report .mar-service-table th:nth-child(5),
+    body.mar-form-report .mar-service-table th:nth-child(6),
+    body.mar-form-report .mar-service-table td:nth-child(2),
+    body.mar-form-report .mar-service-table td:nth-child(3),
+    body.mar-form-report .mar-service-table td:nth-child(4),
+    body.mar-form-report .mar-service-table td:nth-child(5),
+    body.mar-form-report .mar-service-table td:nth-child(6) {
+        width: 14% !important;
+    }
+
+    body.mar-form-report .mar-service-table .bg-category,
+    body.mar-form-report .mar-service-table tr.bg-category td {
+        text-align: left !important;
+        padding-left: 10px !important;
+    }
+
+    body.mar-form-report .mar-service-table tr.bg-category td:nth-child(n+2) {
+        text-align: center !important;
+    }
+
+    body.mar-form-report .mar-service-table td.mar-numbered-service {
+        padding-left: 30px !important;
+    }
+
+    body.mar-form-report .official-inventory-meta .meta-value.mar-report-identity-value,
+    body.mar-form-report .mar-closing-name.mar-report-identity-value,
+    body.mar-form-report .mar-closing-role.mar-report-identity-value {
+        text-transform: none !important;
+    }
+
     @media print {
         body.official-form-report {
             margin: 0;
@@ -1802,10 +1866,9 @@
             $combinedGad = $gadTables['combined'] ?? [];
             $freshmenClearanceGad = $gadTables['freshmen_clearance'] ?? [];
             $marPreparedBy = auth('admin')->user() ?? auth()->user();
-            $marPreparedByName = trim((string) optional($marPreparedBy)->name) ?: 'CLINIC STAFF';
-            $marPreparedByPosition = \App\Models\User::normalizeRole(optional($marPreparedBy)->user_role) === \App\Models\User::ROLE_ADMIN
-                ? 'Nurse / Clinic Staff'
-                : 'Clinic Staff';
+            $marPreparedIdentity = $resolveReportIdentity($marPreparedBy, 'CLINIC STAFF', 'Nurse / Clinic Staff');
+            $marPreparedByName = $marPreparedIdentity['name'];
+            $marPreparedByPosition = $marPreparedIdentity['position'];
         @endphp
 
         @unless($isPdfMode)
@@ -1862,7 +1925,7 @@
                 <tr>
                     <td>
                         <span class="meta-label">Name:</span>
-                        <span class="meta-value">{{ $marPreparedByName }}</span>
+                        <span class="meta-value mar-report-identity-value">{{ $marPreparedByName }}</span>
                     </td>
                     <td>
                         <span class="meta-label">Date of Submission:</span>
@@ -1872,7 +1935,7 @@
                 <tr>
                     <td>
                         <span class="meta-label">Position:</span>
-                        <span class="meta-value">{{ $marPreparedByPosition }}</span>
+                        <span class="meta-value mar-report-identity-value">{{ $marPreparedByPosition }}</span>
                     </td>
                     <td>
                         <span class="meta-label">Unit / Department:</span>
@@ -1883,35 +1946,30 @@
 
         <table class="mar-report-table mar-service-table">
             <colgroup>
-                <col>
-                <col class="metric-col">
-                <col class="metric-col">
-                <col class="metric-col">
-                <col class="metric-col">
-                <col class="metric-col">
+                <col style="width: 30%;">
+                <col class="metric-col" style="width: 14%;">
+                <col class="metric-col" style="width: 14%;">
+                <col class="metric-col" style="width: 14%;">
+                <col class="metric-col" style="width: 14%;">
+                <col class="metric-col" style="width: 14%;">
             </colgroup>
             <thead>
                 <tr>
-                    <th>MEDICAL SERVICE RENDERED</th>
-                    <th>STUDENTS</th>
-                    <th>FACULTY</th>
-                    <th>ADMIN</th>
-                    <th>DEPENDENTS</th>
-                    <th>REMARKS</th>
+                    <th style="width: 30%;">MEDICAL SERVICE RENDERED</th>
+                    <th style="width: 14%;">STUDENTS</th>
+                    <th style="width: 14%;">FACULTY</th>
+                    <th style="width: 14%;">ADMIN</th>
+                    <th style="width: 14%;">DEPENDENTS</th>
+                    <th style="width: 14%;">REMARKS</th>
                 </tr>
             </thead>
             <tbody>
                 @php
-                    $resolveConsultationPatientType = function ($consultation) {
-                        $value = strtolower(trim((string) ($consultation->user_role ?: $consultation->user_type ?: '')));
-
-                        return match ($value) {
-                            'student' => 'student',
-                            'faculty' => 'faculty',
-                            'admin', 'staff' => 'admin',
-                            'dependent', 'dependents' => 'dependent',
-                            default => null,
-                        };
+                    $marPatientTypeNormalizer = app(\App\Services\MarPatientTypeNormalizer::class);
+                    $resolveConsultationPatientType = function ($consultation) use ($marPatientTypeNormalizer) {
+                        return $marPatientTypeNormalizer->normalize(
+                            $consultation->user_role ?: $consultation->user_type ?: ''
+                        );
                     };
 
                     $countByPatientType = function ($consultations, string $type) use ($resolveConsultationPatientType) {
@@ -1920,13 +1978,20 @@
                         })->count();
                     };
 
-                    $countCertificateByType = function ($consultations, string $certificateType, string $patientType) use ($countByPatientType) {
-                        $filtered = $consultations->filter(function ($consultation) use ($certificateType) {
-                            return trim((string) ($consultation->certificate_type ?? 'none')) === $certificateType;
-                        });
+                    $alphaLabel = function (int $index) {
+                        $label = '';
+                        $value = $index + 1;
 
-                        return $countByPatientType($filtered, $patientType);
+                        while ($value > 0) {
+                            $value--;
+                            $label = chr(65 + ($value % 26)) . $label;
+                            $value = intdiv($value, 26);
+                        }
+
+                        return $label;
                     };
+
+                    $displayCount = fn ($value) => (int) $value > 0 ? $value : '';
 
                     $roman = function (int $value) {
                         $map = [
@@ -1946,10 +2011,52 @@
                     };
 
                     $consultationTotals = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
-                    $excusedLetterTotals = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
-                    $cocIjtTotals = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
-                    $cocLadderizedTotals = ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0];
-                    $excusedLetterCategoryRows = collect();
+                    $resolveIssuancePatientType = function ($issuance) use ($marPatientTypeNormalizer) {
+                        return $marPatientTypeNormalizer->normalize($issuance->user_type ?? '');
+                    };
+
+                    $countIssuancesBySubcategory = function ($issuances, int $subcategoryId, string $patientType) use ($resolveIssuancePatientType) {
+                        return $issuances->filter(function ($issuance) use ($subcategoryId, $resolveIssuancePatientType, $patientType) {
+                            return (int) $issuance->clearance_subcategory_id === $subcategoryId
+                                && $resolveIssuancePatientType($issuance) === $patientType;
+                        })->count();
+                    };
+                    $countIssuancesByParent = function ($issuances, int $clearanceTypeId, string $patientType) use ($resolveIssuancePatientType) {
+                        return $issuances->filter(function ($issuance) use ($clearanceTypeId, $resolveIssuancePatientType, $patientType) {
+                            return (int) $issuance->clearance_type_id === $clearanceTypeId
+                                && $issuance->clearance_subcategory_id === null
+                                && $resolveIssuancePatientType($issuance) === $patientType;
+                        })->count();
+                    };
+
+                    $clearanceGroups = collect($marClearanceTypes ?? [])->values()->map(function ($clearanceType, $index) use ($marClearanceIssuances, $countIssuancesBySubcategory, $countIssuancesByParent, $alphaLabel) {
+                        $parentRow = [
+                            'student' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'student'),
+                            'faculty' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'faculty'),
+                            'admin' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'admin'),
+                            'dependent' => $countIssuancesByParent($marClearanceIssuances, (int) $clearanceType->id, 'dependent'),
+                        ];
+                        $buildRow = function (string $name, int $subcategoryId) use ($marClearanceIssuances, $countIssuancesBySubcategory) {
+                            return [
+                                'name' => $name,
+                                'student' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'student'),
+                                'faculty' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'faculty'),
+                                'admin' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'admin'),
+                                'dependent' => $countIssuancesBySubcategory($marClearanceIssuances, $subcategoryId, 'dependent'),
+                            ];
+                        };
+
+                        $rows = $clearanceType->subcategories->values()->map(function ($subcategory) use ($buildRow) {
+                            return $buildRow($subcategory->name, (int) $subcategory->id);
+                        });
+
+                        return [
+                            'label' => $alphaLabel($index) . '. ' . $clearanceType->name,
+                            'allow_direct_use' => (bool) $clearanceType->allow_direct_use,
+                            'parent' => $parentRow,
+                            'rows' => $rows->values(),
+                        ];
+                    });
                     $onlineTotals = [
                         'consultation' => ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0],
                         'medical_clearance' => ['student' => 0, 'faculty' => 0, 'admin' => 0, 'dependent' => 0],
@@ -1962,29 +2069,6 @@
                 @foreach($data as $catIndex => $cat)
                     @php
                         $categoryConsultations = $cat->medicalConditions->flatMap->consultations;
-                        $categoryExcused = [
-                            'student' => $countCertificateByType($categoryConsultations, 'excused_letter', 'student'),
-                            'faculty' => $countCertificateByType($categoryConsultations, 'excused_letter', 'faculty'),
-                            'admin' => $countCertificateByType($categoryConsultations, 'excused_letter', 'admin'),
-                            'dependent' => $countCertificateByType($categoryConsultations, 'excused_letter', 'dependent'),
-                        ];
-
-                        if (array_sum($categoryExcused) > 0) {
-                            $excusedLetterCategoryRows->push([
-                                'label' => chr(65 + $catIndex) . '. ' . $cat->name,
-                                'student' => $categoryExcused['student'],
-                                'faculty' => $categoryExcused['faculty'],
-                                'admin' => $categoryExcused['admin'],
-                                'dependent' => $categoryExcused['dependent'],
-                                'total' => array_sum($categoryExcused),
-                            ]);
-                        }
-
-                        foreach (['student', 'faculty', 'admin', 'dependent'] as $type) {
-                            $excusedLetterTotals[$type] += $categoryExcused[$type];
-                            $cocIjtTotals[$type] += $countCertificateByType($categoryConsultations, 'coc_ijt', $type);
-                            $cocLadderizedTotals[$type] += $countCertificateByType($categoryConsultations, 'coc_ladderized', $type);
-                        }
 
                         $onlineConsultations = $categoryConsultations->filter(function ($consultation) {
                             return trim((string) ($consultation->consultation_source ?? '')) === 'online';
@@ -2014,7 +2098,7 @@
                     <tr class="bg-category">
                         <td colspan="6">{{ chr(65 + $catIndex) }}. {{ $cat->name }}</td>
                     </tr>
-                    @foreach($cat->medicalConditions as $conditionIndex => $condition)
+                    @forelse($cat->medicalConditions as $conditionIndex => $condition)
                         @php
                             $stu = $countByPatientType($condition->consultations, 'student');
                             $fac = $countByPatientType($condition->consultations, 'faculty');
@@ -2027,48 +2111,74 @@
                             $consultationTotals['dependent'] += $dep;
                         @endphp
                         <tr>
-                            <td class="text-left" style="padding-left: 15px;">{{ $conditionIndex + 1 }}. {{ $condition->name }}</td>
+                            <td class="text-left mar-numbered-service" style="padding-left: 30px;">{{ $conditionIndex + 1 }}. {{ $condition->name }}</td>
                             <td>{{ $stu ?: '' }}</td>
                             <td>{{ $fac ?: '' }}</td>
                             <td>{{ $sta ?: '' }}</td>
                             <td>{{ $dep ?: '' }}</td>
                             <td></td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                        </tr>
+                    @endforelse
                 @endforeach
                 <tr class="bg-category">
                     <td>Total Consultation</td>
-                    <td>{{ $consultationTotals['student'] }}</td>
-                    <td>{{ $consultationTotals['faculty'] }}</td>
-                    <td>{{ $consultationTotals['admin'] }}</td>
-                    <td>{{ $consultationTotals['dependent'] }}</td>
+                    <td>{{ $displayCount($consultationTotals['student']) }}</td>
+                    <td>{{ $displayCount($consultationTotals['faculty']) }}</td>
+                    <td>{{ $displayCount($consultationTotals['admin']) }}</td>
+                    <td>{{ $displayCount($consultationTotals['dependent']) }}</td>
                     <td></td>
                 </tr>
-                <tr class="bg-category"><td colspan="6">{{ $roman(2) }}. MEDICAL CERTIFICATE / CLEARANCE - CERTIFICATE OF COMPLIANCE</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">A. Excused Letter</td><td>{{ $excusedLetterTotals['student'] }}</td><td>{{ $excusedLetterTotals['faculty'] }}</td><td>{{ $excusedLetterTotals['admin'] }}</td><td>{{ $excusedLetterTotals['dependent'] }}</td><td></td></tr>
-                @forelse($excusedLetterCategoryRows as $categoryRow)
-                    <tr><td class="text-left" style="padding-left: 30px;">{{ $categoryRow['label'] }}</td><td>{{ $categoryRow['student'] }}</td><td>{{ $categoryRow['faculty'] }}</td><td>{{ $categoryRow['admin'] }}</td><td>{{ $categoryRow['dependent'] }}</td><td>{{ $categoryRow['total'] }}</td></tr>
+                <tr class="bg-category"><td colspan="6">{{ $roman(2) }}. MEDICAL CERTIFICATE / CLEARANCE</td></tr>
+                @forelse($clearanceGroups as $clearanceGroup)
+                    @php
+                        $parentRow = $clearanceGroup['parent'];
+                    @endphp
+                    <tr>
+                        <td class="text-left" style="padding-left: 15px; font-weight: bold;">{{ $clearanceGroup['label'] }}</td>
+                        <td>{{ $parentRow['student'] ?: '' }}</td>
+                        <td>{{ $parentRow['faculty'] ?: '' }}</td>
+                        <td>{{ $parentRow['admin'] ?: '' }}</td>
+                        <td>{{ $parentRow['dependent'] ?: '' }}</td>
+                        <td></td>
+                    </tr>
+                    @foreach($clearanceGroup['rows'] as $subcategoryIndex => $subcategoryRow)
+                        <tr>
+                            <td class="text-left mar-numbered-service" style="padding-left: 30px;">{{ $subcategoryIndex + 1 }}. {{ $subcategoryRow['name'] }}</td>
+                            <td>{{ $displayCount($subcategoryRow['student']) }}</td>
+                            <td>{{ $displayCount($subcategoryRow['faculty']) }}</td>
+                            <td>{{ $displayCount($subcategoryRow['admin']) }}</td>
+                            <td>{{ $displayCount($subcategoryRow['dependent']) }}</td>
+                            <td></td>
+                        </tr>
+                    @endforeach
                 @empty
-                    <tr><td class="text-left" style="padding-left: 30px;">No excused letter category recorded yet.</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
                 @endforelse
-                <tr><td class="text-left" style="padding-left: 15px;">B. COC for IJT</td><td>{{ $cocIjtTotals['student'] }}</td><td>{{ $cocIjtTotals['faculty'] }}</td><td>{{ $cocIjtTotals['admin'] }}</td><td>{{ $cocIjtTotals['dependent'] }}</td><td></td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">C. COC for Ladderized</td><td>{{ $cocLadderizedTotals['student'] }}</td><td>{{ $cocLadderizedTotals['faculty'] }}</td><td>{{ $cocLadderizedTotals['admin'] }}</td><td>{{ $cocLadderizedTotals['dependent'] }}</td><td></td></tr>
                 <tr class="bg-category"><td colspan="6">{{ $roman(3) }}. INJECTIONS</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">A. Injection Services</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">A. Injection Services</td><td></td><td></td><td></td><td></td><td></td></tr>
                 <tr class="bg-category"><td colspan="6">{{ $roman(4) }}. REFERRALS</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">A. Ref. to Hospital without nurse</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">B. Ref. to Hospital with nurse</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">C. Referral</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">A. Ref. to Hospital without nurse</td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">B. Ref. to Hospital with nurse</td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">C. Referral</td><td></td><td></td><td></td><td></td><td></td></tr>
                 <tr class="bg-category"><td colspan="6">{{ $roman(5) }}. OTHERS</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">A. Other Services</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">A. Other Services</td><td></td><td></td><td></td><td></td><td></td></tr>
                 <tr class="bg-category"><td colspan="6">{{ $roman(6) }}. ON-LINE CONSULTATION</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">A. Consultation</td><td>{{ $onlineTotals['consultation']['student'] }}</td><td>{{ $onlineTotals['consultation']['faculty'] }}</td><td>{{ $onlineTotals['consultation']['admin'] }}</td><td>{{ $onlineTotals['consultation']['dependent'] }}</td><td></td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">B. Medical Clearance</td><td>{{ $onlineTotals['medical_clearance']['student'] }}</td><td>{{ $onlineTotals['medical_clearance']['faculty'] }}</td><td>{{ $onlineTotals['medical_clearance']['admin'] }}</td><td>{{ $onlineTotals['medical_clearance']['dependent'] }}</td><td></td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">C. Others</td><td>{{ $onlineTotals['others']['student'] }}</td><td>{{ $onlineTotals['others']['faculty'] }}</td><td>{{ $onlineTotals['others']['admin'] }}</td><td>{{ $onlineTotals['others']['dependent'] }}</td><td></td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">A. Consultation</td><td>{{ $displayCount($onlineTotals['consultation']['student']) }}</td><td>{{ $displayCount($onlineTotals['consultation']['faculty']) }}</td><td>{{ $displayCount($onlineTotals['consultation']['admin']) }}</td><td>{{ $displayCount($onlineTotals['consultation']['dependent']) }}</td><td></td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">B. Medical Clearance</td><td>{{ $displayCount($onlineTotals['medical_clearance']['student']) }}</td><td>{{ $displayCount($onlineTotals['medical_clearance']['faculty']) }}</td><td>{{ $displayCount($onlineTotals['medical_clearance']['admin']) }}</td><td>{{ $displayCount($onlineTotals['medical_clearance']['dependent']) }}</td><td></td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">C. Others</td><td>{{ $displayCount($onlineTotals['others']['student']) }}</td><td>{{ $displayCount($onlineTotals['others']['faculty']) }}</td><td>{{ $displayCount($onlineTotals['others']['admin']) }}</td><td>{{ $displayCount($onlineTotals['others']['dependent']) }}</td><td></td></tr>
                 <tr class="bg-category"><td colspan="6">{{ $roman(7) }}. TRIAGE SURVEY</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">A. Online</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">A. Online</td><td></td><td></td><td></td><td></td><td></td></tr>
                 <tr class="bg-category"><td colspan="6">{{ $roman(8) }}. BULLETIN UPDATES</td></tr>
-                <tr><td class="text-left" style="padding-left: 15px;">A. Bulletin Updates</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td class="text-left" style="padding-left: 15px;">A. Bulletin Updates</td><td></td><td></td><td></td><td></td><td></td></tr>
             </tbody>
         </table>
 
@@ -2245,7 +2355,8 @@
                     </tr>
                     <tr>
                         <td>
-                            <div class="mar-closing-name">Nurse / Medical Staff</div>
+                            <div class="mar-closing-name mar-report-identity-value">{{ $marPreparedByName }}</div>
+                            <div class="mar-closing-role mar-report-identity-value">{{ $marPreparedByPosition }}</div>
                         </td>
                         <td>
                             <div class="mar-closing-name">Branch Director</div>
@@ -2262,11 +2373,9 @@
             $inventoryScope = $inventoryScope ?? 'all';
             $reportAsOf = $inventoryReportAsOf ?? \Carbon\Carbon::parse(($monthFilter ?? now()->format('Y-m')) . '-01')->endOfMonth();
             $preparedBy = $inventoryPreparedBy ?? null;
-            $preparedByName = trim((string) optional($preparedBy)->name) ?: 'CLINIC STAFF';
-            $preparedByOffice = trim((string) optional(optional($preparedBy)->adminProfile)->office);
-            $preparedByPosition = $preparedByOffice !== ''
-                ? $preparedByOffice
-                : (\App\Models\User::normalizeRole(optional($preparedBy)->user_role) === \App\Models\User::ROLE_ADMIN ? 'Nurse / Clinic Staff' : 'Clinic Staff');
+            $preparedByIdentity = $resolveReportIdentity($preparedBy, 'CLINIC STAFF', 'Nurse / Clinic Staff', true);
+            $preparedByName = $preparedByIdentity['name'];
+            $preparedByPosition = $preparedByIdentity['position'];
             $inventoryTitle = $inventoryScope === 'medicines'
                 ? 'Inventory of Medicines'
                 : 'Inventory of Supplies';
@@ -2418,8 +2527,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <div class="official-inventory-signature-name">&nbsp;</div>
-                        <div class="official-inventory-signature-role">&nbsp;</div>
+                        <div class="official-inventory-signature-name">{{ $preparedByName }}</div>
+                        <div class="official-inventory-signature-role">{{ $preparedByPosition }}</div>
                     </td>
                     <td>
                         <div class="official-inventory-signature-name">&nbsp;</div>
@@ -2435,10 +2544,9 @@
     @elseif($type == 'appointment')
         @php
             $appointmentPreparedBy = auth('admin')->user() ?? auth()->user();
-            $appointmentPreparedByName = trim((string) optional($appointmentPreparedBy)->name) ?: 'CLINIC STAFF';
-            $appointmentPreparedByPosition = \App\Models\User::normalizeRole(optional($appointmentPreparedBy)->user_role) === \App\Models\User::ROLE_ADMIN
-                ? 'Nurse / Clinic Staff'
-                : 'Clinic Staff';
+            $appointmentPreparedIdentity = $resolveReportIdentity($appointmentPreparedBy, 'CLINIC STAFF', 'Nurse / Clinic Staff');
+            $appointmentPreparedByName = $appointmentPreparedIdentity['name'];
+            $appointmentPreparedByPosition = $appointmentPreparedIdentity['position'];
             $appointmentReportAsOf = $dateTo ?? now();
         @endphp
 
@@ -2555,8 +2663,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <div class="official-inventory-signature-name">&nbsp;</div>
-                        <div class="official-inventory-signature-role">&nbsp;</div>
+                        <div class="official-inventory-signature-name">{{ $appointmentPreparedByName }}</div>
+                        <div class="official-inventory-signature-role">{{ $appointmentPreparedByPosition }}</div>
                     </td>
                     <td>
                         <div class="official-inventory-signature-name">&nbsp;</div>
@@ -2635,7 +2743,8 @@
         <div class="footer-signatures" style="margin-top: 40px;">
             <div class="sig-box">
                 <p>Prepared by:</p>
-                <div class="sig-line">NURSE / MEDICAL STAFF</div>
+                <div class="sig-line">{{ data_get($resolveReportIdentity(auth('admin')->user() ?? auth()->user(), 'CLINIC STAFF', 'Nurse / Medical Staff'), 'name') }}</div>
+                <div class="sig-line">{{ data_get($resolveReportIdentity(auth('admin')->user() ?? auth()->user(), 'CLINIC STAFF', 'Nurse / Medical Staff'), 'position') }}</div>
             </div>
             <div class="sig-box">
                 <p>Noted by:</p>

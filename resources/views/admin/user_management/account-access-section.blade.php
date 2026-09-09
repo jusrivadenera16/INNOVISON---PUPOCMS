@@ -94,7 +94,7 @@
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="walkin.scan_id" data-module-action>
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
-                            <span><strong>OCR / Scan ID</strong><small>Scan or manually enter an ID for walk-in intake</small></span>
+                            <span><strong>Consultation</strong><small>Scan or manually enter an ID for walk-in intake</small></span>
                         </label>
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="walkin.register_patient" data-module-action>
@@ -117,16 +117,16 @@
                             <span><strong>Final approval</strong><small>Restricted to Super Admin</small></span>
                             <span class="um-locked-badge">Locked</span>
                         </div>
-                        <div class="um-module-actions-head"><strong>Employees Module</strong><span>View access is required before ID lookup</span></div>
+                        <div class="um-module-actions-head"><strong>Patient Record Lookup</strong><span>View access is required before ID lookup</span></div>
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="walkin.employee_view" data-module-action>
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
-                            <span><strong>View employee records</strong><small>Open employee or student clinic records</small></span>
+                            <span><strong>View patient records</strong><small>Open employee, student, or dependent clinic records</small></span>
                         </label>
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="walkin.employee_lookup" data-module-action>
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
-                            <span><strong>Input employee / student ID</strong><small>Look up an employee or student clinic record</small></span>
+                            <span><strong>Input patient ID</strong><small>Look up an employee, student, or dependent clinic record</small></span>
                         </label>
                         <div class="um-action-permission is-locked">
                             <span class="um-action-lock" aria-hidden="true"><x-outline-icon name="shield-check" /></span>

@@ -6,12 +6,18 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+    public function marClearanceIssuances(): HasMany
+    {
+        return $this->hasMany(MarClearanceIssuance::class);
+    }
 
     public const ROLE_STUDENT = 'student';
     public const ROLE_ADMIN = 'admin';
@@ -30,9 +36,152 @@ class User extends Authenticatable
         };
     }
 
-    /**
-     * The attributes that are mass assignable.
-     */
+    public static function userTypeForIdpRole(?string $role): string
+    {
+        $role = str_replace(['-', ' '], '_', strtolower(trim((string) $role)));
+
+        return match ($role) {
+            'student', 'ojt', 'student_ojt' => 'Student',
+            'applicant' => 'Applicant',
+            'faculty' => 'Faculty',
+            'admin', 'staff', 'employee', 'designee', 'admin_designee',
+            'non_teaching', 'non_teaching_staff' => 'Admin',
+            'guest' => 'Guest',
+            default => 'Dependent',
+        };
+    }
+
+    public const CLINIC_ACCOUNT_TYPES = [
+        'applicant' => 'Applicant',
+        'student' => 'Student / OJT',
+        'faculty' => 'Faculty',
+        'non_teaching_staff' => 'Non-teaching Staff / Admins',
+        'dependent' => 'Guest',
+    ];
+
+    public function needsClinicAccountTypeSelection(): bool
+    {
+        return self::normalizeRole($this->user_role) === self::ROLE_STUDENT
+            && $this->clinicAccountTypeKey() === null;
+    }
+
+    public static function userTypeForClinicAccountType(string $type): ?string
+    {
+        return match ($type) {
+            'applicant' => 'Applicant',
+            'student' => 'Student',
+            'faculty' => 'Faculty',
+            'non_teaching_staff' => 'Admin',
+            'dependent' => 'Dependent',
+            default => null,
+        };
+    }
+
+    public function clinicAccountTypeKey(): ?string
+    {
+        $userType = strtolower(trim((string) $this->user_type));
+
+        return match ($userType) {
+            'applicant' => 'applicant',
+            'student', 'ojt', 'student / ojt' => 'student',
+            'faculty' => 'faculty',
+            'admin', 'staff', 'employee', 'non-teaching staff', 'non-teaching staff / admins' => 'non_teaching_staff',
+            'guest', 'dependent' => 'dependent',
+            default => null,
+        };
+    }
+
+    public function allowedClinicAccountTypes(): array
+    {
+        if ($this->hasPendingAdmissionReference()) {
+            return ['applicant'];
+        }
+
+        $role = str_replace(['-', ' '], '_', strtolower(trim((string) $this->idp_role)));
+        $type = match ($role) {
+            'applicant' => 'applicant',
+            'student', 'ojt', 'student_ojt' => 'student',
+            'faculty' => 'faculty',
+            'admin', 'staff', 'employee', 'designee', 'admin_designee',
+            'non_teaching', 'non_teaching_staff' => 'non_teaching_staff',
+            'guest', 'dependent', 'dependents' => 'dependent',
+            default => null,
+        };
+
+        // IDP hints constrain form choices only, never local authorization.
+        return $type !== null ? [$type] : array_keys(self::CLINIC_ACCOUNT_TYPES);
+    }
+
+    public function hasPendingAdmissionReference(): bool
+    {
+        $profile = $this->relationLoaded('healthProfile') ? $this->healthProfile : (
+            \Illuminate\Support\Facades\Schema::hasTable('health_profiles') ? $this->healthProfile()->first() : null
+        );
+        if (in_array(strtolower(trim((string) ($profile?->clearance_status ?? ''))), ['issued', 'fully cleared'], true)) {
+            return false;
+        }
+
+        foreach ([$this->reference_number, $profile?->reference_number] as $reference) {
+            $reference = strtoupper(trim((string) $reference));
+            if ($reference !== ''
+                && !preg_match('/^(CLN-|LOC-|TEST-LOCAL)/', $reference)
+                && !preg_match('/^\d{4}-\d{5}-[A-Z]{2}-\d+$/', $reference)
+                && $reference !== strtoupper(trim((string) $this->student_id))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function clinicHealthFormAudience(): ?string
+    {
+        if (self::normalizeRole($this->user_role) !== self::ROLE_STUDENT) {
+            return null;
+        }
+
+        if ($this->hasPendingAdmissionReference()) {
+            return 'applicant';
+        }
+
+        $accountType = $this->clinicAccountTypeKey();
+
+        if ($accountType === 'applicant') {
+            $profile = $this->relationLoaded('healthProfile') ? $this->healthProfile : (
+                \Illuminate\Support\Facades\Schema::hasTable('health_profiles') ? $this->healthProfile()->first() : null
+            );
+            if (in_array(strtolower(trim((string) ($profile?->clearance_status ?? ''))), ['issued', 'fully cleared'], true)) {
+                return 'student';
+            }
+        }
+
+        return match ($accountType) {
+            'faculty', 'non_teaching_staff' => 'employee',
+            'student' => 'student',
+            'applicant' => 'applicant',
+            'dependent' => 'dependent',
+            default => 'unselected',
+        };
+    }
+
+    public function clinicUserType(): ?string
+    {
+        $accountType = $this->clinicAccountTypeKey();
+
+        return $accountType !== null ? self::userTypeForClinicAccountType($accountType) : null;
+    }
+
+    public function clinicHealthFormRoute(): ?string
+    {
+        return match ($this->clinicHealthFormAudience()) {
+            'applicant' => 'health.form',
+            'student' => 'health.form.student',
+            'employee' => 'health.form.employee',
+            'dependent' => 'dependent.profile.form',
+            default => null,
+        };
+    }
+
     /**
      * The attributes that are mass assignable.
      */

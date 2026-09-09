@@ -4,6 +4,18 @@
 
 @push('styles')
 <style>
+    body:has(.settings-page) .main {
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.84)),
+            url('{{ asset("images/admin-bg-light.png") }}?v={{ is_file(public_path("images/admin-bg-light.png")) ? md5_file(public_path("images/admin-bg-light.png")) : "missing" }}') center center / 100% 100% no-repeat fixed !important;
+    }
+
+    html[data-theme="dark"] body:has(.settings-page) .main {
+        background:
+            linear-gradient(180deg, rgba(42, 14, 22, 0.78), rgba(42, 14, 22, 0.78)),
+            url('{{ asset("images/admin-bg-dark.png") }}?v={{ is_file(public_path("images/admin-bg-dark.png")) ? md5_file(public_path("images/admin-bg-dark.png")) : "missing" }}') center center / 100% 100% no-repeat fixed !important;
+    }
+
     :root {
         --stg-maroon: #7f0000;
         --stg-maroon-deep: #4f0000;
@@ -2127,7 +2139,7 @@
         width: 100% !important;
     }
 
-    /* Final Settings hub surface pass: match Reports/Developer Tools */
+    /* Final Settings hub surface pass: match Patient Intake */
     .settings-page {
         border-color: rgba(250, 204, 21, 0.20) !important;
     }
@@ -2162,11 +2174,16 @@
     html[data-theme="dark"] .settings-page .settings-hub-card:nth-child(2),
     html[data-theme="dark"] .settings-page .settings-hub-card:nth-child(4),
     html[data-theme="dark"] .settings-page .settings-hub-card:nth-child(5) {
-        background: transparent !important;
+        background: #2E0D13 !important;
         background-image: none !important;
         border: 1px solid rgba(250, 204, 21, 0.18) !important;
         box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.22) !important;
         color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .settings-page .settings-hub-card::before,
+    html[data-theme="dark"] .settings-page .settings-hub-card::after {
+        background: transparent !important;
     }
 
     .settings-page .settings-hub-card:hover,

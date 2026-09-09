@@ -10,6 +10,18 @@
         margin: 0 auto;
     }
 
+    body:has(.dashboard-container) .main {
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.84)),
+            url('{{ asset("images/admin-bg-light.png") }}?v={{ is_file(public_path("images/admin-bg-light.png")) ? md5_file(public_path("images/admin-bg-light.png")) : "missing" }}') center center / 100% 100% no-repeat fixed !important;
+    }
+
+    html[data-theme="dark"] body:has(.dashboard-container) .main {
+        background:
+            linear-gradient(180deg, rgba(42, 14, 22, 0.78), rgba(42, 14, 22, 0.78)),
+            url('{{ asset("images/admin-bg-dark.png") }}?v={{ is_file(public_path("images/admin-bg-dark.png")) ? md5_file(public_path("images/admin-bg-dark.png")) : "missing" }}') center center / 100% 100% no-repeat fixed !important;
+    }
+
     .dashboard-welcome {
         display: flex;
         align-items: center;
@@ -868,6 +880,10 @@
         border-color: rgba(250, 204, 21, 0.18);
         background: rgba(15, 23, 42, 0.72);
         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
+    }
+
+    html[data-theme="dark"] .dashboard-date-badge svg {
+        color: #facc15;
     }
 
     /* Final light-mode surface pass */

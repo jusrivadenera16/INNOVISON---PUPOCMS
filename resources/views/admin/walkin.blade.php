@@ -226,6 +226,18 @@
         margin-top: 8px !important;
     }
 
+    body:has(.patient-intake-entry-shell) .main {
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.84)),
+            url('{{ asset("images/admin-bg-light.png") }}?v={{ is_file(public_path("images/admin-bg-light.png")) ? md5_file(public_path("images/admin-bg-light.png")) : "missing" }}') center center / 100% 100% no-repeat fixed !important;
+    }
+
+    html[data-theme="dark"] body:has(.patient-intake-entry-shell) .main {
+        background:
+            linear-gradient(180deg, rgba(42, 14, 22, 0.78), rgba(42, 14, 22, 0.78)),
+            url('{{ asset("images/admin-bg-dark.png") }}?v={{ is_file(public_path("images/admin-bg-dark.png")) ? md5_file(public_path("images/admin-bg-dark.png")) : "missing" }}') center center / 100% 100% no-repeat fixed !important;
+    }
+
     .walkin-strip-card::before {
         content: "";
         position: absolute;
@@ -1240,6 +1252,19 @@
 
     #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-total-badge {
         display: inline-flex;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow {
+        width: min(1120px, 100%);
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .employee-drafts-total-badge {
+        display: inline-flex;
+    }
+
+    /* Keep employee/faculty draft totals inside the dedicated drafts workflow. */
+    #applicantRefModal .applicant-modal-shell.is-final-review-workflow #employeeDraftTotalBadge {
+        display: none;
     }
 
     .applicant-final-review-total-badge span {
@@ -3057,8 +3082,51 @@
         padding-top: 26px !important;
     }
 
+    #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .applicant-modal-body {
+        justify-content: flex-start !important;
+        min-height: 0 !important;
+        padding-top: 26px !important;
+    }
+
     .applicant-final-review-list.is-visible {
         display: flex;
+    }
+
+    .employee-draft-list {
+        width: min(920px, 100%);
+    }
+
+    .employee-draft-card {
+        grid-template-columns: minmax(250px, 1fr) minmax(220px, .85fr) auto;
+    }
+
+    .employee-draft-card .employee-draft-date {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 12px;
+    }
+
+    .employee-draft-card .employee-draft-resume-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        white-space: nowrap;
+    }
+
+    .employee-draft-card .employee-draft-resume-btn svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .employee-draft-card .employee-draft-resume-btn:hover,
+    .employee-draft-card .employee-draft-resume-btn:focus-visible,
+    .employee-draft-card .employee-draft-resume-btn:hover span,
+    .employee-draft-card .employee-draft-resume-btn:focus-visible span,
+    .employee-draft-card .employee-draft-resume-btn:hover svg,
+    .employee-draft-card .employee-draft-resume-btn:focus-visible svg {
+        color: #70131b !important;
+        stroke: currentColor;
     }
 
     .applicant-final-review-toolbar {
@@ -3305,8 +3373,8 @@
     .applicant-final-review-toolbar .applicant-final-review-refresh-btn svg {
         width: 18px;
         height: 18px;
-        fill: currentColor;
-        stroke: none;
+        fill: none;
+        stroke: currentColor;
     }
 
     .applicant-final-review-toolbar .applicant-final-review-btn span {
@@ -3505,9 +3573,10 @@
         position: relative;
         display: inline-flex;
         min-width: 126px;
-        z-index: 30;
+        z-index: 90;
     }
     .premium-select-button {
+        position: relative;
         width: 100%;
         min-height: 38px;
         display: inline-flex;
@@ -3515,58 +3584,125 @@
         justify-content: space-between;
         gap: 10px;
         padding: 0 12px;
-        border-radius: 9px;
-        border: 1px solid rgba(112, 19, 27, .24);
+        border-radius: 6px;
+        border: 1px solid rgba(148, 163, 184, .34);
         background: #ffffff;
-        color: #111827;
+        color: #70131b;
         font-size: 12px;
         font-weight: 900;
         cursor: pointer;
-        box-shadow: 0 10px 20px rgba(15, 23, 42, .06);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+        transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, color .18s ease, transform .18s ease;
     }
     .premium-select-button::after {
         content: "";
         width: 8px;
         height: 8px;
-        border-right: 2px solid #70131B;
-        border-bottom: 2px solid #70131B;
+        flex: 0 0 8px;
+        border-right: 2px solid #70131b;
+        border-bottom: 2px solid #70131b;
         transform: rotate(45deg) translateY(-2px);
+        transition: transform .18s ease, border-color .18s ease;
     }
     .premium-select-shell.is-open .premium-select-button::after {
         transform: rotate(225deg) translateY(-2px);
     }
+    .premium-select-button:hover,
+    .premium-select-button:focus-visible,
+    .premium-select-shell.is-open .premium-select-button {
+        border-color: #facc15;
+        background: #fff8e6;
+        color: #70131b;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .12), 0 10px 20px rgba(112, 19, 27, .12);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .premium-select-button:hover::after,
+    .premium-select-button:focus-visible::after,
+    .premium-select-shell.is-open .premium-select-button::after {
+        border-color: #70131b;
+    }
     .premium-select-menu {
         position: absolute;
+        z-index: 100;
         top: calc(100% + 8px);
         left: 0;
         right: 0;
         display: none;
         flex-direction: column;
         gap: 6px;
+        max-height: 260px;
         padding: 8px;
-        border-radius: 14px;
-        border: 1px solid rgba(112, 19, 27, .16);
+        overflow-y: auto;
+        border-radius: 8px;
+        border: 1px solid rgba(112, 19, 27, .18);
         background: #ffffff;
         box-shadow: 0 18px 36px rgba(15, 23, 42, .16);
     }
     .premium-select-shell.is-open .premium-select-menu { display: flex; }
     .premium-select-option {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        width: 100%;
         min-height: 34px;
-        border: 1px solid rgba(226, 232, 240, .9);
-        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, .42);
+        border-radius: 6px;
         background: #ffffff;
-        color: #111827;
+        color: #70131b;
         font-size: 12px;
         font-weight: 900;
         text-align: left;
         padding: 0 12px;
         cursor: pointer;
+        transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+    .premium-select-option::after {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        top: -40%;
+        left: -135%;
+        width: 48%;
+        height: 180%;
+        background: linear-gradient(105deg, rgba(255, 247, 181, 0) 0%, rgba(255, 247, 181, .72) 48%, rgba(255, 247, 181, 0) 100%);
+        transform: skewX(-18deg);
+        pointer-events: none;
     }
     .premium-select-option:hover,
+    .premium-select-option:focus-visible {
+        background: #facc15;
+        color: #70131b;
+        border-color: #facc15;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .18);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .premium-select-option:hover::after,
+    .premium-select-option:focus-visible::after {
+        animation: premiumSelectSweep .85s ease both;
+    }
     .premium-select-option.is-selected {
-        background: #7f0010;
-        color: #facc15;
-        border-color: #7f0010;
+        background: #70131b;
+        color: #ffffff;
+        border-color: #70131b;
+        box-shadow: none;
+        transform: none;
+    }
+    .premium-select-option.is-selected:hover,
+    .premium-select-option.is-selected:focus-visible {
+        background: #facc15;
+        color: #70131b;
+        border-color: #facc15;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .18);
+        transform: translateY(-1px);
+    }
+    .premium-select-option:disabled {
+        display: none;
+    }
+    @keyframes premiumSelectSweep {
+        from { left: -135%; }
+        to { left: 150%; }
     }
 
     .applicant-final-review-pagination-controls {
@@ -3674,6 +3810,9 @@
 
     .applicant-ref-instruction {
         position: relative;
+        display: flex;
+        align-items: center;
+        gap: 12px;
         min-height: 88px;
         padding: 14px 15px;
         border-radius: 16px;
@@ -3712,6 +3851,7 @@
 
     .applicant-ref-help-copy {
         display: block;
+        flex: 1 1 auto;
         color: #9a3412;
         font-size: 12px;
         line-height: 1.5;
@@ -3723,6 +3863,41 @@
         font-size: inherit;
         letter-spacing: 0;
         text-transform: none;
+    }
+
+    .employee-drafts-trigger {
+        display: none;
+        flex: 0 0 46px;
+        width: 46px;
+        height: 46px;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 1px solid rgba(112, 19, 27, 0.32);
+        border-radius: 12px;
+        background: #70131b;
+        color: #facc15;
+        cursor: pointer;
+        box-shadow: 0 8px 16px rgba(112, 19, 27, 0.16);
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-drafts-trigger {
+        display: inline-flex;
+    }
+
+    .employee-drafts-trigger:hover,
+    .employee-drafts-trigger:focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131b;
+        transform: translateY(-1px);
+        outline: none;
+    }
+
+    .employee-drafts-trigger svg {
+        width: 22px;
+        height: 22px;
     }
 
     .applicant-ref-toggle-btn,
@@ -3958,14 +4133,31 @@
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-actions {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1fr) repeat(3, minmax(118px, 170px)) !important;
         align-items: center;
-        gap: 12px;
+        justify-content: end;
+        gap: 10px !important;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-action-btn {
         width: 100%;
         min-width: 0;
+        min-height: 48px;
+        padding: 0 12px;
+        border-radius: 10px;
+        font-size: 13px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-cancel-btn {
+        grid-column: 2;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-draft-btn {
+        grid-column: 3;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-ref-find-btn {
+        grid-column: 4;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-cancel-btn {
@@ -5717,6 +5909,14 @@
         scrollbar-width: thin;
     }
 
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-physical-stack {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        align-self: stretch;
+    }
+
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .employee-physical-assessment-panel .applicant-screening-panel-title {
         position: sticky;
         top: 0;
@@ -5844,7 +6044,7 @@
         min-height: 34px;
         padding: 7px 11px;
         border: 1px solid rgba(203, 213, 225, 0.92);
-        border-radius: 999px;
+        border-radius: 6px;
         background: #ffffff;
         color: #334155;
         font-size: 12px;
@@ -5920,18 +6120,12 @@
     }
 
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .applicant-screening-panel-copy,
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .applicant-vitals-grid,
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .bmi-gauge-card {
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .applicant-vitals-grid {
         display: none !important;
     }
 
     #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .employee-physical-assessment-panel .applicant-vitals-grid {
         display: grid !important;
-    }
-
-    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup.is-student-lookup .employee-physical-assessment-panel .bmi-gauge-card {
-        display: block !important;
-        margin-top: 12px;
     }
 
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col {
@@ -5982,6 +6176,36 @@
         font-weight: 800;
     }
 
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options .employee-exam-option-heading {
+        display: inline-flex;
+        align-items: center;
+        font-size: 11px !important;
+        line-height: 1.2;
+        font-weight: 800;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-skin-options {
+        align-items: start;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-skin-scars-group {
+        display: grid;
+        gap: 6px;
+        flex: 0 0 100%;
+        min-width: 0;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-skin-scars-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell {
+        width: 180px;
+        min-width: 180px;
+    }
+
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-options select,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-line select {
         width: 180px;
@@ -6026,13 +6250,55 @@
         box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
     }
 
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-bmi-assessment-section {
+        padding: 16px 18px 18px;
+        border-color: rgba(112, 19, 27, 0.18);
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 248, 0.94)),
+            radial-gradient(circle at 12% 0%, rgba(250, 204, 21, 0.12), transparent 28%);
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-bmi-assessment-section .applicant-screening-panel-title {
+        margin: 0 0 12px;
+        color: #70131b;
+        font-size: 14px;
+        letter-spacing: 0.02em;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-bmi-assessment-section .bmi-gauge-card {
+        margin-top: 0;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-physical-stack .bmi-gauge-layout {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-physical-stack .bmi-gauge-meter {
+        width: min(300px, 100%);
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-physical-stack .bmi-gauge-summary {
+        margin-bottom: 6px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-physical-stack .bmi-gauge-summary strong {
+        font-size: 18px;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-physical-stack .bmi-gauge-summary span,
+    #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-physical-stack .bmi-gauge-details {
+        font-size: 12px;
+    }
+
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-section,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-exam-two-col,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .bmi-gauge-card {
         box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.72);
     }
 
-    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-screening-panel {
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-screening-panel:not(.applicant-bmi-assessment-section) {
         padding: 0;
         border-radius: 10px;
         border-color: transparent;
@@ -6040,7 +6306,7 @@
         box-shadow: none;
     }
 
-    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-screening-panel {
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-final-review-workflow .applicant-screening-panel:not(.applicant-bmi-assessment-section) {
         padding: 18px;
         border-radius: 10px;
         border-color: #e5e7eb;
@@ -7442,7 +7708,7 @@
     }
 
     .clinic-error-card {
-        padding-top: 32px;
+        padding-top: 34px;
     }
 
     .clinic-error-icon {
@@ -7472,9 +7738,12 @@
     }
 
     .clinic-error-continue {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
         width: 100%;
         min-height: 50px;
-        border: 0;
+        border: 1px solid transparent;
         border-radius: 9px;
         background: linear-gradient(135deg, #70131B, #9a1b2c);
         color: #ffffff;
@@ -7482,15 +7751,48 @@
         font-weight: 900;
         cursor: pointer;
         box-shadow: 0 16px 34px rgba(112, 19, 27, .20);
-        transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+        transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, background .18s ease, border-color .18s ease, color .18s ease;
+    }
+
+    .clinic-error-continue::after {
+        content: "";
+        position: absolute;
+        z-index: 0;
+        top: -40%;
+        left: -130%;
+        width: 48%;
+        height: 180%;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, .72) 48%, rgba(255, 255, 255, 0) 100%);
+        transform: skewX(-18deg);
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .clinic-error-continue > span {
+        position: relative;
+        z-index: 1;
     }
 
     .clinic-error-continue:hover,
     .clinic-error-continue:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
         transform: translateY(-1px);
-        filter: brightness(1.05);
-        box-shadow: 0 18px 38px rgba(112, 19, 27, .26);
+        filter: none;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .16), 0 14px 26px rgba(112, 19, 27, .16);
         outline: none;
+    }
+
+    .clinic-error-continue:hover::after,
+    .clinic-error-continue:focus-visible::after {
+        animation: clinicErrorSweep .85s ease both;
+        opacity: 1;
+    }
+
+    @keyframes clinicErrorSweep {
+        from { left: -130%; }
+        to { left: 150%; }
     }
 
     .clinic-confirm-card {
@@ -7523,12 +7825,36 @@
 
     .clinic-confirm-cancel,
     .clinic-confirm-approve {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
         min-height: 48px;
         border-radius: 9px;
         font-size: 14px;
         font-weight: 900;
         cursor: pointer;
         transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, background .18s ease, color .18s ease;
+    }
+
+    .clinic-confirm-cancel::after,
+    .clinic-confirm-approve::after {
+        content: "";
+        position: absolute;
+        z-index: 0;
+        top: -40%;
+        left: -130%;
+        width: 48%;
+        height: 180%;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, .72) 48%, rgba(255, 255, 255, 0) 100%);
+        transform: skewX(-18deg);
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .clinic-confirm-cancel > span,
+    .clinic-confirm-approve > span {
+        position: relative;
+        z-index: 1;
     }
 
     .clinic-confirm-cancel {
@@ -7548,21 +7874,26 @@
     .clinic-confirm-cancel:focus-visible,
     .clinic-confirm-approve:hover,
     .clinic-confirm-approve:focus-visible {
-        transform: translateY(-1px);
-        outline: none;
-    }
-
-    .clinic-confirm-cancel:hover,
-    .clinic-confirm-cancel:focus-visible {
         border-color: #facc15;
         background: #facc15;
         color: #70131b;
+        transform: translateY(-1px);
+        outline: none;
+        filter: none;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .16), 0 14px 26px rgba(112, 19, 27, .16);
     }
 
-    .clinic-confirm-approve:hover,
-    .clinic-confirm-approve:focus-visible {
-        filter: brightness(1.05);
-        box-shadow: 0 18px 38px rgba(112, 19, 27, .26);
+    .clinic-confirm-cancel:hover::after,
+    .clinic-confirm-cancel:focus-visible::after,
+    .clinic-confirm-approve:hover::after,
+    .clinic-confirm-approve:focus-visible::after {
+        animation: clinicConfirmSweep .85s ease both;
+        opacity: 1;
+    }
+
+    @keyframes clinicConfirmSweep {
+        from { left: -130%; }
+        to { left: 150%; }
     }
 
     .clinic-confirm-approve:disabled,
@@ -7622,6 +7953,15 @@
         border-color: rgba(250, 204, 21, .2);
         background: #151e2d;
         color: #fde68a;
+    }
+
+    html[data-theme="dark"] .clinic-confirm-cancel:hover,
+    html[data-theme="dark"] .clinic-confirm-cancel:focus-visible,
+    html[data-theme="dark"] .clinic-confirm-approve:hover,
+    html[data-theme="dark"] .clinic-confirm-approve:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
     }
 
     @keyframes clinicSuccessPop {
@@ -8186,6 +8526,33 @@
         border-color: rgba(250, 204, 21, .55);
         color: #fde68a;
     }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell .premium-select-button,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell .premium-select-menu,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell .premium-select-option {
+        border-color: rgba(148, 163, 184, .34);
+        background: #0f172a;
+        color: #e2e8f0;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell .premium-select-button::after {
+        border-color: #facc15;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell .premium-select-option:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell .premium-select-option:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell .premium-select-option.is-selected {
+        border-color: #70131b;
+        background: #70131b;
+        color: #facc15;
+    }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell .premium-select-option.is-selected:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-fit-select-shell .premium-select-option.is-selected:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+    }
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template input[type="text"],
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-exam-template input[type="date"] {
         background: #0f172a;
@@ -8269,9 +8636,20 @@
         color: #fca5a5 !important;
     }
 
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup .employee-physical-assessment-panel .bmi-gauge-card {
-        display: block !important;
-        margin-top: 12px;
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-bmi-assessment-section {
+        background: linear-gradient(180deg, #111827, #0f172a) !important;
+        border-color: rgba(250, 204, 21, .28) !important;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, .28) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-bmi-assessment-section .applicant-screening-panel-title {
+        color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result .applicant-bmi-assessment-section .bmi-gauge-card {
+        background: rgba(15, 23, 42, 0.86) !important;
+        border-color: rgba(148, 163, 184, .28) !important;
+        box-shadow: none !important;
     }
 
     /* Do not reserve space for an empty lookup status under the employee ID field. */
@@ -8335,6 +8713,13 @@
         border-color: rgba(250, 204, 21, .18) !important;
         color: #f8fafc !important;
     }
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-lookup-details,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-employee-lookup .applicant-file-actions {
+        background: #111827 !important;
+        border-color: rgba(148, 163, 184, .22) !important;
+        color: #f8fafc !important;
+        box-shadow: none !important;
+    }
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefStatus.is-error,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .manual-lookup-status.is-error {
         background: rgba(127, 29, 29, .34) !important;
@@ -8354,8 +8739,10 @@
 
     #applicantRefModal .applicant-ref-actions.has-draft-action {
         display: grid !important;
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        grid-template-columns: minmax(0, 1fr) repeat(3, minmax(118px, 170px)) !important;
         align-items: center;
+        justify-content: end;
+        gap: 10px !important;
     }
 
     #applicantRefModal .applicant-ref-actions.has-draft-action .applicant-ref-cancel-btn {
@@ -8373,6 +8760,10 @@
     #applicantRefModal .applicant-ref-actions.has-draft-action .applicant-ref-action-btn {
         width: 100%;
         min-width: 0;
+        min-height: 48px;
+        padding: 0 12px;
+        border-radius: 10px;
+        font-size: 13px;
     }
 
     /* Applicant workflow and employee/student lookup dark-mode polish */
@@ -8501,11 +8892,11 @@
     }
 
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn {
-        background: #111827 !important;
+        background: #70131B !important;
         background-image: none !important;
-        border: 1px solid rgba(250, 204, 21, 0.18) !important;
-        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.20), 0 4px 12px rgba(0, 0, 0, 0.12) !important;
-        color: #ffffff !important;
+        border: 1px solid rgba(112, 19, 27, 0.42) !important;
+        box-shadow: 0 18px 34px rgba(112, 19, 27, 0.20), 0 4px 12px rgba(112, 19, 27, 0.12) !important;
+        color: #facc15 !important;
     }
 
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn {
@@ -8518,6 +8909,12 @@
 
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn svg,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn span {
+        color: #facc15 !important;
+        stroke: currentColor !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn svg,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup .applicant-ref-toggle-btn span {
         color: #ffffff !important;
         stroke: currentColor !important;
     }
@@ -8540,12 +8937,26 @@
 
     /* Final Walk-in intake surface pass: match Reports/Developer Tools */
     .patient-intake-entry-shell > .walkin-strip-card {
+        padding: 16px 16px 18px !important;
+        border-radius: 12px !important;
         border: 1px solid rgba(250, 204, 21, 0.20) !important;
         box-shadow: 0 18px 34px rgba(112, 19, 27, 0.08) !important;
     }
 
     .patient-intake-entry-shell > .walkin-strip-card::before {
+        left: 12px !important;
+        right: 12px !important;
         background: #70131B !important;
+    }
+
+    .patient-intake-entry-shell .intake-heading-kicker {
+        font-size: 13px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .patient-intake-entry-shell .intake-heading-title {
+        font-size: 20px !important;
+        line-height: 1.2 !important;
     }
 
     .patient-intake-entry-shell .intake-option-card,
@@ -8560,8 +8971,31 @@
         color: #ffffff !important;
     }
 
+    .patient-intake-entry-shell .intake-option-icon-wrap {
+        width: 48px !important;
+        height: 48px !important;
+        border-radius: 13px !important;
+        margin-bottom: 18px !important;
+    }
+
+    .patient-intake-entry-shell .intake-option-icon-wrap svg {
+        width: 21px !important;
+        height: 21px !important;
+    }
+
+    .patient-intake-entry-shell .intake-option-title {
+        font-size: 18px !important;
+        line-height: 1.25 !important;
+        margin-bottom: 10px !important;
+    }
+
+    .patient-intake-entry-shell .intake-option-copy {
+        font-size: 15px !important;
+        line-height: 1.42 !important;
+    }
+
     html[data-theme="dark"] .patient-intake-entry-shell > .walkin-strip-card {
-        background: transparent !important;
+        background: linear-gradient(180deg, #46131B 0%, #2E0D13 100%) !important;
         background-image: none !important;
         border-color: rgba(250, 204, 21, 0.20) !important;
         box-shadow: 0 18px 34px rgba(0, 0, 0, 0.18) !important;
@@ -8576,11 +9010,16 @@
     html[data-theme="dark"] .patient-intake-entry-shell .intake-option-scan,
     html[data-theme="dark"] .patient-intake-entry-shell .intake-option-assisted,
     html[data-theme="dark"] .patient-intake-entry-shell .intake-option-applicant {
-        background: transparent !important;
+        background: #2E0D13 !important;
         background-image: none !important;
         border: 1px solid rgba(250, 204, 21, 0.18) !important;
         box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.22) !important;
         color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .patient-intake-entry-shell .intake-option-card::before,
+    html[data-theme="dark"] .patient-intake-entry-shell .intake-option-card::after {
+        background: transparent !important;
     }
 
     .patient-intake-entry-shell .intake-option-card:hover,
@@ -8733,6 +9172,52 @@
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-card strong,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-card span {
         color: #f8fafc;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .applicant-final-review-search {
+        border-color: rgba(250, 204, 21, .24) !important;
+        background: #1e293b !important;
+        color: #f8fafc !important;
+        box-shadow: 0 12px 26px rgba(0, 0, 0, .22) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .applicant-final-review-search::placeholder,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .applicant-final-review-card small {
+        color: #94a3b8 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .employee-draft-card {
+        border-color: rgba(148, 163, 184, .22) !important;
+        background: #182235 !important;
+        box-shadow: 0 12px 26px rgba(0, 0, 0, .18) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .employee-draft-card:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .employee-draft-card:focus-within {
+        border-color: rgba(250, 204, 21, .42) !important;
+        background: #202c42 !important;
+        box-shadow: 0 16px 30px rgba(0, 0, 0, .28) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .employee-draft-card strong,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .employee-draft-card span {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .employee-draft-card .employee-draft-resume-btn:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .employee-draft-card .employee-draft-resume-btn:focus-visible,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .employee-draft-card .employee-draft-resume-btn:hover span,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .employee-draft-card .employee-draft-resume-btn:focus-visible span,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .employee-draft-card .employee-draft-resume-btn:hover svg,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .employee-draft-card .employee-draft-resume-btn:focus-visible svg {
+        color: #70131b !important;
+        stroke: currentColor !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-drafts-workflow .applicant-final-review-reference-badge {
+        border-color: rgba(250, 204, 21, .28) !important;
+        background: #111827 !important;
+        color: #fde68a !important;
     }
 
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-final-review-workflow .applicant-final-review-reference-badge {
@@ -9091,6 +9576,30 @@
         overflow: visible !important;
     }
 
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only #applicantRefStatus,
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only #applicantRefStatus.ocr-status,
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only #applicantRefStatus.ocr-status.is-visible,
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only #applicantRefStatus.ocr-status.is-visible:not(:empty),
+    #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-ref-actions {
+        display: none !important;
+        min-height: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        background-image: none !important;
+        overflow: hidden !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-approved-result-only,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-modal-body,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-approved-result-only .applicant-ref-panel {
+        background: #0f172a !important;
+        background-image: none !important;
+    }
+
     #applicantRefModal .applicant-modal-shell.is-employee-lookup:not(.has-lookup-result) .applicant-file-actions {
         display: none !important;
         min-height: 0 !important;
@@ -9103,7 +9612,27 @@
         overflow: hidden !important;
     }
 
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input {
+        background: #ffffff !important;
+        background-image: none !important;
+        border: 1px solid rgba(112, 19, 27, 0.24) !important;
+        color: #111827 !important;
+        -webkit-text-fill-color: #111827 !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 10px 20px rgba(112, 19, 27, 0.06) !important;
+        filter: none !important;
+        outline: none !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:hover,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:focus {
+        background: #ffffff !important;
+        background-image: none !important;
+        border-color: rgba(112, 19, 27, 0.48) !important;
+        box-shadow: 0 0 0 3px rgba(112, 19, 27, 0.08), 0 10px 20px rgba(112, 19, 27, 0.08) !important;
+        filter: none !important;
+        outline: none !important;
+    }
+
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input {
         background: #111827 !important;
         background-image: none !important;
@@ -9115,8 +9644,6 @@
         outline: none !important;
     }
 
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:hover,
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:focus,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:hover,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #applicantRefInput.applicant-ref-input:focus {
         background: #111827 !important;
@@ -9127,7 +9654,20 @@
         outline: none !important;
     }
 
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn {
+        background: #70131B !important;
+        background-image: none !important;
+        border: 1px solid rgba(112, 19, 27, 0.42) !important;
+        box-shadow: 0 18px 34px rgba(112, 19, 27, 0.20), 0 4px 12px rgba(112, 19, 27, 0.12) !important;
+        color: #facc15 !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn svg,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn span {
+        color: #facc15 !important;
+        stroke: currentColor !important;
+    }
+
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn {
         background: #111827 !important;
         background-image: none !important;
@@ -9136,8 +9676,6 @@
         color: #ffffff !important;
     }
 
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn svg,
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn span,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn svg,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn span {
         color: #ffffff !important;
@@ -9146,10 +9684,7 @@
 
     #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus,
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible,
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover,
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus,
-    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible {
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible {
         background: #facc15 !important;
         background-image: none !important;
         border-color: #facc15 !important;
@@ -9163,7 +9698,21 @@
     #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible svg,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover span,
     #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus span,
-    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible span,
+    #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible span {
+        color: #70131B !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible {
+        background: #facc15 !important;
+        background-image: none !important;
+        border-color: #facc15 !important;
+        color: #70131B !important;
+        transform: translateY(-2px);
+        box-shadow: 0 22px 38px rgba(112, 19, 27, 0.28) !important;
+    }
+
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:hover svg,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus svg,
     html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.is-employee-lookup #btnShowApplicantRefInput.applicant-ref-toggle-btn:focus-visible svg,
@@ -9178,6 +9727,529 @@
         display: none !important;
     }
 
+    .consultation-drafts-modal {
+        position: fixed;
+        z-index: 1500;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, .56);
+        backdrop-filter: blur(6px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .18s ease;
+    }
+    .consultation-drafts-modal.is-open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .consultation-drafts-dialog {
+        display: grid;
+        width: min(680px, 100%);
+        max-height: min(720px, calc(100vh - 40px));
+        overflow: hidden;
+        border: 1px solid #ead0d2;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 28px 70px rgba(15, 23, 42, .28), 0 0 0 3px rgba(250, 204, 21, .08);
+        transform: translateY(10px) scale(.98);
+        transition: transform .18s ease;
+    }
+    .consultation-drafts-modal.is-open .consultation-drafts-dialog {
+        transform: translateY(0) scale(1);
+    }
+    .consultation-drafts-dialog-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 18px 20px;
+        border-bottom: 1px solid #f1dfe0;
+        background: #8b0000;
+        color: #ffffff;
+    }
+    .consultation-drafts-dialog-head,
+    .consultation-drafts-dialog-head h2,
+    .consultation-drafts-dialog-head p {
+        color: #ffffff !important;
+    }
+    .consultation-drafts-dialog-heading {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        min-width: 0;
+    }
+    .consultation-drafts-dialog-heading-icon {
+        display: inline-grid;
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        place-items: center;
+        border: 1px solid rgba(250, 204, 21, .7);
+        border-radius: 8px;
+        color: #facc15;
+    }
+    .consultation-drafts-dialog-heading-icon svg {
+        width: 19px;
+        height: 19px;
+    }
+    .consultation-drafts-dialog-kicker {
+        margin: 0 0 5px;
+        color: #facc15 !important;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+    .consultation-drafts-dialog-head h2 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.15;
+        color: #ffffff !important;
+    }
+    .consultation-drafts-dialog-heading > div > p:last-child {
+        margin: 6px 0 0;
+        color: rgba(255, 255, 255, .82) !important;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+    .consultation-drafts-dialog-close,
+    .consultation-drafts-refresh {
+        display: inline-flex;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, .45);
+        border-radius: 8px;
+        background: transparent;
+        color: #ffffff;
+        cursor: pointer;
+        transition: background .18s ease, border-color .18s ease, color .18s ease;
+        transform: none;
+        animation: none;
+    }
+    .consultation-drafts-dialog-close {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border-radius: 50%;
+    }
+    .consultation-drafts-dialog-close svg {
+        width: 18px;
+        height: 18px;
+    }
+    .consultation-drafts-dialog-close:hover,
+    .consultation-drafts-dialog-close:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        outline: none;
+        transform: none;
+    }
+    .consultation-drafts-dialog-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 38px;
+        gap: 8px;
+        padding: 16px 20px 8px;
+    }
+    .consultation-drafts-search-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 38px;
+        padding: 0 11px;
+        border: 1px solid #d9c5c7;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #8b0000;
+    }
+    .consultation-drafts-search-wrap svg {
+        width: 17px;
+        height: 17px;
+        flex-shrink: 0;
+    }
+    .consultation-drafts-search-wrap input {
+        width: 100%;
+        min-width: 0;
+        height: 36px;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: #1e293b;
+        font-size: 11px;
+    }
+    .consultation-drafts-refresh {
+        width: 38px;
+        height: 38px;
+        border-color: #8b0000;
+        background: #8b0000;
+        color: #facc15;
+    }
+    .consultation-drafts-refresh svg {
+        width: 17px;
+        height: 17px;
+    }
+    .consultation-drafts-refresh:hover,
+    .consultation-drafts-refresh:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        outline: none;
+        transform: none;
+    }
+    .consultation-drafts-dialog-list {
+        display: grid;
+        gap: 8px;
+        overflow-y: auto;
+        padding: 6px 20px 20px;
+    }
+    .consultation-drafts-dialog-row {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr) auto auto;
+        gap: 12px;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid #eadfe0;
+        border-radius: 8px;
+        background: #ffffff;
+    }
+    .consultation-drafts-dialog-avatar {
+        display: inline-flex;
+        width: 42px;
+        height: 42px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #efd4d7;
+        color: #8b0000;
+        font-size: 12px;
+        font-weight: 900;
+    }
+    .consultation-drafts-dialog-person strong,
+    .consultation-drafts-dialog-person span {
+        display: block;
+    }
+    .consultation-drafts-dialog-person strong {
+        color: #1e293b;
+        font-size: 13px;
+    }
+    .consultation-drafts-dialog-person span,
+    .consultation-drafts-dialog-time {
+        margin-top: 3px;
+        color: #64748b;
+        font-size: 11px;
+    }
+    .consultation-drafts-dialog-time {
+        white-space: nowrap;
+    }
+    .consultation-drafts-dialog-resume {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 32px;
+        padding: 6px 10px;
+        border: 1px solid #eadfe0;
+        border-radius: 8px;
+        background: #fffafa;
+        color: #8b0000;
+        font-size: 11px;
+        font-weight: 800;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .ocr-consultation-draft-resume::after,
+    .consultation-drafts-dialog-resume::after {
+        content: "->";
+        font-size: 13px;
+    }
+    .consultation-drafts-dialog-resume:hover,
+    .consultation-drafts-dialog-resume:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        box-shadow: 0 7px 14px rgba(112, 19, 27, .14);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .consultation-drafts-empty-state {
+        padding: 34px 16px;
+        color: #64748b;
+        font-size: 12px;
+        text-align: center;
+    }
+    html[data-theme="dark"] .consultation-drafts-dialog {
+        border-color: #475569;
+        background: #111827;
+    }
+    html[data-theme="dark"] .consultation-drafts-dialog-head {
+        border-color: #334155;
+    }
+    html[data-theme="dark"] .consultation-drafts-dialog-toolbar,
+    html[data-theme="dark"] .consultation-drafts-dialog-list {
+        background: #111827;
+    }
+    html[data-theme="dark"] .consultation-drafts-search-wrap {
+        border-color: #475569;
+        background: #1e293b;
+    }
+    html[data-theme="dark"] .consultation-drafts-search-wrap input {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .consultation-drafts-dialog-row {
+        border-color: #334155;
+        background: #182235;
+    }
+    html[data-theme="dark"] .consultation-drafts-dialog-person strong {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .consultation-drafts-dialog-person span,
+    html[data-theme="dark"] .consultation-drafts-dialog-time,
+    html[data-theme="dark"] .consultation-drafts-empty-state {
+        color: #94a3b8;
+    }
+    html[data-theme="dark"] .consultation-drafts-dialog-resume {
+        border-color: #475569;
+        background: #1e293b;
+        color: #fca5a5;
+    }
+
+    /* Consultation drafts stay in their own shell below the alternative lookup. */
+    #applicantScanModal .manual-lookup-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 42px;
+        gap: 7px;
+        align-items: center;
+    }
+    #applicantScanModal .manual-lookup-copy {
+        margin: 5px 0 11px;
+        font-size: 11px;
+        line-height: 1.35;
+    }
+    #applicantScanModal .manual-lookup-form .form-control {
+        height: 42px;
+        min-height: 42px;
+        max-height: 42px;
+        padding: 10px 12px;
+        font-size: 13px;
+        font-weight: 800;
+    }
+    #applicantScanModal .manual-lookup-form .manual-find-btn {
+        display: inline-flex;
+        width: 42px;
+        min-width: 42px;
+        height: 42px;
+        min-height: 42px;
+        max-height: 42px;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border-radius: 8px;
+    }
+    #applicantScanModal .manual-lookup-form .manual-find-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+    .ocr-consultation-drafts-shell {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 7px 18px rgba(15, 23, 42, .06);
+    }
+    .ocr-consultation-drafts-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    .ocr-consultation-drafts-kicker {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin: 0;
+        color: #8b0000;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+    .ocr-consultation-drafts-kicker svg {
+        width: 16px;
+        height: 16px;
+    }
+    .ocr-consultation-drafts-copy {
+        margin: 4px 0 0;
+        color: #475569;
+        font-size: 11px;
+        line-height: 1.35;
+    }
+    .ocr-consultation-drafts-count {
+        flex-shrink: 0;
+        padding: 5px 9px;
+        border: 1px solid #f3c86b;
+        border-radius: 999px;
+        background: #fff3d6;
+        color: #a85d00;
+        font-size: 10px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+    .ocr-consultation-drafts-preview {
+        display: grid;
+        gap: 6px;
+    }
+    .ocr-consultation-draft-row {
+        display: grid;
+        grid-template-columns: 32px minmax(0, 1fr) auto auto;
+        gap: 8px;
+        align-items: center;
+        min-height: 48px;
+        padding: 6px 7px;
+        border: 1px solid #edf0f4;
+        border-radius: 8px;
+        background: #ffffff;
+    }
+    .ocr-consultation-draft-avatar {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #efd4d7;
+        color: #8b0000;
+        font-size: 11px;
+        font-weight: 900;
+    }
+    .ocr-consultation-draft-person,
+    .ocr-consultation-draft-time {
+        min-width: 0;
+    }
+    .ocr-consultation-draft-person strong,
+    .ocr-consultation-draft-person span {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .ocr-consultation-draft-person strong {
+        color: #1e293b;
+        font-size: 11px;
+        line-height: 1.25;
+    }
+    .ocr-consultation-draft-person span {
+        margin-top: 2px;
+        color: #334155;
+        font-size: 10px;
+        line-height: 1.25;
+    }
+    .ocr-consultation-draft-time {
+        color: #334155;
+        font-size: 10px;
+        white-space: nowrap;
+    }
+    .ocr-consultation-draft-resume,
+    .ocr-consultation-drafts-view-all {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border: 1px solid #eadfe0;
+        border-radius: 8px;
+        background: #fffafa;
+        color: #8b0000;
+        font-size: 10px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .ocr-consultation-draft-resume {
+        min-height: 30px;
+        padding: 5px 8px;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    .ocr-consultation-draft-resume:hover,
+    .ocr-consultation-draft-resume:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131b;
+        box-shadow: 0 7px 14px rgba(112, 19, 27, .14);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .ocr-consultation-drafts-view-all {
+        width: auto;
+        min-height: auto;
+        justify-self: end;
+        padding: 1px 0 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        color: #8b0000;
+        text-decoration: none;
+    }
+    .ocr-consultation-drafts-view-all:hover,
+    .ocr-consultation-drafts-view-all:focus-visible {
+        border-color: transparent;
+        background: transparent;
+        color: #70131b;
+        box-shadow: none;
+        outline: none;
+        transform: none;
+        text-decoration: underline;
+    }
+    .ocr-consultation-drafts-empty {
+        padding: 12px 8px;
+        color: #64748b;
+        font-size: 11px;
+        text-align: center;
+    }
+    html[data-theme="dark"] #applicantScanModal .ocr-consultation-drafts-shell {
+        border-color: #334155;
+        background: #111827;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, .22);
+    }
+    html[data-theme="dark"] #applicantScanModal .ocr-consultation-drafts-copy,
+    html[data-theme="dark"] #applicantScanModal .ocr-consultation-draft-time,
+    html[data-theme="dark"] #applicantScanModal .ocr-consultation-draft-person span {
+        color: #94a3b8;
+    }
+    html[data-theme="dark"] #applicantScanModal .ocr-consultation-draft-row {
+        border-color: #334155;
+        background: #182235;
+    }
+    html[data-theme="dark"] #applicantScanModal .ocr-consultation-draft-person strong {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] #applicantScanModal .ocr-consultation-draft-resume {
+        border-color: #475569;
+        background: #1e293b;
+        color: #fca5a5;
+    }
+    html[data-theme="dark"] #applicantScanModal .ocr-consultation-drafts-view-all {
+        border-color: transparent;
+        background: transparent;
+        color: #fca5a5;
+    }
+    html[data-theme="dark"] #applicantScanModal .ocr-consultation-drafts-empty {
+        color: #94a3b8;
+    }
+    @media (max-width: 560px) {
+        .ocr-consultation-draft-row {
+            grid-template-columns: 32px minmax(0, 1fr) auto;
+        }
+        .ocr-consultation-draft-time {
+            display: none;
+        }
+    }
 </style>
 @endpush
 
@@ -9227,7 +10299,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5A1.5 1.5 0 0 1 4.5 6h15A1.5 1.5 0 0 1 21 7.5v9A1.5 1.5 0 0 1 19.5 18h-15A1.5 1.5 0 0 1 3 16.5v-9Zm3 3h12m-12 3h7.5" />
                         </svg>
                     </span>
-                    <h3 class="intake-option-title">OCR / Scan ID</h3>
+                    <h3 class="intake-option-title">Consultation</h3>
                     <p class="intake-option-copy">Scan or manually enter an ID to open an existing patient record for consultation.</p>
                 </div>
             </a>
@@ -9285,8 +10357,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" />
                         </svg>
                     </span>
-                    <h3 class="intake-option-title">Employees Module</h3>
-                    <p class="intake-option-copy">Enter an employee or student ID to view the permitted clinic record.</p>
+                    <h3 class="intake-option-title">Employee's, Students and Dependents</h3>
+                    <p class="intake-option-copy">Search an employee, student, or dependent ID to look up record.</p>
                 </div>
             </a>
             @endif
@@ -9309,6 +10381,10 @@
                     <div class="applicant-final-review-total-badge" id="applicantFinalReviewTotalBadge">
                         <span>Total Applicants</span>
                         <strong id="applicantFinalReviewTotalCount">{{ $finalReviewApplicants->count() }}</strong>
+                    </div>
+                    <div class="applicant-final-review-total-badge employee-drafts-total-badge" id="employeeDraftTotalBadge">
+                        <span>Total Drafts</span>
+                        <strong id="employeeDraftTotalCount">{{ $employeeDrafts->count() }}</strong>
                     </div>
                     <button type="button" class="applicant-modal-close" id="closeApplicantRefModal" aria-label="Close modal">
                         <x-outline-icon name="x-mark" />
@@ -9423,6 +10499,64 @@
                             </select>
                         </div>
                     </div>
+
+                    <div class="applicant-final-review-list employee-draft-list" id="employeeDraftList">
+                        <div class="applicant-final-review-toolbar">
+                            <label class="applicant-final-review-search-wrap" for="employeeDraftSearch">
+                                <x-outline-icon name="magnifying-glass" />
+                                <input type="search" class="applicant-final-review-search" id="employeeDraftSearch" placeholder="Search by name or employee number">
+                            </label>
+                            <button type="button" class="applicant-final-review-btn applicant-final-review-refresh-btn" id="btnRefreshEmployeeDrafts" aria-label="Refresh employee drafts" title="Refresh employee drafts">
+                                <x-outline-icon name="arrow-path-refresh" />
+                            </button>
+                        </div>
+                        <div id="employeeDraftRows">
+                            @forelse($employeeDrafts as $employeeDraft)
+                                @php
+                                    $draftName = trim((string) ($employeeDraft->name ?: trim(implode(' ', array_filter([
+                                        $employeeDraft->first_name,
+                                        $employeeDraft->middle_name,
+                                        $employeeDraft->last_name,
+                                        $employeeDraft->suffix_name,
+                                    ])))));
+                                    $draftName = $draftName !== '' ? $draftName : ($employeeDraft->user?->name ?: 'Employee');
+                                    $draftReference = trim((string) ($employeeDraft->employee_number ?: $employeeDraft->user?->employee_number ?: $employeeDraft->id));
+                                    $draftSearch = strtolower(trim($draftName . ' ' . ($employeeDraft->user?->email ?? '') . ' ' . $draftReference));
+                                    $draftPhotoUrl = filled($employeeDraft->student_photo)
+                                        ? route(request()->routeIs('assistant.*') ? 'assistant.walkin.employeeDocument' : 'walkin.employeeDocument', ['employeeProfile' => $employeeDraft->id, 'document' => 'student_photo'])
+                                        : '';
+                                @endphp
+                                <article class="applicant-final-review-card employee-draft-card" data-employee-draft-row data-search="{{ $draftSearch }}">
+                                    <div class="applicant-final-review-person">
+                                        <span class="applicant-final-review-avatar">
+                                            @if($draftPhotoUrl)
+                                                <img src="{{ $draftPhotoUrl }}" alt="{{ $draftName }} 2x2 photo">
+                                            @else
+                                                {{ strtoupper(mb_substr($draftName, 0, 1) . (str_contains($draftName, ' ') ? mb_substr(strrchr($draftName, ' '), 1, 1) : '')) }}
+                                            @endif
+                                        </span>
+                                        <div>
+                                            <small>{{ $employeeDraft->draft_record_type ?: 'Faculty' }}</small>
+                                            <strong>{{ $draftName }}</strong>
+                                            <span>{{ $employeeDraft->user?->email ?? 'Local employee record' }}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <small>ID Number</small>
+                                        <strong class="employee-draft-id">{{ $draftReference }}</strong>
+                                        <span>{{ $employeeDraft->health_form_category ?: 'Employee Health Form' }} - {{ optional($employeeDraft->updated_at)->format('M d, Y g:i A') }}</span>
+                                    </div>
+                                    <button type="button" class="applicant-final-review-btn employee-draft-resume-btn" data-employee-draft-reference="{{ $draftReference }}">
+                                        <x-outline-icon name="pencil-square-resume" />
+                                        <span>Resume</span>
+                                    </button>
+                                </article>
+                            @empty
+                                <div class="applicant-documents-empty" id="employeeDraftNoRecords">No employee drafts found.</div>
+                            @endforelse
+                        </div>
+                        <div class="applicant-final-review-empty" id="employeeDraftEmpty">No employee draft matches your search.</div>
+                    </div>
                 </div>
 
                 <div class="applicant-ref-panel" id="applicantRefEntry">
@@ -9433,6 +10567,9 @@
                     <div class="applicant-ref-lookup-row">
                     <div class="applicant-ref-instruction">
                         <span class="applicant-ref-help-copy" id="lookupModalHelpCopy">Find the reference number in the <strong>Admission System</strong> under the applicant's profile or registration form.</span>
+                        <button type="button" id="btnShowEmployeeDrafts" class="employee-drafts-trigger" aria-label="Open employee drafts" aria-controls="employeeDraftList" title="Open employee drafts">
+                            <x-outline-icon name="document-clock" />
+                        </button>
                     </div>
                     <div class="applicant-ref-field">
                         <label for="applicantRefInput" id="lookupModalFieldLabel">Reference Number</label>
@@ -9715,9 +10852,10 @@
                             </div>
                         </section>
 
-                        <section class="applicant-screening-panel employee-physical-assessment-panel">
-                            <h4 class="applicant-screening-panel-title">PHYSICAL EXAMINATION</h4>
-                            <div class="employee-physical-exam-template" aria-label="Physical examination">
+                        <div class="applicant-physical-stack">
+                            <section class="applicant-screening-panel employee-physical-assessment-panel">
+                                <h4 class="applicant-screening-panel-title">PHYSICAL EXAMINATION</h4>
+                                <div class="employee-physical-exam-template" aria-label="Physical examination">
                                 <div class="employee-exam-section">
                                     <strong>Vital Signs:</strong>
                                     <div class="employee-exam-options">
@@ -9791,11 +10929,11 @@
                                 <div class="employee-exam-section">
                                     <strong>Heart:</strong>
                                     <div class="employee-exam-options">
-                                        <span>Murmur:</span>
+                                        <span class="employee-exam-option-heading">Murmur:</span>
                                         <label><input type="radio" name="employee_exam_heart_murmur" value="present"> Present</label>
                                         <label><input type="radio" name="employee_exam_heart_murmur" value="absent"> Absent</label>
                                         <label><input type="radio" name="employee_exam_heart_murmur" value="na"> N/A</label>
-                                        <span>Rhythm:</span>
+                                        <span class="employee-exam-option-heading">Rhythm:</span>
                                         <label><input type="radio" name="employee_exam_heart_rhythm" value="regular"> Regular</label>
                                         <label><input type="radio" name="employee_exam_heart_rhythm" value="irregular"> Irregular</label>
                                         <label><input type="radio" name="employee_exam_heart_rhythm" value="na"> N/A</label>
@@ -9826,13 +10964,17 @@
                                 </div>
                                 <div class="employee-exam-section">
                                     <strong>Skin:</strong>
-                                    <div class="employee-exam-options">
+                                    <div class="employee-exam-options employee-skin-options">
                                         <label><input type="checkbox" name="employee_exam_skin[]" value="pallor"> Pallor</label>
                                         <label><input type="checkbox" name="employee_exam_skin[]" value="rashes"> Rashes</label>
                                         <label><input type="checkbox" name="employee_exam_skin[]" value="lesions"> Lesions</label>
-                                    <strong>Scars:</strong>
-                                        <label><input type="radio" name="employee_exam_scars" value="absent"> Absent</label>
-                                        <label><input type="radio" name="employee_exam_scars" value="present"> Present</label>
+                                        <div class="employee-skin-scars-group">
+                                            <span class="employee-exam-option-heading">Scars:</span>
+                                            <div class="employee-skin-scars-options">
+                                                <label><input type="radio" name="employee_exam_scars" value="absent"> Absent</label>
+                                                <label><input type="radio" name="employee_exam_scars" value="present"> Present</label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="employee-exam-section">
@@ -9862,8 +11004,8 @@
                                     </div>
                                     <label class="employee-exam-line"><strong>Follow up on:</strong> <input type="date" name="employee_exam_follow_up_on"></label>
                                 </div>
-                            </div>
-                            <div class="applicant-vitals-grid">
+                                </div>
+                                <div class="applicant-vitals-grid">
                                 <div class="applicant-condition-field">
                                     <label for="applicantHeight">Height <span style="color:#dc2626;">*</span></label>
                                     <input type="text" id="applicantHeight" name="height" class="applicant-condition-input vital-input" placeholder="e.g., 5'6&quot;" inputmode="text" required>
@@ -9923,8 +11065,12 @@
                                     <label for="applicantEncodeRemarks">Assessment Remarks <span style="color:#94a3b8;">(Optional)</span></label>
                                     <textarea id="applicantEncodeRemarks" name="encode_remarks" placeholder="Optional assessment notes from the encoding station..." class="applicant-condition-textarea" rows="3"></textarea>
                                 </div>
-                            </div>
-                            <div class="bmi-gauge-card" id="bmiGaugeCard" aria-live="polite">
+                                </div>
+                            </section>
+
+                            <section class="applicant-screening-panel applicant-bmi-assessment-section" aria-label="BMI assessment">
+                                <h4 class="applicant-screening-panel-title">BMI ASSESSMENT</h4>
+                                <div class="bmi-gauge-card" id="bmiGaugeCard" aria-live="polite">
                                 <div class="bmi-gauge-summary">
                                     <strong id="bmiGaugeTitle">BMI pending</strong>
                                     <span id="bmiGaugeCategory">Enter height and weight</span>
@@ -9955,8 +11101,9 @@
                                         <li id="bmiPonderal">Ponderal Index: --</li>
                                     </ul>
                                 </div>
-                            </div>
-                        </section>
+                                </div>
+                            </section>
+                        </div>
                     </div>
 
                     <div class="applicant-ref-actions">
@@ -10144,13 +11291,10 @@
 
     <div class="clinic-success-overlay" id="applicantFinalReviewErrorOverlay" role="alertdialog" aria-modal="true" aria-labelledby="applicantFinalReviewErrorTitle" aria-describedby="applicantFinalReviewErrorMessage" aria-hidden="true">
         <div class="clinic-success-card clinic-error-card">
-            <div class="clinic-error-icon" aria-hidden="true">
-                <x-outline-icon name="exclamation-triangle" />
-            </div>
-            <strong id="applicantFinalReviewErrorTitle">Unable to Continue</strong>
+            <strong id="applicantFinalReviewErrorTitle">Error</strong>
             <p id="applicantFinalReviewErrorMessage">Please review the required fields before continuing.</p>
             <hr>
-            <button type="button" class="clinic-error-continue" data-final-review-error-close>Continue</button>
+            <button type="button" class="clinic-error-continue" data-final-review-error-close><span>Continue</span></button>
         </div>
     </div>
 
@@ -10163,8 +11307,8 @@
             <p id="applicantFinalReviewConfirmMessage">Are you sure you want to approve this decision?</p>
             <hr>
             <div class="clinic-confirm-actions">
-                <button type="button" class="clinic-confirm-cancel" data-final-review-confirm-cancel>Cancel</button>
-                <button type="button" class="clinic-confirm-approve" id="applicantFinalReviewConfirmApprove">Approve</button>
+                <button type="button" class="clinic-confirm-cancel" data-final-review-confirm-cancel><span>Cancel</span></button>
+                <button type="button" class="clinic-confirm-approve" id="applicantFinalReviewConfirmApprove"><span>Approve</span></button>
             </div>
         </div>
     </div>
@@ -10211,9 +11355,8 @@
                 <div class="applicant-modal-head-main">
                     <div id="headerIcon" class="applicant-modal-head-badge">AP</div>
                     <div class="applicant-modal-head-copy">
-                        <h3 id="headerTitle">OCR Ready</h3>
-                        <span id="scanMethodBadge" class="scan-method-badge">OCR Active</span>
-                        <p id="headerSubtitle">Start with OCR ID scanning, or use manual student number entry when the card cannot be captured clearly.</p>
+                        <h3 id="headerTitle">Consultation</h3>
+                        <p id="headerSubtitle">Use OCR or manual Patient ID Number lookup to open a consultation record.</p>
                     </div>
                 </div>
                 <div class="applicant-modal-head-actions" style="display:none;">
@@ -10234,7 +11377,7 @@
                     <div id="scanForm" style="display: contents;">
                         <div id="scanStage" class="scan-stage">
                             <div id="scanner-container-scan" class="scan-surface" style="position:relative;">
-                                <p id="scanInlineNote" class="scan-inline-note">OCR mode is active. Align the physical ID inside the frame and continue once the ID number and name are matched locally.</p>
+                                <p id="scanInlineNote" class="scan-inline-note">OCR mode is active. Align the physical ID inside the frame and continue once the Patient ID Number and name are matched locally.</p>
                                 <div id="barcodeScanPanel">
                                     <div id="scan-loading">
                                         <div class="spinner"></div>
@@ -10244,16 +11387,16 @@
                                         <div id="readerScan" class="scanner-box">
                                             <div class="scan-line-overlay"></div>
                                             <div class="ocr-guide"></div>
-                                            <div class="ocr-guide-label">Align Student Number and Name</div>
+                                            <div class="ocr-guide-label">Align Patient ID Number and Name</div>
                                         </div>
-                                        <div id="ocrCameraIdle" class="ocr-camera-idle">Camera is Closed. Select Start Camera when you are ready to scan the student ID.</div>
+                                        <div id="ocrCameraIdle" class="ocr-camera-idle">Camera is Closed. Select Start Camera when you are ready to scan the physical ID.</div>
                                     </div>
                                     <div class="ocr-camera-controls">
                                         <button type="button" id="btnStartOcrCamera" class="btn-ocr btn-ocr-primary">Start Camera</button>
                                         <button type="button" id="btnCloseOcrCamera" class="btn-ocr btn-ocr-secondary" disabled>Close Camera</button>
                                     </div>
                                     <div class="ocr-actions" id="ocrScanActions" style="display:none;">
-                                        <button type="button" id="btnRunAiOcr" class="btn-ocr btn-ocr-primary" style="background:linear-gradient(135deg,#1d4ed8,#2563eb 55%,#3b82f6);box-shadow:0 12px 24px rgba(37,99,235,0.22);">Reading ID Number</button>
+                                        <button type="button" id="btnRunAiOcr" class="btn-ocr btn-ocr-primary" style="background:linear-gradient(135deg,#1d4ed8,#2563eb 55%,#3b82f6);box-shadow:0 12px 24px rgba(37,99,235,0.22);">Reading Patient ID</button>
                                         <button type="button" id="btnRetryOcr" class="btn-ocr btn-ocr-secondary">Clear OCR Result</button>
                                     </div>
                                 </div>
@@ -10285,13 +11428,13 @@
                                     <input type="text" id="ocr_student_name" class="form-control" readonly style="margin-bottom:0;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;box-shadow:inset 0 1px 0 rgba(255,255,255,0.95);font-weight:700;cursor:default;">
                                 </div>
                                 <div style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,#fdfefe,#f8fafc);border:1px solid #e2e8f0;">
-                                    <p class="ocr-result-label" style="margin:0;color:#334155;">ID Number</p>
+                                    <p class="ocr-result-label" style="margin:0;color:#334155;">Patient ID Number</p>
                                     <input type="text" id="ocr_student_number" class="form-control" readonly style="margin-bottom:0;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;box-shadow:inset 0 1px 0 rgba(255,255,255,0.95);font-weight:700;cursor:default;">
                                 </div>
                             </div>
                             <div id="ocrStatus" class="ocr-status info" style="display:block;">AI verification could not finish right now.</div>
                             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                                <div id="ocrConfidenceText" class="ocr-meta">ID number confidence: 10%</div>
+                            <div id="ocrConfidenceText" class="ocr-meta">Patient ID confidence: 10%</div>
                                 <div id="ocrLockBadge" class="ocr-lock-badge" style="display:none;">Locked on ID</div>
                             </div>
                             <div class="ocr-actions" style="margin-top:14px;">
@@ -10299,19 +11442,67 @@
                             </div>
                             </div>
                             <div class="manual-input-stack">
-                                <p class="manual-toggle-label">Alternative Lookup</p>
-                                <h4 class="manual-lookup-title">Employee's / Student Number Lookup</h4>
-                                <p class="manual-lookup-copy">Use the employee number or student number saved in local clinic records when OCR cannot read the physical ID clearly.</p>
+                                <h4 class="manual-lookup-title">Patient ID Number Lookup</h4>
+                                <p class="manual-lookup-copy">Use the Patient ID Number saved in local clinic records when OCR cannot read the physical ID clearly.</p>
                                 <form id="walkinFormManual" class="manual-lookup-form">
-                                    <input type="text" id="student_id_manual" placeholder="Enter employee or student number" class="form-control" required>
-                                    <button type="submit" id="manualFindBtn" class="manual-find-btn" disabled>Find Record</button>
+                                    <input type="text" id="student_id_manual" placeholder="Enter Patient ID Number" class="form-control" required>
+                                    <button type="submit" id="manualFindBtn" class="manual-find-btn" disabled aria-label="Find record" title="Find record">
+                                        <x-outline-icon name="magnifying-glass" />
+                                    </button>
                                 </form>
                                 <div id="manualLookupStatus" class="manual-lookup-status" role="status" aria-live="polite"></div>
                             </div>
+                            <section class="ocr-consultation-drafts-shell" aria-labelledby="ocrConsultationDraftsTitle">
+                                    <div class="ocr-consultation-drafts-heading">
+                                        <div>
+                                            <p class="ocr-consultation-drafts-kicker"><x-outline-icon name="document-text" /> Draft Consultations</p>
+                                            <p class="ocr-consultation-drafts-copy">Continue your unfinished consultation records.</p>
+                                        </div>
+                                        <span class="ocr-consultation-drafts-count" id="ocrConsultationDraftsCount">0 Total</span>
+                                    </div>
+                                    <div class="ocr-consultation-drafts-preview" id="ocrConsultationDraftsPreview">
+                                        <div class="ocr-consultation-drafts-empty">No consultation drafts found.</div>
+                                    </div>
+                                    <button type="button" class="ocr-consultation-drafts-view-all" id="btnViewAllConsultationDrafts">
+                                        <span>View all drafts</span>
+                                        <span aria-hidden="true">&rarr;</span>
+                                    </button>
+                            </section>
                         </div>
                         <canvas id="ocrCanvas" style="display:none;"></canvas>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="consultation-drafts-modal" id="consultationDraftsModal" aria-hidden="true" hidden>
+        <div class="consultation-drafts-dialog" role="dialog" aria-modal="true" aria-labelledby="consultationDraftsTitle">
+            <div class="consultation-drafts-dialog-head">
+                <div class="consultation-drafts-dialog-heading">
+                    <span class="consultation-drafts-dialog-heading-icon" aria-hidden="true">
+                        <x-outline-icon name="document-text" />
+                    </span>
+                    <div>
+                        <h2 id="consultationDraftsTitle">Consultations Drafts</h2>
+                        <p>Resume unfinished consultation records saved from the clinic form.</p>
+                    </div>
+                </div>
+                <button type="button" class="consultation-drafts-dialog-close" id="closeConsultationDraftsModal" aria-label="Close consultation drafts">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </div>
+            <div class="consultation-drafts-dialog-toolbar">
+                <label class="consultation-drafts-search-wrap" for="consultationDraftSearch">
+                    <x-outline-icon name="magnifying-glass" />
+                    <input type="search" id="consultationDraftSearch" placeholder="Search patient or ID number">
+                </label>
+                <button type="button" class="consultation-drafts-refresh" id="refreshConsultationDrafts" aria-label="Refresh consultation drafts" title="Refresh consultation drafts">
+                    <x-outline-icon name="arrow-path-refresh" />
+                </button>
+            </div>
+            <div class="consultation-drafts-dialog-list" id="consultationDraftsDialogList">
+                <div class="consultation-drafts-empty-state">No consultation drafts found.</div>
             </div>
         </div>
     </div>
@@ -10367,10 +11558,10 @@
         <div id="headerIcon" class="mode-header-badge">{{ $currentMode === 'applicant' ? 'AP' : 'SB' }}</div>
         <div class="mode-header-copy">
             <h3 id="headerTitle" style="margin: 0; font-weight: 800; text-transform: uppercase; font-size: 1rem; letter-spacing: 1px;">
-                {{ $currentMode === 'applicant' ? 'Applicant Scan Ready' : 'OCR Ready' }}
+                {{ $currentMode === 'applicant' ? 'Applicant Scan Ready' : 'Consultation' }}
             </h3>
             <p id="headerSubtitle">
-                {{ $currentMode === 'applicant' ? 'Choose OCR scanning or manual ID entry to identify the applicant record.' : 'Choose OCR scanning or manual ID entry to identify the patient.' }}
+                {{ $currentMode === 'applicant' ? 'Choose OCR scanning or manual ID entry to identify the applicant record.' : 'Use OCR or manual Patient ID Number lookup to open a consultation record.' }}
             </p>
         </div>
     </div>
@@ -10380,15 +11571,14 @@
         <div id="scanStage" class="scan-stage">
             <div class="scan-method-bar">
                 <div>
-                <p id="scanMethodTitle" class="scan-method-title">OCR ID Scan</p>
-                <p id="scanMethodNote" class="scan-method-note">Use the camera to extract the student number from the physical ID card, or enter it manually.</p>
-                <span id="scanMethodBadge" class="scan-method-badge">OCR Active</span>
+                <p id="scanMethodTitle" class="scan-method-title">OCR Patient ID Scan</p>
+                <p id="scanMethodNote" class="scan-method-note">Use the camera to extract the Patient ID Number from the physical ID card, or enter it manually.</p>
                 </div>
                 <button type="button" id="btnSwitchScanMode" class="btn-scan-switch" style="display:none;">OCR Scan Active</button>
             </div>
 
             <div id="scanner-container-scan" class="scan-surface" style="position: relative;">
-                <p id="scanInlineNote" class="scan-inline-note">OCR mode is active. Align the physical ID inside the frame, or type the student number manually.</p>
+                <p id="scanInlineNote" class="scan-inline-note">OCR mode is active. Align the physical ID inside the frame, or type the Patient ID Number manually.</p>
                 <div id="barcodeScanPanel">
                     <div id="scan-loading">
                         <div class="spinner"></div>
@@ -10397,11 +11587,11 @@
                     <div id="readerScan" class="scanner-box">
                         <div class="scan-line-overlay"></div>
                         <div class="ocr-guide"></div>
-                        <div class="ocr-guide-label">Align Student Number and Name</div>
+                        <div class="ocr-guide-label">Align Patient ID Number and Name</div>
                     </div>
 
                     <div class="ocr-actions">
-                        <button type="button" id="btnRunAiOcr" class="btn-ocr btn-ocr-primary" style="background:linear-gradient(135deg, #1d4ed8, #2563eb 55%, #3b82f6); box-shadow:0 12px 24px rgba(37,99,235,0.22);">Reading ID Number</button>
+                        <button type="button" id="btnRunAiOcr" class="btn-ocr btn-ocr-primary" style="background:linear-gradient(135deg, #1d4ed8, #2563eb 55%, #3b82f6); box-shadow:0 12px 24px rgba(37,99,235,0.22);">Reading Patient ID</button>
                         <button type="button" id="btnRetryOcr" class="btn-ocr btn-ocr-secondary">Clear OCR Result</button>
                     </div>
 
@@ -10412,12 +11602,12 @@
                                 <input type="text" id="ocr_student_name" class="form-control" placeholder="Enter full name" style="margin-bottom:0;">
                             </div>
                             <div style="display:grid; grid-template-columns: 120px minmax(0, 1fr); gap:12px; align-items:center;">
-                                <p class="ocr-result-label" style="margin:0;">ID Number</p>
-                                <input type="text" id="ocr_student_number" class="form-control" placeholder="Enter ID number" style="margin-bottom:0;">
+                                <p class="ocr-result-label" style="margin:0;">Patient ID Number</p>
+                                <input type="text" id="ocr_student_number" class="form-control" placeholder="Enter Patient ID Number" style="margin-bottom:0;">
                             </div>
                         </div>
 
-                        <div id="ocrStatus" class="ocr-status info" style="display:block;">Live OCR is ready. Hold the ID steady inside the frame so we can detect the student number and fill the saved name from records.</div>
+                        <div id="ocrStatus" class="ocr-status info" style="display:block;">Live OCR is ready. Hold the ID steady inside the frame so we can detect the Patient ID Number and fill the saved name from records.</div>
                         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                             <div id="ocrConfidenceText" class="ocr-meta">OCR confidence will appear here after analysis.</div>
                             <div id="ocrLockBadge" class="ocr-lock-badge" style="display:none;">Locked on ID</div>
@@ -10435,14 +11625,16 @@
         
             <div class="text-center mt-3">
                 <button type="button" id="btnShowManual" style="background:none; border:none; color:#8B0000; text-decoration:underline; cursor:pointer; font-weight:600; font-size: 0.85rem;">
-                    Type Student Number Manually
+                    Type Patient ID Number Manually
                 </button>
             </div>
 
             <div id="manualInputArea" style="display:none;" class="mt-3">
                 <form id="walkinFormManual" class="d-flex gap-2">
-                    <input type="text" id="student_id_manual" placeholder="Enter employee or student number" class="form-control" style="margin-bottom:0;" required>
-                    <button type="submit" id="manualFindBtn" class="manual-find-btn" disabled>Find Record</button>
+                    <input type="text" id="student_id_manual" placeholder="Enter Patient ID Number" class="form-control" style="margin-bottom:0;" required>
+                    <button type="submit" id="manualFindBtn" class="manual-find-btn" disabled aria-label="Find record" title="Find record">
+                        <x-outline-icon name="magnifying-glass" />
+                    </button>
                 </form>
                 <div id="manualLookupStatus" class="manual-lookup-status" role="status" aria-live="polite"></div>
             </div>
@@ -10484,8 +11676,8 @@
                         </div>
 
             <div class="mb-3 assisted-highlight-card">
-                <label style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Student Number / Reference ID</label>
-                <input type="text" id="reg_student_id" class="form-control mb-0" placeholder="Enter student number or reference ID" required>
+                <label style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Patient ID Number / Reference ID</label>
+                <input type="text" id="reg_student_id" class="form-control mb-0" placeholder="Enter Patient ID Number or reference ID" required>
                 <input type="hidden" id="reg_barcode">
             </div>
             
@@ -10683,8 +11875,191 @@
         const assistedGenderMenu = document.getElementById('assistedGenderMenu');
         const assistedGenderOptions = Array.from(document.querySelectorAll('.assisted-gender-option'));
         const assistedGenderWrap = assistedGenderDisplay ? assistedGenderDisplay.closest('.assisted-gender-wrap') : null;
+        const consultationDraftsUrl = '{{ url($basePrefix . '/walkin/consultation-drafts') }}';
+        const consultationDraftsCount = document.getElementById('ocrConsultationDraftsCount');
+        const consultationDraftsPreview = document.getElementById('ocrConsultationDraftsPreview');
+        const consultationDraftsShell = document.querySelector('.ocr-consultation-drafts-shell');
+        const viewAllConsultationDraftsButton = document.getElementById('btnViewAllConsultationDrafts');
+        const consultationDraftsModal = document.getElementById('consultationDraftsModal');
+        const closeConsultationDraftsButton = document.getElementById('closeConsultationDraftsModal');
+        const consultationDraftsDialogList = document.getElementById('consultationDraftsDialogList');
+        const consultationDraftSearch = document.getElementById('consultationDraftSearch');
+        const refreshConsultationDraftsButton = document.getElementById('refreshConsultationDrafts');
 
         updateScanModeUI();
+
+        function consultationDraftInitials(name) {
+            return String(name || 'Patient')
+                .trim()
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map(function (part) { return part.charAt(0).toUpperCase(); })
+                .join('') || 'PT';
+        }
+
+        function consultationDraftAge(savedAt) {
+            if (!savedAt) return 'Recently saved';
+
+            const savedDate = new Date(savedAt);
+            if (Number.isNaN(savedDate.getTime())) return 'Recently saved';
+
+            const minutes = Math.max(0, Math.floor((Date.now() - savedDate.getTime()) / 60000));
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes} min${minutes === 1 ? '' : 's'} ago`;
+
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+
+            const days = Math.floor(hours / 24);
+            return `${days} day${days === 1 ? '' : 's'} ago`;
+        }
+
+        function buildConsultationDraftRow(draft, isDialogRow = false) {
+            const row = document.createElement('article');
+            row.className = isDialogRow ? 'consultation-drafts-dialog-row' : 'ocr-consultation-draft-row';
+            row.dataset.search = String(draft.search || `${draft.name || ''} ${draft.identifier || ''}`).toLowerCase();
+            row.title = `${draft.name || 'Patient'}\n${draft.identifier || 'No ID number'}\nSaved ${consultationDraftAge(draft.saved_at)}`;
+
+            const avatar = document.createElement('span');
+            avatar.className = isDialogRow ? 'consultation-drafts-dialog-avatar' : 'ocr-consultation-draft-avatar';
+            avatar.textContent = consultationDraftInitials(draft.name);
+
+            const person = document.createElement('div');
+            person.className = isDialogRow ? 'consultation-drafts-dialog-person' : 'ocr-consultation-draft-person';
+            const identifier = document.createElement('strong');
+            identifier.textContent = draft.identifier || 'No ID number';
+            const name = document.createElement('span');
+            name.textContent = draft.name || 'Patient';
+            person.append(identifier, name);
+
+            const savedAt = document.createElement('span');
+            savedAt.className = isDialogRow ? 'consultation-drafts-dialog-time' : 'ocr-consultation-draft-time';
+            savedAt.textContent = consultationDraftAge(draft.saved_at);
+
+            const resume = document.createElement('a');
+            resume.className = isDialogRow ? 'consultation-drafts-dialog-resume' : 'ocr-consultation-draft-resume';
+            resume.href = draft.resume_url || '#';
+            resume.textContent = 'Resume';
+            resume.dataset.loaderScope = 'screen';
+            resume.setAttribute('aria-label', `Resume consultation draft for ${draft.name || 'patient'}`);
+
+            row.append(avatar, person, savedAt, resume);
+            return row;
+        }
+
+        function renderConsultationDrafts(drafts) {
+            const items = Array.isArray(drafts) ? drafts : [];
+            if (consultationDraftsCount) consultationDraftsCount.textContent = `${items.length} Total`;
+
+            if (consultationDraftsPreview) {
+                consultationDraftsPreview.replaceChildren();
+                if (!items.length) {
+                    const empty = document.createElement('div');
+                    empty.className = 'ocr-consultation-drafts-empty';
+                    empty.textContent = 'No consultation drafts found.';
+                    consultationDraftsPreview.appendChild(empty);
+                } else {
+                    items.slice(0, 3).forEach(function (draft) {
+                        consultationDraftsPreview.appendChild(buildConsultationDraftRow(draft));
+                    });
+                }
+            }
+
+            if (consultationDraftsDialogList) {
+                consultationDraftsDialogList.replaceChildren();
+                if (!items.length) {
+                    const empty = document.createElement('div');
+                    empty.className = 'consultation-drafts-empty-state';
+                    empty.textContent = 'No consultation drafts found.';
+                    consultationDraftsDialogList.appendChild(empty);
+                } else {
+                    items.forEach(function (draft) {
+                        consultationDraftsDialogList.appendChild(buildConsultationDraftRow(draft, true));
+                    });
+                }
+                filterConsultationDrafts();
+            }
+        }
+
+        function filterConsultationDrafts() {
+            if (!consultationDraftsDialogList) return;
+
+            const query = String(consultationDraftSearch?.value || '').trim().toLowerCase();
+            const rows = Array.from(consultationDraftsDialogList.querySelectorAll('.consultation-drafts-dialog-row'));
+            let visibleRows = 0;
+            rows.forEach(function (row) {
+                const matches = !query || (row.dataset.search || '').includes(query);
+                row.hidden = !matches;
+                if (matches) visibleRows += 1;
+            });
+
+            const empty = consultationDraftsDialogList.querySelector('.consultation-drafts-empty-state');
+            if (empty && rows.length) {
+                empty.textContent = visibleRows ? '' : 'No consultation drafts match your search.';
+                empty.hidden = visibleRows > 0;
+            }
+        }
+
+        function refreshConsultationDrafts() {
+            if (!consultationDraftsUrl || !consultationDraftsPreview) return Promise.resolve();
+
+            if (refreshConsultationDraftsButton) refreshConsultationDraftsButton.disabled = true;
+
+            return fetch(consultationDraftsUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+                .then(function (response) { return response.json(); })
+                .then(function (payload) {
+                    if (!payload.success) throw new Error(payload.message || 'Unable to load consultation drafts.');
+                    renderConsultationDrafts(payload.drafts || []);
+                })
+                .catch(function (error) {
+                    console.error(error);
+                    renderConsultationDrafts([]);
+                })
+                .finally(function () {
+                    if (refreshConsultationDraftsButton) refreshConsultationDraftsButton.disabled = false;
+                });
+        }
+
+        function openConsultationDraftsModal() {
+            if (!consultationDraftsModal) return;
+            consultationDraftsModal.hidden = false;
+            consultationDraftsModal.classList.add('is-open');
+            consultationDraftsModal.setAttribute('aria-hidden', 'false');
+            if (consultationDraftSearch) consultationDraftSearch.value = '';
+            refreshConsultationDrafts().finally(function () {
+                consultationDraftSearch?.focus();
+            });
+        }
+
+        function closeConsultationDraftsModal() {
+            if (!consultationDraftsModal) return;
+            consultationDraftsModal.classList.remove('is-open');
+            consultationDraftsModal.setAttribute('aria-hidden', 'true');
+            window.setTimeout(function () {
+                if (!consultationDraftsModal.classList.contains('is-open')) consultationDraftsModal.hidden = true;
+            }, 180);
+        }
+
+        if (viewAllConsultationDraftsButton) viewAllConsultationDraftsButton.addEventListener('click', openConsultationDraftsModal);
+        if (closeConsultationDraftsButton) closeConsultationDraftsButton.addEventListener('click', closeConsultationDraftsModal);
+        if (refreshConsultationDraftsButton) refreshConsultationDraftsButton.addEventListener('click', refreshConsultationDrafts);
+        if (consultationDraftSearch) consultationDraftSearch.addEventListener('input', filterConsultationDrafts);
+        if (consultationDraftsModal) consultationDraftsModal.addEventListener('click', function (event) {
+            if (event.target === consultationDraftsModal) closeConsultationDraftsModal();
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && consultationDraftsModal?.classList.contains('is-open')) {
+                closeConsultationDraftsModal();
+            }
+        });
+        refreshConsultationDrafts();
 
         function getDestinationLabel() {
             return intakeTarget === 'assessment' ? 'applicant record' : 'consultation form';
@@ -10785,7 +12160,7 @@
             if (closeOcrCameraBtn) closeOcrCameraBtn.disabled = !isActive;
             if (ocrCameraIdle) ocrCameraIdle.classList.toggle('is-hidden', isActive);
             if (ocrCameraIdle && !isActive && !isStarting) {
-                ocrCameraIdle.textContent = 'Camera is Closed. Select Start Camera when you are ready to scan the student ID.';
+                ocrCameraIdle.textContent = 'Camera is Closed. Select Start Camera when you are ready to scan the physical ID.';
             }
             if (ocrScanActions) ocrScanActions.style.display = isActive ? 'flex' : 'none';
             if (applicantOcrDetectedContent) applicantOcrDetectedContent.style.display = isActive ? 'block' : 'none';
@@ -10813,8 +12188,8 @@
                 );
                 attachVideoTrack();
                 setOcrCameraState(true);
-                buildStatus('Live OCR is scanning. Hold the student ID steady inside the frame.', 'info');
-                $('#ocrConfidenceText').text('Student number confidence will appear after scanning.');
+                buildStatus('Live OCR is scanning. Hold the physical ID steady inside the frame.', 'info');
+                $('#ocrConfidenceText').text('Patient ID confidence will appear after scanning.');
                 startLiveOcr();
             } catch (error) {
                 mainScanner = null;
@@ -10851,6 +12226,9 @@
         function buildStatus(message, type = 'info', extra = '') {
             const $status = $('#ocrStatus');
             $status.removeClass('info success error').addClass(type).html(`${message}${extra ? `<div class="ocr-meta">${extra}</div>` : ''}`);
+            if (type === 'error') {
+                showFinalReviewErrorModal(`${message}${extra ? ` ${extra}` : ''}`);
+            }
         }
 
         function normalizeSpaces(value) {
@@ -10970,7 +12348,7 @@
                 ocrNameLocked = true;
             }
 
-            $('#ocrConfidenceText').text(confidence ? `ID number confidence: ${confidence}%` : 'ID number confidence will appear here after analysis.');
+            $('#ocrConfidenceText').text(confidence ? `Patient ID confidence: ${confidence}%` : 'Patient ID confidence will appear here after analysis.');
             $('#ocrResultPanel').show();
             $('#btnConfirmOcr').prop('disabled', !($('#ocr_student_number').val().trim() && $('#ocr_student_name').val().trim()));
             $('#ocrLockBadge').toggle(isLocked);
@@ -11015,7 +12393,7 @@
 
             autoProceedInFlight = true;
             lastAutoProceedKey = autoProceedKey;
-            buildStatus(`Student number and name matched. Opening the ${getDestinationLabel()} now.`, 'success', 'Auto proceed');
+            buildStatus(`Patient ID Number and name matched. Opening the ${getDestinationLabel()} now.`, 'success', 'Auto proceed');
             verifyUser(normalizedStudentNumber, normalizedStudentName, true);
         }
 
@@ -11207,9 +12585,9 @@
                 if (stableStudentNumber) {
                     requestMatchedNamePreview(stableStudentNumber, stableStudentName || studentName, function(preview) {
                         if (preview.name_matches === false) {
-                            buildStatus('Student number matched an official record, but the scanned name still looks different. Please review the card before continuing.', 'info', 'Record name applied');
+                            buildStatus('Patient ID Number matched an official record, but the scanned name still looks different. Please review the card before continuing.', 'info', 'Record name applied');
                         } else {
-                            buildStatus('Student number matched an official record and the system applied the saved name automatically. Please review before continuing.', 'success', 'Record name applied');
+                            buildStatus('Patient ID Number matched an official record and the system applied the saved name automatically. Please review before continuing.', 'success', 'Record name applied');
                             attemptAutoProceed(
                                 stableStudentNumber,
                                 ($('#ocr_student_name').val() || preview.student_name || stableStudentName || studentName)
@@ -11220,21 +12598,21 @@
                     if (signature !== lastOcrSignature || !isAutoPass) {
                         buildStatus(
                             isLocked
-                                ? 'Live OCR locked onto the card. Please review the extracted ID number and name before continuing.'
+                                ? 'Live OCR locked onto the card. Please review the extracted Patient ID Number and name before continuing.'
                                 : allowNameAutofill
-                                    ? 'Live OCR found a stable student number and a usable name guess. Please review the extracted fields below.'
-                                    : 'Live OCR found a stable student number. The system is matching the saved name now.',
+                                    ? 'Live OCR found a stable Patient ID Number and a usable name guess. Please review the extracted fields below.'
+                                    : 'Live OCR found a stable Patient ID Number. The system is matching the saved name now.',
                             'success',
-                            `ID number confidence ${confidence}%`
+                            `Patient ID confidence ${confidence}%`
                         );
                         lastOcrSignature = signature;
                     }
                 } else if (stableStudentName) {
                     if (signature !== lastOcrSignature) {
                         buildStatus(
-                            'The name is stable now. Keep the ID steady and we will keep reading the student number.',
+                            'The name is stable now. Keep the ID steady and we will keep reading the Patient ID Number.',
                             'info',
-                            `ID number confidence ${confidence}%`
+                            `Patient ID confidence ${confidence}%`
                         );
                         lastOcrSignature = signature;
                     }
@@ -11245,7 +12623,7 @@
                     }, 7000);
                     verifyWithAi(true);
                 } else if (!isAutoPass) {
-                    buildStatus('OCR could not confidently read the ID number yet. You can keep the card steady, use AI ID-number reading, or type it manually.', 'error', `ID number confidence ${confidence}%`);
+                    buildStatus('OCR could not confidently read the Patient ID Number yet. You can keep the card steady, use AI reading, or type it manually.', 'error', `Patient ID confidence ${confidence}%`);
                 }
             } catch (error) {
                 if (!isAutoPass) {
@@ -11260,15 +12638,15 @@
         function verifyWithAi(isAutoAssist = false) {
             const canvas = capturePreparedIdCanvas(false);
             if (!canvas) {
-                buildStatus('Camera preview is not ready yet. Please wait a moment, then try AI student-number reading again.', 'error');
+                buildStatus('Camera preview is not ready yet. Please wait a moment, then try AI Patient ID reading again.', 'error');
                 return;
             }
 
-            $('#btnRunAiOcr').prop('disabled', true).text('Reading ID...');
+            $('#btnRunAiOcr').prop('disabled', true).text('Reading Patient ID...');
             buildStatus(
                 isAutoAssist
-                    ? 'Live OCR needs help, so we are sending the current camera image to AI to extract the student number.'
-                    : 'Sending the current camera image to AI to extract the student number.',
+                    ? 'Live OCR needs help, so we are sending the current camera image to AI to extract the Patient ID Number.'
+                    : 'Sending the current camera image to AI to extract the Patient ID Number.',
                 'info'
             );
 
@@ -11282,7 +12660,7 @@
                 success: function(res) {
                     const studentNumber = (res.student_number || '').trim();
                     const studentName = (res.student_name || '').trim();
-                    const note = (res.confidence_note || 'AI student-number reading completed.').trim();
+                    const note = (res.confidence_note || 'AI Patient ID reading completed.').trim();
 
                     if (studentNumber) {
                         $('#ocr_student_number').val(studentNumber);
@@ -11295,7 +12673,7 @@
                     if (studentNumber) {
                         requestMatchedNamePreview(studentNumber, '', function(preview) {
                             if (preview && preview.student_name) {
-                                buildStatus('AI read the student number and the system filled the saved name from records. Please review before continuing.', 'success', 'AI + records');
+                                buildStatus('AI read the Patient ID Number and the system filled the saved name from records. Please review before continuing.', 'success', 'AI + records');
                                 attemptAutoProceed(studentNumber, preview.student_name);
                                 return;
                             }
@@ -11318,10 +12696,10 @@
                 },
                 error: function(xhr) {
                     const response = xhr.responseJSON || {};
-                    buildStatus(response.message || 'AI student-number reading could not complete right now. Please keep using OCR or manual review.', 'error');
+                    buildStatus(response.message || 'AI Patient ID reading could not complete right now. Please keep using OCR or manual review.', 'error');
                 },
                 complete: function() {
-                    $('#btnRunAiOcr').prop('disabled', false).text('Reading ID Number');
+                    $('#btnRunAiOcr').prop('disabled', false).text('Reading Patient ID');
                 }
             });
         }
@@ -11343,6 +12721,10 @@
             const copy = document.createElement('span');
             copy.textContent = message;
             status.appendChild(copy);
+
+            if (type === 'error') {
+                showFinalReviewErrorModal(message);
+            }
         }
 
         function isSupportedClinicIdNumber(value) {
@@ -11350,7 +12732,7 @@
             if (!normalized) return false;
 
             const studentNumberPattern = /^\d{4}-\d{5}-[A-Z]{2}-\d+$/;
-            const employeeNumberPattern = /^[A-Z0-9-]{3,40}$/;
+            const employeeNumberPattern = /^[A-Z0-9-]{1,120}$/;
 
             return studentNumberPattern.test(normalized) || employeeNumberPattern.test(normalized);
         }
@@ -11360,10 +12742,10 @@
             const normalizedId = String(id || '').trim();
 
             if (!isSupportedClinicIdNumber(normalizedId)) {
-                const invalidMessage = 'Enter a valid employee number or student number from local clinic records.';
+                const invalidMessage = 'Enter a valid Patient ID Number from local clinic records.';
                 if (isManualLookup) {
                     setManualLookupStatus('error', invalidMessage);
-                    $('#manualFindBtn').prop('disabled', false).text('Find Record');
+                    $('#manualFindBtn').prop('disabled', false).attr('aria-label', 'Find record');
                 } else {
                     buildStatus(invalidMessage, 'error');
                 }
@@ -11372,7 +12754,7 @@
 
             if (isManualLookup) {
                 setManualLookupStatus('loading', 'Checking local clinic records...');
-                $('#manualFindBtn').prop('disabled', true).text('Verifying...');
+                $('#manualFindBtn').prop('disabled', true).attr('aria-label', 'Finding record');
             } else {
                 $('#scan-loading').css('display', 'flex');
             }
@@ -11400,7 +12782,7 @@
                 } else {
                     const failureMessage = res.message
                         ? res.message
-                        : `No local employee or student record found for ID number ${normalizedId}. Please check the number and try again.`;
+                        : `No local patient record found for Patient ID Number ${normalizedId}. Please check the number and try again.`;
 
                     if (isManualLookup) {
                         setManualLookupStatus('error', failureMessage);
@@ -11434,7 +12816,7 @@
                 autoProceedInFlight = false;
             }).always(() => {
                 if (isManualLookup) {
-                    $('#manualFindBtn').prop('disabled', normalizedId === '').text('Find Record');
+                    $('#manualFindBtn').prop('disabled', normalizedId === '').attr('aria-label', 'Find record');
                 }
             });
         }
@@ -11453,26 +12835,26 @@
         function updateScanModeUI() {
             scanMethod = 'ocr';
             const isApplicantFlow = intakeTarget === 'assessment';
-            $('#scanMethodTitle').text('OCR ID Scan');
+            if (consultationDraftsShell) consultationDraftsShell.hidden = isApplicantFlow;
+            $('#scanMethodTitle').text('OCR Patient ID Scan');
             $('#scanMethodNote').text(
                 isApplicantFlow
-                        ? 'Use the live camera feed to extract the printed ID number from the physical ID card, then review the saved local record.'
-                        : 'Use the live camera feed to extract the printed ID number from the physical ID card, then fill the saved name from records.'
+                        ? 'Use the live camera feed to extract the printed Patient ID Number from the physical ID card, then review the saved local record.'
+                        : 'Use the live camera feed to extract the printed Patient ID Number from the physical ID card, then fill the saved name from records.'
             );
-            $('#scanMethodBadge').text('OCR Active');
             $('#btnSwitchScanMode').hide();
             $('#btnSwitchScanMode span').text('OCR Scan Active');
-            $('#headerTitle').text('OCR Ready');
+            $('#headerTitle').text(isApplicantFlow ? 'Applicant Scan Ready' : 'Consultation');
             $('#headerSubtitle').text(
                 isApplicantFlow
-                        ? 'Choose OCR ID scanning or manual ID entry to identify the saved local clinic record.'
-                        : ''
+                        ? 'Choose OCR scanning or manual Patient ID Number entry to identify the saved local clinic record.'
+                        : 'Use OCR or manual Patient ID Number lookup to open a consultation record.'
             );
             $('#headerIcon').text(isApplicantFlow ? 'AP' : 'SB');
             $('#scanInlineNote').text(
                 isApplicantFlow
-                        ? 'OCR mode is active. Align the physical ID inside the frame and continue once the ID number and name are matched locally.'
-                        : 'OCR mode is active. Align the physical ID inside the frame and the system will keep reading the ID number live, then match the saved name automatically.'
+                        ? 'OCR mode is active. Align the physical ID inside the frame and continue once the Patient ID Number and name are matched locally.'
+                        : 'OCR mode is active. Align the physical ID inside the frame and the system will keep reading the Patient ID Number live, then match the saved name automatically.'
             );
             $('#barcodeScanPanel').show();
             $('#btnShowManual').show();
@@ -11616,7 +12998,7 @@
             const studentName = $('#ocr_student_name').val().trim();
 
             if (!studentNumber || !studentName) {
-                buildStatus('Please review both extracted fields first. We need both the student number and the student name for confirmation.', 'error');
+                buildStatus('Please review both extracted fields first. We need both the Patient ID Number and the name for confirmation.', 'error');
                 return;
             }
 
@@ -11627,7 +13009,7 @@
             $('#ocr_student_number').val('');
             $('#ocr_student_name').val('');
             $('#btnConfirmOcr').prop('disabled', true);
-            $('#ocrConfidenceText').text('Student number confidence will appear here after analysis.');
+            $('#ocrConfidenceText').text('Patient ID confidence will appear here after analysis.');
             lastOcrSignature = '';
             ocrLockCount = 0;
             lastStudentNumberCandidate = '';
@@ -11672,7 +13054,10 @@
             const role = $('#reg_user_type').val();
             const email = $('#reg_email').val().trim();
 
-            if(!role) { alert("Please select a User Role!"); return; }
+            if (!role) {
+                showFinalReviewErrorModal('Please select a User Role.');
+                return;
+            }
 
             if (!email) {
                 $('#reg_email')[0].reportValidity();
@@ -11755,6 +13140,13 @@
         const finalReviewPerPage = document.getElementById('applicantFinalReviewPerPage');
         const finalReviewEmpty = document.getElementById('applicantFinalReviewEmpty');
         const finalReviewTotalCount = document.getElementById('applicantFinalReviewTotalCount');
+        const employeeDraftList = document.getElementById('employeeDraftList');
+        const employeeDraftRows = document.getElementById('employeeDraftRows');
+        const employeeDraftSearch = document.getElementById('employeeDraftSearch');
+        const employeeDraftRefresh = document.getElementById('btnRefreshEmployeeDrafts');
+        const employeeDraftEmpty = document.getElementById('employeeDraftEmpty');
+        const employeeDraftTotalCount = document.getElementById('employeeDraftTotalCount');
+        const showEmployeeDraftsBtn = document.getElementById('btnShowEmployeeDrafts');
         const finalReviewActionRow = document.getElementById('applicantFinalReviewActionRow');
         const backToFinalReviewList = document.getElementById('btnBackToFinalReviewList');
         const cancelEntryBtn  = document.getElementById('btnCancelApplicantRef');
@@ -11867,6 +13259,7 @@
         let pendingFinalReviewIsPendingDecision = false;
         let finalReviewApprovalInProgress = false;
         let currentLookupRef  = '';
+        let currentLookupName = '';
         let currentDocuments  = [];
         let currentLookupMode = 'applicant';
         let currentApplicantWorkflow = 'select';
@@ -11877,6 +13270,7 @@
         const canApproveFinalReview = @json($canApproveFinalReview);
         const getStudentUrl   = '{{ url($basePrefix . '/walkin/get-student') }}';
         const finalReviewApplicantsUrl = '{{ url($basePrefix . '/walkin/final-review-applicants') }}';
+        const employeeDraftsUrl = '{{ url($basePrefix . '/walkin/employee-drafts') }}';
         const finalReviewTimeInUrl = '{{ url($basePrefix . '/walkin/final-review/time-in') }}';
         const saveEncodingUrl = '{{ url($basePrefix . '/walkin/applicant-encoding') }}';
         const saveStudentAssessmentUrl = '{{ url($basePrefix . '/walkin/student-assessment') }}';
@@ -11897,7 +13291,7 @@
         }
 
         function isStudentLookupResult() {
-            return currentRecordType === 'student';
+            return currentRecordType === 'student' || currentRecordType === 'dependent';
         }
 
         function isEncodeWorkflow() {
@@ -12028,9 +13422,15 @@
             finalReviewApprovalInProgress = Boolean(isLoading);
             if (finalReviewConfirmApprove) {
                 finalReviewConfirmApprove.disabled = finalReviewApprovalInProgress;
-                finalReviewConfirmApprove.textContent = finalReviewApprovalInProgress
+                const approveLabel = finalReviewApprovalInProgress
                     ? 'Approving...'
                     : (pendingFinalReviewIsPendingDecision ? 'Approve' : 'Approve');
+                const approveText = finalReviewConfirmApprove.querySelector('span');
+                if (approveText) {
+                    approveText.textContent = approveLabel;
+                } else {
+                    finalReviewConfirmApprove.textContent = approveLabel;
+                }
             }
             finalReviewConfirmOverlay
                 ?.querySelectorAll('[data-final-review-confirm-cancel]')
@@ -12054,10 +13454,13 @@
 
             pendingFinalReviewApprovalData = approvalData;
             pendingFinalReviewIsPendingDecision = Boolean(isPendingDecision);
+            const isFacultyApproval = ['employee_local', 'clinic_local'].includes(String(approvalData?.lookup_scope || '').toLowerCase());
+            const subjectName = String(currentLookupName || '').trim();
+            const subjectLabel = subjectName || (isFacultyApproval ? 'this faculty/employee record' : 'this applicant');
             if (finalReviewConfirmMessage) {
                 finalReviewConfirmMessage.textContent = pendingFinalReviewIsPendingDecision
-                    ? 'Are you sure you want to mark this applicant for pending compliance?'
-                    : 'Are you sure you want to approve and issue this clearance?';
+                    ? `Are you sure you want to mark ${subjectLabel} for pending compliance?`
+                    : `Are you sure you want to approve ${subjectLabel} and issue this clearance?`;
             }
             setFinalReviewConfirmLoading(false);
             finalReviewConfirmOverlay.classList.add('is-open');
@@ -12092,11 +13495,11 @@
             syncDocumentsModalCopy();
 
             if (lookupModalBadge) lookupModalBadge.textContent = isClinicLookupMode() ? 'ID' : 'AP';
-            if (lookupModalTitle) lookupModalTitle.textContent = isClinicLookupMode() ? "Employee's / Students" : 'Applicants';
+            if (lookupModalTitle) lookupModalTitle.textContent = isClinicLookupMode() ? "Employee's, Students and Dependents" : 'Applicants';
             if (lookupModalSubtitle) lookupModalSubtitle.textContent = isClinicLookupMode()
                 ? 'Enter an employee number or student number to look up local employee records.'
                 : "Enter the applicant's reference number to look up the record.";
-            if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isClinicLookupMode() ? "Employee's / Student ID Lookup" : 'Reference Lookup';
+            if (lookupModalEntryTitle) lookupModalEntryTitle.textContent = isClinicLookupMode() ? "Employee's, Students and Dependents ID Lookup" : 'Reference Lookup';
             if (lookupModalEntrySubtitle) lookupModalEntrySubtitle.textContent = isClinicLookupMode()
                 ? 'Use the employee number or student number to open the saved local employee record.'
                 : 'Choose encoding for the first station or final review for approval.';
@@ -12112,6 +13515,10 @@
             if (workflowChoices) workflowChoices.style.display = isClinicLookupMode() ? 'none' : 'grid';
             if (showEntryBtn) showEntryBtn.style.display = isClinicLookupMode() ? 'inline-flex' : 'none';
             if (finalReviewList) finalReviewList.classList.remove('is-visible');
+            if (employeeDraftList) employeeDraftList.classList.remove('is-visible');
+            if (modalShell) modalShell.classList.remove('is-employee-drafts-workflow');
+            const introCopy = defaultPane?.querySelector('.applicant-ref-copy');
+            if (introCopy) introCopy.style.display = '';
             if (backToFinalReviewList) backToFinalReviewList.classList.remove('is-visible');
         }
 
@@ -12434,6 +13841,7 @@
                 savedAssessmentModal.setAttribute('aria-hidden', 'true');
             }
             currentLookupRef = '';
+            currentLookupName = '';
             currentLookupRedirect = '';
             currentAssessmentReview = {};
             currentRecordType = isClinicLookupMode() ? 'employee' : 'applicant';
@@ -12553,6 +13961,8 @@
             if (backdrop) backdrop.classList.remove('show');
             closeHealthInfoModal();
             closeMedicalConditionModal();
+            if (employeeDraftList) employeeDraftList.classList.remove('is-visible');
+            if (modalShell) modalShell.classList.remove('is-employee-drafts-workflow');
             setEntryMode(false);
             if (refInput) refInput.value = '';
         }
@@ -12571,7 +13981,7 @@
             refStatus.style.display = 'block';
             refStatus.className = 'ocr-status ' + type + ' is-visible';
             refStatus.textContent = cleanMessage;
-            if (type === 'error' && isFinalReviewWorkflow()) {
+            if (type === 'error') {
                 showFinalReviewErrorModal(cleanMessage);
             }
         }
@@ -12596,7 +14006,7 @@
                 input.disabled = Boolean(locked);
             });
 
-            const physicalPanel = document.querySelector('#applicantRefModal .applicant-medical-condition-section > section:not(.applicant-review-panel)');
+            const physicalPanel = document.querySelector('#applicantRefModal .employee-physical-assessment-panel');
             if (physicalPanel) {
                 physicalPanel.classList.toggle('is-readonly-review', Boolean(locked));
             }
@@ -13887,7 +15297,9 @@
             }
             const physicalExamTitle = document.querySelector('#applicantRefModal .employee-physical-assessment-panel .applicant-screening-panel-title');
             if (physicalExamTitle) {
-                physicalExamTitle.textContent = isStudentRecord ? 'Student/OJT Assessment' : 'PHYSICAL EXAMINATION';
+                physicalExamTitle.textContent = currentRecordType === 'dependent'
+                    ? 'Dependent Assessment'
+                    : (isStudentRecord ? 'Student/OJT Assessment' : 'PHYSICAL EXAMINATION');
             }
 
             populateAssessmentReview(currentAssessmentReview);
@@ -13977,6 +15389,7 @@
                     }
 
                     currentLookupRef = data.reference_number || ref;
+                    currentLookupName = applicantName.trim();
                     currentLookupRedirect = data.redirect_url || '';
 
                     // Check if applicant is already approved
@@ -13989,18 +15402,20 @@
                         || data.approved === true
                         || data.approved === 1;
 
-                    const isStudentRecord = data.record_type === 'student';
+                    const isDependentRecord = data.record_type === 'dependent';
+                    const isStudentRecord = data.record_type === 'student' || isDependentRecord;
                     const isLocalHealthProfile = data.lookup_source === 'local_health_profile';
                     const isLocalEmployeeReference = ['local_employee_reference', 'local_clinic_reference'].includes(data.lookup_source);
                     const isLocalEmployeeId = ['local_employee_id', 'local_clinic_id'].includes(data.lookup_source);
-                    const isLocalOnlyLookup = isStudentRecord || isLocalHealthProfile || isLocalEmployeeReference || isLocalEmployeeId;
+                    const isLocalDependentId = data.lookup_source === 'local_dependent_id';
+                    const isLocalOnlyLookup = isStudentRecord || isLocalHealthProfile || isLocalEmployeeReference || isLocalEmployeeId || isLocalDependentId;
                     const lookupFoundMessage = isLocalHealthProfile
                         ? (data.sync_warning || 'Local health profile found. PUPTAS sync will still depend on a valid Admission reference.')
                         : (isStudentRecord
                             ? (applicantName ? 'Student/OJT health profile found: ' + applicantName + '.' : 'Student/OJT health profile found.')
                             : (isClinicLookupMode()
-                            ? (applicantName ? "Employee's record found: " + applicantName + '.' : "Employee's record found.")
-                            : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.')));
+                                ? (applicantName ? "Employee's record found: " + applicantName + '.' : "Employee's record found.")
+                                : (applicantName ? 'Applicant found: ' + applicantName + '.' : 'Applicant found.')));
 
                     if (isAlreadyApproved && !isStudentRecord) {
                         showLookupDetails(data, ref);
@@ -14301,6 +15716,20 @@
             const temperatureInput = document.getElementById('applicantTemperature');
             const covidPositiveInput = document.querySelector('input[name="applicant_covid_positive"]:checked');
             const covidPositiveDateInput = document.getElementById('applicantCovidPositiveDate');
+            const isFacultyRecord = isClinicLookupMode() && !isStudentLookupResult();
+            const facultyHeightInput = document.querySelector('[name="employee_exam_height"]');
+            const facultyWeightInput = document.querySelector('[name="employee_exam_weight"]');
+            const facultyBloodPressureInput = document.querySelector('[name="employee_exam_bp"]');
+            const facultyPulseRateInput = document.querySelector('[name="employee_exam_hr"]');
+            const facultyRespiratoryRateInput = document.querySelector('[name="employee_exam_rr"]');
+            const facultyTemperatureInput = document.querySelector('[name="employee_exam_temperature"]');
+            const vitalHeightInput = isFacultyRecord ? facultyHeightInput : heightInput;
+            const vitalWeightInput = isFacultyRecord ? facultyWeightInput : weightInput;
+            const vitalBloodPressureInput = isFacultyRecord ? facultyBloodPressureInput : bloodPressureInput;
+            const vitalPulseRateInput = isFacultyRecord ? facultyPulseRateInput : pulseRateInput;
+            const vitalRespiratoryRateInput = isFacultyRecord ? facultyRespiratoryRateInput : respiratoryRateInput;
+            const vitalTemperatureInput = isFacultyRecord ? facultyTemperatureInput : temperatureInput;
+            const vitalValue = (input) => String(input?.value ?? '').trim();
 
             if (!findingsStatusInput) {
                 setStatus('error', 'Please select the nurse findings review result.');
@@ -14342,23 +15771,25 @@
                 return;
             }
 
-            if (!heightInput?.value || !weightInput?.value || !bloodPressureInput?.value.trim() || !pulseRateInput?.value || !respiratoryRateInput?.value || !temperatureInput?.value) {
-                setStatus('error', 'Please complete the height, weight, blood pressure, pulse rate, respiratory rate, and temperature fields.');
+            if ([vitalHeightInput, vitalWeightInput, vitalBloodPressureInput, vitalPulseRateInput, vitalRespiratoryRateInput, vitalTemperatureInput].some((input) => !vitalValue(input))) {
+                setStatus('error', isFacultyRecord
+                    ? 'Please complete the faculty physical examination vital signs.'
+                    : 'Please complete the height, weight, blood pressure, pulse rate, respiratory rate, and temperature fields.');
                 return;
             }
 
-            const heightValue = parseHeightFeet(heightInput.value);
+            const heightValue = parseHeightFeet(vitalHeightInput.value);
             if (heightValue === null || heightValue < 1 || heightValue > 10) {
                 setStatus('error', 'Height must use feet and inches, e.g., 5\'6".');
                 return;
             }
 
-            if (!covidPositiveInput) {
+            if (!isFacultyRecord && !covidPositiveInput) {
                 setStatus('error', 'Please select if the student is COVID Positive.');
                 return;
             }
 
-            if (covidPositiveInput.value === 'Yes' && !covidPositiveDateInput?.value) {
+            if (!isFacultyRecord && covidPositiveInput.value === 'Yes' && !covidPositiveDateInput?.value) {
                 setStatus('error', 'Please enter the COVID Positive date.');
                 return;
             }
@@ -14368,14 +15799,14 @@
                 lookup_scope: isClinicLookupMode() ? 'employee_local' : 'default',
                 findings_status: findingsStatusInput.value,
                 clearance_decision: clearanceDecisionInput.value,
-                height: heightInput.value,
-                weight: weightInput.value,
-                blood_pressure: bloodPressureInput.value.trim(),
-                pulse_rate: pulseRateInput.value,
-                respiratory_rate: respiratoryRateInput.value,
-                temperature: temperatureInput.value,
-                covid_positive: covidPositiveInput.value,
-                covid_positive_date: covidPositiveInput.value === 'Yes' ? covidPositiveDateInput.value : '',
+                height: vitalValue(vitalHeightInput),
+                weight: vitalValue(vitalWeightInput),
+                blood_pressure: vitalValue(vitalBloodPressureInput),
+                pulse_rate: vitalValue(vitalPulseRateInput),
+                respiratory_rate: vitalValue(vitalRespiratoryRateInput),
+                temperature: vitalValue(vitalTemperatureInput),
+                covid_positive: isFacultyRecord ? '' : covidPositiveInput.value,
+                covid_positive_date: !isFacultyRecord && covidPositiveInput.value === 'Yes' ? covidPositiveDateInput.value : '',
                 med_assessment_remarks: hasFindings
                     ? (findingRemarksInput?.value.trim() || '')
                     : (normalRemarksInput?.value.trim() || '')
@@ -14389,13 +15820,13 @@
 
                 Object.assign(approvalData, {
                     employee_exam_distress: checkedValue('employee_exam_distress'),
-                    employee_exam_height: fieldValue('employee_exam_height') || heightInput.value,
-                    employee_exam_weight: fieldValue('employee_exam_weight') || weightInput.value,
+                    employee_exam_height: fieldValue('employee_exam_height') || vitalValue(vitalHeightInput),
+                    employee_exam_weight: fieldValue('employee_exam_weight') || vitalValue(vitalWeightInput),
                     employee_exam_bmi: fieldValue('employee_exam_bmi'),
-                    employee_exam_bp: fieldValue('employee_exam_bp') || bloodPressureInput.value.trim(),
-                    employee_exam_hr: fieldValue('employee_exam_hr') || pulseRateInput.value,
-                    employee_exam_rr: fieldValue('employee_exam_rr') || respiratoryRateInput.value,
-                    employee_exam_temperature: fieldValue('employee_exam_temperature') || temperatureInput.value,
+                    employee_exam_bp: fieldValue('employee_exam_bp') || vitalValue(vitalBloodPressureInput),
+                    employee_exam_hr: fieldValue('employee_exam_hr') || vitalValue(vitalPulseRateInput),
+                    employee_exam_rr: fieldValue('employee_exam_rr') || vitalValue(vitalRespiratoryRateInput),
+                    employee_exam_temperature: fieldValue('employee_exam_temperature') || vitalValue(vitalTemperatureInput),
                     employee_exam_head: checkedValues('employee_exam_head[]'),
                     employee_exam_eyes: checkedValues('employee_exam_eyes[]'),
                     employee_exam_ears: checkedValues('employee_exam_ears[]'),
@@ -14440,7 +15871,10 @@
 
         function submitFinalReviewApproval(approvalData, isPendingDecision) {
             setFinalReviewConfirmLoading(true);
-            setStatus('info', isPendingDecision ? 'Saving pending compliance...' : 'Approving applicant...');
+            const isFacultyApproval = ['employee_local', 'clinic_local'].includes(String(approvalData?.lookup_scope || '').toLowerCase());
+            setStatus('info', isPendingDecision
+                ? 'Saving pending compliance...'
+                : (isFacultyApproval ? 'Approving faculty/employee record...' : 'Approving applicant...'));
 
             fetch("{{ route('admin.walkin.approve_applicant') }}", {
                 method: 'POST',
@@ -14466,8 +15900,12 @@
                     showClinicSuccessOverlay(approvalOverlay, {
                         title: isPendingDecision ? 'Marked Pending' : 'Medical Clearance Issued',
                         message: isPendingDecision
-                            ? 'The applicant has been moved to pending compliance for follow-up.'
-                            : 'The applicant has been approved successfully.',
+                            ? (isFacultyApproval
+                                ? 'The faculty/employee record has been moved to pending compliance for follow-up.'
+                                : 'The applicant has been moved to pending compliance for follow-up.')
+                            : (isFacultyApproval
+                                ? 'The faculty/employee record has been approved successfully.'
+                                : 'The applicant has been approved successfully.'),
                         duration: 3000,
                         onDone: () => {
                         if (isFinalReviewWorkflow()) {
@@ -14499,7 +15937,9 @@
                 finalReviewConfirmOverlay?.setAttribute('aria-hidden', 'true');
                 pendingFinalReviewApprovalData = null;
                 setFinalReviewConfirmLoading(false);
-                setStatus('error', 'Unable to save the applicant decision right now. Please try again.');
+                setStatus('error', isFacultyApproval
+                    ? 'Unable to save the faculty/employee decision right now. Please try again.'
+                    : 'Unable to save the applicant decision right now. Please try again.');
             });
         }
 
@@ -14931,7 +16371,7 @@
             input.addEventListener('change', syncCovidPositiveFields);
         });
 
-        const finalReviewPhysicalPanel = document.querySelector('#applicantRefModal .applicant-medical-condition-section > section:not(.applicant-review-panel)');
+        const finalReviewPhysicalPanel = document.querySelector('#applicantRefModal .employee-physical-assessment-panel');
         if (finalReviewPhysicalPanel) {
             finalReviewPhysicalPanel.addEventListener('dblclick', function () {
                 if (!isFinalReviewWorkflow() || !canApproveFinalReview) return;
@@ -14985,9 +16425,204 @@
             setApplicantWorkflow(workflow);
             if (workflowChoices) workflowChoices.style.display = 'none';
             if (finalReviewList) finalReviewList.classList.remove('is-visible');
+            if (employeeDraftList) employeeDraftList.classList.remove('is-visible');
+            if (modalShell) modalShell.classList.remove('is-employee-drafts-workflow');
             if (showEntryBtn) showEntryBtn.style.display = 'none';
             if (refInput) refInput.value = '';
             setEntryMode(true);
+        }
+
+        function formatEmployeeDraftDate(value) {
+            if (!value) return 'Not available';
+
+            try {
+                return new Intl.DateTimeFormat(undefined, {
+                    month: 'short',
+                    day: '2-digit',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit'
+                }).format(new Date(value));
+            } catch (error) {
+                return 'Not available';
+            }
+        }
+
+        function buildEmployeeDraftCard(draft) {
+            const article = document.createElement('article');
+            article.className = 'applicant-final-review-card employee-draft-card';
+            article.setAttribute('data-employee-draft-row', '');
+            article.setAttribute('data-search', draft.search || '');
+
+            const personBlock = document.createElement('div');
+            personBlock.className = 'applicant-final-review-person';
+
+            const avatar = document.createElement('span');
+            avatar.className = 'applicant-final-review-avatar';
+            const initials = getApplicantInitials(draft.name || 'Employee');
+            if (draft.photo_url) {
+                const photo = document.createElement('img');
+                photo.src = draft.photo_url;
+                photo.alt = `${draft.name || 'Employee'} 2x2 photo`;
+                photo.addEventListener('error', function () {
+                    avatar.textContent = initials;
+                }, { once: true });
+                avatar.appendChild(photo);
+            } else {
+                avatar.textContent = initials;
+            }
+
+            const personText = document.createElement('div');
+            const personLabel = document.createElement('small');
+            personLabel.textContent = draft.record_type || 'Faculty';
+            const personName = document.createElement('strong');
+            personName.textContent = draft.name || 'Employee';
+            const personEmail = document.createElement('span');
+            personEmail.textContent = draft.email || 'Local employee record';
+            personText.append(personLabel, personName, personEmail);
+            personBlock.append(avatar, personText);
+
+            const detailsBlock = document.createElement('div');
+            const detailsLabel = document.createElement('small');
+            detailsLabel.textContent = 'ID Number';
+            const detailsValue = document.createElement('strong');
+            detailsValue.className = 'employee-draft-id';
+            detailsValue.textContent = draft.employee_number || 'N/A';
+            const detailsMeta = document.createElement('span');
+            detailsMeta.textContent = `${draft.health_form_category || 'Employee Health Form'} - ${formatEmployeeDraftDate(draft.saved_at)}`;
+            detailsBlock.append(detailsLabel, detailsValue, detailsMeta);
+
+            const resumeButton = document.createElement('button');
+            resumeButton.type = 'button';
+            resumeButton.className = 'applicant-final-review-btn employee-draft-resume-btn';
+            resumeButton.dataset.employeeDraftReference = draft.employee_number || '';
+            const resumeIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            resumeIcon.setAttribute('viewBox', '0 0 24 24');
+            resumeIcon.setAttribute('aria-hidden', 'true');
+            resumeIcon.innerHTML = '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />';
+            const resumeLabel = document.createElement('span');
+            resumeLabel.textContent = 'Resume';
+            resumeButton.append(resumeIcon, resumeLabel);
+
+            article.append(personBlock, detailsBlock, resumeButton);
+            return article;
+        }
+
+        function filterEmployeeDraftRows() {
+            if (!employeeDraftRows) return;
+
+            const query = employeeDraftSearch ? employeeDraftSearch.value.trim().toLowerCase() : '';
+            const rows = Array.from(employeeDraftRows.querySelectorAll('[data-employee-draft-row]'));
+            let matches = 0;
+
+            rows.forEach(function (row) {
+                const haystack = row.getAttribute('data-search') || '';
+                const isMatch = !query || haystack.includes(query);
+                row.style.display = isMatch ? '' : 'none';
+                if (isMatch) matches += 1;
+            });
+
+            if (employeeDraftEmpty) {
+                employeeDraftEmpty.textContent = rows.length && query
+                    ? 'No employee draft matches your search.'
+                    : 'No employee drafts found.';
+                employeeDraftEmpty.classList.toggle('is-visible', rows.length > 0 && matches === 0);
+            }
+        }
+
+        function renderEmployeeDrafts(drafts) {
+            if (!employeeDraftRows) return;
+
+            employeeDraftRows.replaceChildren();
+            const items = Array.isArray(drafts) ? drafts : [];
+            if (employeeDraftTotalCount) employeeDraftTotalCount.textContent = String(items.length);
+
+            if (!items.length) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'applicant-documents-empty';
+                emptyState.textContent = 'No employee drafts found.';
+                employeeDraftRows.appendChild(emptyState);
+                if (employeeDraftEmpty) employeeDraftEmpty.classList.remove('is-visible');
+                return;
+            }
+
+            items.forEach(function (draft) {
+                employeeDraftRows.appendChild(buildEmployeeDraftCard(draft));
+            });
+            filterEmployeeDraftRows();
+        }
+
+        function refreshEmployeeDrafts() {
+            if (!employeeDraftsUrl) return Promise.resolve();
+
+            if (employeeDraftRefresh) {
+                employeeDraftRefresh.disabled = true;
+                employeeDraftRefresh.style.opacity = '0.72';
+            }
+
+            return fetch(employeeDraftsUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message || 'Unable to refresh employee drafts.');
+                    }
+                    renderEmployeeDrafts(data.drafts || []);
+                })
+                .catch(error => {
+                    console.error(error);
+                    if (employeeDraftEmpty) {
+                        employeeDraftEmpty.textContent = 'Unable to refresh the drafts list. Please try again.';
+                        employeeDraftEmpty.classList.add('is-visible');
+                    }
+                })
+                .finally(() => {
+                    if (employeeDraftRefresh) {
+                        employeeDraftRefresh.disabled = false;
+                        employeeDraftRefresh.style.opacity = '';
+                    }
+                });
+        }
+
+        function showEmployeeDraftList() {
+            if (!isClinicLookupMode()) return;
+
+            resetLookupState();
+            applyLookupMode('clinic');
+            currentApplicantWorkflow = 'review';
+            if (modalShell) modalShell.classList.add('is-employee-drafts-workflow');
+            if (defaultPane) defaultPane.style.display = 'flex';
+            if (entryPane) entryPane.classList.remove('is-visible');
+            if (workflowChoices) workflowChoices.style.display = 'none';
+            if (showEntryBtn) showEntryBtn.style.display = 'none';
+            if (defaultPane?.querySelector('.applicant-ref-copy')) {
+                defaultPane.querySelector('.applicant-ref-copy').style.display = 'none';
+            }
+            if (finalReviewList) finalReviewList.classList.remove('is-visible');
+            if (employeeDraftList) employeeDraftList.classList.add('is-visible');
+            if (lookupModalTitle) lookupModalTitle.textContent = 'Drafts';
+            if (lookupModalSubtitle) lookupModalSubtitle.textContent = 'Resume saved employee, student and dependents health form drafts.';
+            if (applicantModalBody) applicantModalBody.scrollTop = 0;
+            if (employeeDraftSearch) employeeDraftSearch.value = '';
+            refreshEmployeeDrafts().finally(() => employeeDraftSearch?.focus());
+        }
+
+        function openEmployeeDraftReference(referenceNumber) {
+            const reference = String(referenceNumber || '').trim();
+            if (!reference) return;
+
+            currentLookupMode = 'clinic';
+            currentApplicantWorkflow = 'review';
+            resetLookupState();
+            applyLookupMode('clinic');
+            if (refInput) refInput.value = reference;
+            setEntryMode(true);
+            doLookup();
         }
 
         function showFinalReviewList() {
@@ -15227,6 +16862,27 @@
             });
         }
 
+        if (showEmployeeDraftsBtn) {
+            showEmployeeDraftsBtn.addEventListener('click', showEmployeeDraftList);
+        }
+
+        if (employeeDraftRefresh) {
+            employeeDraftRefresh.addEventListener('click', refreshEmployeeDrafts);
+        }
+
+        if (employeeDraftSearch) {
+            employeeDraftSearch.addEventListener('input', filterEmployeeDraftRows);
+        }
+
+        if (employeeDraftRows) {
+            employeeDraftRows.addEventListener('click', function (event) {
+                const button = event.target.closest('[data-employee-draft-reference]');
+                if (!button) return;
+
+                openEmployeeDraftReference(button.getAttribute('data-employee-draft-reference') || '');
+            });
+        }
+
         if (finalReviewPrev) {
             finalReviewPrev.addEventListener('click', function () {
                 updateFinalReviewPagination(finalReviewPage - 1);
@@ -15397,17 +17053,36 @@
     })();
 
     (function initApplicantPremiumSelects() {
+        let selectId = 0;
+
+        function closePremiumSelects(exceptShell) {
+            document.querySelectorAll('.premium-select-shell.is-open').forEach(function (shell) {
+                if (shell === exceptShell) return;
+                shell.classList.remove('is-open');
+                const display = shell.querySelector('.premium-select-button');
+                if (display) display.setAttribute('aria-expanded', 'false');
+            });
+        }
+
         function enhance(select) {
             if (!select || select.dataset.premiumEnhanced === 'true') return;
             select.dataset.premiumEnhanced = 'true';
             select.classList.add('premium-select-native');
             const shell = document.createElement('div');
             shell.className = 'premium-select-shell';
+            if (select.id === 'employeeExamFit') {
+                shell.classList.add('employee-fit-select-shell');
+            }
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'premium-select-button';
+            button.setAttribute('aria-haspopup', 'listbox');
+            button.setAttribute('aria-expanded', 'false');
             const menu = document.createElement('div');
             menu.className = 'premium-select-menu';
+            menu.id = 'premiumSelectMenu' + (++selectId);
+            menu.setAttribute('role', 'listbox');
+            button.setAttribute('aria-controls', menu.id);
             function rebuild() {
                 const selected = select.options[select.selectedIndex];
                 button.textContent = selected ? selected.textContent.trim() : 'Select';
@@ -15416,11 +17091,14 @@
                     const item = document.createElement('button');
                     item.type = 'button';
                     item.className = 'premium-select-option';
+                    item.setAttribute('role', 'option');
                     item.textContent = option.textContent.trim();
                     item.classList.toggle('is-selected', option.selected);
+                    item.setAttribute('aria-selected', option.selected ? 'true' : 'false');
+                    item.disabled = option.disabled;
                     item.addEventListener('click', function() {
                         select.value = option.value;
-                        shell.classList.remove('is-open');
+                        closePremiumSelects();
                         rebuild();
                         select.dispatchEvent(new Event('change', { bubbles: true }));
                     });
@@ -15431,20 +17109,22 @@
             shell.appendChild(select);
             shell.appendChild(button);
             shell.appendChild(menu);
+            select.addEventListener('change', rebuild);
             button.addEventListener('click', function(event) {
                 event.stopPropagation();
-                document.querySelectorAll('.premium-select-shell.is-open').forEach(function(openShell) {
-                    if (openShell !== shell) openShell.classList.remove('is-open');
-                });
-                shell.classList.toggle('is-open');
+                const opening = !shell.classList.contains('is-open');
+                closePremiumSelects(shell);
+                shell.classList.toggle('is-open', opening);
+                button.setAttribute('aria-expanded', opening ? 'true' : 'false');
             });
             rebuild();
         }
-        document.querySelectorAll('.applicant-final-review-per-page').forEach(enhance);
-        document.addEventListener('click', function() {
-            document.querySelectorAll('.premium-select-shell.is-open').forEach(function(shell) {
-                shell.classList.remove('is-open');
-            });
+        document.querySelectorAll('.applicant-final-review-per-page, #employeeExamFit').forEach(enhance);
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.premium-select-shell')) closePremiumSelects();
+        });
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') closePremiumSelects();
         });
     })();
 

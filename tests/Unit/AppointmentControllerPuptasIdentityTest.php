@@ -206,6 +206,7 @@ class AppointmentControllerPuptasIdentityTest extends TestCase
         $user->user_role = User::ROLE_STUDENT;
         $user->idp_role = 'applicant';
         $user->user_type = 'Applicant';
+        $user->setRelation('healthProfile', null);
 
         $this->assertSame(
             'admission',
@@ -227,6 +228,7 @@ class AppointmentControllerPuptasIdentityTest extends TestCase
         $applicant->user_role = User::ROLE_STUDENT;
         $applicant->idp_role = 'applicant';
         $applicant->user_type = 'Applicant';
+        $applicant->setRelation('healthProfile', null);
 
         $this->assertFalse($method->invoke($controller, $applicant, null, null, 'not_found'));
 
@@ -242,11 +244,12 @@ class AppointmentControllerPuptasIdentityTest extends TestCase
         $student->user_role = User::ROLE_STUDENT;
         $student->idp_role = 'student';
         $student->user_type = 'Student';
+        $student->setRelation('healthProfile', null);
 
         $this->assertTrue($method->invoke($controller, $student, null, null, 'not_found'));
     }
 
-    public function test_current_student_idp_role_uses_student_number_mode_even_when_puptas_has_data(): void
+    public function test_local_student_choice_uses_student_number_mode_even_when_puptas_has_data(): void
     {
         $controller = new AppointmentController();
         $method = new ReflectionMethod($controller, 'resolveHealthReferenceMode');
@@ -256,6 +259,7 @@ class AppointmentControllerPuptasIdentityTest extends TestCase
         $user->idp_role = 'student';
         $user->user_role = User::ROLE_STUDENT;
         $user->user_type = 'Student';
+        $user->setRelation('healthProfile', null);
 
         $this->assertSame(
             'student_number',

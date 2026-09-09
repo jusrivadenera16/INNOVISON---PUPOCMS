@@ -24,7 +24,7 @@
             background-color: #740018;
             background-image:
                 linear-gradient(rgba(91, 0, 22, 0.38), rgba(91, 0, 22, 0.50)),
-                url('{{ asset("images/PUPBG.jpg") }}');
+                url('{{ asset("images/PUPBG.jpg") }}?v={{ filemtime(public_path("images/PUPBG.jpg")) }}');
             background-repeat: no-repeat;
             background-position: center center;
             background-attachment: fixed;
@@ -651,21 +651,36 @@
             display: none;
             align-items: center;
             justify-content: center;
-            background: rgba(15, 23, 42, 0.68);
+            background:
+                radial-gradient(ellipse 24% 42% at 50% 50%, rgba(250, 204, 21, 0.08) 0%, rgba(250, 204, 21, 0.025) 30%, transparent 70%),
+                linear-gradient(90deg, #3f0816 0%, #4c0a1b 44%, #29040e 100%);
             backdrop-filter: blur(4px);
+        }
+        .login-loading-overlay::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: url('{{ asset("images/PUPBG.jpg") }}?v={{ filemtime(public_path("images/PUPBG.jpg")) }}') left center / cover no-repeat;
+            opacity: 0.13;
+            filter: saturate(0.55) brightness(0.58) contrast(0.92);
+            -webkit-mask-image: linear-gradient(90deg, #000 0%, rgba(0, 0, 0, 0.72) 16%, rgba(0, 0, 0, 0.32) 34%, rgba(0, 0, 0, 0.08) 50%, transparent 64%);
+            mask-image: linear-gradient(90deg, #000 0%, rgba(0, 0, 0, 0.72) 16%, rgba(0, 0, 0, 0.32) 34%, rgba(0, 0, 0, 0.08) 50%, transparent 64%);
+            pointer-events: none;
         }
         .login-loading-overlay.show {
             display: flex;
         }
         .login-loading-card {
+            position: relative;
+            z-index: 1;
             text-align: center;
             color: #ffffff;
-            background: rgba(9, 14, 19, 0.72);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(45, 5, 15, 0.48);
+            border: 1px solid rgba(250, 204, 21, 0.18);
             border-radius: 22px;
             padding: 24px 28px;
             min-width: 180px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 50px rgba(20, 0, 8, 0.34), 0 0 28px rgba(250, 204, 21, 0.08);
         }
         .login-loading-logo {
             width: 72px;
@@ -1016,7 +1031,7 @@
   <div id="loginLoadingOverlay" class="login-loading-overlay" aria-hidden="true">
       <div class="login-loading-card">
           <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="Loading" class="login-loading-logo">
-          <div class="login-loading-text">Signing in...</div>
+          <div class="login-loading-text">Logging in...</div>
       </div>
   </div>
 
@@ -1056,7 +1071,7 @@
               loadingOverlay.classList.add('show');
               loadingOverlay.setAttribute('aria-hidden', 'false');
               loginSubmitBtn.disabled = true;
-              loginSubmitBtn.textContent = 'Signing in...';
+              loginSubmitBtn.textContent = 'Logging in...';
 
               requestAnimationFrame(function () {
                   setTimeout(function () {

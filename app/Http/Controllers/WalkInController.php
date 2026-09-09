@@ -9,12 +9,18 @@ use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
 use App\Models\EmployeeHealthProfile;
 use App\Models\HealthProfileStaff;
+use App\Models\DependentsProfile;
 use App\Models\AdminHub;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\ActivityLog;
 use App\Models\Consultation;
+use App\Models\ConsultationDraft;
 use App\Models\ConsultationMedicine;
+use App\Models\MarClearanceSubcategory;
+use App\Models\MarClearanceSubcategorySource;
+use App\Models\MarClearanceType;
+use App\Services\MarClearanceIssuanceService;
 use App\Services\PuptasWebhookService;
 use App\Services\StudentNotificationMailer;
 use App\Services\EmployeeHealthFormPdfService;
@@ -26,6 +32,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class WalkInController extends Controller
 {
@@ -41,6 +48,32 @@ class WalkInController extends Controller
         return in_array($source, ['online', 'walkin', 'assisted'], true)
             ? $source
             : 'walkin';
+    }
+
+    private function resolveApplicantClearanceTarget(?HealthProfile $profile): ?array
+    {
+        $category = strtolower(trim((string) optional($profile)->health_form_category));
+        if ($category === '' || $category === 'general' || $category === 'student') {
+            return null;
+        }
+
+        return $this->resolveClearanceTargetForWorkflow(
+            $profile->health_form_category,
+            MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW,
+            ['ojt', 'on the job', 'freshman', 'freshmen', 'returnee']
+        );
+    }
+
+    private function resolveClearanceTargetForWorkflow(
+        ?string $category,
+        string $sourceWorkflow,
+        array $additionalAliases = []
+    ): ?array {
+        return app(MarClearanceIssuanceService::class)->resolveClearanceTargetForWorkflow(
+            $category,
+            $sourceWorkflow,
+            $additionalAliases
+        );
     }
 
     private function normalizeHeightToDecimalFeet($value): ?string
@@ -74,6 +107,17 @@ class WalkInController extends Controller
         }
 
         return null;
+    }
+
+    private function consultationAppointmentNumberSessionKey($staffId, $studentId, string $source): string
+    {
+        $identity = implode('|', [
+            (string) ($staffId ?: 'guest'),
+            (string) $studentId,
+            $this->normalizeConsultationSource($source),
+        ]);
+
+        return 'consultation_appointment_number.' . hash('sha256', $identity);
     }
 
     private function consultationStartSessionKey($staffId, $studentId, string $source): string
@@ -202,7 +246,7 @@ class WalkInController extends Controller
 
         $normalizedIdentifier = strtoupper($identifier);
 
-        return User::with('healthProfile')
+        $user = User::with(['healthProfile', 'dependentProfile'])
             ->where(function ($query) use ($identifier) {
                 if (\Schema::hasColumn('users', 'employee_number')) {
                     $query->orWhere('employee_number', $identifier);
@@ -229,6 +273,18 @@ class WalkInController extends Controller
                 }
             })
             ->first();
+
+        if ($user) {
+            return $user;
+        }
+
+        $profile = $this->findHealthProfileByReference($identifier);
+        if ($profile?->user) {
+            $profile->user->setRelation('healthProfile', $profile);
+            return $profile->user->loadMissing('dependentProfile');
+        }
+
+        return $this->findUserByDependentIdNumber($identifier);
     }
 
     private function findUserByEmployeeIdNumber(string $identifier): ?User
@@ -240,7 +296,7 @@ class WalkInController extends Controller
 
         $normalizedIdentifier = strtoupper($identifier);
 
-        return User::with('healthProfile')
+        $user = User::with(['healthProfile', 'dependentProfile'])
             ->where(function ($query) use ($identifier) {
                 if (\Schema::hasColumn('users', 'employee_number')) {
                     $query->orWhere('employee_number', $identifier);
@@ -260,11 +316,71 @@ class WalkInController extends Controller
                 }
             })
             ->first();
+
+        if ($user) {
+            return $user;
+        }
+
+        $profile = $this->findHealthProfileByReference($identifier);
+        if ($profile?->user) {
+            $profile->user->setRelation('healthProfile', $profile);
+            return $profile->user->loadMissing('dependentProfile');
+        }
+
+        return $this->findUserByDependentIdNumber($identifier);
     }
 
     private function findUserByClinicIdNumber(string $identifier): ?User
     {
         return $this->findUserByEmployeeIdNumber($identifier);
+    }
+
+    private function findUserByDependentIdNumber(string $identifier): ?User
+    {
+        $identifier = trim($identifier);
+        if ($identifier === '' || !\Schema::hasTable('dependents_profiles')) {
+            return null;
+        }
+
+        $normalizedIdentifier = strtoupper($identifier);
+        $profile = DependentsProfile::query()
+            ->with('user.healthProfile')
+            ->where(function ($query) use ($identifier, $normalizedIdentifier) {
+                foreach (['id_number', 'idp_user_id', 'email'] as $column) {
+                    if (\Schema::hasColumn('dependents_profiles', $column)) {
+                        $query->orWhere($column, $identifier)
+                            ->orWhereRaw('UPPER(TRIM(' . $column . ')) = ?', [$normalizedIdentifier]);
+                    }
+                }
+            })
+            ->latest()
+            ->first();
+
+        return $profile?->user?->loadMissing('healthProfile', 'dependentProfile');
+    }
+
+    private function isDependentHealthProfileUser(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        $markers = strtolower(trim(implode(' ', array_filter([
+            (string) ($user->user_type ?? ''),
+            (string) ($user->user_role ?? ''),
+            (string) ($user->idp_role ?? ''),
+        ]))));
+
+        if ($markers !== '' && (str_contains($markers, 'dependent') || str_contains($markers, 'guest'))) {
+            return true;
+        }
+
+        if ($user->relationLoaded('dependentProfile') && $user->dependentProfile) {
+            return true;
+        }
+
+        return \Schema::hasTable('dependents_profiles')
+            && DependentsProfile::query()->where('user_id', $user->id)->exists();
     }
 
     private function isStudentOjtHealthProfileUser(?User $user): bool
@@ -273,8 +389,10 @@ class WalkInController extends Controller
             return false;
         }
 
+        $user->loadMissing('healthProfile');
         $markers = strtolower(trim(implode(' ', array_filter([
             (string) ($user->user_type ?? ''),
+            (string) ($user->user_role ?? ''),
             (string) ($user->idp_role ?? ''),
         ]))));
 
@@ -284,9 +402,19 @@ class WalkInController extends Controller
             }
         }
 
+        $profileMarkers = strtolower(trim(implode(' ', array_filter([
+            (string) ($user->healthProfile?->health_form_category ?? ''),
+            (string) ($user->healthProfile?->student_number ?? ''),
+        ]))));
+
+        if ($profileMarkers !== '' && (str_contains($profileMarkers, 'student') || str_contains($profileMarkers, 'ojt'))) {
+            return true;
+        }
+
         return str_contains($markers, 'student')
             || str_contains($markers, 'ojt')
-            || trim((string) ($user->student_number ?? '')) !== '';
+            || trim((string) ($user->student_number ?? '')) !== ''
+            || trim((string) ($user->healthProfile?->student_number ?? '')) !== '';
     }
 
     private function findAdminHubByEmployeeLookup(string $identifier): ?AdminHub
@@ -389,6 +517,47 @@ class WalkInController extends Controller
         return $user;
     }
 
+    private function ensureWalkinHealthProfile(User $user): HealthProfile
+    {
+        $user->loadMissing('healthProfile', 'dependentProfile');
+        if ($user->healthProfile) {
+            return $user->healthProfile;
+        }
+
+        $dependentProfile = $user->dependentProfile;
+        $identifier = trim((string) (
+            $user->student_number
+            ?: $user->employee_number
+            ?: $dependentProfile?->id_number
+            ?: $user->student_id
+            ?: $user->id
+        ));
+
+        $profile = HealthProfile::create([
+            'user_id' => $user->id,
+            'student_id' => (string) ($user->student_id ?: $identifier),
+            'student_number' => (string) ($user->student_number ?: $dependentProfile?->id_number ?: ''),
+            'reference_number' => (string) ($user->reference_number ?: $identifier),
+            'health_form_category' => $this->isDependentHealthProfileUser($user) ? 'Dependent' : null,
+            'home_address' => (string) ($dependentProfile?->home_address ?? ''),
+            'street' => (string) ($dependentProfile?->street ?? ''),
+            'barangay' => (string) ($dependentProfile?->barangay ?? ''),
+            'municipality' => (string) ($dependentProfile?->municipality ?? ''),
+            'province' => (string) ($dependentProfile?->province ?? ''),
+            'birthday' => $dependentProfile?->birthday,
+            'age' => $dependentProfile?->age,
+            'sex' => (string) ($dependentProfile?->sex ?? $user->gender ?? ''),
+            'civil_status' => (string) ($dependentProfile?->civil_status ?? ''),
+            'landline' => (string) ($dependentProfile?->landline ?? ''),
+            'cellphone' => (string) ($dependentProfile?->contact_no ?? $user->contact_no ?? ''),
+            'clearance_status' => 'Pending',
+        ]);
+
+        $user->setRelation('healthProfile', $profile);
+
+        return $profile;
+    }
+
     private function findHealthProfileByReference(string $referenceNumber): ?HealthProfile
     {
         $referenceNumber = trim($referenceNumber);
@@ -470,15 +639,14 @@ class WalkInController extends Controller
             return $mapped[$normalized];
         }
 
-        return Str::of($value)
+        return (string) Str::of($value)
             ->replace('_', ' ')
             ->lower()
             ->title()
             ->replace('Na', 'N/A')
             ->replace('Tpc', 'TPC')
             ->replace('W/O', 'w/o')
-            ->replace('W/ ', 'w/ ')
-            ->toString();
+            ->replace('W/ ', 'w/ ');
     }
 
     private function formatEmployeeExamArray($value): ?array
@@ -861,6 +1029,118 @@ class WalkInController extends Controller
         ];
 
         return $documents;
+    }
+
+    private function healthProfileDocumentVersions(Request $request, ?HealthProfile $profile): array
+    {
+        if (!$profile) {
+            return [];
+        }
+
+        $submissions = HealthFormSubmission::query()
+            ->where(function ($query) use ($profile) {
+                $query->where('health_profile_id', $profile->id)
+                    ->orWhere('user_id', $profile->user_id);
+            })
+            ->whereIn('status', array_values(array_unique([
+                HealthFormSubmission::STATUS_REQUESTED,
+                HealthFormSubmission::STATUS_SUBMITTED,
+                HealthFormSubmission::STATUS_APPROVED,
+                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                'Approved',
+            ])))
+            ->orderByRaw('submitted_at IS NULL ASC')
+            ->latest('submitted_at')
+            ->latest('requested_at')
+            ->latest('id')
+            ->get();
+
+        if ($submissions->isEmpty()) {
+            return [];
+        }
+
+        $versionNumbers = $submissions
+            ->sortBy(function (HealthFormSubmission $submission) {
+                return sprintf(
+                    '%020d-%020d',
+                    optional($submission->requested_at ?: $submission->submitted_at ?: $submission->created_at)->timestamp ?? 0,
+                    $submission->id
+                );
+            })
+            ->values()
+            ->mapWithKeys(fn (HealthFormSubmission $submission, int $index) => [
+                $submission->id => $index + 1,
+            ]);
+
+        $currentSubmission = $submissions->first(function (HealthFormSubmission $submission): bool {
+            return in_array(strtolower((string) $submission->status), [
+                HealthFormSubmission::STATUS_SUBMITTED,
+                HealthFormSubmission::STATUS_APPROVED,
+                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+            ], true);
+        });
+
+        $documentDefinitions = [
+            'student_photo' => ['label' => '2x2 Photo', 'type' => 'image'],
+            'health_declaration' => ['label' => 'Health Declaration', 'type' => 'file'],
+            'medical_certificate' => ['label' => 'Medical Certificate', 'type' => 'file'],
+            'medical_assessment_upload' => ['label' => 'Medical Assessment Copy', 'type' => 'file'],
+            'chest_xray_result' => ['label' => 'Chest X-Ray Result', 'type' => 'file'],
+            'pwd_id_proof' => ['label' => 'PWD ID Proof', 'type' => 'file'],
+        ];
+
+        return $submissions
+            ->map(function (HealthFormSubmission $submission) use ($request, $profile, $versionNumbers, $currentSubmission, $documentDefinitions): array {
+                $isCurrent = $currentSubmission && (int) $currentSubmission->id === (int) $submission->id;
+                $profileData = $submission->snapshotProfile();
+
+                if ($profileData === [] && $isCurrent) {
+                    $profileData = $profile->attributesToArray();
+                }
+
+                $documents = collect();
+
+                if (filled($submission->pdf_path)) {
+                    $documents->push([
+                        'key' => 'health_form',
+                        'label' => 'Health Information Form',
+                        'url' => route('admin.health_form_submissions.pdf', $submission),
+                        'type' => 'file',
+                    ]);
+                }
+
+                foreach ($documentDefinitions as $documentKey => $definition) {
+                    if (!filled($profileData[$documentKey] ?? null)) {
+                        continue;
+                    }
+
+                    $documents->push([
+                        'key' => $documentKey,
+                        'label' => $definition['label'],
+                        'url' => route('admin.health_form_submissions.document', [
+                            'submission' => $submission,
+                            'document' => $documentKey,
+                        ]),
+                        'type' => $definition['type'],
+                    ]);
+                }
+
+                $status = strtolower((string) $submission->status);
+                $statusLabel = ucwords(str_replace('_', ' ', $status));
+                $timestamp = $submission->submitted_at ?: $submission->requested_at ?: $submission->created_at;
+
+                return [
+                    'version' => (int) ($versionNumbers->get($submission->id) ?? 1),
+                    'label' => $submission->category ?: 'General Health Form',
+                    'status' => $statusLabel,
+                    'is_current' => $isCurrent,
+                    'submitted_at' => $timestamp,
+                    'documents' => $documents->values()->all(),
+                ];
+            })
+            ->sortByDesc('version')
+            ->values()
+            ->all();
     }
 
     private function healthProfileConditionSummary(?HealthProfile $profile): array
@@ -1389,8 +1669,14 @@ class WalkInController extends Controller
     $finalReviewApplicants = optional($request->user())->canAccessPermission('walkin.review_submission')
         ? $this->finalReviewApplicantQuery()->get()
         : collect();
+    $employeeDrafts = optional($request->user())->canAccessPermission('walkin.employee_lookup')
+        ? $this->employeeDraftQuery()
+            ->get()
+            ->filter(fn (EmployeeHealthProfile $profile) => is_array($profile->draft_data) && count($profile->draft_data) > 0)
+            ->each(fn (EmployeeHealthProfile $profile) => $profile->setAttribute('draft_record_type', $this->employeeDraftType($profile)))
+        : collect();
     
-    return view('admin.walkin', compact('walkins', 'mode', 'finalReviewApplicants'));
+    return view('admin.walkin', compact('walkins', 'mode', 'finalReviewApplicants', 'employeeDrafts'));
 }
 
     private function finalReviewApplicantQuery()
@@ -1450,6 +1736,244 @@ class WalkInController extends Controller
         ]);
     }
 
+    private function employeeDraftQuery()
+    {
+        return EmployeeHealthProfile::with('user')
+            ->whereNotNull('draft_data')
+            ->latest('updated_at')
+            ->take(50);
+    }
+
+    private function employeeDraftType(EmployeeHealthProfile $profile): string
+    {
+        $user = $profile->user;
+        $rawType = Str::lower(trim(implode(' ', array_filter([
+            $user?->user_type,
+            $user?->idp_role,
+            $user?->user_role,
+        ]))));
+
+        if (Str::contains($rawType, 'dependent')) {
+            return 'Dependent';
+        }
+        if (Str::contains($rawType, ['admin', 'nurse', 'clinic staff', 'clinic_staff'])) {
+            return 'Admin';
+        }
+        if (Str::contains($rawType, 'faculty')) {
+            return 'Faculty';
+        }
+        if (Str::contains($rawType, 'student')) {
+            return 'Student';
+        }
+
+        $studentNumber = Str::upper(trim((string) ($profile->employee_number ?: $user?->student_number)));
+        if ($studentNumber !== '' && preg_match('/^\d{4}-\d{5}-[A-Z]{2}-\d+$/', $studentNumber) === 1) {
+            return 'Student';
+        }
+
+        return 'Faculty';
+    }
+
+    private function employeeDraftPayload(EmployeeHealthProfile $profile, Request $request): array
+    {
+        $user = $profile->user;
+        $name = trim((string) ($profile->name ?: trim(implode(' ', array_filter([
+            $profile->first_name,
+            $profile->middle_name,
+            $profile->last_name,
+            $profile->suffix_name,
+        ])))));
+        if ($name === '') {
+            $name = trim((string) ($user?->name ?: trim(implode(' ', array_filter([
+                $user?->first_name,
+                $user?->middle_name,
+                $user?->last_name,
+            ])))));
+        }
+        if ($name === '') {
+            $name = 'Employee';
+        }
+
+        $employeeNumber = trim((string) (
+            $profile->employee_number
+            ?: $user?->employee_number
+            ?: $profile->id
+        ));
+        $email = trim((string) ($user?->email ?? ''));
+        $status = trim((string) ($profile->clearance_status ?: $profile->submission_status ?: 'Draft'));
+        $employeeDocumentRoute = $request->routeIs('assistant.*')
+            ? 'assistant.walkin.employeeDocument'
+            : 'walkin.employeeDocument';
+        $photoUrl = filled($profile->student_photo)
+            ? route($employeeDocumentRoute, ['employeeProfile' => $profile->id, 'document' => 'student_photo'])
+            : '';
+
+        return [
+            'id' => $profile->id,
+            'name' => $name,
+            'email' => $email,
+            'employee_number' => $employeeNumber,
+            'photo_url' => $photoUrl,
+            'record_type' => $this->employeeDraftType($profile),
+            'health_form_category' => trim((string) ($profile->health_form_category ?: 'Employee Health Form')),
+            'status' => $status,
+            'saved_at' => optional($profile->updated_at)->toIso8601String(),
+            'search' => Str::lower(trim($name . ' ' . $email . ' ' . $employeeNumber)),
+        ];
+    }
+
+    public function employeeDrafts(Request $request)
+    {
+        $drafts = $this->employeeDraftQuery()
+            ->get()
+            ->filter(fn (EmployeeHealthProfile $profile) => is_array($profile->draft_data) && count($profile->draft_data) > 0)
+            ->map(fn (EmployeeHealthProfile $profile) => $this->employeeDraftPayload($profile, $request))
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'drafts' => $drafts,
+            'total' => $drafts->count(),
+        ]);
+    }
+
+    private function consultationDraftQuery()
+    {
+        return ConsultationDraft::with(['patient', 'savedBy'])
+            ->latest('updated_at')
+            ->latest('id')
+            ->take(50);
+    }
+
+    private function consultationDraftPayload(ConsultationDraft $draft, Request $request): array
+    {
+        $patient = $draft->patient;
+        $name = trim((string) ($patient?->name ?: trim(implode(' ', array_filter([
+            $patient?->first_name,
+            $patient?->middle_name,
+            $patient?->last_name,
+        ])))));
+        $name = $name !== '' ? $name : 'Patient';
+        $dependentProfile = $patient?->dependentProfile;
+        $identifier = trim((string) (
+            $dependentProfile?->id_number
+            ?: $patient?->employee_number
+            ?: $patient?->student_number
+            ?: $patient?->reference_number
+            ?: $patient?->student_id
+            ?: $patient?->id
+        ));
+        $userType = Appointment::normalizeUserType($patient?->user_role ?? $patient?->user_type ?? 'Patient');
+        $routeName = $this->walkinRouteName($request, 'form');
+
+        return [
+            'id' => $draft->id,
+            'name' => $name,
+            'identifier' => $identifier,
+            'user_type' => $userType,
+            'consultation_source' => $draft->consultation_source,
+            'saved_at' => optional($draft->updated_at)->toIso8601String(),
+            'resume_url' => route($routeName, [
+                'student_id' => $identifier,
+                'source' => $draft->consultation_source,
+            ]),
+            'search' => Str::lower(trim($name . ' ' . $identifier . ' ' . $userType)),
+        ];
+    }
+
+    public function consultationDrafts(Request $request)
+    {
+        $drafts = $this->consultationDraftQuery()
+            ->get()
+            ->filter(fn (ConsultationDraft $draft) => $draft->patient !== null)
+            ->map(fn (ConsultationDraft $draft) => $this->consultationDraftPayload($draft, $request))
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'drafts' => $drafts,
+            'total' => $drafts->count(),
+        ]);
+    }
+
+    public function saveConsultationDraft(Request $request)
+    {
+        foreach (['item_id', 'issued_quantity'] as $medicineField) {
+            $value = $request->input($medicineField);
+            if ($value !== null && !is_array($value)) {
+                $request->merge([$medicineField => [$value]]);
+            }
+        }
+
+        $validated = $request->validate([
+            'student_number' => ['required', 'string', 'max:120'],
+            'service' => ['nullable', 'string', 'max:120'],
+            'remarks' => ['nullable', 'string', 'max:5000'],
+            'condition_id' => ['nullable', 'integer', 'exists:medical_conditions,id'],
+            'dob' => ['nullable', 'date'],
+            'height' => ['nullable', 'numeric', 'min:0', 'max:1100'],
+            'weight' => ['nullable', 'numeric', 'min:0', 'max:1100'],
+            'temp' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'bp' => ['nullable', 'string', 'max:30'],
+            'pulse_rate' => ['nullable', 'integer', 'min:0', 'max:500'],
+            'respiratory_rate' => ['nullable', 'integer', 'min:0', 'max:200'],
+            'covid_status' => ['nullable', 'in:Yes,No'],
+            'covid_positive_date' => ['nullable', 'date'],
+            'reason_for_visit' => ['nullable', 'string', 'max:255'],
+            'certificate_type' => ['nullable', 'string', 'max:160'],
+            'referral_type' => ['nullable', 'in:none,hospital_without_nurse,hospital_with_nurse,general,others'],
+            'referral_details' => ['nullable', 'string', 'max:500'],
+            'item_id' => ['nullable', 'array', 'max:5'],
+            'item_id.*' => ['nullable', 'integer', 'exists:items,id'],
+            'issued_quantity' => ['nullable', 'array', 'max:5'],
+            'issued_quantity.*' => ['nullable', 'numeric', 'min:0'],
+            'consultation_started_at' => ['nullable', 'date_format:H:i:s'],
+        ]);
+
+        $student = $this->findUserByIdentifier((string) $validated['student_number']);
+        if (!$student) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Patient record not found.',
+            ], 404);
+        }
+
+        $source = $this->normalizeConsultationSource($request->input('user_type', 'walkin'));
+        $startedAt = trim((string) ($validated['consultation_started_at'] ?? ''));
+        $appointmentNumberSessionKey = $this->consultationAppointmentNumberSessionKey(
+            auth()->id(),
+            $student->id,
+            $source
+        );
+        $appointmentNumber = trim((string) $request->session()->get($appointmentNumberSessionKey, ''));
+        $payload = $request->except([
+            '_token',
+            'student_number',
+            'user_role',
+            'user_type',
+        ]);
+
+        $draft = ConsultationDraft::updateOrCreate(
+            [
+                'patient_user_id' => $student->id,
+                'consultation_source' => $source,
+            ],
+            [
+                'saved_by_user_id' => auth()->id(),
+                'appointment_number' => $appointmentNumber !== '' ? $appointmentNumber : null,
+                'started_at' => $startedAt !== '' ? $startedAt : null,
+                'payload' => $payload,
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Consultation draft saved.',
+            'draft_id' => $draft->id,
+            'saved_at' => optional($draft->updated_at)->toIso8601String(),
+        ]);
+    }
+
     public function markFinalReviewTimeIn(Request $request)
     {
         $validated = $request->validate([
@@ -1494,8 +2018,22 @@ class WalkInController extends Controller
         }
 
         abort_if(!$student, 404);
+        $student->loadMissing('healthProfile', 'dependentProfile');
+        $this->ensureWalkinHealthProfile($student);
         $user_source = $this->normalizeConsultationSource($request->query('source', 'walkin'));
+        $consultationDraft = ConsultationDraft::query()
+            ->where('patient_user_id', $student->id)
+            ->where('consultation_source', $user_source)
+            ->first();
+        $consultationDraftData = is_array($consultationDraft?->payload)
+            ? $consultationDraft->payload
+            : [];
         $consultationSessionKey = $this->consultationStartSessionKey(
+            auth()->id(),
+            $student->id,
+            $user_source
+        );
+        $appointmentNumberSessionKey = $this->consultationAppointmentNumberSessionKey(
             auth()->id(),
             $student->id,
             $user_source
@@ -1534,12 +2072,57 @@ class WalkInController extends Controller
             }
         }
 
+        $appointmentNumber = trim((string) optional($latestAppointment)->apt_id);
+        if ($appointmentNumber === '' && ($user_source !== 'online' || $latestAppointment)) {
+            $appointmentNumber = trim((string) $request->session()->get($appointmentNumberSessionKey, ''));
+
+            if ($appointmentNumber === '') {
+                $appointmentNumber = Appointment::generateAppointmentNumber(
+                    now(),
+                    $user_source === 'online' ? 'online' : 'walkin'
+                );
+                $request->session()->put($appointmentNumberSessionKey, $appointmentNumber);
+            }
+        }
+
+        if ($appointmentNumber === '' && $consultationDraft?->appointment_number) {
+            $appointmentNumber = trim((string) $consultationDraft->appointment_number);
+            $request->session()->put($appointmentNumberSessionKey, $appointmentNumber);
+        }
+
         $items = Item::query()
             ->availableMedicinesFefo()
             ->get();
 
         $conditions = \App\Models\MedicalConditions::with('category')->get();
+        $clearanceTypes = MarClearanceType::query()
+            ->where('is_active', true)
+            ->with([
+                'sources',
+                'subcategories' => function ($query) {
+                    $query->whereHas('sources', fn ($sourceQuery) => $sourceQuery->where(
+                        'source',
+                        MarClearanceSubcategorySource::CONSULTATION
+                    ));
+                },
+            ])
+            ->where(function ($query) {
+                $query->whereHas('subcategories.sources', fn ($sourceQuery) => $sourceQuery->where(
+                    'source',
+                    MarClearanceSubcategorySource::CONSULTATION
+                ))->orWhere(function ($directQuery) {
+                    $directQuery->where('allow_direct_use', true)
+                        ->whereHas('sources', fn ($sourceQuery) => $sourceQuery->where(
+                            'source',
+                            MarClearanceSubcategorySource::CONSULTATION
+                        ));
+                });
+            })
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
         $studentDocuments = $this->healthProfileDocuments($request, $student->healthProfile);
+        $studentDocumentVersions = $this->healthProfileDocumentVersions($request, $student->healthProfile);
         $studentTreatments = Consultation::query()
             ->with(['medicalCondition.category', 'medicineItem', 'medicines.item', 'attendingStaff'])
             ->where('user_id', $student->id)
@@ -1571,14 +2154,18 @@ class WalkInController extends Controller
             'student',
             'items',
             'conditions',
+            'clearanceTypes',
             'latestAppointment',
+            'appointmentNumber',
             'user_source',
             'consultationDob',
             'consultationHeight',
             'consultationWeight',
             'studentDocuments',
+            'studentDocumentVersions',
             'studentTreatments',
-            'consultationStartedAt'
+            'consultationStartedAt',
+            'consultationDraftData'
         ));
     }
 
@@ -1621,6 +2208,14 @@ class WalkInController extends Controller
                     if ($student) {
                         $lookupStatus = 'local_admin_hub';
                         $lookupMessage = 'Employee record found in Admin Hub.';
+                    }
+                }
+
+                if (!$student) {
+                    $student = $this->findUserByDependentIdNumber($lookup);
+                    if ($student) {
+                        $lookupStatus = 'local_dependent_id';
+                        $lookupMessage = 'Dependent ID number found in local records.';
                     }
                 }
             }
@@ -1692,14 +2287,32 @@ class WalkInController extends Controller
         }
 
         if ($student) {
+            $student->loadMissing('healthProfile', 'dependentProfile');
             $resolvedName = trim((string) ($student->name ?: trim(($student->first_name ?? '') . ' ' . ($student->last_name ?? ''))));
-            $healthProfile = HealthProfile::where('user_id', $student->id)->first();
+            $healthProfile = null;
+            if ($lookup !== '') {
+                $matchedHealthProfile = $this->findHealthProfileByReference($lookup);
+                if ($matchedHealthProfile && (int) $matchedHealthProfile->user_id === (int) $student->id) {
+                    $healthProfile = $matchedHealthProfile;
+                }
+            }
+            $healthProfile = $healthProfile
+                ?: ($student->relationLoaded('healthProfile') ? $student->healthProfile : null)
+                ?: HealthProfile::where('user_id', $student->id)->latest()->first();
+            if ($healthProfile) {
+                $student->setRelation('healthProfile', $healthProfile);
+            }
+            $dependentProfile = $isEmployeeLookupScope && $this->isDependentHealthProfileUser($student)
+                ? $student->dependentProfile
+                : null;
             $employeeProfile = $isEmployeeLookupScope
                 ? EmployeeHealthProfile::where('user_id', $student->id)->latest()->first()
                 : null;
-            $recordType = $isEmployeeLookupScope && $this->isStudentOjtHealthProfileUser($student)
-                ? 'student'
-                : ($isEmployeeLookupScope ? 'employee' : 'applicant');
+            $recordType = $isEmployeeLookupScope && $dependentProfile
+                ? 'dependent'
+                : ($isEmployeeLookupScope && $this->isStudentOjtHealthProfileUser($student)
+                    ? 'student'
+                    : ($isEmployeeLookupScope ? 'employee' : 'applicant'));
             $resolvedReferenceNumber = trim((string) (
                 ($lookup !== '' && !$this->looksLikeUuid($lookup) ? $lookup : null)
                 ?: $student->reference_number
@@ -1711,10 +2324,12 @@ class WalkInController extends Controller
             ));
             $resolvedYear = trim((string) ($student->year ?? ''));
             $resolvedSection = trim((string) ($student->section ?? ''));
-            $resolvedDob = !empty($student->DOB) ? (string) $student->DOB : '';
+            $resolvedDob = !empty($student->DOB)
+                ? (string) $student->DOB
+                : (string) ($dependentProfile?->birthday ?? '');
             $resolvedEmail = trim((string) ($student->email ?? ''));
-            $resolvedBirthday = trim((string) (optional($healthProfile)->birthday ?: $resolvedDob));
-            $resolvedAge = optional($healthProfile)->age;
+            $resolvedBirthday = trim((string) (optional($healthProfile)->birthday ?: ($dependentProfile?->birthday ?: $resolvedDob)));
+            $resolvedAge = optional($healthProfile)->age ?? $dependentProfile?->age;
             if (($resolvedAge === null || $resolvedAge === '') && $resolvedBirthday !== '') {
                 try {
                     $resolvedAge = \Carbon\Carbon::parse($resolvedBirthday)->age;
@@ -1724,15 +2339,18 @@ class WalkInController extends Controller
             }
             $resolvedHeight = trim((string) (optional($healthProfile)->height ?: ($student->height ?? '')));
             $resolvedWeight = trim((string) (optional($healthProfile)->weight ?: ($student->weight ?? '')));
-            $resolvedSex = trim((string) (optional($healthProfile)->sex ?: ($student->gender ?? '')));
-            $resolvedCivilStatus = trim((string) optional($healthProfile)->civil_status);
+            $resolvedSex = trim((string) (optional($healthProfile)->sex ?: ($dependentProfile?->sex ?: ($student->gender ?? ''))));
+            $resolvedCivilStatus = trim((string) (optional($healthProfile)->civil_status ?: $dependentProfile?->civil_status));
             $resolvedContactNumber = trim((string) (
                 optional($healthProfile)->cellphone
                 ?: optional($healthProfile)->landline
+                ?: $dependentProfile?->contact_no
+                ?: $dependentProfile?->landline
                 ?: ($student->contact_no ?? '')
             ));
             $walkinLookupIdentifier = (string) (
-                ($isEmployeeLookupScope ? ($student->employee_number ?: $student->student_number) : $student->student_number)
+                ($recordType === 'dependent' ? $dependentProfile?->id_number : null)
+                ?: ($isEmployeeLookupScope ? ($student->employee_number ?: $student->student_number) : $student->student_number)
                 ?: $resolvedReferenceNumber
                 ?: $student->student_id
                 ?: $student->id
@@ -1770,6 +2388,7 @@ class WalkInController extends Controller
                     'reference_number' => $resolvedReferenceNumber,
                     'student_number' => $student->student_number ?: '',
                     'student_id' => $student->student_id ?: '',
+                    'dependent_id_number' => $dependentProfile?->id_number ?: '',
                     'student_name' => $resolvedName,
                     'course' => $resolvedCourse,
                     'year' => $resolvedYear,
@@ -1802,9 +2421,9 @@ class WalkInController extends Controller
                     'name_matches' => $lookupName !== '' ? $this->namesRoughlyMatch($lookupName, $student) : null,
                     'lookup_status' => $lookupStatus,
                     'record_type' => $recordType,
-                    'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_employee_reference', 'local_clinic_reference'], true)
+                    'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_employee_reference', 'local_clinic_reference', 'local_dependent_id'], true)
                         ? $lookupStatus
-                        : ($recordType === 'student' ? 'local_student_id' : 'puptas_or_local_user'),
+                        : ($recordType === 'student' ? 'local_student_id' : ($recordType === 'dependent' ? 'local_dependent_id' : 'puptas_or_local_user')),
                     'sync_warning' => $lookupStatus === 'local_health_profile'
                         ? 'Local health profile found. PUPTAS sync will only succeed if this saved reference matches the Admission System.'
                         : null,
@@ -1816,9 +2435,9 @@ class WalkInController extends Controller
                 return response()->json([
                     'status' => 'name_mismatch',
                     'lookup_status' => $lookupStatus,
-                    'message' => 'The student number matched a record, but the extracted name does not match our saved name yet.',
+                    'message' => 'The Patient ID Number matched a record, but the extracted name does not match our saved name yet.',
                     'candidate' => [
-                        'student_number' => $student->student_number ?: $student->student_id,
+                        'student_number' => $walkinLookupIdentifier,
                         'name' => $resolvedName,
                     ],
                 ]);
@@ -1829,6 +2448,7 @@ class WalkInController extends Controller
                 'reference_number' => $resolvedReferenceNumber,
                 'student_number' => $student->student_number ?: '',
                 'student_id' => $student->student_id ?: '',
+                'dependent_id_number' => $dependentProfile?->id_number ?: '',
                 'student_name' => $resolvedName,
                 'course' => $resolvedCourse,
                 'year' => $resolvedYear,
@@ -1860,9 +2480,9 @@ class WalkInController extends Controller
                 'documents' => $this->healthProfileDocuments($request, $healthProfile),
                 'lookup_status' => $lookupStatus,
                 'record_type' => $recordType,
-                'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_employee_reference', 'local_clinic_reference'], true)
+                'lookup_source' => in_array($lookupStatus, ['local_health_profile', 'local_employee_reference', 'local_clinic_reference', 'local_dependent_id'], true)
                     ? $lookupStatus
-                    : ($recordType === 'student' ? 'local_student_id' : 'puptas_or_local_user'),
+                    : ($recordType === 'student' ? 'local_student_id' : ($recordType === 'dependent' ? 'local_dependent_id' : 'puptas_or_local_user')),
                 'sync_warning' => $lookupStatus === 'local_health_profile'
                     ? 'Local health profile found. PUPTAS sync will only succeed if this saved reference matches the Admission System.'
                     : null,
@@ -2001,19 +2621,20 @@ class WalkInController extends Controller
             $model = 'gpt-4.1-mini';
         }
 
-        $prompt = <<<'PROMPT'
+$prompt = <<<'PROMPT'
 You are reading a school ID card for clinic intake.
-Your top priority is extracting the student number correctly.
+Your top priority is extracting the Patient ID Number correctly.
 Return strict JSON with these keys:
 student_number, first_name, surname, full_name, confidence_note
 
 Rules:
-- Focus on the student number first. It is the most important field.
-- Student number format may look like: 2025-00523-TG-0
-- Preserve hyphens in the student number.
-- If the student number is readable but the name is unclear, return the student number and leave the name fields empty.
+- Put the Patient ID Number in the student_number JSON key for compatibility.
+- Focus on the Patient ID Number first. It is the most important field.
+- A Patient ID Number may look like: 2025-00523-TG-0, 2026-000-000, or another saved local clinic ID.
+- Preserve hyphens in the Patient ID Number.
+- If the Patient ID Number is readable but the name is unclear, return the Patient ID Number and leave the name fields empty.
 - Only fill first_name, surname, and full_name when they are clearly readable from the card.
-- confidence_note should be a short plain-English note focused on how reliable the student number extraction is.
+- confidence_note should be a short plain-English note focused on how reliable the Patient ID Number extraction is.
 - Return JSON only. No markdown fence. No explanation.
 PROMPT;
 
@@ -2157,6 +2778,24 @@ PROMPT;
             }
         }
 
+        $clearanceSubcategoryCodes = MarClearanceSubcategory::query()
+            ->whereHas('clearanceType', fn ($query) => $query->where('is_active', true))
+            ->whereHas('sources', fn ($query) => $query->where(
+                'source',
+                MarClearanceSubcategorySource::CONSULTATION
+            ))
+            ->pluck('code')
+            ->all();
+        $clearanceTypeCodes = MarClearanceType::query()
+            ->where('is_active', true)
+            ->where('allow_direct_use', true)
+            ->whereHas('sources', fn ($query) => $query->where(
+                'source',
+                MarClearanceSubcategorySource::CONSULTATION
+            ))
+            ->pluck('code')
+            ->all();
+
         $request->validate([
             'student_number' => 'required',
             'service'      => 'required',
@@ -2172,7 +2811,11 @@ PROMPT;
             'covid_status' => 'required|in:Yes,No',
             'covid_positive_date' => 'required_if:covid_status,Yes|nullable|date|before_or_equal:today',
             'reason_for_visit' => 'nullable|string|max:255',
-            'certificate_type' => 'nullable|in:none,excused_letter,coc_ijt,coc_ladderized',
+            'certificate_type' => ['nullable', Rule::in(array_merge(
+                ['none'],
+                $clearanceSubcategoryCodes,
+                $clearanceTypeCodes
+            ))],
             'referral_type' => 'nullable|in:none,hospital_without_nurse,hospital_with_nurse,general,others',
             'referral_details' => 'required_if:referral_type,others|nullable|string|max:500',
             'item_id' => 'nullable|array|max:5',
@@ -2196,7 +2839,13 @@ PROMPT;
             $student->id,
             $requestedSource
         );
+        $appointmentNumberSessionKey = $this->consultationAppointmentNumberSessionKey(
+            auth()->id(),
+            $student->id,
+            $requestedSource
+        );
         $consultationStartedAt = (string) $request->session()->get($consultationSessionKey, '');
+        $appointmentNumber = trim((string) $request->session()->get($appointmentNumberSessionKey, ''));
 
         if (!preg_match('/^\d{2}:\d{2}:\d{2}$/', $consultationStartedAt)) {
             $submittedStartedAt = (string) $request->input('consultation_started_at', '');
@@ -2300,7 +2949,7 @@ PROMPT;
             return redirect()->back()->withInput()->with('error', 'You can issue up to five medicines per consultation.');
         }
 
-        $completedAppointment = DB::transaction(function () use ($request, $student, $medicineLines, $requestedSource, $consultationStartedAt) {
+        $completedAppointment = DB::transaction(function () use ($request, $student, $medicineLines, $requestedSource, $consultationStartedAt, $appointmentNumber) {
             $isOnlineSource = $requestedSource === 'online';
             $finalSource = 'walkin';
             $patientType = Appointment::normalizeUserType($student->user_role ?? $student->user_type);
@@ -2322,7 +2971,7 @@ PROMPT;
 
                 if ($existingAppt) {
                     if (empty($existingAppt->apt_id)) {
-                        $existingAppt->apt_id = Appointment::generateAppointmentNumber(
+                        $existingAppt->apt_id = $appointmentNumber ?: Appointment::generateAppointmentNumber(
                             $existingAppt->created_at ?: now(),
                             'online'
                         );
@@ -2337,7 +2986,11 @@ PROMPT;
 
             if ($finalSource !== 'online') {
                 $appointment = new Appointment();
-                $appointment->apt_id     = Appointment::generateAppointmentNumber(now(), 'walkin');
+                $walkinAppointmentNumber = $appointmentNumber;
+                if ($walkinAppointmentNumber === '' || Appointment::where('apt_id', $walkinAppointmentNumber)->exists()) {
+                    $walkinAppointmentNumber = Appointment::generateAppointmentNumber(now(), 'walkin');
+                }
+                $appointment->apt_id     = $walkinAppointmentNumber;
                 $appointment->user_id    = $student->id;
                 $appointment->student_id = $student->student_id;
                 $appointment->student_number = $student->student_number ?? null;
@@ -2435,6 +3088,23 @@ PROMPT;
                 'comments'             => $request->remarks,
             ]);
 
+            $certificateType = trim((string) ($request->input('certificate_type') ?: 'none'));
+            if ($certificateType !== 'none') {
+                try {
+                    app(MarClearanceIssuanceService::class)->syncApprovedConsultation(
+                        $consultation,
+                        $student
+                    );
+                } catch (\Throwable $exception) {
+                    Log::warning('Consultation saved but MAR issuance could not be recorded.', [
+                        'consultation_id' => $consultation->id,
+                        'user_id' => $student->id,
+                        'certificate_type' => $certificateType,
+                        'error' => $exception->getMessage(),
+                    ]);
+                }
+            }
+
             foreach ($medicineRecords as $medicineRecord) {
                 ConsultationMedicine::create([
                     'consultation_id' => $consultation->id,
@@ -2452,6 +3122,11 @@ PROMPT;
         }
 
         $request->session()->forget($consultationSessionKey);
+        $request->session()->forget($appointmentNumberSessionKey);
+        ConsultationDraft::query()
+            ->where('patient_user_id', $student->id)
+            ->where('consultation_source', $requestedSource)
+            ->delete();
 
         // Redirect logic
         if ($requestedSource === 'online') {
@@ -2922,6 +3597,21 @@ PROMPT;
             return $employeeProfile->fresh('user');
         });
 
+        try {
+            $employeeIssuanceService = app(MarClearanceIssuanceService::class);
+            $employeeIssuanceService->syncApprovedEmployeeHealthProfile(
+                $employeeProfile,
+                !$hasPendingFinding
+            );
+        } catch (\Throwable $exception) {
+            Log::warning('Employee MAR issuance synchronization failed.', [
+                'employee_profile_id' => $employeeProfile->id,
+                'reference_number' => $referenceNumber,
+                'clearance_status' => $clearanceStatus,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+
         ActivityLog::create([
             'user_id' => auth()->id(),
             'user_name' => auth()->user()?->name ?? auth()->user()?->email ?? 'System',
@@ -2976,6 +3666,8 @@ PROMPT;
     public function approveApplicant(Request $request, PuptasWebhookService $webhookService)
     {
         try {
+            $lookupScopeInput = strtolower(trim((string) $request->input('lookup_scope', 'default')));
+            $isLocalEmployeeRequest = in_array($lookupScopeInput, ['employee_local', 'clinic_local'], true);
             $validated = $request->validate([
                 'reference_number' => ['required', 'string', 'max:120'],
                 'lookup_scope' => ['nullable', 'string', 'max:40'],
@@ -2992,18 +3684,28 @@ PROMPT;
                 'medical_condition' => ['required_if:has_medical_condition,true', 'nullable', 'string', 'max:1000'],
                 'condition_remarks' => ['nullable', 'string', 'max:2000'],
                 'med_assessment_remarks' => ['nullable', 'string', 'max:2000'],
-                'height' => ['required', 'string', 'max:20'],
-                'weight' => ['required', 'numeric', 'min:1', 'max:1100'],
-                'blood_pressure' => ['required', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
-                'pulse_rate' => ['required', 'integer', 'min:1', 'max:300'],
-                'respiratory_rate' => ['required', 'integer', 'min:1', 'max:120'],
-                'temperature' => ['required', 'numeric', 'min:30', 'max:45'],
-                'covid_positive' => ['required', 'string', 'in:Yes,No'],
-                'covid_positive_date' => ['required_if:covid_positive,Yes', 'nullable', 'date'],
+                'height' => [$isLocalEmployeeRequest ? 'nullable' : 'required', 'string', 'max:20'],
+                'weight' => [$isLocalEmployeeRequest ? 'nullable' : 'required', 'numeric', 'min:1', 'max:1100'],
+                'blood_pressure' => [$isLocalEmployeeRequest ? 'nullable' : 'required', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
+                'pulse_rate' => [$isLocalEmployeeRequest ? 'nullable' : 'required', 'integer', 'min:1', 'max:300'],
+                'respiratory_rate' => [$isLocalEmployeeRequest ? 'nullable' : 'required', 'integer', 'min:1', 'max:120'],
+                'temperature' => [$isLocalEmployeeRequest ? 'nullable' : 'required', 'numeric', 'min:30', 'max:45'],
+                'covid_positive' => [$isLocalEmployeeRequest ? 'nullable' : 'required', 'string', 'in:Yes,No'],
+                'covid_positive_date' => [$isLocalEmployeeRequest ? 'nullable' : 'required_if:covid_positive,Yes', 'nullable', 'date'],
             ]);
+            if ($isLocalEmployeeRequest) {
+                $request->validate([
+                    'employee_exam_height' => ['required', 'string', 'max:20'],
+                    'employee_exam_weight' => ['required', 'numeric', 'min:1', 'max:1100'],
+                    'employee_exam_bp' => ['required', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
+                    'employee_exam_hr' => ['required', 'integer', 'min:1', 'max:300'],
+                    'employee_exam_rr' => ['required', 'integer', 'min:1', 'max:120'],
+                    'employee_exam_temperature' => ['required', 'numeric', 'min:30', 'max:45'],
+                ]);
+            }
             $referenceNumber = trim((string) $validated['reference_number']);
             $lookupScope = strtolower(trim((string) ($validated['lookup_scope'] ?? 'default')));
-            $forceLocalEmployeeApproval = in_array($lookupScope, ['employee_local', 'clinic_local'], true);
+            $forceLocalEmployeeApproval = $isLocalEmployeeRequest;
             $findingsStatus = (string) $validated['findings_status'];
             $clearanceDecision = (string) $validated['clearance_decision'];
             $hasPendingFinding = $clearanceDecision === 'pending';
@@ -3027,20 +3729,20 @@ PROMPT;
                 : '';
             $conditionRemarks = trim((string) $request->input('condition_remarks', ''));
             $medAssessmentRemarks = trim((string) $request->input('med_assessment_remarks', ''));
-            $height = $this->normalizeHeightToDecimalFeet($validated['height']);
-            if ($height === null) {
+            $height = $this->normalizeHeightToDecimalFeet($validated['height'] ?? null);
+            if (!$isLocalEmployeeRequest && $height === null) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'height' => ['Height must use feet and inches, e.g., 5\'6". Valid range: 1\'0"-10\'0".'],
                 ]);
             }
-            $weight = (string) $validated['weight'];
-            $bloodPressure = preg_replace('/\s+/', '', (string) $validated['blood_pressure']);
-            $pulseRate = (int) $validated['pulse_rate'];
-            $respiratoryRate = (int) $validated['respiratory_rate'];
-            $temperature = (float) $validated['temperature'];
-            $covidPositive = (string) $validated['covid_positive'];
+            $weight = (string) ($validated['weight'] ?? '');
+            $bloodPressure = preg_replace('/\s+/', '', (string) ($validated['blood_pressure'] ?? ''));
+            $pulseRate = (int) ($validated['pulse_rate'] ?? 0);
+            $respiratoryRate = (int) ($validated['respiratory_rate'] ?? 0);
+            $temperature = (float) ($validated['temperature'] ?? 0);
+            $covidPositive = (string) ($validated['covid_positive'] ?? '');
             $covidPositiveDate = $covidPositive === 'Yes'
-                ? $validated['covid_positive_date']
+                ? ($validated['covid_positive_date'] ?? null)
                 : null;
 
             $pendingReasons = [];
@@ -3079,6 +3781,27 @@ PROMPT;
                 ], 422);
             }
 
+            $clearanceStatus = $hasPendingFinding
+                ? ($hasIncompleteRequirements ? 'Pending Resubmission' : 'Pending/Conditional')
+                : 'Fully Cleared';
+
+            if ($forceLocalEmployeeApproval) {
+                return $this->approveEmployeeHealthProfile(
+                    $request,
+                    $validated,
+                    $referenceNumber,
+                    $clearanceStatus,
+                    $hasPendingFinding,
+                    $hasIncompleteRequirements,
+                    $resubmissionRequiredDocuments,
+                    $pendingReasons,
+                    $findingsStatus,
+                    $medicalCondition,
+                    $conditionRemarks,
+                    $medAssessmentRemarks
+                );
+            }
+
             // Fetch applicant details to get student ID
             $applicantData = $forceLocalEmployeeApproval
                 ? null
@@ -3115,27 +3838,6 @@ PROMPT;
                 $idpStudentId = trim((string) ($student->student_id ?? $localOnlyProfile?->student_id ?? ''));
                 $studentId = $idpStudentId !== '' ? $idpStudentId : $referenceNumber;
             }
-            $clearanceStatus = $hasPendingFinding
-                ? ($hasIncompleteRequirements ? 'Pending Resubmission' : 'Pending/Conditional')
-                : 'Fully Cleared';
-
-            if ($forceLocalEmployeeApproval) {
-                return $this->approveEmployeeHealthProfile(
-                    $request,
-                    $validated,
-                    $referenceNumber,
-                    $clearanceStatus,
-                    $hasPendingFinding,
-                    $hasIncompleteRequirements,
-                    $resubmissionRequiredDocuments,
-                    $pendingReasons,
-                    $findingsStatus,
-                    $medicalCondition,
-                    $conditionRemarks,
-                    $medAssessmentRemarks
-                );
-            }
-
             // Save the local decision first; PUPTAS sync happens after the DB transaction.
             $webhookResult = $isLocalOnlyApproval
                 ? [
@@ -3196,6 +3898,9 @@ PROMPT;
                 $profile->birthday = $profile->birthday ?: $student->DOB;
                 $profile->sex = (string) ($profile->sex ?: $student->gender);
                 $profile->med_cert_findings = $findingsStatus;
+                if (\Schema::hasColumn('health_profiles', 'final_review_findings_status')) {
+                    $profile->final_review_findings_status = $findingsStatus;
+                }
                 $profile->xray_findings = trim((string) $profile->xray_findings) !== ''
                     ? $profile->xray_findings
                     : ($findingsStatus === 'No Findings / Normal' ? 'Normal' : 'With Findings');
@@ -3266,6 +3971,22 @@ PROMPT;
 
                 return $profile;
             });
+
+            try {
+                $issuanceService = app(MarClearanceIssuanceService::class);
+                $issuanceService->syncApprovedHealthProfileForWorkflow(
+                    $profile->fresh('user'),
+                    MarClearanceSubcategorySource::APPLICANT_FINAL_REVIEW,
+                    !$hasPendingFinding
+                );
+            } catch (\Throwable $exception) {
+                Log::warning('Applicant MAR issuance synchronization failed.', [
+                    'health_profile_id' => $profile->id,
+                    'reference_number' => $referenceNumber,
+                    'clearance_status' => $clearanceStatus,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
 
             if (!$isLocalOnlyApproval && !$hasPendingFinding) {
                 $profile->puptas_sync_status = 'syncing';
@@ -3399,7 +4120,7 @@ PROMPT;
 
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred during approval: ' . $e->getMessage()
+                'message' => 'An error occurred during approval. Please try again.'
             ], 500);
         }
     }
@@ -3431,12 +4152,24 @@ PROMPT;
                 ?: $this->findUserByEmployeeIdNumber($referenceNumber)
                 ?: $this->findUserByIdentifier($referenceNumber);
 
-            if (!$student || !$this->isStudentOjtHealthProfileUser($student)) {
+            $student?->loadMissing('healthProfile', 'dependentProfile');
+            $isAssessmentPatient = $student
+                && (
+                    $this->isStudentOjtHealthProfileUser($student)
+                    || $this->isDependentHealthProfileUser($student)
+                );
+
+            if (!$isAssessmentPatient) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Student/OJT health profile was not found for that student number.',
+                    'message' => 'Patient health profile was not found for that Patient ID Number.',
                 ], 404);
             }
+
+            $assessmentWorkflow = $this->isDependentHealthProfileUser($student)
+                ? MarClearanceSubcategorySource::PATIENT_INTAKE
+                : MarClearanceSubcategorySource::STUDENT_NURSE_REVIEW;
+            $healthProfile = $healthProfile ?: $this->ensureWalkinHealthProfile($student);
 
             $height = null;
             $heightInput = trim((string) ($validated['height'] ?? ''));
@@ -3557,7 +4290,7 @@ PROMPT;
 
                 if ($hasAssessmentValue) {
                     $profile->assessment_date = $profile->assessment_date ?: now()->toDateString();
-                    $profile->physical_assessment_status = $profile->physical_assessment_status ?: 'Student/OJT Assessment Saved';
+                    $profile->physical_assessment_status = $profile->physical_assessment_status ?: 'Patient Assessment Saved';
                     if (!$profile->review_started_at) {
                         $profile->review_started_at = now();
                         $profile->review_started_by_user_id = auth()->id();
@@ -3568,6 +4301,26 @@ PROMPT;
 
                 return $profile;
             });
+
+            // Re-read this outside the transaction for the MAR synchronization below.
+            $clearanceDecision = trim((string) ($validated['clearance_decision'] ?? ''));
+            if ($clearanceDecision !== '') {
+                try {
+                    $studentIssuanceService = app(MarClearanceIssuanceService::class);
+                    $studentIssuanceService->syncApprovedHealthProfileForWorkflow(
+                        $profile->fresh('user'),
+                        $assessmentWorkflow,
+                        $clearanceDecision === 'approve'
+                    );
+                } catch (\Throwable $exception) {
+                    Log::warning('Student MAR issuance synchronization failed.', [
+                        'health_profile_id' => $profile->id,
+                        'reference_number' => $referenceNumber,
+                        'clearance_status' => $profile->clearance_status,
+                        'error' => $exception->getMessage(),
+                    ]);
+                }
+            }
 
             ActivityLog::create([
                 'user_id' => auth()->id(),

@@ -1315,9 +1315,9 @@
         max-width: 100%;
         margin: 0 0 9px;
         color: #70131b;
-        font-size: clamp(1.65rem, 3vw, 2.25rem);
+        font-size: clamp(1.35rem, 2.1vw, 1.75rem);
         font-weight: 900;
-        line-height: 1.05;
+        line-height: 1.12;
         overflow-wrap: anywhere;
     }
     .consultation-main .patient-badges {
@@ -1375,6 +1375,18 @@
     }
     .consultation-source-badge {
         margin: 6px 0 8px;
+    }
+    .consultation-main .consultation-date .consultation-appointment-number {
+        display: block;
+        max-width: 100%;
+        margin: -2px 0 8px;
+        overflow-wrap: anywhere;
+        color: #70131b;
+        font-size: .68rem;
+        font-weight: 900;
+        line-height: 1.2;
+        text-transform: none;
+        letter-spacing: .01em;
     }
     .consultation-main .consultation-date .source-walkin {
         color: #111111;
@@ -1987,6 +1999,9 @@
     }
     html[data-theme="dark"] .consultation-main .consultation-date .source-walkin {
         color: #111111;
+    }
+    html[data-theme="dark"] .consultation-main .consultation-date .consultation-appointment-number {
+        color: #facc15;
     }
     html[data-theme="dark"] .consult-section-heading {
         border-bottom-color: rgba(250, 204, 21, .24);
@@ -3258,6 +3273,1079 @@
     html[data-theme="dark"] .physical-assessment-card > .form-grid-2 > .form-group > input.form-control.has-value {
         border-bottom-color: #60a5fa !important;
     }
+
+    /* Remove the old yellow top accent from consultation section containers. */
+    .consultation-main .physical-assessment-card,
+    .consultation-main .visit-details-card,
+    .consultation-main .medicine-dispensing-card,
+    .consultation-main .clinical-findings-card,
+    html[data-theme="dark"] .consultation-main .physical-assessment-card,
+    html[data-theme="dark"] .consultation-main .visit-details-card,
+    html[data-theme="dark"] .consultation-main .medicine-dispensing-card,
+    html[data-theme="dark"] .consultation-main .clinical-findings-card {
+        border-top: 0 !important;
+    }
+
+    /* Final consultation controls: shared dropdown and action-button treatment. */
+    .consultation-main .clinic-select-display {
+        min-height: 44px !important;
+        padding: 10px 44px 10px 14px !important;
+        border: 1px solid rgba(250, 204, 21, .18) !important;
+        border-radius: 8px !important;
+        background: #182235 !important;
+        color: #f8fafc !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035), 0 4px 12px rgba(0, 0, 0, .16) !important;
+        font-size: .86rem;
+        font-weight: 800;
+        transform: none;
+        transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease, color .2s ease, transform .2s ease;
+    }
+    .consultation-main .clinic-select-display::before {
+        display: none !important;
+    }
+    .consultation-main .clinic-select-display::after {
+        right: 16px !important;
+        border-color: #facc15 !important;
+    }
+    .consultation-main .clinic-select-display:hover,
+    .consultation-main .clinic-select-display.is-open,
+    .consultation-main .clinic-select-display:focus-visible {
+        border-color: #facc15 !important;
+        background: #202d42 !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .10), 0 10px 20px rgba(0, 0, 0, .2) !important;
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .consultation-main .clinic-select-menu {
+        gap: 8px !important;
+        padding: 10px !important;
+        border: 1px solid rgba(250, 204, 21, .18) !important;
+        border-radius: 10px !important;
+        background: #111827 !important;
+        box-shadow: 0 18px 34px rgba(0, 0, 0, .35) !important;
+        backdrop-filter: none;
+    }
+    .consultation-main .clinic-select-option {
+        position: relative;
+        isolation: isolate;
+        min-height: 38px !important;
+        overflow: hidden;
+        padding: 0 12px !important;
+        border: 1px solid rgba(255, 255, 255, .16) !important;
+        border-radius: 8px !important;
+        background: #223044 !important;
+        color: #f8fafc !important;
+        font-size: 13px !important;
+        font-weight: 800;
+        transform: none;
+        transition: background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+    .consultation-main .clinic-select-option::after {
+        content: "";
+        position: absolute;
+        z-index: 0;
+        top: -40%;
+        bottom: -40%;
+        left: -135%;
+        right: auto;
+        width: 34%;
+        opacity: 0;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, .72) 48%, rgba(255, 255, 255, 0) 100%);
+        transform: translateX(0) skewX(-18deg);
+        pointer-events: none;
+    }
+    .consultation-main .clinic-select-option:hover,
+    .consultation-main .clinic-select-option:focus-visible,
+    .consultation-main .clinic-select-option.is-selected {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .18);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .consultation-main .clinic-select-option:hover::after,
+    .consultation-main .clinic-select-option:focus-visible::after {
+        animation: consultationControlSweep .85s ease both;
+    }
+
+    .consultation-main .form-actions {
+        display: grid;
+        grid-template-columns: minmax(122px, auto) minmax(122px, auto) minmax(0, 1fr);
+        align-items: stretch;
+        gap: 12px;
+    }
+    .consultation-main .btn-cancel {
+        grid-column: 1;
+        grid-row: 1;
+        min-width: 122px;
+        width: 100%;
+        min-height: 46px;
+        padding: 12px 18px;
+        border: 1px solid rgba(250, 204, 21, .18) !important;
+        border-radius: 8px;
+        background: #273145 !important;
+        color: #ffffff !important;
+        box-shadow: 0 7px 16px rgba(0, 0, 0, .16);
+    }
+    .consultation-main .btn-save {
+        grid-column: 3;
+        grid-row: 1;
+        width: 100%;
+        min-height: 46px;
+        border: 1px solid #70131B !important;
+        border-radius: 8px;
+        background: #70131B !important;
+        color: #ffffff !important;
+        box-shadow: 0 10px 22px rgba(112, 19, 27, .28);
+    }
+    .consultation-main .btn-draft {
+        position: relative;
+        display: inline-flex;
+        grid-column: 2;
+        grid-row: 1;
+        width: 100%;
+        min-width: 122px;
+        min-height: 46px;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        overflow: hidden;
+        padding: 12px 18px;
+        border: 1px solid rgba(250, 204, 21, .28) !important;
+        border-radius: 8px;
+        background: #273145 !important;
+        color: #ffffff !important;
+        box-shadow: 0 7px 16px rgba(0, 0, 0, .16);
+        cursor: pointer;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .consultation-main .btn-draft svg {
+        position: relative;
+        z-index: 1;
+        width: 18px;
+        height: 18px;
+    }
+    .consultation-main .btn-draft > span {
+        position: relative;
+        z-index: 1;
+    }
+    .consultation-main .btn-draft::before {
+        content: "";
+        position: absolute;
+        z-index: 0;
+        top: -40%;
+        bottom: -40%;
+        left: -135%;
+        width: 34%;
+        opacity: 0;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, .72) 48%, rgba(255, 255, 255, 0) 100%);
+        transform: translateX(0) skewX(-18deg);
+        pointer-events: none;
+    }
+    .consultation-main .btn-draft:hover,
+    .consultation-main .btn-draft:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .12), 0 12px 22px rgba(112, 19, 27, .2);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .consultation-main .btn-draft:hover::before,
+    .consultation-main .btn-draft:focus-visible::before {
+        animation: consultationControlSweep .85s ease both;
+    }
+    .consultation-main .btn-draft.is-saving {
+        opacity: .74;
+        pointer-events: none;
+    }
+    .consultation-main .btn-save::before,
+    .consultation-main .btn-cancel::before {
+        content: "";
+        position: absolute;
+        z-index: 0;
+        top: -40%;
+        bottom: -40%;
+        left: -135%;
+        width: 34%;
+        opacity: 0;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, .72) 48%, rgba(255, 255, 255, 0) 100%);
+        transform: translateX(0) skewX(-18deg);
+        pointer-events: none;
+    }
+    .consultation-main .btn-save > span,
+    .consultation-main .btn-cancel > * {
+        position: relative;
+        z-index: 1;
+    }
+    .consultation-main .btn-save:hover,
+    .consultation-main .btn-save:focus-visible,
+    .consultation-main .btn-cancel:hover,
+    .consultation-main .btn-cancel:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .12), 0 12px 22px rgba(112, 19, 27, .2);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .consultation-main .btn-save:hover::before,
+    .consultation-main .btn-save:focus-visible::before,
+    .consultation-main .btn-cancel:hover::before,
+    .consultation-main .btn-cancel:focus-visible::before {
+        animation: consultationControlSweep .85s ease both;
+    }
+    .consultation-main .btn-save.is-finalizing {
+        background: #facc15 !important;
+        color: #70131B !important;
+        pointer-events: none;
+    }
+
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-display {
+        border-color: rgba(112, 19, 27, .22) !important;
+        background: #ffffff !important;
+        color: #70131B !important;
+        box-shadow: 0 4px 12px rgba(112, 19, 27, .08) !important;
+    }
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-display::after {
+        border-color: #70131B !important;
+    }
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-display:hover,
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-display.is-open,
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-display:focus-visible {
+        border-color: #facc15 !important;
+        background: #fff8e6 !important;
+        color: #70131B !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .12), 0 10px 20px rgba(112, 19, 27, .12) !important;
+    }
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-menu {
+        border-color: rgba(112, 19, 27, .18) !important;
+        background: #ffffff !important;
+        box-shadow: 0 18px 34px rgba(112, 19, 27, .16) !important;
+    }
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-option {
+        border-color: rgba(112, 19, 27, .16) !important;
+        background: #ffffff !important;
+        color: #70131B !important;
+    }
+    html:not([data-theme="dark"]) .consultation-main .btn-cancel {
+        border-color: rgba(112, 19, 27, .24) !important;
+        background: #f8fafc !important;
+        color: #70131B !important;
+        box-shadow: 0 7px 16px rgba(112, 19, 27, .08);
+    }
+    html:not([data-theme="dark"]) .consultation-main .btn-draft {
+        border-color: rgba(112, 19, 27, .24) !important;
+        background: #ffffff !important;
+        color: #70131B !important;
+        box-shadow: 0 7px 16px rgba(112, 19, 27, .08);
+    }
+    @keyframes consultationControlSweep {
+        0% {
+            opacity: 0;
+            transform: translateX(0) skewX(-18deg);
+        }
+        18% {
+            opacity: .72;
+        }
+        72% {
+            opacity: .72;
+        }
+        100% {
+            opacity: 0;
+            transform: translateX(820%) skewX(-18deg);
+        }
+    }
+    @media (max-width: 520px) {
+        .consultation-main .form-actions {
+            grid-template-columns: 1fr;
+        }
+        .consultation-main .btn-cancel,
+        .consultation-main .btn-draft,
+        .consultation-main .btn-save {
+            grid-column: 1;
+            grid-row: auto;
+        }
+    }
+
+    /* Keep the utility rail interactive after the dark-mode surface overrides. */
+    .consultation-utility-rail .utility-rail-button {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        border-color: rgba(250, 204, 21, .18) !important;
+        transition: background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+    .consultation-utility-rail .utility-rail-button::before {
+        content: "";
+        position: absolute;
+        z-index: 0;
+        top: -40%;
+        bottom: -40%;
+        left: -135%;
+        width: 34%;
+        opacity: 0;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 196, .72) 48%, rgba(255, 255, 255, 0) 100%);
+        transform: translateX(0) skewX(-18deg);
+        pointer-events: none;
+    }
+    .consultation-utility-rail .utility-rail-button > * {
+        position: relative;
+        z-index: 1;
+    }
+    .consultation-utility-rail .utility-rail-button:hover,
+    .consultation-utility-rail .utility-rail-button:focus-visible,
+    .consultation-utility-rail .utility-rail-button.active {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .12), 0 12px 22px rgba(112, 19, 27, .24);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .consultation-utility-rail .utility-rail-button:hover::before,
+    .consultation-utility-rail .utility-rail-button:focus-visible::before,
+    .consultation-utility-rail .utility-rail-button.active::before {
+        animation: consultationControlSweep .85s ease both;
+    }
+    .consultation-utility-rail .utility-rail-button:hover .utility-rail-count,
+    .consultation-utility-rail .utility-rail-button:focus-visible .utility-rail-count,
+    .consultation-utility-rail .utility-rail-button.active .utility-rail-count {
+        background: #70131B;
+        color: #facc15;
+    }
+
+    .document-version-list {
+        display: grid;
+        gap: 16px;
+    }
+    .document-version-group {
+        display: grid;
+        gap: 9px;
+    }
+    .document-version-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 0 2px 8px;
+        border-bottom: 1px solid rgba(250, 204, 21, .18);
+    }
+    .document-version-header > div {
+        min-width: 0;
+    }
+    .document-version-kicker,
+    .document-version-header strong,
+    .document-version-header small {
+        display: block;
+    }
+    .document-version-kicker {
+        margin-bottom: 3px;
+        color: #facc15;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+    .document-version-header strong {
+        overflow: hidden;
+        color: #f8fafc;
+        font-size: 12px;
+        font-weight: 900;
+        line-height: 1.3;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .document-version-header small {
+        margin-top: 3px;
+        color: #94a3b8;
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+    .document-version-current {
+        flex: 0 0 auto;
+        border: 1px solid rgba(250, 204, 21, .5);
+        border-radius: 999px;
+        background: rgba(250, 204, 21, .12);
+        color: #facc15;
+        padding: 4px 7px;
+        font-size: 9px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    .document-card {
+        transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+    .document-card:hover {
+        border-color: rgba(250, 204, 21, .62);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, .18);
+        transform: translateY(-1px);
+    }
+    .document-preview.is-missing {
+        color: #64748b;
+        opacity: .72;
+    }
+    .document-open.is-disabled {
+        color: #94a3b8;
+        cursor: default;
+    }
+    html:not([data-theme="dark"]) .document-version-header {
+        border-bottom-color: rgba(112, 19, 27, .16);
+    }
+    html:not([data-theme="dark"]) .document-version-header strong {
+        color: #70131B;
+    }
+    html:not([data-theme="dark"]) .document-version-header small {
+        color: #64748b;
+    }
+    html:not([data-theme="dark"]) .document-version-current {
+        border-color: rgba(112, 19, 27, .3);
+        background: rgba(112, 19, 27, .08);
+        color: #70131B;
+    }
+
+    /* Personal Information: avoid a second inner line inside each vital field. */
+    .physical-assessment-card > .form-grid-2 > .form-group > input.form-control,
+    .physical-assessment-card > .form-grid-2 > .form-group > input.form-control:hover,
+    .physical-assessment-card > .form-grid-2 > .form-group > input.form-control:focus,
+    .physical-assessment-card > .form-grid-2 > .form-group > input.form-control.is-valid,
+    .physical-assessment-card > .form-grid-2 > .form-group > input.form-control.is-invalid {
+        border: 0 !important;
+        border-bottom: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    /* Birthday uses a soft radius without a colored bottom rule. */
+    .physical-assessment-card > .physical-dob-group > #consultDob,
+    .physical-assessment-card > .physical-dob-group > #consultDob:hover,
+    .physical-assessment-card > .physical-dob-group > #consultDob:focus {
+        border: 1px solid #e5e7eb !important;
+        border-bottom: 0 !important;
+        border-radius: 6px !important;
+        background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%) !important;
+        box-shadow: 0 2px 5px rgba(15, 23, 42, .06) !important;
+    }
+    html[data-theme="dark"] .physical-assessment-card > .physical-dob-group > #consultDob,
+    html[data-theme="dark"] .physical-assessment-card > .physical-dob-group > #consultDob:hover,
+    html[data-theme="dark"] .physical-assessment-card > .physical-dob-group > #consultDob:focus {
+        border: 1px solid #3b475b !important;
+        border-bottom: 0 !important;
+        border-radius: 6px !important;
+        background: #182235 !important;
+        box-shadow: none !important;
+    }
+
+    /* Match the Birthday field width to the first vital field on desktop. */
+    @media (min-width: 821px) {
+        .physical-assessment-card > .physical-dob-group {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            column-gap: 18px !important;
+        }
+    }
+
+    /* Remove value-state blue/yellow lines from the Personal Information vitals. */
+    .physical-assessment-card > .form-grid-2 > .form-group,
+    .physical-assessment-card > .form-grid-2 > .form-group.has-value {
+        border-color: #e5e7eb !important;
+        box-shadow: 0 2px 5px rgba(15, 23, 42, .06) !important;
+    }
+    .physical-assessment-card > .form-grid-2 > .form-group > input.form-control,
+    .physical-assessment-card > .form-grid-2 > .form-group > input.form-control.has-value,
+    .physical-assessment-card > .form-grid-2 > .form-group > input.form-control:hover,
+    .physical-assessment-card > .form-grid-2 > .form-group > input.form-control:focus {
+        border: 0 !important;
+        border-top: 0 !important;
+        border-right: 0 !important;
+        border-bottom: 0 !important;
+        border-left: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    html[data-theme="dark"] .physical-assessment-card > .form-grid-2 > .form-group,
+    html[data-theme="dark"] .physical-assessment-card > .form-grid-2 > .form-group.has-value {
+        border-color: #3b475b !important;
+        background: #182235 !important;
+        box-shadow: none !important;
+    }
+    html[data-theme="dark"] .physical-assessment-card > .form-grid-2 > .form-group > input.form-control,
+    html[data-theme="dark"] .physical-assessment-card > .form-grid-2 > .form-group > input.form-control.has-value,
+    html[data-theme="dark"] .physical-assessment-card > .form-grid-2 > .form-group > input.form-control:hover,
+    html[data-theme="dark"] .physical-assessment-card > .form-grid-2 > .form-group > input.form-control:focus {
+        border: 0 !important;
+        border-top: 0 !important;
+        border-right: 0 !important;
+        border-bottom: 0 !important;
+        border-left: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    /* A selected COVID option uses the same active yellow treatment as the other controls. */
+    .physical-assessment-card > .physical-covid-group .choice-input:checked + .choice-card,
+    html[data-theme="dark"] .physical-assessment-card > .physical-covid-group .choice-input:checked + .choice-card {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .2) !important;
+    }
+
+    /* Helper copy stays lightweight: no box, border, background, or info badge. */
+    .consultation-main .form-help {
+        display: block !important;
+        min-height: 0 !important;
+        margin-top: 7px !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    .consultation-main .form-help::before {
+        display: none !important;
+        content: none !important;
+    }
+
+    /* Keep the helper indicator while leaving the helper copy unboxed. */
+    .consultation-main .physical-assessment-card > .physical-dob-group > .form-help::before,
+    .consultation-main .visit-details-card .visit-field .form-help::before,
+    .consultation-main .clinical-findings-card > .form-group > .form-help::before {
+        display: inline-grid !important;
+        content: 'i' !important;
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        margin-right: 7px;
+        place-items: center;
+        border: 1px solid currentColor;
+        border-radius: 50%;
+        font-size: 11px;
+        font-weight: 850;
+        line-height: 1;
+    }
+
+    /* Keep the utility buttons and their count badges aligned while labels wrap. */
+    @media (min-width: 761px) {
+        .consultation-utility-rail {
+            width: 126px !important;
+        }
+        .consultation-utility-rail .utility-rail-button {
+            display: grid !important;
+            grid-template-columns: 21px minmax(0, 1fr) 22px;
+            align-items: center;
+            column-gap: 9px;
+            width: 126px !important;
+            min-width: 126px !important;
+            max-width: 126px !important;
+            box-sizing: border-box;
+        }
+        .consultation-utility-rail .utility-rail-button > span:not(.utility-rail-count) {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+        }
+        .consultation-utility-rail .utility-rail-count {
+            width: 22px;
+            min-width: 22px;
+            height: 19px;
+            margin-left: 0 !important;
+            padding: 0;
+            justify-self: end;
+        }
+    }
+
+    /* Use the same maroon/yellow hover treatment for light-mode dropdown options. */
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-option:hover,
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-option:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .18);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-option:hover::after,
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-option:focus-visible::after {
+        z-index: 0;
+        animation: consultationControlSweep .85s ease both;
+    }
+
+    /* Keep the populated trigger on the default light surface. */
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-display.has-value {
+        border-color: rgba(112, 19, 27, .22) !important;
+        background: #ffffff !important;
+        color: #70131B !important;
+        box-shadow: 0 4px 12px rgba(112, 19, 27, .08) !important;
+    }
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-display.has-value:hover,
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-display.has-value.is-open,
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-display.has-value:focus-visible {
+        border-color: #facc15 !important;
+        background: #fff8e6 !important;
+        color: #70131B !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .12), 0 10px 20px rgba(112, 19, 27, .12) !important;
+    }
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-display.has-value::after {
+        border-color: #70131B !important;
+    }
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-option.is-selected,
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-option.is-selected:hover,
+    html:not([data-theme="dark"]) .consultation-main .clinic-select-option.is-selected:focus-visible {
+        border-color: #70131B !important;
+        background: #70131B !important;
+        color: #ffffff !important;
+        box-shadow: none !important;
+        transform: none;
+    }
+
+    /* Document versions stay compact until the user opens one. */
+    .document-version-toggle {
+        position: relative;
+        width: 100%;
+        padding-right: 34px;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+    .document-version-toggle:hover {
+        background: rgba(250, 204, 21, .05);
+    }
+    .document-version-toggle:focus-visible {
+        outline: 2px solid #facc15;
+        outline-offset: 3px;
+    }
+    .document-version-toggle-icon {
+        position: absolute;
+        top: 50%;
+        right: 7px;
+        width: 9px;
+        height: 9px;
+        border-right: 2px solid #facc15;
+        border-bottom: 2px solid #facc15;
+        transform: translateY(-70%) rotate(45deg);
+        transition: transform .18s ease;
+    }
+    .document-version-toggle[aria-expanded="true"] .document-version-toggle-icon {
+        transform: translateY(-20%) rotate(225deg);
+    }
+    .document-version-content {
+        display: grid;
+        gap: 9px;
+    }
+    .document-version-content[hidden] {
+        display: none !important;
+    }
+    html:not([data-theme="dark"]) .document-version-toggle-icon {
+        border-color: #70131B;
+    }
+
+    /* Inventory search uses one straight underline, including on focus. */
+    .inventory-panel-search-input,
+    .inventory-panel-search-input:hover,
+    .inventory-panel-search-input:focus {
+        border: 0 !important;
+        border-radius: 0 !important;
+        border-bottom: 2px solid #8f2230 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+    html[data-theme="dark"] .inventory-panel-search-input,
+    html[data-theme="dark"] .inventory-panel-search-input:hover,
+    html[data-theme="dark"] .inventory-panel-search-input:focus {
+        border: 0 !important;
+        border-bottom: 2px solid #facc15 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .consult-certificate-label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 6px;
+    }
+    .consultation-main .consult-certificate-label-row > label {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin: 0;
+    }
+    .consult-add-subcategory-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 32px;
+        padding: 0 10px;
+        border: 1px solid #7f1d2d;
+        border-radius: 8px;
+        background: #7f1d2d;
+        color: #ffffff;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, color .18s ease, transform .18s ease;
+    }
+    .consult-add-subcategory-button svg {
+        width: 15px;
+        height: 15px;
+        flex: 0 0 15px;
+    }
+    .consult-add-subcategory-button:hover,
+    .consult-add-subcategory-button:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .22);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .consult-add-subcategory-button:disabled {
+        opacity: .45;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .consultation-mar-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, .58);
+        backdrop-filter: blur(7px);
+    }
+    .consultation-mar-modal[hidden] {
+        display: none !important;
+    }
+    .consultation-mar-dialog {
+        width: min(540px, calc(100vw - 32px));
+        overflow: hidden;
+        border: 1px solid rgba(127, 29, 45, .22);
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 28px 80px rgba(15, 23, 42, .28), 0 0 0 3px rgba(250, 204, 21, .10);
+        animation: consultationMarDialogIn .2s ease both;
+    }
+    @keyframes consultationMarDialogIn {
+        from { opacity: 0; transform: translateY(12px) scale(.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .consultation-mar-dialog-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 20px;
+        background: linear-gradient(135deg, #7f1d2d, #991b2e);
+        color: #ffffff;
+    }
+    .consultation-mar-dialog-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+    .consultation-mar-dialog-icon {
+        display: inline-grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+        border: 1px solid rgba(250, 204, 21, .68);
+        border-radius: 8px;
+        color: #facc15;
+    }
+    .consultation-mar-dialog-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+    .consultation-mar-dialog-header h2 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 900;
+        color: #ffffff !important;
+    }
+    .consultation-mar-dialog-header p {
+        margin: 4px 0 0;
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, .82) !important;
+    }
+    .consultation-mar-dialog-close {
+        display: inline-grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        border: 1px solid rgba(250, 204, 21, .55);
+        border-radius: 999px;
+        background: transparent;
+        color: #ffffff;
+        line-height: 1;
+        cursor: pointer;
+        transition: background-color .18s ease, border-color .18s ease, color .18s ease;
+        transform: none;
+        animation: none;
+    }
+    .consultation-mar-dialog-close svg {
+        width: 17px;
+        height: 17px;
+    }
+    .consultation-mar-dialog-close:hover,
+    .consultation-mar-dialog-close:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        outline: none;
+        transform: none;
+    }
+    .consultation-mar-dialog-body {
+        display: grid;
+        gap: 16px;
+        padding: 22px 24px 24px;
+    }
+    .consultation-mar-parent {
+        margin: 0;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 700;
+    }
+    .consultation-mar-parent strong {
+        color: #7f1d2d;
+        font-weight: 900;
+    }
+    .consultation-mar-field {
+        display: grid;
+        gap: 7px;
+    }
+    .consultation-mar-field label,
+    .consultation-mar-source-box legend {
+        color: #374151;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+    .consultation-mar-field input,
+    .consultation-mar-field select {
+        width: 100%;
+        min-height: 46px;
+        padding: 0 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #111827;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        outline: none;
+        transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+    }
+    .consultation-mar-field input:focus,
+    .consultation-mar-field select:focus {
+        border-color: #7f1d2d;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(127, 29, 45, .12);
+    }
+    .consultation-mar-source-box {
+        min-width: 0;
+        margin: 0;
+        padding: 12px 14px 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #f8fafc;
+    }
+    .consultation-mar-source-box legend {
+        padding: 0 6px;
+    }
+    .consultation-mar-source-value {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #111827;
+    }
+    .consultation-mar-source-icon {
+        display: inline-grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        border: 1px solid rgba(127, 29, 45, .22);
+        border-radius: 8px;
+        background: #fff1f2;
+        color: #7f1d2d;
+    }
+    .consultation-mar-source-icon svg {
+        width: 17px;
+        height: 17px;
+    }
+    .consultation-mar-source-value strong,
+    .consultation-mar-source-value small {
+        display: block;
+    }
+    .consultation-mar-source-value strong {
+        font-size: 13px;
+        font-weight: 900;
+    }
+    .consultation-mar-source-value small {
+        margin-top: 2px;
+        color: #64748b;
+        font-size: 11px;
+        line-height: 1.4;
+    }
+    .consultation-mar-error {
+        margin: -4px 0 0;
+        padding: 10px 12px;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        background: #fef2f2;
+        color: #991b1b;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+    .consultation-mar-dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 2px;
+    }
+    .consultation-mar-cancel,
+    .consultation-mar-save {
+        min-height: 40px;
+        padding: 0 16px;
+        border-radius: 8px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, color .18s ease, transform .18s ease;
+    }
+    .consultation-mar-cancel {
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #334155;
+    }
+    .consultation-mar-save {
+        border: 1px solid #7f1d2d;
+        background: #7f1d2d;
+        color: #ffffff;
+    }
+    .consultation-mar-cancel:hover,
+    .consultation-mar-cancel:focus-visible {
+        border-color: #7f1d2d;
+        background: #fff1f2;
+        color: #7f1d2d;
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .consultation-mar-save:hover,
+    .consultation-mar-save:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        box-shadow: 0 8px 18px rgba(250, 204, 21, .22);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    .consultation-mar-save:disabled {
+        opacity: .58;
+        cursor: wait;
+        transform: none;
+        box-shadow: none;
+    }
+    html[data-theme="dark"] .consultation-mar-dialog {
+        border-color: rgba(250, 204, 21, .22);
+        background: #111827;
+        box-shadow: 0 28px 80px rgba(0, 0, 0, .46), 0 0 0 3px rgba(250, 204, 21, .08);
+    }
+    html[data-theme="dark"] .consultation-mar-parent,
+    html[data-theme="dark"] .consultation-mar-field label,
+    html[data-theme="dark"] .consultation-mar-source-box legend {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .consultation-mar-parent strong {
+        color: #facc15;
+    }
+    html[data-theme="dark"] .consultation-mar-field input,
+    html[data-theme="dark"] .consultation-mar-field select {
+        border-color: #3b475b;
+        background: #1f2937;
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .consultation-mar-field input:focus,
+    html[data-theme="dark"] .consultation-mar-field select:focus {
+        border-color: #facc15;
+        background: #202d42;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .12);
+    }
+    html[data-theme="dark"] .consultation-mar-source-box {
+        border-color: #3b475b;
+        background: #161d2b;
+    }
+    html[data-theme="dark"] .consultation-mar-source-value {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .consultation-mar-source-icon {
+        border-color: rgba(250, 204, 21, .24);
+        background: rgba(127, 29, 45, .38);
+        color: #facc15;
+    }
+    html[data-theme="dark"] .consultation-mar-source-value small {
+        color: #94a3b8;
+    }
+    html[data-theme="dark"] .consultation-mar-error {
+        border-color: rgba(248, 113, 113, .38);
+        background: rgba(127, 29, 45, .24);
+        color: #fecaca;
+    }
+    html[data-theme="dark"] .consultation-mar-cancel {
+        border-color: #3b475b;
+        background: #1f2937;
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .consultation-mar-cancel:hover,
+    html[data-theme="dark"] .consultation-mar-cancel:focus-visible {
+        border-color: #facc15;
+        background: rgba(250, 204, 21, .12);
+        color: #facc15;
+    }
+    @media (max-width: 600px) {
+        .consult-certificate-label-row {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .consult-add-subcategory-button {
+            width: 100%;
+        }
+        .consultation-mar-dialog-body {
+            padding: 18px;
+        }
+        .consultation-mar-dialog-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+        .consultation-mar-cancel,
+        .consultation-mar-save {
+            width: 100%;
+        }
+    }
 </style>
 @endpush
 
@@ -3269,8 +4357,41 @@
     $studentDisplayRole = \App\Models\Appointment::normalizeUserType($student->user_role ?? $student->user_type ?? 'Student');
     $isAssistedIntake = ($user_source ?? '') === 'assisted';
     $studentDocuments = $studentDocuments ?? [];
+    $studentDocumentVersions = $studentDocumentVersions ?? [];
+    $studentDocumentVersionCount = collect($studentDocumentVersions)->sum(fn (array $version) => count($version['documents'] ?? []));
+    $studentDocumentCount = $studentDocumentVersionCount > 0 ? $studentDocumentVersionCount : count($studentDocuments);
+    $hasVersionedDocuments = $studentDocumentVersionCount > 0;
     $studentPhotoDocument = collect($studentDocuments)->firstWhere('key', 'student_photo');
     $studentCourse = trim((string) ($student->course ?: optional($student->healthProfile)->course_college));
+    $dependentProfile = $student->relationLoaded('dependentProfile') ? $student->dependentProfile : $student->dependentProfile()->first();
+    $patientRoleMarkers = strtolower(trim(implode(' ', array_filter([
+        (string) ($student->user_role ?? ''),
+        (string) ($student->user_type ?? ''),
+        (string) ($student->idp_role ?? ''),
+        (string) $studentDisplayRole,
+    ]))));
+    $isDependentPatient = (bool) $dependentProfile || str_contains($patientRoleMarkers, 'dependent') || str_contains($patientRoleMarkers, 'guest');
+    $isEmployeePatient = !$isDependentPatient && (
+        str_contains($patientRoleMarkers, 'faculty')
+        || str_contains($patientRoleMarkers, 'admin')
+        || str_contains($patientRoleMarkers, 'employee')
+        || str_contains($patientRoleMarkers, 'staff')
+        || str_contains($patientRoleMarkers, 'designee')
+    );
+    $patientIdLabel = $isDependentPatient ? 'Patient ID Number' : ($isEmployeePatient ? 'Employee Number' : 'Student Number');
+    $patientIdNumber = $isDependentPatient
+        ? ($dependentProfile?->id_number ?: ($student->student_number ?: $student->student_id ?: 'N/A'))
+        : ($isEmployeePatient
+            ? ($student->employee_number ?: ($student->student_number ?: $student->student_id ?: 'N/A'))
+            : ($student->student_number ?: $student->student_id ?: 'N/A'));
+    $patientIdNumberForSubmit = $patientIdNumber === 'N/A' ? '' : $patientIdNumber;
+    $canManageMarConfiguration = (bool) (optional(auth()->user())->canAccessPermission('settings.medical') ?? false);
+    $consultationSubcategoryStoreUrl = route('mar-clearance-subcategories.consultation.store', ['marClearanceType' => '__ID__']);
+    $consultationDraftData = is_array($consultationDraftData ?? null) ? $consultationDraftData : [];
+    $draftValue = static function (string $key, $default = '') use ($consultationDraftData) {
+        return old($key, array_key_exists($key, $consultationDraftData) ? $consultationDraftData[$key] : $default);
+    };
+    $consultationDraftStorageKey = 'consultation-draft:' . $patientIdNumberForSubmit . ':' . ($user_source ?? 'walkin');
     $studentInitials = collect(preg_split('/\s+/', trim((string) $student->name)) ?: [])
         ->filter()
         ->take(2)
@@ -3293,8 +4414,7 @@
                     <h2 class="patient-name">{{ $student->name }}</h2>
                     <div class="patient-badges">
                         <span class="patient-badge">{{ $studentDisplayRole }}</span>
-                        <span class="patient-badge">Student No. {{ $student->student_number ?: $student->student_id ?: 'N/A' }}</span>
-                        <span class="patient-badge">Appointment No. {{ optional($latestAppointment)->apt_id ?: 'N/A' }}</span>
+                        <span class="patient-badge">{{ $patientIdLabel }} {{ $patientIdNumber }}</span>
                     </div>
                     <div class="patient-meta">
                         <div class="patient-meta-row">
@@ -3324,6 +4444,7 @@
                     @else
                         <span class="badge-source source-walkin consultation-source-badge">Walk-in Patient</span>
                     @endif
+                    <span class="consultation-appointment-number">{{ $appointmentNumber ?: 'N/A' }}</span>
                     {{ now()->format('F d, Y') }}
                 </div>
             </div>
@@ -3347,10 +4468,10 @@
 
         <form action="{{ route($walkinStoreRoute) }}" method="POST" id="consultationForm">
             @csrf
-            <input type="hidden" name="student_number" value="{{ $student->student_number ?: $student->student_id }}">
+            <input type="hidden" name="student_number" value="{{ $patientIdNumberForSubmit }}">
             <input type="hidden" name="user_role" value="{{ $studentDisplayRole }}">
             <input type="hidden" name="user_type" value="{{ $user_source ?? 'walkin' }}">
-            <input type="hidden" name="consultation_started_at" value="{{ old('consultation_started_at', $consultationStartedAt ?? now()->format('H:i:s')) }}">
+            <input type="hidden" name="consultation_started_at" value="{{ $draftValue('consultation_started_at', $consultationStartedAt ?? now()->format('H:i:s')) }}">
 
             <section class="consult-card physical-assessment-card">
                 <div class="consult-section-heading">
@@ -3363,7 +4484,7 @@
                 <div class="form-group physical-dob-group">
                     <label for="consultDob">Date of Birth</label>
                     @php
-                        $lockedConsultationDob = $consultationDob ?? old('dob', '');
+                        $lockedConsultationDob = $draftValue('dob', $consultationDob ?? '');
                     @endphp
                     <input type="hidden" name="dob" value="{{ $lockedConsultationDob }}">
                     <input type="date" id="consultDob" class="form-control" value="{{ $lockedConsultationDob }}" disabled aria-readonly="true">
@@ -3375,7 +4496,7 @@
                 <div class="form-grid-2">
                     <div class="form-group">
                         <label for="consultHeight">Height (ft)</label>
-                        <input type="number" id="consultHeight" step="0.01" name="height" class="form-control @error('height') is-invalid @enderror" placeholder="5.6" value="{{ old('height', $consultationHeight ?? '') }}" data-vital="height" data-vital-min="1" data-vital-max="10" data-vital-name="Height">
+                        <input type="number" id="consultHeight" step="0.01" name="height" class="form-control @error('height') is-invalid @enderror" placeholder="5.6" value="{{ $draftValue('height', $consultationHeight ?? '') }}" data-vital="height" data-vital-min="1" data-vital-max="10" data-vital-name="Height">
                         <div class="form-error" id="heightError"></div>
                         <div class="form-success" id="heightSuccess">✓ Valid height</div>
                         @error('height')
@@ -3384,7 +4505,7 @@
                     </div>
                     <div class="form-group">
                         <label for="consultWeight">Weight (lbs)</label>
-                        <input type="number" id="consultWeight" step="0.01" name="weight" class="form-control @error('weight') is-invalid @enderror" placeholder="143" value="{{ old('weight', $consultationWeight ?? '') }}" data-vital="weight" data-vital-min="1" data-vital-max="1100" data-vital-name="Weight">
+                        <input type="number" id="consultWeight" step="0.01" name="weight" class="form-control @error('weight') is-invalid @enderror" placeholder="143" value="{{ $draftValue('weight', $consultationWeight ?? '') }}" data-vital="weight" data-vital-min="1" data-vital-max="1100" data-vital-name="Weight">
                         <div class="form-error" id="weightError"></div>
                         <div class="form-success" id="weightSuccess">✓ Valid weight</div>
                         @error('weight')
@@ -3393,7 +4514,7 @@
                     </div>
                     <div class="form-group">
                         <label for="consultTemp">Temperature (C)</label>
-                        <input type="number" id="consultTemp" step="0.1" name="temp" class="form-control @error('temp') is-invalid @enderror" placeholder="36.5" value="{{ old('temp') }}" data-vital="temp" data-vital-min="30" data-vital-max="45" data-vital-name="Temperature">
+                        <input type="number" id="consultTemp" step="0.1" name="temp" class="form-control @error('temp') is-invalid @enderror" placeholder="36.5" value="{{ $draftValue('temp') }}" data-vital="temp" data-vital-min="30" data-vital-max="45" data-vital-name="Temperature">
                         <div class="form-error" id="tempError"></div>
                         <div class="form-success" id="tempSuccess">✓ Valid temperature</div>
                         @error('temp')
@@ -3402,7 +4523,7 @@
                     </div>
                     <div class="form-group">
                         <label for="consultBp">Blood Pressure</label>
-                        <input type="text" id="consultBp" name="bp" class="form-control @error('bp') is-invalid @enderror" placeholder="120/80" value="{{ old('bp') }}" data-vital="bp" data-vital-name="Blood Pressure">
+                        <input type="text" id="consultBp" name="bp" class="form-control @error('bp') is-invalid @enderror" placeholder="120/80" value="{{ $draftValue('bp') }}" data-vital="bp" data-vital-name="Blood Pressure">
                         <div class="form-error" id="bpError"></div>
                         <div class="form-success" id="bpSuccess">✓ Valid blood pressure</div>
                         @error('bp')
@@ -3411,7 +4532,7 @@
                     </div>
                     <div class="form-group">
                         <label for="consultPulse">Pulse Rate (bpm)</label>
-                        <input type="number" id="consultPulse" name="pulse_rate" class="form-control @error('pulse_rate') is-invalid @enderror" placeholder="72" value="{{ old('pulse_rate') }}" data-vital="pulse_rate" data-vital-min="1" data-vital-max="300" data-vital-name="Pulse Rate">
+                        <input type="number" id="consultPulse" name="pulse_rate" class="form-control @error('pulse_rate') is-invalid @enderror" placeholder="72" value="{{ $draftValue('pulse_rate') }}" data-vital="pulse_rate" data-vital-min="1" data-vital-max="300" data-vital-name="Pulse Rate">
                         <div class="form-error" id="pulseError"></div>
                         <div class="form-success" id="pulseSuccess">✓ Valid pulse rate</div>
                         @error('pulse_rate')
@@ -3420,7 +4541,7 @@
                     </div>
                     <div class="form-group">
                         <label for="consultRespiratory">Respiratory Rate (cpm)</label>
-                        <input type="number" id="consultRespiratory" name="respiratory_rate" class="form-control @error('respiratory_rate') is-invalid @enderror" placeholder="18" value="{{ old('respiratory_rate') }}" data-vital="respiratory_rate" data-vital-min="1" data-vital-max="120" data-vital-name="Respiratory Rate">
+                        <input type="number" id="consultRespiratory" name="respiratory_rate" class="form-control @error('respiratory_rate') is-invalid @enderror" placeholder="18" value="{{ $draftValue('respiratory_rate') }}" data-vital="respiratory_rate" data-vital-min="1" data-vital-max="120" data-vital-name="Respiratory Rate">
                         <div class="form-error" id="respiratoryError"></div>
                         <div class="form-success" id="respiratorySuccess">✓ Valid respiratory rate</div>
                         @error('respiratory_rate')
@@ -3432,24 +4553,24 @@
                     <label>Covid Positive?</label>
                     <div class="choice-grid">
                         <label>
-                            <input type="radio" name="covid_status" class="choice-input" value="Yes" {{ old('covid_status') === 'Yes' ? 'checked' : '' }}>
+                            <input type="radio" name="covid_status" class="choice-input" value="Yes" {{ $draftValue('covid_status') === 'Yes' ? 'checked' : '' }}>
                             <span class="choice-card">Yes</span>
                         </label>
                         <label>
-                            <input type="radio" name="covid_status" class="choice-input" value="No" {{ old('covid_status', 'No') === 'No' ? 'checked' : '' }}>
+                            <input type="radio" name="covid_status" class="choice-input" value="No" {{ $draftValue('covid_status', 'No') === 'No' ? 'checked' : '' }}>
                             <span class="choice-card">No</span>
                         </label>
                     </div>
-                    <div class="physical-covid-date-group {{ old('covid_status') === 'Yes' ? 'is-visible' : '' }}" id="covidPositiveDateGroup">
+                    <div class="physical-covid-date-group {{ $draftValue('covid_status', 'No') === 'Yes' ? 'is-visible' : '' }}" id="covidPositiveDateGroup">
                         <label for="consultCovidPositiveDate">Date Tested Positive</label>
                         <input
                             type="date"
                             id="consultCovidPositiveDate"
                             name="covid_positive_date"
                             class="form-control @error('covid_positive_date') is-invalid @enderror"
-                            value="{{ old('covid_positive_date') }}"
+                            value="{{ $draftValue('covid_positive_date') }}"
                             max="{{ now()->format('Y-m-d') }}"
-                            {{ old('covid_status') === 'Yes' ? 'required' : 'disabled' }}
+                            {{ $draftValue('covid_status', 'No') === 'Yes' ? 'required' : 'disabled' }}
                         >
                         @error('covid_positive_date')
                             <div class="form-error" style="display: block;">{{ $message }}</div>
@@ -3472,17 +4593,17 @@
                     </div>
                     <div class="form-group visit-field">
                         <label for="consultReason">{{ ($user_source ?? '') === 'online' ? 'Appointment Remarks' : 'Reason for Visiting Clinic' }}</label>
-                        <textarea id="consultReason" name="reason_for_visit" class="form-control" rows="3" maxlength="255" placeholder="Describe the student's concern or reason for visit..." {{ ($user_source ?? '') === 'online' ? 'readonly' : '' }}>{{ old('reason_for_visit', optional($latestAppointment)->remarks) }}</textarea>
+                        <textarea id="consultReason" name="reason_for_visit" class="form-control" rows="3" maxlength="255" placeholder="Describe the student's concern or reason for visit..." {{ ($user_source ?? '') === 'online' ? 'readonly' : '' }}>{{ $draftValue('reason_for_visit', optional($latestAppointment)->remarks) }}</textarea>
                     </div>
                     <div class="form-group visit-field">
                         <label for="consultService">Purpose of Visit / Service</label>
                         <select id="consultService" class="form-control" data-clinic-select @if(($user_source ?? '') === 'online') disabled @else name="service" @endif required>
-                            <option value="" disabled {{ !old('service', optional($latestAppointment)->service) ? 'selected' : '' }}>Select clinic service</option>
-                            <option value="General Consultation" {{ old('service', optional($latestAppointment)->service) === 'General Consultation' ? 'selected' : '' }}>General Consultation</option>
-                            <option value="BP Monitoring" {{ old('service', optional($latestAppointment)->service) === 'BP Monitoring' ? 'selected' : '' }}>BP Monitoring</option>
+                            <option value="" disabled {{ !$draftValue('service', optional($latestAppointment)->service) ? 'selected' : '' }}>Select clinic service</option>
+                            <option value="General Consultation" {{ $draftValue('service', optional($latestAppointment)->service) === 'General Consultation' ? 'selected' : '' }}>General Consultation</option>
+                            <option value="BP Monitoring" {{ $draftValue('service', optional($latestAppointment)->service) === 'BP Monitoring' ? 'selected' : '' }}>BP Monitoring</option>
                         </select>
                         @if(($user_source ?? '') === 'online')
-                            <input type="hidden" name="service" value="{{ old('service', optional($latestAppointment)->service) }}">
+                            <input type="hidden" name="service" value="{{ $draftValue('service', optional($latestAppointment)->service) }}">
                         @endif
                     </div>
                 </div>
@@ -3496,9 +4617,9 @@
                             <span class="visit-field-badge">MAR Classification</span>
                         </label>
                         <select name="condition_id" id="consultCondition" class="form-control mar-required" data-clinic-select required>
-                            <option value="" disabled {{ old('condition_id') ? '' : 'selected' }}>Select diagnosis / classification</option>
+                            <option value="" disabled {{ $draftValue('condition_id') ? '' : 'selected' }}>Select diagnosis / classification</option>
                             @foreach($conditions as $condition)
-                                <option value="{{ $condition->id }}" {{ (string) old('condition_id') === (string) $condition->id ? 'selected' : '' }}>
+                                <option value="{{ $condition->id }}" {{ (string) $draftValue('condition_id') === (string) $condition->id ? 'selected' : '' }}>
                                     Category {{ optional($condition->category)->code }}: {{ $condition->name }}
                                 </option>
                             @endforeach
@@ -3506,16 +4627,38 @@
                         <div class="form-help">Required for MAR reporting.</div>
                     </div>
                     <div class="form-group visit-field">
-                        <label for="consultCertificate">
-                            Medical Certificate / Clearance
-                            <span class="visit-field-badge is-muted">Optional</span>
-                        </label>
+                        <div class="consult-certificate-label-row">
+                            <label for="consultCertificate">
+                                Medical Certificate / Clearance
+                                <span class="visit-field-badge is-muted">Optional</span>
+                            </label>
+                            @if($canManageMarConfiguration)
+                                <button type="button" class="consult-add-subcategory-button" id="consultAddSubcategoryButton" data-mar-add-subcategory aria-haspopup="dialog">
+                                    <x-outline-icon name="plus-circle" />
+                                    <span>Add Subcategory</span>
+                                </button>
+                            @endif
+                        </div>
                         <select name="certificate_type" id="consultCertificate" class="form-control" data-clinic-select>
-                            <option value="none" {{ old('certificate_type', 'none') === 'none' ? 'selected' : '' }}>No certificate / clearance</option>
-                            <option value="excused_letter" {{ old('certificate_type') === 'excused_letter' ? 'selected' : '' }}>Excused Letter</option>
-                            <option value="coc_ijt" {{ old('certificate_type') === 'coc_ijt' ? 'selected' : '' }}>COC for IJT</option>
-                            <option value="coc_ladderized" {{ old('certificate_type') === 'coc_ladderized' ? 'selected' : '' }}>COC for Ladderized</option>
+                            <option value="none" {{ $draftValue('certificate_type', 'none') === 'none' ? 'selected' : '' }}>No certificate / clearance</option>
+                            @foreach($clearanceTypes as $clearanceType)
+                                @if($clearanceType->allow_direct_use && $clearanceType->sources->contains('source', \App\Models\MarClearanceSubcategorySource::CONSULTATION))
+                                    <option value="{{ $clearanceType->code }}" data-clearance-type-id="{{ $clearanceType->id }}" data-clearance-type-name="{{ $clearanceType->name }}" {{ $draftValue('certificate_type') === $clearanceType->code ? 'selected' : '' }}>
+                                        {{ $clearanceType->name }}
+                                    </option>
+                                @endif
+                                @if($clearanceType->subcategories->isNotEmpty())
+                                    <optgroup label="{{ $clearanceType->name }}" data-clearance-type-id="{{ $clearanceType->id }}" data-clearance-type-name="{{ $clearanceType->name }}">
+                                        @foreach($clearanceType->subcategories as $subcategory)
+                                            <option value="{{ $subcategory->code }}" data-clearance-type-id="{{ $clearanceType->id }}" data-clearance-type-name="{{ $clearanceType->name }}" {{ $draftValue('certificate_type') === $subcategory->code ? 'selected' : '' }}>
+                                                {{ $clearanceType->name }} - {{ $subcategory->name }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
+                            @endforeach
                         </select>
+                        <div class="form-help">Choose the specific subcategory configured under the clearance type.</div>
                     </div>
                 </div>
             </section>
@@ -3540,8 +4683,8 @@
                     </div>
                 </div>
                 @php
-                    $oldMedicineIds = old('item_id', []);
-                    $oldMedicineQuantities = old('issued_quantity', []);
+                    $oldMedicineIds = $draftValue('item_id', []);
+                    $oldMedicineQuantities = $draftValue('issued_quantity', []);
                     $oldMedicineIds = is_array($oldMedicineIds) ? $oldMedicineIds : [$oldMedicineIds];
                     $oldMedicineQuantities = is_array($oldMedicineQuantities) ? $oldMedicineQuantities : [$oldMedicineQuantities];
                 @endphp
@@ -3623,33 +4766,37 @@
                 <div class="form-group">
                     <label for="consultReferral">Referral</label>
                     <select name="referral_type" id="consultReferral" class="form-control" data-clinic-select>
-                        <option value="none" {{ old('referral_type', 'none') === 'none' ? 'selected' : '' }}>No Referral</option>
-                        <option value="hospital_without_nurse" {{ old('referral_type') === 'hospital_without_nurse' ? 'selected' : '' }}>Refer to Hospital (Without Nurse)</option>
-                        <option value="hospital_with_nurse" {{ old('referral_type') === 'hospital_with_nurse' ? 'selected' : '' }}>Refer to Hospital (With Nurse)</option>
-                        <option value="general" {{ old('referral_type') === 'general' ? 'selected' : '' }}>Referral (General)</option>
-                        <option value="others" {{ old('referral_type') === 'others' ? 'selected' : '' }}>Others</option>
+                        <option value="none" {{ $draftValue('referral_type', 'none') === 'none' ? 'selected' : '' }}>No Referral</option>
+                        <option value="hospital_without_nurse" {{ $draftValue('referral_type') === 'hospital_without_nurse' ? 'selected' : '' }}>Refer to Hospital (Without Nurse)</option>
+                        <option value="hospital_with_nurse" {{ $draftValue('referral_type') === 'hospital_with_nurse' ? 'selected' : '' }}>Refer to Hospital (With Nurse)</option>
+                        <option value="general" {{ $draftValue('referral_type') === 'general' ? 'selected' : '' }}>Referral (General)</option>
+                        <option value="others" {{ $draftValue('referral_type') === 'others' ? 'selected' : '' }}>Others</option>
                     </select>
                     <div class="form-help">Use this when the patient needs care beyond the school clinic.</div>
                 </div>
-                <div class="form-group referral-details-group {{ old('referral_type') === 'others' ? 'is-visible' : '' }}" id="referralDetailsGroup">
+                <div class="form-group referral-details-group {{ $draftValue('referral_type', 'none') === 'others' ? 'is-visible' : '' }}" id="referralDetailsGroup">
                     <label for="consultReferralDetails">Referral Details</label>
-                    <input type="text" name="referral_details" id="consultReferralDetails" class="form-control" value="{{ old('referral_details') }}" maxlength="500" placeholder="Specify the referral destination or reason">
+                    <input type="text" name="referral_details" id="consultReferralDetails" class="form-control" value="{{ $draftValue('referral_details') }}" maxlength="500" placeholder="Specify the referral destination or reason">
                     @error('referral_details')
                         <div class="form-error" style="display: block;">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="form-group">
                     <label for="consultRemarks">Remarks / Assessment</label>
-                    <textarea name="remarks" id="consultRemarks" class="form-control" rows="5" required placeholder="Describe symptoms or concerns...">{{ old('remarks') }}</textarea>
+                    <textarea name="remarks" id="consultRemarks" class="form-control" rows="5" required placeholder="Describe symptoms or concerns...">{{ $draftValue('remarks') }}</textarea>
                 </div>
                 <div class="form-actions">
-                    <button type="submit" class="btn-save" id="finalizeConsultationButton">
-                        <span>Save &amp; Finalize Consultation</span>
-                    </button>
                     <a href="{{ route($walkinIndexRoute) }}" class="btn-cancel">
                         <x-outline-icon name="x-mark" />
                         <span>Cancel</span>
                     </a>
+                    <button type="button" class="btn-draft" id="saveConsultationDraftButton">
+                        <x-outline-icon name="document-text" />
+                        <span>Save Draft</span>
+                    </button>
+                    <button type="submit" class="btn-save" id="finalizeConsultationButton">
+                        <span>Save &amp; Finalize Consultation</span>
+                    </button>
                 </div>
             </section>
         </form>
@@ -3665,11 +4812,61 @@
     </div>
 </div>
 
+@if($canManageMarConfiguration)
+    <div class="consultation-mar-modal" id="consultationMarSubcategoryModal" aria-hidden="true" hidden>
+        <div class="consultation-mar-dialog" role="dialog" aria-modal="true" aria-labelledby="consultationMarDialogTitle">
+            <div class="consultation-mar-dialog-header">
+                <div class="consultation-mar-dialog-heading">
+                    <span class="consultation-mar-dialog-icon" aria-hidden="true"><x-outline-icon name="plus-circle" /></span>
+                    <div>
+                        <h2 id="consultationMarDialogTitle">Add Subcategory</h2>
+                        <p>Create a new numbered entry under the selected clearance type.</p>
+                    </div>
+                </div>
+                <button type="button" class="consultation-mar-dialog-close" data-close-consultation-mar aria-label="Close Add Subcategory">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </div>
+            <form id="consultationMarSubcategoryForm" class="consultation-mar-dialog-body">
+                <div class="consultation-mar-field">
+                    <label for="consultationMarParentSelect">Clearance Type</label>
+                    <select id="consultationMarParentSelect" class="form-control" required>
+                        <option value="">Select clearance type</option>
+                        @foreach($clearanceTypes as $clearanceType)
+                            <option value="{{ $clearanceType->id }}" data-clearance-type-name="{{ $clearanceType->name }}">{{ $clearanceType->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <p class="consultation-mar-parent">Clearance type: <strong id="consultationMarParentName">Select a clearance</strong></p>
+                <div class="consultation-mar-field">
+                    <label for="consultationMarSubcategoryName">Subcategory Name</label>
+                    <input type="text" id="consultationMarSubcategoryName" name="name" maxlength="160" placeholder="Enter subcategory name" required>
+                </div>
+                <fieldset class="consultation-mar-source-box">
+                    <legend>MAR data source</legend>
+                    <div class="consultation-mar-source-value">
+                        <span class="consultation-mar-source-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span>
+                        <span>
+                            <strong>Consultation Records</strong>
+                            <small>Automatically selected from the Consultation Form.</small>
+                        </span>
+                    </div>
+                </fieldset>
+                <p class="consultation-mar-error" id="consultationMarSubcategoryError" role="alert" hidden></p>
+                <div class="consultation-mar-dialog-actions">
+                    <button type="button" class="consultation-mar-cancel" data-close-consultation-mar>Cancel</button>
+                    <button type="submit" class="consultation-mar-save" id="consultationMarSubcategorySave">Save Subcategory</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endif
+
 <nav class="consultation-utility-rail" id="consultationUtilityRail" aria-label="Consultation tools">
     <button type="button" class="utility-rail-button" data-utility-target="documents" title="Uploaded Documents">
         <x-outline-icon name="document-text" />
         <span>Documents</span>
-        <span class="utility-rail-count">{{ count($studentDocuments) }}</span>
+        <span class="utility-rail-count">{{ $studentDocumentCount }}</span>
     </button>
     <button type="button" class="utility-rail-button" data-utility-target="inventory" title="Live Stock Tally">
         <x-outline-icon name="cube" />
@@ -3703,23 +4900,93 @@
 
     <section class="utility-panel-pane" data-utility-pane="documents">
         <p class="utility-pane-note">Submitted clinic files and the generated Health Information Form.</p>
-        @if(count($studentDocuments))
+        @if($hasVersionedDocuments || (!$studentDocumentCount && count($studentDocumentVersions)))
+            <div class="document-version-list">
+                @foreach($studentDocumentVersions as $documentVersion)
+                    <section class="document-version-group">
+                        <button
+                            type="button"
+                            class="document-version-header document-version-toggle"
+                            data-document-version-toggle
+                            aria-expanded="false"
+                            aria-controls="document-version-content-{{ $loop->index }}"
+                        >
+                            <div>
+                                <span class="document-version-kicker">Version {{ $documentVersion['version'] }}</span>
+                                <strong>{{ $documentVersion['label'] }}</strong>
+                                <small>
+                                    {{ $documentVersion['status'] }}
+                                    @if($documentVersion['submitted_at'])
+                                        · {{ $documentVersion['submitted_at']->format('M d, Y h:i A') }}
+                                    @endif
+                                </small>
+                            </div>
+                            @if($documentVersion['is_current'])
+                                <span class="document-version-current">Current</span>
+                            @endif
+                            <span class="document-version-toggle-icon" aria-hidden="true"></span>
+                        </button>
+
+                        <div
+                            class="document-version-content"
+                            id="document-version-content-{{ $loop->index }}"
+                            hidden
+                        >
+                            @if(count($documentVersion['documents']))
+                                <div class="document-list">
+                                    @foreach($documentVersion['documents'] as $document)
+                                        <article class="document-card">
+                                            <a class="document-preview" href="{{ $document['url'] }}" target="_blank" rel="noopener">
+                                                @if($document['type'] === 'image')
+                                                    <img src="{{ $document['url'] }}" alt="{{ $document['label'] }} preview">
+                                                @else
+                                                    <x-outline-icon name="document-text" />
+                                                @endif
+                                            </a>
+                                            <div class="document-card-body">
+                                                <span class="document-card-title">{{ $document['label'] }}</span>
+                                                <a class="document-open" href="{{ $document['url'] }}" target="_blank" rel="noopener">
+                                                    <x-outline-icon name="eye" />
+                                                    Open document
+                                                </a>
+                                            </div>
+                                        </article>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="documents-empty">No saved documents are available for this version yet.</div>
+                            @endif
+                        </div>
+                    </section>
+                @endforeach
+            </div>
+        @elseif(count($studentDocuments))
             <div class="document-list">
                 @foreach($studentDocuments as $document)
                     <article class="document-card">
-                        <a class="document-preview" href="{{ $document['url'] }}" target="_blank" rel="noopener">
-                            @if($document['type'] === 'image')
-                                <img src="{{ $document['url'] }}" alt="{{ $document['label'] }} preview">
-                            @else
+                        @if(filled($document['url'] ?? null))
+                            <a class="document-preview" href="{{ $document['url'] }}" target="_blank" rel="noopener">
+                                @if($document['type'] === 'image')
+                                    <img src="{{ $document['url'] }}" alt="{{ $document['label'] }} preview">
+                                @else
+                                    <x-outline-icon name="document-text" />
+                                @endif
+                            </a>
+                        @else
+                            <div class="document-preview is-missing" aria-hidden="true">
                                 <x-outline-icon name="document-text" />
-                            @endif
-                        </a>
+                            </div>
+                        @endif
                         <div class="document-card-body">
                             <span class="document-card-title">{{ $document['label'] }}</span>
-                            <a class="document-open" href="{{ $document['url'] }}" target="_blank" rel="noopener">
-                                <x-outline-icon name="eye" />
-                                Open document
-                            </a>
+                            @if(filled($document['url'] ?? null))
+                                <a class="document-open" href="{{ $document['url'] }}" target="_blank" rel="noopener">
+                                    <x-outline-icon name="eye" />
+                                    Open document
+                                </a>
+                            @else
+                                <span class="document-open is-disabled">Not uploaded</span>
+                            @endif
                         </div>
                     </article>
                 @endforeach
@@ -3964,6 +5231,7 @@
         const utilityRail = document.getElementById('consultationUtilityRail');
         const utilityButtons = Array.from(document.querySelectorAll('[data-utility-target]'));
         const utilityPanes = Array.from(document.querySelectorAll('[data-utility-pane]'));
+        const documentVersionToggles = Array.from(document.querySelectorAll('[data-document-version-toggle]'));
         const utilityTitle = document.getElementById('utilityPanelTitle');
         const expandUtilityPanel = document.getElementById('expand-utility-panel');
         const closeUtilityPanel = document.getElementById('close-utility-panel');
@@ -3977,6 +5245,16 @@
         const consultationForm = document.getElementById('consultationForm');
         const finalizeButton = document.getElementById('finalizeConsultationButton');
         const consultationSuccessOverlay = document.getElementById('consultationSuccessOverlay');
+        const certificateSelect = document.getElementById('consultCertificate');
+        const addSubcategoryButton = document.getElementById('consultAddSubcategoryButton');
+        const marSubcategoryModal = document.getElementById('consultationMarSubcategoryModal');
+        const marSubcategoryForm = document.getElementById('consultationMarSubcategoryForm');
+        const marSubcategoryNameInput = document.getElementById('consultationMarSubcategoryName');
+        const marSubcategoryParentSelect = document.getElementById('consultationMarParentSelect');
+        const marSubcategoryParentName = document.getElementById('consultationMarParentName');
+        const marSubcategoryError = document.getElementById('consultationMarSubcategoryError');
+        const marSubcategorySave = document.getElementById('consultationMarSubcategorySave');
+        const marSubcategoryStoreUrlTemplate = @json($consultationSubcategoryStoreUrl);
         const bpInput = document.getElementById('consultBp');
         const referralSelect = document.getElementById('consultReferral');
         const referralDetailsGroup = document.getElementById('referralDetailsGroup');
@@ -3984,8 +5262,274 @@
         const covidStatusInputs = Array.from(document.querySelectorAll('input[name="covid_status"]'));
         const covidPositiveDateGroup = document.getElementById('covidPositiveDateGroup');
         const covidPositiveDateInput = document.getElementById('consultCovidPositiveDate');
+        const saveConsultationDraftButton = document.getElementById('saveConsultationDraftButton');
+        const saveConsultationDraftUrl = @json(route($walkinStoreRoute === 'assistant.walkin.store' ? 'assistant.walkin.consultation-draft' : 'walkin.consultation-draft'));
+        const walkinIndexUrl = @json(route($walkinIndexRoute));
+        const consultationDraftStorageKey = @json($consultationDraftStorageKey);
         let isSubmittingConsultation = false;
         let activeUtility = '';
+        let lastMarSubcategoryTrigger = null;
+        let draftSaveTimer = null;
+
+        documentVersionToggles.forEach(function (toggle) {
+            const content = document.getElementById(toggle.getAttribute('aria-controls'));
+            if (!content) return;
+
+            toggle.addEventListener('click', function () {
+                const isOpening = toggle.getAttribute('aria-expanded') !== 'true';
+
+                documentVersionToggles.forEach(function (otherToggle) {
+                    if (otherToggle === toggle) return;
+                    const otherContent = document.getElementById(otherToggle.getAttribute('aria-controls'));
+                    otherToggle.setAttribute('aria-expanded', 'false');
+                    otherToggle.classList.remove('is-open');
+                    if (otherContent) otherContent.hidden = true;
+                });
+
+                toggle.setAttribute('aria-expanded', isOpening ? 'true' : 'false');
+                toggle.classList.toggle('is-open', isOpening);
+                content.hidden = !isOpening;
+            });
+        });
+
+        function syncPopulatedFieldState(field) {
+            if (!field) return;
+            const val = (field.value || '').trim();
+            const hasVal = val !== '' && val !== 'none';
+
+            field.classList.toggle('has-value', hasVal);
+
+            const vitalGroup = field.closest('.physical-assessment-card .form-group');
+            if (vitalGroup) {
+                vitalGroup.classList.toggle('has-value', hasVal);
+            }
+
+            const shell = field.closest('.clinic-select-shell');
+            if (shell) {
+                const display = shell.querySelector('.clinic-select-display');
+                if (display) {
+                    display.classList.toggle('has-value', hasVal);
+                }
+            }
+        }
+
+        function collectConsultationDraftFields() {
+            if (!consultationForm) return {};
+
+            const fields = {};
+            const formData = new FormData(consultationForm);
+            formData.forEach(function (value, key) {
+                if (key === '_token' || key === 'student_number' || key === 'user_role' || key === 'user_type') return;
+
+                if (Object.prototype.hasOwnProperty.call(fields, key)) {
+                    fields[key] = Array.isArray(fields[key]) ? fields[key].concat([String(value)]) : [fields[key], String(value)];
+                    return;
+                }
+
+                fields[key] = String(value);
+            });
+            return fields;
+        }
+
+        function persistLocalConsultationDraft() {
+            if (!consultationForm || !consultationDraftStorageKey) return;
+
+            try {
+                localStorage.setItem(consultationDraftStorageKey, JSON.stringify({
+                    saved_at: new Date().toISOString(),
+                    fields: collectConsultationDraftFields(),
+                }));
+            } catch (error) {
+                console.warn('Unable to keep the consultation draft on this device.', error);
+            }
+        }
+
+        function scheduleLocalConsultationDraftSave() {
+            window.clearTimeout(draftSaveTimer);
+            draftSaveTimer = window.setTimeout(persistLocalConsultationDraft, 250);
+        }
+
+        function restoreLocalConsultationDraft() {
+            if (!consultationForm || !consultationDraftStorageKey) return;
+
+            let savedDraft;
+            try {
+                savedDraft = JSON.parse(localStorage.getItem(consultationDraftStorageKey) || 'null');
+            } catch (error) {
+                savedDraft = null;
+            }
+
+            const fields = savedDraft?.fields;
+            if (!fields || typeof fields !== 'object') return;
+
+            Object.entries(fields).forEach(function ([name, rawValue]) {
+                const values = Array.isArray(rawValue) ? rawValue : [rawValue];
+                const targets = Array.from(consultationForm.elements).filter(function (field) {
+                    return field.name === name;
+                });
+                if (!targets.length) return;
+
+                if (targets[0].type === 'radio' || targets[0].type === 'checkbox') {
+                    targets.forEach(function (field) {
+                        field.checked = values.includes(field.value);
+                    });
+                    return;
+                }
+
+                targets.forEach(function (field, index) {
+                    const value = values[index] ?? values[0] ?? '';
+                    field.value = value;
+                    if (field.closest('[data-medicine-entry]') && value !== '') {
+                        field.closest('[data-medicine-entry]').classList.add('is-visible');
+                    }
+                    field.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            });
+
+            syncReferralDetails();
+            syncCovidPositiveDate();
+            updateMedicineSelections();
+            syncAllPopulatedFields();
+        }
+
+        async function saveConsultationDraft() {
+            if (!consultationForm || !saveConsultationDraftButton) return;
+
+            persistLocalConsultationDraft();
+            saveConsultationDraftButton.classList.add('is-saving');
+            saveConsultationDraftButton.disabled = true;
+            const label = saveConsultationDraftButton.querySelector('span');
+            const originalLabel = label?.textContent || 'Save Draft';
+            if (label) label.textContent = 'Saving Draft...';
+
+            try {
+                const response = await fetch(saveConsultationDraftUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: new FormData(consultationForm),
+                });
+                const payload = await response.json().catch(function () { return {}; });
+                if (!response.ok || !payload.success) {
+                    const validationMessage = Object.values(payload.errors || {})
+                        .flat()
+                        .find(function (message) { return typeof message === 'string' && message.trim() !== ''; });
+                    throw new Error(validationMessage || payload.message || 'The consultation draft could not be saved.');
+                }
+
+                if (label) label.textContent = 'Draft Saved';
+                window.AdminLoading?.showAction('Opening Walk-In');
+                window.setTimeout(function () {
+                    window.location.assign(walkinIndexUrl);
+                }, 80);
+            } catch (error) {
+                console.error(error);
+                if (label) label.textContent = 'Save Draft';
+                window.setTimeout(function () {
+                    if (label) label.textContent = originalLabel;
+                }, 1800);
+            } finally {
+                saveConsultationDraftButton.classList.remove('is-saving');
+                saveConsultationDraftButton.disabled = false;
+            }
+        }
+
+        function selectedConsultationClearanceOption() {
+            if (!certificateSelect || certificateSelect.selectedIndex < 0) return null;
+
+            const selected = certificateSelect.options[certificateSelect.selectedIndex];
+            return selected && selected.dataset.clearanceTypeId ? selected : null;
+        }
+
+        function syncAddSubcategoryButton() {
+            if (!addSubcategoryButton) return;
+
+            const selected = selectedConsultationClearanceOption();
+            addSubcategoryButton.title = selected
+                ? `Add a subcategory under ${selected.dataset.clearanceTypeName || 'this clearance'}`
+                : 'Add a subcategory under any consultation clearance type';
+        }
+
+        function setConsultationMarError(message) {
+            if (!marSubcategoryError) return;
+
+            marSubcategoryError.textContent = message || '';
+            marSubcategoryError.hidden = !message;
+        }
+
+        function closeConsultationMarModal() {
+            if (!marSubcategoryModal) return;
+
+            marSubcategoryModal.classList.remove('is-open');
+            marSubcategoryModal.setAttribute('aria-hidden', 'true');
+            marSubcategoryModal.hidden = true;
+            setConsultationMarError('');
+            if (marSubcategoryForm) marSubcategoryForm.reset();
+            lastMarSubcategoryTrigger?.focus();
+        }
+
+        function openConsultationMarModal() {
+            const selected = selectedConsultationClearanceOption();
+            if (!marSubcategoryModal) return;
+
+            lastMarSubcategoryTrigger = addSubcategoryButton;
+            if (marSubcategoryParentSelect) {
+                marSubcategoryParentSelect.value = selected?.dataset.clearanceTypeId || '';
+            }
+            marSubcategoryParentName.textContent = selected?.dataset.clearanceTypeName || 'Select a clearance';
+            setConsultationMarError('');
+            marSubcategoryModal.hidden = false;
+            marSubcategoryModal.classList.add('is-open');
+            marSubcategoryModal.setAttribute('aria-hidden', 'false');
+            window.setTimeout(function () {
+                marSubcategoryNameInput?.focus();
+            }, 80);
+        }
+
+        function appendConsultationSubcategoryOption(subcategory) {
+            if (!certificateSelect || !subcategory) return;
+
+            let group = Array.from(certificateSelect.querySelectorAll('optgroup')).find(function (candidate) {
+                return candidate.dataset.clearanceTypeId === String(subcategory.clearance_type_id);
+            });
+
+            if (!group) {
+                group = document.createElement('optgroup');
+                group.label = subcategory.clearance_type_name;
+                group.dataset.clearanceTypeId = String(subcategory.clearance_type_id);
+                group.dataset.clearanceTypeName = subcategory.clearance_type_name;
+                certificateSelect.appendChild(group);
+            }
+
+            const option = document.createElement('option');
+            option.value = subcategory.code;
+            option.textContent = subcategory.label;
+            option.dataset.clearanceTypeId = String(subcategory.clearance_type_id);
+            option.dataset.clearanceTypeName = subcategory.clearance_type_name;
+            group.appendChild(option);
+
+            const shell = certificateSelect.closest('.clinic-select-shell');
+            const menu = shell?.querySelector('.clinic-select-menu');
+            if (menu) {
+                const optionButton = document.createElement('button');
+                optionButton.type = 'button';
+                optionButton.className = 'clinic-select-option';
+                optionButton.dataset.value = option.value;
+                optionButton.textContent = option.textContent;
+                optionButton.addEventListener('click', function () {
+                    certificateSelect.value = option.value;
+                    certificateSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    closeClinicSelects();
+                });
+                menu.appendChild(optionButton);
+            }
+
+            certificateSelect.value = option.value;
+            certificateSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            syncAddSubcategoryButton();
+        }
 
         const syncReferralDetails = function () {
             const showDetails = referralSelect?.value === 'others';
@@ -4449,6 +5993,101 @@
             syncDisplay();
         });
 
+        certificateSelect?.addEventListener('change', syncAddSubcategoryButton);
+        syncAddSubcategoryButton();
+
+        addSubcategoryButton?.addEventListener('click', function () {
+            closeClinicSelects();
+            openConsultationMarModal();
+        });
+
+        marSubcategoryParentSelect?.addEventListener('change', function () {
+            const selectedParent = marSubcategoryParentSelect.options[marSubcategoryParentSelect.selectedIndex];
+            if (marSubcategoryParentName) {
+                marSubcategoryParentName.textContent = selectedParent?.dataset.clearanceTypeName || 'Select a clearance';
+            }
+        });
+
+        marSubcategoryModal?.addEventListener('click', function (event) {
+            if (event.target === marSubcategoryModal) {
+                closeConsultationMarModal();
+            }
+        });
+
+        marSubcategoryModal?.querySelectorAll('[data-close-consultation-mar]').forEach(function (button) {
+            button.addEventListener('click', closeConsultationMarModal);
+        });
+
+        marSubcategoryForm?.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const selected = selectedConsultationClearanceOption();
+            const name = marSubcategoryNameInput?.value.trim() || '';
+            const parentId = marSubcategoryParentSelect?.value || selected?.dataset.clearanceTypeId || '';
+            if (!parentId) {
+                setConsultationMarError('Select a clearance type before adding a subcategory.');
+                marSubcategoryParentSelect?.focus();
+                return;
+            }
+            if (!name) {
+                setConsultationMarError('Enter a subcategory name.');
+                marSubcategoryNameInput?.focus();
+                return;
+            }
+
+            const endpoint = marSubcategoryStoreUrlTemplate.replace('__ID__', encodeURIComponent(parentId));
+            const csrfToken = document.querySelector('input[name="_token"]')?.value
+                || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                || '';
+
+            setConsultationMarError('');
+            if (marSubcategorySave) {
+                marSubcategorySave.disabled = true;
+                marSubcategorySave.textContent = 'Saving...';
+            }
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ name }),
+                });
+                const payload = await response.json().catch(function () { return {}; });
+
+                if (!response.ok) {
+                    const validationMessage = Object.values(payload.errors || {})
+                        .flat()
+                        .find(function (message) { return typeof message === 'string' && message.trim() !== ''; });
+                    throw new Error(validationMessage || payload.message || 'The subcategory could not be added.');
+                }
+
+                if (!payload.subcategory) {
+                    throw new Error('The subcategory was saved, but the new option could not be loaded.');
+                }
+
+                appendConsultationSubcategoryOption(payload.subcategory);
+                closeConsultationMarModal();
+            } catch (error) {
+                setConsultationMarError(error.message || 'The subcategory could not be added.');
+            } finally {
+                if (marSubcategorySave) {
+                    marSubcategorySave.disabled = false;
+                    marSubcategorySave.textContent = 'Save Subcategory';
+                }
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && marSubcategoryModal?.classList.contains('is-open')) {
+                closeConsultationMarModal();
+            }
+        });
+
         inventoryCards.forEach(function (card) {
             card.addEventListener('click', function (event) {
                 if (event.target.closest('[data-issue-medicine]')) return;
@@ -4548,6 +6187,11 @@
             }
 
             event.preventDefault();
+            try {
+                localStorage.removeItem(consultationDraftStorageKey);
+            } catch (error) {
+                console.warn('Unable to clear the local consultation draft.', error);
+            }
             isSubmittingConsultation = true;
             finalizeButton.classList.add('is-finalizing');
             finalizeButton.setAttribute('aria-disabled', 'true');
@@ -4560,27 +6204,6 @@
             }, 850);
         });
 
-        const syncPopulatedFieldState = function (field) {
-            if (!field) return;
-            const val = (field.value || '').trim();
-            const hasVal = val !== '' && val !== 'none';
-
-            field.classList.toggle('has-value', hasVal);
-
-            const vitalGroup = field.closest('.physical-assessment-card .form-group');
-            if (vitalGroup) {
-                vitalGroup.classList.toggle('has-value', hasVal);
-            }
-
-            const shell = field.closest('.clinic-select-shell');
-            if (shell) {
-                const display = shell.querySelector('.clinic-select-display');
-                if (display) {
-                    display.classList.toggle('has-value', hasVal);
-                }
-            }
-        };
-
         const syncAllPopulatedFields = function () {
             const form = document.getElementById('consultationForm');
             if (!form) return;
@@ -4591,17 +6214,23 @@
         if (consultFormEl) {
             consultFormEl.addEventListener('input', function (e) {
                 syncPopulatedFieldState(e.target);
+                scheduleLocalConsultationDraftSave();
             });
             consultFormEl.addEventListener('change', function (e) {
                 syncPopulatedFieldState(e.target);
+                scheduleLocalConsultationDraftSave();
             });
         }
+
+        saveConsultationDraftButton?.addEventListener('click', saveConsultationDraft);
+        window.addEventListener('beforeunload', persistLocalConsultationDraft);
 
         medicineEntries.forEach(updateMedicineEntry);
         updateMedicineSelections();
         syncReferralDetails();
         syncCovidPositiveDate();
         syncAllPopulatedFields();
+        restoreLocalConsultationDraft();
     })();
 </script>
 @endsection

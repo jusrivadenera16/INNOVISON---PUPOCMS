@@ -76,7 +76,6 @@ return [
         'profile_paths' => array_values(array_filter(array_map('trim', explode(',', (string) env('IDP_PROFILE_PATHS', '/me,/auth/me,/userinfo'))))),
         'validate_token_path' => env('IDP_VALIDATE_TOKEN_PATH', '/api/validate-token'),
         'role_prefix' => env('IDP_ROLE_PREFIX', ''),
-        'local_superadmin_identifiers' => array_values(array_filter(array_map('trim', explode(',', (string) env('IDP_LOCAL_SUPERADMIN_IDENTIFIERS', 'pupocms,pupocms2027@gmail.com'))))),
         'access_cookie_name' => env('IDP_ACCESS_COOKIE_NAME', 'access_token'),
         'refresh_cookie_name' => env('IDP_REFRESH_COOKIE_NAME', 'refresh_token'),
         'access_cookie_minutes' => (int) env('IDP_ACCESS_COOKIE_MINUTES', 60),

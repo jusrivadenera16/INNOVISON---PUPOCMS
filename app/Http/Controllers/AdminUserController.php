@@ -355,6 +355,7 @@ class AdminUserController extends Controller
     public function update(Request $request, User $user, FacultySyncService $facultySyncService)
     {
         $this->ensureCanManageUsers();
+        $this->ensureCanManageTargetUser($user);
         $managementView = trim((string) $request->input('management_view', 'account-access'));
         $allowedRoles = $managementView === 'admin-hub'
             ? ['admin_designee']
@@ -455,7 +456,7 @@ class AdminUserController extends Controller
             );
         }
 
-        if ($this->isProtectedUser($user)) {
+        if ($this->isProtectedUser($user) && !$this->isSystemDeveloper($user)) {
             return redirect()->back()->with('error', 'This account is protected and cannot be modified here.');
         }
 
@@ -979,6 +980,7 @@ class AdminUserController extends Controller
     public function destroy(Request $request, User $user)
     {
         $this->ensureCanManageUsers();
+        $this->ensureCanManageTargetUser($user);
 
         if ($this->isProtectedUser($user) || $user->id === Auth::id()) {
             return $this->redirectToManagementView($request, 'error', 'This account access cannot be removed.');
@@ -1054,6 +1056,7 @@ class AdminUserController extends Controller
     public function deleteAccount(Request $request, User $user)
     {
         $this->ensureCanManageUsers();
+        $this->ensureCanManageTargetUser($user);
 
         if ($user->id === Auth::id()) {
             return $this->redirectToManagementView($request, 'error', 'You cannot delete the account you are currently using.');
@@ -1920,6 +1923,10 @@ class AdminUserController extends Controller
 
     private function resolveUserSourceLabel(User $user, ?Admin $linkedAdmin = null): string
     {
+        if ($this->isSystemDeveloper($user)) {
+            return 'System Developer';
+        }
+
         return match ($this->resolveUserSource($user, $linkedAdmin)) {
             'superadmin' => 'Super Admin',
             'admin' => 'Admin',
@@ -1935,6 +1942,10 @@ class AdminUserController extends Controller
         $normalizedRole = User::normalizeRole($rawRole);
         $userType = strtolower(trim((string) ($user->user_type ?? '')));
         $idpRole = strtolower(trim((string) ($user->idp_role ?? '')));
+
+        if ($this->isSystemDeveloper($user)) {
+            return 'System Developer';
+        }
 
         if ($normalizedRole === User::ROLE_SUPERADMIN) {
             return 'Super Admin';
@@ -2268,15 +2279,57 @@ class AdminUserController extends Controller
         return $user->id === $currentUserId;
     }
 
+    private function isSystemDeveloper(?User $user = null): bool
+    {
+        $user ??= Auth::user();
+        $developerEmail = strtolower(trim((string) config('app.system_developer_email', 'pupocms2027@gmail.com')));
+        $accountEmail = strtolower(trim((string) ($user?->email ?? '')));
+
+        return $developerEmail !== '' && $accountEmail !== '' && hash_equals($developerEmail, $accountEmail);
+    }
+
+    private function isSuperAdminAccount(User $user): bool
+    {
+        if (User::normalizeRole((string) ($user->user_role ?? '')) === User::ROLE_SUPERADMIN) {
+            return true;
+        }
+
+        $linkedAdmin = $this->findLinkedAdminProfile($user);
+        $accessLevel = strtolower(trim((string) $this->resolveEffectiveAdminAccessLevel($user, $linkedAdmin)));
+
+        return in_array($accessLevel, ['superadmin', 'super_admin'], true);
+    }
+
+    private function ensureCanManageTargetUser(User $user): void
+    {
+        $current = Auth::user();
+        $isOwnAccount = $current && (int) $user->id === (int) $current->id;
+
+        abort_unless(
+            $isOwnAccount
+                ? $this->isSystemDeveloper($current)
+                : !$this->isSuperAdminAccount($user),
+            403,
+            'This account cannot be managed from Account Access.'
+        );
+    }
+
     private function canManageRecord(array $record, ?int $currentUserId = null): bool
     {
         $recordId = (string) ($record['id'] ?? $record['record_id'] ?? '');
+        $isOwnAccount = $recordId !== '' && $currentUserId !== null && $recordId === (string) $currentUserId;
+        $recordRole = User::normalizeRole((string) ($record['normalized_role'] ?? $record['raw_role'] ?? ''));
+        $recordSource = strtolower(trim((string) ($record['source'] ?? '')));
+        $recordAccessLevel = strtolower(trim((string) data_get($record, 'meta.access_level', '')));
+        $isSuperAdminRecord = $recordSource === 'superadmin'
+            || $recordRole === User::ROLE_SUPERADMIN
+            || in_array($recordAccessLevel, ['superadmin', 'super_admin'], true);
 
-        if ($recordId !== '' && $currentUserId !== null && $recordId === (string) $currentUserId) {
-            return false;
+        if ($isSuperAdminRecord) {
+            return $isOwnAccount && $this->isSystemDeveloper();
         }
 
-        return true;
+        return !$isOwnAccount;
     }
 
     private function ensureCanManageUsers(): void

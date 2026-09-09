@@ -204,6 +204,12 @@
         background: #fff1f2;
         color: var(--personal-maroon);
     }
+    .personal-section-description {
+        margin: -2px 12px 10px;
+        color: var(--personal-muted);
+        font-size: 11px;
+        font-weight: 600;
+    }
     .personal-fields-grid {
         display: grid;
         border-top: 1px solid var(--personal-line);
@@ -386,6 +392,9 @@
     html[data-theme="dark"] .personal-settings-page .settings-section-title > span {
         color: #f8fafc;
     }
+    html[data-theme="dark"] .personal-settings-page .personal-section-heading {
+        color: #f8fafc;
+    }
     html[data-theme="dark"] .personal-settings-page .personal-title-icon {
         background: rgba(127, 0, 16, .35);
         color: #fecdd3;
@@ -446,8 +455,11 @@
     $profileName = trim((string) ($cmsProfile['name'] ?? $admin->name ?? '')) ?: 'Administrator';
     $profileParts = preg_split('/\s+/', $profileName, -1, PREG_SPLIT_NO_EMPTY);
     $profileInitials = strtoupper(substr((string) ($profileParts[0] ?? 'A'), 0, 1) . substr((string) ($profileParts[count($profileParts) - 1] ?? ''), 0, 1));
+    $profileEmail = strtolower(trim((string) ($cmsProfile['email'] ?? $admin->email ?? '')));
     $profileRole = strtolower(trim((string) ($cmsProfile['role'] ?? $admin->user_role ?? '')));
-    $profileRoleLabel = match ($profileRole) {
+    $profileRoleLabel = $profileEmail === strtolower((string) config('app.system_developer_email', 'pupocms2027@gmail.com'))
+        ? 'System Developer'
+        : match ($profileRole) {
         'superadmin', 'super_admin' => 'Super Administrator',
         'student_assistant', 'assistant' => 'Student Assistant',
         default => 'Clinic Staff',
@@ -557,9 +569,9 @@
             </div>
         </section>
 
-        <section class="personal-info-section">
-            <div class="personal-section-heading"><x-outline-icon name="shield-check" /><span>Emergency Contact</span></div>
-            <div class="personal-fields-grid emergency">
+    <section class="personal-info-section">
+        <div class="personal-section-heading"><x-outline-icon name="shield-check" /><span>Emergency Contact</span></div>
+        <div class="personal-fields-grid emergency">
                 <div class="personal-field">
                     <label for="emergency_contact_person">Contact Person</label>
                     <input id="emergency_contact_person" name="emergency_contact_person" value="{{ old('emergency_contact_person', $cmsProfile['emergency_contact_person'] ?? '') }}" placeholder="—" disabled data-edit-field>
@@ -567,6 +579,21 @@
                 <div class="personal-field">
                     <label for="emergency_contact_no">Contact Number</label>
                     <input id="emergency_contact_no" name="emergency_contact_no" value="{{ old('emergency_contact_no', $cmsProfile['emergency_contact_no'] ?? '') }}" placeholder="—" disabled data-edit-field>
+                </div>
+            </div>
+        </section>
+
+        <section class="personal-info-section">
+            <div class="personal-section-heading"><x-outline-icon name="document-text" /><span>Report Identity</span></div>
+            <div class="personal-section-description">These details appear on exported reports.</div>
+            <div class="personal-fields-grid report-identity">
+                <div class="personal-field">
+                    <label for="report_name">Name shown on reports</label>
+                    <input id="report_name" name="report_name" value="{{ old('report_name', $reportIdentity?->report_name ?? '') }}" placeholder="Example: Juan Delacruz, R.N." disabled data-edit-field>
+                </div>
+                <div class="personal-field">
+                    <label for="report_position">Position shown on reports</label>
+                    <input id="report_position" name="report_position" value="{{ old('report_position', $reportIdentity?->report_position ?? '') }}" placeholder="Example: Nurse II" disabled data-edit-field>
                 </div>
             </div>
         </section>

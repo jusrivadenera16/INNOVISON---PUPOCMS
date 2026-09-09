@@ -141,6 +141,137 @@
         background: rgba(255, 255, 255, .46);
         border-color: rgba(112, 19, 27, .24);
     }
+    .medical-config-dropdown {
+        overflow: hidden;
+        border-radius: 8px;
+    }
+    .medical-config-dropdown > summary {
+        list-style: none;
+        cursor: pointer;
+        display: grid;
+        width: 100%;
+        min-height: 88px;
+        box-sizing: border-box;
+        overflow: hidden !important;
+        grid-template-columns: 70px minmax(150px, 210px) minmax(0, 1fr) 32px;
+    }
+    .medical-config-dropdown > summary .medical-config-icon,
+    .medical-config-dropdown > summary .medical-config-arrow {
+        flex: 0 0 auto !important;
+    }
+    .medical-config-dropdown > summary .medical-config-icon {
+        display: grid;
+    }
+    .medical-config-dropdown > summary .medical-config-icon svg {
+        display: block;
+        width: 24px;
+        height: 24px;
+    }
+    .medical-config-dropdown > summary::-webkit-details-marker {
+        display: none;
+    }
+    .medical-config-dropdown[open] > summary {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    .medical-config-dropdown[open] .medical-config-arrow {
+        transform: rotate(90deg);
+    }
+    .medical-config-dropdown .medical-config-arrow {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+        min-height: 30px !important;
+        transition: transform .2s ease;
+    }
+    .medical-config-dropdown .medical-config-arrow svg {
+        width: 18px !important;
+        height: 18px !important;
+        max-width: 18px !important;
+        max-height: 18px !important;
+    }
+    .medical-config-submenu {
+        display: grid;
+        gap: 8px;
+        padding: 10px 20px 12px 108px;
+        border: 1px solid rgba(112, 19, 27, .14);
+        border-top: 0;
+        background: rgba(255, 255, 255, .92);
+    }
+    .medical-config-submenu a {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 42px;
+        padding: 10px 14px;
+        border: 1px solid rgba(112, 19, 27, .14);
+        border-radius: 7px;
+        color: #70131B;
+        background: #fff;
+        font-size: 13px;
+        font-weight: 800;
+        text-decoration: none;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+    .medical-config-submenu a::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(105deg, transparent 0%, rgba(255, 248, 196, .75) 50%, transparent 100%);
+        transform: translateX(-135%);
+        transition: transform .7s ease;
+        pointer-events: none;
+    }
+    .medical-config-submenu a:hover,
+    .medical-config-submenu a:focus-visible {
+        color: #70131B;
+        background: #facc15;
+        border-color: #facc15;
+        outline: none;
+    }
+    .medical-config-submenu a:hover::after,
+    .medical-config-submenu a:focus-visible::after {
+        transform: translateX(135%);
+    }
+    .medical-config-submenu a span,
+    .medical-config-submenu a svg {
+        position: relative;
+        z-index: 1;
+    }
+    .medical-config-submenu a span {
+        flex: 1 1 auto;
+        min-width: 0;
+        line-height: 1.4;
+        overflow-wrap: break-word;
+    }
+    .medical-config-submenu a svg {
+        flex: 0 0 18px;
+        display: block !important;
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px !important;
+        min-height: 18px !important;
+        max-width: 18px !important;
+        max-height: 18px !important;
+    }
+    html[data-theme="dark"] .medical-config-submenu {
+        border-color: rgba(255, 255, 255, .12);
+        background: rgba(17, 24, 39, .96);
+    }
+    html[data-theme="dark"] .medical-config-submenu a {
+        color: #f8fafc;
+        background: rgba(17, 24, 39, .92);
+        border-color: rgba(255, 255, 255, .12);
+    }
+    html[data-theme="dark"] .medical-config-submenu a:hover,
+    html[data-theme="dark"] .medical-config-submenu a:focus-visible {
+        color: #70131B;
+        background: #facc15;
+        border-color: #facc15;
+    }
     html[data-theme="dark"] .medical-config-row {
         background: rgba(17, 24, 39, 0.92);
         border-color: rgba(255, 255, 255, .12);
@@ -166,8 +297,15 @@
         background: #facc15;
     }
     @media (max-width: 720px) {
+        .medical-config-submenu {
+            padding-left: 82px;
+        }
+        .medical-config-dropdown > summary {
+            min-height: 96px;
+            grid-template-columns: 50px minmax(0, 1fr) 30px;
+        }
         .medical-config-row {
-            grid-template-columns: 56px minmax(0, 1fr) 30px;
+            grid-template-columns: 50px minmax(0, 1fr) 30px;
             gap: 12px;
             min-height: 96px;
         }
@@ -176,6 +314,9 @@
         }
         .medical-config-arrow {
             grid-column: 3;
+            grid-row: 1 / span 2;
+        }
+        .medical-config-icon {
             grid-row: 1 / span 2;
         }
     }
@@ -195,7 +336,8 @@
     </section>
 
     <div class="medical-config-list">
-        <a href="{{ route('admin.reports.manage-mar', ['month' => $currentMonth]) }}" class="medical-config-row">
+        <details class="medical-config-dropdown">
+            <summary class="medical-config-row">
             <div class="medical-config-main">
                 <div class="medical-config-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -203,14 +345,25 @@
                     </svg>
                 </div>
                 <div class="medical-config-copy">
-                    <h4>Medical Conditions</h4>
-                    <p>Manage medical conditions and sub-categories used in consultations and Medical Accomplishment Reports.</p>
+                    <h4>MAR Configuration</h4>
+                    <p>Manage medical conditions and clearance types used in Medical Accomplishment Reports.</p>
                 </div>
             </div>
             <div class="medical-config-arrow">
                 <x-outline-icon name="chevron-right" />
             </div>
-        </a>
+            </summary>
+            <div class="medical-config-submenu">
+                <a href="{{ route('admin.reports.manage-mar', ['month' => $currentMonth]) }}#medical-conditions">
+                    <span>Medical Conditions</span>
+                    <x-outline-icon name="chevron-right" />
+                </a>
+                <a href="{{ route('mar-clearance-types.index') }}">
+                    <span>Clearance / Certificate Types</span>
+                    <x-outline-icon name="chevron-right" />
+                </a>
+            </div>
+        </details>
 
         <a href="{{ route('admin.reports.manage-medicine-types', ['month' => $currentMonth]) }}" class="medical-config-row">
             <div class="medical-config-main">

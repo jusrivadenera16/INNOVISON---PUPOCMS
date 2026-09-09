@@ -15,6 +15,8 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'system_developer_email' => env('SYSTEM_DEVELOPER_EMAIL', 'pupocms2027@gmail.com'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

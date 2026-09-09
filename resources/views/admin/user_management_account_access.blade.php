@@ -1408,7 +1408,9 @@
                             <strong>{{ ucfirst($record['status']) }}</strong>
                             <small>{{ $lastUpdated ? 'Updated ' . \Carbon\Carbon::parse($lastUpdated)->format('M j, g:i A') : 'No recent update' }}</small>
                         </div>
-                        <button type="button" class="access-console__manage">Manage</button>
+                        @if($record['can_edit'])
+                            <button type="button" class="access-console__manage">Manage</button>
+                        @endif
                     </article>
                 @empty
                     <div class="access-console__empty">No managed clinic accounts found yet.</div>
@@ -2058,11 +2060,15 @@
         const usesSeparateAdminEmail = managementView !== 'admin-hub' && isStudentAssistant;
 
         if (detailClinicRole) {
-            detailClinicRole.value = ({
+            const roleLabel = detailRole.value === 'super_admin'
+                && detailRole.dataset.displayRoleLabel === 'System Developer'
+                ? 'System Developer'
+                : ({
                 admin_clinic_staff: 'Clinic Staff',
                 student_assistant: 'Student Assistant',
                 super_admin: 'Super Admin',
-            })[detailRole.value] || 'Not assigned';
+                })[detailRole.value] || 'Not assigned';
+            detailClinicRole.value = roleLabel;
         }
 
         if (moduleAccessPreview) {
@@ -2186,6 +2192,9 @@
             return 'admin_clinic_staff';
         })();
         detailRole.value = normalizedRole;
+        detailRole.dataset.displayRoleLabel = row.dataset.roleLabel === 'System Developer'
+            ? 'System Developer'
+            : '';
         detailStatus.value = row.dataset.status || 'active';
         const meta = (() => {
             try {

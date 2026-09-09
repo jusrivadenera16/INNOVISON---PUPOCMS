@@ -868,7 +868,7 @@
     $totalConditions = $allConditions->count();
 @endphp
 
-<div class="conditions-page">
+<div class="conditions-page" id="medical-conditions">
     <div class="conditions-header">
         <div class="conditions-title-wrap">
             <span class="conditions-title-icon" aria-hidden="true">
@@ -951,6 +951,7 @@
 
     <div class="conditions-empty" id="conditionsEmpty" hidden>No medical conditions matched the current filters.</div>
 </div>
+
 
 <div id="addConditionModal" class="modal-overlay" aria-hidden="true">
     <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="addConditionTitle">

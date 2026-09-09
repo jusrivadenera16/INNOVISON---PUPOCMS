@@ -1944,6 +1944,8 @@
         .student-consent-guardian-note { margin: 14px 0; padding: 10px 12px; border-left: 3px solid #facc15; background: #fff7d6; color: #64111d; font-size: 12px; font-weight: 700; line-height: 1.4; }
         .student-consent-agreement { display: flex; align-items: flex-start; gap: 9px; margin-top: 18px; color: #64111d; font-size: 13px; font-weight: 800; line-height: 1.35; cursor: pointer; }
         .student-consent-agreement input { width: 17px; height: 17px; margin-top: 1px; accent-color: #7f1d2d; flex: 0 0 auto; }
+        .student-consent-purpose-wrap.is-invalid select { border-color: #7f1d2d !important; background-color: #fff7f7 !important; box-shadow: 0 0 0 3px rgba(127, 29, 45, .16) !important; }
+        .student-consent-agreement.is-invalid input { outline: 2px solid #7f1d2d; outline-offset: 2px; box-shadow: 0 0 0 4px rgba(127, 29, 45, .14); }
         .student-consent-continue { display: block; width: 100%; margin-top: 20px; padding: 11px 18px; border: 1px solid #7f1d2d; border-radius: 8px; background: #7f1d2d; color: #fff; font-weight: 800; cursor: pointer; }
         .student-consent-continue:hover, .student-consent-continue:focus-visible { border-color: #facc15; background: #facc15; color: #000; outline: none; }
         @media (max-width: 560px) { .student-consent-card { padding: 24px 18px 20px; } .student-consent-card h2 { font-size: 18px; } }
@@ -2948,9 +2950,56 @@
                         
                         @php
                             $pendingCategory = optional($pendingHealthFormRequest)->category;
-                            $isOjtCategory = $pendingCategory && (stripos($pendingCategory, 'ojt') !== false || stripos($pendingCategory, 'on-the-job') !== false);
-                            $isStudentCategory = $pendingCategory && (stripos($pendingCategory, 'student') !== false || stripos($pendingCategory, 'enrolment') !== false || stripos($pendingCategory, 'general') !== false);
-                            $initialCategory = $isOjtCategory ? 'On-the-Job Training (OJT)' : ($isStudentCategory ? 'Student' : '');
+                            $normalizeStudentCategory = static function ($category): string {
+                                $category = trim((string) $category);
+                                $normalized = strtolower($category);
+
+                                if ($normalized === '' || $normalized === 'general') {
+                                    return '';
+                                }
+
+                                if (str_contains($normalized, 'ojt') || str_contains($normalized, 'on-the-job')) {
+                                    return 'OJT';
+                                }
+
+                                return $category;
+                            };
+                            $studentCategoryOptions = collect([
+                                ['value' => 'Student', 'label' => 'Student (Currently enrolled student)'],
+                            ]);
+                            foreach ($studentHealthFormCategories ?? [] as $category) {
+                                $categoryName = trim((string) ($category->name ?? ''));
+                                $normalizedCategoryName = strtolower($categoryName);
+                                if ($categoryName === ''
+                                    || $normalizedCategoryName === 'student') {
+                                    continue;
+                                }
+
+                                if (!$studentCategoryOptions->contains('value', $categoryName)) {
+                                    $studentCategoryOptions->push([
+                                        'value' => $categoryName,
+                                        'label' => $categoryName,
+                                    ]);
+                                }
+                            }
+
+                            $initialCategory = $normalizeStudentCategory(old('health_form_category', $pendingCategory));
+                            if ($initialCategory === '' && $pendingCategory && strtolower(trim((string) $pendingCategory)) === 'general') {
+                                $initialCategory = 'Student';
+                            }
+                            if ($initialCategory !== '' && !$studentCategoryOptions->contains('value', $initialCategory)) {
+                                $studentCategoryOptions->push([
+                                    'value' => $initialCategory,
+                                    'label' => $initialCategory,
+                                ]);
+                            }
+
+                            $initialConsentPurpose = $initialCategory === 'OJT'
+                                ? 'On-the-Job Training (OJT)'
+                                : ($initialCategory === 'Student' ? 'currently enrolled student' : ($initialCategory ?: '[Select Purpose]'));
+                            $initialConsentEndorsement = $initialCategory === 'OJT'
+                                ? 'On-the-Job Training (OJT)'
+                                : ($initialCategory === 'Student' ? 'status as a currently enrolled student' : ($initialCategory ?: '[Select Purpose]'));
                         @endphp
 
                         <div class="student-consent-purpose-wrap" style="margin: 0 0 16px;">
@@ -2958,23 +3007,16 @@
                                 Purpose of Medical Clearance <span style="color: #dc2626;">*</span>
                             </label>
                             <select id="studentConsentPurpose" name="health_form_category" class="form-select" style="width: 100%; padding: 8px 12px; border: 1.5px solid #7f1d2d; border-radius: 8px; font-size: 13.5px; font-weight: 700; background-color: #ffffff; color: #1f2937;" required>
-                                @if(!$pendingCategory)
-                                    <option value="" disabled {{ old('health_form_category', $initialCategory) === '' ? 'selected' : '' }}>-- Select Purpose of Medical Clearance --</option>
-                                    <option value="Student" {{ old('health_form_category', $initialCategory) === 'Student' ? 'selected' : '' }}>Student (Enrolment / Annual Medical Clearance)</option>
-                                    <option value="On-the-Job Training (OJT)" {{ old('health_form_category', $initialCategory) === 'On-the-Job Training (OJT)' ? 'selected' : '' }}>On-the-Job Training (OJT)</option>
-                                @elseif($isOjtCategory)
-                                    <option value="On-the-Job Training (OJT)" selected>On-the-Job Training (OJT)</option>
-                                    <option value="Student">Student (Enrolment / Annual Medical Clearance)</option>
-                                @else
-                                    <option value="Student" selected>Student (Enrolment / Annual Medical Clearance)</option>
-                                    <option value="On-the-Job Training (OJT)">On-the-Job Training (OJT)</option>
-                                @endif
+                                <option value="" disabled {{ $initialCategory === '' ? 'selected' : '' }}>-- Select Purpose of Medical Clearance --</option>
+                                @foreach($studentCategoryOptions as $categoryOption)
+                                    <option value="{{ $categoryOption['value'] }}" {{ $initialCategory === $categoryOption['value'] ? 'selected' : '' }}>{{ $categoryOption['label'] }}</option>
+                                @endforeach
                             </select>
                         </div>
 
                         <div class="student-consent-copy">
                             <p id="studentConsentCertParagraph">
-                                I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my on-site consultation for the issuance of medical clearance for <u id="consentDynamicPurpose" style="font-weight: 700;">{{ $initialCategory === 'On-the-Job Training (OJT)' ? 'On-the-Job Training (OJT)' : ($initialCategory === 'Student' ? 'enrolled student' : '[Select Purpose]') }}</u> are true, correct and complete to the best of my knowledge. I have fully disclosed all the medical condition that may affect in the assessment to endorse my <u id="consentDynamicEndorsement" style="font-weight: 700;">{{ $initialCategory === 'On-the-Job Training (OJT)' ? 'On-the-Job Training (OJT)' : ($initialCategory === 'Student' ? 'enrolment as a student' : '[Select Purpose]') }}</u> of PUP Taguig Campus
+                                I hereby certify that the medical health information given to the physician and nurses of Polytechnic University of the Philippines (PUP) during my on-site consultation for the issuance of medical clearance for <u id="consentDynamicPurpose" style="font-weight: 700;">{{ $initialConsentPurpose }}</u> are true, correct and complete to the best of my knowledge. I have fully disclosed all the medical condition that may affect in the assessment to endorse my <u id="consentDynamicEndorsement" style="font-weight: 700;">{{ $initialConsentEndorsement }}</u> of PUP Taguig Campus
                             </p>
                             <p>I also understand that the PUP Medical Services and University will not be liable for any untoward incident that may arise due to my failure to disclose accurate information or intentionally providing false and deceptive information.</p>
                             <p>In compliance with the Data Privacy Act of 2012 and its implementing Rules and Regulations, I voluntarily consent to the collection, processing and storage of my personal and health information for the purpose/s of health assessment, treatment/ or research (following research ethics guidelines) for the improvement of healthcare services.</p>
@@ -3643,6 +3685,8 @@
             const consentDynamicPurpose = document.getElementById('consentDynamicPurpose');
             const consentDynamicEndorsement = document.getElementById('consentDynamicEndorsement');
             const studentConsentCheckbox = document.getElementById('studentConsentCheckbox');
+            const studentConsentAgreement = studentConsentCheckbox?.closest('.student-consent-agreement');
+            const studentConsentPurposeWrap = studentConsentPurpose?.closest('.student-consent-purpose-wrap');
             const studentConsentAcknowledged = document.getElementById('consentAcknowledged');
             const studentConsentContinue = document.getElementById('studentConsentContinue');
             const studentConsentClose = document.getElementById('studentConsentClose');
@@ -4863,23 +4907,50 @@
             function resetStudentConsent() {
                 if (studentConsentAcknowledged) studentConsentAcknowledged.value = '';
                 if (studentConsentCheckbox) studentConsentCheckbox.checked = false;
+                clearStudentConsentValidation();
+            }
+
+            function clearStudentConsentValidation() {
+                studentConsentPurposeWrap?.classList.remove('is-invalid');
+                studentConsentAgreement?.classList.remove('is-invalid');
             }
 
             function updateConsentDynamicText() {
                 const selected = studentConsentPurpose?.value || '';
-                if (selected === 'On-the-Job Training (OJT)') {
-                    if (consentDynamicPurpose) consentDynamicPurpose.textContent = 'On-the-Job Training (OJT)';
-                    if (consentDynamicEndorsement) consentDynamicEndorsement.textContent = 'On-the-Job Training (OJT)';
-                } else if (selected === 'Student') {
-                    if (consentDynamicPurpose) consentDynamicPurpose.textContent = 'enrolled student';
-                    if (consentDynamicEndorsement) consentDynamicEndorsement.textContent = 'enrolment as a student';
+                const normalized = selected.toLowerCase();
+                let purpose = selected;
+                let endorsement = normalized;
+
+                if (selected === 'OJT' || normalized.includes('ojt') || normalized.includes('on-the-job')) {
+                    purpose = 'On-the-Job Training (OJT)';
+                    endorsement = 'On-the-Job Training (OJT)';
+                } else if (selected === 'Student' || normalized === 'student') {
+                    purpose = 'currently enrolled student';
+                    endorsement = 'status as a currently enrolled student';
+                } else if (normalized.includes('return to school')) {
+                    purpose = selected;
+                    endorsement = 'return to school';
+                } else if (normalized.includes('transfer')) {
+                    purpose = selected;
+                    endorsement = 'transfer as a student';
+                }
+
+                if (selected) {
+                    if (consentDynamicPurpose) consentDynamicPurpose.textContent = purpose;
+                    if (consentDynamicEndorsement) consentDynamicEndorsement.textContent = endorsement;
                 } else {
                     if (consentDynamicPurpose) consentDynamicPurpose.textContent = '[Select Purpose]';
                     if (consentDynamicEndorsement) consentDynamicEndorsement.textContent = '[Select Purpose]';
                 }
             }
 
-            studentConsentPurpose?.addEventListener('change', updateConsentDynamicText);
+            studentConsentPurpose?.addEventListener('change', () => {
+                studentConsentPurposeWrap?.classList.remove('is-invalid');
+                updateConsentDynamicText();
+            });
+            studentConsentCheckbox?.addEventListener('change', () => {
+                studentConsentAgreement?.classList.remove('is-invalid');
+            });
 
             function openStudentConsent() {
                 if (!studentConsentModal) return;
@@ -4897,14 +4968,18 @@
             studentConsentClose?.addEventListener('click', closeStudentConsent);
             studentConsentContinue?.addEventListener('click', () => {
                 if (!studentConsentPurpose?.value) {
-                    showError('Please select the Purpose of your Medical Clearance before proceeding.');
+                    studentConsentPurposeWrap?.classList.add('is-invalid');
+                    showErrorModal('Please select your purpose.');
                     studentConsentPurpose?.focus();
                     return;
                 }
                 if (!studentConsentCheckbox?.checked) {
-                    showError('Please confirm that you have read and agree to the consent form.');
+                    studentConsentAgreement?.classList.add('is-invalid');
+                    showErrorModal('Please confirm that you have read and agree to the consent form.');
+                    studentConsentCheckbox?.focus();
                     return;
                 }
+                clearStudentConsentValidation();
                 if (studentConsentAcknowledged) studentConsentAcknowledged.value = '1';
                 closeStudentConsent();
                 setStep(3);
