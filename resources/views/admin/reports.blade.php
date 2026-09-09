@@ -4,6 +4,18 @@
 
 @push('styles')
 <style>
+    body:has(.reports-frame) .main {
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.84)),
+            url('{{ asset("images/admin-bg-light.png") }}?v={{ is_file(public_path("images/admin-bg-light.png")) ? md5_file(public_path("images/admin-bg-light.png")) : "missing" }}') center center / 100% 100% no-repeat fixed !important;
+    }
+
+    html[data-theme="dark"] body:has(.reports-frame) .main {
+        background:
+            linear-gradient(180deg, rgba(42, 14, 22, 0.78), rgba(42, 14, 22, 0.78)),
+            url('{{ asset("images/admin-bg-dark.png") }}?v={{ is_file(public_path("images/admin-bg-dark.png")) ? md5_file(public_path("images/admin-bg-dark.png")) : "missing" }}') center center / 100% 100% no-repeat fixed !important;
+    }
+
     /* --- DASHBOARD CONTAINER --- */
     .dashboard-container {
         max-width: 1400px;
@@ -1272,7 +1284,7 @@
         background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.12) 42%, rgba(255, 255, 255, 0.44) 50%, rgba(255, 255, 255, 0.12) 58%, rgba(255, 255, 255, 0) 100%) !important;
     }
 
-    /* Final card surface pass: subtle border only, no thick yellow bottom edge */
+    /* Final card surface pass: match Patient Intake */
     .reports-frame .report-grid > .report-card,
     .reports-frame .report-grid > a.report-card,
     .reports-frame .report-grid > .report-card.report-card-primary,
@@ -1288,11 +1300,18 @@
     html[data-theme="dark"] .reports-frame .report-grid > a.report-card,
     html[data-theme="dark"] .reports-frame .report-grid > .report-card.report-card-primary,
     html[data-theme="dark"] .reports-frame .report-grid > .report-card.report-card-audit {
-        background: transparent !important;
+        background: #2E0D13 !important;
         background-image: none !important;
         border: 1px solid rgba(250, 204, 21, 0.18) !important;
         box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.22) !important;
         color: #ffffff !important;
+    }
+
+    html[data-theme="dark"] .reports-frame .report-grid > .report-card::before,
+    html[data-theme="dark"] .reports-frame .report-grid > a.report-card::before,
+    html[data-theme="dark"] .reports-frame .report-grid > .report-card::after,
+    html[data-theme="dark"] .reports-frame .report-grid > a.report-card::after {
+        background: transparent !important;
     }
 
     .reports-frame .report-grid > .report-card:hover,

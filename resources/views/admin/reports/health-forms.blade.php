@@ -20,12 +20,12 @@
         margin: 0;
         font-size: 30px;
         font-weight: 900;
-        color: #ffffff;
+        color: #111827;
         letter-spacing: -0.03em;
     }
     .health-forms-copy {
         margin: 8px 0 0;
-        color: rgba(255,255,255,0.78);
+        color: #475569;
         font-size: 14px;
         line-height: 1.6;
         max-width: 720px;
@@ -83,7 +83,7 @@
     }
     .health-forms-stat-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 18px;
         margin-bottom: 24px;
     }
@@ -293,7 +293,7 @@
         align-items: center;
         justify-content: center;
         min-height: 44px;
-        border-radius: 14px;
+        border-radius: 8px;
         padding: 0 16px;
         text-decoration: none;
         font-weight: 800;
@@ -330,10 +330,14 @@
         outline: none;
     }
     .health-forms-filter-trigger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
         background: #7f1d2d;
         color: #ffffff;
         border: 1px solid #7f1d2d;
-        border-radius: 14px;
+        border-radius: 8px;
         min-height: 46px;
         padding: 0 24px;
         font-size: 13px;
@@ -349,6 +353,15 @@
         border-color: #facc15;
         color: #70131B;
         outline: none;
+    }
+    .health-forms-filter-icon {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 16px;
+        display: inline-block;
+        background: currentColor;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='4' y='5' width='16' height='15' rx='2' stroke='black' stroke-width='2'/%3E%3Cpath d='M8 3v4M16 3v4M4 10h16' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='4' y='5' width='16' height='15' rx='2' stroke='black' stroke-width='2'/%3E%3Cpath d='M8 3v4M16 3v4M4 10h16' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
     }
     .health-forms-table-wrap {
         background: #ffffff;
@@ -377,7 +390,7 @@
         letter-spacing: 0.05em;
         color: #64748b;
     }
-    .health-forms-course-link {
+    .health-forms-type-link {
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -385,8 +398,8 @@
         font-weight: 900;
         text-decoration: none;
     }
-    .health-forms-course-link::after {
-        content: "View students";
+    .health-forms-type-link::after {
+        content: "View records";
         padding: 4px 8px;
         border-radius: 999px;
         background: #fff7ed;
@@ -399,8 +412,8 @@
         transform: translateX(-4px);
         transition: opacity .18s ease, transform .18s ease;
     }
-    .health-forms-table tbody tr:hover .health-forms-course-link::after,
-    .health-forms-course-link:focus-visible::after {
+    .health-forms-table tbody tr:hover .health-forms-type-link::after,
+    .health-forms-type-link:focus-visible::after {
         opacity: 1;
         transform: translateX(0);
     }
@@ -531,10 +544,10 @@
     html[data-theme="dark"] .health-forms-table td {
         border-bottom-color: rgba(250, 204, 21, .12);
     }
-    html[data-theme="dark"] .health-forms-course-link {
+    html[data-theme="dark"] .health-forms-type-link {
         color: #facc15;
     }
-    html[data-theme="dark"] .health-forms-course-link::after {
+    html[data-theme="dark"] .health-forms-type-link::after {
         background: rgba(250, 204, 21, .12);
         color: #fde68a;
     }
@@ -598,7 +611,7 @@
     }
 
     .health-forms-stat-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
         gap: 10px !important;
         margin: 0 0 16px !important;
     }
@@ -646,36 +659,53 @@
     }
 
     .health-forms-stat-card:nth-child(1) {
-        border-color: rgba(34, 197, 94, .32) !important;
+        border-color: rgba(37, 99, 235, .30) !important;
     }
 
     .health-forms-stat-card:nth-child(1)::before {
-        background: #dcfce7;
+        background: #dbeafe;
     }
 
     .health-forms-stat-card:nth-child(1)::after {
+        background: #2563eb;
+        --health-forms-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 5h16v14H4zM8 9h8M8 13h5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+
+    .health-forms-stat-card:nth-child(2) {
+        border-color: rgba(34, 197, 94, .32) !important;
+    }
+
+    .health-forms-stat-card:nth-child(2)::before {
+        background: #dcfce7;
+    }
+
+    .health-forms-stat-card:nth-child(2)::after {
         background: #22c55e;
         --health-forms-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m5 13 4 4L19 7' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
 
-    .health-forms-stat-card:nth-child(2) {
-        border-color: rgba(248, 113, 113, .36) !important;
-    }
-
-    .health-forms-stat-card:nth-child(2)::before {
-        background: #fee2e2;
-    }
-
-    .health-forms-stat-card:nth-child(2)::after {
-        background: #ef4444;
-        --health-forms-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M17 20a5 5 0 0 0-10 0M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7 8a3 3 0 0 0-3-3' stroke='black' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    }
-
     .health-forms-stat-card:nth-child(3) {
-        border-color: rgba(127, 29, 45, .26) !important;
+        border-color: rgba(217, 119, 6, .38) !important;
+    }
+
+    .health-forms-stat-card:nth-child(3)::before {
+        background: #fef3c7;
     }
 
     .health-forms-stat-card:nth-child(3)::after {
+        background: #d97706;
+        --health-forms-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='8' stroke='black' stroke-width='2'/%3E%3Cpath d='M12 7v5l3 2' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+
+    .health-forms-stat-card:nth-child(4) {
+        border-color: rgba(127, 29, 45, .28) !important;
+    }
+
+    .health-forms-stat-card:nth-child(4)::before {
+        background: #fee2e2;
+    }
+
+    .health-forms-stat-card:nth-child(4)::after {
         background: #7f1d2d;
         --health-forms-stat-icon: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 21s-7-4.4-7-11a4 4 0 0 1 7-2.65A4 4 0 0 1 19 10c0 6.6-7 11-7 11Z' stroke='black' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
@@ -737,9 +767,9 @@
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
     $reportsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
     $applicantsListUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/health-forms/applicants-list') : url('/admin/reports/health-forms/applicants-list');
-    $courseDetailsUrl = function (string $course) use ($applicantsListUrl) {
+    $userTypeDetailsUrl = function (string $type) use ($applicantsListUrl) {
         return $applicantsListUrl . '?' . http_build_query([
-            'course' => $course,
+            'type' => $type,
             'per_page' => 'all',
         ]);
     };
@@ -748,26 +778,34 @@
     <div class="health-forms-head">
         <div>
             <h1 class="health-forms-title">Health Forms</h1>
-            <p class="health-forms-copy">Issued health forms summarized by course for the selected date range.</p>
+            <p class="health-forms-copy">Health form records summarized by user type for the selected date range.</p>
         </div>
         <div style="display: flex; gap: 10px;">
-            <a href="{{ $applicantsListUrl }}" class="health-forms-action">Applicants List</a>
+            <button type="button" class="health-forms-filter-trigger" onclick="openHealthFormsFilter()">
+                <span class="health-forms-filter-icon" aria-hidden="true"></span>
+                <span>Filter</span>
+            </button>
+            <a href="{{ $applicantsListUrl }}" class="health-forms-action">List</a>
             <a href="{{ $reportsUrl }}" class="health-forms-action">&larr; Back to Reports</a>
         </div>
     </div>
 
     <div class="health-forms-stat-grid">
         <div class="health-forms-stat-card">
+            <span>Total List</span>
+            <strong>{{ $totalList }}</strong>
+        </div>
+        <div class="health-forms-stat-card">
             <span>Total Issued</span>
             <strong>{{ $totalIssued }}</strong>
         </div>
         <div class="health-forms-stat-card">
-            <span>Courses Covered</span>
-            <strong>{{ $totalCourses }}</strong>
+            <span>Total Pending</span>
+            <strong>{{ $totalPending }}</strong>
         </div>
         <div class="health-forms-stat-card">
-            <span>With Condition</span>
-            <strong>{{ $issuedWithConditions }}</strong>
+            <span>With Conditions</span>
+            <strong>{{ $withConditions }}</strong>
         </div>
     </div>
 
@@ -776,15 +814,15 @@
         <aside class="health-forms-panel">
             <button type="button" class="health-forms-filter-close" onclick="closeHealthFormsFilter()" aria-label="Close filter">&times;</button>
             <h3>Filter Health Forms</h3>
-            <p class="health-forms-panel-copy">Narrow the student health form list by course and date range.</p>
+            <p class="health-forms-panel-copy">Narrow the health form list by user type and date range.</p>
             <form class="health-forms-filter-form" method="GET">
                 <div class="health-forms-field">
-                    <label for="healthFormsSearch">Course</label>
+                    <label for="healthFormsSearch">User Type</label>
                     <select id="healthFormsSearch" name="q">
-                        <option value="">All Courses</option>
-                        @foreach($allCourses as $course)
-                            <option value="{{ $course }}" {{ $search === $course ? 'selected' : '' }}>
-                                {{ $course }}
+                        <option value="">All User Types</option>
+                        @foreach($allUserTypes as $userType)
+                            <option value="{{ $userType }}" {{ $search === $userType ? 'selected' : '' }}>
+                                {{ $userType }}
                             </option>
                         @endforeach
                     </select>
@@ -810,38 +848,35 @@
                 <table class="health-forms-table">
                     <thead>
                         <tr>
-                            <th>Course</th>
-                            <th>Issued Forms</th>
-                            <th>With Condition</th>
-                            <th>No Condition</th>
-                            <th>For Approval</th>
+                            <th>User Type</th>
+                            <th>Total List</th>
+                            <th>Total Issued</th>
+                            <th>Total Pending</th>
+                            <th>With Conditions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($issuedForms as $form)
+                        @forelse($userTypeRows as $row)
                             <tr>
                                 <td>
-                                    <a class="health-forms-course-link" href="{{ $courseDetailsUrl($form->course) }}" title="View students in {{ $form->course }}">
-                                        {{ $form->course }}
+                                    <a class="health-forms-type-link" href="{{ $userTypeDetailsUrl($row->user_type) }}" title="View {{ $row->user_type_label }}">
+                                        {{ $row->user_type_label }}
                                     </a>
                                 </td>
-                                <td><span class="health-status-badge">{{ $form->issued_count }}</span></td>
-                                <td><span class="health-condition-badge">{{ $form->with_condition_count }}</span></td>
-                                <td><span class="health-condition-badge none">{{ $form->no_condition_count }}</span></td>
-                                <td><span class="health-condition-badge pending">{{ $form->for_approval_count }}</span></td>
+                                <td><span class="health-status-badge">{{ $row->total_count }}</span></td>
+                                <td><span class="health-condition-badge">{{ $row->issued_count }}</span></td>
+                                <td><span class="health-condition-badge pending">{{ $row->pending_count }}</span></td>
+                                <td><span class="health-condition-badge">{{ $row->with_condition_count }}</span></td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="health-forms-empty">No issued health forms found for this filter.</td>
+                                <td colspan="5" class="health-forms-empty">No health form records found for this filter.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
 
-            <div class="health-forms-pagination">
-                {{ $issuedForms->withQueryString()->links() }}
-            </div>
         </div>
     </div>
 </div>

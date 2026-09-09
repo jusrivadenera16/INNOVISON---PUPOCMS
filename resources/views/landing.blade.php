@@ -1281,32 +1281,243 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, rgba(51, 8, 13, 0.98), rgba(112, 19, 27, 0.95));
+            background: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 9999;
             opacity: 1;
-            transition: opacity 0.6s ease, visibility 0.6s ease;
+            transform: scale(1);
+            filter: blur(0);
+            transition: opacity .24s ease, visibility .24s ease;
             visibility: visible;
+            isolation: isolate;
+            overflow: hidden;
+        }
+
+        #preloader::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            background:
+                radial-gradient(circle at 50% 38%, rgba(250, 204, 21, 0.18), transparent 28%),
+                linear-gradient(180deg, rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.24));
+            opacity: 1;
+            transition: opacity .24s ease;
+        }
+
+        #preloader::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                linear-gradient(180deg, rgba(51, 8, 13, 0.97), rgba(112, 19, 27, 0.94)),
+                url('{{ asset('images/PUPBG.jpg') }}') center center / cover no-repeat;
+            opacity: 1;
+            transition: opacity .24s ease;
+        }
+
+        .preloader-content {
+            position: relative;
+            z-index: 2;
+            width: min(360px, calc(100% - 40px));
+            display: grid;
+            justify-items: center;
+            gap: 16px;
+            text-align: center;
+            transform: translateY(0) scale(1);
+            transition: opacity 0.6s ease, transform 0.72s cubic-bezier(.22, 1, .36, 1), filter 0.6s ease;
+            animation: preloaderContentIn 0.5s ease both;
+        }
+
+        #preloader.hidden .preloader-content {
+            opacity: 0;
+            filter: none;
+            transform: none;
+            animation: none !important;
+            transition: opacity .18s ease;
+        }
+
+        .preloader-logo {
+            position: relative;
+            width: 116px;
+            height: 116px;
+            display: grid;
+            place-items: center;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 248, 196, 0.34);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 8px rgba(250, 204, 21, 0.06), 0 20px 42px rgba(15, 23, 42, 0.28);
+            transform: translateZ(0);
+            transform-origin: center;
+            backface-visibility: hidden;
+            will-change: transform, opacity;
+            animation: pulseLogo 2.5s ease-in-out infinite;
+        }
+
+        .preloader-logo::before {
+            content: "";
+            position: absolute;
+            inset: -9px;
+            border: 1px solid rgba(250, 204, 21, 0.34);
+            border-radius: 38px;
+            animation: preloaderRing 2.2s ease-in-out infinite;
+        }
+
+        .preloader-logo img {
+            width: 78px;
+            height: 78px;
+            object-fit: contain;
+        }
+
+        .preloader-brand {
+            display: grid;
+            gap: 4px;
+        }
+
+        .preloader-kicker {
+            color: #facc15;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .preloader-title {
+            color: #ffffff;
+            font-size: 25px;
+            font-weight: 800;
+            line-height: 1.15;
+        }
+
+        .preloader-progress {
+            width: min(240px, 100%);
+            height: 5px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.18);
+            box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.22);
+        }
+
+        .preloader-progress span {
+            display: block;
+            width: 42%;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #facc15, #fff1a8, #facc15);
+            box-shadow: 0 0 14px rgba(250, 204, 21, 0.62);
+            animation: preloaderProgress 1.35s ease-in-out infinite;
+        }
+
+        .preloader-status {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.76);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        @keyframes preloaderContentIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes preloaderRing {
+            0%, 100% { opacity: 0.36; transform: scale(0.98); }
+            50% { opacity: 0.82; transform: scale(1.04); }
+        }
+
+        @keyframes preloaderProgress {
+            0% { transform: translateX(-135%); }
+            55%, 100% { transform: translateX(335%); }
+        }
+
+        @keyframes preloaderLogoDrop {
+            0% {
+                opacity: 1;
+                transform: translate3d(0, 0, 0) rotate(0deg);
+                animation-timing-function: cubic-bezier(.33, 1, .68, 1);
+            }
+            11% {
+                opacity: 1;
+                transform: translate3d(-3px, -15px, 0) rotate(-2deg);
+                animation-timing-function: cubic-bezier(.42, 0, 1, 1);
+            }
+            24% {
+                opacity: 1;
+                transform: translate3d(3px, 6px, 0) rotate(2deg);
+                animation-timing-function: cubic-bezier(.42, 0, 1, 1);
+            }
+            42% {
+                opacity: 0.99;
+                transform: translate3d(-2px, 105px, 0) rotate(-3deg);
+                animation-timing-function: cubic-bezier(.42, 0, 1, 1);
+            }
+            63% {
+                opacity: 0.86;
+                transform: translate3d(6px, 330px, 0) rotate(7deg);
+                animation-timing-function: cubic-bezier(.42, 0, 1, 1);
+            }
+            82% {
+                opacity: 0.52;
+                transform: translate3d(12px, 700px, 0) rotate(16deg);
+                animation-timing-function: cubic-bezier(.42, 0, 1, 1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate3d(20px, 115vh, 0) rotate(27deg);
+            }
         }
 
         #preloader.hidden {
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
+            transform: none;
+            filter: none;
         }
 
-        .preloader-logo {
-            width: 120px;
-            height: 120px;
-            animation: pulseLogo 2.5s ease-in-out infinite;
+        #preloader.is-exiting {
+            opacity: 1;
+            pointer-events: none;
+            transform: none;
+            filter: blur(0);
         }
 
-        .preloader-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+        #preloader.is-exiting::before,
+        #preloader.is-exiting::after {
+            opacity: 0;
+        }
+
+        #preloader.is-exiting .preloader-content {
+            opacity: 1;
+            filter: none;
+            transform: none;
+            animation: none;
+            transition: none;
+        }
+
+        #preloader.is-exiting .preloader-logo {
+            animation: preloaderLogoDrop 1.15s linear forwards;
+            opacity: 1;
+            transform: translateZ(0);
+            transition: none;
+            box-shadow: 0 20px 42px rgba(15, 23, 42, 0.28);
+        }
+
+        #preloader.is-exiting .preloader-logo::before {
+            display: none;
+        }
+
+        #preloader.is-exiting .preloader-brand,
+        #preloader.is-exiting .preloader-progress,
+        #preloader.is-exiting .preloader-status {
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity .24s ease, transform .24s ease;
         }
 
         @keyframes pulseLogo {
@@ -8134,6 +8345,20 @@
             }
         }
 
+        .landing-panel {
+            opacity: 0;
+            filter: blur(3px);
+            transform: translateY(18px) scale(.965);
+            transition: opacity .58s ease, transform .78s cubic-bezier(.2, 1.18, .32, 1), filter .58s ease;
+            will-change: opacity, transform, filter;
+        }
+
+        .landing-panel.is-panel-visible {
+            opacity: 1;
+            filter: none;
+            transform: translateY(0) scale(1);
+        }
+
         .landing-panel .gateway-logo-row,
         .landing-panel .gateway-kicker,
         .landing-panel .gateway-title,
@@ -8166,6 +8391,14 @@
         .landing-panel.is-content-visible .gateway-utility { transition-delay: 400ms; }
 
         @media (prefers-reduced-motion: reduce) {
+            .landing-panel,
+            .landing-panel.is-panel-visible {
+                opacity: 1;
+                filter: none;
+                transform: none;
+                transition: none;
+            }
+
             .landing-panel .gateway-logo-row,
             .landing-panel .gateway-kicker,
             .landing-panel .gateway-title,
@@ -8216,9 +8449,17 @@
     @endphp
 
     <!-- Full-Screen Preloader -->
-    <div id="preloader">
-        <div class="preloader-logo">
-            <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="Clinic Logo">
+    <div id="preloader" role="status" aria-live="polite" aria-label="Loading PUP Taguig Medical Clinic">
+        <div class="preloader-content">
+            <div class="preloader-logo" aria-hidden="true">
+                <img src="{{ asset('images/clinic_logo_transparent.png') }}" alt="">
+            </div>
+            <div class="preloader-brand">
+                <span class="preloader-kicker">PUP Taguig</span>
+                <strong class="preloader-title">Medical Clinic</strong>
+            </div>
+            <div class="preloader-progress" aria-hidden="true"><span></span></div>
+            <p class="preloader-status">Preparing your clinic workspace</p>
         </div>
     </div>
     <main class="landing-shell">
@@ -9733,6 +9974,10 @@
             const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
             const showHeroContent = function () {
+                if (preloader && !preloader.classList.contains('hidden')) {
+                    return;
+                }
+
                 window.clearTimeout(heroRevealTimer);
                 window.clearTimeout(heroVisualTimer);
                 landingPanel.classList.add('is-content-visible', 'is-visuals-visible');
@@ -9829,8 +10074,16 @@
         function hidePreloader() {
             if (preloader) {
                 setTimeout(() => {
-                    landingPanel?.classList.add('is-content-visible', 'is-visuals-visible');
-                    preloader.classList.add('hidden');
+                    preloader.classList.add('is-exiting');
+                    landingPanel?.classList.add('is-panel-visible');
+
+                    window.setTimeout(() => {
+                        landingPanel?.classList.add('is-content-visible', 'is-visuals-visible');
+                    }, 120);
+
+                    window.setTimeout(() => {
+                        preloader.classList.add('hidden');
+                    }, 1200);
                 }, 650);
             }
         }

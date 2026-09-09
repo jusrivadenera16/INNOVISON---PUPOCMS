@@ -22,6 +22,9 @@ SVG,
         'arrow-path' => <<<'SVG'
 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 9.75A7.5 7.5 0 0 1 17.25 5.1L19.5 7.5m0 0V3m0 4.5H15M19.5 14.25A7.5 7.5 0 0 1 6.75 18.9L4.5 16.5m0 0V21m0-4.5H9" />
 SVG,
+        'arrow-path-refresh' => <<<'SVG'
+<path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+SVG,
         'arrow-down-tray' => <<<'SVG'
 <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75v10.5m0 0 3.75-3.75M12 14.25 8.25 10.5M5.25 15.75v2.25A2.25 2.25 0 0 0 7.5 20.25h9A2.25 2.25 0 0 0 18.75 18v-2.25" />
 SVG,
@@ -36,6 +39,9 @@ SVG,
 SVG,
         'calendar-days' => <<<'SVG'
 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
+SVG,
+        'calendar' => <<<'SVG'
+<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3.75 8.25h16.5M5.25 5.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25A2.25 2.25 0 0 1 18.75 21H5.25A2.25 2.25 0 0 1 3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25Z" />
 SVG,
         'check' => <<<'SVG'
 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
@@ -70,6 +76,11 @@ SVG,
 SVG,
         'document-check' => <<<'SVG'
 <path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12" />
+SVG,
+        'document-clock' => <<<'SVG'
+<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 3.75H6.375A2.25 2.25 0 0 0 4.125 6v12a2.25 2.25 0 0 0 2.25 2.25h6.75m2.625-16.5 4.125 4.125M15.75 3.75v4.125a1.125 1.125 0 0 0 1.125 1.125H21" />
+<path stroke-linecap="round" stroke-linejoin="round" d="M9 11.25h3.75M9 14.25h2.25" />
+<path stroke-linecap="round" stroke-linejoin="round" d="M17.25 21a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0-6.75v2.25l1.5.75" />
 SVG,
         'document-download' => <<<'SVG'
 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
@@ -129,6 +140,12 @@ SVG,
         'pencil-square' => <<<'SVG'
 <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487a2.25 2.25 0 1 1 3.182 3.182L8.25 19.463 3.75 20.25l.787-4.5L16.862 4.487Z" />
 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v4.125A2.625 2.625 0 0 1 16.875 21H5.625A2.625 2.625 0 0 1 3 18.375V7.125A2.625 2.625 0 0 1 5.625 4.5H9.75" />
+SVG,
+        'pencil-square-resume' => <<<'SVG'
+<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+SVG,
+        'plus' => <<<'SVG'
+<path stroke-linecap="round" stroke-linejoin="round" d="M12 5.25v13.5m-6.75-6.75h13.5" />
 SVG,
         'plus-circle' => <<<'SVG'
 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v7.5m3.75-3.75h-7.5" />

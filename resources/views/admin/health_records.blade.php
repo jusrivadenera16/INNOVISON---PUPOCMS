@@ -4,6 +4,18 @@
 
 @push('styles')
 <style>
+    body:has(.health-records-overview) .main {
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.84)),
+            url('{{ asset("images/admin-bg-light.png") }}?v={{ is_file(public_path("images/admin-bg-light.png")) ? md5_file(public_path("images/admin-bg-light.png")) : "missing" }}') center center / 100% 100% no-repeat fixed !important;
+    }
+
+    html[data-theme="dark"] body:has(.health-records-overview) .main {
+        background:
+            linear-gradient(180deg, rgba(42, 14, 22, 0.78), rgba(42, 14, 22, 0.78)),
+            url('{{ asset("images/admin-bg-dark.png") }}?v={{ is_file(public_path("images/admin-bg-dark.png")) ? md5_file(public_path("images/admin-bg-dark.png")) : "missing" }}') center center / 100% 100% no-repeat fixed !important;
+    }
+
     /* Table & Card Styling */
     .card {
         background: #fff;

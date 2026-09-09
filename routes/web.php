@@ -330,9 +330,11 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::get('/admin/walkin', [WalkInController::class, 'index'])->middleware('module.permission:walkin.view')->name('walkin.index');
         Route::get('/admin/walkin/get-student', [WalkInController::class, 'getStudent'])->middleware('module.permission:walkin.scan_id|walkin.register_patient|walkin.encode_assessment|walkin.review_submission|walkin.employee_lookup')->name('walkin.getStudent');
         Route::get('/admin/walkin/final-review-applicants', [WalkInController::class, 'finalReviewApplicants'])->middleware('module.permission:walkin.review_submission')->name('walkin.final-review-applicants');
+        Route::get('/admin/walkin/employee-drafts', [WalkInController::class, 'employeeDrafts'])->middleware('module.permission:walkin.employee_lookup')->name('walkin.employee-drafts');
+        Route::get('/admin/walkin/consultation-drafts', [WalkInController::class, 'consultationDrafts'])->middleware('module.permission:walkin.scan_id')->name('walkin.consultation-drafts');
         Route::post('/admin/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->middleware('module.permission:walkin.scan_id')->name('walkin.verify-id-ai');
         Route::post('/admin/walkin/register', [WalkInController::class, 'registerStudent'])->middleware('module.permission:walkin.register_patient')->name('walkin.registerStudent');
-        Route::get('/admin/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->middleware('module.permission:walkin.scan_id|walkin.register_patient')->name('walkin.form');
+        Route::get('/admin/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->middleware('module.permission:walkin.scan_id|walkin.register_patient|walkin.encode_assessment')->name('walkin.form');
         Route::get('/admin/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->middleware('module.permission:walkin.encode_assessment|walkin.review_submission')->name('walkin.healthForm');
         Route::get('/admin/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->middleware('module.permission:walkin.encode_assessment|walkin.review_submission')->name('walkin.document');
         Route::get('/admin/walkin/employee-health-form/{employeeProfile}', [WalkInController::class, 'showEmployeeHealthForm'])->middleware('module.permission:walkin.employee_view')->name('walkin.employeeHealthForm');
@@ -341,6 +343,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::get('/admin/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->middleware('module.permission:walkin.employee_view')->name('walkin.staffDocument');
         Route::post('/admin/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.health-profile-information.update');
         Route::post('/admin/walkin/store', [WalkInController::class, 'store'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.store');
+        Route::post('/admin/walkin/consultation-draft', [WalkInController::class, 'saveConsultationDraft'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.consultation-draft');
         Route::post('/admin/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->middleware('module.permission:walkin.encode_assessment')->name('admin.walkin.applicant_encoding');
         Route::post('/admin/walkin/student-assessment', [WalkInController::class, 'saveStudentAssessment'])->middleware('module.permission:walkin.encode_assessment|walkin.employee_lookup')->name('admin.walkin.student_assessment');
         Route::post('/admin/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('admin.walkin.final_review.time_in');
@@ -485,6 +488,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::put('/admin/mar-clearance-types/{marClearanceType}', [MarClearanceTypeController::class, 'update'])->name('mar-clearance-types.update');
         Route::delete('/admin/mar-clearance-types/{marClearanceType}', [MarClearanceTypeController::class, 'destroy'])->name('mar-clearance-types.destroy');
         Route::post('/admin/mar-clearance-types/{marClearanceType}/subcategories', [MarClearanceTypeController::class, 'storeSubcategory'])->name('mar-clearance-subcategories.store');
+        Route::post('/admin/mar-clearance-types/{marClearanceType}/subcategories/consultation', [MarClearanceTypeController::class, 'storeConsultationSubcategory'])->name('mar-clearance-subcategories.consultation.store');
         Route::put('/admin/mar-clearance-subcategories/{marClearanceSubcategory}', [MarClearanceTypeController::class, 'updateSubcategory'])->name('mar-clearance-subcategories.update');
         Route::delete('/admin/mar-clearance-subcategories/{marClearanceSubcategory}', [MarClearanceTypeController::class, 'destroySubcategory'])->name('mar-clearance-subcategories.destroy');
         Route::post('/admin/medicine-types', [MedicineTypeController::class, 'store'])->name('medicine-types.store');
@@ -505,9 +509,11 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::get('/walkin', [WalkInController::class, 'index'])->middleware('module.permission:walkin.view')->name('walkin.index');
         Route::get('/walkin/get-student', [WalkInController::class, 'getStudent'])->middleware('module.permission:walkin.scan_id|walkin.register_patient|walkin.encode_assessment|walkin.review_submission|walkin.employee_lookup')->name('walkin.getStudent');
         Route::get('/walkin/final-review-applicants', [WalkInController::class, 'finalReviewApplicants'])->middleware('module.permission:walkin.review_submission')->name('walkin.final-review-applicants');
+        Route::get('/walkin/employee-drafts', [WalkInController::class, 'employeeDrafts'])->middleware('module.permission:walkin.employee_lookup')->name('walkin.employee-drafts');
+        Route::get('/walkin/consultation-drafts', [WalkInController::class, 'consultationDrafts'])->middleware('module.permission:walkin.scan_id')->name('walkin.consultation-drafts');
         Route::post('/walkin/verify-id-ai', [WalkInController::class, 'verifyStudentIdWithAi'])->middleware('module.permission:walkin.scan_id')->name('walkin.verify-id-ai');
         Route::post('/walkin/register', [WalkInController::class, 'registerStudent'])->middleware('module.permission:walkin.register_patient')->name('walkin.registerStudent');
-        Route::get('/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->middleware('module.permission:walkin.scan_id|walkin.register_patient')->name('walkin.form');
+        Route::get('/walkin/form/{student_id}', [WalkInController::class, 'showWalkinForm'])->middleware('module.permission:walkin.scan_id|walkin.register_patient|walkin.encode_assessment')->name('walkin.form');
         Route::get('/walkin/health-form/{healthProfile}', [WalkInController::class, 'showApplicantHealthForm'])->middleware('module.permission:walkin.encode_assessment|walkin.review_submission')->name('walkin.healthForm');
         Route::get('/walkin/document/{healthProfile}/{document}', [WalkInController::class, 'showApplicantDocument'])->middleware('module.permission:walkin.encode_assessment|walkin.review_submission')->name('walkin.document');
         Route::get('/walkin/employee-health-form/{employeeProfile}', [WalkInController::class, 'showEmployeeHealthForm'])->middleware('module.permission:walkin.employee_view')->name('walkin.employeeHealthForm');
@@ -516,6 +522,7 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::get('/walkin/staff-document/{staffProfile}/{document}', [WalkInController::class, 'showStaffDocument'])->middleware('module.permission:walkin.employee_view')->name('walkin.staffDocument');
         Route::post('/walkin/health-profile-information/{healthProfile}', [WalkInController::class, 'updateHealthProfileInformation'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.health-profile-information.update');
         Route::post('/walkin/store', [WalkInController::class, 'store'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.store');
+        Route::post('/walkin/consultation-draft', [WalkInController::class, 'saveConsultationDraft'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.consultation-draft');
         Route::post('/walkin/applicant-encoding', [WalkInController::class, 'saveApplicantEncoding'])->middleware('module.permission:walkin.encode_assessment')->name('walkin.applicant_encoding');
         Route::post('/walkin/student-assessment', [WalkInController::class, 'saveStudentAssessment'])->middleware('module.permission:walkin.encode_assessment|walkin.employee_lookup')->name('walkin.student_assessment');
         Route::post('/walkin/final-review/time-in', [WalkInController::class, 'markFinalReviewTimeIn'])->middleware(['module.permission:walkin.final_review', 'role:superadmin'])->name('walkin.final_review.time_in');

@@ -266,6 +266,48 @@ class MarClearanceTypeController extends Controller
             return back()->withInput()->withErrors(['name' => 'This subcategory already exists under the selected clearance type.']);
         }
 
+        $this->createSubcategory($marClearanceType, $validated);
+
+        return back()->with('success', 'Clearance subcategory added.');
+    }
+
+    public function storeConsultationSubcategory(Request $request, MarClearanceType $marClearanceType)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:160'],
+        ]);
+
+        $name = trim($validated['name']);
+        $exists = $marClearanceType->subcategories()
+            ->whereRaw('LOWER(TRIM(name)) = ?', [mb_strtolower($name)])
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'message' => 'This subcategory already exists under the selected clearance type.',
+                'errors' => ['name' => ['This subcategory already exists under the selected clearance type.']],
+            ], 422);
+        }
+
+        $validated['source_key'] = 'consultation';
+        $subcategory = $this->createSubcategory($marClearanceType, $validated);
+
+        return response()->json([
+            'message' => 'Consultation subcategory added.',
+            'subcategory' => [
+                'id' => $subcategory->id,
+                'code' => $subcategory->code,
+                'name' => $subcategory->name,
+                'label' => $marClearanceType->name . ' - ' . $subcategory->name,
+                'clearance_type_id' => $marClearanceType->id,
+                'clearance_type_name' => $marClearanceType->name,
+            ],
+        ], 201);
+    }
+
+    private function createSubcategory(MarClearanceType $marClearanceType, array $validated): MarClearanceSubcategory
+    {
+        $name = trim($validated['name']);
         $baseCode = Str::snake(Str::limit($marClearanceType->code . '_' . $name, 90, '')) ?: 'clearance_subcategory';
         $code = $baseCode;
         $suffix = 2;
@@ -273,7 +315,7 @@ class MarClearanceTypeController extends Controller
             $code = $baseCode . '_' . $suffix++;
         }
 
-        DB::transaction(function () use ($marClearanceType, $code, $name, $validated) {
+        return DB::transaction(function () use ($marClearanceType, $code, $name, $validated): MarClearanceSubcategory {
             $subcategory = $marClearanceType->subcategories()->create([
                 'code' => $code,
                 'name' => $name,
@@ -285,9 +327,9 @@ class MarClearanceTypeController extends Controller
                 $this->workflowSourcesForDataSource((string) $validated['source_key'])
             );
             $this->syncSubcategorySourceMapping($subcategory, $validated);
-        });
 
-        return back()->with('success', 'Clearance subcategory added.');
+            return $subcategory;
+        });
     }
 
     public function updateSubcategory(Request $request, MarClearanceSubcategory $marClearanceSubcategory)

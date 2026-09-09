@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Health Forms Applicants List')
+@section('title', 'Health Forms List')
 
 @push('styles')
 <style>
@@ -1099,18 +1099,34 @@
 
     .logbook-per-page-form .premium-select-shell,
     .logbook-per-page-form .premium-select-button {
-        width: 132px;
+        width: 118px;
+        min-width: 118px;
     }
 
     .logbook-per-page-form .premium-select-button {
         position: relative;
         isolation: isolate;
         overflow: hidden;
-        min-height: 36px;
-        height: 36px;
-        border-radius: 10px;
-        font-size: 11px;
-        text-align: left;
+        min-height: 34px;
+        height: 34px;
+        border-radius: 7px;
+        padding: 0 24px 0 8px;
+        justify-content: center;
+        font-size: 10px;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .logbook-per-page-form .premium-select-shell::before {
+        display: none;
+    }
+
+    .logbook-per-page-form .premium-select-shell::after {
+        top: 17px;
+        right: 10px;
+        width: 7px;
+        height: 7px;
+        border-width: 1.5px;
     }
 
     .logbook-per-page-form .premium-select-menu {
@@ -1118,16 +1134,20 @@
         right: 0;
         bottom: calc(100% + 8px);
         left: auto;
-        width: 170px;
+        width: 136px;
+        padding: 6px;
+        gap: 4px;
     }
 
     .logbook-per-page-form .premium-select-option {
         position: relative;
         isolation: isolate;
         overflow: hidden;
-        min-height: 38px;
-        border-radius: 8px;
-        font-size: 12px;
+        min-height: 32px;
+        padding: 7px 9px;
+        border-radius: 7px;
+        font-size: 11px;
+        white-space: nowrap;
     }
 
     html[data-theme="dark"] .logbook-pagination {
@@ -1190,7 +1210,7 @@
     <div class="logbook-head">
         <div>
             <h1 class="logbook-title">Health Forms</h1>
-            <p class="logbook-copy">List of applicants, students, and staff who submitted health forms.</p>
+            <p class="logbook-copy">List of applicants, students, faculty, admins, and dependents with submitted health records.</p>
         </div>
         <div style="display: flex; gap: 10px;">
             <button type="button" class="filter-btn-open" onclick="openFilterModal()">
@@ -1205,7 +1225,7 @@
 
     <div class="logbook-toolbar">
         <div class="logbook-search-wrap">
-            <input type="search" id="searchInput" class="logbook-search-input" placeholder="Search by applicant or student name..." value="{{ $search }}" autocomplete="off" enterkeyhint="search">
+            <input type="search" id="searchInput" class="logbook-search-input" placeholder="Search by name, email, or ID number..." value="{{ $search }}" autocomplete="off" enterkeyhint="search">
         </div>
         <div class="logbook-toolbar-actions">
             <div class="logbook-total-card">Total:<span>{{ number_format($logbookRecords->total()) }}</span></div>
@@ -1247,6 +1267,7 @@
                             <option value="Student" {{ $userTypeFilter === 'Student' ? 'selected' : '' }}>Student</option>
                             <option value="Faculty" {{ $userTypeFilter === 'Faculty' ? 'selected' : '' }}>Faculty</option>
                             <option value="Admin" {{ $userTypeFilter === 'Admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="Dependent" {{ $userTypeFilter === 'Dependent' ? 'selected' : '' }}>Dependent</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -1304,56 +1325,17 @@
                 @forelse($logbookRecords as $record)
                     @php
                         $user = $record->user;
-                        $approver = $record->approvedBy;
-                        $reviewer = $record->reviewStartedBy;
-                        $isApproved = in_array($record->clearance_status, ['Issued', 'Fully Cleared'], true);
-                        $isRejected = $record->clearance_status === 'Rejected';
-                        $statusLabel = $isApproved ? 'Approved' : ($isRejected ? 'Rejected' : 'Pending');
-                        $hasCondition = $record->hasMedicalCondition();
-                        $conditionDetails = collect();
-                        $formatList = static function ($value): string {
-                            if (is_array($value)) {
-                                return collect($value)
-                                    ->filter(fn ($item) => trim((string) $item) !== '')
-                                    ->implode(', ');
-                            }
-
-                            return trim((string) $value);
-                        };
-
-                        if ($record->has_disability === 'Yes') {
-                            $conditionDetails->push([
-                                'label' => 'Disability',
-                                'value' => trim((string) $record->disability_type) !== '' ? $record->disability_type : 'Yes',
-                            ]);
-                        }
-
-                        if ($record->has_illness === 'Yes' || $formatList($record->medical_history) !== '') {
-                            $conditionDetails->push([
-                                'label' => 'Medical History',
-                                'value' => $formatList($record->medical_history) !== '' ? $formatList($record->medical_history) : 'Yes',
-                            ]);
-                        }
-
-                        foreach ([
-                            'Other Illness' => $record->other_illness,
-                            'Food Allergies' => $record->food_allergies,
-                            'Medicine Allergies' => $record->medicine_allergies,
-                            'Other Medicine Allergies' => $record->other_med_allergies,
-                            'Nurse Remarks' => $record->medical_condition_remarks,
-                        ] as $label => $value) {
-                            $formattedValue = $formatList($value);
-                            if ($formattedValue !== '' && $formattedValue !== '[]') {
-                                $conditionDetails->push([
-                                    'label' => $label,
-                                    'value' => $formattedValue,
-                                ]);
-                            }
-                        }
-                        $patientName = $record->formatted_patient_name ?? $user->name ?? 'N/A';
-                        $submittedAt = $record->created_at ? \Carbon\Carbon::parse($record->created_at)->format('M d, Y g:i A') : 'N/A';
-                        $reviewedAt = $record->review_started_at ? \Carbon\Carbon::parse($record->review_started_at)->format('M d, Y g:i A') : 'N/A';
-                        $approvedAt = $isApproved && $record->verified_at ? \Carbon\Carbon::parse($record->verified_at)->format('M d, Y g:i A') : 'N/A';
+                        $approver = $record->report_approver;
+                        $reviewer = $record->report_reviewer;
+                        $isApproved = $record->report_is_approved;
+                        $statusLabel = $record->report_status;
+                        $isRejected = $statusLabel === 'Rejected';
+                        $hasCondition = $record->report_has_condition;
+                        $conditionDetails = collect($record->report_condition_details ?? []);
+                        $patientName = $record->report_patient_name;
+                        $submittedAt = $record->report_submitted_at ? \Carbon\Carbon::parse($record->report_submitted_at)->format('M d, Y g:i A') : 'N/A';
+                        $reviewedAt = $record->report_reviewed_at ? \Carbon\Carbon::parse($record->report_reviewed_at)->format('M d, Y g:i A') : 'N/A';
+                        $approvedAt = $record->report_approved_at ? \Carbon\Carbon::parse($record->report_approved_at)->format('M d, Y g:i A') : 'N/A';
                         $conditionPayload = $conditionDetails
                             ->map(fn ($detail) => $detail['label'] . '::' . $detail['value'])
                             ->implode('||');
@@ -1361,10 +1343,10 @@
                     <tr
                         data-logbook-row
                         data-report-name="{{ e($patientName) }}"
-                        data-report-email="{{ e($user->email ?? 'N/A') }}"
-                        data-report-gender="{{ e($record->sex ?: ($user->gender ?? 'N/A')) }}"
-                        data-report-course="{{ e($record->course_college ?? $user->course ?? 'N/A') }}"
-                        data-report-type="{{ e($user->user_type ?? 'N/A') }}"
+                        data-report-email="{{ e($record->report_email) }}"
+                        data-report-gender="{{ e($record->report_gender) }}"
+                        data-report-course="{{ e($record->report_course) }}"
+                        data-report-type="{{ e($record->report_type) }}"
                         data-report-submitted="{{ e($submittedAt) }}"
                         data-report-reviewed-by="{{ e($reviewer?->name ?? 'N/A') }}"
                         data-report-reviewed-at="{{ e($reviewedAt) }}"
@@ -1373,16 +1355,16 @@
                         data-report-status="{{ e($statusLabel) }}"
                         data-report-condition="{{ e($hasCondition ? 'Yes' : 'No') }}"
                         data-report-conditions="{{ e($conditionPayload) }}"
-                        data-search="{{ strtolower($patientName . ' ' . ($user->name ?? '') . ' ' . ($user->email ?? '') . ' ' . ($record->sex ?: ($user->gender ?? 'N/A')) . ' ' . ($record->course_college ?? $user->course ?? 'N/A') . ' ' . ($user->user_type ?? 'N/A') . ' ' . $statusLabel . ' ' . ($hasCondition ? 'yes with condition medical condition' : 'no condition')) }}"
+                        data-search="{{ e($record->report_search) }}"
                         tabindex="0"
                         aria-label="View report details for {{ $patientName }}"
                     >
                         <td>
                             <button type="button" class="logbook-record-link" data-open-report-details>{{ $patientName }}</button>
                         </td>
-                        <td>{{ $record->sex ?: ($user->gender ?? 'N/A') }}</td>
-                        <td>{{ $record->course_college ?? $user->course ?? 'N/A' }}</td>
-                        <td>{{ $user->user_type ?? 'N/A' }}</td>
+                        <td>{{ $record->report_gender }}</td>
+                        <td>{{ $record->report_course }}</td>
+                        <td>{{ $record->report_type }}</td>
                         <td>{{ $submittedAt }}</td>
                         <td>
                             @if($reviewer)
@@ -1454,7 +1436,7 @@
             <span class="logbook-pagination-meta">
                 Showing {{ $logbookRecords->firstItem() }} to {{ $logbookRecords->lastItem() }} of {{ $logbookRecords->total() }} records
             </span>
-            <nav class="logbook-pagination-pages" aria-label="Applicants list pagination">
+            <nav class="logbook-pagination-pages" aria-label="Health Forms list pagination">
                 @if($logbookRecords->onFirstPage())
                     <span class="logbook-page-link is-disabled" aria-disabled="true">&larr;</span>
                 @else
@@ -1485,7 +1467,7 @@
                         <input type="hidden" name="{{ $queryKey }}" value="{{ $queryValue }}">
                     @endif
                 @endforeach
-                <select name="per_page" class="logbook-per-page-select" onchange="this.form.submit()" aria-label="Applicants list records per page">
+                <select name="per_page" class="logbook-per-page-select" onchange="this.form.submit()" aria-label="Health Forms records per page">
                     @foreach(['20' => '20 per page', '40' => '40 per page', '80' => '80 per page', '100' => '100 per page', 'all' => 'Show all'] as $optionValue => $optionLabel)
                         <option value="{{ $optionValue }}" @selected(($perPage ?? '20') === $optionValue)>{{ $optionLabel }}</option>
                     @endforeach
@@ -1502,7 +1484,7 @@
                 <span class="logbook-report-icon" aria-hidden="true"><x-outline-icon name="clipboard-document-list" /></span>
                 <div>
                     <h2 class="logbook-report-title" id="logbookReportTitle">Health Form Report Details</h2>
-                    <p class="logbook-report-copy">Read-only report information from the Health Forms applicants list.</p>
+                    <p class="logbook-report-copy">Read-only report information from the Health Forms list.</p>
                 </div>
             </div>
             <button type="button" class="logbook-report-close" id="logbookReportClose" aria-label="Close report details">

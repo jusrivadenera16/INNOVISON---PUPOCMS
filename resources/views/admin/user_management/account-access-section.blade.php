@@ -94,7 +94,7 @@
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="walkin.scan_id" data-module-action>
                             <span class="um-action-check" aria-hidden="true"><x-outline-icon name="check" /></span>
-                            <span><strong>OCR / Scan ID</strong><small>Scan or manually enter an ID for walk-in intake</small></span>
+                            <span><strong>Consultation</strong><small>Scan or manually enter an ID for walk-in intake</small></span>
                         </label>
                         <label class="um-action-permission">
                             <input type="checkbox" name="module_permissions[]" value="walkin.register_patient" data-module-action>

@@ -7,10 +7,8 @@
         align-items: center;
         justify-content: center;
         background:
-            radial-gradient(ellipse 42% 58% at 50% 50%, rgba(255, 246, 241, 0.78) 0%, rgba(244, 194, 197, 0.62) 20%, rgba(156, 36, 55, 0.52) 42%, transparent 70%),
-            radial-gradient(ellipse 88% 72% at 12% 50%, rgba(235, 118, 130, 0.38) 0%, rgba(139, 16, 32, 0.18) 42%, transparent 70%),
-            radial-gradient(ellipse 88% 72% at 88% 50%, rgba(235, 118, 130, 0.38) 0%, rgba(139, 16, 32, 0.18) 42%, transparent 70%),
-            linear-gradient(90deg, #4a0b18 0%, #8f1b2d 42%, #7a1425 50%, #8f1b2d 58%, #4a0b18 100%);
+            radial-gradient(ellipse 20% 30% at 50% 45%, rgba(250, 204, 21, 0.14) 0%, rgba(250, 204, 21, 0.045) 34%, transparent 70%),
+            linear-gradient(90deg, #3f0816 0%, #4c0a1b 44%, #29040e 100%);
         backdrop-filter: blur(4px);
         -webkit-backdrop-filter: blur(4px);
         opacity: 1;
@@ -26,10 +24,23 @@
             radial-gradient(circle, rgba(255, 255, 255, 0.22) 1px, transparent 1.5px),
             radial-gradient(circle, rgba(250, 204, 21, 0.16) 1px, transparent 1.5px);
         background-size: 54px 54px, 86px 86px;
-        background-position: 10px 12px, 36px 42px;
-        opacity: 0.55;
-        pointer-events: none;
-    }
+            background-position: 10px 12px, 36px 42px;
+            opacity: 0.55;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+    .post-login-loader::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url('{{ asset("images/PUPBG.jpg") }}?v={{ filemtime(public_path("images/PUPBG.jpg")) }}') left center / cover no-repeat;
+        opacity: 0.13;
+        filter: saturate(0.55) brightness(0.58) contrast(0.92);
+        -webkit-mask-image: linear-gradient(90deg, #000 0%, rgba(0, 0, 0, 0.72) 16%, rgba(0, 0, 0, 0.32) 34%, rgba(0, 0, 0, 0.08) 50%, transparent 64%);
+        mask-image: linear-gradient(90deg, #000 0%, rgba(0, 0, 0, 0.72) 16%, rgba(0, 0, 0, 0.32) 34%, rgba(0, 0, 0, 0.08) 50%, transparent 64%);
+            pointer-events: none;
+        }
 
     .post-login-loader.hidden {
         opacity: 0;
@@ -40,6 +51,7 @@
     .post-login-loader-bg-icons {
         position: absolute;
         inset: 0;
+        z-index: 1;
         overflow: hidden;
         pointer-events: none;
     }
@@ -95,7 +107,7 @@
     .post-login-loader-card {
         position: absolute;
         inset: 0;
-        z-index: 1;
+        z-index: 2;
         display: grid;
         grid-template-rows: 1fr auto;
         align-items: center;
@@ -108,6 +120,7 @@
     }
 
     .capsule-loader-content {
+        position: relative;
         width: min(360px, 58vmin);
         height: min(360px, 58vmin);
         display: flex;
@@ -115,7 +128,24 @@
         justify-content: center;
     }
 
+    .capsule-loader-content::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: 10%;
+        width: min(100px, 14vmin);
+        height: min(18px, 2.8vmin);
+        border-radius: 50%;
+        background: rgba(35, 3, 12, 0.62);
+        box-shadow: 0 4px 0 rgba(20, 2, 8, 0.5);
+        transform: translateX(-50%);
+        z-index: 0;
+        pointer-events: none;
+    }
+
     .capsule-loader {
+        position: relative;
+        z-index: 1;
         width: min(106px, 15vmin);
         height: min(282px, 40vmin);
         display: flex;
@@ -312,22 +342,27 @@
     }
 
     .post-login-loader-text {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+        --typing-width: 13ch;
+        --typing-count: 13;
+        display: block;
+        width: 0;
+        max-width: var(--typing-width);
+        overflow: hidden;
+        white-space: nowrap;
+        text-align: left;
         min-height: 20px;
         margin-top: 10px;
         font-size: 14px;
         font-weight: 700;
         letter-spacing: 0.04em;
+        animation: postLoginTypewriter 2.6s steps(var(--typing-count), end) infinite;
     }
 
     .post-login-loader-text span {
-        display: inline-block;
-        opacity: 0.18;
-        transform: translateY(5px);
-        animation: postLoginLetterReveal 1.65s infinite ease-in-out;
-        animation-delay: calc(var(--letter-index) * 0.08s);
+        display: inline;
+        opacity: 1;
+        transform: none;
+        animation: none;
     }
 
     @keyframes postLoginRipplePulse {
@@ -354,14 +389,12 @@
         }
     }
 
-    @keyframes postLoginLetterReveal {
-        0%, 100% {
-            opacity: 0.18;
-            transform: translateY(5px);
+    @keyframes postLoginTypewriter {
+        0%, 8% {
+            width: 0;
         }
-        22%, 58% {
-            opacity: 1;
-            transform: translateY(0);
+        62%, 100% {
+            width: var(--typing-width);
         }
     }
 
@@ -453,6 +486,12 @@
         pointer-events: auto;
     }
 
+    .terms-gate-overlay.is-closing {
+        opacity: 0;
+        visibility: visible;
+        pointer-events: none;
+    }
+
     .terms-gate-modal {
         width: min(560px, 100%);
         background: #ffffff;
@@ -532,6 +571,7 @@
         cursor: pointer;
         min-width: 96px;
         font-family: inherit;
+        transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
     }
 
     .terms-gate-btn-cancel {
@@ -553,6 +593,243 @@
 
     body.terms-gate-lock {
         overflow: hidden;
+    }
+
+    .post-login-welcome {
+        position: fixed;
+        inset: 0;
+        z-index: 1000003;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(5, 8, 16, 0.92);
+        backdrop-filter: blur(10px) saturate(0.76);
+        -webkit-backdrop-filter: blur(10px) saturate(0.76);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.34s ease, visibility 0.34s ease;
+    }
+
+    .post-login-welcome.is-visible {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .post-login-welcome.is-closing {
+        opacity: 0;
+        visibility: visible;
+        pointer-events: none;
+        transition: opacity 0.86s ease;
+    }
+
+    .post-login-welcome-card {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        display: grid;
+        justify-items: center;
+        gap: 12px;
+        width: min(760px, calc(100% - 32px));
+        color: #ffffff;
+        text-align: center;
+        transform: translate(-50%, -50%) scale(0.84);
+        opacity: 0;
+    }
+
+    .post-login-welcome.is-visible .post-login-welcome-card {
+        animation: postLoginWelcomeEnter 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .post-login-welcome.is-closing .post-login-welcome-card {
+        animation: postLoginWelcomeToDashboard 0.86s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .post-login-welcome-icon {
+        width: 72px;
+        height: 72px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #facc15;
+        border-radius: 999px;
+        background: #70131b;
+        color: #facc15;
+        box-shadow:
+            0 0 0 4px rgba(250, 204, 21, 0.12),
+            0 0 28px rgba(250, 204, 21, 0.34),
+            0 18px 38px rgba(0, 0, 0, 0.34);
+    }
+
+    .post-login-welcome-icon svg {
+        width: 38px;
+        height: 38px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+    }
+
+    .post-login-welcome-eyebrow {
+        margin: 8px 0 0;
+        color: #facc15;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+    }
+
+    .post-login-welcome-card h2 {
+        display: grid;
+        gap: 4px;
+        margin: 0;
+        font-size: 56px;
+        font-weight: 900;
+        line-height: 1.04;
+        letter-spacing: 0;
+    }
+
+    .post-login-welcome-card h2 strong {
+        color: #facc15;
+        font-weight: 900;
+    }
+
+    html[data-theme="light"] .post-login-welcome {
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(10px) saturate(0.82);
+        -webkit-backdrop-filter: blur(10px) saturate(0.82);
+    }
+
+    html[data-theme="light"] .post-login-welcome-card {
+        color: #111827;
+    }
+
+    .terms-gate-overlay.is-admin-terms-gate {
+        background: rgba(5, 8, 16, 0.88);
+        backdrop-filter: blur(10px) saturate(0.78);
+        -webkit-backdrop-filter: blur(10px) saturate(0.78);
+    }
+
+    .terms-gate-modal.is-admin-terms-gate {
+        border: 1px solid rgba(250, 204, 21, 0.22);
+        background: #111827;
+        color: #f8fafc;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
+    }
+
+    .terms-gate-modal.is-admin-terms-gate .terms-gate-body {
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .terms-gate-modal.is-admin-terms-gate .terms-gate-body p,
+    .terms-gate-modal.is-admin-terms-gate .terms-gate-checkbox {
+        color: #e5e7eb;
+    }
+
+    .terms-gate-modal.is-admin-terms-gate .terms-gate-body a {
+        color: #fde68a;
+    }
+
+    .terms-gate-modal.is-admin-terms-gate .terms-gate-actions {
+        background: #0f172a;
+    }
+
+    .terms-gate-modal.is-admin-terms-gate .terms-gate-btn-continue:not(:disabled):hover,
+    .terms-gate-modal.is-admin-terms-gate .terms-gate-btn-continue:not(:disabled):focus-visible {
+        background: #facc15;
+        border-color: #facc15;
+        color: #70131b;
+        transform: translateY(-1px);
+    }
+
+    html[data-theme="light"] .terms-gate-overlay.is-admin-terms-gate {
+        background: rgba(255, 255, 255, 0.84);
+        backdrop-filter: blur(10px) saturate(0.9);
+        -webkit-backdrop-filter: blur(10px) saturate(0.9);
+    }
+
+    html[data-theme="light"] .terms-gate-modal.is-admin-terms-gate {
+        border-color: rgba(128, 0, 0, 0.14);
+        background: #ffffff;
+        color: #1f2937;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+    }
+
+    html[data-theme="light"] .terms-gate-modal.is-admin-terms-gate .terms-gate-body p,
+    html[data-theme="light"] .terms-gate-modal.is-admin-terms-gate .terms-gate-checkbox {
+        color: #334155;
+    }
+
+    html[data-theme="light"] .terms-gate-modal.is-admin-terms-gate .terms-gate-body a {
+        color: #8b0000;
+    }
+
+    html[data-theme="light"] .terms-gate-modal.is-admin-terms-gate .terms-gate-actions {
+        background: #f8fafc;
+    }
+
+    @keyframes postLoginWelcomeEnter {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.84);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+    }
+
+    @keyframes postLoginWelcomeToDashboard {
+        0% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        72% {
+            opacity: 0.82;
+            transform: translate(
+                calc(-50% + var(--welcome-target-x, 0px)),
+                calc(-50% + var(--welcome-target-y, 0px))
+            ) scale(0.42);
+        }
+        100% {
+            opacity: 0;
+            transform: translate(
+                calc(-50% + var(--welcome-target-x, 0px)),
+                calc(-50% + var(--welcome-target-y, 0px))
+            ) scale(0.12);
+        }
+    }
+
+    .post-login-greeting-target {
+        animation: postLoginGreetingTarget 0.9s ease-out;
+    }
+
+    @keyframes postLoginGreetingTarget {
+        0% {
+            filter: drop-shadow(0 0 0 rgba(250, 204, 21, 0));
+        }
+        45% {
+            filter: drop-shadow(0 0 12px rgba(250, 204, 21, 0.66));
+        }
+        100% {
+            filter: drop-shadow(0 0 0 rgba(250, 204, 21, 0));
+        }
+    }
+
+    @media (max-width: 640px) {
+        .post-login-welcome-card h2 {
+            font-size: 36px;
+        }
+
+        .post-login-welcome-icon {
+            width: 60px;
+            height: 60px;
+        }
+
+        .post-login-welcome-icon svg {
+            width: 32px;
+            height: 32px;
+        }
     }
 
     @media (max-width: 640px) {
@@ -577,6 +854,20 @@
         }
     }
 </style>
+
+@php
+    $postLoginIsAdminDashboard = request()->is('admin/dashboard') || request()->is('dashboard');
+    $postLoginUser = $postLoginIsAdminDashboard ? auth()->user() : null;
+    $postLoginName = trim((string) ($postLoginUser?->name ?: 'Clinic User'));
+    $postLoginNameParts = preg_split('/\s+/', $postLoginName, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+    $postLoginFirstName = $postLoginNameParts[0] ?? 'Clinic User';
+    $postLoginLastName = count($postLoginNameParts) > 1 ? (string) end($postLoginNameParts) : '';
+    $postLoginGreetingName = trim($postLoginFirstName . ($postLoginLastName !== '' ? ' ' . strtoupper(substr($postLoginLastName, 0, 1)) . '.' : ''));
+    $postLoginHour = (int) now()->format('G');
+    $postLoginGreeting = $postLoginHour < 12
+        ? 'Good morning'
+        : ($postLoginHour < 18 ? 'Good afternoon' : 'Good evening');
+@endphp
 
 @if (session('show_terms_modal'))
     <div class="post-login-loader" id="postLoginLoader" aria-live="polite" aria-label="Logging in">
@@ -647,8 +938,23 @@
         </div>
     </div>
 
-    <div class="terms-gate-overlay" id="termsGateOverlay" role="dialog" aria-modal="true" aria-labelledby="termsGateTitle">
-        <div class="terms-gate-modal">
+    @if ($postLoginIsAdminDashboard)
+        <div class="post-login-welcome" id="postLoginWelcome" aria-hidden="true">
+            <div class="post-login-welcome-card" role="status" aria-live="polite">
+                <span class="post-login-welcome-icon" aria-hidden="true">
+                    <x-outline-icon name="user-circle" />
+                </span>
+                <p class="post-login-welcome-eyebrow">PUP Taguig Clinic</p>
+                <h2>
+                    <span>{{ $postLoginGreeting }}!</span>
+                    <strong>{{ $postLoginGreetingName }}</strong>
+                </h2>
+            </div>
+        </div>
+    @endif
+
+    <div class="terms-gate-overlay {{ $postLoginIsAdminDashboard ? 'is-admin-terms-gate' : '' }}" id="termsGateOverlay" role="dialog" aria-modal="true" aria-labelledby="termsGateTitle">
+        <div class="terms-gate-modal {{ $postLoginIsAdminDashboard ? 'is-admin-terms-gate' : '' }}">
             <div class="terms-gate-head">
                 <h3 id="termsGateTitle">Terms and Conditions</h3>
             </div>
@@ -687,6 +993,8 @@
         (function () {
             const loader = document.getElementById('postLoginLoader');
             const overlay = document.getElementById('termsGateOverlay');
+            const welcome = document.getElementById('postLoginWelcome');
+            const welcomeCard = welcome ? welcome.querySelector('.post-login-welcome-card') : null;
             const agreeInput = document.getElementById('termsGateAgree');
             const continueBtn = document.getElementById('termsGateContinueBtn');
             const cancelBtn = document.getElementById('termsGateCancelBtn');
@@ -703,11 +1011,12 @@
             syncContinueState();
             document.body.classList.add('terms-gate-lock');
 
-            const minimumLoaderMs = 3000;
+            const minimumLoaderMs = 1700;
             const fallbackLoaderMs = 12000;
             let minimumTimeElapsed = false;
             let pageIsReady = document.readyState === 'complete';
             let termsShown = false;
+            let transitionStarted = false;
 
             function showTermsGate() {
                 if (termsShown || !minimumTimeElapsed || !pageIsReady) {
@@ -741,10 +1050,60 @@
 
             agreeInput.addEventListener('change', syncContinueState);
 
-            continueBtn.addEventListener('click', function () {
-                if (!agreeInput.checked) {
+            function prepareWelcomeTarget() {
+                if (!welcomeCard) {
                     return;
                 }
+
+                const target = document.getElementById('dashboardTimeGreeting')
+                    || document.querySelector('.dashboard-welcome-copy h1');
+                if (!target) {
+                    return;
+                }
+
+                const targetRect = target.getBoundingClientRect();
+                welcomeCard.style.setProperty(
+                    '--welcome-target-x',
+                    `${targetRect.left + (targetRect.width / 2) - (window.innerWidth / 2)}px`
+                );
+                welcomeCard.style.setProperty(
+                    '--welcome-target-y',
+                    `${targetRect.top + (targetRect.height / 2) - (window.innerHeight / 2)}px`
+                );
+                target.dataset.postLoginGreetingTarget = 'true';
+            }
+
+            function showPostLoginWelcome() {
+                if (!welcome) {
+                    document.body.classList.remove('terms-gate-lock');
+                    return;
+                }
+
+                prepareWelcomeTarget();
+                welcome.classList.add('is-visible');
+                welcome.setAttribute('aria-hidden', 'false');
+
+                window.setTimeout(function () {
+                    welcome.classList.add('is-closing');
+                }, 1350);
+
+                window.setTimeout(function () {
+                    const target = document.querySelector('[data-post-login-greeting-target]');
+                    welcome.remove();
+                    document.body.classList.remove('terms-gate-lock');
+                    target?.classList.add('post-login-greeting-target');
+                    window.setTimeout(function () {
+                        target?.classList.remove('post-login-greeting-target');
+                    }, 900);
+                }, 2250);
+            }
+
+            continueBtn.addEventListener('click', function () {
+                if (!agreeInput.checked || transitionStarted) {
+                    return;
+                }
+                transitionStarted = true;
+                continueBtn.disabled = true;
                 fetch('{{ route('post-login-terms.acknowledge') }}', {
                     method: 'POST',
                     headers: {
@@ -754,8 +1113,12 @@
                     },
                     body: JSON.stringify({})
                 }).catch(function () {});
-                overlay.remove();
-                document.body.classList.remove('terms-gate-lock');
+                overlay.classList.add('is-closing');
+                window.setTimeout(function () {
+                    overlay.remove();
+                    loader?.remove();
+                    showPostLoginWelcome();
+                }, 260);
             });
 
             cancelBtn.addEventListener('click', function () {

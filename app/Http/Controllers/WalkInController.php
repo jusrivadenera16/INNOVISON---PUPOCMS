@@ -15,6 +15,7 @@ use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\ActivityLog;
 use App\Models\Consultation;
+use App\Models\ConsultationDraft;
 use App\Models\ConsultationMedicine;
 use App\Models\MarClearanceSubcategory;
 use App\Models\MarClearanceSubcategorySource;
@@ -106,6 +107,17 @@ class WalkInController extends Controller
         }
 
         return null;
+    }
+
+    private function consultationAppointmentNumberSessionKey($staffId, $studentId, string $source): string
+    {
+        $identity = implode('|', [
+            (string) ($staffId ?: 'guest'),
+            (string) $studentId,
+            $this->normalizeConsultationSource($source),
+        ]);
+
+        return 'consultation_appointment_number.' . hash('sha256', $identity);
     }
 
     private function consultationStartSessionKey($staffId, $studentId, string $source): string
@@ -378,17 +390,9 @@ class WalkInController extends Controller
         }
 
         $user->loadMissing('healthProfile');
-        $profileMarkers = strtolower(trim(implode(' ', array_filter([
-            (string) ($user->healthProfile?->health_form_category ?? ''),
-            (string) ($user->healthProfile?->student_number ?? ''),
-        ]))));
-
-        if ($profileMarkers !== '' && (str_contains($profileMarkers, 'student') || str_contains($profileMarkers, 'ojt'))) {
-            return true;
-        }
-
         $markers = strtolower(trim(implode(' ', array_filter([
             (string) ($user->user_type ?? ''),
+            (string) ($user->user_role ?? ''),
             (string) ($user->idp_role ?? ''),
         ]))));
 
@@ -396,6 +400,15 @@ class WalkInController extends Controller
             if ($markers !== '' && str_contains($markers, $excluded)) {
                 return false;
             }
+        }
+
+        $profileMarkers = strtolower(trim(implode(' ', array_filter([
+            (string) ($user->healthProfile?->health_form_category ?? ''),
+            (string) ($user->healthProfile?->student_number ?? ''),
+        ]))));
+
+        if ($profileMarkers !== '' && (str_contains($profileMarkers, 'student') || str_contains($profileMarkers, 'ojt'))) {
+            return true;
         }
 
         return str_contains($markers, 'student')
@@ -626,15 +639,14 @@ class WalkInController extends Controller
             return $mapped[$normalized];
         }
 
-        return Str::of($value)
+        return (string) Str::of($value)
             ->replace('_', ' ')
             ->lower()
             ->title()
             ->replace('Na', 'N/A')
             ->replace('Tpc', 'TPC')
             ->replace('W/O', 'w/o')
-            ->replace('W/ ', 'w/ ')
-            ->toString();
+            ->replace('W/ ', 'w/ ');
     }
 
     private function formatEmployeeExamArray($value): ?array
@@ -1017,6 +1029,118 @@ class WalkInController extends Controller
         ];
 
         return $documents;
+    }
+
+    private function healthProfileDocumentVersions(Request $request, ?HealthProfile $profile): array
+    {
+        if (!$profile) {
+            return [];
+        }
+
+        $submissions = HealthFormSubmission::query()
+            ->where(function ($query) use ($profile) {
+                $query->where('health_profile_id', $profile->id)
+                    ->orWhere('user_id', $profile->user_id);
+            })
+            ->whereIn('status', array_values(array_unique([
+                HealthFormSubmission::STATUS_REQUESTED,
+                HealthFormSubmission::STATUS_SUBMITTED,
+                HealthFormSubmission::STATUS_APPROVED,
+                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+                'Approved',
+            ])))
+            ->orderByRaw('submitted_at IS NULL ASC')
+            ->latest('submitted_at')
+            ->latest('requested_at')
+            ->latest('id')
+            ->get();
+
+        if ($submissions->isEmpty()) {
+            return [];
+        }
+
+        $versionNumbers = $submissions
+            ->sortBy(function (HealthFormSubmission $submission) {
+                return sprintf(
+                    '%020d-%020d',
+                    optional($submission->requested_at ?: $submission->submitted_at ?: $submission->created_at)->timestamp ?? 0,
+                    $submission->id
+                );
+            })
+            ->values()
+            ->mapWithKeys(fn (HealthFormSubmission $submission, int $index) => [
+                $submission->id => $index + 1,
+            ]);
+
+        $currentSubmission = $submissions->first(function (HealthFormSubmission $submission): bool {
+            return in_array(strtolower((string) $submission->status), [
+                HealthFormSubmission::STATUS_SUBMITTED,
+                HealthFormSubmission::STATUS_APPROVED,
+                HealthFormSubmission::STATUS_NEEDS_CORRECTION,
+            ], true);
+        });
+
+        $documentDefinitions = [
+            'student_photo' => ['label' => '2x2 Photo', 'type' => 'image'],
+            'health_declaration' => ['label' => 'Health Declaration', 'type' => 'file'],
+            'medical_certificate' => ['label' => 'Medical Certificate', 'type' => 'file'],
+            'medical_assessment_upload' => ['label' => 'Medical Assessment Copy', 'type' => 'file'],
+            'chest_xray_result' => ['label' => 'Chest X-Ray Result', 'type' => 'file'],
+            'pwd_id_proof' => ['label' => 'PWD ID Proof', 'type' => 'file'],
+        ];
+
+        return $submissions
+            ->map(function (HealthFormSubmission $submission) use ($request, $profile, $versionNumbers, $currentSubmission, $documentDefinitions): array {
+                $isCurrent = $currentSubmission && (int) $currentSubmission->id === (int) $submission->id;
+                $profileData = $submission->snapshotProfile();
+
+                if ($profileData === [] && $isCurrent) {
+                    $profileData = $profile->attributesToArray();
+                }
+
+                $documents = collect();
+
+                if (filled($submission->pdf_path)) {
+                    $documents->push([
+                        'key' => 'health_form',
+                        'label' => 'Health Information Form',
+                        'url' => route('admin.health_form_submissions.pdf', $submission),
+                        'type' => 'file',
+                    ]);
+                }
+
+                foreach ($documentDefinitions as $documentKey => $definition) {
+                    if (!filled($profileData[$documentKey] ?? null)) {
+                        continue;
+                    }
+
+                    $documents->push([
+                        'key' => $documentKey,
+                        'label' => $definition['label'],
+                        'url' => route('admin.health_form_submissions.document', [
+                            'submission' => $submission,
+                            'document' => $documentKey,
+                        ]),
+                        'type' => $definition['type'],
+                    ]);
+                }
+
+                $status = strtolower((string) $submission->status);
+                $statusLabel = ucwords(str_replace('_', ' ', $status));
+                $timestamp = $submission->submitted_at ?: $submission->requested_at ?: $submission->created_at;
+
+                return [
+                    'version' => (int) ($versionNumbers->get($submission->id) ?? 1),
+                    'label' => $submission->category ?: 'General Health Form',
+                    'status' => $statusLabel,
+                    'is_current' => $isCurrent,
+                    'submitted_at' => $timestamp,
+                    'documents' => $documents->values()->all(),
+                ];
+            })
+            ->sortByDesc('version')
+            ->values()
+            ->all();
     }
 
     private function healthProfileConditionSummary(?HealthProfile $profile): array
@@ -1545,8 +1669,14 @@ class WalkInController extends Controller
     $finalReviewApplicants = optional($request->user())->canAccessPermission('walkin.review_submission')
         ? $this->finalReviewApplicantQuery()->get()
         : collect();
+    $employeeDrafts = optional($request->user())->canAccessPermission('walkin.employee_lookup')
+        ? $this->employeeDraftQuery()
+            ->get()
+            ->filter(fn (EmployeeHealthProfile $profile) => is_array($profile->draft_data) && count($profile->draft_data) > 0)
+            ->each(fn (EmployeeHealthProfile $profile) => $profile->setAttribute('draft_record_type', $this->employeeDraftType($profile)))
+        : collect();
     
-    return view('admin.walkin', compact('walkins', 'mode', 'finalReviewApplicants'));
+    return view('admin.walkin', compact('walkins', 'mode', 'finalReviewApplicants', 'employeeDrafts'));
 }
 
     private function finalReviewApplicantQuery()
@@ -1606,6 +1736,244 @@ class WalkInController extends Controller
         ]);
     }
 
+    private function employeeDraftQuery()
+    {
+        return EmployeeHealthProfile::with('user')
+            ->whereNotNull('draft_data')
+            ->latest('updated_at')
+            ->take(50);
+    }
+
+    private function employeeDraftType(EmployeeHealthProfile $profile): string
+    {
+        $user = $profile->user;
+        $rawType = Str::lower(trim(implode(' ', array_filter([
+            $user?->user_type,
+            $user?->idp_role,
+            $user?->user_role,
+        ]))));
+
+        if (Str::contains($rawType, 'dependent')) {
+            return 'Dependent';
+        }
+        if (Str::contains($rawType, ['admin', 'nurse', 'clinic staff', 'clinic_staff'])) {
+            return 'Admin';
+        }
+        if (Str::contains($rawType, 'faculty')) {
+            return 'Faculty';
+        }
+        if (Str::contains($rawType, 'student')) {
+            return 'Student';
+        }
+
+        $studentNumber = Str::upper(trim((string) ($profile->employee_number ?: $user?->student_number)));
+        if ($studentNumber !== '' && preg_match('/^\d{4}-\d{5}-[A-Z]{2}-\d+$/', $studentNumber) === 1) {
+            return 'Student';
+        }
+
+        return 'Faculty';
+    }
+
+    private function employeeDraftPayload(EmployeeHealthProfile $profile, Request $request): array
+    {
+        $user = $profile->user;
+        $name = trim((string) ($profile->name ?: trim(implode(' ', array_filter([
+            $profile->first_name,
+            $profile->middle_name,
+            $profile->last_name,
+            $profile->suffix_name,
+        ])))));
+        if ($name === '') {
+            $name = trim((string) ($user?->name ?: trim(implode(' ', array_filter([
+                $user?->first_name,
+                $user?->middle_name,
+                $user?->last_name,
+            ])))));
+        }
+        if ($name === '') {
+            $name = 'Employee';
+        }
+
+        $employeeNumber = trim((string) (
+            $profile->employee_number
+            ?: $user?->employee_number
+            ?: $profile->id
+        ));
+        $email = trim((string) ($user?->email ?? ''));
+        $status = trim((string) ($profile->clearance_status ?: $profile->submission_status ?: 'Draft'));
+        $employeeDocumentRoute = $request->routeIs('assistant.*')
+            ? 'assistant.walkin.employeeDocument'
+            : 'walkin.employeeDocument';
+        $photoUrl = filled($profile->student_photo)
+            ? route($employeeDocumentRoute, ['employeeProfile' => $profile->id, 'document' => 'student_photo'])
+            : '';
+
+        return [
+            'id' => $profile->id,
+            'name' => $name,
+            'email' => $email,
+            'employee_number' => $employeeNumber,
+            'photo_url' => $photoUrl,
+            'record_type' => $this->employeeDraftType($profile),
+            'health_form_category' => trim((string) ($profile->health_form_category ?: 'Employee Health Form')),
+            'status' => $status,
+            'saved_at' => optional($profile->updated_at)->toIso8601String(),
+            'search' => Str::lower(trim($name . ' ' . $email . ' ' . $employeeNumber)),
+        ];
+    }
+
+    public function employeeDrafts(Request $request)
+    {
+        $drafts = $this->employeeDraftQuery()
+            ->get()
+            ->filter(fn (EmployeeHealthProfile $profile) => is_array($profile->draft_data) && count($profile->draft_data) > 0)
+            ->map(fn (EmployeeHealthProfile $profile) => $this->employeeDraftPayload($profile, $request))
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'drafts' => $drafts,
+            'total' => $drafts->count(),
+        ]);
+    }
+
+    private function consultationDraftQuery()
+    {
+        return ConsultationDraft::with(['patient', 'savedBy'])
+            ->latest('updated_at')
+            ->latest('id')
+            ->take(50);
+    }
+
+    private function consultationDraftPayload(ConsultationDraft $draft, Request $request): array
+    {
+        $patient = $draft->patient;
+        $name = trim((string) ($patient?->name ?: trim(implode(' ', array_filter([
+            $patient?->first_name,
+            $patient?->middle_name,
+            $patient?->last_name,
+        ])))));
+        $name = $name !== '' ? $name : 'Patient';
+        $dependentProfile = $patient?->dependentProfile;
+        $identifier = trim((string) (
+            $dependentProfile?->id_number
+            ?: $patient?->employee_number
+            ?: $patient?->student_number
+            ?: $patient?->reference_number
+            ?: $patient?->student_id
+            ?: $patient?->id
+        ));
+        $userType = Appointment::normalizeUserType($patient?->user_role ?? $patient?->user_type ?? 'Patient');
+        $routeName = $this->walkinRouteName($request, 'form');
+
+        return [
+            'id' => $draft->id,
+            'name' => $name,
+            'identifier' => $identifier,
+            'user_type' => $userType,
+            'consultation_source' => $draft->consultation_source,
+            'saved_at' => optional($draft->updated_at)->toIso8601String(),
+            'resume_url' => route($routeName, [
+                'student_id' => $identifier,
+                'source' => $draft->consultation_source,
+            ]),
+            'search' => Str::lower(trim($name . ' ' . $identifier . ' ' . $userType)),
+        ];
+    }
+
+    public function consultationDrafts(Request $request)
+    {
+        $drafts = $this->consultationDraftQuery()
+            ->get()
+            ->filter(fn (ConsultationDraft $draft) => $draft->patient !== null)
+            ->map(fn (ConsultationDraft $draft) => $this->consultationDraftPayload($draft, $request))
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'drafts' => $drafts,
+            'total' => $drafts->count(),
+        ]);
+    }
+
+    public function saveConsultationDraft(Request $request)
+    {
+        foreach (['item_id', 'issued_quantity'] as $medicineField) {
+            $value = $request->input($medicineField);
+            if ($value !== null && !is_array($value)) {
+                $request->merge([$medicineField => [$value]]);
+            }
+        }
+
+        $validated = $request->validate([
+            'student_number' => ['required', 'string', 'max:120'],
+            'service' => ['nullable', 'string', 'max:120'],
+            'remarks' => ['nullable', 'string', 'max:5000'],
+            'condition_id' => ['nullable', 'integer', 'exists:medical_conditions,id'],
+            'dob' => ['nullable', 'date'],
+            'height' => ['nullable', 'numeric', 'min:0', 'max:1100'],
+            'weight' => ['nullable', 'numeric', 'min:0', 'max:1100'],
+            'temp' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'bp' => ['nullable', 'string', 'max:30'],
+            'pulse_rate' => ['nullable', 'integer', 'min:0', 'max:500'],
+            'respiratory_rate' => ['nullable', 'integer', 'min:0', 'max:200'],
+            'covid_status' => ['nullable', 'in:Yes,No'],
+            'covid_positive_date' => ['nullable', 'date'],
+            'reason_for_visit' => ['nullable', 'string', 'max:255'],
+            'certificate_type' => ['nullable', 'string', 'max:160'],
+            'referral_type' => ['nullable', 'in:none,hospital_without_nurse,hospital_with_nurse,general,others'],
+            'referral_details' => ['nullable', 'string', 'max:500'],
+            'item_id' => ['nullable', 'array', 'max:5'],
+            'item_id.*' => ['nullable', 'integer', 'exists:items,id'],
+            'issued_quantity' => ['nullable', 'array', 'max:5'],
+            'issued_quantity.*' => ['nullable', 'numeric', 'min:0'],
+            'consultation_started_at' => ['nullable', 'date_format:H:i:s'],
+        ]);
+
+        $student = $this->findUserByIdentifier((string) $validated['student_number']);
+        if (!$student) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Patient record not found.',
+            ], 404);
+        }
+
+        $source = $this->normalizeConsultationSource($request->input('user_type', 'walkin'));
+        $startedAt = trim((string) ($validated['consultation_started_at'] ?? ''));
+        $appointmentNumberSessionKey = $this->consultationAppointmentNumberSessionKey(
+            auth()->id(),
+            $student->id,
+            $source
+        );
+        $appointmentNumber = trim((string) $request->session()->get($appointmentNumberSessionKey, ''));
+        $payload = $request->except([
+            '_token',
+            'student_number',
+            'user_role',
+            'user_type',
+        ]);
+
+        $draft = ConsultationDraft::updateOrCreate(
+            [
+                'patient_user_id' => $student->id,
+                'consultation_source' => $source,
+            ],
+            [
+                'saved_by_user_id' => auth()->id(),
+                'appointment_number' => $appointmentNumber !== '' ? $appointmentNumber : null,
+                'started_at' => $startedAt !== '' ? $startedAt : null,
+                'payload' => $payload,
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Consultation draft saved.',
+            'draft_id' => $draft->id,
+            'saved_at' => optional($draft->updated_at)->toIso8601String(),
+        ]);
+    }
+
     public function markFinalReviewTimeIn(Request $request)
     {
         $validated = $request->validate([
@@ -1653,7 +2021,19 @@ class WalkInController extends Controller
         $student->loadMissing('healthProfile', 'dependentProfile');
         $this->ensureWalkinHealthProfile($student);
         $user_source = $this->normalizeConsultationSource($request->query('source', 'walkin'));
+        $consultationDraft = ConsultationDraft::query()
+            ->where('patient_user_id', $student->id)
+            ->where('consultation_source', $user_source)
+            ->first();
+        $consultationDraftData = is_array($consultationDraft?->payload)
+            ? $consultationDraft->payload
+            : [];
         $consultationSessionKey = $this->consultationStartSessionKey(
+            auth()->id(),
+            $student->id,
+            $user_source
+        );
+        $appointmentNumberSessionKey = $this->consultationAppointmentNumberSessionKey(
             auth()->id(),
             $student->id,
             $user_source
@@ -1692,6 +2072,24 @@ class WalkInController extends Controller
             }
         }
 
+        $appointmentNumber = trim((string) optional($latestAppointment)->apt_id);
+        if ($appointmentNumber === '' && ($user_source !== 'online' || $latestAppointment)) {
+            $appointmentNumber = trim((string) $request->session()->get($appointmentNumberSessionKey, ''));
+
+            if ($appointmentNumber === '') {
+                $appointmentNumber = Appointment::generateAppointmentNumber(
+                    now(),
+                    $user_source === 'online' ? 'online' : 'walkin'
+                );
+                $request->session()->put($appointmentNumberSessionKey, $appointmentNumber);
+            }
+        }
+
+        if ($appointmentNumber === '' && $consultationDraft?->appointment_number) {
+            $appointmentNumber = trim((string) $consultationDraft->appointment_number);
+            $request->session()->put($appointmentNumberSessionKey, $appointmentNumber);
+        }
+
         $items = Item::query()
             ->availableMedicinesFefo()
             ->get();
@@ -1724,6 +2122,7 @@ class WalkInController extends Controller
             ->orderBy('name')
             ->get();
         $studentDocuments = $this->healthProfileDocuments($request, $student->healthProfile);
+        $studentDocumentVersions = $this->healthProfileDocumentVersions($request, $student->healthProfile);
         $studentTreatments = Consultation::query()
             ->with(['medicalCondition.category', 'medicineItem', 'medicines.item', 'attendingStaff'])
             ->where('user_id', $student->id)
@@ -1757,13 +2156,16 @@ class WalkInController extends Controller
             'conditions',
             'clearanceTypes',
             'latestAppointment',
+            'appointmentNumber',
             'user_source',
             'consultationDob',
             'consultationHeight',
             'consultationWeight',
             'studentDocuments',
+            'studentDocumentVersions',
             'studentTreatments',
-            'consultationStartedAt'
+            'consultationStartedAt',
+            'consultationDraftData'
         ));
     }
 
@@ -2437,7 +2839,13 @@ PROMPT;
             $student->id,
             $requestedSource
         );
+        $appointmentNumberSessionKey = $this->consultationAppointmentNumberSessionKey(
+            auth()->id(),
+            $student->id,
+            $requestedSource
+        );
         $consultationStartedAt = (string) $request->session()->get($consultationSessionKey, '');
+        $appointmentNumber = trim((string) $request->session()->get($appointmentNumberSessionKey, ''));
 
         if (!preg_match('/^\d{2}:\d{2}:\d{2}$/', $consultationStartedAt)) {
             $submittedStartedAt = (string) $request->input('consultation_started_at', '');
@@ -2541,7 +2949,7 @@ PROMPT;
             return redirect()->back()->withInput()->with('error', 'You can issue up to five medicines per consultation.');
         }
 
-        $completedAppointment = DB::transaction(function () use ($request, $student, $medicineLines, $requestedSource, $consultationStartedAt) {
+        $completedAppointment = DB::transaction(function () use ($request, $student, $medicineLines, $requestedSource, $consultationStartedAt, $appointmentNumber) {
             $isOnlineSource = $requestedSource === 'online';
             $finalSource = 'walkin';
             $patientType = Appointment::normalizeUserType($student->user_role ?? $student->user_type);
@@ -2563,7 +2971,7 @@ PROMPT;
 
                 if ($existingAppt) {
                     if (empty($existingAppt->apt_id)) {
-                        $existingAppt->apt_id = Appointment::generateAppointmentNumber(
+                        $existingAppt->apt_id = $appointmentNumber ?: Appointment::generateAppointmentNumber(
                             $existingAppt->created_at ?: now(),
                             'online'
                         );
@@ -2578,7 +2986,11 @@ PROMPT;
 
             if ($finalSource !== 'online') {
                 $appointment = new Appointment();
-                $appointment->apt_id     = Appointment::generateAppointmentNumber(now(), 'walkin');
+                $walkinAppointmentNumber = $appointmentNumber;
+                if ($walkinAppointmentNumber === '' || Appointment::where('apt_id', $walkinAppointmentNumber)->exists()) {
+                    $walkinAppointmentNumber = Appointment::generateAppointmentNumber(now(), 'walkin');
+                }
+                $appointment->apt_id     = $walkinAppointmentNumber;
                 $appointment->user_id    = $student->id;
                 $appointment->student_id = $student->student_id;
                 $appointment->student_number = $student->student_number ?? null;
@@ -2710,6 +3122,11 @@ PROMPT;
         }
 
         $request->session()->forget($consultationSessionKey);
+        $request->session()->forget($appointmentNumberSessionKey);
+        ConsultationDraft::query()
+            ->where('patient_user_id', $student->id)
+            ->where('consultation_source', $requestedSource)
+            ->delete();
 
         // Redirect logic
         if ($requestedSource === 'online') {
@@ -3249,6 +3666,8 @@ PROMPT;
     public function approveApplicant(Request $request, PuptasWebhookService $webhookService)
     {
         try {
+            $lookupScopeInput = strtolower(trim((string) $request->input('lookup_scope', 'default')));
+            $isLocalEmployeeRequest = in_array($lookupScopeInput, ['employee_local', 'clinic_local'], true);
             $validated = $request->validate([
                 'reference_number' => ['required', 'string', 'max:120'],
                 'lookup_scope' => ['nullable', 'string', 'max:40'],
@@ -3265,18 +3684,28 @@ PROMPT;
                 'medical_condition' => ['required_if:has_medical_condition,true', 'nullable', 'string', 'max:1000'],
                 'condition_remarks' => ['nullable', 'string', 'max:2000'],
                 'med_assessment_remarks' => ['nullable', 'string', 'max:2000'],
-                'height' => ['required', 'string', 'max:20'],
-                'weight' => ['required', 'numeric', 'min:1', 'max:1100'],
-                'blood_pressure' => ['required', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
-                'pulse_rate' => ['required', 'integer', 'min:1', 'max:300'],
-                'respiratory_rate' => ['required', 'integer', 'min:1', 'max:120'],
-                'temperature' => ['required', 'numeric', 'min:30', 'max:45'],
-                'covid_positive' => ['required', 'string', 'in:Yes,No'],
-                'covid_positive_date' => ['required_if:covid_positive,Yes', 'nullable', 'date'],
+                'height' => [$isLocalEmployeeRequest ? 'nullable' : 'required', 'string', 'max:20'],
+                'weight' => [$isLocalEmployeeRequest ? 'nullable' : 'required', 'numeric', 'min:1', 'max:1100'],
+                'blood_pressure' => [$isLocalEmployeeRequest ? 'nullable' : 'required', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
+                'pulse_rate' => [$isLocalEmployeeRequest ? 'nullable' : 'required', 'integer', 'min:1', 'max:300'],
+                'respiratory_rate' => [$isLocalEmployeeRequest ? 'nullable' : 'required', 'integer', 'min:1', 'max:120'],
+                'temperature' => [$isLocalEmployeeRequest ? 'nullable' : 'required', 'numeric', 'min:30', 'max:45'],
+                'covid_positive' => [$isLocalEmployeeRequest ? 'nullable' : 'required', 'string', 'in:Yes,No'],
+                'covid_positive_date' => [$isLocalEmployeeRequest ? 'nullable' : 'required_if:covid_positive,Yes', 'nullable', 'date'],
             ]);
+            if ($isLocalEmployeeRequest) {
+                $request->validate([
+                    'employee_exam_height' => ['required', 'string', 'max:20'],
+                    'employee_exam_weight' => ['required', 'numeric', 'min:1', 'max:1100'],
+                    'employee_exam_bp' => ['required', 'string', 'max:20', 'regex:/^\d{2,3}\s*\/\s*\d{2,3}$/'],
+                    'employee_exam_hr' => ['required', 'integer', 'min:1', 'max:300'],
+                    'employee_exam_rr' => ['required', 'integer', 'min:1', 'max:120'],
+                    'employee_exam_temperature' => ['required', 'numeric', 'min:30', 'max:45'],
+                ]);
+            }
             $referenceNumber = trim((string) $validated['reference_number']);
             $lookupScope = strtolower(trim((string) ($validated['lookup_scope'] ?? 'default')));
-            $forceLocalEmployeeApproval = in_array($lookupScope, ['employee_local', 'clinic_local'], true);
+            $forceLocalEmployeeApproval = $isLocalEmployeeRequest;
             $findingsStatus = (string) $validated['findings_status'];
             $clearanceDecision = (string) $validated['clearance_decision'];
             $hasPendingFinding = $clearanceDecision === 'pending';
@@ -3300,20 +3729,20 @@ PROMPT;
                 : '';
             $conditionRemarks = trim((string) $request->input('condition_remarks', ''));
             $medAssessmentRemarks = trim((string) $request->input('med_assessment_remarks', ''));
-            $height = $this->normalizeHeightToDecimalFeet($validated['height']);
-            if ($height === null) {
+            $height = $this->normalizeHeightToDecimalFeet($validated['height'] ?? null);
+            if (!$isLocalEmployeeRequest && $height === null) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'height' => ['Height must use feet and inches, e.g., 5\'6". Valid range: 1\'0"-10\'0".'],
                 ]);
             }
-            $weight = (string) $validated['weight'];
-            $bloodPressure = preg_replace('/\s+/', '', (string) $validated['blood_pressure']);
-            $pulseRate = (int) $validated['pulse_rate'];
-            $respiratoryRate = (int) $validated['respiratory_rate'];
-            $temperature = (float) $validated['temperature'];
-            $covidPositive = (string) $validated['covid_positive'];
+            $weight = (string) ($validated['weight'] ?? '');
+            $bloodPressure = preg_replace('/\s+/', '', (string) ($validated['blood_pressure'] ?? ''));
+            $pulseRate = (int) ($validated['pulse_rate'] ?? 0);
+            $respiratoryRate = (int) ($validated['respiratory_rate'] ?? 0);
+            $temperature = (float) ($validated['temperature'] ?? 0);
+            $covidPositive = (string) ($validated['covid_positive'] ?? '');
             $covidPositiveDate = $covidPositive === 'Yes'
-                ? $validated['covid_positive_date']
+                ? ($validated['covid_positive_date'] ?? null)
                 : null;
 
             $pendingReasons = [];
@@ -3352,6 +3781,27 @@ PROMPT;
                 ], 422);
             }
 
+            $clearanceStatus = $hasPendingFinding
+                ? ($hasIncompleteRequirements ? 'Pending Resubmission' : 'Pending/Conditional')
+                : 'Fully Cleared';
+
+            if ($forceLocalEmployeeApproval) {
+                return $this->approveEmployeeHealthProfile(
+                    $request,
+                    $validated,
+                    $referenceNumber,
+                    $clearanceStatus,
+                    $hasPendingFinding,
+                    $hasIncompleteRequirements,
+                    $resubmissionRequiredDocuments,
+                    $pendingReasons,
+                    $findingsStatus,
+                    $medicalCondition,
+                    $conditionRemarks,
+                    $medAssessmentRemarks
+                );
+            }
+
             // Fetch applicant details to get student ID
             $applicantData = $forceLocalEmployeeApproval
                 ? null
@@ -3388,27 +3838,6 @@ PROMPT;
                 $idpStudentId = trim((string) ($student->student_id ?? $localOnlyProfile?->student_id ?? ''));
                 $studentId = $idpStudentId !== '' ? $idpStudentId : $referenceNumber;
             }
-            $clearanceStatus = $hasPendingFinding
-                ? ($hasIncompleteRequirements ? 'Pending Resubmission' : 'Pending/Conditional')
-                : 'Fully Cleared';
-
-            if ($forceLocalEmployeeApproval) {
-                return $this->approveEmployeeHealthProfile(
-                    $request,
-                    $validated,
-                    $referenceNumber,
-                    $clearanceStatus,
-                    $hasPendingFinding,
-                    $hasIncompleteRequirements,
-                    $resubmissionRequiredDocuments,
-                    $pendingReasons,
-                    $findingsStatus,
-                    $medicalCondition,
-                    $conditionRemarks,
-                    $medAssessmentRemarks
-                );
-            }
-
             // Save the local decision first; PUPTAS sync happens after the DB transaction.
             $webhookResult = $isLocalOnlyApproval
                 ? [
@@ -3691,7 +4120,7 @@ PROMPT;
 
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred during approval: ' . $e->getMessage()
+                'message' => 'An error occurred during approval. Please try again.'
             ], 500);
         }
     }

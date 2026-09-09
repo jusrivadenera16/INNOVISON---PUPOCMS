@@ -326,10 +326,15 @@
             flex: 0 0 auto;
             padding: 0;
             box-shadow:
-                0 0 0 3px rgba(250, 204, 21, 0.12),
-                0 0 18px rgba(250, 204, 21, 0.26),
-                0 10px 22px rgba(95, 0, 18, 0.28);
+                0 0 0 1px rgba(250, 204, 21, 0.05),
+                0 0 10px rgba(250, 204, 21, 0.12),
+                0 8px 16px rgba(95, 0, 18, 0.22);
             transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .student-quick-action-btn {
+            border-width: 1px;
+            border-color: rgba(250, 204, 21, 0.46);
         }
 
         .student-quick-actions-toggle,
@@ -338,7 +343,7 @@
         }
 
         .student-quick-actions-toggle {
-            animation: quickActionsGlow 2.2s ease-in-out infinite;
+            animation: studentQuickActionsGlow 2.2s ease-in-out infinite;
             position: relative;
             margin-left: 0;
         }
@@ -349,19 +354,19 @@
             border-color: #fde047;
             transform: translateY(-2px) scale(1.02);
             box-shadow:
-                0 0 0 3px rgba(250, 204, 21, 0.18),
-                0 0 22px rgba(250, 204, 21, 0.34),
-                0 14px 28px rgba(95, 0, 18, 0.36);
+                0 0 0 2px rgba(250, 204, 21, 0.14),
+                0 0 14px rgba(250, 204, 21, 0.28),
+                0 10px 20px rgba(95, 0, 18, 0.3);
         }
 
         .student-quick-action-item:hover .student-quick-action-btn,
         .student-quick-action-item:hover .student-quick-action-logo {
             box-shadow:
-                0 0 0 3px rgba(250, 204, 21, 0.18),
-                0 0 10px rgba(255, 0, 102, 0.34),
-                0 0 18px rgba(0, 200, 255, 0.32),
-                0 0 26px rgba(255, 221, 0, 0.3),
-                0 14px 28px rgba(95, 0, 18, 0.36) !important;
+                0 0 0 2px rgba(250, 204, 21, 0.14),
+                0 0 8px rgba(255, 0, 102, 0.24),
+                0 0 13px rgba(0, 200, 255, 0.2),
+                0 0 18px rgba(255, 221, 0, 0.22),
+                0 10px 20px rgba(95, 0, 18, 0.3) !important;
         }
 
         .student-quick-action-item:hover .student-quick-action-btn svg,
@@ -902,7 +907,8 @@
             color: #ffffff !important;
             box-shadow:
                 0 0 0 3px rgba(250, 204, 21, 0.12),
-                0 0 18px rgba(250, 204, 21, 0.32),
+                0 0 20px rgba(250, 204, 21, 0.24),
+                0 0 36px rgba(250, 204, 21, 0.08),
                 0 12px 26px rgba(95, 0, 18, 0.34);
         }
 
@@ -940,7 +946,8 @@
             color: #ffffff !important;
             box-shadow:
                 0 0 0 3px rgba(250, 204, 21, 0.12),
-                0 0 18px rgba(250, 204, 21, 0.32),
+                0 0 20px rgba(250, 204, 21, 0.24),
+                0 0 36px rgba(250, 204, 21, 0.08),
                 0 12px 26px rgba(95, 0, 18, 0.34);
         }
 
@@ -962,6 +969,16 @@
 
         html[data-theme="dark"] .student-quick-actions-panel::before {
             border-top-color: #facc15;
+        }
+
+        html[data-theme="light"] .student-quick-action-btn,
+        html[data-theme="dark"] .student-quick-action-btn {
+            border-width: 1px;
+            border-color: rgba(250, 204, 21, 0.46);
+            box-shadow:
+                0 0 0 1px rgba(250, 204, 21, 0.05),
+                0 0 10px rgba(250, 204, 21, 0.12),
+                0 8px 16px rgba(95, 0, 18, 0.22);
         }
 
         html[data-theme="dark"] .student-quick-action-tooltip {
@@ -1209,6 +1226,276 @@
         html[data-theme="dark"] .student-toast-message,
         html[data-theme="dark"] .student-toast-close {
             color: #cbd5e1;
+        }
+
+        .student-quick-actions-toggle {
+            width: 72px;
+            height: 72px;
+            border-radius: 999px;
+            position: relative;
+            overflow: visible;
+            isolation: isolate;
+            background: linear-gradient(145deg, #9b111e, #6e1220 55%, #4f0b15);
+            border: 2px solid #facc15;
+            box-shadow:
+                0 0 0 3px rgba(250, 204, 21, 0.12),
+                0 0 20px rgba(250, 204, 21, 0.24),
+                0 0 36px rgba(250, 204, 21, 0.08),
+                0 12px 26px rgba(95, 0, 18, 0.34);
+        }
+
+        .student-quick-actions-toggle::before {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            padding: 2px;
+            border-radius: 999px;
+            background: conic-gradient(
+                from 18deg,
+                transparent 0deg 205deg,
+                rgba(255, 164, 35, 0.08) 220deg,
+                rgba(250, 204, 21, 0.42) 240deg,
+                #fff7b2 256deg,
+                #facc15 270deg,
+                rgba(255, 164, 35, 0.44) 291deg,
+                rgba(250, 204, 21, 0.08) 316deg,
+                transparent 334deg 360deg
+            );
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            filter:
+                drop-shadow(0 0 8px rgba(250, 204, 21, 0.78))
+                drop-shadow(0 0 18px rgba(250, 140, 0, 0.3));
+            pointer-events: none;
+            z-index: 0;
+            animation: studentQuickToolsBorderSpin 3.6s linear infinite;
+        }
+
+        .student-quick-actions-toggle::after {
+            content: "";
+            position: absolute;
+            inset: -12px;
+            border-radius: 999px;
+            background: conic-gradient(
+                from 220deg,
+                transparent 0deg 184deg,
+                rgba(255, 142, 0, .04) 198deg,
+                rgba(255, 159, 24, .18) 218deg,
+                rgba(255, 193, 54, .42) 237deg,
+                rgba(255, 248, 196, .88) 252deg,
+                rgba(255, 193, 54, .62) 272deg,
+                rgba(255, 164, 35, .2) 302deg,
+                transparent 324deg 360deg
+            );
+            -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 21px), #000 calc(100% - 17px), #000 calc(100% - 8px), transparent calc(100% - 2px));
+            mask: radial-gradient(farthest-side, transparent calc(100% - 21px), #000 calc(100% - 17px), #000 calc(100% - 8px), transparent calc(100% - 2px));
+            filter:
+                blur(2.2px)
+                drop-shadow(0 0 6px rgba(250, 204, 21, .72))
+                drop-shadow(0 0 14px rgba(250, 140, 0, .2));
+            opacity: .86;
+            pointer-events: none;
+            z-index: 0;
+            animation: studentQuickToolsTrailSpin 5.4s linear infinite;
+        }
+
+        .student-quick-actions-toggle > .student-quick-actions-toggle-icon,
+        .student-quick-actions-toggle > .student-quick-actions-badge {
+            z-index: 1;
+        }
+
+        .student-quick-actions-toggle-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 34px;
+            height: 34px;
+            margin: -17px 0 0 -17px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 8px;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .student-quick-actions-toggle-icon svg {
+            width: 28px;
+            height: 28px;
+            color: #ffffff;
+            stroke: currentColor;
+            transition: none;
+            animation: studentQuickToolsIconColor 3.8s ease-in-out infinite;
+        }
+
+        .student-quick-actions-grid-icon {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+
+        .student-quick-actions-close-icon {
+            opacity: 0;
+            transform: rotate(-90deg) scale(0.68);
+        }
+
+        .student-quick-actions-wrap.is-open .student-quick-actions-grid-icon {
+            opacity: 0;
+            transform: rotate(90deg) scale(0.68);
+        }
+
+        .student-quick-actions-wrap.is-open .student-quick-actions-close-icon {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+
+        .student-quick-actions-wrap.is-open .student-quick-actions-toggle-icon svg {
+            transform: none;
+        }
+
+        .student-quick-action-btn {
+            position: relative;
+            isolation: isolate;
+            overflow: visible;
+        }
+
+        .student-quick-action-btn::before {
+            content: "";
+            position: absolute;
+            inset: -3px;
+            padding: 2px;
+            border-radius: 999px;
+            background: conic-gradient(
+                from 18deg,
+                transparent 0deg 205deg,
+                rgba(255, 164, 35, 0.08) 220deg,
+                rgba(250, 204, 21, 0.42) 240deg,
+                #fff7b2 256deg,
+                #facc15 270deg,
+                rgba(255, 164, 35, 0.44) 291deg,
+                rgba(250, 204, 21, 0.08) 316deg,
+                transparent 334deg 360deg
+            );
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.58));
+            opacity: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .student-quick-action-btn > svg {
+            position: relative;
+            z-index: 1;
+        }
+
+        .student-quick-action-item:hover .student-quick-action-btn,
+        .student-quick-action-item:focus-within .student-quick-action-btn {
+            color: #facc15 !important;
+            border-color: #facc15 !important;
+            box-shadow:
+                0 0 0 2px rgba(250, 204, 21, 0.14),
+                0 0 13px rgba(250, 204, 21, 0.32),
+                0 10px 20px rgba(95, 0, 18, 0.3) !important;
+        }
+
+        html[data-theme="light"] .student-quick-action-item:hover .student-quick-action-btn,
+        html[data-theme="light"] .student-quick-action-item:focus-within .student-quick-action-btn,
+        html[data-theme="dark"] .student-quick-action-item:hover .student-quick-action-btn,
+        html[data-theme="dark"] .student-quick-action-item:focus-within .student-quick-action-btn {
+            color: #facc15 !important;
+            border-color: #facc15 !important;
+            box-shadow:
+                0 0 0 2px rgba(250, 204, 21, 0.14),
+                0 0 13px rgba(250, 204, 21, 0.32),
+                0 10px 20px rgba(95, 0, 18, 0.3) !important;
+        }
+
+        .student-quick-action-item:hover .student-quick-action-btn::before,
+        .student-quick-action-item:focus-within .student-quick-action-btn::before {
+            opacity: 1;
+            animation: studentQuickToolsBorderSpin 2.8s linear infinite;
+        }
+
+        .student-quick-action-item:hover .student-quick-action-btn svg,
+        .student-quick-action-item:focus-within .student-quick-action-btn svg {
+            color: #facc15 !important;
+            stroke: #facc15 !important;
+            filter: drop-shadow(0 0 5px rgba(250, 204, 21, 0.56)) !important;
+            animation: none !important;
+        }
+
+        .student-quick-action-item.is-tooltip-visible .student-quick-action-tooltip {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateY(-50%) translateX(0) !important;
+        }
+
+        .student-quick-action-item.is-tooltip-hidden .student-quick-action-tooltip,
+        .student-quick-action-item.is-tooltip-hidden:hover .student-quick-action-tooltip,
+        .student-quick-action-item.is-tooltip-hidden:focus-within .student-quick-action-tooltip {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transform: translateY(-50%) translateX(6px) !important;
+        }
+
+        @keyframes studentQuickActionsGlow {
+            0%, 100% {
+                box-shadow:
+                    0 0 0 3px rgba(250, 204, 21, 0.12),
+                    0 0 20px rgba(250, 204, 21, 0.24),
+                    0 0 36px rgba(250, 204, 21, 0.08),
+                    0 12px 26px rgba(95, 0, 18, 0.34);
+            }
+            50% {
+                box-shadow:
+                    0 0 0 4px rgba(250, 204, 21, 0.16),
+                    0 0 26px rgba(250, 204, 21, 0.34),
+                    0 0 44px rgba(250, 204, 21, 0.12),
+                    0 14px 30px rgba(95, 0, 18, 0.4);
+            }
+        }
+
+        @keyframes studentQuickToolsBorderSpin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes studentQuickToolsTrailSpin {
+            from {
+                transform: rotate(-42deg) scale(.98);
+                opacity: .34;
+            }
+            28% {
+                opacity: .72;
+            }
+            58% {
+                opacity: .96;
+            }
+            78% {
+                opacity: .68;
+            }
+            to {
+                transform: rotate(318deg) scale(1.04);
+                opacity: .34;
+            }
+        }
+
+        @keyframes studentQuickToolsIconColor {
+            0%, 26% {
+                color: #ffffff;
+            }
+            34%, 64% {
+                color: #facc15;
+            }
+            72%, 100% {
+                color: #ffffff;
+            }
         }
 
         @media (max-width: 768px) {
@@ -2807,9 +3094,12 @@
             aria-label="Open quick actions"
             title="Quick actions"
         >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5.25v13.5M5.25 12h13.5" />
-            </svg>
+            <span class="student-quick-actions-toggle-icon student-quick-actions-grid-icon" aria-hidden="true">
+                <x-outline-icon name="squares-2x2" />
+            </span>
+            <span class="student-quick-actions-toggle-icon student-quick-actions-close-icon" aria-hidden="true">
+                <x-outline-icon name="x-mark" />
+            </span>
             @if($notificationCount > 0)
                 <span class="student-quick-actions-badge">{{ $notificationCount }}</span>
             @endif
@@ -2989,6 +3279,50 @@
                     button.querySelectorAll('svg path[fill="none"]').forEach((path) => {
                         path.style.setProperty('stroke', 'none', 'important');
                     });
+                });
+            }
+
+            function initStudentQuickActionTooltips() {
+                document.querySelectorAll('.student-quick-actions-fab-wrap .student-quick-action-item').forEach((item) => {
+                    if (item.dataset.quickTooltipBound === '1') {
+                        return;
+                    }
+
+                    item.dataset.quickTooltipBound = '1';
+                    let tooltipTimer = null;
+
+                    const clearTooltipTimer = () => {
+                        if (tooltipTimer !== null) {
+                            window.clearTimeout(tooltipTimer);
+                            tooltipTimer = null;
+                        }
+                    };
+
+                    const showTooltip = () => {
+                        clearTooltipTimer();
+                        item.classList.remove('is-tooltip-hidden');
+                        item.classList.add('is-tooltip-visible');
+                        tooltipTimer = window.setTimeout(() => {
+                            item.classList.remove('is-tooltip-visible');
+                            item.classList.add('is-tooltip-hidden');
+                            tooltipTimer = null;
+                        }, 1000);
+                    };
+
+                    const resetTooltip = () => {
+                        clearTooltipTimer();
+                        item.classList.remove('is-tooltip-visible');
+                        if (item.contains(document.activeElement)) {
+                            item.classList.add('is-tooltip-hidden');
+                        } else {
+                            item.classList.remove('is-tooltip-hidden');
+                        }
+                    };
+
+                    item.addEventListener('mouseenter', showTooltip);
+                    item.addEventListener('mouseleave', resetTooltip);
+                    item.addEventListener('focusin', showTooltip);
+                    item.addEventListener('focusout', resetTooltip);
                 });
             }
 
@@ -3392,6 +3726,7 @@
                 });
             }
 
+            initStudentQuickActionTooltips();
             initAccessibilityLaunch();
 
             if (themeToggleBtn) {

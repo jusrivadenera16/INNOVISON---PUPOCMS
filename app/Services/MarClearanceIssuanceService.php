@@ -749,7 +749,7 @@ class MarClearanceIssuanceService
         $mappings = $this->activeSourceMappingsForWorkflow($sourceWorkflow, $profile->verified_at ?: now());
         $category = $this->normalizeSourceCategory($profile->health_form_category);
 
-        return $this->selectConfiguredTarget($mappings, function (MarClearanceSourceMapping $mapping) use ($category): int {
+        return $this->selectConfiguredTarget($mappings, function (MarClearanceSourceMapping $mapping) use ($category, $profile): int {
             $sourceKey = trim((string) $mapping->source_key);
 
             if ($sourceKey === 'health_form_category') {

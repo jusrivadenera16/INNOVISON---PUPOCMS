@@ -392,6 +392,14 @@
         justify-content: space-between;
         gap: 20px;
     }
+    .form-b-heading-actions {
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-end;
+        gap: 10px;
+        min-width: 0;
+        flex: 0 0 auto;
+    }
     .form-b-title-copy {
         min-width: 0;
     }
@@ -417,6 +425,9 @@
     .logbook-search {
         flex: 0 1 330px;
         width: min(100%, 330px);
+    }
+    .form-b-heading-actions .logbook-search {
+        flex: 0 1 330px;
     }
     .logbook-search-wrap {
         position: relative;
@@ -620,6 +631,14 @@
             width: 100%;
             flex-basis: auto;
         }
+        .form-b-heading-actions {
+            width: 100%;
+            justify-content: stretch;
+        }
+        .form-b-heading-actions .logbook-search {
+            width: auto;
+            flex: 1 1 auto;
+        }
     }
     @media (max-width: 620px) {
         .treatment-record-shell {
@@ -640,6 +659,14 @@
         .treatment-field,
         .treatment-filter-button {
             width: 100%;
+        }
+        .form-b-heading-actions {
+            align-items: stretch;
+            flex-direction: column;
+        }
+        .form-b-heading-actions .logbook-search {
+            width: 100%;
+            flex-basis: auto;
         }
         .treatment-record-title {
             font-size: 25px;
@@ -669,10 +696,12 @@
             <p class="treatment-record-subtitle">Official digital Form B logbook for clinic consultations, treatment provided, medicines dispensed, and attending personnel.</p>
         </div>
         <div class="treatment-record-actions">
-            <button type="button" class="treatment-filter-button" id="openTreatmentFilter">
-                <x-outline-icon name="calendar-days" />
-                Filter
-            </button>
+            @if(!request()->boolean('embed'))
+                <button type="button" class="treatment-filter-button" id="openTreatmentFilter" aria-controls="treatmentFilterModal">
+                    <x-outline-icon name="calendar" />
+                    Filter
+                </button>
+            @endif
             <a href="{{ $reportsHomeUrl }}" class="treatment-record-back">
                 <x-outline-icon name="arrow-long-right" />
                 Back
@@ -683,17 +712,24 @@
     <section class="form-b-panel">
         <div class="form-b-heading">
             <div>
-                <p class="form-b-kicker">PUP Taguig Medical Clinic · Form B</p>
                 <div class="form-b-title-row">
                     <div class="form-b-title-copy">
                         <h2 class="form-b-title">Digital Treatment Logbook</h2>
                         <p class="form-b-month">{{ $selectedMonthLabel }}</p>
                     </div>
-                    <div class="logbook-search">
-                        <label for="treatmentRecordSearch">Search Patient</label>
-                        <div class="logbook-search-wrap">
-                            <x-outline-icon name="magnifying-glass" />
-                            <input id="treatmentRecordSearch" class="treatment-control" type="search" placeholder="Name or student number" autocomplete="off">
+                    <div class="form-b-heading-actions">
+                        @if(request()->boolean('embed'))
+                            <button type="button" class="treatment-filter-button treatment-filter-button--compact" id="openTreatmentFilter" aria-controls="treatmentFilterModal">
+                                <x-outline-icon name="calendar" />
+                                Filter
+                            </button>
+                        @endif
+                        <div class="logbook-search">
+                            <label for="treatmentRecordSearch">Search Patient</label>
+                            <div class="logbook-search-wrap">
+                                <x-outline-icon name="magnifying-glass" />
+                                <input id="treatmentRecordSearch" class="treatment-control" type="search" placeholder="Name or student number" autocomplete="off">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -817,12 +853,15 @@
                 <x-outline-icon name="calendar-days" />
             </span>
             <div class="treatment-filter-head-copy">
-                <h2 id="treatmentFilterTitle">Treatment Record Date Range</h2>
+                <h2 id="treatmentFilterTitle">Date Range</h2>
                 <p>Select the starting and ending dates to display in the Form B logbook.</p>
             </div>
             <button type="button" class="treatment-filter-close" id="closeTreatmentFilter" aria-label="Close date filter">&times;</button>
         </header>
         <form method="GET" class="treatment-filter-form">
+            @if(request()->boolean('embed'))
+                <input type="hidden" name="embed" value="1">
+            @endif
             <div class="treatment-filter-grid">
                 <div class="treatment-filter-card">
                     <label for="treatmentDateFrom">From</label>
