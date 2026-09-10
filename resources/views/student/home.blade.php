@@ -4657,7 +4657,6 @@
           const dots = Array.from(announcementShell.querySelectorAll('[data-announcement-dot]'));
           const positionClasses = ['is-current', 'is-next', 'is-prev', 'is-next-far'];
           let activeAnnouncement = slides.findIndex((slide) => slide.classList.contains('is-current'));
-          let announcementTimer = null;
 
           if (activeAnnouncement < 0) activeAnnouncement = 0;
 
@@ -4686,40 +4685,21 @@
             });
           };
 
-          const restartAnnouncementTimer = function () {
-            if (announcementTimer) window.clearInterval(announcementTimer);
-            if (slides.length >= 2) {
-              announcementTimer = window.setInterval(function () {
-                showAnnouncement(activeAnnouncement + 1);
-              }, 5000);
-            }
-          };
-
           prevButton?.addEventListener('click', function () {
             showAnnouncement(activeAnnouncement - 1);
-            restartAnnouncementTimer();
           });
 
           nextButton?.addEventListener('click', function () {
             showAnnouncement(activeAnnouncement + 1);
-            restartAnnouncementTimer();
           });
 
           dots.forEach(function (dot) {
             dot.addEventListener('click', function () {
               showAnnouncement(Number(dot.dataset.announcementDot || 0));
-              restartAnnouncementTimer();
             });
           });
 
-          announcementShell.addEventListener('mouseenter', function () {
-            if (announcementTimer) window.clearInterval(announcementTimer);
-          });
-
-          announcementShell.addEventListener('mouseleave', restartAnnouncementTimer);
-
           showAnnouncement(activeAnnouncement);
-          restartAnnouncementTimer();
         }
 
       });

@@ -718,8 +718,8 @@
             --admin-status-completed-bg: rgba(255, 255, 255, 0.12);
             --admin-status-completed-text: #fff8fb;
             --admin-sidebar-bg:
-                linear-gradient(180deg, rgba(140, 72, 89, 0.18) 0%, rgba(98, 33, 47, 0.24) 100%),
-                linear-gradient(180deg, #281217 0%, #160a0e 100%);
+                linear-gradient(180deg, rgba(140, 72, 89, 0.22) 0%, rgba(98, 33, 47, 0.28) 100%),
+                linear-gradient(180deg, #35121d 0%, #1e0a12 100%);
             --admin-sidebar-border: rgba(255, 255, 255, 0.08);
             --admin-sidebar-divider: rgba(255, 255, 255, 0.16);
             --admin-sidebar-title: #ffffff;
@@ -887,6 +887,64 @@
             color: var(--muted);
             font-size: 13px;
             font-weight: 500;
+            min-height: 1.2em;
+        }
+
+        .header-subtitle-slogan-emphasis {
+            color: #facc15;
+            font-weight: 800;
+        }
+
+        .header-subtitle-slogan-part {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(6px);
+        }
+
+        .header-subtitle.is-slogan .header-subtitle-slogan-part {
+            animation: adminSubtitlePartIn 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .header-subtitle.is-slogan .header-subtitle-slogan-part--emphasis {
+            animation-delay: 180ms;
+        }
+
+        .header-subtitle.is-default {
+            animation: adminSubtitleDefaultIn 420ms ease-out both;
+        }
+
+        @keyframes adminSubtitlePartIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes adminSubtitleDefaultIn {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .header-subtitle.is-slogan .header-subtitle-slogan-part,
+            .header-subtitle.is-default {
+                animation: none;
+            }
+
+            .header-subtitle-slogan-part {
+                opacity: 1;
+                transform: none;
+            }
         }
 
         .header-right {
@@ -1825,6 +1883,9 @@
         }
 
         .sidebar-logo-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             margin: 0;
             font-family: "Outfit", "Manrope", sans-serif;
             font-size: 14px;
@@ -1835,12 +1896,35 @@
         }
 
         .sidebar-logo-sub {
-            margin: 3px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0 0 15px;
             color: var(--admin-sidebar-muted);
             font-size: 10px;
             font-weight: 600;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            text-transform: none;
+        }
+
+        .sidebar-logo-title-indicator {
+            display: inline-block;
+            width: 5px;
+            height: 20px;
+            flex: 0 0 5px;
+            border-radius: 999px;
+            background: #facc15;
+            box-shadow: 0 0 12px rgba(250, 204, 21, 0.32);
+        }
+
+        .sidebar-logo-sub-indicator {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            flex: 0 0 7px;
+            border-radius: 50%;
+            background: #4ade80;
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.34);
         }
 
         .sidebar-logo-text {
@@ -2912,9 +2996,17 @@
         }
 
         .admin-brand-logout-text {
-            --typing-width: 14ch;
-            --typing-count: 14;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 20px;
             margin-top: 0;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.34);
         }
 
         .main.is-navigation-loading .admin-content-loader,
@@ -5765,13 +5857,15 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     @stack('late-styles')
 </head>
 <body class="{{ (request()->routeIs('admin.inventory*') || request()->routeIs('assistant.inventory*')) ? 'admin-inventory-page' : '' }} {{ request()->boolean('embed') ? 'admin-embedded-view' : '' }}">
+@include('partials.post_login_terms_gate')
 @php
     $authUser = auth()->user();
     $currentRole = \App\Models\User::normalizeRole(optional($authUser)->user_role ?? '');
-    $currentUserType = strtolower(trim((string) (optional($authUser)->user_type ?? '')));
-    $isStudentAssistant = $currentRole === \App\Models\User::ROLE_ADMIN
-        && in_array($currentUserType, ['assistant', 'student assistant', 'student_assistant'], true);
+    $isStudentAssistant = $authUser?->isStudentAssistant() ?? false;
     $isAdminLike = $currentRole === \App\Models\User::ROLE_SUPERADMIN;
+    $sidebarRoleLabel = $isStudentAssistant
+        ? 'Student Assistant'
+        : ($isAdminLike ? 'Administration' : 'Clinic Staff');
     $canAccessModule = fn (string $permission): bool => $authUser?->canAccessPermission($permission) ?? false;
     $canAccessAnyModule = fn (array $permissions): bool => $authUser?->canAccessAnyPermission($permissions) ?? false;
     $linkedAdminProfile = null;
@@ -6279,8 +6373,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             <img src="{{ $brandLogo }}" alt="Clinic Logo" class="header-brand-avatar header-brand-avatar--clinic">
         </div>
         <div class="header-copy">
-            <h1 class="header-title">PUP TAGUIG CLINIC</h1>
-            <p class="header-subtitle">{{ $adminTypeLabel ? 'Clinic Administration' : ($isStudentAssistant ? 'Clinic Assistant Console' : 'Clinic Administration') }}</p>
+            <h1 class="header-title">PUP-T MEDICAL CLINIC</h1>
+            <p class="header-subtitle" id="adminHeaderSubtitle" aria-live="polite">Campus Health Services</p>
         </div>
     </div>
 
@@ -6397,8 +6491,14 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         
       </div>
       <div class="sidebar-logo-text">
-        <div class="sidebar-logo-title">PUP TAGUIG</div>
-        <div class="sidebar-logo-sub">{{ $adminTypeLabel ? 'Clinic Admin' : ($isStudentAssistant ? 'Clinic Assistant' : 'Clinic Admin') }}</div>
+        <div class="sidebar-logo-title">
+          <span class="sidebar-logo-title-indicator" aria-hidden="true"></span>
+          <span>CLINIC WORKSPACE</span>
+        </div>
+        <div class="sidebar-logo-sub">
+          <span class="sidebar-logo-sub-indicator" aria-hidden="true"></span>
+          <span>{{ $sidebarRoleLabel }}</span>
+        </div>
       </div>
     </div>
     
@@ -6568,7 +6668,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" class="loader-pulse"></polyline>
         </svg>
         <div class="admin-loader-message">
-            <span data-admin-loader-message-text>Logging out</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
+            <span data-admin-loader-message-text>Signing you out</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
         </div>
     </div>
     <div class="admin-action-brand-loader" aria-hidden="true">
@@ -6586,21 +6686,8 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         </div>
         <div class="loader-bottom-brand">
             <img src="{{ $brandLogo }}" alt="Clinic Logo" class="loader-bottom-logo">
-            <div class="post-login-loader-text admin-brand-logout-text" aria-label="Logging out">
-                <span style="--letter-index: 0;">L</span>
-                <span style="--letter-index: 1;">o</span>
-                <span style="--letter-index: 2;">g</span>
-                <span style="--letter-index: 3;">g</span>
-                <span style="--letter-index: 4;">i</span>
-                <span style="--letter-index: 5;">n</span>
-                <span style="--letter-index: 6;">g</span>
-                <span style="--letter-index: 7;">&nbsp;</span>
-                <span style="--letter-index: 8;">o</span>
-                <span style="--letter-index: 9;">u</span>
-                <span style="--letter-index: 10;">t</span>
-                <span style="--letter-index: 11;">.</span>
-                <span style="--letter-index: 12;">.</span>
-                <span style="--letter-index: 13;">.</span>
+            <div class="admin-brand-logout-text" aria-label="Signing you out">
+                <span>Signing you out</span><span class="admin-loader-message-dots" aria-hidden="true"><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span><span class="admin-loader-message-dot">.</span></span>
             </div>
         </div>
     </div>
@@ -6880,7 +6967,6 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     <p class="assistant-note"><strong>Clinical safety:</strong> responses support initial triage only, not a confirmed diagnosis. For emergencies, call local emergency services immediately.</p>
 </section>
 
-@include('partials.post_login_terms_gate')
 @hasSection('disable_voice_inputs')
 @else
 @include('partials.student_voice_input_support')
@@ -7086,7 +7172,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             if (messageText) {
                 messageText.textContent = normalizedMessage || 'Processing';
             }
-            const isLogoutLoader = normalizedMessage.toLowerCase() === 'logging out';
+            const isLogoutLoader = normalizedMessage.toLowerCase() === 'signing you out';
             actionLoader.classList.toggle('is-brand-logout', isLogoutLoader);
             actionLoader.classList.toggle('has-message', normalizedMessage !== '' && !isLogoutLoader);
             actionLoader.setAttribute('aria-label', normalizedMessage ? `${normalizedMessage}...` : 'Processing action');
@@ -7243,6 +7329,46 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
                 });
             }
         });
+    }
+
+    function initHeaderSubtitleRotation() {
+        const subtitle = document.getElementById('adminHeaderSubtitle');
+        if (!subtitle) {
+            return;
+        }
+
+        const defaultSubtitle = 'Campus Health Services';
+        let restoreTimer = null;
+
+        function restartSubtitleAnimation(className) {
+            subtitle.classList.remove('is-slogan', 'is-default');
+            void subtitle.offsetWidth;
+            subtitle.classList.add(className);
+        }
+
+        function showDefaultSubtitle() {
+            subtitle.textContent = defaultSubtitle;
+            restartSubtitleAnimation('is-default');
+        }
+
+        function showRotatingSubtitle() {
+            const greeting = document.createElement('span');
+            greeting.className = 'header-subtitle-slogan-part';
+            greeting.textContent = "Mula sa'yo, ";
+
+            const emphasis = document.createElement('span');
+            emphasis.className = 'header-subtitle-slogan-part header-subtitle-slogan-part--emphasis header-subtitle-slogan-emphasis';
+            emphasis.textContent = 'para sa Bayan!';
+
+            subtitle.replaceChildren(greeting, emphasis);
+            restartSubtitleAnimation('is-slogan');
+            window.clearTimeout(restoreTimer);
+            restoreTimer = window.setTimeout(showDefaultSubtitle, 5000);
+        }
+
+        window.setInterval(function () {
+            showRotatingSubtitle();
+        }, 20000);
     }
 
     function initMedicineAlerts() {
@@ -8580,8 +8706,12 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
             }
         });
         confirmButton.addEventListener('click', function () {
-            window.AdminLoading?.showAction('Logging out');
-            form.submit();
+            window.AdminLoading?.showAction('Signing you out');
+            window.requestAnimationFrame(function () {
+                window.requestAnimationFrame(function () {
+                    HTMLFormElement.prototype.submit.call(form);
+                });
+            });
         });
     }
 
@@ -8654,6 +8784,7 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         initAssistantUi();
         initGlobalSearch();
         initThemeToggle();
+        initHeaderSubtitleRotation();
         initSidebarScrollIndicator();
         initSidebarDropdowns();
         initContentNavigationLoading();

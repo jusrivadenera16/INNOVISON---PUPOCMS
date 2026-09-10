@@ -10217,6 +10217,13 @@
         background: #111827;
         box-shadow: 0 12px 24px rgba(0, 0, 0, .22);
     }
+    html[data-theme="dark"] #applicantScanModal .ocr-consultation-drafts-kicker,
+    html[data-theme="dark"] #applicantScanModal .ocr-consultation-drafts-kicker svg {
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] #applicantScanModal .ocr-detected-data-kicker {
+        color: #ffffff !important;
+    }
     html[data-theme="dark"] #applicantScanModal .ocr-consultation-drafts-copy,
     html[data-theme="dark"] #applicantScanModal .ocr-consultation-draft-time,
     html[data-theme="dark"] #applicantScanModal .ocr-consultation-draft-person span {
@@ -10242,6 +10249,154 @@
     html[data-theme="dark"] #applicantScanModal .ocr-consultation-drafts-empty {
         color: #94a3b8;
     }
+
+    html[data-theme="dark"] #applicantScanModal .ocr-result-panel {
+        background: #111827 !important;
+        border-color: rgba(148, 163, 184, .28) !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] #applicantScanModal .ocr-result-row {
+        background: #1e293b !important;
+        border-color: rgba(148, 163, 184, .30) !important;
+    }
+    html[data-theme="dark"] #applicantScanModal .ocr-result-label {
+        color: #cbd5e1 !important;
+    }
+    html[data-theme="dark"] #applicantScanModal #ocr_student_name,
+    html[data-theme="dark"] #applicantScanModal #ocr_student_number,
+    html[data-theme="dark"] #applicantScanModal .ocr-result-panel .form-control {
+        background: #0f172a !important;
+        background-image: none !important;
+        border-color: rgba(148, 163, 184, .38) !important;
+        color: #f8fafc !important;
+        -webkit-text-fill-color: #f8fafc !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04) !important;
+    }
+    html[data-theme="dark"] #applicantScanModal #ocr_student_name::placeholder,
+    html[data-theme="dark"] #applicantScanModal #ocr_student_number::placeholder,
+    html[data-theme="dark"] #applicantScanModal .ocr-result-panel .form-control::placeholder {
+        color: #94a3b8 !important;
+        -webkit-text-fill-color: #94a3b8 !important;
+    }
+
+    /* Encode Assessment: keep the lookup and physical-assessment surfaces dark. */
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-modal-body,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-panel {
+        background: #0f172a !important;
+        background-image: none !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-result,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-lookup-details {
+        border-color: rgba(148, 163, 184, .28) !important;
+        background: #111827 !important;
+        background-image: none !important;
+        color: #f8fafc !important;
+        box-shadow: 0 12px 26px rgba(0, 0, 0, .22) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-result::before {
+        color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-result::after {
+        background:
+            radial-gradient(circle at 50% 42%, transparent 0 8px, rgba(127, 29, 29, .42) 9px 100%),
+            linear-gradient(135deg, #3f1720, #27131b) !important;
+        border-color: rgba(248, 113, 113, .42) !important;
+        color: #fecaca !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-result strong,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-lookup-value {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-lookup-label {
+        color: #94a3b8 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-screening-panel:not(.applicant-bmi-assessment-section),
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-vitals-grid::before,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-vitals-grid .applicant-condition-field:nth-child(7),
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-vitals-grid .applicant-condition-field:nth-child(8),
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-vitals-grid .applicant-condition-field:nth-child(9) {
+        border-color: rgba(148, 163, 184, .28) !important;
+        background: #111827 !important;
+        background-image: none !important;
+        color: #f8fafc !important;
+        box-shadow: 0 12px 26px rgba(0, 0, 0, .22) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-screening-panel-title,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-condition-field label,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-findings-label {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-screening-panel-title {
+        color: #facc15 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-condition-input,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-condition-textarea {
+        border-color: rgba(148, 163, 184, .38) !important;
+        background: #1e293b !important;
+        background-image: none !important;
+        color: #f8fafc !important;
+        -webkit-text-fill-color: #f8fafc !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04) !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-condition-input::placeholder,
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-condition-textarea::placeholder {
+        color: #94a3b8 !important;
+        -webkit-text-fill-color: #94a3b8 !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-findings-option span {
+        border-color: rgba(148, 163, 184, .38) !important;
+        background: #1e293b !important;
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .vital-status.is-muted {
+        border-color: rgba(148, 163, 184, .30) !important;
+        background: #1e293b !important;
+        color: #cbd5e1 !important;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-actions {
+        grid-template-columns: minmax(0, 1fr) repeat(2, minmax(150px, 252px));
+        justify-content: end;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-cancel-btn {
+        grid-column: 2;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-find-btn {
+        grid-column: 3;
+    }
+
+    #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-actions.has-draft-action {
+        grid-template-columns: minmax(0, 1fr) repeat(3, minmax(118px, 170px)) !important;
+    }
+
+    @media (max-width: 768px) {
+        #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-actions,
+        #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-actions.has-draft-action {
+            grid-template-columns: 1fr !important;
+        }
+
+        #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-cancel-btn,
+        #applicantRefModal .applicant-modal-shell.has-lookup-result.is-encode-workflow .applicant-ref-find-btn {
+            grid-column: auto;
+        }
+    }
+
     @media (max-width: 560px) {
         .ocr-consultation-draft-row {
             grid-template-columns: 32px minmax(0, 1fr) auto;
@@ -11416,18 +11571,18 @@
                                         </svg>
                                     </span>
                                     <div>
-                                        <p style="margin:0;font-size:11px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;color:#8b0000;">Detected Data</p>
+                                        <p class="ocr-detected-data-kicker" style="margin:0;font-size:11px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;color:#8b0000;">Detected Data</p>
                                         <p style="margin:4px 0 0;font-size:12px;color:#64748b;line-height:1.5;">Captured from OCR scan and arranged for final review.</p>
                                     </div>
                                 </div>
                                 <span style="display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-size:11px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;white-space:nowrap;">OCR Result</span>
                             </div>
                             <div style="display:grid;gap:12px;">
-                                <div style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,#fdfefe,#f8fafc);border:1px solid #e2e8f0;">
+                                <div class="ocr-result-row" style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,#fdfefe,#f8fafc);border:1px solid #e2e8f0;">
                                     <p class="ocr-result-label" style="margin:0;color:#334155;">Full Name</p>
                                     <input type="text" id="ocr_student_name" class="form-control" readonly style="margin-bottom:0;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;box-shadow:inset 0 1px 0 rgba(255,255,255,0.95);font-weight:700;cursor:default;">
                                 </div>
-                                <div style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,#fdfefe,#f8fafc);border:1px solid #e2e8f0;">
+                                <div class="ocr-result-row" style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,#fdfefe,#f8fafc);border:1px solid #e2e8f0;">
                                     <p class="ocr-result-label" style="margin:0;color:#334155;">Patient ID Number</p>
                                     <input type="text" id="ocr_student_number" class="form-control" readonly style="margin-bottom:0;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;box-shadow:inset 0 1px 0 rgba(255,255,255,0.95);font-weight:700;cursor:default;">
                                 </div>
@@ -11597,11 +11752,11 @@
 
                     <div id="ocrResultPanel" class="ocr-result-panel" style="display:none;">
                         <div style="display:grid; gap:12px;">
-                            <div style="display:grid; grid-template-columns: 120px minmax(0, 1fr); gap:12px; align-items:center;">
+                            <div class="ocr-result-row" style="display:grid; grid-template-columns: 120px minmax(0, 1fr); gap:12px; align-items:center;">
                                 <p class="ocr-result-label" style="margin:0;">Full Name</p>
                                 <input type="text" id="ocr_student_name" class="form-control" placeholder="Enter full name" style="margin-bottom:0;">
                             </div>
-                            <div style="display:grid; grid-template-columns: 120px minmax(0, 1fr); gap:12px; align-items:center;">
+                            <div class="ocr-result-row" style="display:grid; grid-template-columns: 120px minmax(0, 1fr); gap:12px; align-items:center;">
                                 <p class="ocr-result-label" style="margin:0;">Patient ID Number</p>
                                 <input type="text" id="ocr_student_number" class="form-control" placeholder="Enter Patient ID Number" style="margin-bottom:0;">
                             </div>

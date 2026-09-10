@@ -286,6 +286,48 @@
         margin-top: 0;
     }
 
+    .post-login-logout-text {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 20px;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.34);
+    }
+
+    .post-login-logout-dots {
+        display: inline-flex;
+    }
+
+    .post-login-logout-dot {
+        display: inline-block;
+        opacity: 0.18;
+        animation: postLoginLogoutDotReveal 1.2s infinite ease-in-out;
+    }
+
+    .post-login-logout-dot:nth-child(2) {
+        animation-delay: 0.16s;
+    }
+
+    .post-login-logout-dot:nth-child(3) {
+        animation-delay: 0.32s;
+    }
+
+    @keyframes postLoginLogoutDotReveal {
+        0%, 100% {
+            opacity: 0.18;
+            transform: translateY(2px);
+        }
+        45% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     .post-login-ripple-loader {
         --size: min(460px, 86vw);
         --duration: 2.5s;
@@ -870,7 +912,7 @@
 @endphp
 
 @if (session('show_terms_modal'))
-    <div class="post-login-loader" id="postLoginLoader" aria-live="polite" aria-label="Logging in">
+    <div class="post-login-loader" id="postLoginLoader" aria-live="polite" aria-label="Loading">
         <div class="post-login-loader-bg-icons" aria-hidden="true">
             <span class="post-login-loader-bg-icon is-one">
                 <svg viewBox="0 0 24 24">
@@ -919,21 +961,6 @@
             </div>
             <div class="loader-bottom-brand">
                 <img src="{{ asset('images/clinic_logo_transparent.png') }}?v={{ filemtime(public_path('images/clinic_logo_transparent.png')) }}" alt="Clinic Logo" class="loader-bottom-logo">
-                <div class="post-login-loader-text" aria-label="Logging in">
-                    <span style="--letter-index: 0;">L</span>
-                    <span style="--letter-index: 1;">o</span>
-                    <span style="--letter-index: 2;">g</span>
-                    <span style="--letter-index: 3;">g</span>
-                    <span style="--letter-index: 4;">i</span>
-                    <span style="--letter-index: 5;">n</span>
-                    <span style="--letter-index: 6;">g</span>
-                    <span style="--letter-index: 7;">&nbsp;</span>
-                    <span style="--letter-index: 8;">i</span>
-                    <span style="--letter-index: 9;">n</span>
-                    <span style="--letter-index: 10;">.</span>
-                    <span style="--letter-index: 11;">.</span>
-                    <span style="--letter-index: 12;">.</span>
-                </div>
             </div>
         </div>
     </div>
@@ -1122,6 +1149,27 @@
             });
 
             cancelBtn.addEventListener('click', function () {
+                if (transitionStarted) {
+                    return;
+                }
+                transitionStarted = true;
+                cancelBtn.disabled = true;
+
+                if (window.AdminLoading && document.getElementById('adminActionLoader')) {
+                    window.AdminLoading.showAction('Signing you out');
+                    window.requestAnimationFrame(function () {
+                        window.requestAnimationFrame(function () {
+                            HTMLFormElement.prototype.submit.call(logoutForm);
+                        });
+                    });
+                    return;
+                }
+
+                if (typeof logoutForm.requestSubmit === 'function') {
+                    logoutForm.requestSubmit();
+                    return;
+                }
+
                 logoutForm.submit();
             });
         })();
