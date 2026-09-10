@@ -358,11 +358,15 @@ class User extends Authenticatable
     {
         $rawRole = strtolower(trim((string) $this->user_role));
         $userType = strtolower(trim((string) ($this->user_type ?? '')));
+        $idpRole = str_replace(['-', ' '], '_', strtolower(trim((string) ($this->idp_role ?? ''))));
 
         return in_array($rawRole, ['student_assistant', 'studentassistant', 'assistant'], true)
             || (
                 self::normalizeRole($rawRole) === self::ROLE_ADMIN
-                && in_array($userType, ['assistant', 'student assistant', 'student_assistant'], true)
+                && (
+                    in_array($userType, ['assistant', 'student assistant', 'student_assistant'], true)
+                    || in_array($idpRole, ['student_assistant', 'studentassistant', 'assistant'], true)
+                )
             );
     }
 

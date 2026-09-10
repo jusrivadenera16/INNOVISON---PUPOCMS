@@ -10460,7 +10460,6 @@
         }
 
         let activeLandingAnnouncement = 0;
-        let landingAnnouncementTimer = null;
         let landingAnnouncementSwitchTimer = null;
         const landingAnnouncementDotsList = [];
 
@@ -10581,18 +10580,6 @@
             }
         }
 
-        function restartLandingAnnouncementTimer() {
-            if (landingAnnouncementTimer) {
-                window.clearInterval(landingAnnouncementTimer);
-            }
-
-            if (getLandingVisibleCards().length > 1) {
-                landingAnnouncementTimer = window.setInterval(function () {
-                    showLandingAnnouncement(activeLandingAnnouncement + 1, 1);
-                }, 6500);
-            }
-        }
-
         function parseAnnouncementImages(source) {
             try {
                 const parsed = JSON.parse(source || '[]');
@@ -10694,7 +10681,6 @@
                 dot.setAttribute('aria-label', `Show announcement ${index + 1}`);
                 dot.addEventListener('click', function () {
                     showLandingAnnouncement(index, index < activeLandingAnnouncement ? -1 : 1);
-                    restartLandingAnnouncementTimer();
                 });
                 landingAnnouncementDots.appendChild(dot);
                 landingAnnouncementDotsList.push(dot);
@@ -10703,21 +10689,11 @@
 
         landingAnnouncementPrev?.addEventListener('click', function () {
             showLandingAnnouncement(activeLandingAnnouncement - 1, -1);
-            restartLandingAnnouncementTimer();
         });
 
         landingAnnouncementNext?.addEventListener('click', function () {
             showLandingAnnouncement(activeLandingAnnouncement + 1, 1);
-            restartLandingAnnouncementTimer();
         });
-
-        landingAnnouncementCarousel?.addEventListener('mouseenter', function () {
-            if (landingAnnouncementTimer) {
-                window.clearInterval(landingAnnouncementTimer);
-            }
-        });
-
-        landingAnnouncementCarousel?.addEventListener('mouseleave', restartLandingAnnouncementTimer);
 
         announcementCards.forEach(function (card) {
             card.addEventListener('click', function (event) {
@@ -10963,7 +10939,6 @@
 
         updateAnnouncementBadge({{ ($landingAnnouncements ?? collect())->count() }});
         filterAnnouncements();
-        restartLandingAnnouncementTimer();
         window.setTimeout(syncAnnouncementReadButtons, 50);
         window.addEventListener('resize', syncAnnouncementReadButtons);
 
