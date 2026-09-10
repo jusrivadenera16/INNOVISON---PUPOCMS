@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\ExcludesInactiveUserRecords;
 
 class DependentsProfile extends Model
 {
+    use ExcludesInactiveUserRecords;
+
     protected $table = 'dependents_profiles';
 
     protected $fillable = [

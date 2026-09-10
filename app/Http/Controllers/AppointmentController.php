@@ -4450,7 +4450,9 @@ public function updateContact(Request $request)
     // -------------------------------
     public function fetchUser($student_id)
     {
-        $user = User::where('student_id', $student_id)->first();
+        $user = User::visibleForAdminHubRecords()
+            ->where('student_id', $student_id)
+            ->first();
 
         if ($user) {
             return response()->json([

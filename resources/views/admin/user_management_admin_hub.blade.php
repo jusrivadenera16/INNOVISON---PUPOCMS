@@ -915,6 +915,31 @@
         color: #475569;
     }
 
+    .um-status-readonly {
+        display: inline-flex;
+        align-items: center;
+        min-height: 42px;
+        padding: 8px 12px;
+        border: 1px solid rgba(22, 101, 52, 0.25);
+        border-radius: 12px;
+        background: #f0fdf4;
+        color: #166534;
+        font-size: .9rem;
+        font-weight: 800;
+    }
+
+    .um-status-readonly.is-inactive {
+        border-color: rgba(153, 27, 27, 0.25);
+        background: #fef2f2;
+        color: #991b1b;
+    }
+
+    .um-settings-action.um-action-activate {
+        border-color: rgba(22, 101, 52, 0.35);
+        background: #166534;
+        color: #fff;
+    }
+
     .um-actions {
         display: flex;
         gap: 10px;
@@ -953,6 +978,18 @@
     html[data-theme="dark"] .um-profile-row .value,
     html[data-theme="dark"] .um-section-title {
         color: #fff;
+    }
+
+    html[data-theme="dark"] .um-status-readonly {
+        border-color: rgba(74, 222, 128, 0.32);
+        background: rgba(20, 83, 45, 0.35);
+        color: #bbf7d0;
+    }
+
+    html[data-theme="dark"] .um-status-readonly.is-inactive {
+        border-color: rgba(248, 113, 113, 0.32);
+        background: rgba(127, 29, 29, 0.35);
+        color: #fecaca;
     }
 
     html[data-theme="dark"] .um-section-kicker {
@@ -1452,9 +1489,10 @@
                             type="submit"
                             form="deleteForm"
                             class="um-settings-action um-action-warning"
-                            onclick="return confirm('Remove only the Admin Designee role and restore the linked account to its base role?')"
+                            id="removeAccessBtn"
+                            onclick="return confirm('Remove Admin Hub access? Student-side access or separate clinic access will remain unchanged.')"
                         >
-                            Remove Admin Designee Role
+                            Remove Access
                         </button>
                         <button
                             type="submit"
@@ -1462,9 +1500,9 @@
                             class="um-settings-action um-action-danger"
                             id="deleteAdminHubBtn"
                             style="display:none;"
-                            onclick="return confirm('Delete this standalone directory record? Linked clinic accounts will be preserved and only removed from the Admin Hub.')"
+                            onclick="return confirm('Delete this Admin Hub directory account? The local account, clinic access, and records will be preserved.')"
                         >
-                            Delete Directory Record
+                            Delete Directory Account
                         </button>
                         <button type="submit" form="settingsForm" class="um-settings-action um-action-primary" id="saveSettingsBtn">Save Changes</button>
                     </div>
@@ -1500,6 +1538,7 @@
     const detailUpdated = document.getElementById('detailUpdated');
     const detailRole = document.getElementById('detailRole');
     const detailStatus = document.getElementById('detailStatus');
+    const detailStatusBadge = document.getElementById('detailStatusBadge');
     const detailManagementView = document.getElementById('detailManagementView');
     const detailLookupSource = document.getElementById('detailLookupSource');
     const detailFirstName = document.getElementById('detailFirstName');
@@ -1529,6 +1568,7 @@
     const deleteAdminHubBtn = document.getElementById('deleteAdminHubBtn');
     const externalNote = document.getElementById('externalNote');
     const deactivateBtn = document.getElementById('deactivateBtn');
+    const removeAccessBtn = document.getElementById('removeAccessBtn');
     const saveSettingsBtn = document.getElementById('saveSettingsBtn');
     const directoryPanel = document.getElementById('directoryPanel');
     const lookupDirectoryPanel = document.getElementById('lookupDirectoryPanel');
@@ -1564,6 +1604,28 @@
         if (adminHubSection) {
             adminHubSection.classList.remove('is-hidden');
             adminHubSection.style.display = (canEdit || canOnboard) ? '' : 'none';
+        }
+    };
+
+    const syncStatusUi = () => {
+        const isAdminHub = detailManagementView?.value === 'admin-hub';
+        const isInactive = String(detailStatus?.value || 'active').toLowerCase() === 'inactive';
+
+        if (detailStatusBadge) {
+            detailStatusBadge.textContent = isInactive ? 'Inactive' : 'Active';
+            detailStatusBadge.classList.toggle('is-inactive', isInactive);
+        }
+
+        if (deactivateBtn) {
+            deactivateBtn.textContent = isAdminHub && isInactive ? 'Activate Account' : 'Deactivate Account';
+            deactivateBtn.classList.toggle('um-action-activate', isAdminHub && isInactive);
+        }
+
+        if (removeAccessBtn) {
+            removeAccessBtn.disabled = !isAdminHub || isInactive;
+            removeAccessBtn.title = isInactive
+                ? 'Activate the account before removing Admin Hub access.'
+                : '';
         }
     };
 
@@ -1603,6 +1665,8 @@
         if (detailAdminProfileStatus && !hasAdminHub) {
             detailAdminProfileStatus.textContent = 'Not needed while this account stays on the student side only.';
         }
+
+        syncStatusUi();
     };
 
     const openSettingsFromRow = (row) => {
@@ -1995,11 +2059,20 @@
     });
 
     deactivateBtn.addEventListener('click', () => {
-        const confirmDeactivate = window.confirm('Deactivate this account as resigned/inactive? This restores the base role, revokes access tokens, and preserves audit history.');
-        if (!confirmDeactivate) {
+        const isAdminHub = detailManagementView?.value === 'admin-hub';
+        const isInactive = String(detailStatus?.value || 'active').toLowerCase() === 'inactive';
+        const nextStatus = isAdminHub && isInactive ? 'active' : 'inactive';
+        const confirmationMessage = isAdminHub && isInactive
+            ? 'Activate this Admin Hub account? Its previous role and access assignments will remain unchanged.'
+            : isAdminHub
+                ? 'Deactivate this Admin Hub account? Access will be blocked, active tokens will be revoked, and its records will be hidden until reactivation.'
+                : 'Deactivate this account as resigned/inactive? This restores the base role, revokes access tokens, and preserves audit history.';
+
+        if (!window.confirm(confirmationMessage)) {
             return;
         }
-        detailStatus.value = 'inactive';
+
+        detailStatus.value = nextStatus;
         settingsForm.submit();
     });
 

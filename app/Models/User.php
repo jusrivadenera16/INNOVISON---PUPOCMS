@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class User extends Authenticatable
@@ -328,6 +329,45 @@ class User extends Authenticatable
     public function adminHubProfile()
     {
         return $this->hasOne(AdminHub::class, 'user_id', 'id');
+    }
+
+    /**
+     * Scope users that remain visible to clinic records after an Admin Hub action.
+     */
+    public function scopeVisibleForAdminHubRecords($query)
+    {
+        if (!Schema::hasTable('admin_hub')
+            || !Schema::hasColumn('admin_hub', 'status')
+            || !Schema::hasColumn('users', 'status')) {
+            return $query;
+        }
+
+        $statusColumn = $query->getModel()->qualifyColumn('status');
+
+        return $query->where(function ($visibilityQuery) use ($statusColumn) {
+            $visibilityQuery->whereNull($statusColumn)
+                ->orWhere($statusColumn, 'active')
+                ->orWhereDoesntHave('adminHubProfile', function ($adminHubQuery) {
+                    $adminHubQuery->where('status', 'inactive');
+                });
+        });
+    }
+
+    public function isVisibleForAdminHubRecords(): bool
+    {
+        if (!Schema::hasTable('admin_hub')
+            || !Schema::hasColumn('admin_hub', 'status')
+            || !Schema::hasColumn('users', 'status')) {
+            return true;
+        }
+
+        if (strtolower(trim((string) $this->status)) !== 'inactive') {
+            return true;
+        }
+
+        return !$this->adminHubProfile()
+            ->where('status', 'inactive')
+            ->exists();
     }
 
     /**

@@ -19,6 +19,8 @@ use Illuminate\Validation\Rule;
 
 class AdminUserController extends Controller
 {
+    private const ADMIN_HUB_REMOVED_ROLE = 'removed';
+
     private function redirectToManagementView(Request $request, string $messageType, string $message)
     {
         $managementView = trim((string) $request->input('management_view', $request->query('management_view', '')));
@@ -430,16 +432,17 @@ class AdminUserController extends Controller
             $linkedAdminHub->save();
 
             if ($requestedStatus === 'inactive') {
-                $this->reconcileUserAfterAdminHubDeactivation($user);
+                $this->deactivateUserFromAdminHub($user);
             } else {
                 $this->activateUserForAdminHub($user);
+                $this->activateAccountFromAdminHub($user);
             }
 
             $this->logUserManagementAction(
                 $requestedStatus === 'inactive' ? 'Deactivated admin hub account' : 'Added local account to Admin Hub',
                 sprintf(
                     $requestedStatus === 'inactive'
-                        ? 'Marked %s (%s) inactive in Admin Hub and restored the appropriate clinic or IDP access.'
+                        ? 'Marked %s (%s) inactive in Admin Hub, revoked active tokens, and preserved the assigned role and records.'
                         : 'Added %s (%s) to the centralized Admin Hub as %s without changing clinic permissions.',
                     $user->name ?? $user->email,
                     $user->email,
@@ -451,7 +454,7 @@ class AdminUserController extends Controller
                 $request,
                 'success',
                 $requestedStatus === 'inactive'
-                    ? 'Admin Hub access deactivated. Clinic access was preserved when separately assigned.'
+                    ? 'Admin Hub account deactivated. Access was blocked and the account records were hidden while the database history was preserved.'
                     : 'The profile was added to the Admin Hub. Clinic permissions were not changed.'
             );
         }
@@ -675,9 +678,10 @@ class AdminUserController extends Controller
                 }
 
                 if (strtolower(trim((string) $request->status)) === 'inactive') {
-                    $this->reconcileUserAfterAdminHubDeactivation($linkedUser);
+                    $this->deactivateUserFromAdminHub($linkedUser);
                 } else {
                     $this->activateUserForAdminHub($linkedUser);
+                    $this->activateAccountFromAdminHub($linkedUser);
                 }
             }
 
@@ -889,16 +893,17 @@ class AdminUserController extends Controller
         $requestedStatus = strtolower(trim((string) $request->status));
         $linkedUser = $this->resolveLinkedUserForAdminHubRecord($admin);
         if ($linkedUser && $requestedStatus === 'inactive') {
-            $this->reconcileUserAfterAdminHubDeactivation($linkedUser);
+            $this->deactivateUserFromAdminHub($linkedUser);
         } elseif ($linkedUser) {
             $this->activateUserForAdminHub($linkedUser);
+            $this->activateAccountFromAdminHub($linkedUser);
         }
 
         $this->logUserManagementAction(
             $requestedStatus === 'inactive' ? 'Deactivated admin hub profile' : 'Updated admin hub profile',
             sprintf(
                 $requestedStatus === 'inactive'
-                    ? 'Marked admin hub record #%s (%s) inactive and restored the linked account to its remaining access.'
+                    ? 'Marked admin hub record #%s (%s) inactive, revoked active tokens, and preserved the linked account role and records.'
                     : 'Updated admin hub record #%s (%s).',
                 $admin->id,
                 $admin->name ?? ($admin->email ?? 'Unknown Admin')
@@ -909,7 +914,7 @@ class AdminUserController extends Controller
             $request,
             'success',
             $requestedStatus === 'inactive'
-                ? 'Admin Hub profile deactivated. Separate clinic access was preserved when available.'
+                ? 'Admin Hub account deactivated. Access was blocked and linked records were hidden while the database history was preserved.'
                 : 'Admin Hub profile updated successfully.'
         );
     }
@@ -918,10 +923,22 @@ class AdminUserController extends Controller
     {
         $this->ensureCanManageUsers();
 
+        if (strtolower(trim((string) ($admin->status ?? 'active'))) === 'inactive') {
+            return $this->redirectToManagementView(
+                $request,
+                'error',
+                'Activate the Admin Hub account before removing its access.'
+            );
+        }
+
         $linkedUser = $this->resolveLinkedUserForAdminHubRecord($admin);
 
-        if (AdminHub::hasColumn('status')) {
-            $admin->status = 'inactive';
+        // Keep the directory record for history, but remove its active membership.
+        if (AdminHub::hasColumn('role')) {
+            $admin->role = self::ADMIN_HUB_REMOVED_ROLE;
+        }
+        if (AdminHub::hasColumn('access_level')) {
+            $admin->access_level = null;
         }
         $admin->save();
 
@@ -956,6 +973,10 @@ class AdminUserController extends Controller
         $linkedUser = $this->resolveLinkedUserForAdminHubRecord($admin);
         $hasLinkedClinicAccount = $linkedUser && $this->hasClinicAccountAccess($linkedUser, $this->findLinkedAdminProfile($linkedUser));
         $admin->delete();
+
+        if ($linkedUser) {
+            $this->reconcileUserAfterAdminHubDeactivation($linkedUser);
+        }
 
         $this->logUserManagementAction(
             'Deleted admin hub record',
@@ -1744,6 +1765,12 @@ class AdminUserController extends Controller
 
         $query = AdminHub::query();
 
+        if (AdminHub::hasColumn('role')) {
+            $query->whereIn('role', ['admin_designee', 'designee']);
+        } elseif (AdminHub::hasColumn('access_level')) {
+            $query->where('access_level', 'designee');
+        }
+
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
                 foreach (['admin_uuid', 'employee_number', 'name', 'first_name', 'middle_name', 'last_name', 'email', 'office', 'status'] as $column) {
@@ -2463,6 +2490,10 @@ class AdminUserController extends Controller
 
     private function hasClinicAccountAccess(User $user, ?Admin $linkedAdmin = null): bool
     {
+        if ($linkedAdmin && strtolower(trim((string) ($linkedAdmin->status ?? 'active'))) !== 'active') {
+            return false;
+        }
+
         if (User::normalizeRole((string) ($user->user_role ?? '')) === User::ROLE_SUPERADMIN) {
             return true;
         }
@@ -2479,9 +2510,15 @@ class AdminUserController extends Controller
         return in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff', 'superadmin'], true);
     }
 
-    private function restoreUserToBaseRole(User $user): void
+    private function restoreUserToStudentSide(User $user): void
     {
-        $this->applyBaseRoleToUser($user);
+        $user->user_role = User::ROLE_STUDENT;
+        if (Schema::hasColumn('users', 'user_type')) {
+            $user->user_type = $this->defaultUserTypeForIdpRole(
+                trim((string) ($user->idp_role ?? '')),
+                User::ROLE_STUDENT
+            );
+        }
         if (Schema::hasColumn('users', 'status')) {
             $user->status = 'active';
         }
@@ -2504,14 +2541,45 @@ class AdminUserController extends Controller
         $user->save();
     }
 
+    private function deactivateUserFromAdminHub(User $user): void
+    {
+        if (Schema::hasColumn('users', 'status')) {
+            $user->status = 'inactive';
+        }
+
+        if (Schema::hasColumn('users', 'remember_token')) {
+            $user->remember_token = null;
+        }
+
+        $user->save();
+
+        if (method_exists($user, 'tokens') && Schema::hasTable('personal_access_tokens')) {
+            $user->tokens()->delete();
+        }
+    }
+
+    private function activateAccountFromAdminHub(User $user): void
+    {
+        if (!Schema::hasColumn('users', 'status')) {
+            return;
+        }
+
+        $user->status = 'active';
+        $user->save();
+    }
+
     private function reconcileUserAfterAdminHubDeactivation(User $user): void
     {
+        if (strtolower(trim((string) ($user->status ?? 'active'))) === 'inactive') {
+            return;
+        }
+
         $linkedAdmin = $this->findLinkedAdminProfile($user);
         if ($this->hasClinicAccountAccess($user, $linkedAdmin)) {
             return;
         }
 
-        $this->restoreUserToBaseRole($user);
+        $this->restoreUserToStudentSide($user);
     }
 
     private function deactivateUserAccess(User $user, ?Admin $linkedAdmin = null): void

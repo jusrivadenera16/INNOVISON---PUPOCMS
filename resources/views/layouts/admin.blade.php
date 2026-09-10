@@ -4122,6 +4122,10 @@
             border-color: rgba(255, 255, 255, 0.1);
         }
 
+        html[data-theme="dark"] .global-search-group-label {
+            color: #facc15;
+        }
+
         html[data-theme="dark"] .global-search-result {
             color: #fff7fa;
         }

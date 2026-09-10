@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use App\Models\Concerns\ExcludesInactiveUserRecords;
 
 class Appointment extends Model
 {
-    use HasFactory;
+    use HasFactory, ExcludesInactiveUserRecords;
 
     /**
      * Mass assignable fields
@@ -76,7 +77,8 @@ class Appointment extends Model
         $dayPrefix = $sourcePrefix . '-' . $baseTime->format('dmy') . '-';
         $timePrefix = $dayPrefix . $baseTime->format('Hi');
 
-        $existingAppointmentNumbers = static::query()
+        // Include preserved inactive rows so a new appointment number cannot collide.
+        $existingAppointmentNumbers = static::withoutGlobalScope('activeLinkedUser')
             ->where('apt_id', 'like', $dayPrefix . '%')
             ->pluck('apt_id')
             ->map(fn ($appointmentNumber) => (string) $appointmentNumber);

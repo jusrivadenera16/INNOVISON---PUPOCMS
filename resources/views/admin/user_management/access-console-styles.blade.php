@@ -113,6 +113,11 @@
     }
 
     .access-console__stat-icon svg { width: 25px; height: 25px; }
+    html[data-theme="dark"] .user-management-shell .access-console__stat-icon {
+        color: #facc15;
+        background: #24171c;
+    }
+    html[data-theme="dark"] .user-management-shell .access-console__stat-icon svg { color: #facc15; }
     .access-console__stat:nth-child(1) .access-console__stat-icon { color: #a2152b; background: #fff0f2; }
     .access-console__stat:nth-child(2) .access-console__stat-icon { color: #108247; background: #eaf8ef; }
     .access-console__stat:nth-child(3) .access-console__stat-icon { color: #b55323; background: #fff1e8; }

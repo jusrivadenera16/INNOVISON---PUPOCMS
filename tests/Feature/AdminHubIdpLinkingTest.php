@@ -709,6 +709,230 @@ class AdminHubIdpLinkingTest extends TestCase
         }
     }
 
+    public function test_active_clinic_staff_account_redirects_to_admin_dashboard(): void
+    {
+        $identity = ['id' => 'clinic-staff-redirect-id', 'email' => 'clinic-staff-redirect@example.test'];
+        $user = $this->upsertFromIdp($identity + ['roles' => 'guest']);
+        Admin::create([
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'access_level' => 'clinic_staff',
+            'status' => 'active',
+        ]);
+
+        $user = $this->upsertFromIdp($identity + ['roles' => 'guest']);
+        $method = new ReflectionMethod(LoginController::class, 'resolveRedirectPathForUser');
+        $method->setAccessible(true);
+
+        $this->assertSame('/admin/dashboard', $method->invoke(new LoginController(), $user));
+    }
+
+    public function test_removing_admin_hub_access_hides_membership_and_preserves_clinic_access(): void
+    {
+        $manager = User::create([
+            'student_id' => 'remove-access-manager',
+            'first_name' => 'System',
+            'last_name' => 'Manager',
+            'name' => 'System Manager',
+            'email' => 'remove-access-manager@example.test',
+            'user_role' => User::ROLE_SUPERADMIN,
+            'idp_role' => 'superadmin',
+            'user_type' => 'Regular',
+            'status' => 'active',
+            'password' => 'secret',
+        ]);
+        $user = User::create([
+            'student_id' => 'remove-access-target',
+            'first_name' => 'Clinic',
+            'last_name' => 'Staff',
+            'name' => 'Clinic Staff',
+            'email' => 'remove-access-target@example.test',
+            'user_role' => User::ROLE_ADMIN,
+            'idp_role' => 'faculty',
+            'user_type' => 'Regular',
+            'status' => 'active',
+            'password' => 'secret',
+        ]);
+        Admin::create([
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'access_level' => 'clinic_staff',
+            'status' => 'active',
+        ]);
+        $adminHub = AdminHub::create([
+            'user_id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => 'admin_designee',
+            'access_level' => 'designee',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($manager, 'admin');
+        $request = \Illuminate\Http\Request::create(
+            '/admin/user-management/admin-hub/' . $adminHub->id,
+            'DELETE',
+            ['management_view' => 'admin-hub']
+        );
+        $request->setLaravelSession($this->app['session.store']);
+        (new AdminUserController())->destroyAdminHub($request, $adminHub);
+
+        $this->assertDatabaseHas('admin_hub', [
+            'id' => $adminHub->id,
+            'role' => 'removed',
+            'access_level' => null,
+            'status' => 'active',
+        ]);
+        $this->assertSame(User::ROLE_ADMIN, $user->fresh()->user_role);
+        $this->assertSame('active', $user->fresh()->status);
+
+        $collect = new ReflectionMethod(AdminUserController::class, 'collectAdminHubProfiles');
+        $collect->setAccessible(true);
+        $records = $collect->invoke(new AdminUserController(), '', []);
+
+        $this->assertNull(collect($records)->firstWhere('id', (string) $adminHub->id));
+    }
+
+    public function test_removing_admin_hub_access_restores_base_role_without_clinic_access(): void
+    {
+        $manager = User::create([
+            'student_id' => 'remove-base-manager',
+            'first_name' => 'System',
+            'last_name' => 'Manager',
+            'name' => 'System Manager',
+            'email' => 'remove-base-manager@example.test',
+            'user_role' => User::ROLE_SUPERADMIN,
+            'idp_role' => 'superadmin',
+            'user_type' => 'Regular',
+            'status' => 'active',
+            'password' => 'secret',
+        ]);
+        $user = User::create([
+            'student_id' => 'remove-base-target',
+            'first_name' => 'Admin',
+            'last_name' => 'Designee',
+            'name' => 'Admin Designee',
+            'email' => 'remove-base-target@example.test',
+            'user_role' => User::ROLE_ADMIN,
+            'idp_role' => 'Admin',
+            'user_type' => 'Regular',
+            'status' => 'active',
+            'password' => 'secret',
+        ]);
+        $adminHub = AdminHub::create([
+            'user_id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => 'admin_designee',
+            'access_level' => 'designee',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($manager, 'admin');
+        $request = \Illuminate\Http\Request::create(
+            '/admin/user-management/admin-hub/' . $adminHub->id,
+            'DELETE',
+            ['management_view' => 'admin-hub']
+        );
+        $request->setLaravelSession($this->app['session.store']);
+        (new AdminUserController())->destroyAdminHub($request, $adminHub);
+
+        $updatedUser = $user->fresh();
+        $this->assertSame(User::ROLE_STUDENT, $updatedUser->user_role);
+        $this->assertSame('Regular', $updatedUser->user_type);
+        $this->assertSame('active', $updatedUser->status);
+        $this->assertDatabaseHas('admin_hub', [
+            'id' => $adminHub->id,
+            'role' => 'removed',
+            'access_level' => null,
+        ]);
+    }
+
+    public function test_deleting_directory_account_preserves_user_and_reconciles_access(): void
+    {
+        $manager = User::create([
+            'student_id' => 'delete-directory-manager',
+            'first_name' => 'System',
+            'last_name' => 'Manager',
+            'name' => 'System Manager',
+            'email' => 'delete-directory-manager@example.test',
+            'user_role' => User::ROLE_SUPERADMIN,
+            'idp_role' => 'superadmin',
+            'user_type' => 'Regular',
+            'status' => 'active',
+            'password' => 'secret',
+        ]);
+        $clinicUser = User::create([
+            'student_id' => 'delete-directory-clinic',
+            'first_name' => 'Clinic',
+            'last_name' => 'Staff',
+            'name' => 'Clinic Staff',
+            'email' => 'delete-directory-clinic@example.test',
+            'user_role' => User::ROLE_ADMIN,
+            'idp_role' => 'faculty',
+            'user_type' => 'Regular',
+            'status' => 'active',
+            'password' => 'secret',
+        ]);
+        Admin::create([
+            'user_id' => $clinicUser->id,
+            'email' => $clinicUser->email,
+            'access_level' => 'clinic_staff',
+            'status' => 'active',
+        ]);
+        $clinicHub = AdminHub::create([
+            'user_id' => $clinicUser->id,
+            'name' => $clinicUser->name,
+            'email' => $clinicUser->email,
+            'role' => 'admin_designee',
+            'access_level' => 'designee',
+            'status' => 'active',
+        ]);
+        $studentUser = User::create([
+            'student_id' => 'delete-directory-student',
+            'first_name' => 'Faculty',
+            'last_name' => 'Designee',
+            'name' => 'Faculty Designee',
+            'email' => 'delete-directory-student@example.test',
+            'user_role' => User::ROLE_ADMIN,
+            'idp_role' => 'faculty',
+            'user_type' => 'Regular',
+            'status' => 'active',
+            'password' => 'secret',
+        ]);
+        $studentHub = AdminHub::create([
+            'user_id' => $studentUser->id,
+            'name' => $studentUser->name,
+            'email' => $studentUser->email,
+            'role' => 'admin_designee',
+            'access_level' => 'designee',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($manager, 'admin');
+        $controller = new AdminUserController();
+        foreach ([$clinicHub, $studentHub] as $adminHub) {
+            $request = \Illuminate\Http\Request::create(
+                '/admin/user-management/admin-hub/' . $adminHub->id . '/delete-record',
+                'DELETE',
+                ['management_view' => 'admin-hub']
+            );
+            $request->setLaravelSession($this->app['session.store']);
+            $controller->deleteAdminHubRecord($request, $adminHub);
+        }
+
+        $this->assertDatabaseMissing('admin_hub', ['id' => $clinicHub->id]);
+        $this->assertDatabaseMissing('admin_hub', ['id' => $studentHub->id]);
+        $this->assertSame(User::ROLE_ADMIN, $clinicUser->fresh()->user_role);
+        $this->assertSame(User::ROLE_STUDENT, $studentUser->fresh()->user_role);
+        $this->assertDatabaseHas('users', ['id' => $clinicUser->id]);
+        $this->assertDatabaseHas('users', ['id' => $studentUser->id]);
+        $this->assertDatabaseHas('admins', [
+            'user_id' => $clinicUser->id,
+            'access_level' => 'clinic_staff',
+        ]);
+    }
+
     private function canAccessAdminRoutes(User $user): bool
     {
         $middleware = new RoleMiddleware();

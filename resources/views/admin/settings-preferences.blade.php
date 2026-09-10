@@ -325,6 +325,9 @@
         font-size: 15px;
         font-weight: 900;
     }
+    html[data-theme="dark"] .preferences-settings-page .preferences-subheading {
+        color: #ffffff;
+    }
     .preferences-settings-page .preferences-general-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
         padding: 0;

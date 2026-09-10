@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Concerns\ExcludesInactiveUserRecords;
 
 class EmployeeHealthProfile extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, ExcludesInactiveUserRecords;
 
     protected $table = 'health_profile_emp';
 

@@ -410,6 +410,20 @@ class LoginController extends Controller
         return in_array($userType, ['assistant', 'student assistant', 'student_assistant'], true);
     }
 
+    private function isClinicStaffAccount(User $user): bool
+    {
+        if (User::normalizeRole((string) $user->user_role) !== User::ROLE_ADMIN) {
+            return false;
+        }
+
+        $linkedAdmin = $this->findLinkedAdminProfile($user);
+        $accessLevel = strtolower(trim((string) ($linkedAdmin?->access_level ?? '')));
+        $status = strtolower(trim((string) ($linkedAdmin?->status ?? 'active')));
+
+        return $status === 'active'
+            && in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff'], true);
+    }
+
     private function isAdminDesigneeAccount(User $user): bool
     {
         if (User::normalizeRole((string) $user->user_role) !== User::ROLE_ADMIN) {
@@ -644,6 +658,10 @@ class LoginController extends Controller
         if ($normalizedRole === User::ROLE_ADMIN) {
             if ($this->isStudentAssistantAccount($user)) {
                 return '/assistant/choose-portal';
+            }
+
+            if ($this->isClinicStaffAccount($user)) {
+                return '/admin/dashboard';
             }
 
             if ($this->isAdminDesigneeAccount($user)) {

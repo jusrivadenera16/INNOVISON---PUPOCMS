@@ -382,9 +382,14 @@
     <input type="hidden" name="email" id="detailEditEmail">
     <div class="um-field">
         <label>Status</label>
-        <select name="status" id="detailStatus">
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-        </select>
+        @if(($managementView ?? '') === 'admin-hub')
+            <input type="hidden" name="status" id="detailStatus" value="active">
+            <span class="um-status-readonly" id="detailStatusBadge">Active</span>
+        @else
+            <select name="status" id="detailStatus">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        @endif
     </div>
 </div>
