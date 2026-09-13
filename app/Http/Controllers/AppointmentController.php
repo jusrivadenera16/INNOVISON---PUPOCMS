@@ -4750,6 +4750,18 @@ public function showEmployeeHealthForm()
 {
     /** @var \App\Models\User|null $user */
     $user = Auth::guard('student')->user() ?: Auth::user();
+    return $this->renderEmployeeHealthForm($user, false);
+}
+
+public function showAdminEmployeeHealthForm()
+{
+    /** @var \App\Models\User|null $user */
+    $user = Auth::guard('admin')->user() ?: Auth::user();
+    return $this->renderEmployeeHealthForm($user, true);
+}
+
+private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
+{
     if ($user) {
         $user = User::with(['adminProfile', 'adminHubProfile', 'employeeHealthProfile'])->find($user->id);
     }
@@ -4758,11 +4770,13 @@ public function showEmployeeHealthForm()
         return redirect('/login')->with('error', 'Please login first.');
     }
 
-    if (!$this->shouldUseEmployeeHealthForm($user)) {
+    if ($adminForm) {
+        abort_unless($this->canUseAdminEmployeeHealthForm($user), 403);
+    } elseif (!$this->shouldUseEmployeeHealthForm($user)) {
         return redirect()->route('health.form');
     }
 
-    if ($this->hasSubmittedEmployeeHealthProfile($user)) {
+    if (!$adminForm && $this->hasSubmittedEmployeeHealthProfile($user)) {
         return redirect('/student/account?view=health-record')
             ->with('info', 'Your health examination record has already been submitted for clinic review.');
     }
@@ -4792,8 +4806,19 @@ public function showEmployeeHealthForm()
         'displayName',
         'employeeCourseOptions',
         'healthFormCategories',
-        'defaultEmployeeHealthFormCategory'
+        'defaultEmployeeHealthFormCategory',
+        'adminForm'
     ));
+}
+
+private function canUseAdminEmployeeHealthForm(User $user): bool
+{
+    $currentRole = User::normalizeRole((string) ($user->user_role ?? ''));
+    $accessLevel = strtolower(trim((string) ($user->adminProfile?->access_level ?? '')));
+    $isClinicStaff = $currentRole === User::ROLE_ADMIN
+        && in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff'], true);
+
+    return $currentRole === User::ROLE_SUPERADMIN || $isClinicStaff;
 }
 
 private function generateEmployeeHealthFormPdf(EmployeeHealthProfile $profile): string
@@ -5026,25 +5051,34 @@ private function normalizeDateValue($value): string
     }
 }
 
-public function storeEmployeeHealthForm(Request $request)
+public function storeAdminEmployeeHealthForm(Request $request)
+{
+    return $this->storeEmployeeHealthForm($request, true);
+}
+
+public function storeEmployeeHealthForm(Request $request, bool $adminForm = false)
 {
     /** @var \App\Models\User|null $user */
-    $user = Auth::guard('student')->user() ?: Auth::user();
+    $user = $adminForm
+        ? (Auth::guard('admin')->user() ?: Auth::user())
+        : (Auth::guard('student')->user() ?: Auth::user());
     if ($user) {
-        $user = User::with(['adminProfile', 'employeeHealthProfile'])->find($user->id);
+        $user = User::with(['adminProfile', 'adminHubProfile', 'employeeHealthProfile'])->find($user->id);
     }
 
     if (!$user) {
         return redirect('/login')->with('error', 'Please login first.');
     }
 
-    if (!$this->shouldUseEmployeeHealthForm($user)) {
+    if ($adminForm) {
+        abort_unless($this->canUseAdminEmployeeHealthForm($user), 403);
+    } elseif (!$this->shouldUseEmployeeHealthForm($user)) {
         return redirect()->route('health.form')
             ->with('info', 'Please use the student/applicant Health Information Form.');
     }
 
     $existingEmployeeProfile = $user->employeeHealthProfile;
-    if ($existingEmployeeProfile) {
+    if ($existingEmployeeProfile && !$adminForm) {
         return redirect('/student/account?view=health-record')
             ->with('info', 'Your health examination record has already been submitted for clinic review.');
     }
@@ -5058,13 +5092,18 @@ public function storeEmployeeHealthForm(Request $request)
         ]);
     }
 
+    $employeeNumberRule = Rule::unique('health_profile_emp', 'employee_number')
+        ->where(fn ($query) => $query->whereNull('deleted_at'));
+    if ($adminForm && $existingEmployeeProfile) {
+        $employeeNumberRule->ignore($existingEmployeeProfile->id);
+    }
+
     $validated = $request->validate([
         'employee_number' => [
             'nullable',
             'string',
             'max:120',
-            Rule::unique('health_profile_emp', 'employee_number')
-                ->where(fn ($query) => $query->whereNull('deleted_at')),
+            $employeeNumberRule,
         ],
         'first_name' => ['required', 'string', 'max:120'],
         'middle_name' => ['nullable', 'string', 'max:120'],
@@ -5221,7 +5260,11 @@ public function storeEmployeeHealthForm(Request $request)
     foreach ($employeeRequirementFiles as $field => $directory) {
         $employeeRequirementPaths[$field] = $request->hasFile($field)
             ? $this->healthFiles()->store($request->file($field), $directory)
-            : null;
+            : ($adminForm
+                ? ($field === 'student_photo'
+                    ? ($existingEmployeeProfile?->student_photo ?: null)
+                    : ($existingEmployeeProfile?->{$field} ?: null))
+                : null);
     }
 
     $employeeHealthDeclarationPath = $employeeRequirementPaths['health_declaration'];
@@ -5260,7 +5303,8 @@ public function storeEmployeeHealthForm(Request $request)
         $this->healthFiles()->put($employeeHealthDeclarationPath, $declarationPdf->output());
     }
 
-    $profile = EmployeeHealthProfile::create([
+    $profile = $existingEmployeeProfile ?: new EmployeeHealthProfile();
+    $profile->fill([
         'user_id' => $user->id,
         'employee_number' => $validated['employee_number'] ?? null,
         ...(\Schema::hasColumn('health_profile_emp', 'health_form_category') ? [
@@ -5352,10 +5396,17 @@ public function storeEmployeeHealthForm(Request $request)
         'uploaded_signature_path' => $signaturePath,
         'signature_type' => $signatureType,
         'certified_at' => now(),
-        'submission_status' => 'submitted',
-        'clearance_status' => 'For Verification',
-        'documents_valid' => null,
+        'submission_status' => $adminForm ? 'approved' : 'submitted',
+        'clearance_status' => $adminForm ? 'Approved' : 'For Verification',
+        'documents_valid' => $adminForm ? true : null,
+        'verified_at' => $adminForm ? now() : null,
+        'approved_by_user_id' => $adminForm ? $user->id : null,
     ]);
+    $profile->save();
+
+    if ($adminForm) {
+        $this->generateEmployeeHealthFormPdf($profile);
+    }
 
     $user->contact_no = $validated['contact_no'];
     $user->DOB = $validated['birthday'];
@@ -5368,17 +5419,26 @@ public function storeEmployeeHealthForm(Request $request)
     $user->name = $fullName;
     $user->gender = $validated['sex'];
     $user->employee_number = $validated['employee_number'] ?? null;
-    $user->is_health_profile_completed = 0;
+    $user->is_health_profile_completed = $adminForm ? 1 : 0;
     $user->save();
 
     \App\Models\ActivityLog::create([
         'user_id' => $user->id,
         'user_name' => $user->name,
-        'action' => 'Employee Health Examination Submitted',
-        'description' => 'Faculty/administrative employee/dependent submitted a Health Examination Record.',
+        'action' => $adminForm
+            ? 'Employee Health Examination Approved'
+            : 'Employee Health Examination Submitted',
+        'description' => $adminForm
+            ? 'Super Admin/Clinic Staff saved an automatically approved Health Examination Record.'
+            : 'Faculty/administrative employee/dependent submitted a Health Examination Record.',
         'ip_address' => $request->ip(),
         'user_agent' => $request->userAgent(),
     ]);
+
+    if ($adminForm) {
+        return redirect()->route('admin.settings.health-profile')
+            ->with('success', 'Health Examination Record saved successfully.');
+    }
 
     return redirect('/student/account?view=health-record')
         ->with('success', 'Health Examination Record submitted successfully.')

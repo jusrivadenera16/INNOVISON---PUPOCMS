@@ -311,15 +311,17 @@
     $dailyTreatmentRecordUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/daily-treatment-record') : url('/admin/reports/daily-treatment-record');
     $isSuperAdmin = $role === \App\Models\User::ROLE_SUPERADMIN;
 @endphp
-
 <div class="digital-logbook-shell">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Reports', 'url' => $reportsHomeUrl],
+        ['label' => 'Digital Logbook'],
+    ]])
     <section class="digital-logbook-frame">
         <header class="digital-logbook-header">
             <div>
                 <h1 class="digital-logbook-title">Digital Logbook</h1>
                 <p class="digital-logbook-copy">Open the clinic logbooks used to monitor consultations, treatment records, and health form review visits.</p>
             </div>
-            <a href="{{ $reportsHomeUrl }}" class="digital-logbook-back">&larr; Back to Reports</a>
         </header>
 
         <div class="digital-logbook-grid">

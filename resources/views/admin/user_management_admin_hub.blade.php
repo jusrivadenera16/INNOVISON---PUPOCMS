@@ -1055,6 +1055,11 @@
 
 @section('content')
 <div class="user-management-shell">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Settings', 'url' => route('admin.settings')],
+        ['label' => 'Users Management', 'url' => route('admin.user-management')],
+        ['label' => 'Admin Hub'],
+    ]])
     @php
         $hubTotal = count($adminHubRecords);
         $hubActive = collect($adminHubRecords)->where('status', 'active')->count();

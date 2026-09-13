@@ -2315,6 +2315,15 @@ class AdminUserController extends Controller
         return $developerEmail !== '' && $accountEmail !== '' && hash_equals($developerEmail, $accountEmail);
     }
 
+    private function isSystemDeveloperSuperAdmin(?User $user = null): bool
+    {
+        $user ??= Auth::user();
+
+        return $user
+            && User::normalizeRole((string) ($user->user_role ?? '')) === User::ROLE_SUPERADMIN
+            && $this->isSystemDeveloper($user);
+    }
+
     private function isSuperAdminAccount(User $user): bool
     {
         if (User::normalizeRole((string) ($user->user_role ?? '')) === User::ROLE_SUPERADMIN) {
@@ -2331,11 +2340,12 @@ class AdminUserController extends Controller
     {
         $current = Auth::user();
         $isOwnAccount = $current && (int) $user->id === (int) $current->id;
+        $canManageSuperAdminTargets = $this->isSystemDeveloperSuperAdmin($current);
 
         abort_unless(
             $isOwnAccount
-                ? $this->isSystemDeveloper($current)
-                : !$this->isSuperAdminAccount($user),
+                ? $canManageSuperAdminTargets
+                : !$this->isSuperAdminAccount($user) || $canManageSuperAdminTargets,
             403,
             'This account cannot be managed from Account Access.'
         );
@@ -2353,7 +2363,8 @@ class AdminUserController extends Controller
             || in_array($recordAccessLevel, ['superadmin', 'super_admin'], true);
 
         if ($isSuperAdminRecord) {
-            return $isOwnAccount && $this->isSystemDeveloper();
+            return $this->isSystemDeveloperSuperAdmin()
+                || ($isOwnAccount && $this->isSystemDeveloper());
         }
 
         return !$isOwnAccount;

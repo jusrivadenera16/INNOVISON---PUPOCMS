@@ -274,6 +274,9 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
     Route::get('/health-profile/{id}', [AdminController::class, 'showHealth'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
         ->name('admin.show_health');
+    Route::get('/employee-health-profile/{employeeProfile}', [AdminController::class, 'showEmployeeHealthProfile'])
+        ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
+        ->name('admin.employee_health_profile.show');
     Route::get('/health-profile/{id}/plain', [AdminController::class, 'showHealthPlain'])
         ->middleware(['role:superadmin,admin', 'module.permission:health_records.view'])
         ->name('admin.show_health_plain');
@@ -461,6 +464,23 @@ Route::middleware(['auth:admin', 'account.active', 'idp.session', 'audit'])->gro
         Route::put('/admin/student-assistants/{assistant}', [StudentAssistantController::class, 'update'])->name('admin.student-assistants.update');
         Route::delete('/admin/student-assistants/{assistant}', [StudentAssistantController::class, 'destroy'])->name('admin.student-assistants.destroy');
     });
+
+    Route::get('/admin/settings/my-health-profile/health-form', [AppointmentController::class, 'showAdminEmployeeHealthForm'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.settings.health-profile.form');
+    Route::post('/admin/settings/my-health-profile/health-form', [AppointmentController::class, 'storeAdminEmployeeHealthForm'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.settings.health-profile.form.store');
+    Route::post('/admin/settings/my-health-profile/documents/{document}', [AdminController::class, 'uploadMyHealthProfileDocument'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.settings.health-profile.document.upload');
+    Route::get('/admin/settings/my-health-profile/documents/{document}/download', [AdminController::class, 'downloadMyHealthProfileDocument'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.settings.health-profile.document.download');
+
+    Route::get('/admin/settings/my-health-profile', [AdminController::class, 'myHealthProfile'])
+        ->middleware('role:superadmin,admin')
+        ->name('admin.settings.health-profile');
 
     Route::middleware('module.permission:settings.view')->group(function () {
         Route::get('/admin/settings', [AdminController::class, 'settings'])->name('admin.settings');

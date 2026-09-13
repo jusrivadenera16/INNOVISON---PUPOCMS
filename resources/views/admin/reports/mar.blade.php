@@ -511,12 +511,15 @@
     $freshmenClearanceGad = $gadTables['freshmen_clearance'] ?? [];
 @endphp
 
+@include('admin.partials.report-breadcrumb', ['items' => [
+    ['label' => 'Reports', 'url' => $reportsHomeUrl],
+    ['label' => 'MAR'],
+]])
 
 
 <div class="card">
     <div class="mar-header-bar">
         <h2>Medical Accomplishment Report</h2>
-        <a href="{{ $reportsHomeUrl }}" class="mar-back-button">&larr; Back to Reports</a>
     </div>
 
     <form method="GET" class="mar-filter-bar">

@@ -763,6 +763,10 @@
     $reportRangeLabel = $dateFrom->isSameDay($dateTo) ? $rangeStartLabel : $rangeStartLabel . ' to ' . $rangeEndLabel;
 @endphp
 <div class="summary-container">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Reports', 'url' => $reportsHomeUrl],
+        ['label' => 'Inventory Summary'],
+    ]])
     <div class="summary-header">
         <div>
             <h2 class="summary-title">Inventory Summary Report</h2>
@@ -776,7 +780,6 @@
                 </svg>
                 <span>Filter</span>
             </button>
-            <a href="{{ $reportsHomeUrl }}" class="summary-back">&larr; Back to Reports</a>
             <div class="summary-filter-panel" id="summaryFilterPanel" aria-hidden="true">
                 <div class="summary-filter-panel-title">Calendar Filter</div>
                 <div class="summary-date-grid">

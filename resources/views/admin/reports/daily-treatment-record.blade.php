@@ -682,14 +682,19 @@
 @php
     $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
     $reportsHomeUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/digital-logbook') : url('/admin/reports/digital-logbook');
+    $reportsRootUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
     $rangeStartLabel = $dateFrom->format('d M Y');
     $rangeEndLabel = $dateTo->format('d M Y');
     $selectedMonthLabel = $dateFrom->isSameDay($dateTo)
         ? $rangeStartLabel
         : $rangeStartLabel . ' to ' . $rangeEndLabel;
 @endphp
-
 <div class="treatment-record-shell">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Reports', 'url' => $reportsRootUrl],
+        ['label' => 'Digital Logbook', 'url' => $reportsHomeUrl],
+        ['label' => 'Daily Treatment'],
+    ]])
     <header class="treatment-record-header">
         <div>
             <h1 class="treatment-record-title">Daily Treatment Record</h1>
@@ -702,10 +707,6 @@
                     Filter
                 </button>
             @endif
-            <a href="{{ $reportsHomeUrl }}" class="treatment-record-back">
-                <x-outline-icon name="arrow-long-right" />
-                Back
-            </a>
         </div>
     </header>
 

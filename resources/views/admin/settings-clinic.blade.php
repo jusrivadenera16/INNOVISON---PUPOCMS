@@ -343,6 +343,10 @@
 
 @section('content')
 <div class="settings-section-page clinic-settings-page">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Settings', 'url' => route('admin.settings')],
+        ['label' => 'Clinic Information'],
+    ]])
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -362,7 +366,6 @@
             <h1 class="settings-section-title"><span class="clinic-title-icon"><x-outline-icon name="home" /></span><span>Clinic Information</span></h1>
             <p>Manage the clinic identity, location, operating hours, and service information shown across the system.</p>
         </div>
-        <a href="{{ route('admin.settings') }}" class="settings-back-link"><x-outline-icon name="chevron-right" /> Settings Hub</a>
     </section>
 
     <div class="settings-section-grid two">

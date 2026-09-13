@@ -1238,6 +1238,50 @@ class ReportsController extends Controller
         ));
     }
 
+    private function healthFormsCourseSummaryRows(Collection $issuedRecords, Collection $pendingRecords): Collection
+    {
+        $issuedByCourse = $issuedRecords->groupBy(fn (HealthProfile $form) => $this->healthFormsCourseLabel($form));
+        $pendingByCourse = $pendingRecords
+            ->groupBy(fn (HealthProfile $form) => $this->healthFormsCourseLabel($form))
+            ->map(fn (Collection $forms) => $forms->count());
+
+        return $issuedByCourse
+            ->keys()
+            ->merge($pendingByCourse->keys())
+            ->unique()
+            ->map(function (string $course) use ($issuedByCourse, $pendingByCourse) {
+                $forms = $issuedByCourse->get($course, collect());
+                $sortedForms = $forms
+                    ->sortByDesc(fn (HealthProfile $form) => $this->healthApprovalDate($form))
+                    ->values();
+                $withConditionCount = $forms
+                    ->filter(fn (HealthProfile $form) => $form->hasMedicalCondition())
+                    ->count();
+                $issuedCount = $forms->count();
+
+                return (object) [
+                    'course' => $course,
+                    'issued_count' => $issuedCount,
+                    'with_condition_count' => $withConditionCount,
+                    'no_condition_count' => $issuedCount - $withConditionCount,
+                    'for_approval_count' => (int) ($pendingByCourse->get($course) ?? 0),
+                    'last_issued_at' => $this->healthApprovalDate($sortedForms->first()),
+                ];
+            })
+            ->sort(function ($first, $second) {
+                return [$second->issued_count, $second->for_approval_count, $first->course]
+                    <=> [$first->issued_count, $first->for_approval_count, $second->course];
+            })
+            ->values();
+    }
+
+    private function healthFormsCourseLabel(HealthProfile $form): string
+    {
+        $course = trim((string) ($form->course_college ?: optional($form->user)->course ?: ''));
+
+        return $course !== '' ? $course : 'Unspecified Course';
+    }
+
     private function healthFormsApplicantsListRecords(): Collection
     {
         $records = HealthProfile::query()

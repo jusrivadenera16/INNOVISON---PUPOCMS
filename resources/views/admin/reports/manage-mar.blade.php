@@ -869,6 +869,11 @@
 @endphp
 
 <div class="conditions-page" id="medical-conditions">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Settings', 'url' => route('admin.settings')],
+        ['label' => 'Medical Configuration', 'url' => route('admin.settings.medical')],
+        ['label' => 'Medical Conditions'],
+    ], 'class' => 'report-breadcrumb--settings-medical'])
     <div class="conditions-header">
         <div class="conditions-title-wrap">
             <span class="conditions-title-icon" aria-hidden="true">

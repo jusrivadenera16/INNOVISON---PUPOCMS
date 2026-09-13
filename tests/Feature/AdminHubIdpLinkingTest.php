@@ -281,6 +281,101 @@ class AdminHubIdpLinkingTest extends TestCase
         ]);
     }
 
+    public function test_system_developer_superadmin_can_manage_another_superadmin_in_account_access(): void
+    {
+        Config::set('app.system_developer_email', 'system-developer@example.test');
+
+        $developer = User::create([
+            'student_id' => 'system-developer-account',
+            'first_name' => 'System',
+            'last_name' => 'Developer',
+            'name' => 'System Developer',
+            'email' => 'system-developer@example.test',
+            'user_role' => User::ROLE_SUPERADMIN,
+            'user_type' => 'Regular',
+            'status' => 'active',
+            'password' => bcrypt('secret'),
+        ]);
+        $otherSuperAdmin = User::create([
+            'student_id' => 'other-superadmin-account',
+            'first_name' => 'Other',
+            'last_name' => 'Superadmin',
+            'name' => 'Other Superadmin',
+            'email' => 'other-superadmin@example.test',
+            'user_role' => User::ROLE_SUPERADMIN,
+            'user_type' => 'Regular',
+            'status' => 'active',
+            'password' => bcrypt('secret'),
+        ]);
+
+        $this->actingAs($developer, 'admin');
+        $controller = new AdminUserController();
+        $canManage = new ReflectionMethod($controller, 'canManageRecord');
+        $canManage->setAccessible(true);
+
+        $this->assertTrue($canManage->invoke($controller, [
+            'id' => $otherSuperAdmin->id,
+            'source' => 'superadmin',
+            'normalized_role' => User::ROLE_SUPERADMIN,
+            'raw_role' => User::ROLE_SUPERADMIN,
+            'meta' => ['access_level' => 'superadmin'],
+        ], $developer->id));
+
+        $ensureTarget = new ReflectionMethod($controller, 'ensureCanManageTargetUser');
+        $ensureTarget->setAccessible(true);
+        $ensureTarget->invoke($controller, $otherSuperAdmin);
+    }
+
+    public function test_regular_superadmin_cannot_manage_another_superadmin_in_account_access(): void
+    {
+        Config::set('app.system_developer_email', 'system-developer@example.test');
+
+        $manager = User::create([
+            'student_id' => 'regular-superadmin-account',
+            'first_name' => 'Regular',
+            'last_name' => 'Superadmin',
+            'name' => 'Regular Superadmin',
+            'email' => 'regular-superadmin@example.test',
+            'user_role' => User::ROLE_SUPERADMIN,
+            'user_type' => 'Regular',
+            'status' => 'active',
+            'password' => bcrypt('secret'),
+        ]);
+        $otherSuperAdmin = User::create([
+            'student_id' => 'protected-superadmin-account',
+            'first_name' => 'Protected',
+            'last_name' => 'Superadmin',
+            'name' => 'Protected Superadmin',
+            'email' => 'protected-superadmin@example.test',
+            'user_role' => User::ROLE_SUPERADMIN,
+            'user_type' => 'Regular',
+            'status' => 'active',
+            'password' => bcrypt('secret'),
+        ]);
+
+        $this->actingAs($manager, 'admin');
+        $controller = new AdminUserController();
+        $canManage = new ReflectionMethod($controller, 'canManageRecord');
+        $canManage->setAccessible(true);
+
+        $this->assertFalse($canManage->invoke($controller, [
+            'id' => $otherSuperAdmin->id,
+            'source' => 'superadmin',
+            'normalized_role' => User::ROLE_SUPERADMIN,
+            'raw_role' => User::ROLE_SUPERADMIN,
+            'meta' => ['access_level' => 'superadmin'],
+        ], $manager->id));
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectExceptionMessage('This account cannot be managed from Account Access.');
+
+        $controller->update(
+            \Illuminate\Http\Request::create('/admin/user-management/' . $otherSuperAdmin->id, 'PUT'),
+            $otherSuperAdmin,
+            new \App\Services\FacultySyncService()
+        );
+    }
+
     public function test_activating_admin_hub_membership_does_not_demote_account_access_superadmin(): void
     {
         $user = User::create([

@@ -1291,6 +1291,11 @@
 
 @section('content')
 <div class="user-management-shell">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Settings', 'url' => route('admin.settings')],
+        ['label' => 'Users Management', 'url' => route('admin.user-management')],
+        ['label' => 'Account Access'],
+    ]])
     @php
         $clinicTotal = count($localRecords);
         $clinicActive = collect($localRecords)->where('status', 'active')->count();

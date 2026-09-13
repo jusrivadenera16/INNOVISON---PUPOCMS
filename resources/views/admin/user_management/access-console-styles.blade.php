@@ -184,8 +184,22 @@
     }
     .access-console__add::after { content: ''; position: absolute; top: -40%; left: -90%; width: 48%; height: 180%; background: linear-gradient(115deg, transparent 0%, rgba(255, 247, 181, .65) 50%, transparent 100%); transform: skewX(-18deg); transition: left .48s ease; pointer-events: none; }
     .access-console__add > * { position: relative; z-index: 1; }
-    .access-console__add:hover { color: #76101c; background: #ffd21f; box-shadow: 0 15px 28px rgba(112, 19, 27, .25); transform: translateY(-2px); }
-    .access-console__add:hover::after { left: 145%; }
+    .access-console__add:hover,
+    .access-console__add:focus-visible {
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+        background: #ffd21f;
+        box-shadow: 0 15px 28px rgba(112, 19, 27, .25);
+        transform: translateY(-2px);
+        outline: none;
+    }
+    .access-console__add:hover > *,
+    .access-console__add:focus-visible > * {
+        color: inherit !important;
+        -webkit-text-fill-color: currentColor !important;
+    }
+    .access-console__add:hover::after,
+    .access-console__add:focus-visible::after { left: 145%; }
     .access-console__add svg { width: 15px; height: 15px; }
 
     .access-console__list { min-height: 180px; }

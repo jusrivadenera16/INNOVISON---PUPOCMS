@@ -997,6 +997,10 @@
         color: #ffffff;
     }
 
+    html[data-theme="dark"] .export-page-kicker {
+        color: #ffffff !important;
+    }
+
     html[data-theme="dark"] .export-page-copy,
     html[data-theme="dark"] .export-preview-copy {
         color: #cbd5e1;
@@ -1133,7 +1137,21 @@
 @endpush
 
 @section('content')
+@php
+    $exportBreadcrumbLabel = [
+        'mar' => 'MAR',
+        'inventory' => 'Inventory',
+        'appointments' => 'Appointments',
+        'audit-trail' => 'Audit Trail',
+        'health-forms' => 'Health Forms',
+    ][$reportType ?? ''] ?? ($title ?? 'Report');
+@endphp
 <div class="export-page-shell">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Reports', 'url' => $reportsHomeUrl],
+        ['label' => 'Export Reports', 'url' => $hubUrl],
+        ['label' => $exportBreadcrumbLabel],
+    ]])
     <section class="export-page-frame">
         <header class="export-page-header">
             <div>
@@ -1141,7 +1159,6 @@
                 <h1 class="export-page-title">{{ $title }}</h1>
                 <p class="export-page-copy">{{ $subtitle }}</p>
             </div>
-            <a href="{{ $hubUrl }}" class="export-page-back">&larr; Export Hub</a>
         </header>
 
         <div class="export-action-grid export-action-grid-{{ $reportType }}">

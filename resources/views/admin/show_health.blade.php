@@ -35,6 +35,28 @@
         padding-bottom: 16px;
         border-bottom: 1px solid rgba(112, 19, 27, 0.08);
     }
+    .profile-breadcrumb {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 0 0 -6px;
+        font-size: 12px;
+        font-weight: 900;
+    }
+    .profile-breadcrumb a {
+        color: #64748b;
+        text-decoration: none;
+        transition: color .18s ease;
+    }
+    .profile-breadcrumb a:hover,
+    .profile-breadcrumb a:focus-visible {
+        color: #70131B;
+        text-decoration: underline;
+        outline: none;
+    }
+    .profile-breadcrumb-separator { color: #94a3b8; }
+    .profile-breadcrumb-current { color: #70131B; }
     .profile-hero-main {
         min-width: 0;
     }
@@ -2148,6 +2170,10 @@
         background: rgba(20, 83, 45, 0.28);
         border-color: rgba(74, 222, 128, 0.35);
     }
+    [data-theme="dark"] .profile-breadcrumb a { color: #ffffff; }
+    [data-theme="dark"] .profile-breadcrumb a:hover,
+    [data-theme="dark"] .profile-breadcrumb a:focus-visible { color: #facc15; }
+    [data-theme="dark"] .profile-breadcrumb-current { color: #facc15; }
     [data-theme="dark"] .profile-correction-panel,
     [data-theme="dark"] .profile-correction-card,
     [data-theme="dark"] .correction-card {
@@ -2629,6 +2655,12 @@
         $displayStudentNumber = 'N/A';
     }
     $profileName = trim((string) ($profile->user->name ?? 'N/A'));
+    $profileUserType = strtolower(trim((string) ($profile->user->user_type ?? $profile->user->idp_role ?? '')));
+    $profileDetailLabel = str_contains($profileUserType, 'applicant')
+        ? 'Applicant Health Profile'
+        : (str_contains($profileUserType, 'dependent')
+            ? 'Dependent Health Profile'
+            : 'Student Health Profile');
     $profileInitials = collect(explode(' ', $profileName))
         ->filter()
         ->take(2)
@@ -2696,17 +2728,17 @@
     ])->filter()->implode("\n");
 @endphp
 <div class="health-profile-wrap">
+    <nav class="profile-breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ route('admin.health_records') }}">Health Records</a>
+        <span class="profile-breadcrumb-separator" aria-hidden="true">&rarr;</span>
+        <span class="profile-breadcrumb-current" aria-current="page">{{ $profileDetailLabel }}</span>
+    </nav>
+
     <div class="profile-card profile-hero-card">
             <div class="profile-hero-head">
                 <div class="profile-hero-main">
-                    <h1 class="profile-title">Student Health Profile</h1>
+                    <h1 class="profile-title">{{ $profileDetailLabel }}</h1>
                     <p class="profile-sub">Issued health profile details and submitted documents.</p>
-                </div>
-                <div class="profile-head-actions">
-                <a href="{{ route('admin.health_records') }}" class="profile-top-btn">
-                    <span aria-hidden="true">&larr;</span>
-                    Back
-                </a>
                 </div>
         </div>
 
@@ -2728,7 +2760,11 @@
 
                 <div class="profile-quick-row">
                     <div class="profile-quick-item">
-                        <span class="profile-quick-icon"><x-outline-icon name="academic-cap" /></span>
+                        <span class="profile-quick-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z" />
+                            </svg>
+                        </span>
                         <span>Student No.<strong>{{ $displayStudentNumber }}</strong></span>
                     </div>
                     <div class="profile-quick-item">

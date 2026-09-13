@@ -505,14 +505,17 @@
     };
     $selectedId = (int) request('user_id');
 @endphp
-
 <div class="appt-history-shell">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Reports', 'url' => $reportsUrl],
+        ['label' => 'Appointment Statistics', 'url' => $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/appointment-statistics') : url('/admin/reports/appointment-statistics')],
+        ['label' => 'History'],
+    ]])
     <div class="appt-history-head">
         <div>
             <h1 class="appt-history-title">Appointment History</h1>
             <p class="appt-history-copy">Search for a patient and review consultation visits, vitals, treatment, medicines, and clinic notes in one organized record.</p>
         </div>
-        <a href="{{ $reportsUrl }}" class="appt-history-back">&larr; Back to Reports</a>
     </div>
 
     <section class="appt-panel">

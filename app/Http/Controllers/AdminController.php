@@ -678,12 +678,17 @@ class AdminController extends Controller
         $isStudentAssistant = $this->isStudentAssistantAccount($user);
         $isSuperadmin = $this->isSuperadminAccount($user);
         $linkedAdmin = $isSuperadmin ? $this->findLinkedAdminProfile($user) : null;
+        $employeeHealthProfile = $user->relationLoaded('employeeHealthProfile')
+            ? $user->employeeHealthProfile
+            : $user->employeeHealthProfile()->first();
 
-        $birthday = $linkedAdmin?->birthday;
+        $birthday = $employeeHealthProfile?->birthday ?: ($linkedAdmin?->birthday ?: $user->DOB);
         $age = null;
         if ($birthday) {
             try {
-                $age = Carbon::parse($birthday)->age;
+                $birthdayCarbon = Carbon::parse($birthday);
+                $birthday = $birthdayCarbon->format('Y-m-d');
+                $age = $birthdayCarbon->age;
             } catch (\Throwable $exception) {
                 $age = null;
             }
@@ -693,12 +698,22 @@ class AdminController extends Controller
             ?? ($isStudentAssistant ? 'student_assistant' : User::normalizeRole($user->user_role));
 
         $resolvedStatus = $linkedAdmin?->status ?? ($isStudentAssistant ? null : 'active');
-        $resolvedAddress = $linkedAdmin?->address;
-        $resolvedContactNumber = $linkedAdmin?->contact_no ?? $linkedAdmin?->emergency_contact_no;
-        $resolvedFirstName = $linkedAdmin?->first_name ?: ($user->first_name ?? '');
-        $resolvedMiddleName = $linkedAdmin?->middle_name;
-        $resolvedLastName = $linkedAdmin?->last_name ?: ($user->last_name ?? '');
-        $resolvedSuffixName = $linkedAdmin?->suffix_name;
+        $resolvedAddress = $employeeHealthProfile?->home_address ?: $linkedAdmin?->address;
+        $resolvedContactNumber = $employeeHealthProfile?->contact_no
+            ?: ($linkedAdmin?->contact_no ?? $linkedAdmin?->emergency_contact_no ?? $user->contact_no);
+        $resolvedFirstName = $employeeHealthProfile?->first_name
+            ?: ($linkedAdmin?->first_name ?: ($user->first_name ?? ''));
+        $resolvedMiddleName = $employeeHealthProfile?->middle_name ?: $linkedAdmin?->middle_name;
+        $resolvedLastName = $employeeHealthProfile?->last_name
+            ?: ($linkedAdmin?->last_name ?: ($user->last_name ?? ''));
+        $resolvedSuffixName = $employeeHealthProfile?->suffix_name ?: $linkedAdmin?->suffix_name;
+        $resolvedGender = $employeeHealthProfile?->sex ?: ($linkedAdmin?->gender ?: $user->gender);
+        $resolvedCivilStatus = $employeeHealthProfile?->civil_status ?: $linkedAdmin?->civil_status;
+        $resolvedEmergencyContactPerson = $employeeHealthProfile?->emergency_contact_person
+            ?: $linkedAdmin?->emergency_contact_person;
+        $resolvedEmergencyContactNo = $employeeHealthProfile?->emergency_contact_no
+            ?: $linkedAdmin?->emergency_contact_no;
+        $resolvedOffice = $employeeHealthProfile?->office ?: $linkedAdmin?->office;
         $resolvedName = trim(implode(' ', array_filter([
             $resolvedFirstName,
             $resolvedMiddleName,
@@ -718,14 +733,16 @@ class AdminController extends Controller
             'age' => $age,
             'address' => $resolvedAddress,
             'contact_number' => $resolvedContactNumber,
-            'emergency_contact_person' => $linkedAdmin?->emergency_contact_person,
-            'emergency_contact_no' => $linkedAdmin?->emergency_contact_no,
-            'office' => $linkedAdmin?->office,
-            'gender' => $linkedAdmin?->gender,
-            'civil_status' => $linkedAdmin?->civil_status,
+            'emergency_contact_person' => $resolvedEmergencyContactPerson,
+            'emergency_contact_no' => $resolvedEmergencyContactNo,
+            'office' => $resolvedOffice,
+            'gender' => $resolvedGender,
+            'civil_status' => $resolvedCivilStatus,
             'role' => $resolvedRole,
             'status' => $resolvedStatus,
-            'source' => $isSuperadmin ? 'admins' : ($isStudentAssistant ? 'external_pending' : 'display_only'),
+            'source' => $employeeHealthProfile
+                ? 'health_profile_emp'
+                : ($isSuperadmin ? 'admins' : ($isStudentAssistant ? 'external_pending' : 'display_only')),
             'is_student_assistant' => $isStudentAssistant,
             'is_superadmin' => $isSuperadmin,
             'has_local_admin_profile' => (bool) $linkedAdmin,
@@ -3490,6 +3507,51 @@ class AdminController extends Controller
         ));
     }
 
+    public function showEmployeeHealthProfile(EmployeeHealthProfile $employeeProfile)
+    {
+        $employeeProfile->loadMissing(['user', 'approvedBy']);
+        abort_unless($employeeProfile->user, 404);
+
+        $healthFiles = $this->healthFiles();
+        $employeeDocuments = collect($this->myHealthProfileDocumentDefinitions($employeeProfile))
+            ->map(function (array $definition, string $key) use ($employeeProfile, $healthFiles): array {
+                $path = $healthFiles->normalizePath($employeeProfile->{$definition['field']} ?? null);
+                $fileName = basename($path);
+                $isHealthForm = $key === 'health_form';
+                $isUploaded = $isHealthForm || (
+                    $path !== ''
+                    && $fileName !== ''
+                    && $fileName !== '.'
+                    && $fileName !== DIRECTORY_SEPARATOR
+                    && $healthFiles->exists($path)
+                );
+                $viewUrl = $isHealthForm
+                    ? route('walkin.employeeHealthForm', ['employeeProfile' => $employeeProfile->id])
+                    : ($isUploaded
+                        ? route('walkin.employeeDocument', [
+                            'employeeProfile' => $employeeProfile->id,
+                            'document' => $key,
+                        ])
+                        : null);
+
+                return [
+                    'key' => $key,
+                    'type' => $definition['type'],
+                    'name' => $isHealthForm
+                        ? ($fileName !== '' && $fileName !== '.' ? $fileName : 'Health Form')
+                        : ($isUploaded ? $fileName : 'Missing'),
+                    'uploaded' => $isUploaded,
+                    'view_url' => $viewUrl,
+                    'uploaded_at' => $isUploaded
+                        ? (optional($employeeProfile->updated_at)->format('M j, Y') ?: 'Date unavailable')
+                        : '-',
+                ];
+            })
+            ->values();
+
+        return view('admin.show_employee_health', compact('employeeProfile', 'employeeDocuments'));
+    }
+
     public function requestNewHealthForm(Request $request, $id)
     {
         $profile = HealthProfile::with('user')->findOrFail($id);
@@ -5031,12 +5093,184 @@ public function updateClearance(Request $request, $id)
         $admin = Auth::user();
         $settings = Setting::first();
         if(!$settings) { $settings = new Setting(); }
+        $admin?->loadMissing(['adminProfile', 'employeeHealthProfile']);
         $cmsProfile = $admin ? $this->buildCmsAdminProfile($admin) : [];
         $reportIdentity = $admin && Schema::hasTable('admins')
             ? $this->findLinkedAdminProfile($admin)
             : null;
 
         return view('admin.settings-personal', compact('admin', 'settings', 'cmsProfile', 'reportIdentity'));
+    }
+
+    private function myHealthProfileDocumentDefinitions(?EmployeeHealthProfile $employeeProfile = null): array
+    {
+        $definitions = [
+            'health_form' => ['field' => 'staff_health_form_pdf_path', 'type' => 'Health Form'],
+            'health_declaration' => ['field' => 'health_declaration', 'type' => 'Health Declaration'],
+            'medical_certificate' => ['field' => 'medical_certificate', 'type' => 'Medical Certificate'],
+            'chest_xray_document' => ['field' => 'chest_xray_document', 'type' => 'Chest Xray'],
+        ];
+
+        if ($employeeProfile && (bool) $employeeProfile->has_disability) {
+            $definitions['pwd_id_proof'] = ['field' => 'pwd_id_proof', 'type' => 'PWD'];
+        }
+
+        return $definitions;
+    }
+
+    private function canUseMyHealthProfile(?User $admin): bool
+    {
+        if (!$admin) {
+            return false;
+        }
+
+        $currentRole = User::normalizeRole((string) ($admin->user_role ?? ''));
+        $accessLevel = strtolower(trim((string) ($admin->adminProfile?->access_level ?? '')));
+        $isClinicStaff = $currentRole === User::ROLE_ADMIN
+            && in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff'], true);
+
+        return $currentRole === User::ROLE_SUPERADMIN || $isClinicStaff;
+    }
+
+    public function myHealthProfile()
+    {
+        $admin = Auth::user();
+        abort_unless($admin, 403);
+
+        $admin->loadMissing(['adminProfile', 'employeeHealthProfile']);
+        $currentRole = User::normalizeRole((string) ($admin->user_role ?? ''));
+        $accessLevel = strtolower(trim((string) ($admin->adminProfile?->access_level ?? '')));
+        $isClinicStaff = $currentRole === User::ROLE_ADMIN
+            && in_array($accessLevel, ['clinic_staff', 'clinic staff', 'staff'], true);
+
+        abort_unless($currentRole === User::ROLE_SUPERADMIN || $isClinicStaff, 403);
+
+        $employeeProfile = $admin->employeeHealthProfile;
+        $documentDefinitions = $this->myHealthProfileDocumentDefinitions($employeeProfile);
+        $healthFiles = $this->healthFiles();
+        $documentRows = collect($documentDefinitions)
+            ->map(function (array $definition, string $key) use ($employeeProfile, $healthFiles): array {
+                $path = $employeeProfile
+                    ? $healthFiles->normalizePath($employeeProfile->{$definition['field']} ?? null)
+                    : '';
+                $fileName = basename($path);
+                $isUploaded = $path !== ''
+                    && $fileName !== ''
+                    && $fileName !== '.'
+                    && $fileName !== DIRECTORY_SEPARATOR
+                    && $healthFiles->exists($path);
+
+                return [
+                    'key' => $key,
+                    'type' => $definition['type'],
+                    'name' => $isUploaded ? $fileName : 'Missing',
+                    'uploaded' => $isUploaded,
+                    'view_url' => $isUploaded && $employeeProfile
+                        ? ($key === 'health_form'
+                            ? route('walkin.employeeHealthForm', ['employeeProfile' => $employeeProfile->id])
+                            : route('walkin.employeeDocument', [
+                                'employeeProfile' => $employeeProfile->id,
+                                'document' => $key,
+                            ]))
+                        : null,
+                    'download_url' => $isUploaded
+                        ? route('admin.settings.health-profile.document.download', ['document' => $key])
+                        : null,
+                    'uploaded_at' => $isUploaded
+                        ? (optional($employeeProfile?->updated_at)->format('M j, Y') ?: 'Date unavailable')
+                        : '-',
+                ];
+            })
+            ->values()
+            ->all();
+        $healthFormVersions = [];
+
+        if ($employeeProfile) {
+            $healthFormStatus = trim((string) ($employeeProfile->clearance_status ?: $employeeProfile->submission_status ?: 'Submitted'));
+            $healthFormVersions[] = [
+                'version' => 1,
+                'label' => 'Version 1',
+                'is_current' => true,
+                'status' => ucwords(str_replace(['_', '-'], ' ', $healthFormStatus)),
+                'submitted_at' => optional($employeeProfile->form_date)->format('M j, Y')
+                    ?: optional($employeeProfile->created_at)->format('M j, Y')
+                    ?: 'Date unavailable',
+                'documents' => $documentRows,
+            ];
+        }
+
+        return view('admin.my_health_profile', [
+            'admin' => $admin,
+            'employeeProfile' => $employeeProfile,
+            'healthFormVersions' => $healthFormVersions,
+            'documentRows' => $documentRows,
+        ]);
+    }
+
+    public function uploadMyHealthProfileDocument(Request $request, string $document)
+    {
+        $admin = Auth::user();
+        $admin?->loadMissing(['adminProfile', 'employeeHealthProfile']);
+        abort_unless($this->canUseMyHealthProfile($admin), 403);
+
+        $employeeProfile = $admin->employeeHealthProfile;
+        abort_unless($employeeProfile, 404);
+
+        $definitions = $this->myHealthProfileDocumentDefinitions($employeeProfile);
+        abort_unless(isset($definitions[$document]), 404);
+
+        $validated = $request->validate([
+            'document' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
+        ], [
+            'document.max' => 'The document must not be larger than 1 MB.',
+        ]);
+
+        $storageFolders = [
+            'health_form' => 'health_profile_employees/health_forms',
+            'health_declaration' => 'health_profile_employees/health_declarations',
+            'medical_certificate' => 'health_profile_employees/medical_certificates',
+            'chest_xray_document' => 'health_profile_employees/chest_xray_documents',
+            'pwd_id_proof' => 'health_profile_employees/pwd_id_proofs',
+        ];
+        $field = $definitions[$document]['field'];
+        $healthFiles = $this->healthFiles();
+        $oldPath = $healthFiles->normalizePath($employeeProfile->{$field} ?? null);
+        $newPath = $healthFiles->store($validated['document'], $storageFolders[$document]);
+
+        $employeeProfile->{$field} = $newPath;
+        $employeeProfile->save();
+
+        if ($oldPath !== '' && $oldPath !== $newPath) {
+            $healthFiles->delete($oldPath);
+        }
+
+        return redirect()
+            ->route('admin.settings.health-profile')
+            ->with('success', $definitions[$document]['type'] . ' uploaded successfully.');
+    }
+
+    public function downloadMyHealthProfileDocument(string $document)
+    {
+        $admin = Auth::user();
+        $admin?->loadMissing(['adminProfile', 'employeeHealthProfile']);
+        abort_unless($this->canUseMyHealthProfile($admin), 403);
+
+        $employeeProfile = $admin->employeeHealthProfile;
+        abort_unless($employeeProfile, 404);
+
+        $definitions = $this->myHealthProfileDocumentDefinitions($employeeProfile);
+        abort_unless(isset($definitions[$document]), 404);
+
+        $healthFiles = $this->healthFiles();
+        $path = $healthFiles->normalizePath($employeeProfile->{$definitions[$document]['field']} ?? null);
+        abort_if($path === '' || !$healthFiles->exists($path), 404, 'Uploaded document not found.');
+
+        return $healthFiles->download($path, basename($path), [
+            'Content-Type' => $healthFiles->mimeType($path) ?: 'application/octet-stream',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+        ]);
     }
 
     public function settingsClinic()

@@ -5291,6 +5291,198 @@
         color: #70131B !important;
     }
 
+    .health-table-action-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        max-width: 100%;
+        overflow: visible !important;
+    }
+    .health-more-actions {
+        position: relative;
+        flex: 0 0 auto;
+        z-index: 1300;
+        display: flex;
+        align-items: center;
+    }
+    .health-more-actions-toggle {
+        width: 42px;
+        min-width: 42px;
+        height: 42px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #8f2230;
+        border-radius: 10px;
+        background: #70131B;
+        color: #ffffff;
+        cursor: pointer;
+        visibility: visible !important;
+        opacity: 1 !important;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, .12);
+        transition: background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
+    }
+    .health-more-actions-dots {
+        width: 18px;
+        height: 18px;
+        display: block;
+        flex: 0 0 18px;
+        background: none;
+        border-radius: 0;
+        box-shadow: none;
+    }
+    .health-more-actions-dots circle {
+        fill: #ffffff !important;
+        stroke: none !important;
+    }
+    .health-more-actions-toggle:hover,
+    .health-more-actions-toggle:focus-visible,
+    .health-more-actions.is-open .health-more-actions-toggle {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        transform: none;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .14), 0 10px 20px rgba(112, 19, 27, .20);
+        outline: none;
+    }
+    .health-more-actions-toggle:hover .health-more-actions-dots circle,
+    .health-more-actions-toggle:focus-visible .health-more-actions-dots circle,
+    .health-more-actions.is-open .health-more-actions-dots circle {
+        fill: #70131B !important;
+    }
+    .health-more-actions-menu {
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        width: min(232px, calc(100vw - 32px));
+        padding: 8px;
+        border: 1px solid #ead3d7;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 20px 44px rgba(15, 23, 42, .22);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(-6px) scale(.98);
+        transform-origin: top right;
+        transition: opacity .16s ease, transform .16s ease, visibility 0s linear .16s;
+    }
+    .health-more-actions.is-open .health-more-actions-menu {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(0) scale(1);
+        transition-delay: 0s;
+    }
+    .health-more-actions-item {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        width: 100%;
+        min-height: 42px;
+        padding: 0 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border: 1px solid #8f2230;
+        border-radius: 9px;
+        background: #70131B;
+        color: #ffffff;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        text-align: left;
+        cursor: pointer;
+        box-shadow: 0 8px 18px rgba(112, 19, 27, .20);
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .health-more-actions-item::after {
+        content: "";
+        position: absolute;
+        top: -45%;
+        left: -125%;
+        width: 80%;
+        height: 190%;
+        border-radius: 999px;
+        background: linear-gradient(115deg, transparent 0%, rgba(255, 249, 196, .30) 30%, rgba(255, 249, 196, .92) 50%, rgba(255, 249, 196, .30) 70%, transparent 100%);
+        transform: skewX(-20deg);
+        transition: left .65s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+    .health-more-actions-item > span {
+        position: relative;
+        z-index: 1;
+        color: inherit !important;
+        -webkit-text-fill-color: currentColor !important;
+    }
+    .health-more-actions-item:hover,
+    .health-more-actions-item:focus-visible,
+    .health-more-actions-item:active {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .14), 0 12px 24px rgba(250, 204, 21, .24);
+    }
+    .health-more-actions-item:hover,
+    .health-more-actions-item:focus-visible {
+        transform: translateY(-1px);
+    }
+    .health-more-actions-item:active {
+        transform: translateY(0) scale(.985);
+    }
+    .health-more-actions-item:hover::after,
+    .health-more-actions-item:focus-visible::after,
+    .health-more-actions-item:active::after {
+        left: 135%;
+    }
+    .health-more-actions-item span:last-child {
+        flex: 0 0 auto;
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 1;
+    }
+    html[data-theme="dark"] .health-more-actions-menu {
+        border-color: rgba(250, 204, 21, .28);
+        background: #111827;
+        box-shadow: 0 22px 48px rgba(0, 0, 0, .42);
+    }
+    html[data-theme="dark"] .health-more-actions-toggle {
+        border-color: rgba(250, 204, 21, .24);
+        background: #111827;
+        color: #ffffff;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, .32);
+    }
+    html[data-theme="dark"] .health-more-actions-toggle:hover,
+    html[data-theme="dark"] .health-more-actions-toggle:focus-visible,
+    html[data-theme="dark"] .health-more-actions.is-open .health-more-actions-toggle {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .14), 0 12px 24px rgba(0, 0, 0, .36);
+    }
+    html[data-theme="dark"] .health-more-actions-item {
+        border-color: #8f2230 !important;
+        background: #70131B !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    html[data-theme="dark"] .health-more-actions-item:hover,
+    html[data-theme="dark"] .health-more-actions-item:focus-visible,
+    html[data-theme="dark"] .health-more-actions-item:active {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        color: #70131B !important;
+        -webkit-text-fill-color: #70131B !important;
+    }
+    #healthFilterModal {
+        right: 60px !important;
+    }
+
     /* Final Appointments/Inventory parity pass for Health Records */
     .health-records-overview {
         margin-bottom: 16px !important;
@@ -5328,6 +5520,8 @@
     }
     .health-table-tools {
         width: min(100%, 440px) !important;
+        min-width: 0 !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
         align-items: center !important;
     }
     .health-table-tools .health-records-search-wrap {
@@ -5761,6 +5955,14 @@
         button#healthRecordsOverviewFilterBtn.health-records-search-submit {
             width: 100% !important;
         }
+        .health-table-action-group {
+            width: 100%;
+        }
+        .health-table-action-group button#healthRecordsOverviewFilterBtn.health-records-search-submit {
+            flex: 1 1 auto;
+            width: auto !important;
+            min-width: 0 !important;
+        }
         #healthFilterModal {
             right: auto !important;
             left: 0 !important;
@@ -5965,6 +6167,16 @@
         }
         .main .health-summary-card > .readonly-modal-pagination .readonly-pagination-per-page-form {
             justify-self: end;
+        }
+    }
+    @media (max-width: 768px) {
+        .main .health-summary-card .health-table-tools {
+            grid-template-columns: minmax(0, 1fr) auto !important;
+        }
+        .main .health-summary-card .health-table-action-group {
+            width: auto !important;
+            max-width: 100%;
+            gap: 8px;
         }
     }
 </style>
@@ -6229,12 +6441,39 @@
                     >
                 </div>
             </form>
-            <button type="button" class="health-records-search-submit" id="healthRecordsOverviewFilterBtn" aria-expanded="false" aria-controls="healthFilterModal">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
-                </svg>
-                <span>Filter</span>
-            </button>
+            <div class="health-table-action-group">
+                <button type="button" class="health-records-search-submit" id="healthRecordsOverviewFilterBtn" aria-expanded="false" aria-controls="healthFilterModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+                    </svg>
+                    <span>Filter</span>
+                </button>
+                @if (in_array(strtolower((string) ($userTypeFilter ?? '')), ['faculty', 'admin'], true))
+                    <div class="health-more-actions" id="healthMoreActions">
+                        <button
+                            type="button"
+                            class="health-more-actions-toggle"
+                            id="healthMoreActionsToggle"
+                            aria-label="Open health record actions"
+                            aria-haspopup="menu"
+                            aria-expanded="false"
+                            aria-controls="healthMoreActionsMenu"
+                        >
+                            <svg class="health-more-actions-dots" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                                <circle cx="12" cy="5" r="1.8" fill="#ffffff" />
+                                <circle cx="12" cy="12" r="1.8" fill="#ffffff" />
+                                <circle cx="12" cy="19" r="1.8" fill="#ffffff" />
+                            </svg>
+                        </button>
+                        <div class="health-more-actions-menu" id="healthMoreActionsMenu" role="menu" aria-hidden="true">
+                            <button type="button" class="health-more-actions-item" role="menuitem">
+                                <span>Request New Health Form</span>
+                                <span aria-hidden="true">+</span>
+                            </button>
+                        </div>
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
     <div class="health-table-scroll">
@@ -6465,10 +6704,10 @@
                         {{ $record->verified_at ? \Carbon\Carbon::parse($record->verified_at)->format('M d, Y g:i A') : '-' }}
                     </td>
 
-                    <td style="text-align: center;">
-                        <div class="d-flex justify-content-center">
-                            @if($recordIsEmployee)
-                                <a href="{{ route('walkin.employeeHealthForm', ['employeeProfile' => $record->id, 'fresh' => 1]) }}" class="btn-action btn-view" target="_blank" rel="noopener noreferrer">
+                            <td style="text-align: center;">
+                                <div class="d-flex justify-content-center">
+                                    @if($recordIsEmployee)
+                                <a href="{{ route('admin.employee_health_profile.show', $record->id) }}" class="btn-action btn-view">
                                     <x-outline-icon name="eye" />
                                     <span>View</span>
                                 </a>
@@ -7597,6 +7836,9 @@
     const healthFilterModal = document.getElementById('healthFilterModal');
     const healthFilterCloseBtn = document.getElementById('healthFilterCloseBtn');
     const healthFilterForm = document.getElementById('healthFilterForm');
+    const healthMoreActions = document.getElementById('healthMoreActions');
+    const healthMoreActionsToggle = document.getElementById('healthMoreActionsToggle');
+    const healthMoreActionsMenu = document.getElementById('healthMoreActionsMenu');
     const healthTableTools = healthRecordsOverviewFilterBtn?.closest('.health-table-tools');
     if (healthTableTools && healthFilterModal) {
         healthTableTools.appendChild(healthFilterModal);
@@ -7646,6 +7888,9 @@
 
     function setHealthFilterModalOpen(isOpen) {
         if (!healthFilterModal) return;
+        if (isOpen) {
+            setHealthMoreActionsOpen(false);
+        }
         healthFilterModal.classList.toggle('is-open', isOpen);
         healthFilterModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
         healthFilterToggle?.classList.toggle('is-open', isOpen);
@@ -7656,6 +7901,13 @@
                 wrap.classList.remove('is-open');
             });
         }
+    }
+
+    function setHealthMoreActionsOpen(isOpen) {
+        if (!healthMoreActions || !healthMoreActionsToggle || !healthMoreActionsMenu) return;
+        healthMoreActions.classList.toggle('is-open', isOpen);
+        healthMoreActionsToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        healthMoreActionsMenu.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
     }
 
     document.querySelectorAll('.health-filter-custom-source').forEach(function (select) {
@@ -7740,6 +7992,14 @@
         setHealthFilterModalOpen(!healthFilterModal?.classList.contains('is-open'));
     });
 
+    healthMoreActionsToggle?.addEventListener('click', function () {
+        const willOpen = !healthMoreActions?.classList.contains('is-open');
+        if (willOpen) {
+            setHealthFilterModalOpen(false);
+        }
+        setHealthMoreActionsOpen(willOpen);
+    });
+
     healthFilterToggle?.addEventListener('click', function () {
         setHealthFilterModalOpen(true);
     });
@@ -7759,6 +8019,18 @@
         if (healthFilterModal.contains(event.target)) return;
         if (healthRecordsOverviewFilterBtn?.contains(event.target)) return;
         setHealthFilterModalOpen(false);
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!healthMoreActions?.classList.contains('is-open')) return;
+        if (healthMoreActions.contains(event.target)) return;
+        setHealthMoreActionsOpen(false);
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape' || !healthMoreActions?.classList.contains('is-open')) return;
+        setHealthMoreActionsOpen(false);
+        healthMoreActionsToggle?.focus();
     });
 
     function syncDocumentResubmissionReason() {

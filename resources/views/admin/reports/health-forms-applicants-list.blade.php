@@ -1205,8 +1205,12 @@
     $reportsUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/health-forms') : url('/admin/reports/health-forms');
     $logbookRouteName = request()->routeIs('assistant.*') ? 'assistant.reports.health-forms.applicants-list' : 'reports.health-forms.applicants-list';
 @endphp
-
 <div class="logbook-shell">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Reports', 'url' => $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports')],
+        ['label' => 'Health Forms', 'url' => $reportsUrl],
+        ['label' => 'List'],
+    ]])
     <div class="logbook-head">
         <div>
             <h1 class="logbook-title">Health Forms</h1>
@@ -1219,7 +1223,6 @@
                 </svg>
                 <span>Filter</span>
             </button>
-            <a href="{{ $reportsUrl }}" class="logbook-back">&larr; Back</a>
         </div>
     </div>
 

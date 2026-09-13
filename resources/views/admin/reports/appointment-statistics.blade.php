@@ -803,8 +803,11 @@
         return number_format($numeric, floor($numeric) === $numeric ? 0 : 1);
     };
 @endphp
-
 <div class="appointment-stats-shell">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Reports', 'url' => $reportsHomeUrl],
+        ['label' => 'Appointment Statistics'],
+    ]])
     <header class="appointment-stats-header">
         <div>
             <h1 class="appointment-stats-title">Appointment Statistics</h1>
@@ -877,9 +880,6 @@
                     </form>
                 </div>
             </div>
-            <a href="{{ $reportsHomeUrl }}" class="appointment-stats-back">
-                &larr; Back to Reports
-            </a>
         </div>
     </header>
 

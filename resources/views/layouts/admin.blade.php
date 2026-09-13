@@ -34,7 +34,7 @@
             $tabIcon = 'WK';
             $tabAccent = '#EA580C';
             $tabTitlePrefix = '[Walk-In] ';
-        } elseif (request()->routeIs('admin.health_records') || request()->is('health-records') || request()->is('health-profile/*')) {
+        } elseif (request()->routeIs('admin.health_records') || request()->routeIs('admin.employee_health_profile.*') || request()->is('health-records') || request()->is('health-profile/*')) {
             $tabIcon = 'HF';
             $tabAccent = '#0F766E';
             $tabTitlePrefix = '[Health Form] ';
@@ -5955,8 +5955,44 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         ? url('/assistant/reports/daily-treatment-record')
         : url('/admin/reports/daily-treatment-record');
     $healthRecordsUrl = route('admin.health_records');
-    $healthRecordsIsActive = request()->routeIs('admin.health_records') || Request::is('health-records') || Request::is('health-profile/*');
+    $healthRecordsIsActive = request()->routeIs('admin.health_records') || request()->routeIs('admin.employee_health_profile.*') || Request::is('health-records') || Request::is('health-profile/*');
     $healthRecordsUserType = strtolower(trim((string) request('user_type', '')));
+    $healthProfileRoute = isset($profile) && $profile instanceof \App\Models\HealthProfile
+        ? $profile
+        : null;
+    if (request()->routeIs('admin.show_health') && $healthProfileRoute) {
+        $healthProfileRouteUser = $healthProfileRoute->relationLoaded('user')
+            ? $healthProfileRoute->getRelation('user')
+            : $healthProfileRoute->user;
+        $healthProfileRouteAudience = $healthProfileRouteUser?->clinicHealthFormAudience();
+        $healthProfileRouteAccountType = $healthProfileRouteUser?->clinicAccountTypeKey();
+
+        $healthRecordsUserType = match (true) {
+            $healthProfileRouteAudience === 'applicant' => 'applicant',
+            $healthProfileRouteAudience === 'student' => 'student',
+            $healthProfileRouteAudience === 'dependent' => 'dependent',
+            $healthProfileRouteAccountType === 'faculty' => 'faculty',
+            $healthProfileRouteAccountType === 'non_teaching_staff' => 'admin',
+            $healthProfileRouteAccountType === 'dependent' => 'dependent',
+            $healthProfileRouteAccountType === 'applicant' => 'applicant',
+            default => 'student',
+        };
+    }
+    $employeeHealthProfileRoute = request()->route('employeeProfile');
+    if (request()->routeIs('admin.employee_health_profile.*') && $employeeHealthProfileRoute instanceof \App\Models\EmployeeHealthProfile) {
+        $employeeRouteUser = $employeeHealthProfileRoute->relationLoaded('user')
+            ? $employeeHealthProfileRoute->getRelation('user')
+            : null;
+        $employeeRouteRoleText = strtolower(trim(collect([
+            $employeeRouteUser?->user_type,
+            $employeeRouteUser?->user_role,
+            $employeeRouteUser?->idp_role,
+        ])->filter()->implode(' ')));
+
+        $healthRecordsUserType = str_contains($employeeRouteRoleText, 'faculty')
+            ? 'faculty'
+            : 'admin';
+    }
     $healthRecordsHasHealthProfiles = \Illuminate\Support\Facades\Schema::hasTable('health_profiles');
     $healthRecordsHasStaffProfiles = \Illuminate\Support\Facades\Schema::hasTable('health_profile_emp');
     $healthRecordsStudentNumberPattern = '^[0-9]{4}-[0-9]{5}-[A-Za-z]{2}-[0-9]+$';
@@ -6093,7 +6129,14 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
     $apiTestingUrl = url('/admin/api-testing');
     $developerToolsUrl = url('/admin/developer-tools');
     $canSeeDeveloperTools = $isAdminLike;
-    $settingsUrl = url('/admin/settings');
+    $canViewMyHealthProfile = $authUser
+        && (
+            $isAdminLike
+            || ($currentRole === \App\Models\User::ROLE_ADMIN && $adminTypeLabel === 'Admin - Clinic Staff')
+        );
+    $settingsUrl = $canViewMyHealthProfile && !$canAccessModule('settings.view')
+        ? route('admin.settings.health-profile')
+        : url('/admin/settings');
     $settingsIsActive = request()->routeIs('admin.settings*')
         || Request::is('admin/settings*')
         || request()->routeIs('admin.reports.manage-mar')
@@ -6104,19 +6147,22 @@ html[data-theme="dark"] .medicine-see-more-link:hover {
         || Request::is('admin/user-management*');
     $settingsNavLinks = collect([
         ['label' => 'Personal Information', 'url' => route('admin.settings.personal'), 'active' => request()->routeIs('admin.settings.personal'), 'icon' => 'user-circle', 'permission' => 'settings.personal'],
+        ['label' => 'My Health Profile', 'url' => route('admin.settings.health-profile'), 'active' => request()->routeIs('admin.settings.health-profile'), 'icon' => 'heart-pulse', 'health_profile' => true],
         ['label' => 'Clinic Information', 'url' => route('admin.settings.clinic'), 'active' => request()->routeIs('admin.settings.clinic'), 'icon' => 'home', 'permission' => 'settings.clinic'],
         ['label' => 'System Preferences', 'url' => route('admin.settings.preferences'), 'active' => request()->routeIs('admin.settings.preferences'), 'icon' => 'code-bracket-square', 'permission' => 'settings.preferences'],
         ['label' => 'Medical Configuration', 'url' => route('admin.settings.medical'), 'active' => request()->routeIs('admin.settings.medical') || request()->routeIs('admin.reports.manage-mar') || request()->routeIs('admin.reports.manage-medicine-types') || request()->routeIs('admin.reports.manage-health-form-categories') || request()->routeIs('mar-clearance-types.*'), 'icon' => 'clipboard-document-list', 'permission' => 'settings.medical'],
         ['label' => 'Users Management', 'url' => route('admin.user-management'), 'active' => request()->routeIs('admin.user-management*'), 'icon' => 'users', 'superadmin' => true],
         ['label' => 'FAQs', 'url' => route('admin.settings.faqs'), 'active' => request()->routeIs('admin.settings.faqs'), 'icon' => 'question-mark-circle', 'permission' => 'settings.faqs'],
-    ])->filter(fn (array $link): bool => !empty($link['superadmin']) ? $isAdminLike : $canAccessModule($link['permission']))->values()->all();
+    ])->filter(fn (array $link): bool => !empty($link['health_profile'])
+        ? $canViewMyHealthProfile
+        : (!empty($link['superadmin']) ? $isAdminLike : $canAccessModule($link['permission'])))->values()->all();
     $canViewAppointments = $canAccessModule('appointments.view');
     $canViewInventory = $canAccessModule('inventory.view');
     $canViewReports = $canAccessModule('reports.view') && $reportNavLinks !== [];
     $canViewWalkin = $canAccessModule('walkin.view');
     $canViewHealthRecords = $canAccessModule('health_records.view');
     $canViewAnnouncements = $canAccessModule('announcements.view');
-    $canViewSettings = $canAccessModule('settings.view') && $settingsNavLinks !== [];
+    $canViewSettings = ($canAccessModule('settings.view') || $canViewMyHealthProfile) && $settingsNavLinks !== [];
     $walkinUrl = $isStudentAssistant ? url('/assistant/walkin') : url('/admin/walkin');
     $assistantEndpoint = $isStudentAssistant ? route('assistant.intent') : route('admin.assistant.intent');
     $displayName = optional($authUser)->name ?? 'Clinic User';

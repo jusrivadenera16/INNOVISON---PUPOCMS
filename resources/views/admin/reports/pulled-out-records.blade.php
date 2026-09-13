@@ -675,7 +675,17 @@
 @endpush
 
 @section('content')
+@php
+    $role = \App\Models\User::normalizeRole(optional(auth()->user())->user_role ?? '');
+    $reportsRootUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports') : url('/admin/reports');
+    $digitalLogbookUrl = $role === \App\Models\User::ROLE_ADMIN ? url('/assistant/reports/digital-logbook') : url('/admin/reports/digital-logbook');
+@endphp
 <div class="pullout-report-shell">
+    @include('admin.partials.report-breadcrumb', ['items' => [
+        ['label' => 'Reports', 'url' => $reportsRootUrl],
+        ['label' => 'Digital Logbook', 'url' => $digitalLogbookUrl],
+        ['label' => 'Pulled Out'],
+    ]])
     <section class="pullout-report-header">
         <div class="pullout-report-heading">
             <div class="pullout-report-title-wrap">
@@ -686,12 +696,6 @@
                 </div>
             </div>
             <div class="pullout-report-head-actions">
-                <a class="pullout-report-back" href="{{ route('reports.digital-logbook') }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-                    </svg>
-                    <span>Back</span>
-                </a>
             </div>
         </div>
     </section>
