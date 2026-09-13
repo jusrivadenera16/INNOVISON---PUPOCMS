@@ -6691,35 +6691,36 @@
             position: absolute;
             top: 50%;
             z-index: 8;
-            width: 38px;
-            height: 38px;
+            width: 56px;
+            height: 56px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid rgba(255, 255, 255, .72);
-            border-radius: 999px;
-            background: #ffffff;
-            color: #8b0000;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            color: #ffffff;
             cursor: pointer;
-            box-shadow: 0 10px 24px rgba(2, 6, 23, .28);
             transform: translateY(-50%);
-            transition: transform .2s ease, background .2s ease, color .2s ease;
+            transition: transform .2s ease, color .2s ease, filter .2s ease;
         }
 
         .landing-announcement-nav:hover,
         .landing-announcement-nav:focus-visible {
-            background: #facc15;
-            color: #70131b;
-            transform: translateY(-50%) scale(1.08);
+            background: transparent;
+            color: #facc15;
+            transform: translateY(-50%) scale(1.16);
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .26));
             outline: none;
         }
 
         .landing-announcement-nav svg {
-            width: 19px;
-            height: 19px;
+            width: 32px;
+            height: 32px;
             fill: none;
             stroke: currentColor;
-            stroke-width: 2.2;
+            stroke-width: 2.5;
             stroke-linecap: round;
             stroke-linejoin: round;
         }
@@ -7538,6 +7539,10 @@
         }
 
         @media (max-width: 820px) {
+            .landing-announcement-carousel {
+                overflow: visible;
+            }
+
             .landing-announcement-carousel .landing-announcement-list {
                 width: min(440px, calc(100% - 56px));
                 grid-template-columns: minmax(0, 1fr);
@@ -7548,11 +7553,11 @@
             }
 
             .landing-announcement-nav.prev {
-                left: 0;
+                left: -18px;
             }
 
             .landing-announcement-nav.next {
-                right: 0;
+                right: -18px;
             }
         }
 
@@ -8412,6 +8417,792 @@
             }
         }
 
+        /* Landing weather widget */
+        .landing-weather-widget {
+            --landing-weather-mini-icon-width: 68px;
+            --landing-weather-panel-origin-offset: 126px;
+            position: absolute;
+            top: auto;
+            right: 0;
+            bottom: clamp(16px, 3vh, 26px);
+            left: auto;
+            z-index: 90;
+            width: 166px;
+            height: 68px;
+            transform: none;
+            transition: opacity .26s ease, transform .38s cubic-bezier(.22, 1, .36, 1);
+            will-change: opacity, transform;
+        }
+
+        .landing-weather-widget.is-animating {
+            pointer-events: none;
+        }
+
+        .landing-weather-widget.is-scroll-hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(calc(100% + 28px));
+        }
+
+        .landing-weather-trigger {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            width: 166px;
+            height: 68px;
+            padding: 4px 7px 4px 6px;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: row;
+            gap: 6px;
+            border: 1px solid rgba(250, 204, 21, .58);
+            border-radius: 13px 0 0 13px;
+            color: #ffffff;
+            background: rgba(57, 4, 18, .46);
+            box-shadow: 0 9px 22px rgba(19, 2, 8, .28), inset 0 1px rgba(255, 255, 255, .14);
+            cursor: pointer;
+            filter: none;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: color .2s ease, border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+            will-change: transform;
+        }
+
+        .landing-weather-trigger:hover,
+        .landing-weather-trigger:focus-visible {
+            color: #facc15;
+            border-color: #facc15;
+            background: rgba(73, 6, 24, .62);
+            box-shadow: 0 11px 26px rgba(19, 2, 8, .36), 0 0 0 3px rgba(250, 204, 21, .10);
+            outline: none;
+            transform: translateX(-2px) scale(1.04);
+        }
+
+        .landing-weather-widget.is-open > .landing-weather-trigger,
+        .landing-weather-widget.is-animating > .landing-weather-trigger {
+            color: #facc15;
+            border-color: transparent;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            outline: none;
+        }
+
+        .landing-weather-widget.is-animating > .landing-weather-trigger {
+            transition: color .2s ease, border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+            transform: none;
+        }
+
+        .landing-weather-widget.is-animating .landing-weather-trigger__summary {
+            transition: none;
+        }
+
+        .landing-weather-trigger__icon {
+            position: relative;
+            display: block;
+            width: 68px;
+            height: 54px;
+            overflow: visible;
+            filter: drop-shadow(0 4px 5px rgba(0, 0, 0, .28));
+            contain: layout paint;
+            transform-origin: center;
+            will-change: transform;
+        }
+
+        .landing-weather-trigger__embed {
+            position: absolute;
+            inset: 0;
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: transparent;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateZ(0);
+            transition: opacity .2s ease;
+            backface-visibility: hidden;
+        }
+
+        .landing-weather-trigger__embed[data-weather-animation="cloudy"] {
+            transform: translateZ(0) scale(1.55);
+            transform-origin: center;
+        }
+
+        .landing-weather-trigger__icon.is-embed-ready .landing-weather-trigger__embed {
+            opacity: 1;
+        }
+
+        .landing-weather-lightning {
+            position: absolute;
+            top: 4px;
+            right: 2px;
+            z-index: 3;
+            width: 30px;
+            height: 42px;
+            opacity: 0;
+            pointer-events: none;
+            filter: drop-shadow(0 0 6px rgba(250, 204, 21, .9));
+            transform: scale(.72) rotate(5deg);
+            transform-origin: center;
+        }
+
+        .landing-weather-trigger__icon.has-lightning .landing-weather-lightning {
+            animation: landingWeatherLightning 2.4s ease-in-out infinite;
+        }
+
+        @keyframes landingWeatherLightning {
+            0%, 68%, 76%, 84%, 100% {
+                opacity: 0;
+                transform: scale(.72) rotate(5deg);
+            }
+            70%, 78% {
+                opacity: 1;
+                transform: scale(1) rotate(5deg);
+            }
+            73%, 81% {
+                opacity: .22;
+                transform: scale(.9) rotate(5deg);
+            }
+        }
+
+        .landing-weather-trigger__temp {
+            display: block;
+            color: currentColor;
+            font-size: 20px;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -.02em;
+        }
+
+        .landing-weather-trigger__summary {
+            min-width: 0;
+            min-height: 48px;
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 4px;
+            padding-left: 9px;
+            border-left: 2px solid rgba(250, 204, 21, .55);
+            transition: opacity .14s ease;
+        }
+
+        .landing-weather-trigger__condition {
+            display: -webkit-box;
+            overflow: hidden;
+            color: rgba(255, 255, 255, .88);
+            font-size: 10px;
+            font-weight: 750;
+            line-height: 1.15;
+            text-align: left;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+
+        .landing-weather-panel {
+            position: absolute;
+            top: auto;
+            right: 0;
+            bottom: 28px;
+            left: auto;
+            z-index: 1;
+            width: min(360px, calc(100vw - 100px));
+            padding: 20px 20px 14px;
+            overflow: hidden;
+            border: 0;
+            border-radius: 28px;
+            color: #ffffff;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(32px) scale(.78);
+            transform-origin: calc(100% - var(--landing-weather-panel-origin-offset)) bottom;
+            transition:
+                opacity .24s ease,
+                visibility 0s linear .34s,
+                transform .34s cubic-bezier(.22, 1, .36, 1),
+                background-color .22s ease,
+                backdrop-filter .22s ease,
+                -webkit-backdrop-filter .22s ease;
+            backface-visibility: hidden;
+            will-change: opacity, transform;
+        }
+
+        .landing-weather-widget.is-open .landing-weather-panel {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+            transition-delay: 0s;
+        }
+
+        .landing-weather-pin {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            z-index: 3;
+            display: grid;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, .2);
+            border-radius: 50%;
+            color: rgba(255, 255, 255, .82);
+            background: rgba(255, 255, 255, .08);
+            cursor: pointer;
+            transition: color .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+        }
+
+        .landing-weather-pin svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+        }
+
+        .landing-weather-pin:hover,
+        .landing-weather-pin:focus-visible {
+            border-color: #facc15;
+            color: #facc15;
+            background: rgba(250, 204, 21, .13);
+            box-shadow: 0 0 0 3px rgba(250, 204, 21, .12);
+            outline: none;
+            transform: translateY(-1px);
+        }
+
+        .landing-weather-pin[aria-pressed="true"] {
+            border-color: #facc15;
+            color: #4b0717;
+            background: #facc15;
+            box-shadow: 0 0 16px rgba(250, 204, 21, .34);
+        }
+
+        .landing-weather-pin[aria-pressed="true"]:hover,
+        .landing-weather-pin[aria-pressed="true"]:focus-visible {
+            color: #4b0717;
+            background: #fde047;
+            transform: translateY(-1px) scale(1.06);
+        }
+
+        .landing-weather-head {
+            display: block;
+            min-height: 56px;
+            padding-right: 34px;
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+        .landing-weather-location,
+        .landing-weather-date {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .landing-weather-location svg {
+            width: 19px;
+            height: 19px;
+            fill: currentColor;
+            flex: 0 0 auto;
+        }
+
+        .landing-weather-date {
+            margin-top: 3px;
+            margin-left: 27px;
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 1px;
+            color: rgba(255, 255, 255, .86);
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .landing-weather-date small {
+            color: rgba(255, 255, 255, .74);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .landing-weather-main {
+            display: grid;
+            grid-template-columns: 100px minmax(0, 1fr);
+            gap: 12px;
+            min-height: 116px;
+            padding: 8px 0 12px;
+            align-items: center;
+        }
+
+        .landing-weather-main__icon {
+            display: grid;
+            width: 100px;
+            height: 80px;
+            place-items: center;
+            overflow: visible;
+            filter: drop-shadow(0 9px 10px rgba(0, 0, 0, .28));
+        }
+
+        .landing-weather-icon-slot .landing-weather-trigger {
+            width: 100px;
+            height: 80px;
+            filter: none;
+            transform: none;
+        }
+
+        .landing-weather-icon-slot .landing-weather-trigger:hover,
+        .landing-weather-icon-slot .landing-weather-trigger:focus-visible {
+            transform: scale(1.05);
+        }
+
+        .landing-weather-icon-slot .landing-weather-trigger__icon {
+            width: 100px;
+            height: 80px;
+        }
+
+        .landing-weather-icon-slot .landing-weather-trigger__temp {
+            display: none;
+        }
+
+        .landing-weather-temperature {
+            display: block;
+            margin: 0;
+            font-size: clamp(46px, 5vw, 56px);
+            font-weight: 400;
+            line-height: .95;
+            letter-spacing: -.055em;
+        }
+
+        .landing-weather-condition {
+            margin: 6px 0 0;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 900;
+            line-height: 1.2;
+        }
+
+        .landing-weather-feels {
+            display: block;
+            margin-top: 4px;
+            color: rgba(255, 255, 255, .72);
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        .landing-weather-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            padding: 12px 0 0;
+            border-top: 1px solid rgba(255, 255, 255, .28);
+        }
+
+        .landing-weather-metric {
+            display: grid;
+            grid-template-columns: 23px minmax(0, 1fr);
+            gap: 5px;
+            align-items: center;
+            padding: 0 6px;
+        }
+
+        .landing-weather-metric + .landing-weather-metric {
+            border-left: 1px solid rgba(255, 255, 255, .14);
+        }
+
+        .landing-weather-metric svg {
+            width: 22px;
+            height: 22px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.9;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .landing-weather-metric.is-humidity { color: #93c5fd; }
+        .landing-weather-metric.is-wind { color: #e2e8f0; }
+        .landing-weather-metric.is-uv { color: #facc15; }
+
+        .landing-weather-metric strong,
+        .landing-weather-metric small {
+            display: block;
+        }
+
+        .landing-weather-metric strong {
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .landing-weather-metric small {
+            margin-top: 2px;
+            color: rgba(255, 255, 255, .66);
+            font-size: 11px;
+            font-weight: 650;
+        }
+
+        .landing-weather-note {
+            display: grid;
+            grid-template-columns: 24px minmax(0, 1fr);
+            gap: 10px;
+            margin-top: 14px;
+            padding: 9px 11px;
+            align-items: start;
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 15px;
+            color: rgba(255, 255, 255, .92);
+            background: rgba(255, 255, 255, .10);
+        }
+
+        .landing-weather-note svg {
+            width: 21px;
+            height: 21px;
+            margin-top: 2px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+        }
+
+        .landing-weather-note strong,
+        .landing-weather-note__text {
+            display: block;
+        }
+
+        .landing-weather-note strong {
+            font-size: 12px;
+            font-weight: 850;
+            line-height: 1.35;
+        }
+
+        .landing-weather-note__text {
+            margin-top: 2px;
+            color: rgba(255, 255, 255, .68);
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        .landing-weather-note__list {
+            display: grid;
+            gap: 4px;
+            margin: 6px 0 0;
+            padding-left: 17px;
+            list-style: disc;
+        }
+
+        .landing-weather-note__list li {
+            padding-left: 2px;
+        }
+
+        .landing-weather-note__safety {
+            display: block;
+            margin-top: 7px;
+            color: inherit;
+            font-weight: 750;
+        }
+
+        .landing-weather-attribution {
+            margin: 6px 0 0;
+            color: rgba(255, 255, 255, .55);
+            text-align: center;
+            font-size: 9px;
+            font-weight: 600;
+        }
+
+        .landing-weather-attribution a {
+            color: inherit;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .landing-weather-attribution a:hover,
+        .landing-weather-attribution a:focus-visible {
+            color: #facc15;
+        }
+
+        body.landing-theme-light .landing-weather-panel {
+            color: #4b1520;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        body.landing-theme-light .landing-weather-trigger {
+            color: #70131b;
+            border-color: rgba(112, 19, 27, .34);
+            background: rgba(255, 255, 255, .48);
+            box-shadow: 0 9px 22px rgba(70, 14, 28, .16), inset 0 1px rgba(255, 255, 255, .62);
+        }
+
+        body.landing-theme-light .landing-weather-trigger__summary {
+            border-left-color: rgba(112, 19, 27, .34);
+        }
+
+        body.landing-theme-light .landing-weather-trigger__condition {
+            color: rgba(75, 21, 32, .78);
+        }
+
+        body.landing-theme-light .landing-weather-trigger:hover,
+        body.landing-theme-light .landing-weather-trigger:focus-visible {
+            color: #70131b;
+            border-color: #b77900;
+            background: rgba(255, 255, 255, .68);
+            box-shadow: 0 11px 26px rgba(70, 14, 28, .20), 0 0 0 3px rgba(183, 121, 0, .10);
+        }
+
+        body.landing-theme-light .landing-weather-widget.is-open > .landing-weather-trigger,
+        body.landing-theme-light .landing-weather-widget.is-animating > .landing-weather-trigger {
+            color: #facc15;
+            border-color: transparent;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        body.landing-theme-light .landing-weather-date small,
+        body.landing-theme-light .landing-weather-feels,
+        body.landing-theme-light .landing-weather-metric small,
+        body.landing-theme-light .landing-weather-note__text {
+            color: rgba(75, 21, 32, .66);
+        }
+
+        body.landing-theme-light .landing-weather-attribution {
+            color: rgba(75, 21, 32, .55);
+        }
+
+        body.landing-theme-light .landing-weather-condition,
+        body.landing-theme-light .landing-weather-metric strong {
+            color: #4b1520;
+        }
+
+        body.landing-theme-light .landing-weather-metrics {
+            border-top-color: rgba(112, 19, 27, .18);
+        }
+
+        body.landing-theme-light .landing-weather-metric + .landing-weather-metric {
+            border-left-color: rgba(112, 19, 27, .12);
+        }
+
+        body.landing-theme-light .landing-weather-metric.is-wind {
+            color: #64748b;
+        }
+
+        body.landing-theme-light .landing-weather-note {
+            color: #70131b;
+            border-color: rgba(112, 19, 27, .12);
+            background: rgba(250, 204, 21, .16);
+        }
+
+        body.landing-theme-light .landing-weather-pin {
+            border-color: rgba(112, 19, 27, .18);
+            color: #70131b;
+            background: rgba(112, 19, 27, .06);
+        }
+
+        body.landing-theme-light .landing-weather-pin:hover,
+        body.landing-theme-light .landing-weather-pin:focus-visible,
+        body.landing-theme-light .landing-weather-pin[aria-pressed="true"] {
+            border-color: #facc15;
+            color: #4b0717;
+            background: #facc15;
+        }
+
+        .landing-panel.has-weather-overlap .landing-weather-panel {
+            background: rgba(43, 3, 15, .22);
+            backdrop-filter: blur(8px) saturate(.88);
+            -webkit-backdrop-filter: blur(8px) saturate(.88);
+        }
+
+        body.landing-theme-light .landing-panel.has-weather-overlap .landing-weather-panel {
+            background: rgba(255, 255, 255, .16);
+        }
+
+        @media (max-width: 700px) {
+            .login-primary.gateway-stage {
+                transition:
+                    opacity .26s ease,
+                    transform .34s cubic-bezier(.22, 1, .36, 1),
+                    visibility 0s linear 0s;
+            }
+
+            .landing-stethoscope-earpiece {
+                transition:
+                    opacity .26s ease,
+                    visibility 0s linear 0s;
+            }
+
+            .landing-panel.is-weather-open .login-primary.gateway-stage {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transform: translateY(10px) scale(.985);
+                transition:
+                    opacity .26s ease,
+                    transform .34s cubic-bezier(.22, 1, .36, 1),
+                    visibility 0s linear .34s;
+            }
+
+            .landing-panel.is-weather-open .landing-stethoscope-earpiece {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition:
+                    opacity .26s ease,
+                    visibility 0s linear .26s;
+            }
+
+            .landing-panel.is-weather-open .help-panel {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+            }
+
+            .landing-weather-widget {
+                --landing-weather-mini-icon-width: 62px;
+                --landing-weather-panel-origin-offset: 124px;
+                right: 0;
+                bottom: 12px;
+                left: auto;
+                width: 160px;
+                height: 66px;
+            }
+
+            .landing-weather-trigger {
+                width: 160px;
+                height: 66px;
+                padding: 4px 5px;
+                gap: 5px;
+                border-radius: 12px 0 0 12px;
+            }
+
+            .landing-weather-trigger__icon {
+                width: 62px;
+                height: 50px;
+            }
+
+            .landing-weather-trigger__temp {
+                font-size: 18px;
+            }
+
+            .landing-weather-trigger__summary {
+                min-height: 46px;
+                gap: 3px;
+                padding-left: 8px;
+            }
+
+            .landing-weather-trigger__condition {
+                font-size: 9px;
+            }
+
+            .landing-weather-panel {
+                position: absolute;
+                top: auto;
+                right: 0;
+                bottom: 20px;
+                left: auto;
+                width: min(430px, calc(100vw - 24px));
+                padding: 18px 16px 14px;
+                transform: translateY(30px) scale(.78);
+                transform-origin: calc(100% - var(--landing-weather-panel-origin-offset)) bottom;
+            }
+
+            .landing-weather-widget.is-open .landing-weather-panel {
+                transform: translateY(0) scale(1);
+            }
+
+            .landing-weather-main {
+                grid-template-columns: 90px minmax(0, 1fr);
+                min-height: 108px;
+                padding-inline: 0;
+            }
+
+            .landing-weather-main__icon {
+                width: 88px;
+                height: 70px;
+            }
+
+            .landing-weather-icon-slot .landing-weather-trigger,
+            .landing-weather-icon-slot .landing-weather-trigger__icon {
+                width: 88px;
+                height: 70px;
+            }
+
+            .landing-weather-metric {
+                padding: 0 8px;
+            }
+        }
+
+        @media (max-width: 430px) {
+            .landing-weather-head {
+                padding-right: 0;
+                font-size: 12px;
+            }
+
+            .landing-weather-main {
+                grid-template-columns: 90px minmax(0, 1fr);
+                gap: 8px;
+            }
+
+            .landing-weather-main__icon {
+                width: 88px;
+                height: 70px;
+            }
+
+            .landing-weather-icon-slot .landing-weather-trigger,
+            .landing-weather-icon-slot .landing-weather-trigger__icon {
+                width: 88px;
+                height: 70px;
+            }
+
+            .landing-weather-temperature {
+                font-size: 50px;
+            }
+
+            .landing-weather-metric {
+                grid-template-columns: 22px minmax(0, 1fr);
+                gap: 5px;
+                padding: 0 5px;
+            }
+
+            .landing-weather-metric svg {
+                width: 21px;
+                height: 21px;
+            }
+
+            .landing-weather-metric strong {
+                font-size: 13px;
+            }
+
+            .landing-weather-metric small {
+                font-size: 10px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .landing-weather-widget,
+            .landing-weather-trigger,
+            .landing-weather-panel,
+            .login-primary.gateway-stage,
+            .landing-stethoscope-earpiece {
+                transition: none;
+            }
+
+            .landing-weather-trigger__icon.has-lightning .landing-weather-lightning {
+                opacity: 1;
+                transform: rotate(5deg);
+                animation: none;
+            }
+        }
+
 
     </style>
 </head>
@@ -8475,6 +9266,97 @@
             <img src="{{ asset('images/clinic-robot-nobg.png') }}" alt="" aria-hidden="true">
             <span>AI Assistant</span>
         </button>
+
+        <div class="landing-weather-widget" id="landingWeatherWidget" data-weather-status="static" aria-busy="false">
+            <button type="button" class="landing-weather-trigger" id="landingWeatherTrigger" aria-label="Open weather details" aria-controls="landingWeatherPanel" aria-expanded="false" title="Weather details">
+                <div class="landing-weather-trigger__icon" id="landingWeatherAnimatedIcon" aria-hidden="true">
+                    <iframe
+                        class="landing-weather-trigger__embed"
+                        id="landingWeatherAnimatedEmbed"
+                        src="https://lottie.host/embed/de650602-fb01-45df-b219-182da24de0d3/QIiItUqyLW.lottie"
+                        data-weather-animation="sunny"
+                        data-sunny-src="https://lottie.host/embed/de650602-fb01-45df-b219-182da24de0d3/QIiItUqyLW.lottie"
+                        data-partly-cloudy-src="https://lottie.host/embed/b9e6fc10-baef-400c-a2d9-fa854874e89d/LGvmY4oaRh.lottie"
+                        data-cloudy-src="https://lottie.host/embed/fe76f238-382f-44d2-9fe0-ea41ea3fc213/Xzj0C0idbo.lottie"
+                        data-rainy-src="https://lottie.host/embed/4c3af4af-82b1-4ad6-99e5-06986dfb51c3/3Tgf8oGWEN.lottie"
+                        data-night-src="https://lottie.host/embed/9406a3f7-202c-428b-b49e-f4b7bf03ca60/DuPHFpLYY4.lottie"
+                        data-night-rain-src="https://lottie.host/embed/b5ec3068-4d02-4768-9601-103904bd6039/2VUg4hgL10.lottie"
+                        title="Animated sunny weather icon"
+                        tabindex="-1"
+                        loading="eager"
+                        referrerpolicy="no-referrer"
+                        onload="this.parentElement.classList.add('is-embed-ready')"
+                    ></iframe>
+                    <svg class="landing-weather-lightning" viewBox="0 0 32 44" aria-hidden="true">
+                        <path d="M18.5 1 5 24h10l-2 19 14-26H17.5l1-16Z" fill="#facc15" stroke="#fff7b2" stroke-linejoin="round" stroke-width="1.25" />
+                    </svg>
+                </div>
+                <span class="landing-weather-trigger__summary" id="landingWeatherMiniSummary" aria-hidden="true">
+                    <span class="landing-weather-trigger__temp" id="landingWeatherMiniTemperature">31&deg;</span>
+                    <span class="landing-weather-trigger__condition" id="landingWeatherMiniCondition">Partly cloudy</span>
+                </span>
+            </button>
+
+            <section class="landing-weather-panel" id="landingWeatherPanel" role="dialog" aria-modal="false" aria-labelledby="landingWeatherCondition" aria-hidden="true" inert>
+                <button type="button" class="landing-weather-pin" id="landingWeatherPin" aria-label="Pin weather panel" aria-pressed="false" title="Pin weather panel">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="m14 3 7 7-4 1.5-3.5 3.5.5 4-2 2-4.5-6.5L3 11l2-2 4 .5L12.5 6 14 3Z" />
+                        <path d="m8 16-4 4" />
+                    </svg>
+                </button>
+                <div class="landing-weather-head">
+                    <div class="landing-weather-location">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.1 7 13 7 13s7-7.9 7-13a7 7 0 0 0-7-7Zm0 10a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" /></svg>
+                        <span>Taguig City, PH</span>
+                    </div>
+                    <time class="landing-weather-date" id="landingWeatherObservedAt" datetime="2026-09-03T14:45:00+08:00">
+                        <span id="landingWeatherDate">Wednesday, September 3, 2026</span>
+                        <small id="landingWeatherTime">2:45 PM</small>
+                    </time>
+                </div>
+
+                <div class="landing-weather-main">
+                    <div class="landing-weather-main__icon landing-weather-icon-slot" id="landingWeatherIconSlot"></div>
+                    <div>
+                        <strong class="landing-weather-temperature" id="landingWeatherTemperature">31&deg;C</strong>
+                        <h2 class="landing-weather-condition" id="landingWeatherCondition">Partly cloudy</h2>
+                        <span class="landing-weather-feels" id="landingWeatherFeels">Feels like 34&deg;C</span>
+                    </div>
+                </div>
+
+                <div class="landing-weather-metrics">
+                    <div class="landing-weather-metric is-humidity">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3S6 10 6 15a6 6 0 0 0 12 0c0-5-6-12-6-12Z" /><path d="M9 16c.5 1.5 1.5 2.2 3 2.2" /></svg>
+                        <div><strong id="landingWeatherHumidity">68%</strong><small>Humidity</small></div>
+                    </div>
+                    <div class="landing-weather-metric is-wind">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h12c2 0 3-1 3-2.5S17 3 15.5 3c-1 0-1.8.5-2.3 1.3M3 12h16c1.7 0 3 1.2 3 2.7s-1.3 2.8-3 2.8c-1.1 0-2-.5-2.5-1.4M3 16h8" /></svg>
+                        <div><strong id="landingWeatherWind">13 km/h</strong><small>Wind</small></div>
+                    </div>
+                    <div class="landing-weather-metric is-uv">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+                        <div><strong id="landingWeatherUv">UV 7</strong><small id="landingWeatherUvLevel">High</small></div>
+                    </div>
+                </div>
+
+                <div class="landing-weather-note">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 10v6M12 7h.01" /></svg>
+                    <div>
+                        <strong id="landingWeatherNoteTitle">Check conditions before heading out.</strong>
+                        <div class="landing-weather-note__text" id="landingWeatherNoteText">
+                            <ul class="landing-weather-note__list">
+                                <li>Bring drinking water and a compact umbrella.</li>
+                                <li>Choose a safe route for your trip.</li>
+                            </ul>
+                            <span class="landing-weather-note__safety">Keep safe, PUPians!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="landing-weather-attribution"><span id="landingWeatherSourceLabel">Weather data by</span> <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a></p>
+
+            </section>
+        </div>
 
         <!-- Announcement Modal -->
         <div class="announcement-modal-overlay" id="announcementModalOverlay">
@@ -9402,7 +10284,790 @@
         const helpButtons = Array.from(document.querySelectorAll('.help-btn'));
         const helpBackButton = document.getElementById('landingHelpBackButton');
         const helpAccordions = Array.from(document.querySelectorAll('.help-accordion'));
+        const landingWeatherWidget = document.getElementById('landingWeatherWidget');
+        const landingWeatherTrigger = document.getElementById('landingWeatherTrigger');
+        const landingWeatherPanel = document.getElementById('landingWeatherPanel');
+        const landingWeatherPin = document.getElementById('landingWeatherPin');
+        const landingWeatherIconSlot = document.getElementById('landingWeatherIconSlot');
+        const landingWeatherTriggerIcon = landingWeatherTrigger?.querySelector('.landing-weather-trigger__icon');
+        const landingWeatherAnimatedEmbed = document.getElementById('landingWeatherAnimatedEmbed');
+        const landingWeatherMiniSummary = document.getElementById('landingWeatherMiniSummary');
+        const landingWeatherMiniTemperature = document.getElementById('landingWeatherMiniTemperature');
+        const landingWeatherMiniCondition = document.getElementById('landingWeatherMiniCondition');
+        const landingWeatherObservedAt = document.getElementById('landingWeatherObservedAt');
+        const landingWeatherDate = document.getElementById('landingWeatherDate');
+        const landingWeatherTime = document.getElementById('landingWeatherTime');
+        const landingWeatherTemperature = document.getElementById('landingWeatherTemperature');
+        const landingWeatherCondition = document.getElementById('landingWeatherCondition');
+        const landingWeatherFeels = document.getElementById('landingWeatherFeels');
+        const landingWeatherHumidity = document.getElementById('landingWeatherHumidity');
+        const landingWeatherWind = document.getElementById('landingWeatherWind');
+        const landingWeatherUv = document.getElementById('landingWeatherUv');
+        const landingWeatherUvLevel = document.getElementById('landingWeatherUvLevel');
+        const landingWeatherNoteTitle = document.getElementById('landingWeatherNoteTitle');
+        const landingWeatherNoteText = document.getElementById('landingWeatherNoteText');
+        const landingWeatherSourceLabel = document.getElementById('landingWeatherSourceLabel');
+        const landingWeatherOverlapTargets = Array.from(document.querySelectorAll(
+            '#landingLoginPrimary .gateway-logo-row, #landingLoginPrimary .gateway-kicker, #landingLoginPrimary .gateway-title, #landingLoginPrimary .gateway-copy, #landingLoginPrimary .gateway-actions'
+        ));
+        const landingWeatherEndpoint = @json(route('landing.weather'));
+        const landingWeatherReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const landingWeatherPanelDuration = landingWeatherReducedMotion ? 0 : 340;
+        const landingWeatherIconDuration = landingWeatherReducedMotion ? 0 : 420;
+        const landingWeatherCloseIconDuration = landingWeatherPanelDuration;
+        const landingWeatherRefreshInterval = 10 * 60 * 1000;
+        let landingWeatherState = 'closed';
+        let landingWeatherExpandedIcon = null;
+        let landingWeatherHeroVisible = true;
+        let landingWeatherIsPinned = false;
+        let landingWeatherOverlapFrame = null;
         let isHelpMode = false;
+
+        if (landingWeatherWidget && landingPanel && landingWeatherWidget.parentElement !== landingPanel) {
+            landingPanel.appendChild(landingWeatherWidget);
+        }
+
+        function waitForLandingWeatherAnimation(duration) {
+            return new Promise(function (resolve) {
+                window.setTimeout(resolve, duration);
+            });
+        }
+
+        function syncLandingWeatherOverlap() {
+            if (!landingPanel || !landingWeatherPanel || !landingWeatherWidget) {
+                return;
+            }
+
+            const shouldCheckOverlap = window.innerWidth > 700
+                && landingWeatherState !== 'closed'
+                && landingWeatherWidget.classList.contains('is-open');
+            let hasOverlap = false;
+
+            if (shouldCheckOverlap) {
+                const panelRect = landingWeatherPanel.getBoundingClientRect();
+
+                hasOverlap = landingWeatherOverlapTargets.some(function (target) {
+                    const targetRect = target.getBoundingClientRect();
+
+                    return panelRect.left < targetRect.right - 8
+                        && panelRect.right > targetRect.left + 8
+                        && panelRect.top < targetRect.bottom - 8
+                        && panelRect.bottom > targetRect.top + 8;
+                });
+            }
+
+            landingPanel.classList.toggle('has-weather-overlap', hasOverlap);
+        }
+
+        function queueLandingWeatherOverlapSync() {
+            if (landingWeatherOverlapFrame !== null) {
+                window.cancelAnimationFrame(landingWeatherOverlapFrame);
+            }
+
+            landingWeatherOverlapFrame = window.requestAnimationFrame(function () {
+                landingWeatherOverlapFrame = null;
+                syncLandingWeatherOverlap();
+            });
+        }
+
+        async function setLandingWeatherPinned(isPinned) {
+            landingWeatherIsPinned = Boolean(isPinned);
+            landingWeatherWidget?.classList.toggle('is-pinned', landingWeatherIsPinned);
+            landingWeatherPin?.setAttribute('aria-pressed', landingWeatherIsPinned ? 'true' : 'false');
+            landingWeatherPin?.setAttribute('aria-label', landingWeatherIsPinned ? 'Unpin weather panel' : 'Pin weather panel');
+
+            if (landingWeatherPin) {
+                landingWeatherPin.title = landingWeatherIsPinned ? 'Unpin weather panel' : 'Pin weather panel';
+            }
+
+            if (landingWeatherIsPinned) {
+                landingWeatherWidget?.classList.remove('is-scroll-hidden');
+                return;
+            }
+
+            if (!landingWeatherHeroVisible) {
+                if (landingWeatherState === 'open') {
+                    await setLandingWeatherOpen(false);
+                }
+                landingWeatherWidget?.classList.add('is-scroll-hidden');
+            }
+        }
+
+        function setLandingWeatherHeroVisible(isVisible) {
+            landingWeatherHeroVisible = Boolean(isVisible);
+
+            if (landingWeatherIsPinned) {
+                landingWeatherWidget?.classList.remove('is-scroll-hidden');
+                return;
+            }
+
+            landingWeatherWidget?.classList.toggle('is-scroll-hidden', !landingWeatherHeroVisible);
+
+            if (!landingWeatherHeroVisible && landingWeatherState === 'open') {
+                setLandingWeatherOpen(false);
+            }
+        }
+
+        function initializeLandingWeatherVisibility() {
+            if (!landingWeatherWidget || !landingPanel) {
+                return;
+            }
+
+            if ('IntersectionObserver' in window) {
+                const heroObserver = new IntersectionObserver(function (entries) {
+                    const heroEntry = entries[0];
+                    setLandingWeatherHeroVisible(heroEntry.isIntersecting && heroEntry.intersectionRatio >= .15);
+                }, {
+                    threshold: [0, .15],
+                });
+
+                heroObserver.observe(landingPanel);
+                return;
+            }
+
+            const updateHeroVisibility = function () {
+                const heroRect = landingPanel.getBoundingClientRect();
+                const visibleHeight = Math.max(0, Math.min(heroRect.bottom, window.innerHeight) - Math.max(heroRect.top, 0));
+                const visibleRatio = visibleHeight / Math.min(heroRect.height, window.innerHeight);
+                setLandingWeatherHeroVisible(visibleRatio >= .15);
+            };
+
+            window.addEventListener('scroll', updateHeroVisibility, { passive: true });
+            window.addEventListener('resize', updateHeroVisibility);
+            updateHeroVisibility();
+        }
+
+        function landingWeatherConditionForCode(code) {
+            if (code === 0) return 'Clear sky';
+            if (code === 1) return 'Mainly clear';
+            if (code === 2) return 'Partly cloudy';
+            if (code === 3) return 'Overcast';
+            if ([45, 48].includes(code)) return 'Foggy';
+            if ([51, 53, 55].includes(code)) return 'Drizzle';
+            if ([56, 57].includes(code)) return 'Freezing drizzle';
+            if ([61, 63, 65].includes(code)) return 'Rainy';
+            if ([66, 67].includes(code)) return 'Freezing rain';
+            if ([71, 73, 75].includes(code)) return 'Snowfall';
+            if (code === 77) return 'Snow grains';
+            if ([80, 81, 82].includes(code)) return 'Rain showers';
+            if ([85, 86].includes(code)) return 'Snow showers';
+            if ([95, 96, 99].includes(code)) return 'Thunderstorm';
+            return 'Current weather';
+        }
+
+        function landingWeatherPresentationFor(data) {
+            const weatherCode = Number(data.weather_code);
+            const precipitation = Number(data.precipitation);
+            const rain = Number(data.rain);
+            const showers = Number(data.showers);
+            const precipitationProbability = Number(data.precipitation_probability);
+            const cloudCover = Number(data.cloud_cover);
+            const lightPrecipitationLabels = {
+                51: 'Light drizzle possible',
+                56: 'Light freezing drizzle possible',
+                61: 'Light rain possible',
+                66: 'Light freezing rain possible',
+                80: 'Light rain showers possible',
+            };
+            const isLightPrecipitation = Object.prototype.hasOwnProperty.call(lightPrecipitationLabels, weatherCode);
+            const hasMeasuredPrecipitation = Math.max(precipitation, rain, showers) > .1;
+            const hasLikelyPrecipitation = precipitationProbability >= 60 && cloudCover >= 70;
+
+            if (isLightPrecipitation && !hasMeasuredPrecipitation && !hasLikelyPrecipitation) {
+                const cloudBasedCode = cloudCover >= 80 ? 3 : (cloudCover >= 30 ? 2 : (cloudCover >= 10 ? 1 : 0));
+
+                return {
+                    code: cloudBasedCode,
+                    condition: lightPrecipitationLabels[weatherCode],
+                };
+            }
+
+            return {
+                code: weatherCode,
+                condition: landingWeatherConditionForCode(weatherCode),
+            };
+        }
+
+        function landingWeatherIsNight(observedAt, isDay) {
+            if (isDay === 0 || isDay === '0') {
+                return true;
+            }
+
+            if (isDay === 1 || isDay === '1') {
+                return false;
+            }
+
+            const hourMatch = String(observedAt || '').match(/T(\d{2}):/);
+
+            if (!hourMatch) {
+                return false;
+            }
+
+            const hour = Number(hourMatch[1]);
+            return hour < 6 || hour >= 18;
+        }
+
+        function landingWeatherAnimationStateFor(code, observedAt, isDay) {
+            const isNight = landingWeatherIsNight(observedAt, isDay);
+            const isRainy = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(code);
+            const isThunderstorm = [95, 96, 99].includes(code);
+
+            if (isNight) {
+                return {
+                    animationName: isRainy || isThunderstorm ? 'night-rain' : 'night',
+                    hasLightning: isThunderstorm,
+                };
+            }
+
+            if (isThunderstorm) {
+                return { animationName: 'rainy', hasLightning: true };
+            }
+
+            if (isRainy) {
+                return { animationName: 'rainy', hasLightning: false };
+            }
+
+            if ([1, 2].includes(code)) {
+                return { animationName: 'partly-cloudy', hasLightning: false };
+            }
+
+            if ([3, 45, 48, 71, 73, 75, 77, 85, 86].includes(code)) {
+                return { animationName: 'cloudy', hasLightning: false };
+            }
+
+            return { animationName: 'sunny', hasLightning: false };
+        }
+
+        function applyLandingWeatherAnimationState(animationName, hasLightning = false) {
+            if (!landingWeatherAnimatedEmbed || !landingWeatherTriggerIcon) {
+                return;
+            }
+
+            const animationSources = {
+                sunny: landingWeatherAnimatedEmbed.dataset.sunnySrc,
+                'partly-cloudy': landingWeatherAnimatedEmbed.dataset.partlyCloudySrc,
+                cloudy: landingWeatherAnimatedEmbed.dataset.cloudySrc,
+                rainy: landingWeatherAnimatedEmbed.dataset.rainySrc,
+                night: landingWeatherAnimatedEmbed.dataset.nightSrc,
+                'night-rain': landingWeatherAnimatedEmbed.dataset.nightRainSrc,
+            };
+            const animationTitles = {
+                sunny: 'Animated sunny weather icon',
+                'partly-cloudy': 'Animated partly cloudy weather icon',
+                cloudy: 'Animated cloudy weather icon',
+                rainy: 'Animated rainy weather icon',
+                night: 'Animated night weather icon',
+                'night-rain': 'Animated rainy night weather icon',
+            };
+            const animationSource = animationSources[animationName] || animationSources.sunny;
+            const animationTitle = hasLightning
+                ? 'Animated thunderstorm weather icon'
+                : (animationTitles[animationName] || animationTitles.sunny);
+
+            landingWeatherTriggerIcon.classList.toggle('has-lightning', hasLightning);
+            landingWeatherAnimatedEmbed.title = animationTitle;
+
+            if (landingWeatherAnimatedEmbed.dataset.weatherAnimation === animationName) {
+                return;
+            }
+
+            landingWeatherAnimatedEmbed.dataset.weatherAnimation = animationName;
+            landingWeatherAnimatedEmbed.src = animationSource;
+        }
+
+        function applyLandingWeatherAnimation(code, observedAt, isDay) {
+            const animationState = landingWeatherAnimationStateFor(code, observedAt, isDay);
+            applyLandingWeatherAnimationState(animationState.animationName, animationState.hasLightning);
+        }
+
+        function landingWeatherUvDetails(uvIndex) {
+            if (uvIndex >= 11) {
+                return { level: 'Extreme', title: 'Avoid direct sun exposure.', note: 'Extreme UV index today.' };
+            }
+            if (uvIndex >= 8) {
+                return { level: 'Very high', title: 'Limit direct sun exposure.', note: 'Very high UV index today.' };
+            }
+            if (uvIndex >= 6) {
+                return { level: 'High', title: 'Stay hydrated and take care!', note: 'High UV index today.' };
+            }
+            if (uvIndex >= 3) {
+                return { level: 'Moderate', title: 'Use sun protection outdoors.', note: 'Moderate UV index today.' };
+            }
+            return { level: 'Low', title: 'Enjoy the day and stay prepared!', note: 'Low UV index today.' };
+        }
+
+        function landingWeatherAdviceFor(code, observedAt, isDay, feelsLike, uvIndex, humidity, windSpeed) {
+            const isNight = landingWeatherIsNight(observedAt, isDay);
+            const isThunderstorm = [95, 96, 99].includes(code);
+            const isRainy = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(code);
+            const isFoggy = [45, 48].includes(code);
+            const isSnowy = [71, 73, 75, 77, 85, 86].includes(code);
+            const extraAdvice = [];
+            let title;
+            let bullets = [];
+
+            if (isThunderstorm) {
+                title = isNight
+                    ? 'Nighttime thunderstorm — shelter first.'
+                    : 'Thunderstorm conditions — shelter first.';
+                bullets = [
+                    'Stay indoors when you hear thunder.',
+                    'Avoid open areas, tall trees, metal, and floodwater.',
+                    'Check the official PUP page for class suspension or cancellation.',
+                ];
+            } else if (isRainy) {
+                title = isNight
+                    ? 'Rainy night — take extra care while traveling.'
+                    : 'Rainy conditions — prepare before heading out.';
+                bullets = isNight
+                    ? [
+                        'Bring a raincoat or umbrella.',
+                        'Keep your phone and documents dry.',
+                        'Wear non-slip shoes and use well-lit roads.',
+                        'Do not enter floodwater.',
+                    ]
+                    : [
+                        'Bring an umbrella or raincoat.',
+                        'Keep your phone and documents dry.',
+                        'Wear non-slip shoes and allow extra travel time.',
+                        'Avoid flooded streets.',
+                    ];
+            } else if (isFoggy) {
+                title = 'Low visibility — slow down and stay alert.';
+                bullets = [
+                    'Use well-lit roads and allow extra travel time.',
+                    'Drivers should use low-beam lights and keep a safe distance.',
+                    'Avoid sudden turns or lane changes.',
+                ];
+            } else if (isSnowy) {
+                title = 'Cold precipitation — dress and travel carefully.';
+                bullets = [
+                    'Wear warm, waterproof clothes and shoes with good grip.',
+                    'Keep your items dry and walk slowly.',
+                    'Avoid travel if conditions get worse.',
+                ];
+            } else if (isNight) {
+                title = 'Nighttime conditions — travel prepared.';
+                bullets = [
+                    'Use well-lit roads and keep your phone charged.',
+                    'Stay alert while traveling.',
+                    'Bring a light jacket or compact umbrella.',
+                ];
+            } else if (code === 3) {
+                title = 'Cloudy conditions — prepare for possible changes.';
+                bullets = [
+                    'Bring a compact umbrella and light jacket.',
+                    'Check the weather before long trips.',
+                    'Keep your documents dry.',
+                ];
+            } else if ([1, 2].includes(code)) {
+                title = 'Mixed sun and clouds — stay ready outdoors.';
+                bullets = uvIndex >= 6
+                    ? [
+                        'Bring drinking water, SPF 30+ sunscreen, and an umbrella or hat.',
+                        'Reapply sunscreen when needed.',
+                        'Rest in shaded areas.',
+                    ]
+                    : [
+                        'Bring water and light sun protection.',
+                        'Carry a compact umbrella.',
+                    ];
+            } else {
+                title = 'Sunny conditions — plan for heat and UV.';
+                bullets = uvIndex >= 6
+                    ? [
+                        'Bring water, SPF 30+ sunscreen, and a hat or umbrella.',
+                        'Avoid long sun exposure at midday.',
+                        'Rest in shaded areas.',
+                    ]
+                    : [
+                        'Bring water and basic sun protection.',
+                        'Wear breathable clothing.',
+                        'Rest in the shade if you feel too warm.',
+                    ];
+            }
+
+            if (!isThunderstorm && windSpeed >= 30) {
+                extraAdvice.push('Strong winds: stay away from weak branches and loose objects.');
+            }
+
+            if (!isRainy && !isThunderstorm && feelsLike >= 34) {
+                extraAdvice.push('Drink water often. Rest if you feel dizzy or very tired.');
+            } else if (!isRainy && !isThunderstorm && humidity >= 85) {
+                extraAdvice.push('High humidity: wear light clothes and rest often.');
+            }
+
+            if (!isNight && !isThunderstorm && ![0, 1, 2].includes(code) && uvIndex >= 6) {
+                extraAdvice.push('Clouds do not block all UV. Use sunscreen.');
+            }
+
+            return {
+                title,
+                bullets: bullets.concat(extraAdvice.slice(0, 2)),
+            };
+        }
+
+        function renderLandingWeatherAdvice(advice) {
+            if (!landingWeatherNoteTitle || !landingWeatherNoteText) {
+                return;
+            }
+
+            landingWeatherNoteTitle.textContent = advice.title;
+            landingWeatherNoteText.textContent = '';
+
+            if (Array.isArray(advice.bullets) && advice.bullets.length) {
+                const list = document.createElement('ul');
+                list.className = 'landing-weather-note__list';
+
+                advice.bullets.forEach(function (step) {
+                    const item = document.createElement('li');
+                    item.textContent = step;
+                    list.appendChild(item);
+                });
+
+                const safety = document.createElement('span');
+                safety.className = 'landing-weather-note__safety';
+                safety.textContent = 'Keep safe, PUPians!';
+                landingWeatherNoteText.append(list, safety);
+                return;
+            }
+
+            const safety = document.createElement('span');
+            safety.className = 'landing-weather-note__safety';
+            safety.textContent = 'Keep safe, PUPians!';
+            landingWeatherNoteText.appendChild(safety);
+        }
+
+        function landingWeatherManilaDate(value) {
+            const rawValue = String(value || '').trim();
+            if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?$/.test(rawValue)) {
+                return null;
+            }
+
+            const localValue = rawValue.length === 16 ? `${rawValue}:00` : rawValue;
+            const date = new Date(`${localValue}+08:00`);
+
+            return Number.isNaN(date.getTime()) ? null : { date, iso: `${localValue}+08:00` };
+        }
+
+        function applyLandingWeather(data, isStale) {
+            const temperature = Math.round(Number(data.temperature));
+            const feelsLike = Math.round(Number(data.apparent_temperature));
+            const humidity = Math.round(Number(data.humidity));
+            const windSpeed = Math.round(Number(data.wind_speed));
+            const weatherCode = Number(data.weather_code);
+            const uvIndex = Math.round(Number(data.uv_index));
+            const precipitation = Number(data.precipitation);
+            const rain = Number(data.rain);
+            const showers = Number(data.showers);
+            const precipitationProbability = Number(data.precipitation_probability);
+            const cloudCover = Number(data.cloud_cover);
+
+            if ([temperature, feelsLike, humidity, windSpeed, weatherCode, uvIndex, precipitation, rain, showers, precipitationProbability, cloudCover].some(value => !Number.isFinite(value))) {
+                throw new Error('Weather response contains invalid values.');
+            }
+
+            const weatherPresentation = landingWeatherPresentationFor(data);
+
+            landingWeatherMiniTemperature.textContent = `${temperature}\u00b0`;
+            landingWeatherMiniCondition.textContent = weatherPresentation.condition;
+            landingWeatherTemperature.textContent = `${temperature}\u00b0C`;
+            landingWeatherCondition.textContent = weatherPresentation.condition;
+            applyLandingWeatherAnimation(weatherPresentation.code, data.observed_at, data.is_day);
+
+            const weatherAdvice = landingWeatherAdviceFor(
+                weatherPresentation.code,
+                data.observed_at,
+                data.is_day,
+                feelsLike,
+                uvIndex,
+                humidity,
+                windSpeed
+            );
+            renderLandingWeatherAdvice(weatherAdvice);
+            landingWeatherFeels.textContent = `Feels like ${feelsLike}\u00b0C`;
+            landingWeatherHumidity.textContent = `${humidity}%`;
+            landingWeatherWind.textContent = `${windSpeed} km/h`;
+            landingWeatherUv.textContent = `UV ${uvIndex}`;
+
+            const uvDetails = landingWeatherUvDetails(uvIndex);
+            landingWeatherUvLevel.textContent = uvDetails.level;
+            landingWeatherSourceLabel.textContent = isStale ? 'Last available weather \u00b7 Data by' : 'Weather data by';
+
+            const observedAt = landingWeatherManilaDate(data.observed_at);
+            if (observedAt) {
+                landingWeatherObservedAt.dateTime = observedAt.iso;
+                landingWeatherDate.textContent = new Intl.DateTimeFormat('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    timeZone: 'Asia/Manila',
+                }).format(observedAt.date);
+                landingWeatherTime.textContent = new Intl.DateTimeFormat('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true,
+                    timeZone: 'Asia/Manila',
+                }).format(observedAt.date);
+            }
+
+            queueLandingWeatherOverlapSync();
+        }
+
+        async function loadLandingWeather() {
+            if (!landingWeatherWidget) {
+                return;
+            }
+
+            landingWeatherWidget.setAttribute('aria-busy', 'true');
+
+            try {
+                const response = await fetch(landingWeatherEndpoint, {
+                    headers: { Accept: 'application/json' },
+                    cache: 'no-store',
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Weather request failed with status ${response.status}.`);
+                }
+
+                const payload = await response.json();
+                applyLandingWeather(payload.data, Boolean(payload.stale));
+                landingWeatherWidget.dataset.weatherStatus = payload.stale ? 'stale' : 'live';
+            } catch (error) {
+                landingWeatherWidget.dataset.weatherStatus = 'fallback';
+            } finally {
+                landingWeatherWidget.setAttribute('aria-busy', 'false');
+            }
+        }
+
+        async function moveLandingWeatherIconIntoPanel() {
+            if (!landingWeatherIconSlot || !landingWeatherTriggerIcon) {
+                return;
+            }
+
+            const startRect = landingWeatherTriggerIcon.getBoundingClientRect();
+            const widgetRect = landingWeatherWidget.getBoundingClientRect();
+            let targetX = landingWeatherIconSlot.offsetWidth / 2;
+            let targetY = landingWeatherIconSlot.offsetHeight / 2;
+            let offsetElement = landingWeatherIconSlot;
+
+            while (offsetElement && offsetElement !== landingWeatherWidget) {
+                targetX += offsetElement.offsetLeft;
+                targetY += offsetElement.offsetTop;
+                offsetElement = offsetElement.offsetParent;
+            }
+
+            if (offsetElement !== landingWeatherWidget) {
+                const targetRect = landingWeatherIconSlot.getBoundingClientRect();
+                targetX = targetRect.left - widgetRect.left + targetRect.width / 2;
+                targetY = targetRect.top - widgetRect.top + targetRect.height / 2;
+            }
+
+            const deltaX = widgetRect.left + targetX - (startRect.left + startRect.width / 2);
+            const deltaY = widgetRect.top + targetY - (startRect.top + startRect.height / 2);
+            const iconScale = Math.max(1, Math.min(
+                landingWeatherIconSlot.offsetWidth / startRect.width,
+                landingWeatherIconSlot.offsetHeight / startRect.height
+            ));
+            const expandedTransform = `translate3d(${deltaX}px, ${deltaY}px, 0)`;
+
+            landingWeatherExpandedIcon = { transform: expandedTransform, scale: iconScale };
+
+            if (landingWeatherIconDuration === 0 || typeof landingWeatherTrigger.animate !== 'function') {
+                landingWeatherTrigger.style.transform = expandedTransform;
+                landingWeatherTriggerIcon.style.transform = `scale(${iconScale})`;
+                landingWeatherMiniSummary.style.opacity = '0';
+                landingWeatherMiniSummary.style.visibility = 'hidden';
+                return;
+            }
+
+            const moveDuration = Math.round(landingWeatherIconDuration * .76);
+            const growDuration = landingWeatherIconDuration - moveDuration;
+            const movement = landingWeatherTrigger.animate([
+                { transform: 'translate3d(0, 0, 0)' },
+                { transform: expandedTransform },
+            ], {
+                duration: moveDuration,
+                easing: 'cubic-bezier(.22, 1, .36, 1)',
+                fill: 'both',
+            });
+            const summaryFade = landingWeatherMiniSummary.animate([
+                { opacity: 1 },
+                { opacity: 0 },
+            ], {
+                duration: Math.min(140, moveDuration),
+                easing: 'ease-out',
+                fill: 'both',
+            });
+
+            await Promise.all([
+                movement.finished.catch(() => undefined),
+                summaryFade.finished.catch(() => undefined),
+            ]);
+            landingWeatherTrigger.style.transform = expandedTransform;
+            landingWeatherMiniSummary.style.opacity = '0';
+            landingWeatherMiniSummary.style.visibility = 'hidden';
+            movement.cancel();
+            summaryFade.cancel();
+
+            const growth = landingWeatherTriggerIcon.animate([
+                { transform: 'scale(1)' },
+                { transform: `scale(${iconScale})` },
+            ], {
+                duration: growDuration,
+                easing: 'cubic-bezier(.22, 1, .36, 1)',
+                fill: 'both',
+            });
+
+            await growth.finished.catch(() => undefined);
+            landingWeatherTriggerIcon.style.transform = `scale(${iconScale})`;
+            growth.cancel();
+        }
+
+        async function moveLandingWeatherIconHome() {
+            if (!landingWeatherTriggerIcon || !landingWeatherExpandedIcon) {
+                return;
+            }
+
+            const expandedIcon = landingWeatherExpandedIcon;
+
+            if (landingWeatherCloseIconDuration > 0 && typeof landingWeatherTrigger.animate === 'function') {
+                const movement = landingWeatherTrigger.animate([
+                    { transform: expandedIcon.transform },
+                    { transform: 'translate3d(0, 0, 0)' },
+                ], {
+                    duration: landingWeatherCloseIconDuration,
+                    easing: 'cubic-bezier(.4, 0, .6, 1)',
+                    fill: 'both',
+                });
+                const shrink = landingWeatherTriggerIcon.animate([
+                    { transform: `scale(${expandedIcon.scale})` },
+                    { transform: 'scale(1)' },
+                ], {
+                    duration: landingWeatherCloseIconDuration,
+                    easing: 'cubic-bezier(.4, 0, .6, 1)',
+                    fill: 'both',
+                });
+                const summaryFade = landingWeatherMiniSummary.animate([
+                    { opacity: 0 },
+                    { opacity: 1 },
+                ], {
+                    duration: Math.round(landingWeatherCloseIconDuration * .45),
+                    delay: Math.round(landingWeatherCloseIconDuration * .55),
+                    easing: 'ease-in',
+                    fill: 'both',
+                });
+
+                await Promise.all([
+                    movement.finished.catch(() => undefined),
+                    shrink.finished.catch(() => undefined),
+                    summaryFade.finished.catch(() => undefined),
+                ]);
+                landingWeatherTrigger.style.transform = 'translate3d(0, 0, 0)';
+                landingWeatherTriggerIcon.style.transform = 'scale(1)';
+                landingWeatherMiniSummary.style.opacity = '1';
+                landingWeatherMiniSummary.style.visibility = 'visible';
+                movement.cancel();
+                shrink.cancel();
+                summaryFade.cancel();
+            }
+
+            landingWeatherTrigger.style.transform = '';
+            landingWeatherTriggerIcon.style.transform = '';
+            landingWeatherMiniSummary.style.opacity = '';
+            landingWeatherMiniSummary.style.visibility = '';
+            landingWeatherExpandedIcon = null;
+        }
+
+        async function setLandingWeatherOpen(isOpen, restoreFocus = false) {
+            if (!landingWeatherWidget || !landingWeatherTrigger || !landingWeatherPanel || landingWeatherState === 'opening' || landingWeatherState === 'closing') {
+                return;
+            }
+
+            if (isOpen && landingWeatherState === 'closed') {
+                landingWeatherState = 'opening';
+                landingPanel?.classList.add('is-weather-open');
+                landingWeatherWidget.classList.add('is-open', 'is-animating');
+                landingWeatherTrigger.setAttribute('aria-expanded', 'true');
+                landingWeatherTrigger.setAttribute('aria-label', 'Close weather details');
+                landingWeatherTrigger.setAttribute('title', 'Close weather details');
+                landingWeatherPanel.setAttribute('aria-hidden', 'false');
+                landingWeatherPanel.removeAttribute('inert');
+                queueLandingWeatherOverlapSync();
+
+                await Promise.all([
+                    waitForLandingWeatherAnimation(landingWeatherPanelDuration),
+                    moveLandingWeatherIconIntoPanel(),
+                ]);
+
+                landingWeatherState = 'open';
+                landingWeatherWidget.classList.remove('is-animating');
+                syncLandingWeatherOverlap();
+                return;
+            }
+
+            if (!isOpen && landingWeatherState === 'open') {
+                landingWeatherState = 'closing';
+                landingWeatherWidget.classList.add('is-animating');
+                landingWeatherTrigger.setAttribute('aria-expanded', 'false');
+                landingWeatherTrigger.setAttribute('aria-label', 'Open weather details');
+                landingWeatherTrigger.setAttribute('title', 'Weather details');
+
+                landingWeatherPanel.setAttribute('aria-hidden', 'true');
+                landingWeatherPanel.setAttribute('inert', '');
+                landingWeatherWidget.classList.remove('is-open');
+                await Promise.all([
+                    waitForLandingWeatherAnimation(landingWeatherPanelDuration),
+                    moveLandingWeatherIconHome(),
+                ]);
+
+                landingWeatherState = 'closed';
+                landingWeatherWidget.classList.remove('is-animating');
+                landingPanel?.classList.remove('is-weather-open', 'has-weather-overlap');
+
+                if (restoreFocus) {
+                    landingWeatherTrigger.focus({ preventScroll: true });
+                }
+            }
+        }
+
+        landingWeatherTrigger?.addEventListener('click', async function () {
+            if (landingWeatherState === 'open' && landingWeatherIsPinned) {
+                await setLandingWeatherPinned(false);
+
+                if (landingWeatherState === 'open') {
+                    setLandingWeatherOpen(false);
+                }
+                return;
+            }
+
+            setLandingWeatherOpen(landingWeatherState === 'closed');
+        });
+
+        landingWeatherPin?.addEventListener('click', function (event) {
+            event.stopPropagation();
+            setLandingWeatherPinned(!landingWeatherIsPinned);
+        });
+
+        window.addEventListener('resize', queueLandingWeatherOverlapSync, { passive: true });
+
+        document.addEventListener('click', function (event) {
+            if (landingWeatherState === 'open' && !landingWeatherIsPinned && !landingWeatherWidget.contains(event.target)) {
+                setLandingWeatherOpen(false);
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && landingWeatherState === 'open' && !landingWeatherIsPinned) {
+                setLandingWeatherOpen(false, true);
+            }
+        });
+
+        initializeLandingWeatherVisibility();
+        loadLandingWeather();
+        window.setInterval(loadLandingWeather, landingWeatherRefreshInterval);
 
         function initializeLandingEarpiece() {
             const earpiece = document.querySelector('.landing-stethoscope-earpiece');

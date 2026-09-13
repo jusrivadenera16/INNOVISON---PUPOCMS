@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\EmergencyAuthController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\HealthFormCategoryController;
+use App\Http\Controllers\LandingWeatherController;
 use App\Http\Controllers\MedicalConditionController;
 use App\Http\Controllers\MarClearanceTypeController;
 use App\Http\Controllers\MaintenanceController;
@@ -58,7 +59,22 @@ if (!function_exists('clinicMaintenanceModeEnabled')) {
 }
 
 // --- PUBLIC ROUTES (No login required) ---
-Route::get('/', function () {
+Route::get('/landing/weather', LandingWeatherController::class)
+    ->middleware('throttle:60,1')
+    ->name('landing.weather');
+
+Route::get('/', function (\Illuminate\Http\Request $request) {
+    if ($request->has('weather-preview')) {
+        $remainingQuery = $request->except('weather-preview');
+        $cleanUrl = $request->url();
+
+        if ($remainingQuery !== []) {
+            $cleanUrl .= '?' . http_build_query($remainingQuery);
+        }
+
+        return redirect()->to($cleanUrl);
+    }
+
     if (clinicMaintenanceModeEnabled()) {
         return redirect()->route('maintenance');
     }
