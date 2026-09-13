@@ -3100,6 +3100,24 @@ class AdminController extends Controller
             });
         $issuedEmployeeRecords = $issuedEmployeeQuery->get()
             ->map(fn ($record) => $decorateHealthRecord($record, 'employee'));
+        $bulkHealthFormRequestRecords = collect();
+        $bulkHealthFormRequestCategories = collect();
+        if (in_array($userTypeFilter, ['faculty', 'admin'], true)) {
+            $bulkEmployeeQuery = EmployeeHealthProfile::with('user')
+                ->whereIn('clearance_status', ['Approved', 'Issued', 'Fully Cleared', 'Cleared'])
+                ->orderBy('last_name')
+                ->orderBy('first_name')
+                ->orderBy('id');
+
+            $this->applyStaffHealthProfileUserTypeFilter($bulkEmployeeQuery, $userTypeFilter);
+            $bulkHealthFormRequestRecords = $bulkEmployeeQuery->get();
+            $bulkHealthFormRequestCategories = HealthFormCategory::query()
+                ->where('is_active', true)
+                ->availableFor($userTypeFilter)
+                ->orderBy('name')
+                ->pluck('name')
+                ->values();
+        }
         $healthRecordName = static function ($record): string {
             $user = optional($record->user);
             $lastName = trim((string) $user->last_name);
@@ -3220,7 +3238,9 @@ class AdminController extends Controller
             'userTypeOptions',
             'issuedPerPage',
             'issuedWithConditions',
-            'issuedLatestApprovedAt'
+            'issuedLatestApprovedAt',
+            'bulkHealthFormRequestRecords',
+            'bulkHealthFormRequestCategories'
         ));
     }
 

@@ -651,6 +651,34 @@
         background: linear-gradient(180deg, rgba(112, 19, 27, .75), rgba(55, 20, 30, .86));
     }
 
+    html[data-theme="dark"] .health-category-pill,
+    body.dark-mode .health-category-pill {
+        color: #e2e8f0;
+        border: 1px solid rgba(148, 163, 184, .24);
+        background: #1e293b;
+    }
+
+    html[data-theme="dark"] .health-category-status.is-active,
+    body.dark-mode .health-category-status.is-active {
+        color: #bbf7d0;
+        border: 1px solid rgba(74, 222, 128, .28);
+        background: #14532d;
+    }
+
+    html[data-theme="dark"] .health-category-status.is-archived,
+    body.dark-mode .health-category-status.is-archived {
+        color: #fecaca;
+        border: 1px solid rgba(248, 113, 113, .28);
+        background: #7f1d1d;
+    }
+
+    html[data-theme="dark"] .health-category-btn--edit,
+    body.dark-mode .health-category-btn--edit {
+        color: #f8fafc;
+        border-color: rgba(148, 163, 184, .34);
+        background: #1e293b;
+    }
+
     html[data-theme="dark"] .health-category-toggle,
     body.dark-mode .health-category-toggle {
         color: var(--clinic-maroon);

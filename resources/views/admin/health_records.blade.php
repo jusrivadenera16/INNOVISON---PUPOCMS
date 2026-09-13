@@ -1032,6 +1032,28 @@
     html[data-theme="dark"] .readonly-modal-search input::placeholder {
         color: #cbd5e1;
     }
+    html[data-theme="dark"] #pendingApprovalInfoModal .readonly-modal-search,
+    html[data-theme="dark"] #pendingApprovalInfoModal .readonly-modal-search:focus-within,
+    html[data-theme="dark"] #pendingConditionalInfoModal .readonly-modal-search,
+    html[data-theme="dark"] #pendingConditionalInfoModal .readonly-modal-search:focus-within,
+    body.dark-mode #pendingApprovalInfoModal .readonly-modal-search,
+    body.dark-mode #pendingApprovalInfoModal .readonly-modal-search:focus-within,
+    body.dark-mode #pendingConditionalInfoModal .readonly-modal-search,
+    body.dark-mode #pendingConditionalInfoModal .readonly-modal-search:focus-within {
+        background: #0f172a !important;
+        border-color: rgba(250, 204, 21, .18) !important;
+        box-shadow: none !important;
+    }
+    html[data-theme="dark"] #pendingApprovalInfoModal .readonly-modal-search input,
+    html[data-theme="dark"] #pendingConditionalInfoModal .readonly-modal-search input,
+    body.dark-mode #pendingApprovalInfoModal .readonly-modal-search input,
+    body.dark-mode #pendingConditionalInfoModal .readonly-modal-search input {
+        background: transparent !important;
+        background-color: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
     html[data-theme="dark"] .readonly-search-empty {
         background: rgba(17, 24, 39, .92);
         border-color: rgba(250, 204, 21, .18);
@@ -1180,28 +1202,32 @@
     .status.review { background: #fee2e2; color: #b91c1c; }
     .status.submitted { background: #e0f2fe; color: #0369a1; }
 
-    html[data-theme="dark"] .status.pending {
-        background: #fff7ed;
-        color: #c2410c !important;
-        border-color: #fed7aa;
+    html[data-theme="dark"] .status.pending,
+    body.dark-mode .status.pending {
+        background: rgba(154, 52, 18, .35);
+        color: #fed7aa !important;
+        border: 1px solid rgba(251, 146, 60, .35);
     }
 
-    html[data-theme="dark"] .status.issued {
-        background: #dcfce7;
-        color: #15803d !important;
-        border-color: #86efac;
+    html[data-theme="dark"] .status.issued,
+    body.dark-mode .status.issued {
+        background: rgba(22, 101, 52, .34);
+        color: #bbf7d0 !important;
+        border: 1px solid rgba(74, 222, 128, .32);
     }
 
-    html[data-theme="dark"] .status.review {
-        background: #fee2e2;
-        color: #b91c1c !important;
-        border-color: #fecaca;
+    html[data-theme="dark"] .status.review,
+    body.dark-mode .status.review {
+        background: rgba(127, 29, 45, .34);
+        color: #fecaca !important;
+        border: 1px solid rgba(248, 113, 113, .34);
     }
 
-    html[data-theme="dark"] .status.submitted {
-        background: #e0f2fe;
-        color: #0369a1 !important;
-        border-color: #bae6fd;
+    html[data-theme="dark"] .status.submitted,
+    body.dark-mode .status.submitted {
+        background: rgba(30, 64, 175, .30);
+        color: #bfdbfe !important;
+        border: 1px solid rgba(96, 165, 250, .35);
     }
 
     /* Buttons */
@@ -2345,7 +2371,7 @@
 
     .health-filter-custom-option {
         border: 0;
-        border-radius: 999px;
+        border-radius: 9px;
         background: #ffffff;
         color: #111827;
         min-height: 34px;
@@ -2359,14 +2385,14 @@
 
     .health-filter-custom-option:hover,
     .health-filter-custom-option:focus {
-        background: #8f0012;
-        color: #ffffff;
+        background: #facc15;
+        color: #70131B;
         outline: 0;
     }
 
     .health-filter-custom-option.is-selected {
-        background: #8f0012;
-        color: #facc15;
+        background: #70131B;
+        color: #ffffff;
     }
 
     .health-records-search {
@@ -3255,13 +3281,13 @@
 
     html[data-theme="dark"] .health-filter-custom-option:hover,
     html[data-theme="dark"] .health-filter-custom-option:focus {
-        background: #8f0012;
-        color: #ffffff;
+        background: #facc15;
+        color: #70131B;
     }
 
     html[data-theme="dark"] .health-filter-custom-option.is-selected {
-        background: #8f0012;
-        color: #facc15;
+        background: #70131B;
+        color: #ffffff;
     }
 
     html[data-theme="dark"] .health-records-search-toggle {
@@ -5387,10 +5413,10 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        border: 1px solid #8f2230;
+        border: 1px solid #ead3d7;
         border-radius: 9px;
-        background: #70131B;
-        color: #ffffff;
+        background: #ffffff;
+        color: #70131B;
         font: inherit;
         font-size: 12px;
         font-weight: 900;
@@ -6179,6 +6205,502 @@
             gap: 8px;
         }
     }
+
+    .health-bulk-request-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1600;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, .68);
+        backdrop-filter: blur(5px);
+    }
+    body.health-bulk-request-modal-open {
+        overflow: hidden;
+    }
+    .health-bulk-request-modal.is-open {
+        display: flex;
+    }
+    .health-bulk-request-modal-card {
+        width: min(980px, 96%);
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid rgba(250, 204, 21, .34);
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 28px 70px rgba(15, 23, 42, .34);
+    }
+    .health-bulk-request-modal-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, .16);
+        background: linear-gradient(135deg, #70131B, #8f2230) !important;
+        color: #ffffff;
+    }
+    .health-bulk-request-modal-head-main {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-width: 0;
+    }
+    .health-bulk-request-modal-badge {
+        width: 48px;
+        height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 48px;
+        border: 1px solid rgba(255, 255, 255, .30);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, .16);
+        color: #ffffff;
+    }
+    .health-bulk-request-modal-badge svg {
+        width: 24px;
+        height: 24px;
+    }
+    .health-bulk-request-modal-title {
+        margin: 0;
+        color: #ffffff !important;
+        font-size: 20px;
+        font-weight: 900;
+        line-height: 1.15;
+    }
+    .health-bulk-request-modal-copy {
+        margin: 5px 0 0;
+        color: #ffffff !important;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.4;
+    }
+    .health-bulk-request-modal-close {
+        width: 44px;
+        height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 44px;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, .24);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .14);
+        color: #ffffff;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: all .3s ease;
+    }
+    .health-bulk-request-modal-close svg {
+        width: 18px;
+        height: 18px;
+    }
+    .health-bulk-request-modal-close:hover,
+    .health-bulk-request-modal-close:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        transform: translateY(-1px);
+        box-shadow: 0 10px 22px rgba(250, 204, 21, .22);
+        outline: none;
+    }
+    .health-bulk-request-modal-body {
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 18px 20px 20px;
+        color: #1f2937;
+    }
+    .health-bulk-request-modal-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .health-bulk-request-modal-summary strong {
+        color: #70131B;
+        font-size: 14px;
+        font-weight: 900;
+    }
+    .health-bulk-request-modal-summary span {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    .health-bulk-request-modal-field {
+        display: grid;
+        gap: 6px;
+    }
+    .health-bulk-request-modal-field label {
+        color: #475569;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+    .health-bulk-request-modal-field select {
+        width: 100%;
+        min-height: 42px;
+        padding: 8px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        background: #f8fafc;
+        color: #1f2937;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+    }
+    .health-bulk-request-modal-field select:focus-visible {
+        border-color: #70131B;
+        outline: 3px solid rgba(112, 19, 27, .12);
+    }
+    .health-bulk-request-modal-field .health-filter-select-wrap {
+        width: min(100%, 360px);
+    }
+    .health-bulk-request-modal-field .health-filter-custom-trigger {
+        min-height: 42px;
+        border-radius: 10px;
+        border-color: #cbd5e1;
+        background: #f8fafc;
+        box-shadow: none;
+        font-size: 12px;
+    }
+    .health-bulk-request-modal-field .health-filter-custom-trigger::after {
+        width: 8px;
+        height: 8px;
+        border-right-width: 1.6px;
+        border-bottom-width: 1.6px;
+        border-color: #70131B;
+    }
+    .health-bulk-request-modal-field .health-filter-custom-menu {
+        z-index: 40;
+        max-height: 190px;
+    }
+    .health-bulk-request-modal-count {
+        color: #70131B !important;
+        font-weight: 900 !important;
+    }
+    .health-bulk-request-modal-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .health-bulk-request-modal-selection-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .health-bulk-request-modal-select-btn,
+    .health-bulk-request-modal-cancel,
+    .health-bulk-request-modal-send {
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 9px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+    .health-bulk-request-modal-select-btn svg,
+    .health-bulk-request-modal-cancel svg,
+    .health-bulk-request-modal-send svg {
+        width: 15px;
+        height: 15px;
+        flex: 0 0 15px;
+    }
+    .health-bulk-request-selection-mode {
+        display: inline-flex;
+        align-items: center;
+    }
+    .health-bulk-request-selection-mode-unselect,
+    .health-bulk-request-selection-label-unselect {
+        display: none;
+    }
+    .health-bulk-request-modal-select-btn.is-all-selected .health-bulk-request-selection-mode-select,
+    .health-bulk-request-modal-select-btn.is-all-selected .health-bulk-request-selection-label-select {
+        display: none;
+    }
+    .health-bulk-request-modal-select-btn.is-all-selected .health-bulk-request-selection-mode-unselect,
+    .health-bulk-request-modal-select-btn.is-all-selected .health-bulk-request-selection-label-unselect {
+        display: inline-flex;
+    }
+    .health-bulk-request-modal-select-btn:disabled {
+        cursor: not-allowed;
+        opacity: .56;
+    }
+    .health-bulk-request-modal-select-btn {
+        border: 1px solid #cbd5e1;
+        background: #f3f4f6;
+        color: #334155;
+    }
+    .health-bulk-request-modal-select-btn:hover,
+    .health-bulk-request-modal-select-btn:focus-visible {
+        border-color: #70131B;
+        background: #70131B;
+        color: #ffffff;
+        outline: none;
+    }
+    .health-bulk-request-modal-table-wrap {
+        min-height: 0;
+        max-height: min(460px, 52dvh);
+        overflow: auto;
+        border: 1px solid #dbe2ea;
+        border-radius: 12px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(112, 19, 27, .42) transparent;
+    }
+    .health-bulk-request-modal-table-wrap::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    .health-bulk-request-modal-table-wrap::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(112, 19, 27, .42);
+    }
+    .health-bulk-request-modal-table {
+        width: 100%;
+        min-width: 620px;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    .health-bulk-request-modal-table th,
+    .health-bulk-request-modal-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+        vertical-align: middle;
+    }
+    .health-bulk-request-modal-table th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: #f8fafc;
+        color: #475569;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+    .health-bulk-request-modal-table td {
+        background: #ffffff;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    .health-bulk-request-modal-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+    .health-bulk-request-modal-table tbody tr:hover td {
+        background: #fffaf0;
+    }
+    .health-bulk-request-modal-table th:first-child,
+    .health-bulk-request-modal-table td:first-child {
+        width: 48px;
+        text-align: center;
+    }
+    .health-bulk-request-modal-table td strong {
+        color: #111827;
+        font-weight: 900;
+    }
+    .health-bulk-request-modal-table input[type="checkbox"] {
+        width: 17px;
+        height: 17px;
+        accent-color: #70131B;
+        cursor: pointer;
+    }
+    .health-bulk-request-modal-empty {
+        padding: 34px 18px !important;
+        color: #64748b !important;
+        text-align: center !important;
+    }
+    .health-bulk-request-modal-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        padding-top: 2px;
+    }
+    .health-bulk-request-modal-cancel {
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #475569;
+    }
+    .health-bulk-request-modal-cancel:hover,
+    .health-bulk-request-modal-cancel:focus-visible {
+        border-color: #70131B;
+        background: #70131B;
+        color: #ffffff;
+        outline: none;
+    }
+    .health-bulk-request-modal-send {
+        border: 1px solid #70131B;
+        background: #70131B;
+        color: #ffffff;
+        box-shadow: 0 8px 18px rgba(112, 19, 27, .18);
+    }
+    .health-bulk-request-modal-send:hover,
+    .health-bulk-request-modal-send:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .14), 0 12px 24px rgba(112, 19, 27, .22);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-card {
+        border-color: rgba(250, 204, 21, .24);
+        background: #0f172a;
+        box-shadow: 0 28px 70px rgba(0, 0, 0, .48);
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-body {
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-summary strong,
+    html[data-theme="dark"] .health-bulk-request-modal-count {
+        color: #facc15 !important;
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-summary span {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-field label {
+        color: #cbd5e1;
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-field select {
+        border-color: rgba(148, 163, 184, .34);
+        background: #1e293b;
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-field .health-filter-custom-trigger {
+        border-color: rgba(148, 163, 184, .34);
+        background: #1e293b;
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-field .health-filter-custom-trigger::after {
+        border-color: #facc15;
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-field select:focus-visible {
+        border-color: #facc15;
+        outline-color: rgba(250, 204, 21, .14);
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-select-btn,
+    html[data-theme="dark"] .health-bulk-request-modal-cancel {
+        border-color: rgba(148, 163, 184, .34);
+        background: #1e293b;
+        color: #f8fafc;
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-select-btn:hover,
+    html[data-theme="dark"] .health-bulk-request-modal-select-btn:focus-visible,
+    html[data-theme="dark"] .health-bulk-request-modal-cancel:hover,
+    html[data-theme="dark"] .health-bulk-request-modal-cancel:focus-visible {
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-table-wrap {
+        border-color: rgba(250, 204, 21, .20);
+        scrollbar-color: rgba(250, 204, 21, .46) transparent;
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-table-wrap::-webkit-scrollbar-thumb {
+        background: rgba(250, 204, 21, .46);
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-table th {
+        background: #111827;
+        color: #cbd5e1;
+        border-bottom-color: rgba(250, 204, 21, .20);
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-table td {
+        background: #182334;
+        color: #e2e8f0;
+        border-bottom-color: rgba(148, 163, 184, .16);
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-table tbody tr:hover td {
+        background: rgba(250, 204, 21, .08);
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-table td strong {
+        color: #ffffff;
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-table input[type="checkbox"] {
+        accent-color: #facc15;
+    }
+    html[data-theme="dark"] .health-bulk-request-modal-empty {
+        color: #cbd5e1 !important;
+    }
+
+    #pendingApprovalInfoModal .awaiting-links-modal-close:hover,
+    #pendingApprovalInfoModal .awaiting-links-modal-close:focus-visible,
+    #pendingConditionalInfoModal .awaiting-links-modal-close:hover,
+    #pendingConditionalInfoModal .awaiting-links-modal-close:focus-visible,
+    html[data-theme="dark"] #pendingApprovalInfoModal .awaiting-links-modal-close:hover,
+    html[data-theme="dark"] #pendingApprovalInfoModal .awaiting-links-modal-close:focus-visible,
+    html[data-theme="dark"] #pendingConditionalInfoModal .awaiting-links-modal-close:hover,
+    html[data-theme="dark"] #pendingConditionalInfoModal .awaiting-links-modal-close:focus-visible,
+    body.dark-mode #pendingApprovalInfoModal .awaiting-links-modal-close:hover,
+    body.dark-mode #pendingApprovalInfoModal .awaiting-links-modal-close:focus-visible,
+    body.dark-mode #pendingConditionalInfoModal .awaiting-links-modal-close:hover,
+    body.dark-mode #pendingConditionalInfoModal .awaiting-links-modal-close:focus-visible {
+        border-color: #facc15 !important;
+        background: #facc15 !important;
+        background-color: #facc15 !important;
+        background-image: none !important;
+        color: #70131B !important;
+    }
+
+    #pendingApprovalInfoModal .awaiting-links-modal-close:hover svg,
+    #pendingApprovalInfoModal .awaiting-links-modal-close:focus-visible svg,
+    #pendingConditionalInfoModal .awaiting-links-modal-close:hover svg,
+    #pendingConditionalInfoModal .awaiting-links-modal-close:focus-visible svg,
+    html[data-theme="dark"] #pendingApprovalInfoModal .awaiting-links-modal-close:hover svg,
+    html[data-theme="dark"] #pendingApprovalInfoModal .awaiting-links-modal-close:focus-visible svg,
+    html[data-theme="dark"] #pendingConditionalInfoModal .awaiting-links-modal-close:hover svg,
+    html[data-theme="dark"] #pendingConditionalInfoModal .awaiting-links-modal-close:focus-visible svg,
+    body.dark-mode #pendingApprovalInfoModal .awaiting-links-modal-close:hover svg,
+    body.dark-mode #pendingApprovalInfoModal .awaiting-links-modal-close:focus-visible svg,
+    body.dark-mode #pendingConditionalInfoModal .awaiting-links-modal-close:hover svg,
+    body.dark-mode #pendingConditionalInfoModal .awaiting-links-modal-close:focus-visible svg {
+        color: #70131B !important;
+        stroke: #70131B !important;
+    }
+
+    @media (max-width: 680px) {
+        .health-bulk-request-modal {
+            align-items: flex-start;
+            padding: 12px;
+        }
+        .health-bulk-request-modal-card {
+            width: 100%;
+            max-height: calc(100dvh - 24px);
+        }
+        .health-bulk-request-modal-head,
+        .health-bulk-request-modal-body {
+            padding-left: 14px;
+            padding-right: 14px;
+        }
+        .health-bulk-request-modal-table-wrap {
+            max-height: 52dvh;
+        }
+        .health-bulk-request-modal-footer {
+            justify-content: stretch;
+        }
+        .health-bulk-request-modal-footer > button {
+            flex: 1 1 0;
+        }
+    }
 </style>
 @endpush
 
@@ -6466,7 +6988,7 @@
                             </svg>
                         </button>
                         <div class="health-more-actions-menu" id="healthMoreActionsMenu" role="menu" aria-hidden="true">
-                            <button type="button" class="health-more-actions-item" role="menuitem">
+                            <button type="button" class="health-more-actions-item" id="healthBulkRequestOpen" role="menuitem">
                                 <span>Request New Health Form</span>
                                 <span aria-hidden="true">+</span>
                             </button>
@@ -7472,7 +7994,9 @@
                     <select id="courseFilter" name="course" class="health-filter-select health-filter-custom-source">
                         <option value="">All Courses</option>
                         @foreach(($courseOptions ?? collect()) as $courseOption)
-                            @php($courseOptionCode = $formatHealthCourseCode($courseOption))
+                            @php
+                                $courseOptionCode = $formatHealthCourseCode($courseOption);
+                            @endphp
                             <option value="{{ $courseOption }}" {{ ($courseFilter ?? '') === $courseOption ? 'selected' : '' }}>
                                 {{ $courseOptionCode !== '' && $courseOptionCode !== $courseOption ? $courseOptionCode . ' - ' . $courseOption : $courseOption }}
                             </option>
@@ -7518,6 +8042,115 @@
         </form>
     </div>
 </div>
+@if (in_array(strtolower((string) ($userTypeFilter ?? '')), ['faculty', 'admin'], true))
+    @php
+        $bulkRequestRoleLabel = strtolower((string) ($userTypeFilter ?? '')) === 'admin' ? 'Admins' : 'Faculty';
+    @endphp
+    <div class="health-bulk-request-modal" id="healthBulkRequestModal" role="dialog" aria-modal="true" aria-labelledby="healthBulkRequestTitle" aria-hidden="true">
+        <div class="health-bulk-request-modal-card">
+            <div class="health-bulk-request-modal-head">
+                <div class="health-bulk-request-modal-head-main">
+                    <span class="health-bulk-request-modal-badge" aria-hidden="true">
+                        <x-outline-icon name="document-text" />
+                    </span>
+                    <div>
+                        <h2 class="health-bulk-request-modal-title" id="healthBulkRequestTitle">Request New Health Form</h2>
+                        <p class="health-bulk-request-modal-copy">Select approved {{ strtolower($bulkRequestRoleLabel) }} to request an updated health form.</p>
+                    </div>
+                </div>
+                <button type="button" class="health-bulk-request-modal-close" data-health-bulk-request-close aria-label="Close request new health form modal">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </div>
+
+            <div class="health-bulk-request-modal-body">
+                <div class="health-bulk-request-modal-summary">
+                    <div>
+                        <strong>Approved {{ $bulkRequestRoleLabel }}</strong>
+                        <span>Choose who should receive the new health form request.</span>
+                    </div>
+                    <span class="health-bulk-request-modal-count" id="healthBulkRequestSelectionCount">0 of {{ $bulkHealthFormRequestRecords->count() }}</span>
+                </div>
+
+                <div class="health-bulk-request-modal-field">
+                    <label for="healthBulkRequestCategory">Category / Purpose</label>
+                    <div class="health-filter-select-wrap health-bulk-request-category-wrap">
+                        <select id="healthBulkRequestCategory" class="health-filter-select health-filter-custom-source">
+                            <option value="">Select category</option>
+                            @foreach($bulkHealthFormRequestCategories as $bulkRequestCategory)
+                                <option value="{{ $bulkRequestCategory }}">{{ $bulkRequestCategory }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="health-bulk-request-modal-controls">
+                    <div class="health-bulk-request-modal-selection-actions">
+                        <button type="button" class="health-bulk-request-modal-select-btn" id="healthBulkRequestToggleSelection" aria-pressed="false">
+                            <span class="health-bulk-request-selection-mode health-bulk-request-selection-mode-select" aria-hidden="true">
+                                <x-outline-icon name="check" />
+                            </span>
+                            <span class="health-bulk-request-selection-mode health-bulk-request-selection-mode-unselect" aria-hidden="true">
+                                <x-outline-icon name="x-mark" />
+                            </span>
+                            <span class="health-bulk-request-selection-label health-bulk-request-selection-label-select">Select All</span>
+                            <span class="health-bulk-request-selection-label health-bulk-request-selection-label-unselect">Unselect All</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="health-bulk-request-modal-table-wrap">
+                    <table class="health-bulk-request-modal-table">
+                        <thead>
+                            <tr>
+                                <th scope="col"><span class="sr-only">Select</span></th>
+                                <th scope="col">Full Name</th>
+                                <th scope="col">Employee Number</th>
+                                <th scope="col">Email</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($bulkHealthFormRequestRecords as $bulkRequestRecord)
+                                @php
+                                    $bulkRequestUser = optional($bulkRequestRecord->user);
+                                    $bulkRequestName = trim((string) ($bulkRequestUser->name ?? ''));
+                                    if ($bulkRequestName === '') {
+                                        $bulkRequestName = trim(implode(' ', array_filter([
+                                            $bulkRequestRecord->first_name ?? $bulkRequestUser->first_name ?? '',
+                                            $bulkRequestRecord->middle_name ?? $bulkRequestUser->middle_name ?? '',
+                                            $bulkRequestRecord->last_name ?? $bulkRequestUser->last_name ?? '',
+                                        ])));
+                                    }
+                                    $bulkRequestEmployeeNumber = trim((string) ($bulkRequestRecord->employee_number ?: ($bulkRequestUser->employee_number ?? '')));
+                                    $bulkRequestEmail = trim((string) ($bulkRequestUser->email ?? ''));
+                                @endphp
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="health-bulk-request-member-checkbox" value="{{ $bulkRequestRecord->id }}" aria-label="Select {{ $bulkRequestName !== '' ? $bulkRequestName : 'employee' }}">
+                                    </td>
+                                    <td><strong>{{ $bulkRequestName !== '' ? $bulkRequestName : 'Unnamed Employee' }}</strong></td>
+                                    <td>{{ $bulkRequestEmployeeNumber !== '' ? $bulkRequestEmployeeNumber : '-' }}</td>
+                                    <td>{{ $bulkRequestEmail !== '' ? $bulkRequestEmail : '-' }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="health-bulk-request-modal-empty">No approved {{ strtolower($bulkRequestRoleLabel) }} found.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="health-bulk-request-modal-footer">
+                    <button type="button" class="health-bulk-request-modal-send">
+                        <x-outline-icon name="arrow-long-right" />
+                        <span>Send Request</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
 @endsection
 
 @push('scripts')
@@ -7839,6 +8472,11 @@
     const healthMoreActions = document.getElementById('healthMoreActions');
     const healthMoreActionsToggle = document.getElementById('healthMoreActionsToggle');
     const healthMoreActionsMenu = document.getElementById('healthMoreActionsMenu');
+    const healthBulkRequestModal = document.getElementById('healthBulkRequestModal');
+    const healthBulkRequestOpen = document.getElementById('healthBulkRequestOpen');
+    const healthBulkRequestSelectionCount = document.getElementById('healthBulkRequestSelectionCount');
+    const healthBulkRequestToggleSelection = document.getElementById('healthBulkRequestToggleSelection');
+    const healthBulkRequestMembers = Array.from(document.querySelectorAll('.health-bulk-request-member-checkbox'));
     const healthTableTools = healthRecordsOverviewFilterBtn?.closest('.health-table-tools');
     if (healthTableTools && healthFilterModal) {
         healthTableTools.appendChild(healthFilterModal);
@@ -7908,6 +8546,33 @@
         healthMoreActions.classList.toggle('is-open', isOpen);
         healthMoreActionsToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         healthMoreActionsMenu.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+    }
+
+    function syncHealthBulkRequestSelectionCount() {
+        const selectedCount = healthBulkRequestMembers.filter(function (input) {
+            return input.checked;
+        }).length;
+        const totalCount = healthBulkRequestMembers.length;
+        if (healthBulkRequestSelectionCount) {
+            healthBulkRequestSelectionCount.textContent = selectedCount + ' of ' + totalCount;
+        }
+        if (healthBulkRequestToggleSelection) {
+            const allSelected = totalCount > 0 && selectedCount === totalCount;
+            healthBulkRequestToggleSelection.classList.toggle('is-all-selected', allSelected);
+            healthBulkRequestToggleSelection.setAttribute('aria-pressed', allSelected ? 'true' : 'false');
+            healthBulkRequestToggleSelection.setAttribute('aria-label', allSelected ? 'Unselect all employees' : 'Select all employees');
+            healthBulkRequestToggleSelection.disabled = totalCount === 0;
+        }
+    }
+
+    function setHealthBulkRequestModalOpen(isOpen) {
+        if (!healthBulkRequestModal) return;
+        healthBulkRequestModal.classList.toggle('is-open', isOpen);
+        healthBulkRequestModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        document.body.classList.toggle('health-bulk-request-modal-open', isOpen);
+        if (isOpen) {
+            syncHealthBulkRequestSelectionCount();
+        }
     }
 
     document.querySelectorAll('.health-filter-custom-source').forEach(function (select) {
@@ -8000,6 +8665,38 @@
         setHealthMoreActionsOpen(willOpen);
     });
 
+    healthBulkRequestOpen?.addEventListener('click', function () {
+        setHealthMoreActionsOpen(false);
+        setHealthBulkRequestModalOpen(true);
+    });
+
+    healthBulkRequestToggleSelection?.addEventListener('click', function () {
+        const allSelected = healthBulkRequestMembers.length > 0 && healthBulkRequestMembers.every(function (input) {
+            return input.checked;
+        });
+        healthBulkRequestMembers.forEach(function (input) {
+            input.checked = !allSelected;
+        });
+        syncHealthBulkRequestSelectionCount();
+    });
+
+    healthBulkRequestMembers.forEach(function (input) {
+        input.addEventListener('change', syncHealthBulkRequestSelectionCount);
+    });
+    syncHealthBulkRequestSelectionCount();
+
+    healthBulkRequestModal?.addEventListener('click', function (event) {
+        if (event.target === healthBulkRequestModal) {
+            setHealthBulkRequestModalOpen(false);
+        }
+    });
+
+    document.querySelectorAll('[data-health-bulk-request-close]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            setHealthBulkRequestModalOpen(false);
+        });
+    });
+
     healthFilterToggle?.addEventListener('click', function () {
         setHealthFilterModalOpen(true);
     });
@@ -8031,6 +8728,12 @@
         if (event.key !== 'Escape' || !healthMoreActions?.classList.contains('is-open')) return;
         setHealthMoreActionsOpen(false);
         healthMoreActionsToggle?.focus();
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape' || !healthBulkRequestModal?.classList.contains('is-open')) return;
+        setHealthBulkRequestModalOpen(false);
+        healthBulkRequestOpen?.focus();
     });
 
     function syncDocumentResubmissionReason() {
