@@ -8064,89 +8064,94 @@
             </div>
 
             <div class="health-bulk-request-modal-body">
-                <div class="health-bulk-request-modal-summary">
-                    <div>
-                        <strong>Approved {{ $bulkRequestRoleLabel }}</strong>
-                        <span>Choose who should receive the new health form request.</span>
-                    </div>
-                    <span class="health-bulk-request-modal-count" id="healthBulkRequestSelectionCount">0 of {{ $bulkHealthFormRequestRecords->count() }}</span>
-                </div>
+                <form method="POST" action="{{ route('admin.health_records.bulk_request_health_form') }}" id="healthBulkRequestForm" class="health-bulk-request-form">
+                    @csrf
+                    <input type="hidden" name="user_type" value="{{ strtolower((string) $userTypeFilter) }}">
 
-                <div class="health-bulk-request-modal-field">
-                    <label for="healthBulkRequestCategory">Category / Purpose</label>
-                    <div class="health-filter-select-wrap health-bulk-request-category-wrap">
-                        <select id="healthBulkRequestCategory" class="health-filter-select health-filter-custom-source">
-                            <option value="">Select category</option>
-                            @foreach($bulkHealthFormRequestCategories as $bulkRequestCategory)
-                                <option value="{{ $bulkRequestCategory }}">{{ $bulkRequestCategory }}</option>
-                            @endforeach
-                        </select>
+                    <div class="health-bulk-request-modal-summary">
+                        <div>
+                            <strong>Approved {{ $bulkRequestRoleLabel }}</strong>
+                            <span>Choose who should receive the new health form request.</span>
+                        </div>
+                        <span class="health-bulk-request-modal-count" id="healthBulkRequestSelectionCount">0 of {{ $bulkHealthFormRequestRecords->count() }}</span>
                     </div>
-                </div>
 
-                <div class="health-bulk-request-modal-controls">
-                    <div class="health-bulk-request-modal-selection-actions">
-                        <button type="button" class="health-bulk-request-modal-select-btn" id="healthBulkRequestToggleSelection" aria-pressed="false">
-                            <span class="health-bulk-request-selection-mode health-bulk-request-selection-mode-select" aria-hidden="true">
-                                <x-outline-icon name="check" />
-                            </span>
-                            <span class="health-bulk-request-selection-mode health-bulk-request-selection-mode-unselect" aria-hidden="true">
-                                <x-outline-icon name="x-mark" />
-                            </span>
-                            <span class="health-bulk-request-selection-label health-bulk-request-selection-label-select">Select All</span>
-                            <span class="health-bulk-request-selection-label health-bulk-request-selection-label-unselect">Unselect All</span>
+                    <div class="health-bulk-request-modal-field">
+                        <label for="healthBulkRequestCategory">Category / Purpose</label>
+                        <div class="health-filter-select-wrap health-bulk-request-category-wrap">
+                            <select id="healthBulkRequestCategory" name="category" class="health-filter-select health-filter-custom-source" required>
+                                <option value="">Select category</option>
+                                @foreach($bulkHealthFormRequestCategories as $bulkRequestCategory)
+                                    <option value="{{ $bulkRequestCategory }}">{{ $bulkRequestCategory }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="health-bulk-request-modal-controls">
+                        <div class="health-bulk-request-modal-selection-actions">
+                            <button type="button" class="health-bulk-request-modal-select-btn" id="healthBulkRequestToggleSelection" aria-pressed="false">
+                                <span class="health-bulk-request-selection-mode health-bulk-request-selection-mode-select" aria-hidden="true">
+                                    <x-outline-icon name="check" />
+                                </span>
+                                <span class="health-bulk-request-selection-mode health-bulk-request-selection-mode-unselect" aria-hidden="true">
+                                    <x-outline-icon name="x-mark" />
+                                </span>
+                                <span class="health-bulk-request-selection-label health-bulk-request-selection-label-select">Select All</span>
+                                <span class="health-bulk-request-selection-label health-bulk-request-selection-label-unselect">Unselect All</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="health-bulk-request-modal-table-wrap">
+                        <table class="health-bulk-request-modal-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col"><span class="sr-only">Select</span></th>
+                                    <th scope="col">Full Name</th>
+                                    <th scope="col">Employee Number</th>
+                                    <th scope="col">Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($bulkHealthFormRequestRecords as $bulkRequestRecord)
+                                    @php
+                                        $bulkRequestUser = optional($bulkRequestRecord->user);
+                                        $bulkRequestName = trim((string) ($bulkRequestUser->name ?? ''));
+                                        if ($bulkRequestName === '') {
+                                            $bulkRequestName = trim(implode(' ', array_filter([
+                                                $bulkRequestRecord->first_name ?? $bulkRequestUser->first_name ?? '',
+                                                $bulkRequestRecord->middle_name ?? $bulkRequestUser->middle_name ?? '',
+                                                $bulkRequestRecord->last_name ?? $bulkRequestUser->last_name ?? '',
+                                            ])));
+                                        }
+                                        $bulkRequestEmployeeNumber = trim((string) ($bulkRequestRecord->employee_number ?: ($bulkRequestUser->employee_number ?? '')));
+                                        $bulkRequestEmail = trim((string) ($bulkRequestUser->email ?? ''));
+                                    @endphp
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="employee_profile_ids[]" class="health-bulk-request-member-checkbox" value="{{ $bulkRequestRecord->id }}" aria-label="Select {{ $bulkRequestName !== '' ? $bulkRequestName : 'employee' }}">
+                                        </td>
+                                        <td><strong>{{ $bulkRequestName !== '' ? $bulkRequestName : 'Unnamed Employee' }}</strong></td>
+                                        <td>{{ $bulkRequestEmployeeNumber !== '' ? $bulkRequestEmployeeNumber : '-' }}</td>
+                                        <td>{{ $bulkRequestEmail !== '' ? $bulkRequestEmail : '-' }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="health-bulk-request-modal-empty">No approved {{ strtolower($bulkRequestRoleLabel) }} found.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="health-bulk-request-modal-footer">
+                        <button type="submit" class="health-bulk-request-modal-send">
+                            <x-outline-icon name="arrow-long-right" />
+                            <span>Send Request</span>
                         </button>
                     </div>
-                </div>
-
-                <div class="health-bulk-request-modal-table-wrap">
-                    <table class="health-bulk-request-modal-table">
-                        <thead>
-                            <tr>
-                                <th scope="col"><span class="sr-only">Select</span></th>
-                                <th scope="col">Full Name</th>
-                                <th scope="col">Employee Number</th>
-                                <th scope="col">Email</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($bulkHealthFormRequestRecords as $bulkRequestRecord)
-                                @php
-                                    $bulkRequestUser = optional($bulkRequestRecord->user);
-                                    $bulkRequestName = trim((string) ($bulkRequestUser->name ?? ''));
-                                    if ($bulkRequestName === '') {
-                                        $bulkRequestName = trim(implode(' ', array_filter([
-                                            $bulkRequestRecord->first_name ?? $bulkRequestUser->first_name ?? '',
-                                            $bulkRequestRecord->middle_name ?? $bulkRequestUser->middle_name ?? '',
-                                            $bulkRequestRecord->last_name ?? $bulkRequestUser->last_name ?? '',
-                                        ])));
-                                    }
-                                    $bulkRequestEmployeeNumber = trim((string) ($bulkRequestRecord->employee_number ?: ($bulkRequestUser->employee_number ?? '')));
-                                    $bulkRequestEmail = trim((string) ($bulkRequestUser->email ?? ''));
-                                @endphp
-                                <tr>
-                                    <td>
-                                        <input type="checkbox" class="health-bulk-request-member-checkbox" value="{{ $bulkRequestRecord->id }}" aria-label="Select {{ $bulkRequestName !== '' ? $bulkRequestName : 'employee' }}">
-                                    </td>
-                                    <td><strong>{{ $bulkRequestName !== '' ? $bulkRequestName : 'Unnamed Employee' }}</strong></td>
-                                    <td>{{ $bulkRequestEmployeeNumber !== '' ? $bulkRequestEmployeeNumber : '-' }}</td>
-                                    <td>{{ $bulkRequestEmail !== '' ? $bulkRequestEmail : '-' }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="health-bulk-request-modal-empty">No approved {{ strtolower($bulkRequestRoleLabel) }} found.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="health-bulk-request-modal-footer">
-                    <button type="button" class="health-bulk-request-modal-send">
-                        <x-outline-icon name="arrow-long-right" />
-                        <span>Send Request</span>
-                    </button>
-                </div>
+                </form>
             </div>
         </div>
     </div>
@@ -8473,9 +8478,12 @@
     const healthMoreActionsToggle = document.getElementById('healthMoreActionsToggle');
     const healthMoreActionsMenu = document.getElementById('healthMoreActionsMenu');
     const healthBulkRequestModal = document.getElementById('healthBulkRequestModal');
+    const healthBulkRequestForm = document.getElementById('healthBulkRequestForm');
     const healthBulkRequestOpen = document.getElementById('healthBulkRequestOpen');
     const healthBulkRequestSelectionCount = document.getElementById('healthBulkRequestSelectionCount');
     const healthBulkRequestToggleSelection = document.getElementById('healthBulkRequestToggleSelection');
+    const healthBulkRequestCategory = document.getElementById('healthBulkRequestCategory');
+    const healthBulkRequestSend = healthBulkRequestForm?.querySelector('.health-bulk-request-modal-send');
     const healthBulkRequestMembers = Array.from(document.querySelectorAll('.health-bulk-request-member-checkbox'));
     const healthTableTools = healthRecordsOverviewFilterBtn?.closest('.health-table-tools');
     if (healthTableTools && healthFilterModal) {
@@ -8562,6 +8570,12 @@
             healthBulkRequestToggleSelection.setAttribute('aria-pressed', allSelected ? 'true' : 'false');
             healthBulkRequestToggleSelection.setAttribute('aria-label', allSelected ? 'Unselect all employees' : 'Select all employees');
             healthBulkRequestToggleSelection.disabled = totalCount === 0;
+        }
+        if (healthBulkRequestMembers[0]) {
+            healthBulkRequestMembers[0].required = selectedCount === 0;
+        }
+        if (healthBulkRequestSend) {
+            healthBulkRequestSend.disabled = totalCount === 0;
         }
     }
 
@@ -8683,7 +8697,25 @@
     healthBulkRequestMembers.forEach(function (input) {
         input.addEventListener('change', syncHealthBulkRequestSelectionCount);
     });
+    healthBulkRequestCategory?.addEventListener('change', syncHealthBulkRequestSelectionCount);
     syncHealthBulkRequestSelectionCount();
+
+    healthBulkRequestForm?.addEventListener('submit', function (event) {
+        const hasSelectedMembers = healthBulkRequestMembers.some(function (input) {
+            return input.checked;
+        });
+        if (!hasSelectedMembers) {
+            event.preventDefault();
+            healthBulkRequestMembers[0]?.focus();
+            return;
+        }
+
+        if (!healthBulkRequestCategory?.value) {
+            event.preventDefault();
+            healthBulkRequestCategory?.reportValidity();
+            healthBulkRequestCategory?.closest('.health-filter-select-wrap')?.querySelector('.health-filter-custom-trigger')?.focus();
+        }
+    });
 
     healthBulkRequestModal?.addEventListener('click', function (event) {
         if (event.target === healthBulkRequestModal) {

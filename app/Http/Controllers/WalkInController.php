@@ -8,12 +8,14 @@ use App\Models\Appointment;
 use App\Models\HealthFormSubmission;
 use App\Models\HealthProfile;
 use App\Models\EmployeeHealthProfile;
+use App\Models\HealthProfileCorrectionRequest;
 use App\Models\HealthProfileStaff;
 use App\Models\DependentsProfile;
 use App\Models\AdminHub;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\ActivityLog;
+use App\Models\ClinicServiceOption;
 use App\Models\Consultation;
 use App\Models\ConsultationDraft;
 use App\Models\ConsultationMedicine;
@@ -24,6 +26,7 @@ use App\Services\MarClearanceIssuanceService;
 use App\Services\PuptasWebhookService;
 use App\Services\StudentNotificationMailer;
 use App\Services\EmployeeHealthFormPdfService;
+use App\Services\EmployeeHealthFormHistoryService;
 use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -2135,6 +2138,18 @@ class WalkInController extends Controller
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
+        $referralOptions = ClinicServiceOption::query()
+            ->forGroup(ClinicServiceOption::GROUP_REFERRAL)
+            ->active()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+        $otherServiceOptions = ClinicServiceOption::query()
+            ->forGroup(ClinicServiceOption::GROUP_OTHER_SERVICE)
+            ->active()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
         $studentDocuments = $this->healthProfileDocuments($request, $student->healthProfile);
         $studentDocumentVersions = $this->healthProfileDocumentVersions($request, $student->healthProfile);
         $studentTreatments = Consultation::query()
@@ -2169,6 +2184,8 @@ class WalkInController extends Controller
             'items',
             'conditions',
             'clearanceTypes',
+            'referralOptions',
+            'otherServiceOptions',
             'latestAppointment',
             'appointmentNumber',
             'user_source',
@@ -2813,6 +2830,11 @@ PROMPT;
             ))
             ->pluck('code')
             ->all();
+        $referralCodes = ClinicServiceOption::query()
+            ->forGroup(ClinicServiceOption::GROUP_REFERRAL)
+            ->active()
+            ->pluck('code')
+            ->all();
 
         $request->validate([
             'student_number' => 'required',
@@ -2834,7 +2856,7 @@ PROMPT;
                 $clearanceSubcategoryCodes,
                 $clearanceTypeCodes
             ))],
-            'referral_type' => 'nullable|in:none,hospital_without_nurse,hospital_with_nurse,general,others',
+            'referral_type' => ['nullable', Rule::in(array_merge(['none'], $referralCodes, ['hospital_without_nurse', 'hospital_with_nurse', 'general', 'others']))],
             'referral_details' => 'required_if:referral_type,others|nullable|string|max:500',
             'item_id' => 'nullable|array|max:5',
             // Empty medicine rows are allowed; duplicate selected medicines are checked below.
@@ -3620,6 +3642,21 @@ PROMPT;
 
             return $employeeProfile->fresh('user');
         });
+
+        if (!$hasPendingFinding) {
+            app(EmployeeHealthFormHistoryService::class)->finalizeLatestSubmission($employeeProfile->fresh(['user', 'approvedBy']));
+            HealthProfileCorrectionRequest::query()
+                ->where('employee_health_profile_id', $employeeProfile->id)
+                ->whereIn('status', [
+                    HealthProfileCorrectionRequest::STATUS_PENDING,
+                    HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+                    HealthProfileCorrectionRequest::STATUS_UNDER_REVIEW,
+                ])
+                ->update([
+                    'status' => HealthProfileCorrectionRequest::STATUS_APPROVED,
+                    'reviewed_at' => now(),
+                ]);
+        }
 
         try {
             $employeeIssuanceService = app(MarClearanceIssuanceService::class);

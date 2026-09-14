@@ -305,6 +305,11 @@ class MarClearanceIssuanceService
         $user = $user ?: $consultation->user;
         $certificateType = trim((string) $consultation->certificate_type);
         if ($certificateType === '' || strtolower($certificateType) === 'none') {
+            $this->removeForSourceRecord(
+                MarClearanceSubcategorySource::CONSULTATION,
+                (string) $consultation->id
+            );
+
             return null;
         }
 
@@ -354,6 +359,35 @@ class MarClearanceIssuanceService
             })
             ->whereBetween('approved_at', [$from, $to])
             ->get();
+
+        // A consultation issuance is valid only while its consultation still
+        // has an actual clearance selection.
+        $consultationIssuanceIds = $issuances
+            ->filter(fn (MarClearanceIssuance $issuance): bool =>
+                $issuance->source_workflow === MarClearanceSubcategorySource::CONSULTATION
+            )
+            ->pluck('source_record_id')
+            ->filter(fn ($id): bool => trim((string) $id) !== '')
+            ->unique()
+            ->values();
+
+        if ($consultationIssuanceIds->isNotEmpty()) {
+            $selectedConsultationIds = Consultation::query()
+                ->whereIn('id', $consultationIssuanceIds->all())
+                ->whereNotNull('certificate_type')
+                ->whereRaw("TRIM(certificate_type) <> ''")
+                ->whereRaw("LOWER(TRIM(certificate_type)) <> 'none'")
+                ->pluck('id')
+                ->map(fn ($id): string => (string) $id)
+                ->flip();
+
+            $issuances = $issuances
+                ->reject(fn (MarClearanceIssuance $issuance): bool =>
+                    $issuance->source_workflow === MarClearanceSubcategorySource::CONSULTATION
+                    && !$selectedConsultationIds->has((string) $issuance->source_record_id)
+                )
+                ->values();
+        }
 
         $knownSourceKeys = $issuances->mapWithKeys(function (MarClearanceIssuance $issuance): array {
             return [$this->reportSourceKey($issuance->source_workflow, $issuance->source_record_id) => true];
@@ -529,6 +563,7 @@ class MarClearanceIssuanceService
         $consultations = Consultation::query()
             ->with('user')
             ->whereNotNull('certificate_type')
+            ->whereRaw("TRIM(certificate_type) <> ''")
             ->whereRaw("LOWER(TRIM(certificate_type)) <> 'none'")
             ->whereBetween('consultation_date', [$from->toDateString(), $to->toDateString()])
             ->orderBy('id')

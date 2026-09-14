@@ -43,13 +43,16 @@
     $profileInitials = $profileInitials !== '' ? $profileInitials : 'EP';
     $profileOffice = trim((string) ($employeeProfile?->office ?: $employeeProfile?->course_college ?: 'Employee'));
     $status = trim((string) ($employeeProfile?->clearance_status ?: $employeeProfile?->submission_status ?: 'Not Processed'));
+    $employeeProfileTypeLabel = $employeeHealthFormAudience ?? 'admin';
     $statusClass = in_array(strtolower($status), ['issued', 'fully cleared', 'approved'], true)
         ? 'profile-status-issued'
         : (in_array(strtolower($status), ['pending', 'for verification', 'pending resubmission'], true)
             ? 'profile-status-pending'
             : 'profile-status-default');
     $employeePhotoUrl = filled($employeeProfile?->student_photo)
-        ? route('walkin.employeeDocument', ['employeeProfile' => $employeeProfile->id, 'document' => 'student_photo'])
+        ? ($displaySubmission
+            ? route('admin.health_form_submissions.document', [$displaySubmission, 'student_photo'])
+            : route('walkin.employeeDocument', ['employeeProfile' => $employeeProfile->id, 'document' => 'student_photo']))
         : null;
     $employeeDocuments = collect($employeeDocuments ?? []);
     $medicalCondition = method_exists($employeeProfile, 'hasMedicalCondition') && $employeeProfile->hasMedicalCondition()
@@ -984,6 +987,357 @@
         border-color: #334155;
     }
 
+    .health-profile-wrap .employee-profile-actions {
+        position: relative;
+        flex: 0 0 auto;
+    }
+
+    .health-profile-wrap .employee-profile-actions-toggle {
+        width: 42px;
+        height: 42px;
+        display: inline-grid;
+        place-items: center;
+        border: 1px solid rgba(112, 19, 27, .18);
+        border-radius: 10px;
+        background: #70131B;
+        color: #ffffff;
+        cursor: pointer;
+        transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .health-profile-wrap .employee-profile-actions-toggle svg {
+        width: 21px;
+        height: 21px;
+    }
+
+    .health-profile-wrap .employee-profile-actions-toggle:hover,
+    .health-profile-wrap .employee-profile-actions-toggle:focus-visible,
+    .health-profile-wrap .employee-profile-actions.is-open .employee-profile-actions-toggle {
+        transform: translateY(-1px);
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .14), 0 10px 22px rgba(112, 19, 27, .16);
+        outline: none;
+    }
+
+    .health-profile-wrap .employee-profile-actions-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 90;
+        width: min(232px, calc(100vw - 40px));
+        display: none;
+        gap: 8px;
+        padding: 8px;
+        border: 1px solid rgba(112, 19, 27, .16);
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 20px 42px rgba(15, 23, 42, .18);
+    }
+
+    .health-profile-wrap .employee-profile-actions.is-open .employee-profile-actions-menu {
+        display: grid;
+    }
+
+    .health-profile-wrap .employee-profile-actions-menu button {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        min-height: 42px;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border: 1px solid rgba(112, 19, 27, .14);
+        border-radius: 8px;
+        background: #fffafa;
+        color: #70131B;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        text-align: left;
+        cursor: pointer;
+        transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+    }
+
+    .health-profile-wrap .employee-profile-actions-menu button:hover,
+    .health-profile-wrap .employee-profile-actions-menu button:focus-visible {
+        transform: translateY(-1px);
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        outline: none;
+    }
+
+    .employee-action-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 2147482500;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, .62);
+    }
+
+    .employee-action-modal.is-open {
+        display: flex;
+    }
+
+    .employee-action-card {
+        width: min(720px, 100%);
+        max-height: min(720px, calc(100vh - 40px));
+        overflow: auto;
+        border: 1px solid rgba(250, 204, 21, .34);
+        border-bottom: 4px solid #70131B;
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, .28);
+    }
+
+    .employee-action-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 18px 20px;
+        border-radius: 17px 17px 0 0;
+        background: linear-gradient(135deg, #70131B, #8f2230);
+        color: #ffffff;
+    }
+
+    .employee-action-head-main {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    .employee-action-head-icon {
+        width: 48px;
+        height: 48px;
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        border: 1px solid rgba(255, 255, 255, .26);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, .1);
+        color: #facc15;
+    }
+
+    .employee-action-head-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .employee-action-head h3 {
+        margin: 0;
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: 900;
+    }
+
+    .employee-action-head p {
+        margin: 4px 0 0;
+        color: rgba(255, 255, 255, .88);
+        font-size: 13px;
+    }
+
+    .employee-action-close {
+        position: relative;
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        border: 1px solid rgba(255, 255, 255, .24);
+        border-radius: 999px;
+        background: rgba(112, 19, 27, .45);
+        color: #ffffff;
+        cursor: pointer;
+        transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+    }
+
+    .employee-action-close:hover,
+    .employee-action-close:focus-visible {
+        transform: translateY(-1px);
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        outline: none;
+    }
+
+    .employee-action-close svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .employee-action-body {
+        display: grid;
+        gap: 16px;
+        padding: 20px;
+    }
+
+    .employee-action-field {
+        display: grid;
+        gap: 7px;
+    }
+
+    .employee-action-field label,
+    .employee-action-checks-title {
+        color: #334155;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .02em;
+        text-transform: uppercase;
+    }
+
+    .employee-action-field select,
+    .employee-action-field textarea {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        background: #f8fafc;
+        color: #172033;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .employee-action-field select {
+        min-height: 48px;
+        padding: 0 12px;
+    }
+
+    .employee-action-field textarea {
+        min-height: 100px;
+        padding: 12px;
+        resize: vertical;
+    }
+
+    .employee-action-field select:focus,
+    .employee-action-field textarea:focus {
+        border-color: #facc15;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, .14);
+        outline: none;
+    }
+
+    .employee-action-checks {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .employee-action-check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 8px 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .employee-action-check input {
+        accent-color: #70131B;
+    }
+
+    .employee-action-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .employee-action-cancel,
+    .employee-action-submit {
+        min-height: 42px;
+        padding: 10px 16px;
+        border-radius: 9px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    .employee-action-cancel {
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #334155;
+    }
+
+    .employee-action-submit {
+        border: 1px solid #8f2230;
+        background: #70131B;
+        color: #ffffff;
+        transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+    }
+
+    .employee-action-cancel:hover,
+    .employee-action-cancel:focus-visible,
+    .employee-action-submit:hover,
+    .employee-action-submit:focus-visible {
+        transform: translateY(-1px);
+        border-color: #facc15;
+        background: #facc15;
+        color: #70131B;
+        outline: none;
+    }
+
+    [data-theme="dark"] .health-profile-wrap .employee-profile-actions-toggle {
+        border-color: #8f2230;
+        background: #70131B;
+        color: #ffffff;
+    }
+
+    [data-theme="dark"] .health-profile-wrap .employee-profile-actions-menu {
+        border-color: rgba(250, 204, 21, .28);
+        background: #111827;
+    }
+
+    [data-theme="dark"] .health-profile-wrap .employee-profile-actions-menu button {
+        border-color: #8f2230;
+        background: #70131B;
+        color: #ffffff;
+    }
+
+    [data-theme="dark"] .employee-action-card {
+        background: #111827;
+        border-color: rgba(250, 204, 21, .34);
+    }
+
+    [data-theme="dark"] .employee-action-field label,
+    [data-theme="dark"] .employee-action-checks-title {
+        color: #cbd5e1;
+    }
+
+    [data-theme="dark"] .employee-action-field select,
+    [data-theme="dark"] .employee-action-field textarea,
+    [data-theme="dark"] .employee-action-check {
+        border-color: #475569;
+        background: #1e293b;
+        color: #f8fafc;
+    }
+
+    [data-theme="dark"] .employee-action-cancel {
+        border-color: #475569;
+        background: #1e293b;
+        color: #f8fafc;
+    }
+
+    [data-theme="dark"] .employee-action-submit {
+        border-color: #8f2230;
+        background: #70131B;
+        color: #ffffff;
+    }
+
     @media (max-width: 1024px) {
         .health-profile-wrap .profile-hero-layout { grid-template-columns: 1fr; }
         .health-profile-wrap .profile-status-card { max-width: none; justify-self: stretch; }
@@ -1013,6 +1367,8 @@
         .health-profile-wrap .profile-version-shell { grid-template-columns: 1fr; }
         .health-profile-wrap .profile-switch { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 3px; }
         .health-profile-wrap .profile-tab { flex: 0 0 auto; }
+        .health-profile-wrap .profile-switch-head { align-items: flex-start; }
+        .employee-action-checks { grid-template-columns: 1fr; }
     }
 </style>
 @endpush
@@ -1076,6 +1432,33 @@
                 <button type="button" class="profile-tab" data-profile-tab-target="healthPanel" role="tab" aria-selected="false"><x-outline-icon name="information-circle" /><span>Health Profile</span></button>
                 <button type="button" class="profile-tab" data-profile-tab-target="docsPanel" role="tab" aria-selected="false"><x-outline-icon name="document-text" /><span>Uploaded Documents</span></button>
             </div>
+            @if($canRequestEmployeeHealthActions)
+                <div class="employee-profile-actions" id="employeeProfileActions">
+                    <button
+                        type="button"
+                        class="employee-profile-actions-toggle"
+                        id="employeeProfileActionsToggle"
+                        aria-label="Open employee health profile actions"
+                        aria-haspopup="menu"
+                        aria-expanded="false"
+                        aria-controls="employeeProfileActionsMenu"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+                        </svg>
+                    </button>
+                    <div class="employee-profile-actions-menu" id="employeeProfileActionsMenu" role="menu" aria-hidden="true">
+                        <button type="button" id="openNewEmployeeHealthFormModal" role="menuitem">
+                            <span>Request New Health Form</span>
+                            <span aria-hidden="true">+</span>
+                        </button>
+                        <button type="button" id="openEmployeeCorrectionModal" role="menuitem">
+                            <span>Request File Correction</span>
+                            <span aria-hidden="true">&rarr;</span>
+                        </button>
+                    </div>
+                </div>
+            @endif
         </div>
 
         <section class="profile-panel is-active" id="summaryPanel" role="tabpanel">
@@ -1158,6 +1541,12 @@
         </section>
 
         <section class="profile-panel" id="docsPanel" role="tabpanel" hidden>
+            @php
+                $employeeVersionHistory = collect($employeeVersionHistory ?? []);
+                $employeeCurrentVersion = $employeeVersionHistory->first(fn (array $version): bool => (bool) ($version['is_current'] ?? false))
+                    ?: $employeeVersionHistory->first();
+                $employeeCurrentVersionNumber = (int) ($employeeCurrentVersion['version'] ?? 1);
+            @endphp
             <div class="profile-version-shell profile-documents-version-shell">
                 <aside class="profile-version-sidebar" aria-label="Uploaded Documents versions">
                     <div class="profile-version-sidebar-head">
@@ -1165,53 +1554,290 @@
                             <h3>Document Versions</h3>
                             <p>Select a version to review its saved files.</p>
                         </div>
-                        <span class="profile-history-count">1</span>
+                        <span class="profile-history-count">{{ $employeeVersionHistory->count() }}</span>
                     </div>
                     <div class="profile-version-nav" role="tablist" aria-label="Uploaded Documents versions">
-                        <button type="button" class="profile-version-choice is-active" role="tab" aria-selected="true">
-                            <span class="profile-version-choice-number">V1</span>
-                            <span class="profile-version-choice-copy">
-                                <strong>Current Documents</strong>
-                                <small>{{ $formatDate($employeeProfile?->form_date) }}</small>
-                            </span>
-                        </button>
+                        @foreach($employeeVersionHistory as $version)
+                            @php
+                                $versionNumber = (int) ($version['version'] ?? 1);
+                                $versionSubmission = $version['submission'] ?? null;
+                                $versionTarget = 'employee-version-pane-' . $versionNumber;
+                                $versionIsActive = $versionNumber === $employeeCurrentVersionNumber;
+                                $versionLabel = ($version['is_current'] ?? false)
+                                    ? 'Current Documents'
+                                    : (($versionSubmission?->status ?? '') === \App\Models\HealthFormSubmission::STATUS_SUBMITTED
+                                        ? 'Pending Review'
+                                        : 'Previous Documents');
+                            @endphp
+                            <button
+                                type="button"
+                                class="profile-version-choice{{ $versionIsActive ? ' is-active' : '' }}"
+                                role="tab"
+                                aria-selected="{{ $versionIsActive ? 'true' : 'false' }}"
+                                aria-controls="{{ $versionTarget }}"
+                                data-profile-version-target="{{ $versionTarget }}"
+                            >
+                                <span class="profile-version-choice-number">V{{ $versionNumber }}</span>
+                                <span class="profile-version-choice-copy">
+                                    <strong>{{ $versionLabel }}</strong>
+                                    <small>{{ $formatDate($versionSubmission?->approved_at ?: $versionSubmission?->submitted_at ?: $employeeProfile?->form_date) }}</small>
+                                </span>
+                            </button>
+                        @endforeach
                     </div>
                 </aside>
 
                 <div class="profile-version-content">
-                    <section class="profile-version-pane is-active">
-                        <div class="profile-version-pane-head">
-                            <div><h3>Current Uploaded Documents</h3><p>Latest files attached to the active Employee Health Profile.</p></div>
-                            <span class="profile-history-badge">Current</span>
-                        </div>
-                        @if($employeeDocuments->isNotEmpty())
-                            <div class="doc-grid">
-                                @foreach($employeeDocuments as $document)
-                                    <div class="doc-file">
-                                        <h4>{{ $document['type'] }}</h4>
-                                        @if(($document['uploaded'] ?? false) && filled($document['view_url']))
-                                            <p>{{ $document['name'] }} - Uploaded {{ $document['uploaded_at'] }}</p>
-                                            <div class="doc-actions"><a class="doc-link" href="{{ $document['view_url'] }}" target="_blank" rel="noopener"><x-outline-icon name="eye" />View</a></div>
-                                        @else
-                                            <p>Missing</p>
-                                            <div class="doc-missing">No file uploaded for this document.</div>
-                                        @endif
-                                    </div>
-                                @endforeach
+                    @foreach($employeeVersionHistory as $version)
+                        @php
+                            $versionNumber = (int) ($version['version'] ?? 1);
+                            $versionSubmission = $version['submission'] ?? null;
+                            $versionIsActive = $versionNumber === $employeeCurrentVersionNumber;
+                            $versionDocuments = collect($version['documents'] ?? []);
+                        @endphp
+                        <section
+                            class="profile-version-pane{{ $versionIsActive ? ' is-active' : '' }}"
+                            id="employee-version-pane-{{ $versionNumber }}"
+                            role="tabpanel"
+                            aria-hidden="{{ $versionIsActive ? 'false' : 'true' }}"
+                            @if(!$versionIsActive) hidden @endif
+                        >
+                            <div class="profile-version-pane-head">
+                                <div>
+                                    <h3>{{ $versionIsActive ? 'Current Uploaded Documents' : 'Saved Documents - Version ' . $versionNumber }}</h3>
+                                    <p>{{ $versionIsActive ? 'Latest approved files attached to the Employee Health Profile.' : 'Files saved with this employee health form version.' }}</p>
+                                </div>
+                                <span class="profile-history-badge">{{ $versionIsActive ? 'Current' : 'Archived' }}</span>
                             </div>
-                        @else
-                            <div class="doc-missing">No employee documents are available.</div>
-                        @endif
-                    </section>
+                            @if($versionDocuments->isNotEmpty())
+                                <div class="doc-grid">
+                                    @foreach($versionDocuments as $document)
+                                        <div class="doc-file">
+                                            <h4>{{ $document['type'] }}</h4>
+                                            @if(($document['uploaded'] ?? false) && filled($document['view_url']))
+                                                <p>{{ $document['name'] }} - Uploaded {{ $document['uploaded_at'] }}</p>
+                                                <div class="doc-actions"><a class="doc-link" href="{{ $document['view_url'] }}" target="_blank" rel="noopener"><x-outline-icon name="eye" />View</a></div>
+                                            @else
+                                                <p>Missing</p>
+                                                <div class="doc-missing">No file uploaded for this document.</div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="doc-missing">No employee documents are available.</div>
+                            @endif
+                        </section>
+                    @endforeach
                 </div>
             </div>
         </section>
     </div>
 </div>
+
+@if($canRequestEmployeeHealthActions)
+    <div class="employee-action-modal" id="newEmployeeHealthFormModal" aria-hidden="true">
+        <div class="employee-action-card" role="dialog" aria-modal="true" aria-labelledby="newEmployeeHealthFormTitle">
+            <div class="employee-action-head">
+                <div class="employee-action-head-main">
+                    <span class="employee-action-head-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span>
+                    <div>
+                        <h3 id="newEmployeeHealthFormTitle">Request New Health Form</h3>
+                        <p>Ask this {{ $employeeProfileTypeLabel }} to submit an updated Health Examination Record.</p>
+                    </div>
+                </div>
+                <button type="button" class="employee-action-close" id="closeNewEmployeeHealthFormModal" aria-label="Close new health form modal">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </div>
+            <form method="POST" action="{{ route('admin.employee_health_profile.request_health_form', $employeeProfile->id) }}" class="employee-action-body">
+                @csrf
+                <div class="employee-action-field">
+                    <label for="newEmployeeHealthFormCategory">Category / Purpose</label>
+                    <select id="newEmployeeHealthFormCategory" name="category" required>
+                        <option value="">Select category</option>
+                        @foreach(($employeeHealthFormCategories ?? collect()) as $category)
+                            <option value="{{ $category }}">{{ $category }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="employee-action-field">
+                    <label for="newEmployeeHealthFormRemarks">Remarks</label>
+                    <textarea id="newEmployeeHealthFormRemarks" name="remarks" placeholder="Optional note for why a new form is needed.">{{ old('remarks') }}</textarea>
+                </div>
+                <div class="employee-action-actions">
+                    <button type="button" class="employee-action-cancel" id="cancelNewEmployeeHealthFormModal">Cancel</button>
+                    <button type="submit" class="employee-action-submit">Send Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="employee-action-modal" id="employeeCorrectionModal" aria-hidden="true">
+        <div class="employee-action-card" role="dialog" aria-modal="true" aria-labelledby="employeeCorrectionTitle">
+            <div class="employee-action-head">
+                <div class="employee-action-head-main">
+                    <span class="employee-action-head-icon" aria-hidden="true"><x-outline-icon name="document-text" /></span>
+                    <div>
+                        <h3 id="employeeCorrectionTitle">Request File Correction</h3>
+                        <p>Select the file or Health Form details that need to be updated.</p>
+                    </div>
+                </div>
+                <button type="button" class="employee-action-close" id="closeEmployeeCorrectionModal" aria-label="Close file correction modal">
+                    <x-outline-icon name="x-mark" />
+                </button>
+            </div>
+            <form method="POST" action="{{ route('admin.employee_health_profile.request_resubmission', $employeeProfile->id) }}" class="employee-action-body" id="employeeCorrectionForm">
+                @csrf
+                <input type="hidden" name="pending_reason" id="employeeCorrectionReason" value="">
+                <div class="employee-action-field">
+                    <span class="employee-action-checks-title">Select requirement/s</span>
+                    <div class="employee-action-checks">
+                        @foreach([
+                            'student_photo' => '2x2 Photo',
+                            'health_declaration' => 'Health Declaration',
+                            'medical_certificate' => 'Medical Certificate',
+                            'chest_xray_result' => 'Chest X-ray Result',
+                            'pwd_id_proof' => 'PWD ID Proof',
+                        ] as $documentKey => $documentLabel)
+                            <label class="employee-action-check">
+                                <input type="checkbox" name="resubmission_required_documents[]" value="{{ $documentKey }}">
+                                <span>{{ $documentLabel }}</span>
+                            </label>
+                        @endforeach
+                        <label class="employee-action-check">
+                            <input type="checkbox" name="needs_health_form_correction" value="1">
+                            <span>Health Form Correction</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="employee-action-field">
+                    <label for="employeeCorrectionRemarks">Remarks</label>
+                    <textarea id="employeeCorrectionRemarks" placeholder="Optional note for the requested correction."></textarea>
+                </div>
+                <div class="employee-action-actions">
+                    <button type="button" class="employee-action-cancel" id="cancelEmployeeCorrectionModal">Cancel</button>
+                    <button type="submit" class="employee-action-submit">Send Correction Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endif
 @endsection
 
 @push('scripts')
 <script>
+    const employeeProfileActions = document.getElementById('employeeProfileActions');
+    const employeeProfileActionsToggle = document.getElementById('employeeProfileActionsToggle');
+    const employeeProfileActionsMenu = document.getElementById('employeeProfileActionsMenu');
+    const newEmployeeHealthFormModal = document.getElementById('newEmployeeHealthFormModal');
+    const employeeCorrectionModal = document.getElementById('employeeCorrectionModal');
+    const employeeCorrectionForm = document.getElementById('employeeCorrectionForm');
+    const employeeCorrectionReason = document.getElementById('employeeCorrectionReason');
+    const employeeCorrectionRemarks = document.getElementById('employeeCorrectionRemarks');
+
+    function setEmployeeProfileActionsMenu(isOpen) {
+        if (!employeeProfileActions || !employeeProfileActionsToggle || !employeeProfileActionsMenu) return;
+
+        employeeProfileActions.classList.toggle('is-open', isOpen);
+        employeeProfileActionsToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        employeeProfileActionsMenu.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+    }
+
+    function setEmployeeActionModal(modal, isOpen) {
+        if (!modal) return;
+
+        modal.classList.toggle('is-open', isOpen);
+        modal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+    }
+
+    function syncEmployeeCorrectionReason() {
+        if (!employeeCorrectionReason) return;
+
+        const selectedDocuments = Array.from(document.querySelectorAll('#employeeCorrectionForm input[name="resubmission_required_documents[]"]:checked'))
+            .map(function (input) { return input.nextElementSibling?.textContent.trim() || ''; })
+            .filter(Boolean);
+        const healthFormCorrection = document.querySelector('#employeeCorrectionForm input[name="needs_health_form_correction"]:checked');
+        const remarks = employeeCorrectionRemarks?.value.trim() || '';
+        const parts = selectedDocuments.length > 0 ? ['Files: ' + selectedDocuments.join(', ')] : [];
+
+        if (healthFormCorrection) {
+            parts.push('Health Form Correction');
+        }
+        if (remarks !== '') {
+            parts.push(remarks);
+        }
+
+        employeeCorrectionReason.value = parts.join('. ') || 'Health Form Correction';
+    }
+
+    employeeProfileActionsToggle?.addEventListener('click', function (event) {
+        event.stopPropagation();
+        setEmployeeProfileActionsMenu(!employeeProfileActions?.classList.contains('is-open'));
+    });
+
+    document.getElementById('openNewEmployeeHealthFormModal')?.addEventListener('click', function () {
+        setEmployeeProfileActionsMenu(false);
+        setEmployeeActionModal(newEmployeeHealthFormModal, true);
+    });
+
+    document.getElementById('openEmployeeCorrectionModal')?.addEventListener('click', function () {
+        setEmployeeProfileActionsMenu(false);
+        setEmployeeActionModal(employeeCorrectionModal, true);
+    });
+
+    document.getElementById('closeNewEmployeeHealthFormModal')?.addEventListener('click', function () {
+        setEmployeeActionModal(newEmployeeHealthFormModal, false);
+    });
+
+    document.getElementById('cancelNewEmployeeHealthFormModal')?.addEventListener('click', function () {
+        setEmployeeActionModal(newEmployeeHealthFormModal, false);
+    });
+
+    document.getElementById('closeEmployeeCorrectionModal')?.addEventListener('click', function () {
+        setEmployeeActionModal(employeeCorrectionModal, false);
+    });
+
+    document.getElementById('cancelEmployeeCorrectionModal')?.addEventListener('click', function () {
+        setEmployeeActionModal(employeeCorrectionModal, false);
+    });
+
+    employeeCorrectionModal?.querySelectorAll('input[type="checkbox"], textarea').forEach(function (input) {
+        input.addEventListener('input', syncEmployeeCorrectionReason);
+        input.addEventListener('change', syncEmployeeCorrectionReason);
+    });
+
+    employeeCorrectionForm?.addEventListener('submit', function () {
+        syncEmployeeCorrectionReason();
+    });
+
+    document.addEventListener('click', function (event) {
+        if (employeeProfileActions?.classList.contains('is-open') && !employeeProfileActions.contains(event.target)) {
+            setEmployeeProfileActionsMenu(false);
+        }
+        if (newEmployeeHealthFormModal && event.target === newEmployeeHealthFormModal) {
+            setEmployeeActionModal(newEmployeeHealthFormModal, false);
+        }
+        if (employeeCorrectionModal && event.target === employeeCorrectionModal) {
+            setEmployeeActionModal(employeeCorrectionModal, false);
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+
+        if (employeeProfileActions?.classList.contains('is-open')) {
+            setEmployeeProfileActionsMenu(false);
+            employeeProfileActionsToggle?.focus();
+        }
+        if (newEmployeeHealthFormModal?.classList.contains('is-open')) {
+            setEmployeeActionModal(newEmployeeHealthFormModal, false);
+        }
+        if (employeeCorrectionModal?.classList.contains('is-open')) {
+            setEmployeeActionModal(employeeCorrectionModal, false);
+        }
+    });
+
     document.querySelectorAll('.health-profile-wrap [data-profile-tab-target]').forEach(function (tab) {
         tab.addEventListener('click', function () {
             const targetId = tab.dataset.profileTabTarget;
@@ -1228,6 +1854,27 @@
                 const isActive = panel.id === targetId;
                 panel.classList.toggle('is-active', isActive);
                 panel.hidden = !isActive;
+            });
+        });
+    });
+
+    document.querySelectorAll('.health-profile-wrap [data-profile-version-target]').forEach(function (choice) {
+        choice.addEventListener('click', function () {
+            const targetId = choice.dataset.profileVersionTarget;
+            const root = choice.closest('.profile-documents-version-shell');
+            if (!root || !targetId) return;
+
+            root.querySelectorAll('[data-profile-version-target]').forEach(function (item) {
+                const isActive = item === choice;
+                item.classList.toggle('is-active', isActive);
+                item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+
+            root.querySelectorAll('.profile-version-pane').forEach(function (pane) {
+                const isActive = pane.id === targetId;
+                pane.classList.toggle('is-active', isActive);
+                pane.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+                pane.hidden = !isActive;
             });
         });
     });

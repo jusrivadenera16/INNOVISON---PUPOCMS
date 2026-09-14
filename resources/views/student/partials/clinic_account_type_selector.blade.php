@@ -23,24 +23,47 @@
                     default => 'users',
                 };
                 $accountTypeDescription = match ($accountType) {
-                    'applicant' => 'For incoming applicants completing medical requirements.',
-                    'student' => 'For enrolled students and on-the-job trainees.',
+                    'applicant' => 'For incoming freshmen with an ARN (Admission Reference Number).',
+                    'student' => 'For Regular Students, Ladderized, Transferees, Shiftees, and OJT.',
                     'faculty' => 'For teaching personnel and academic staff.',
                     'non_teaching_staff' => 'For administrative and support personnel.',
                     default => 'For guest users needing clinic access.',
                 };
                 $accountTypeDisabled = true;
             @endphp
-            <label class="health-role-option{{ $accountTypeDisabled ? ' is-disabled' : '' }}" data-health-role-option>
-                <input type="radio" name="clinic_account_type" value="{{ $accountType }}" required {{ $accountTypeDisabled ? 'disabled' : '' }}>
-                <span class="health-role-radio" aria-hidden="true"></span>
-                <span class="health-role-icon" aria-hidden="true"><x-outline-icon :name="$accountTypeIcon" /></span>
-                <span class="health-role-copy">
-                    <strong>{{ $accountTypeLabel }}</strong>
-                    <small>{{ $accountTypeDescription }}</small>
-                </span>
-                <span class="health-role-check" aria-hidden="true"><x-outline-icon name="check" /></span>
-            </label>
+            <div class="health-role-option{{ $accountTypeDisabled ? ' is-disabled' : '' }}" data-health-role-option role="radio" tabindex="0" aria-checked="false" aria-disabled="{{ $accountTypeDisabled ? 'true' : 'false' }}">
+                <label class="health-role-option-label" for="healthRoleAccountType{{ ucfirst($accountType) }}">
+                    <input id="healthRoleAccountType{{ ucfirst($accountType) }}" type="radio" name="clinic_account_type" value="{{ $accountType }}" required {{ $accountTypeDisabled ? 'disabled' : '' }}>
+                    <span class="health-role-radio" aria-hidden="true"></span>
+                    <span class="health-role-icon" aria-hidden="true"><x-outline-icon :name="$accountTypeIcon" /></span>
+                    <span class="health-role-copy">
+                        <strong>{{ $accountTypeLabel }}</strong>
+                        <small>{{ $accountTypeDescription }}</small>
+                    </span>
+                    <span class="health-role-check" aria-hidden="true"><x-outline-icon name="check" /></span>
+                </label>
+                @if($accountType === 'student')
+                    <div class="health-role-student-type" id="healthRoleStudentType" hidden>
+                        <span class="health-role-student-type-label">Student Type</span>
+                        <div class="health-role-student-type-options" role="radiogroup" aria-label="Choose your student type">
+                            @foreach([
+                                ['value' => 'regular', 'label' => 'Regular'],
+                                ['value' => 'ladderized', 'label' => 'Ladderized'],
+                                ['value' => 'transferee', 'label' => 'Transferee'],
+                                ['value' => 'returnee', 'label' => 'Returnee'],
+                                ['value' => 'shiftee', 'label' => 'Shiftee'],
+                                ['value' => 'ojt', 'label' => 'OJT'],
+                            ] as $studentTypeOption)
+                                <label class="health-role-student-type-choice" for="healthRoleStudentType{{ ucfirst($studentTypeOption['value']) }}">
+                                    <input id="healthRoleStudentType{{ ucfirst($studentTypeOption['value']) }}" type="radio" name="student_type" value="{{ $studentTypeOption['value'] }}" disabled>
+                                    <span class="health-role-student-type-radio" aria-hidden="true"></span>
+                                    <span>{{ $studentTypeOption['label'] }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
             @endforeach
         </div>
         @if($studentPendingAdmission)
@@ -159,8 +182,9 @@
     html[data-theme="dark"] .health-role-selector-heading h2,
     html[data-theme="dark"] #healthRoleSelectorTitle { color: #000000 !important; }
     .health-role-selector-heading p { margin: 6px 0 0; color: #4b5563; font-size: 14px; }
-    .health-role-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .health-role-option { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: 18px 34px minmax(0, 1fr) 18px; align-items: center; gap: 8px; min-height: 86px; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+    .health-role-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; transition: grid-template-columns .28s ease; }
+    .health-role-option { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); min-height: 86px; padding: 0; max-height: 160px; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; transform-origin: top center; will-change: max-height, opacity, transform; transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .55s ease-in-out, max-height .6s ease-in-out, opacity .55s ease-in-out; }
+    .health-role-option-label { display: grid; grid-template-columns: 20px 34px minmax(0, 1fr) 20px; align-items: center; gap: 8px; min-height: 86px; padding: 10px; cursor: pointer; }
     .health-role-option:not(.is-disabled):not(.is-selected):hover,
     .health-role-option:not(.is-disabled):not(.is-selected):focus-within {
         border-color: #facc15;
@@ -170,7 +194,7 @@
     }
     .health-role-option::after { content: ''; position: absolute; inset-block: -45%; left: -55%; width: 52%; background: linear-gradient(105deg, transparent 0%, rgba(255, 249, 190, .08) 18%, rgba(255, 249, 190, .55) 50%, rgba(255, 249, 190, .08) 82%, transparent 100%); filter: blur(2px); transform: skewX(-18deg); opacity: 0; pointer-events: none; }
     .health-role-option:not(.is-disabled):hover::after { animation: health-role-light-sweep .58s ease-out; }
-    .health-role-option > span { position: relative; z-index: 1; }
+    .health-role-option-label > span { position: relative; z-index: 1; }
     .health-role-option.is-selected,
     .health-role-option.is-selected:hover,
     .health-role-option.is-selected:focus-within {
@@ -189,8 +213,11 @@
     .health-role-option.is-selected:focus-within .health-role-copy strong { color: #fff; }
     .health-role-option.is-disabled { opacity: .5; cursor: not-allowed; }
     .health-role-option input { position: absolute; opacity: 0; pointer-events: none; }
-    .health-role-radio { width: 20px; height: 20px; border: 2px solid #b8b8b8; border-radius: 50%; }
-    .health-role-option.is-selected .health-role-radio { border-color: #7f1d2d; box-shadow: inset 0 0 0 4px #fff; background: #7f1d2d; }
+    .health-role-radio { position: relative; display: grid; place-items: center; width: 20px; height: 20px; border: 2px solid #b8b8b8; border-radius: 50%; background: #fff; box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+    .health-role-radio::after { width: 7px; height: 7px; border-radius: 50%; background: #7f1d2d; content: ''; opacity: 0; transform: scale(.2); transition: opacity .18s ease, transform .18s ease; }
+    .health-role-option:hover .health-role-radio { border-color: #7f1d2d; }
+    .health-role-option.is-selected .health-role-radio { border-color: #fff; box-shadow: 0 0 0 3px rgba(250, 204, 21, .28); background: #fff; transform: scale(1.04); }
+    .health-role-option.is-selected .health-role-radio::after { background: #facc15; opacity: 1; transform: scale(1); }
     .health-role-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #fff1d6; color: #7f1d2d; }
     .health-role-icon svg { width: 19px; height: 19px; }
     .health-role-copy { display: grid; gap: 4px; }
@@ -203,6 +230,35 @@
     .health-role-retry { margin-top: 12px; padding: 8px 12px; border: 1px solid #7f1d2d; border-radius: 6px; background: #fff; color: #7f1d2d; cursor: pointer; }
     .health-role-retry:hover { background: #facc15; }
     .health-role-check svg { width: 15px; height: 15px; }
+    .health-role-options.is-student-focus { grid-template-columns: 1fr; }
+    .health-role-options.is-student-focus .health-role-option.is-student-focused { grid-column: 1; max-height: 390px; animation: health-role-student-shell-open .68s ease-in-out both; }
+    .health-role-options.is-student-focus .health-role-option.is-student-closing { animation: health-role-student-shell-close .58s ease-in-out both; pointer-events: none; }
+    .health-role-options.is-student-focus .health-role-option:not(.is-student-focused) { max-height: 0; min-height: 0; margin: 0; border-color: transparent; opacity: 0; pointer-events: none; transform: translateY(-8px) scale(.96); }
+    @keyframes health-role-student-shell-open {
+        0% { max-height: 82px; opacity: .76; transform: scaleY(.9) translateY(-5px); }
+        55% { opacity: .95; transform: scaleY(.98) translateY(-1px); }
+        100% { max-height: 390px; opacity: 1; transform: scaleY(1) translateY(0); }
+    }
+    @keyframes health-role-student-shell-close {
+        0% { max-height: 390px; opacity: 1; transform: scaleY(1) translateY(0); }
+        55% { opacity: .95; transform: scaleY(.98) translateY(-1px); }
+        100% { max-height: 82px; opacity: .9; transform: scaleY(.9) translateY(-5px); }
+    }
+    .health-role-student-type { max-height: 250px; margin: 0 10px 12px; opacity: 1; animation: health-role-student-type-reveal .5s ease-in-out; transition: max-height .58s ease-in-out, opacity .4s ease-in-out, transform .58s ease-in-out, margin .58s ease-in-out; }
+    .health-role-student-type[hidden] { display: block !important; max-height: 0; margin-top: 0; margin-bottom: 0; opacity: 0; pointer-events: none; transform: translateY(-5px); }
+    .health-role-student-type-label { display: block; margin-bottom: 8px; color: #fff; font-size: 11px; font-weight: 900; letter-spacing: .03em; text-transform: uppercase; }
+    .health-role-student-type-options { display: grid; grid-template-columns: 1fr; gap: 0; }
+    .health-role-student-type-choice { position: relative; display: flex; align-items: center; width: 100%; gap: 8px; min-height: 32px; padding: 6px 0; border: 0; border-bottom: 1px solid rgba(255, 255, 255, .36); border-radius: 0; background: transparent; color: #fff; font-size: 12px; font-weight: 800; cursor: pointer; transition: background-color .18s ease, border-color .18s ease, color .18s ease, transform .18s ease; }
+    .health-role-student-type-choice:last-child { border-bottom: 0; }
+    .health-role-student-type-choice:hover,
+    .health-role-student-type-choice:has(input:focus-visible) { border-bottom-color: #facc15; background: rgba(250, 204, 21, .18); transform: translateY(-1px); outline: none; }
+    .health-role-student-type-choice input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    .health-role-student-type-radio { position: relative; display: grid; place-items: center; width: 15px; height: 15px; border: 2px solid rgba(255, 255, 255, .78); border-radius: 50%; }
+    .health-role-student-type-radio::after { width: 5px; height: 5px; border-radius: 50%; background: #64111d; content: ''; opacity: 0; transform: scale(.2); transition: opacity .18s ease, transform .18s ease; }
+    .health-role-student-type-choice input:checked + .health-role-student-type-radio { border-color: #64111d; background: #facc15; box-shadow: 0 0 0 2px rgba(250, 204, 21, .25); }
+    .health-role-student-type-choice input:checked + .health-role-student-type-radio::after { opacity: 1; transform: scale(1); }
+    .health-role-student-type-choice:has(input:checked) { border-bottom-color: rgba(250, 204, 21, .7); background: #facc15; color: #64111d; }
+    @keyframes health-role-student-type-reveal { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
     .health-role-selector-actions { display: flex; justify-content: flex-end; margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(127, 29, 45, .14); }
     .health-role-continue { position: relative; isolation: isolate; overflow: hidden; display: none; align-items: center; justify-content: center; width: min(170px, 100%); padding: 9px 20px; border: 1px solid #9f1239; border-radius: 6px; background: #7f1d2d; color: #fff; font-size: 14px; font-weight: 700; text-align: center; text-decoration: none; cursor: pointer; transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
     .health-role-continue.is-visible { display: inline-flex; }
@@ -398,10 +454,75 @@
         const statusText = document.getElementById('healthRoleSelectorStatus');
         const retryButton = document.getElementById('healthRoleSelectorRetry');
         const options = Array.from(roleModal?.querySelectorAll('[data-health-role-option]') || []);
+        const optionsContainer = roleModal?.querySelector('.health-role-options');
+        const studentTypeField = roleModal?.querySelector('#healthRoleStudentType');
+        const studentTypeInputs = Array.from(roleModal?.querySelectorAll('input[name="student_type"]') || []);
+        const studentOption = options.find(option => option.querySelector('input[name="clinic_account_type"]')?.value === 'student');
+        const studentLabel = studentOption?.querySelector('.health-role-copy strong');
+        const defaultStudentLabel = studentLabel?.textContent?.trim() || 'Student';
         if (!roleModal || !continueLink || !form || !confirmModal || !confirmChoice || !confirmChoiceIcon || !cancelConfirm || !proceedConfirm) return;
         let saving = false;
         let loading = false;
+        let selectedStudentType = '';
         let previousFocus;
+
+        function selectedAccountType() {
+            return form.querySelector('input[name="clinic_account_type"]:checked:not(:disabled)')?.value || '';
+        }
+
+        function updateContinueState() {
+            const accountType = selectedAccountType();
+            const studentTypeReady = accountType !== 'student' || selectedStudentType !== '';
+            const canContinue = !loading && !saving && accountType !== '' && studentTypeReady;
+            continueLink.disabled = !canContinue;
+            continueLink.classList.toggle('is-visible', canContinue);
+        }
+
+        function resetStudentType() {
+            selectedStudentType = '';
+            studentTypeInputs.forEach(input => {
+                input.checked = false;
+                input.disabled = true;
+            });
+            if (studentTypeField) studentTypeField.hidden = true;
+            optionsContainer?.classList.remove('is-student-focus');
+            options.forEach(option => option.classList.remove('is-student-focused', 'is-student-closing'));
+            if (studentLabel) studentLabel.textContent = defaultStudentLabel;
+        }
+
+        function collapseStudentTypeSelection() {
+            if (!studentOption || !studentTypeField) return;
+            studentTypeField.hidden = true;
+            studentTypeInputs.forEach(input => input.disabled = true);
+            studentOption.classList.add('is-student-closing');
+            window.setTimeout(() => {
+                studentOption.classList.remove('is-student-closing');
+                optionsContainer?.classList.remove('is-student-focus');
+                options.forEach(option => option.classList.remove('is-student-focused'));
+            }, 620);
+        }
+
+        function openStudentTypeSelection() {
+            if (!studentOption || !studentTypeField) return;
+            optionsContainer?.classList.add('is-student-focus');
+            options.forEach(option => option.classList.toggle('is-student-focused', option === studentOption));
+            studentTypeField.hidden = false;
+            studentTypeInputs.forEach(input => {
+                input.disabled = false;
+                input.checked = input.value === selectedStudentType;
+            });
+        }
+
+        function studentTypeLabel(value) {
+            return {
+                regular: 'Regular',
+                ladderized: 'Ladderized',
+                transferee: 'Transferee',
+                returnee: 'Returnee',
+                shiftee: 'Shiftee',
+                ojt: 'OJT',
+            }[value] || value;
+        }
 
         async function loadOptions() {
             if (loading || saving) return;
@@ -411,12 +532,15 @@
             statusText.hidden = false;
             continueLink.disabled = true;
             continueLink.classList.remove('is-visible');
+            resetStudentType();
             options.forEach(option => {
-                const input = option.querySelector('input');
+                const input = option.querySelector('input[name="clinic_account_type"]');
                 input.disabled = true;
                 input.checked = false;
                 option.classList.add('is-disabled');
                 option.classList.remove('is-selected');
+                option.setAttribute('aria-checked', 'false');
+                option.setAttribute('aria-disabled', 'true');
             });
             try {
                 const response = await fetch(form.dataset.optionsUrl, {
@@ -427,11 +551,11 @@
                     throw new Error(result.errors?.clinic_account_type?.[0] || result.message || 'Unable to load account types. Please retry.');
                 }
                 options.forEach(option => {
-                    const input = option.querySelector('input');
+                    const input = option.querySelector('input[name="clinic_account_type"]');
                     input.disabled = !result.allowed_types.includes(input.value);
                     option.classList.toggle('is-disabled', input.disabled);
+                    option.setAttribute('aria-disabled', String(input.disabled));
                 });
-                if (!roleModal.hidden) roleModal.querySelector('input:not(:disabled)')?.focus();
             } catch (error) {
                 errorText.textContent = error.message;
                 errorText.hidden = false;
@@ -453,7 +577,7 @@
         }
 
         function selectedOption() {
-            const input = form.querySelector('input[type="radio"]:checked:not(:disabled)');
+            const input = form.querySelector('input[name="clinic_account_type"]:checked:not(:disabled)');
             return input ? input.closest('[data-health-role-option]') : null;
         }
 
@@ -492,13 +616,49 @@
         }
 
         options.forEach(function (option) {
-            option.addEventListener('change', function () {
-                const input = option.querySelector('input');
-                if (!input || input.disabled || saving) return;
-                options.forEach((item) => item.classList.toggle('is-selected', item === option));
-                continueLink.disabled = false;
+            option.addEventListener('change', function (event) {
+                const input = event.target;
+                if (!input?.matches('input[name="clinic_account_type"]') || input.disabled || saving) return;
+                options.forEach((item) => {
+                    item.classList.toggle('is-selected', item === option);
+                    item.setAttribute('aria-checked', String(item === option));
+                });
                 errorText.hidden = true;
-                continueLink.classList.add('is-visible');
+                if (input.value === 'student') {
+                    openStudentTypeSelection();
+                } else {
+                    resetStudentType();
+                }
+                updateContinueState();
+            });
+
+            option.addEventListener('click', function (event) {
+                if (event.target.closest('.health-role-student-type')) return;
+                const input = option.querySelector('input[name="clinic_account_type"]');
+                if (!input || input.disabled || saving) return;
+                if (input.value === 'student' && input.checked && !optionsContainer?.classList.contains('is-student-focus')) {
+                    openStudentTypeSelection();
+                }
+            });
+
+            option.addEventListener('keydown', function (event) {
+                if (event.target !== option || (event.key !== 'Enter' && event.key !== ' ')) return;
+                event.preventDefault();
+                option.querySelector('input[name="clinic_account_type"]')?.click();
+            });
+        });
+
+        studentTypeInputs.forEach(function (input) {
+            input.addEventListener('change', function () {
+                if (!input.value || input.disabled || saving || !studentLabel) return;
+                selectedStudentType = input.value;
+                const selectedLabel = `Student - ${studentTypeLabel(selectedStudentType)}`;
+                window.setTimeout(() => {
+                    collapseStudentTypeSelection();
+                    studentLabel.textContent = selectedLabel;
+                    updateContinueState();
+                    continueLink.focus();
+                }, 180);
             });
         });
 
@@ -509,7 +669,7 @@
         });
 
         async function saveSelectedAccountType() {
-            if (loading || saving || !form.querySelector('input[type="radio"]:checked:not(:disabled)') || !form.reportValidity()) return;
+            if (loading || saving || !form.querySelector('input[name="clinic_account_type"]:checked:not(:disabled)') || !form.reportValidity()) return;
             const payload = new FormData(form);
             saving = true;
             proceedConfirm.disabled = true;

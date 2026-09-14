@@ -9273,15 +9273,15 @@
                     <iframe
                         class="landing-weather-trigger__embed"
                         id="landingWeatherAnimatedEmbed"
-                        src="https://lottie.host/embed/de650602-fb01-45df-b219-182da24de0d3/QIiItUqyLW.lottie"
-                        data-weather-animation="sunny"
+                        src="https://lottie.host/embed/b9e6fc10-baef-400c-a2d9-fa854874e89d/LGvmY4oaRh.lottie"
+                        data-weather-animation="partly-cloudy"
                         data-sunny-src="https://lottie.host/embed/de650602-fb01-45df-b219-182da24de0d3/QIiItUqyLW.lottie"
                         data-partly-cloudy-src="https://lottie.host/embed/b9e6fc10-baef-400c-a2d9-fa854874e89d/LGvmY4oaRh.lottie"
                         data-cloudy-src="https://lottie.host/embed/fe76f238-382f-44d2-9fe0-ea41ea3fc213/Xzj0C0idbo.lottie"
                         data-rainy-src="https://lottie.host/embed/4c3af4af-82b1-4ad6-99e5-06986dfb51c3/3Tgf8oGWEN.lottie"
                         data-night-src="https://lottie.host/embed/9406a3f7-202c-428b-b49e-f4b7bf03ca60/DuPHFpLYY4.lottie"
                         data-night-rain-src="https://lottie.host/embed/b5ec3068-4d02-4768-9601-103904bd6039/2VUg4hgL10.lottie"
-                        title="Animated sunny weather icon"
+                        title="Animated partly cloudy weather icon"
                         tabindex="-1"
                         loading="eager"
                         referrerpolicy="no-referrer"
@@ -10311,6 +10311,7 @@
             '#landingLoginPrimary .gateway-logo-row, #landingLoginPrimary .gateway-kicker, #landingLoginPrimary .gateway-title, #landingLoginPrimary .gateway-copy, #landingLoginPrimary .gateway-actions'
         ));
         const landingWeatherEndpoint = @json(route('landing.weather'));
+        const landingWeatherLastScanStorageKey = 'pup_landing_weather_last_scan';
         const landingWeatherReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const landingWeatherPanelDuration = landingWeatherReducedMotion ? 0 : 340;
         const landingWeatherIconDuration = landingWeatherReducedMotion ? 0 : 420;
@@ -10767,6 +10768,12 @@
                 throw new Error('Weather response contains invalid values.');
             }
 
+            try {
+                window.localStorage.setItem(landingWeatherLastScanStorageKey, JSON.stringify(data));
+            } catch (error) {
+                // Keep the weather widget usable when browser storage is unavailable.
+            }
+
             const weatherPresentation = landingWeatherPresentationFor(data);
 
             landingWeatherMiniTemperature.textContent = `${temperature}\u00b0`;
@@ -10792,7 +10799,7 @@
 
             const uvDetails = landingWeatherUvDetails(uvIndex);
             landingWeatherUvLevel.textContent = uvDetails.level;
-            landingWeatherSourceLabel.textContent = isStale ? 'Last available weather \u00b7 Data by' : 'Weather data by';
+            landingWeatherSourceLabel.textContent = isStale ? 'Last scan time \u00b7 Data by' : 'Weather data by';
 
             const observedAt = landingWeatherManilaDate(data.observed_at);
             if (observedAt) {
@@ -10813,6 +10820,17 @@
             }
 
             queueLandingWeatherOverlapSync();
+        }
+
+        function lastLandingWeatherScan() {
+            try {
+                const storedData = window.localStorage.getItem(landingWeatherLastScanStorageKey);
+                const parsedData = storedData ? JSON.parse(storedData) : null;
+
+                return parsedData && typeof parsedData === 'object' ? parsedData : null;
+            } catch (error) {
+                return null;
+            }
         }
 
         async function loadLandingWeather() {
@@ -10836,6 +10854,17 @@
                 applyLandingWeather(payload.data, Boolean(payload.stale));
                 landingWeatherWidget.dataset.weatherStatus = payload.stale ? 'stale' : 'live';
             } catch (error) {
+                const lastScan = lastLandingWeatherScan();
+
+                if (lastScan) {
+                    try {
+                        applyLandingWeather(lastScan, true);
+                    } catch (storageError) {
+                        // Retain the last rendered scan when stored data is incomplete.
+                    }
+                }
+
+                landingWeatherSourceLabel.textContent = 'Last scan time \u00b7 Data by';
                 landingWeatherWidget.dataset.weatherStatus = 'fallback';
             } finally {
                 landingWeatherWidget.setAttribute('aria-busy', 'false');

@@ -362,8 +362,31 @@
                     <span>Clearance / Certificate Types</span>
                     <x-outline-icon name="chevron-right" />
                 </a>
+                <a href="{{ route('clinic-service-options.referrals') }}">
+                    <span>Referral Services</span>
+                    <x-outline-icon name="chevron-right" />
+                </a>
+                <a href="{{ route('clinic-service-options.online-consultations') }}">
+                    <span>Online Consultation</span>
+                    <x-outline-icon name="chevron-right" />
+                </a>
+                <a href="{{ route('triage-survey.index') }}">
+                    <span>Triage Survey</span>
+                    <x-outline-icon name="chevron-right" />
+                </a>
             </div>
         </details>
+
+        <a href="{{ route('clinic-service-options.other-services') }}" class="medical-config-row">
+            <div class="medical-config-main">
+                <div class="medical-config-icon"><x-outline-icon name="plus-circle" /></div>
+                <div class="medical-config-copy">
+                    <h4>Other Services</h4>
+                    <p>Manage additional services available for appointments and consultations.</p>
+                </div>
+            </div>
+            <div class="medical-config-arrow"><x-outline-icon name="chevron-right" /></div>
+        </a>
 
         <a href="{{ route('admin.reports.manage-medicine-types', ['month' => $currentMonth]) }}" class="medical-config-row">
             <div class="medical-config-main">

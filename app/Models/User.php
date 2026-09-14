@@ -54,7 +54,7 @@ class User extends Authenticatable
 
     public const CLINIC_ACCOUNT_TYPES = [
         'applicant' => 'Applicant',
-        'student' => 'Student / OJT',
+        'student' => 'Student',
         'faculty' => 'Faculty',
         'non_teaching_staff' => 'Non-teaching Staff / Admins',
         'dependent' => 'Guest',

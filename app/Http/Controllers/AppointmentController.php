@@ -10,6 +10,7 @@ use App\Models\ActivityLog;
 use App\Services\AnnouncementContent;
 use App\Models\Appointment;
 use App\Models\AppointmentFeedback;
+use App\Models\ClinicServiceOption;
 use App\Models\Consultation;
 use App\Models\DependentsProfile;
 use App\Models\HealthFormCategory;
@@ -25,6 +26,7 @@ use App\Services\GuisisApiService;
 use App\Services\PuptasWebhookService;
 use App\Services\ClinicWorkflowService;
 use App\Services\EmployeeHealthFormPdfService;
+use App\Services\EmployeeHealthFormHistoryService;
 use App\Services\HealthFileStorage;
 use App\Services\HealthFormPdfSnapshotService;
 use App\Services\HealthProfileSnapshotService;
@@ -2697,8 +2699,28 @@ class AppointmentController extends Controller
         $workflow = app(ClinicWorkflowService::class);
         $clinicClosure = $workflow->activeClosure();
         $clinicHours = $workflow->clinicHoursStatus();
+        $otherServiceOptions = ClinicServiceOption::query()
+            ->forGroup(ClinicServiceOption::GROUP_OTHER_SERVICE)
+            ->active()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+        $onlineConsultationOptions = ClinicServiceOption::query()
+            ->forGroup(ClinicServiceOption::GROUP_ONLINE_CONSULTATION)
+            ->active()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
 
-        return view('student.booking', compact('user', 'appointments', 'studentContext', 'clinicClosure', 'clinicHours'));
+        return view('student.booking', compact(
+            'user',
+            'appointments',
+            'studentContext',
+            'clinicClosure',
+            'clinicHours',
+            'otherServiceOptions',
+            'onlineConsultationOptions'
+        ));
     }
 
     // -------------------------------
@@ -2715,10 +2737,31 @@ class AppointmentController extends Controller
             );
         }
 
+        $activeConfiguredOptions = ClinicServiceOption::query()
+            ->active()
+            ->whereIn('option_group', [
+                ClinicServiceOption::GROUP_OTHER_SERVICE,
+                ClinicServiceOption::GROUP_ONLINE_CONSULTATION,
+            ])
+            ->get();
+        $configuredServices = $activeConfiguredOptions
+            ->map(fn (ClinicServiceOption $option) => $option->serviceLabel())
+            ->prepend('General Consultation')
+            ->unique()
+            ->values()
+            ->all();
+        if ($activeConfiguredOptions->contains(function (ClinicServiceOption $option): bool {
+            return $option->option_group === ClinicServiceOption::GROUP_OTHER_SERVICE
+                && in_array(strtolower(trim($option->name)), ['blood pressure monitoring', 'bp monitoring'], true);
+        })) {
+            $configuredServices[] = 'BP Monitoring';
+        }
+        $configuredServices = array_values(array_unique($configuredServices));
+
         $request->validate([
             'date' => 'required|date',
             'time' => 'required',
-            'service' => 'required',
+            'service' => ['required', Rule::in($configuredServices)],
             'remarks' => 'nullable|string',
         ]);
 
@@ -4776,12 +4819,26 @@ private function renderEmployeeHealthForm(?User $user, bool $adminForm = false)
         return redirect()->route('health.form');
     }
 
-    if (!$adminForm && $this->hasSubmittedEmployeeHealthProfile($user)) {
+    $employeeProfile = $user->employeeHealthProfile;
+    $activeEmployeeHealthFormRequest = $employeeProfile
+        ? HealthProfileCorrectionRequest::query()
+            ->where('user_id', $user->id)
+            ->where('employee_health_profile_id', $employeeProfile->id)
+            ->whereIn('type', [
+                HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION,
+                HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM,
+            ])
+            ->active()
+            ->latest('requested_at')
+            ->latest('id')
+            ->first()
+        : null;
+
+    if (!$adminForm && $this->hasSubmittedEmployeeHealthProfile($user) && !$activeEmployeeHealthFormRequest) {
         return redirect('/student/account?view=health-record')
             ->with('info', 'Your health examination record has already been submitted for clinic review.');
     }
 
-    $employeeProfile = $user->employeeHealthProfile;
     $employeePrefill = $this->buildEmployeeHealthFormPrefill($user, $employeeProfile);
     $displayName = trim((string) ($user->name ?? ''));
 
@@ -5078,9 +5135,31 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
     }
 
     $existingEmployeeProfile = $user->employeeHealthProfile;
-    if ($existingEmployeeProfile && !$adminForm) {
+    $employeeHistory = app(EmployeeHealthFormHistoryService::class);
+    $activeEmployeeHealthFormRequest = $existingEmployeeProfile
+        ? HealthProfileCorrectionRequest::query()
+            ->where('user_id', $user->id)
+            ->where('employee_health_profile_id', $existingEmployeeProfile->id)
+            ->whereIn('type', [
+                HealthProfileCorrectionRequest::TYPE_HEALTH_FORM_CORRECTION,
+                HealthProfileCorrectionRequest::TYPE_NEW_HEALTH_FORM,
+            ])
+            ->active()
+            ->latest('requested_at')
+            ->latest('id')
+            ->first()
+        : null;
+
+    if ($existingEmployeeProfile && !$adminForm && !$activeEmployeeHealthFormRequest) {
         return redirect('/student/account?view=health-record')
             ->with('info', 'Your health examination record has already been submitted for clinic review.');
+    }
+
+    if ($existingEmployeeProfile && (
+        in_array($existingEmployeeProfile->clearance_status, ['Approved', 'Issued', 'Fully Cleared', 'Cleared'], true)
+        || $existingEmployeeProfile->verified_at
+    )) {
+        $employeeHistory->ensureApprovedSnapshot($existingEmployeeProfile);
     }
 
     $employeeCategoryAudience = $this->employeeHealthFormCategoryAudience($user);
@@ -5260,11 +5339,9 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
     foreach ($employeeRequirementFiles as $field => $directory) {
         $employeeRequirementPaths[$field] = $request->hasFile($field)
             ? $this->healthFiles()->store($request->file($field), $directory)
-            : ($adminForm
-                ? ($field === 'student_photo'
-                    ? ($existingEmployeeProfile?->student_photo ?: null)
-                    : ($existingEmployeeProfile?->{$field} ?: null))
-                : null);
+            : ($field === 'student_photo'
+                ? ($existingEmployeeProfile?->student_photo ?: null)
+                : ($existingEmployeeProfile?->{$field} ?: null));
     }
 
     $employeeHealthDeclarationPath = $employeeRequirementPaths['health_declaration'];
@@ -5404,8 +5481,31 @@ public function storeEmployeeHealthForm(Request $request, bool $adminForm = fals
     ]);
     $profile->save();
 
-    if ($adminForm) {
+    if (!$adminForm) {
         $this->generateEmployeeHealthFormPdf($profile);
+        $employeeSubmission = $employeeHistory->createSubmittedSnapshot(
+            $profile->fresh(['user', 'approvedBy']),
+            $activeEmployeeHealthFormRequest
+        );
+    } else {
+        $this->generateEmployeeHealthFormPdf($profile);
+        $employeeHistory->ensureApprovedSnapshot($profile->fresh(['user', 'approvedBy']));
+        $employeeSubmission = null;
+    }
+
+    if (!$adminForm && $activeEmployeeHealthFormRequest) {
+        $requestMetadata = is_array($activeEmployeeHealthFormRequest->metadata)
+            ? $activeEmployeeHealthFormRequest->metadata
+            : [];
+        $requestMetadata['submitted_category'] = $profile->health_form_category;
+        $requestMetadata['health_form_submission_id'] = $employeeSubmission->id;
+
+        $activeEmployeeHealthFormRequest->forceFill([
+            'status' => HealthProfileCorrectionRequest::STATUS_SUBMITTED,
+            'submitted_at' => now(),
+            'health_form_submission_id' => $employeeSubmission->id,
+            'metadata' => $requestMetadata,
+        ])->save();
     }
 
     $user->contact_no = $validated['contact_no'];

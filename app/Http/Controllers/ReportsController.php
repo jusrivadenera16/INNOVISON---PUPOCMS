@@ -9,6 +9,7 @@ use App\Models\Consultation;
 use App\Models\AppointmentFeedback;
 use App\Models\Appointment;
 use App\Models\ActivityLog;
+use App\Models\ClinicServiceOption;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use App\Models\HealthProfile;
@@ -623,6 +624,19 @@ class ReportsController extends Controller
         return app(\App\Services\MarPatientTypeNormalizer::class)->normalize($value);
     }
 
+    private function firstReportPatientType(...$values): ?string
+    {
+        foreach ($values as $value) {
+            $patientType = $this->normalizeReportPatientType($value);
+
+            if ($patientType !== null) {
+                return $patientType;
+            }
+        }
+
+        return null;
+    }
+
     private function normalizeReportGender(?string $value): ?string
     {
         $gender = strtolower(trim((string) $value));
@@ -653,6 +667,132 @@ class ReportsController extends Controller
     {
         $table[$rowKey][$patientType]++;
         $table[$rowKey]['total']++;
+    }
+
+    private function reportUserProfileRelations(): array
+    {
+        $relations = ['healthProfile'];
+
+        if (\Schema::hasTable('health_profile_emp')) {
+            $relations[] = 'employeeHealthProfile';
+        }
+
+        if (\Schema::hasTable('dependents_profiles')) {
+            $relations[] = 'dependentProfile';
+        }
+
+        return $relations;
+    }
+
+    private function buildMarServiceSummary(Carbon $dateFrom, Carbon $dateTo): array
+    {
+        $patientTypes = ['student', 'faculty', 'admin', 'dependent'];
+        $profileRelations = collect($this->reportUserProfileRelations())
+            ->map(fn (string $relation) => 'user.' . $relation)
+            ->all();
+        $consultations = Consultation::query()
+            ->with(array_merge(['user'], $profileRelations))
+            ->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()])
+            ->get();
+
+        $countsFor = function (Collection $records) use ($patientTypes): array {
+            $counts = array_fill_keys($patientTypes, 0);
+
+            foreach ($records as $record) {
+                $patientType = $this->firstReportPatientType(
+                    optional($record->user)->user_type,
+                    optional($record->user)->idp_role,
+                    $record->user_type,
+                    $record->user_role,
+                    optional($record->user)->user_role
+                );
+
+                if ($patientType !== null && array_key_exists($patientType, $counts)) {
+                    $counts[$patientType]++;
+                }
+            }
+
+            return $counts;
+        };
+
+        $referralOptions = ClinicServiceOption::query()
+            ->forGroup(ClinicServiceOption::GROUP_REFERRAL)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        if ($referralOptions->isEmpty()) {
+            $referralOptions = collect([
+                (object) ['code' => 'hospital_without_nurse', 'name' => 'Refer to Hospital (Without Nurse)'],
+                (object) ['code' => 'hospital_with_nurse', 'name' => 'Refer to Hospital (With Nurse)'],
+                (object) ['code' => 'general', 'name' => 'Referral (General)'],
+            ]);
+        }
+
+        $referrals = $referralOptions->map(function ($option) use ($consultations, $countsFor): array {
+            $label = preg_replace('/^Refer to\s+/i', 'Ref. to ', (string) $option->name);
+
+            return [
+                'label' => $label ?: (string) $option->name,
+                'counts' => $countsFor($consultations->filter(
+                    fn ($consultation) => trim((string) $consultation->referral_type) === (string) $option->code
+                )),
+            ];
+        })->values()->all();
+
+        $otherOptions = ClinicServiceOption::query()
+            ->forGroup(ClinicServiceOption::GROUP_OTHER_SERVICE)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+        $otherServiceNames = $otherOptions
+            ->map(fn (ClinicServiceOption $option) => $option->serviceLabel())
+            ->push('BP Monitoring')
+            ->unique()
+            ->values();
+        $otherServices = $countsFor($consultations->filter(function ($consultation) use ($otherServiceNames): bool {
+            return $otherServiceNames->contains(trim((string) $consultation->service));
+        }));
+
+        $onlineConsultations = $consultations->filter(
+            fn ($consultation) => strtolower(trim((string) $consultation->consultation_source)) === 'online'
+        );
+        $onlineProviders = ClinicServiceOption::query()
+            ->forGroup(ClinicServiceOption::GROUP_ONLINE_CONSULTATION)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+        $onlineRows = $onlineProviders->map(function (ClinicServiceOption $option) use ($onlineConsultations, $countsFor): array {
+            $serviceLabel = $option->serviceLabel();
+
+            return [
+                'label' => $serviceLabel,
+                'counts' => $countsFor($onlineConsultations->filter(
+                    fn ($consultation) => trim((string) $consultation->service) === $serviceLabel
+                )),
+            ];
+        })->values()->all();
+
+        $configuredProviderLabels = $onlineProviders
+            ->map(fn (ClinicServiceOption $option) => $option->serviceLabel())
+            ->values();
+        $unassignedOnline = $onlineConsultations->filter(function ($consultation) use ($configuredProviderLabels): bool {
+            $service = trim((string) $consultation->service);
+
+            return !$configuredProviderLabels->contains($service);
+        });
+        if ($unassignedOnline->isNotEmpty() || $onlineRows === []) {
+            array_unshift($onlineRows, [
+                'label' => 'Consultation',
+                'counts' => $countsFor($unassignedOnline),
+            ]);
+        }
+
+        return [
+            'referrals' => $referrals,
+            'other_services' => $otherServices,
+            'online_consultations' => $onlineRows,
+        ];
     }
 
     private function addGadEntry(array &$table, string $patientType, ?string $gender, bool $isPwd, bool $isSenior): void
@@ -709,24 +849,28 @@ class ReportsController extends Controller
         if ($userId) {
             $cacheKey = 'id:' . $userId;
             if (!array_key_exists($cacheKey, $cache)) {
-                $cache[$cacheKey] = User::with('healthProfile')->find($userId);
+                $cache[$cacheKey] = User::with($this->reportUserProfileRelations())->find($userId);
             }
 
             return $cache[$cacheKey];
         }
 
         $name = trim((string) $consultation->name);
-        $role = $this->normalizeReportPatientType($consultation->user_role ?: $consultation->user_type ?: '');
+        $role = $this->firstReportPatientType($consultation->user_type, $consultation->user_role);
         $cacheKey = 'name:' . strtolower($name) . '|' . $role;
 
         if (!array_key_exists($cacheKey, $cache)) {
-            $matches = User::with('healthProfile')
+            $matches = User::with($this->reportUserProfileRelations())
                 ->where('name', $name)
                 ->get();
 
             if ($matches->count() > 1 && $role !== null) {
                 $filtered = $matches->filter(function (User $user) use ($role) {
-                    return $this->normalizeReportPatientType($user->user_role ?? $user->user_type ?? '') === $role;
+                    return $this->firstReportPatientType(
+                        $user->user_type,
+                        $user->idp_role,
+                        $user->user_role
+                    ) === $role;
                 })->values();
 
                 $cache[$cacheKey] = $filtered->count() === 1 ? $filtered->first() : $matches->first();
@@ -740,15 +884,28 @@ class ReportsController extends Controller
 
     private function extractUserDemographics(?User $user): array
     {
+        $profileRelations = $this->reportUserProfileRelations();
+
+        if ($user) {
+            $user->loadMissing($profileRelations);
+        }
+
+        $profiles = collect($profileRelations)
+            ->map(fn (string $relation) => $user?->{$relation})
+            ->filter();
+
+        $profileGender = $profiles
+            ->map(fn ($profile) => $profile->sex ?? null)
+            ->first(fn ($value) => trim((string) $value) !== '');
+
         $gender = $this->normalizeReportGender(
-            $user?->gender
-            ?: optional($user?->healthProfile)->sex
+            $user?->gender ?: $profileGender
         );
 
-        $birthday = trim((string) (
-            $user?->DOB
-            ?: optional($user?->healthProfile)->birthday
-        ));
+        $birthday = $user?->DOB ?: $profiles
+            ->map(fn ($profile) => $profile->birthday ?? null)
+            ->first(fn ($value) => trim((string) $value) !== '');
+        $birthday = trim((string) $birthday);
 
         $isSenior = false;
         if ($birthday !== '') {
@@ -759,7 +916,22 @@ class ReportsController extends Controller
             }
         }
 
-        $isPwd = trim((string) optional($user?->healthProfile)->has_disability) === 'Yes';
+        if (!$isSenior) {
+            $age = $user?->age ?: $profiles
+                ->map(fn ($profile) => $profile->age ?? null)
+                ->first(fn ($value) => is_numeric($value));
+            $isSenior = is_numeric($age) && (float) $age >= 60;
+        }
+
+        $isPwd = $profiles->contains(function ($profile): bool {
+            $value = $profile->has_disability ?? null;
+
+            if (is_bool($value)) {
+                return $value;
+            }
+
+            return in_array(strtolower(trim((string) $value)), ['yes', 'true', '1', 'y'], true);
+        });
 
         return compact('gender', 'isSenior', 'isPwd');
     }
@@ -797,14 +969,80 @@ class ReportsController extends Controller
         $table = $this->emptyGadTable();
 
         foreach ($consultations as $consultation) {
-            $patientType = $this->normalizeReportPatientType($consultation->user_role ?: $consultation->user_type ?: '');
+            $user = $this->resolveConsultationUser($consultation);
+            $patientType = $this->firstReportPatientType(
+                $user?->user_type,
+                $user?->idp_role,
+                $consultation->user_type,
+                $consultation->user_role,
+                $user?->user_role
+            );
             if ($patientType === null) {
                 continue;
             }
 
-            $user = $this->resolveConsultationUser($consultation);
             $demographics = $this->extractUserDemographics($user);
 
+            $this->addGadEntry(
+                $table,
+                $patientType,
+                $demographics['gender'],
+                $demographics['isPwd'],
+                $demographics['isSenior']
+            );
+        }
+
+        return $table;
+    }
+
+    private function buildClearanceGadTable(Collection $issuances): array
+    {
+        $table = $this->emptyGadTable();
+        $profileRelations = $this->reportUserProfileRelations();
+        $userIds = $issuances
+            ->pluck('user_id')
+            ->filter()
+            ->unique()
+            ->values();
+        $usersById = $userIds->isEmpty()
+            ? collect()
+            : User::with($profileRelations)
+                ->whereIn('id', $userIds->all())
+                ->get()
+                ->keyBy('id');
+
+        foreach ($issuances as $issuance) {
+            $clearanceType = $issuance->clearanceType
+                ?: optional($issuance->subcategory)->clearanceType;
+            $clearanceMarkers = strtolower(trim(implode(' ', array_filter([
+                $clearanceType?->code,
+                $clearanceType?->name,
+                $issuance->clearance_name_snapshot,
+            ]))));
+
+            // Freshmen has its own GAD table and must not be counted twice.
+            if (str_contains($clearanceMarkers, 'freshm')) {
+                continue;
+            }
+
+            $user = $issuance->relationLoaded('user')
+                ? $issuance->user
+                : $usersById->get($issuance->user_id);
+            if (!$issuance->relationLoaded('user')) {
+                $issuance->setRelation('user', $user);
+            }
+
+            $patientType = $this->firstReportPatientType(
+                $user?->user_type,
+                $user?->idp_role,
+                $issuance->user_type,
+                $user?->user_role
+            );
+            if ($patientType === null) {
+                continue;
+            }
+
+            $demographics = $this->extractUserDemographics($user);
             $this->addGadEntry(
                 $table,
                 $patientType,
@@ -822,14 +1060,19 @@ class ReportsController extends Controller
         $table = $this->emptyGadTable();
 
         foreach ($appointments as $appointment) {
-            $patientType = $this->normalizeReportPatientType($appointment->user_type ?? '');
+            $user = $appointment->user;
+            $patientType = $this->firstReportPatientType(
+                $user?->user_type,
+                $user?->idp_role,
+                $appointment->user_type,
+                $user?->user_role
+            );
             if ($patientType === null) {
                 continue;
             }
 
-            $user = $appointment->user;
-            if ($user && !$user->relationLoaded('healthProfile')) {
-                $user->load('healthProfile');
+            if ($user) {
+                $user->loadMissing($this->reportUserProfileRelations());
             }
 
             $demographics = $this->extractUserDemographics($user);
@@ -882,40 +1125,28 @@ class ReportsController extends Controller
         Collection $categories,
         Carbon $dateFrom,
         Carbon $dateTo,
-        ?array $clearanceTypeCodes = null
+        ?Collection $clearanceIssuances = null
     ): array
     {
-        $consultations = $categories->flatMap(function ($category) {
-            return $category->medicalConditions->flatMap->consultations;
-        })->unique('id')->values();
+        $consultationUserRelations = array_map(
+            fn (string $relation) => 'user.' . $relation,
+            $this->reportUserProfileRelations()
+        );
+        $consultations = Consultation::with($consultationUserRelations)
+            ->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()])
+            ->get();
 
-        $certificateCodes = $clearanceTypeCodes === null
-            ? collect(['excused_letter', 'coc_ijt', 'coc_ladderized'])
-            : collect($clearanceTypeCodes)
-                ->flatMap(function ($code) {
-                    $normalizedCode = trim((string) $code);
+        $clearanceIssuances ??= app(MarClearanceIssuanceService::class)
+            ->issuancesForReportPeriod($dateFrom, $dateTo);
 
-                    return match ($normalizedCode) {
-                        'ojt' => ['ojt', 'coc_ijt'],
-                        default => [$normalizedCode],
-                    };
-                })
-                ->filter(fn ($code) => $code !== '' && $code !== 'none')
-                ->unique()
-                ->values();
-
-        $certificateConsultations = $consultations->filter(function ($consultation) use ($certificateCodes) {
-            return $certificateCodes->contains(trim((string) ($consultation->certificate_type ?? 'none')));
-        })->values();
-
-        $onlineAppointments = Appointment::with('user.healthProfile')
+        $onlineAppointments = Appointment::with($consultationUserRelations)
             ->whereBetween('date', [$dateFrom->toDateString(), $dateTo->toDateString()])
             ->where('type', 'online')
             ->where('status', '!=', 'Cancelled')
             ->get();
 
         $consultationTable = $this->buildConsultationGadTable($consultations);
-        $certificateTable = $this->buildConsultationGadTable($certificateConsultations);
+        $certificateTable = $this->buildClearanceGadTable($clearanceIssuances);
         $triageOnlineTable = $this->buildAppointmentGadTable($onlineAppointments);
         $freshmenClearanceTable = $this->buildFreshmenClearanceGadTable($dateFrom, $dateTo);
 
@@ -1899,7 +2130,6 @@ class ReportsController extends Controller
     $categories = Category::with(['medicalConditions.consultations' => function($query) use ($dateFrom, $dateTo) {
         $query->whereBetween('consultation_date', [$dateFrom->toDateString(), $dateTo->toDateString()]);
     }])->get();
-    $gadTables = $this->buildMarGadTables($categories, $dateFrom, $dateTo);
 
     $marClearanceTypes = MarClearanceType::query()
         ->where('is_active', true)
@@ -1909,6 +2139,8 @@ class ReportsController extends Controller
         ->get();
     $marClearanceIssuances = app(MarClearanceIssuanceService::class)
         ->issuancesForReportPeriod($dateFrom, $dateTo);
+    $gadTables = $this->buildMarGadTables($categories, $dateFrom, $dateTo, $marClearanceIssuances);
+    $marServiceSummary = $this->buildMarServiceSummary($dateFrom, $dateTo);
 
     $allConditions = MedicalConditions::with('category')->get();
     $categoryList = Category::all();
@@ -1925,6 +2157,7 @@ class ReportsController extends Controller
         'totalToday' => $totalToday,
         'marClearanceTypes' => $marClearanceTypes,
         'marClearanceIssuances' => $marClearanceIssuances,
+        'marServiceSummary' => $marServiceSummary,
     ]);
 }
     // for managing mar
@@ -3256,10 +3489,9 @@ public function printReport(Request $request)
             $data,
             $dateFrom,
             $dateTo,
-            $marClearanceTypes->flatMap(function (MarClearanceType $clearanceType) {
-                return collect([$clearanceType->code])->merge($clearanceType->subcategories->pluck('code'));
-            })->all()
+            $marClearanceIssuances
         );
+        $marServiceSummary = $this->buildMarServiceSummary($dateFrom, $dateTo);
     } 
     elseif ($type == 'inventory') {
         $title = match ($inventoryScope) {
@@ -3342,6 +3574,7 @@ public function printReport(Request $request)
             'gadTables' => $gadTables ?? [],
             'marClearanceTypes' => $marClearanceTypes ?? collect(),
             'marClearanceIssuances' => $marClearanceIssuances ?? collect(),
+            'marServiceSummary' => $marServiceSummary ?? [],
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'isPdf' => true,
@@ -3371,6 +3604,7 @@ public function printReport(Request $request)
         'gadTables' => $gadTables ?? [],
         'marClearanceTypes' => $marClearanceTypes ?? collect(),
         'marClearanceIssuances' => $marClearanceIssuances ?? collect(),
+        'marServiceSummary' => $marServiceSummary ?? [],
         'dateFrom' => $dateFrom,
         'dateTo' => $dateTo,
         'isPdf' => false,

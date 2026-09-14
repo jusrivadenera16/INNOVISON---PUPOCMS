@@ -4600,7 +4600,9 @@
                         <select id="consultService" class="form-control" data-clinic-select @if(($user_source ?? '') === 'online') disabled @else name="service" @endif required>
                             <option value="" disabled {{ !$draftValue('service', optional($latestAppointment)->service) ? 'selected' : '' }}>Select clinic service</option>
                             <option value="General Consultation" {{ $draftValue('service', optional($latestAppointment)->service) === 'General Consultation' ? 'selected' : '' }}>General Consultation</option>
-                            <option value="BP Monitoring" {{ $draftValue('service', optional($latestAppointment)->service) === 'BP Monitoring' ? 'selected' : '' }}>BP Monitoring</option>
+                            @foreach(($otherServiceOptions ?? []) as $serviceOption)
+                                <option value="{{ $serviceOption->serviceLabel() }}" {{ $draftValue('service', optional($latestAppointment)->service) === $serviceOption->serviceLabel() ? 'selected' : '' }}>{{ $serviceOption->serviceLabel() }}</option>
+                            @endforeach
                         </select>
                         @if(($user_source ?? '') === 'online')
                             <input type="hidden" name="service" value="{{ $draftValue('service', optional($latestAppointment)->service) }}">
@@ -4767,10 +4769,9 @@
                     <label for="consultReferral">Referral</label>
                     <select name="referral_type" id="consultReferral" class="form-control" data-clinic-select>
                         <option value="none" {{ $draftValue('referral_type', 'none') === 'none' ? 'selected' : '' }}>No Referral</option>
-                        <option value="hospital_without_nurse" {{ $draftValue('referral_type') === 'hospital_without_nurse' ? 'selected' : '' }}>Refer to Hospital (Without Nurse)</option>
-                        <option value="hospital_with_nurse" {{ $draftValue('referral_type') === 'hospital_with_nurse' ? 'selected' : '' }}>Refer to Hospital (With Nurse)</option>
-                        <option value="general" {{ $draftValue('referral_type') === 'general' ? 'selected' : '' }}>Referral (General)</option>
-                        <option value="others" {{ $draftValue('referral_type') === 'others' ? 'selected' : '' }}>Others</option>
+                        @foreach(($referralOptions ?? []) as $referralOption)
+                            <option value="{{ $referralOption->code }}" {{ $draftValue('referral_type') === $referralOption->code ? 'selected' : '' }}>{{ $referralOption->name }}</option>
+                        @endforeach
                     </select>
                     <div class="form-help">Use this when the patient needs care beyond the school clinic.</div>
                 </div>
@@ -5087,12 +5088,15 @@
                                 $consultTimeOut = $consultation->time_out ?: optional($consultation->updated_at)->format('H:i:s');
                                 $consultComplaint = trim((string) $consultation->reason_for_visit);
                                 $consultImpression = trim((string) $consultation->comments);
-                                $consultReferralLabels = [
-                                    'hospital_without_nurse' => 'Refer to Hospital (Without Nurse)',
-                                    'hospital_with_nurse' => 'Refer to Hospital (With Nurse)',
-                                    'general' => 'Referral (General)',
-                                    'others' => 'Others',
-                                ];
+                                $consultReferralLabels = collect($referralOptions ?? [])
+                                    ->mapWithKeys(fn ($option) => [$option->code => $option->name])
+                                    ->union([
+                                        'hospital_without_nurse' => 'Refer to Hospital (Without Nurse)',
+                                        'hospital_with_nurse' => 'Refer to Hospital (With Nurse)',
+                                        'general' => 'Referral (General)',
+                                        'others' => 'Others',
+                                    ])
+                                    ->all();
                                 $consultReferralType = trim((string) ($consultation->referral_type ?? ''));
                                 $consultReferral = $consultReferralType !== '' && $consultReferralType !== 'none'
                                     ? ($consultReferralLabels[$consultReferralType] ?? $consultReferralType)
@@ -5172,12 +5176,15 @@
                             $treatmentTimeOut = $treatment->time_out ?: optional($treatment->updated_at)->format('H:i:s');
                             $treatmentComplaint = trim((string) $treatment->reason_for_visit);
                             $treatmentImpression = trim((string) $treatment->comments);
-                            $treatmentReferralLabels = [
-                                'hospital_without_nurse' => 'Refer to Hospital (Without Nurse)',
-                                'hospital_with_nurse' => 'Refer to Hospital (With Nurse)',
-                                'general' => 'Referral (General)',
-                                'others' => 'Others',
-                            ];
+                            $treatmentReferralLabels = collect($referralOptions ?? [])
+                                ->mapWithKeys(fn ($option) => [$option->code => $option->name])
+                                ->union([
+                                    'hospital_without_nurse' => 'Refer to Hospital (Without Nurse)',
+                                    'hospital_with_nurse' => 'Refer to Hospital (With Nurse)',
+                                    'general' => 'Referral (General)',
+                                    'others' => 'Others',
+                                ])
+                                ->all();
                             $treatmentReferralType = trim((string) ($treatment->referral_type ?? ''));
                             $treatmentReferral = $treatmentReferralType !== '' && $treatmentReferralType !== 'none'
                                 ? ($treatmentReferralLabels[$treatmentReferralType] ?? $treatmentReferralType)

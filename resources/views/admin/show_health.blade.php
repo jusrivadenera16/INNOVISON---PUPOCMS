@@ -2656,6 +2656,9 @@
     }
     $profileName = trim((string) ($profile->user->name ?? 'N/A'));
     $profileUserType = strtolower(trim((string) ($profile->user->user_type ?? $profile->user->idp_role ?? '')));
+    $profileIsDependent = $profile->user?->clinicHealthFormAudience() === 'dependent'
+        || str_contains($profileUserType, 'dependent')
+        || str_contains($profileUserType, 'guest');
     $profileDetailLabel = str_contains($profileUserType, 'applicant')
         ? 'Applicant Health Profile'
         : (str_contains($profileUserType, 'dependent')
@@ -2694,21 +2697,21 @@
         'not_applicable' => 'profile-status-default',
         default => 'profile-status-pending',
     };
-    $canResyncPuptas = !$isPulloutPending && !$isPulledOut
+    $canResyncPuptas = !$profileIsDependent && !$isPulloutPending && !$isPulledOut
         && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && !in_array($puptasSyncRaw, ['synced', 'not_applicable'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.update_assessment') ?? false);
     $canRequestFileCorrection = !$isPulloutPending && !$isPulledOut
         && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false);
-    $canReturnToPending = !$isPulloutPending && !$isPulledOut
+    $canReturnToPending = !$profileIsDependent && !$isPulloutPending && !$isPulledOut
         && in_array($profileStatusNormalized, ['Issued', 'Fully Cleared'], true)
         && (optional(auth()->user())->canAccessPermission('health_records.request_resubmission') ?? false);
-    $canRequestPullout = in_array($profileStatusRaw, ['Issued', 'Fully Cleared'], true)
+    $canRequestPullout = !$profileIsDependent && in_array($profileStatusRaw, ['Issued', 'Fully Cleared'], true)
         && !$isPulloutPending
         && !$isPulledOut
         && $isSuperAdmin;
-    $canViewPullout = $isSuperAdmin
+    $canViewPullout = !$profileIsDependent && $isSuperAdmin
         && ($canRequestPullout || $isPulloutPending || $isPulledOut || $isPulloutRestored);
     $pulloutActionLabel = $isPulloutPending
         ? 'Mark as Pulled Out'
