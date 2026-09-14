@@ -57,6 +57,10 @@ class AdminAssistantController extends Controller
             return response()->json($this->offTopicResponse());
         }
 
+        if ($this->isGeneralMedicalRequestOutsideClinicScope($normalized)) {
+            return response()->json($this->offTopicResponse());
+        }
+
         $aiReply = $this->askAi($text);
         if ($aiReply !== null) {
             return response()->json([
@@ -298,11 +302,47 @@ class AdminAssistantController extends Controller
         ]);
     }
 
+    private function isGeneralMedicalRequestOutsideClinicScope(string $text): bool
+    {
+        $outsideClinicContexts = [
+            'travel abroad',
+            'travel overseas',
+            'international travel',
+            'abroad',
+            'overseas',
+            'visa',
+            'passport',
+            'embassy',
+            'consulate',
+            'immigration',
+            'country requirement',
+            'entry requirement',
+            'travel requirement',
+            'cdc',
+            'who',
+        ];
+
+        if (!$this->containsAny($text, $outsideClinicContexts)) {
+            return false;
+        }
+
+        return !$this->containsAny($text, [
+            'pup',
+            'campus clinic',
+            'school clinic',
+            'clinic clearance',
+            'health form',
+            'medical certificate from clinic',
+            'appointment',
+            'consultation',
+        ]);
+    }
+
     private function offTopicResponse(): array
     {
         return [
             'type' => 'answer',
-            'message' => 'I can only help with medical, health, and clinic-system requests. Please ask about clinic workflows, appointments, health forms, inventory, reports, or basic symptom triage.',
+            'message' => 'I can only help with this clinic system and clinic-related health support. Please ask about PUP clinic workflows, appointments, health forms, inventory, reports, medical certificates handled by the clinic, or basic symptom triage.',
             'source' => 'scope_guard',
         ];
     }
@@ -330,9 +370,9 @@ class AdminAssistantController extends Controller
 
         $prompt = <<<PROMPT
 You are the Clinic AI Assistant inside a campus clinic management system.
-Only answer requests about medical, health, patient triage, clinic operations, or this clinic management system.
-If the request is unrelated, briefly refuse and redirect the user to clinic, health-form, appointment, inventory, report, or triage topics.
-Do not write code, solve homework, provide entertainment, answer general trivia, give financial/legal advice, or handle unrelated productivity tasks.
+Only answer requests about this actual campus clinic, patient triage in the clinic context, clinic operations, or this clinic management system.
+If the request is general medical information outside the clinic's scope, such as travel abroad requirements, visa medical requirements, country entry rules, or general public-health research, briefly refuse and redirect the user to PUP clinic workflows, health forms, appointments, inventory, reports, clinic-issued certificates, or basic symptom triage.
+Do not write code, solve homework, provide entertainment, answer general trivia, give financial/legal advice, research travel rules, or handle unrelated productivity tasks.
 For medical or symptom questions, give concise safety-first triage guidance, do not provide a definitive diagnosis, and mention urgent red flags when relevant.
 
 User question:
@@ -366,7 +406,7 @@ PROMPT;
                     'messages' => [
                         [
                             'role' => 'system',
-                            'content' => 'You are the Clinic AI Assistant for a campus clinic management system. Only answer requests about medical, health, patient triage, clinic operations, appointments, health forms, inventory, reports, or this clinic system. If the request is unrelated, briefly refuse and redirect to clinic/health topics. Do not write code, solve homework, provide entertainment, answer general trivia, or handle unrelated productivity tasks. For symptom questions, give concise safety-first triage guidance, do not provide a definitive diagnosis, and mention urgent red flags and when to escalate to emergency care.',
+                            'content' => 'You are the Clinic AI Assistant for a campus clinic management system. Only answer requests about this actual campus clinic, patient triage in the clinic context, clinic operations, appointments, health forms, inventory, reports, clinic-issued medical certificates, or this clinic system. If the request is general medical information outside the clinic scope, such as travel abroad requirements, visa medical requirements, country entry rules, or public-health research, briefly refuse and redirect to PUP clinic workflows. Do not write code, solve homework, provide entertainment, answer general trivia, research travel rules, or handle unrelated productivity tasks. For symptom questions, give concise safety-first triage guidance, do not provide a definitive diagnosis, and mention urgent red flags and when to escalate to emergency care.',
                         ],
                         [
                             'role' => 'user',

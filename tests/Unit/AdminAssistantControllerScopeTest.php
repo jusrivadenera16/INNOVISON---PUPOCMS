@@ -20,7 +20,22 @@ class AdminAssistantControllerScopeTest extends TestCase
 
         $this->assertSame('answer', $payload['type']);
         $this->assertSame('scope_guard', $payload['source']);
-        $this->assertStringContainsString('medical, health, and clinic-system requests', $payload['message']);
+        $this->assertStringContainsString('this clinic system', $payload['message']);
+    }
+
+    public function test_it_refuses_general_medical_requests_outside_the_clinic_scope(): void
+    {
+        $response = app(AdminAssistantController::class)->handle(
+            Request::create('/admin/assistant/intent', 'POST', [
+                'text' => 'GIVE ME travel abroad medical requirements',
+            ])
+        );
+
+        $payload = $response->getData(true);
+
+        $this->assertSame('answer', $payload['type']);
+        $this->assertSame('scope_guard', $payload['source']);
+        $this->assertStringContainsString('clinic-related health support', $payload['message']);
     }
 
     public function test_it_explains_its_clinic_scope_for_help_requests(): void
